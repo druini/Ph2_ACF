@@ -11,6 +11,9 @@
 
 namespace Ph2_HwDescription
 {
+  constexpr RD53::FrontEnd RD53::LIN;
+  constexpr RD53::FrontEnd RD53::DIFF;
+
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName)
     : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id)
   {

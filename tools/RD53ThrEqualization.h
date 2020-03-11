@@ -71,13 +71,15 @@ class ThrEqualization : public PixelAlive
   size_t nHITxCol;
   bool   doFast;
 
+  const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
+
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   DetectorDataContainer theOccContainer;
   DetectorDataContainer theTDACcontainer;
 
   void fillHisto         ();
   void bitWiseScanGlobal (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
-  void bitWiseScanLocal  (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
+  void bitWiseScanLocal  (uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
   void chipErrorReport   ();
   void saveChipRegisters (int currentRun);
 

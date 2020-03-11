@@ -25,10 +25,10 @@ void ThrMinimization::ConfigureCalibration ()
   // #######################
   // # Retrieve parameters #
   // #######################
-  rowStart        = this->findValueInSettings("ROWstart");
-  rowStop         = this->findValueInSettings("ROWstop");
-  colStart        = this->findValueInSettings("COLstart");
-  colStop         = this->findValueInSettings("COLstop");
+  // rowStart        = this->findValueInSettings("ROWstart");
+  // rowStop         = this->findValueInSettings("ROWstop");
+  // colStart        = this->findValueInSettings("COLstart");
+  // colStop         = this->findValueInSettings("COLstop");
   nEvents         = this->findValueInSettings("nEvents");
   targetOccupancy = this->findValueInSettings("TargetOcc");
   ThrStart        = this->findValueInSettings("ThrStart");
@@ -37,7 +37,21 @@ void ThrMinimization::ConfigureCalibration ()
   doUpdateChip    = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData  = this->findValueInSettings("SaveBinaryData");
 
+  if (colStart >= RD53::DIFF.colStart)
+    frontEnd = &RD53::DIFF;
+  else if (colStop < RD53::DIFF.colStart)
+    frontEnd = &RD53::LIN;
+  else if (RD53::LIN.colStop - colStart > colStop - RD53::DIFF.colStart)
+    frontEnd = &RD53::LIN;
+  else
+    frontEnd = &RD53::DIFF;
 
+  colStart = std::max(colStart, frontEnd->colStart);
+  colStop = std::min(colStop, frontEnd->colStop);
+
+  std::cout << "colStart: " << colStart << '\n';
+  std::cout << "colStop: " << colStop << '\n';
+  
   // #######################
   // # Initialize progress #
   // #######################
@@ -111,7 +125,7 @@ void ThrMinimization::initializeFiles (const std::string fileRes_, int currentRu
 
 void ThrMinimization::run ()
 {
-  ThrMinimization::bitWiseScanGlobal("Vthreshold_LIN", nEvents, targetOccupancy, ThrStart, ThrStop);
+  ThrMinimization::bitWiseScanGlobal(frontEnd->threshold_reg, nEvents, targetOccupancy, ThrStart, ThrStop);
 
 
   // ############################
@@ -121,7 +135,7 @@ void ThrMinimization::run ()
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        theThrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<RD53*>(cChip)->getReg("Vthreshold_LIN");
+        theThrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<RD53*>(cChip)->getReg(frontEnd->threshold_reg);
 
 
   // ################

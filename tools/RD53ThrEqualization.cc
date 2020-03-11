@@ -39,6 +39,20 @@ void ThrEqualization::ConfigureCalibration ()
   doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
+  if (colStart >= RD53::DIFF.colStart)
+    frontEnd = &RD53::DIFF;
+  else if (colStop < RD53::DIFF.colStart)
+    frontEnd = &RD53::LIN;
+  else if (RD53::LIN.colStop - colStart > colStop - RD53::DIFF.colStart)
+    frontEnd = &RD53::LIN;
+  else
+    frontEnd = &RD53::DIFF;
+
+  colStart = std::max(colStart, frontEnd->colStart);
+  colStop = std::min(colStop, frontEnd->colStop);
+
+  std::cout << "colStart: " << colStart << '\n';
+  std::cout << "colStop: " << colStop << '\n';
 
   // ########################
   // # Custom channel group #
@@ -145,7 +159,7 @@ void ThrEqualization::run ()
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
-  ThrEqualization::bitWiseScanLocal("PIX_PORTAL", nEvents, TARGETEFF, nEvtsBurst);
+  ThrEqualization::bitWiseScanLocal(nEvents, TARGETEFF, nEvtsBurst);
 
 
   // #################################################
@@ -329,11 +343,11 @@ void ThrEqualization::bitWiseScanGlobal (const std::string& regName, uint32_t nE
   PixelAlive::analyze();
 }
 
-void ThrEqualization::bitWiseScanLocal (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
+void ThrEqualization::bitWiseScanLocal (uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
 {
   uint16_t init;
-  uint16_t numberOfBits = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits(regName);
-
+  unsigned int numberOfBits = ceil(log2(frontEnd->nTdacValues));
+  
   DetectorDataContainer minDACcontainer;
   DetectorDataContainer midDACcontainer;
   DetectorDataContainer maxDACcontainer;
@@ -343,7 +357,7 @@ void ThrEqualization::bitWiseScanLocal (const std::string& regName, uint32_t nEv
 
   ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, minDACcontainer, init = 0);
   ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, midDACcontainer);
-  ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, maxDACcontainer, init = (RD53Shared::setBits(numberOfBits) + 1));
+  ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, maxDACcontainer, init = frontEnd->nTdacValues - 1);
 
   ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, bestDACcontainer);
   ContainerFactory::copyAndInitChannel<OccupancyAndPh>(*fDetectorContainer, bestContainer);
@@ -362,7 +376,7 @@ void ThrEqualization::bitWiseScanLocal (const std::string& regName, uint32_t nEv
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        this->fReadoutChipInterface->ReadChipAllLocalReg(static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
+        this->fReadoutChipInterface->ReadChipAllLocalReg(static_cast<RD53*>(cChip), "PIX_PORTAL", *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
 
   for (auto i = 0u; i <= numberOfBits; i++)
@@ -373,7 +387,7 @@ void ThrEqualization::bitWiseScanLocal (const std::string& regName, uint32_t nEv
       for (const auto cBoard : *fDetectorContainer)
         for (const auto cModule : *cBoard)
           for (const auto cChip : *cModule)
-            this->fReadoutChipInterface->WriteChipAllLocalReg(static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
+            this->fReadoutChipInterface->WriteChipAllLocalReg(static_cast<RD53*>(cChip), "PIX_PORTAL", *midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
 
       // ################
@@ -432,7 +446,7 @@ void ThrEqualization::bitWiseScanLocal (const std::string& regName, uint32_t nEv
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        this->fReadoutChipInterface->WriteChipAllLocalReg(static_cast<RD53*>(cChip), regName, *bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
+        this->fReadoutChipInterface->WriteChipAllLocalReg(static_cast<RD53*>(cChip), "PIX_PORTAL", *bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex()));
 
 
   // ################

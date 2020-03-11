@@ -124,6 +124,17 @@ namespace Ph2_HwDescription
     static constexpr size_t nRows = NROWS;
     static constexpr size_t nCols = NCOLS;
 
+    struct FrontEnd {
+      const char* name;
+      const char* thresholdReg;
+      unsigned int nTdacValues;
+      unsigned int colStart;
+      unsigned int colStop;
+    };
+
+    static constexpr FrontEnd LIN = {"LIN", "Vthreshold_LIN", 16, 128, 263};
+    static constexpr FrontEnd DIFF = {"DIFF", "VTH1_DIFF", 31, 264, 399};
+
     RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName);
     RD53 (const RD53& chipObj);
 
