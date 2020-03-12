@@ -54,9 +54,6 @@ class SCurve : public Tool
   }
 
 
-  // ########
-  // # ROOT #
-  // ########
 #ifdef __USE_ROOT__
   SCurveHistograms* histos;
 #endif

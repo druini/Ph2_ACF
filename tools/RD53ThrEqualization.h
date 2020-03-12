@@ -51,9 +51,6 @@ class ThrEqualization : public PixelAlive
   }
 
 
-  // ########
-  // # ROOT #
-  // ########
 #ifdef __USE_ROOT__
   ThrEqualizationHistograms* histos;
 #endif

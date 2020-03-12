@@ -265,7 +265,7 @@ namespace Ph2_HwInterface
     const uint8_t  highGain         = pRD53->getRegItem("HighGain_LIN").fValue;
     const uint8_t  chipID           = pRD53->getChipId();
 
-    std::vector<perPixelData>& mask = doDefault ? *pRD53->getPixelsMaskDefault() : *pRD53->getPixelsMask();
+    std::vector<perColumnPixelData>& mask = doDefault ? *pRD53->getPixelsMaskDefault() : *pRD53->getPixelsMask();
 
     // ##########################
     // # Disable default config #

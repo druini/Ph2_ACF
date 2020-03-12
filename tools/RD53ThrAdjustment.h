@@ -1,14 +1,14 @@
 /*!
-  \file                  RD53ThrMinimization.h
-  \brief                 Implementaion of threshold minimization
+  \file                  RD53ThrAdjustment.h
+  \brief                 Implementaion of threshold adjustment
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef RD53ThrMinimization_H
-#define RD53ThrMinimization_H
+#ifndef RD53ThrAdjustment_H
+#define RD53ThrAdjustment_H
 
 #include "RD53PixelAlive.h"
 
@@ -20,13 +20,14 @@
 // #############
 // # CONSTANTS #
 // #############
+#define TARGETEFF 0.50      // Target efficiency for optimization algorithm
 #define RESULTDIR "Results" // Directory containing the results
 
 
 // #####################################
 // # Threshold minimization test suite #
 // #####################################
-class ThrMinimization : public PixelAlive
+class ThrAdjustment : public PixelAlive
 {
  public:
   void Start (int currentRun)  override;
@@ -42,8 +43,9 @@ class ThrMinimization : public PixelAlive
   size_t getNumberIterations ()
   {
     uint16_t nBitThr        = floor(log2(ThrStop - ThrStart + 1) + 1);
+    uint16_t nBitVCal       = floor(log2(VCalStop - VCalStart + 1) + 1);
     uint16_t moreIterations = 1;
-    return PixelAlive::getNumberIterations()*(nBitThr + moreIterations);
+    return PixelAlive::getNumberIterations()*(nBitThr + moreIterations)*(nBitVCal + moreIterations);
   }
 
 
@@ -58,18 +60,19 @@ class ThrMinimization : public PixelAlive
   size_t colStart;
   size_t colStop;
   size_t nEvents;
-  float  targetOccupancy;
+  size_t VCalStart;
+  size_t VCalStop;
+  size_t targetThreshold;
   size_t ThrStart;
   size_t ThrStop;
 
-  const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
-
   DetectorDataContainer theThrContainer;
 
-  void fillHisto         ();
-  void bitWiseScanGlobal (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
-  void chipErrorReport   ();
-  void saveChipRegisters (int currentRun);
+  void                                   fillHisto                    ();
+  void                                   bitWiseScanGlobal            (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+  std::shared_ptr<DetectorDataContainer> bitWiseScanGlobal_MeasureThr (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+  void                                   chipErrorReport              ();
+  void                                   saveChipRegisters            (int currentRun);
 
 
  protected:

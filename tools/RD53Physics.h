@@ -58,9 +58,6 @@ class Physics : public Tool
   void setGenericEvtConverter (evtConvType arg) { genericEvtConverter = std::move(arg); }
 
 
-  // ########
-  // # ROOT #
-  // ########
 #ifdef __USE_ROOT__
   PhysicsHistograms* histos;
   TApplication* myApp;

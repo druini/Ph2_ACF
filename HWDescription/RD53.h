@@ -110,12 +110,12 @@ namespace RD53chargeConverter
 
 namespace Ph2_HwDescription
 {
-  using perPixelData = struct _perPixelData
-                       {
-                         std::bitset<NROWS>   Enable;
-                         std::bitset<NROWS>   HitBus;
-                         std::bitset<NROWS>   InjEn;
-                         std::vector<uint8_t> TDAC;
+  struct perColumnPixelData
+  {
+    std::bitset<NROWS>         Enable;
+    std::bitset<NROWS>         HitBus;
+    std::bitset<NROWS>         InjEn;
+    std::array<uint8_t, NROWS> TDAC;
   };
 
   class RD53: public ReadoutChip
@@ -151,8 +151,8 @@ namespace Ph2_HwDescription
     uint8_t  getNumberOfBits     (const std::string& regName)   override;
 
     std::string getFileName      (const std::string& fName2Add) { return RD53Shared::composeFileName(configFileName,fName2Add); }
-    std::vector<perPixelData>* getPixelsMask        () { return &fPixelsMask;        }
-    std::vector<perPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
+    std::vector<perColumnPixelData>* getPixelsMask        () { return &fPixelsMask;        }
+    std::vector<perColumnPixelData>* getPixelsMaskDefault () { return &fPixelsMaskDefault; }
 
     void    copyMaskFromDefault ();
     void    copyMaskToDefault   ();
@@ -219,8 +219,8 @@ namespace Ph2_HwDescription
 
 
   private:
-    std::vector<perPixelData> fPixelsMask;
-    std::vector<perPixelData> fPixelsMaskDefault;
+    std::vector<perColumnPixelData> fPixelsMask;
+    std::vector<perColumnPixelData> fPixelsMaskDefault;
     std::string configFileName;
     CommentMap myCommentMap;
     uint8_t myChipLane;

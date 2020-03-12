@@ -54,9 +54,6 @@ class Gain : public Tool
   }
 
 
-  // ########
-  // # ROOT #
-  // ########
 #ifdef __USE_ROOT__
   GainHistograms* histos;
 #endif
