@@ -161,43 +161,31 @@ namespace Ph2_HwInterface
   {
     this->setBoard(pChip->getBeBoardId());
 
-    std::vector<std::pair<uint16_t,uint16_t>> regReadback;
-    unsigned int pixMode = 0;
-    unsigned int row     = 0;
     uint16_t address     = pChip->getRegItem(pRegNode).fAddress;
 
     RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), address, data));
     if ((pRegNode == "VCAL_HIGH") || (pRegNode == "VCAL_MED")) usleep(VCALSLEEP); // @TMP@
 
+    // @TMP@ Mauro: I rearanged things a bit here, it does the same thing I promise
     if (pVerifLoop == true)
       {
-        if (pRegNode != "PIX_PORTAL") {
-          auto readback = RD53Interface::ReadChipReg(pChip, pRegNode);
-          if (readback == data)
-            pChip->setReg(pRegNode, data);
-          else
-            return false;
+        if (pRegNode == "PIX_PORTAL") {
+          auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
+          if (pixMode == 0) {
+            auto regReadback = RD53Interface::ReadRD53Reg(pChip, pRegNode);
+            auto row = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
+            if (regReadback.size() == 0 || regReadback[0].first != row || regReadback[0].second != data)
+              {
+                LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
+                return false;
+              }
+          }
         }
-        else {
-          if (pRegNode == "PIX_PORTAL")                     pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
-          if (pixMode == 0)                             regReadback = RD53Interface::ReadRD53Reg(pChip, pRegNode);
-          if ((pRegNode == "PIX_PORTAL") && (pixMode == 0)) row     = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
-
-          if (regReadback.size() != 0) // @TMP@
-            {
-              if ((pixMode == 0) &&
-                  (((pRegNode == "PIX_PORTAL") && (regReadback[0].first != row))     ||
-                  ((pRegNode != "PIX_PORTAL") && (regReadback[0].first != address)) ||
-                  (regReadback[0].second != data)))
-                {
-                  LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
-                  return false;
-                }
-              else pChip->setReg(pRegNode, data);
-            }
-        }
+        else if (data != RD53Interface::ReadChipReg(pChip, pRegNode)) // I'd rather use ReadChipReg because it retries when it fails and this is needed sometimes
+          return false;
       }
 
+    pChip->setReg(pRegNode, data);
     return true;
   }
 

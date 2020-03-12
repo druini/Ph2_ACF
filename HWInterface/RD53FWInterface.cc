@@ -942,13 +942,6 @@ namespace Ph2_HwInterface
   {
     if (cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
-    // GLOBAL_PULSE_RT = autozero
-    WriteChipCommand(RD53Cmd::WrReg(8, 44, 1 << 14).getFrames(), -1);
-
-    // auto autozero_cmd = RD53Cmd::GlobalPulse(8, 8).getFrames();
-
-    // std::cout << (uint32_t)cfg->autozero_source << '\n';
-
     // ##################################
     // # Configuring fast command block #
     // ##################################
@@ -1061,7 +1054,6 @@ namespace Ph2_HwInterface
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
 
         if (enableAutozero) {
-          std::cout << "autozero enabled\n";
           RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::FastCMDFSM;
           RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en = true;
           RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr = 512;
@@ -1074,15 +1066,15 @@ namespace Ph2_HwInterface
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
 
         if (enableAutozero) {
-          std::cout << "autozero enabled\n";
           RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::FastCMDFSM;
           RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = nClkDelays;
-          RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = 0;
+          RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop           = 0;
         }
       }
     else LOG (ERROR) << BOLDRED << "Option not recognized " << injType << RESET;
 
-    
+    if (enableAutozero)
+      WriteChipCommand(RD53Cmd::WrReg(8, 44, 1 << 14).getFrames(), -1); // GLOBAL_PULSE_RT = autozero
 
     // ##############################
     // # Download the configuration #
