@@ -1,6 +1,6 @@
 /*!
-  \file                  RD53ThrMinimizationHistograms.cc
-  \brief                 Implementation of ThrMinimization calibration histograms
+  \file                  RD53ThresholdHistograms.cc
+  \brief                 Implementation of Threshold calibration histograms
   \author                Alkiviadis PAPADOPOULOS
   \version               1.0
   \date                  28/06/18
@@ -8,11 +8,11 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "RD53ThrMinimizationHistograms.h"
+#include "RD53ThresholdHistograms.h"
 
 using namespace Ph2_HwDescription;
 
-void ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void ThresholdHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
   ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
@@ -23,14 +23,14 @@ void ThrMinimizationHistograms::book (TFile* theOutputFile, const DetectorContai
   bookImplementer(theOutputFile, theDetectorStructure, Threhsold, hThrehsold, "Threhsold", "Entries");
 }
 
-bool ThrMinimizationHistograms::fill (std::vector<char>& dataBuffer)
+bool ThresholdHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChipContainerStream<EmptyContainer,uint16_t> theThrStreamer("ThrMinimization"); //@TMP@
+  ChipContainerStream<EmptyContainer,uint16_t> theThrStreamer("Threshold"); //@TMP@
 
   if(theThrStreamer.attachBuffer(&dataBuffer))
     {
       theThrStreamer.decodeChipData(DetectorData);
-      ThrMinimizationHistograms::fill(DetectorData);
+      ThresholdHistograms::fill(DetectorData);
       DetectorData.cleanDataStored();
       return true;
     }
@@ -38,7 +38,7 @@ bool ThrMinimizationHistograms::fill (std::vector<char>& dataBuffer)
   return false;
 }
 
-void ThrMinimizationHistograms::fill (const DetectorDataContainer& DataContainer)
+void ThresholdHistograms::fill (const DetectorDataContainer& DataContainer)
 {
   for (const auto cBoard : DataContainer)
     for (const auto cModule : *cBoard)
@@ -52,7 +52,7 @@ void ThrMinimizationHistograms::fill (const DetectorDataContainer& DataContainer
         }
 }
 
-void ThrMinimizationHistograms::process ()
+void ThresholdHistograms::process ()
 {
   draw<TH1F>(Threhsold);
 }
