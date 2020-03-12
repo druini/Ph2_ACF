@@ -39,18 +39,20 @@ void ThrEqualization::ConfigureCalibration ()
   doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
-  if (colStart >= RD53::DIFF.colStart)
-    frontEnd = &RD53::DIFF;
-  else if (colStop < RD53::DIFF.colStart)
-    frontEnd = &RD53::LIN;
-  else if (RD53::LIN.colStop - colStart > colStop - RD53::DIFF.colStart)
-    frontEnd = &RD53::LIN;
-  else
-    frontEnd = &RD53::DIFF;
+  frontEnd = RD53::getMajorityFE(colStart, colStop);
+
+  if (frontEnd == &RD53::SYNC) { // the SYNC FE doesn't have TDAC
+    if (colStop >= RD53::LIN.colStart) // choose LIN if possible
+      frontEnd = &RD53::LIN;
+    else {
+      LOG (ERROR) << BOLDRED << "ThrEqualization cannot be used on the Synchronous FE. Please change the selected columns." << RESET;
+      exit(EXIT_FAILURE);
+    }
+  }
 
   colStart = std::max(colStart, frontEnd->colStart);
   colStop = std::min(colStop, frontEnd->colStop);
-  
+
   LOG (INFO) << BOLDBLUE << "\t--> ThrEqualization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << BOLDBLUE << "]" << RESET;
 
   // ########################

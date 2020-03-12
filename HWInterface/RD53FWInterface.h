@@ -165,6 +165,14 @@ namespace Ph2_HwInterface
       Undefined = 0
     };
 
+    enum class AutozeroSource : uint32_t
+    {
+      IPBus = 1,
+      FastCMDFSM,
+      UserDefined,
+      Disabled = 0
+    };
+
     struct FastCmdFSMConfig
     {
       bool ecr_en        = false;
@@ -185,6 +193,7 @@ namespace Ph2_HwInterface
     struct FastCommandsConfig
     {
       TriggerSource trigger_source = TriggerSource::FastCMDFSM;
+      AutozeroSource autozero_source = AutozeroSource::IPBus;
 
       bool initial_ecr_en  = false;
       bool backpressure_en = false;
@@ -199,7 +208,7 @@ namespace Ph2_HwInterface
     };
 
     void ConfigureFromXML            (const Ph2_HwDescription::BeBoard* pBoard);
-    void SetAndConfigureFastCommands (const Ph2_HwDescription::BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0);
+    void SetAndConfigureFastCommands (const Ph2_HwDescription::BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0, bool enableAutozero = false);
 
     struct DIO5Config
     {

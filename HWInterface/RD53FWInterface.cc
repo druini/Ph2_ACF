@@ -942,6 +942,13 @@ namespace Ph2_HwInterface
   {
     if (cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
+    // GLOBAL_PULSE_RT = autozero
+    WriteChipCommand(RD53Cmd::WrReg(8, 44, 1 << 14).getFrames(), -1);
+
+    // auto autozero_cmd = RD53Cmd::GlobalPulse(8, 8).getFrames();
+
+    // std::cout << (uint32_t)cfg->autozero_source << '\n';
+
     // ##################################
     // # Configuring fast command block #
     // ##################################
@@ -977,9 +984,9 @@ namespace Ph2_HwInterface
         // ################################
         // # @TMP@ Autozero configuration #
         // ################################
-        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",2},
-        {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", 0},
-        {"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",  0},
+        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source", (uint32_t)cfg->autozero_source},
+        {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(8, 0, 8, 0)}
+        // {"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",  0},
       });
 
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
@@ -993,7 +1000,7 @@ namespace Ph2_HwInterface
       });
   }
 
-  void RD53FWInterface::SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays)
+  void RD53FWInterface::SetAndConfigureFastCommands (const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays, bool enableAutozero)
   // ############################
   // # injType == 0 --> None    #
   // # injType == 1 --> Analog  #
@@ -1052,14 +1059,30 @@ namespace Ph2_HwInterface
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+
+        if (enableAutozero) {
+          std::cout << "autozero enabled\n";
+          RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::FastCMDFSM;
+          RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en = true;
+          RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr = 512;
+          RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
+        }
       }
     else if (injType == INJtype::None)
       {
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = nClkDelays; // (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+
+        if (enableAutozero) {
+          std::cout << "autozero enabled\n";
+          RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::FastCMDFSM;
+          RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = nClkDelays;
+          RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = 0;
+        }
       }
     else LOG (ERROR) << BOLDRED << "Option not recognized " << injType << RESET;
 
+    
 
     // ##############################
     // # Download the configuration #

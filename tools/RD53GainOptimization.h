@@ -69,6 +69,8 @@ class GainOptimization : public Gain
   size_t KrumCurrStop;
   bool   doFast;
 
+  const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
+
   DetectorDataContainer theKrumCurrContainer;
 
   void fillHisto         ();

@@ -11,8 +11,18 @@
 
 namespace Ph2_HwDescription
 {
+  constexpr RD53::FrontEnd RD53::SYNC;
   constexpr RD53::FrontEnd RD53::LIN;
   constexpr RD53::FrontEnd RD53::DIFF;
+  const RD53::FrontEnd* RD53::frontEnds[] = {&RD53::SYNC, &RD53::LIN, &RD53::DIFF};
+
+  const RD53::FrontEnd* RD53::getMajorityFE(size_t colStart, size_t colStop) {
+    return *std::max_element(std::begin(frontEnds), std::end(frontEnds), [=] (const FrontEnd* a, const FrontEnd* b) {
+      // std::cout << "a: " << a->name << ", " << (std::min(colStop, a->colStop) - int(std::max(colStart, a->colStart))) << '\n';
+      // std::cout << "b: " << b->name << ", " << (std::min(colStop, b->colStop) - int(std::max(colStart, b->colStart))) << '\n';
+      return int(std::min(colStop, a->colStop)) - int(std::max(colStart, a->colStart)) < int(std::min(colStop, b->colStop)) - int(std::max(colStart, b->colStart));
+    });
+  }
 
   RD53::RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName)
     : ReadoutChip (pBeId, pFMCId, pFeId, pRD53Id)

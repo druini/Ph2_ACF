@@ -37,19 +37,12 @@ void ThrMinimization::ConfigureCalibration ()
   doUpdateChip    = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData  = this->findValueInSettings("SaveBinaryData");
 
-  if (colStart >= RD53::DIFF.colStart)
-    frontEnd = &RD53::DIFF;
-  else if (colStop < RD53::DIFF.colStart)
-    frontEnd = &RD53::LIN;
-  else if (RD53::LIN.colStop - colStart > colStop - RD53::DIFF.colStart)
-    frontEnd = &RD53::LIN;
-  else
-    frontEnd = &RD53::DIFF;
+  frontEnd = RD53::getMajorityFE(colStart, colStop);
 
   colStart = std::max(colStart, frontEnd->colStart);
   colStop = std::min(colStop, frontEnd->colStop);
 
-  LOG (INFO) << BOLDBLUE << "\t--> ThrEqualization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << BOLDBLUE << "]" << RESET;
+  LOG (INFO) << BOLDBLUE << "\t--> ThrMinimization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << BOLDBLUE << "]" << RESET;
   
   // #######################
   // # Initialize progress #
