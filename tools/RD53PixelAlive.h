@@ -51,9 +51,6 @@ class PixelAlive : public Tool
   }
 
 
-  // ########
-  // # ROOT #
-  // ########
 #ifdef __USE_ROOT__
   PixelAliveHistograms* histos;
 #endif

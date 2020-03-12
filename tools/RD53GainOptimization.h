@@ -48,9 +48,6 @@ class GainOptimization : public Gain
   }
 
 
-  // ########
-  // # ROOT #
-  // ########
 #ifdef __USE_ROOT__
   GainOptimizationHistograms* histos;
 #endif
