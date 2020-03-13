@@ -75,7 +75,7 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "hybridId", "Serial Number of mezzanine . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
     cmd.defineOption ( "threshold", "Threshold value to set on chips for open and short finding",  ArgvParser::OptionRequiresValue );
 
-    cmd.defineOption ( "checkData", "Compare injected hits and stubs with output", ArgvParser::OptionRequiresValue );
+    cmd.defineOption ( "checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue );
     
     cmd.defineOption ( "antennaDelay", "Delay between the antenna pulse and the delay [25 ns]", ArgvParser::OptionRequiresValue );
     cmd.defineOption ( "latencyRange", "Range of latencies around pulse to scan [25 ns]", ArgvParser::OptionRequiresValue );
@@ -293,7 +293,23 @@ int main ( int argc, char* argv[] )
     //inject hits and stubs using mask and compare input against output 
     if( cCheckData )
     {
+        std::string sFEsToCheck = cmd.optionValue ( "checkData" );
+        std::vector<uint8_t> cFEsToCheck;
+        std::stringstream ssFEsToCheck( sFEsToCheck );
+        int i;
+        while ( ssFEsToCheck >> i )
+        {
+            cFEsToCheck.push_back( i );
+            if ( ssFEsToCheck.peek() == ',' ) ssFEsToCheck.ignore();
+        };
         t.start();
+        DataChecker cDataChecker;
+        cDataChecker.Inherit (&cTool);
+        cDataChecker.Initialise ( );
+        cDataChecker.zeroContainers();
+        cDataChecker.DataCheck(cFEsToCheck);
+
+
         // for( auto& cBoard : cTool.fBoardVector )
         // {
         //     for (auto& cFe : cBoard->fModuleVector)
@@ -318,12 +334,6 @@ int main ( int argc, char* argv[] )
         //         LOG (INFO) << outp.str();
         //     }
         // }
-
-        DataChecker cDataChecker;
-        cDataChecker.Inherit (&cTool);
-        cDataChecker.Initialise ( );
-        cDataChecker.zeroContainers();
-        cDataChecker.DataCheck({0});
 
         // // now create a PedestalEqualization object
         // DataChecker cDataChecker;

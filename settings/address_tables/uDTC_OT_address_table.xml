@@ -98,7 +98,6 @@
                 <node id="power_enable"                     mask="0x00000008"/>
                 <node id="fast_commands_enable"             mask="0x00000010"/>
                 <node id="stub_package_delay"               mask="0x00700000"/>
-                <node id="debug_select"                     mask="0x00F00000"/>
             </node>
             <node id="i2c"				address="0x001">
                     <node id="frequency"			    mask="0x0000000f"/>
@@ -117,6 +116,9 @@
                 <node id="fe_for_ps_roh_data_player_pattern"                 mask="0x000000ff"/>
             </node>
 
+            <node id="slvs_debug" address = "0x000">
+                <node id="chip_select"                     mask="0x000F0000"/>
+            </node>
        </node>
 
         <node id="readout_block"                address="0x5000">

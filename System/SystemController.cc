@@ -135,51 +135,42 @@ namespace Ph2_System
           LOG (INFO) << BOLDBLUE << "Now going to configure chips on Board " << int ( cBoard->getBeId() ) << RESET;
 
           // CIC start-up
-          bool cWithCIC=false;
           for (auto& cFe : cBoard->fModuleVector)
           {
-              if( static_cast<OuterTrackerModule*>(cFe)->fCic == NULL )
-                continue;
-
-              cWithCIC = true;
-              static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
-              auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
-
-              // read CIC sparsification setting 
-              bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard,"fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
-              cBoard->setSparsification( cSparsified );
-
-              LOG (INFO) << BOLDBLUE << "Configuring CIC" << +(cFe->getFeId()%2) << " on link " << +cFe->getLinkId() << " on hybrid " << +cFe->getFeId() << RESET;
-              fCicInterface->ConfigureChip( static_cast<OuterTrackerModule*>(cFe)->fCic);
-              auto cRegisterMap = cCic->getRegMap();
-              uint16_t cRegValue = fReadoutChipInterface->ReadChipReg( cCic, cRegisterMap.begin()->first );
-              LOG (INFO) << BOLDGREEN <<  "Successfully configured CIC : " << cRegisterMap.begin()->first << " set to 0x" << std::hex << cRegValue << std::dec <<  "." << RESET;
-
-              // CIC start-up
-              uint8_t cModeSelect = (cFe->fReadoutChipVector[0]->getFrontEndType() != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
-              // select CIC mode
-              bool cSuccess = fCicInterface->SelectMode( static_cast<OuterTrackerModule*>(cFe)->fCic, cModeSelect );
-              if(!cSuccess)
+              if( static_cast<OuterTrackerModule*>(cFe)->fCic != NULL )
               {
-                  LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
-                  exit(0);
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
+                auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
+
+                // read CIC sparsification setting 
+                bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard,"fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
+                cBoard->setSparsification( cSparsified );
+
+                LOG (INFO) << BOLDBLUE << "Configuring CIC" << +(cFe->getFeId()%2) << " on link " << +cFe->getLinkId() << " on hybrid " << +cFe->getFeId() << RESET;
+                fCicInterface->ConfigureChip( static_cast<OuterTrackerModule*>(cFe)->fCic);
+                
+                // CIC start-up
+                uint8_t cModeSelect = (cFe->fReadoutChipVector[0]->getFrontEndType() != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
+                // select CIC mode
+                bool cSuccess = fCicInterface->SelectMode( static_cast<OuterTrackerModule*>(cFe)->fCic, cModeSelect );
+                if(!cSuccess)
+                {
+                    LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
+                    exit(0);
+                }
+                // CIC start-up sequence
+                uint8_t cDriveStrength = 5;
+                cSuccess = fCicInterface->StartUp(cCic , cDriveStrength);
+                if(!cSuccess)
+                {
+                    LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " CIC start-up sequence.." << RESET;
+                    exit(0);
+                }
+                fBeBoardInterface->ChipReSync ( cBoard );
+                LOG (INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cFe->getFeId()%2) << " connected to link " << +cFe->getLinkId() <<  RESET ;
+                LOG (INFO) << BOLDGREEN << "####################################################################################" << RESET;
               }
-              // CIC start-up sequence
-              uint8_t cDriveStrength = 5;
-              cSuccess = fCicInterface->StartUp(cCic , cDriveStrength);
-              if(!cSuccess)
-              {
-                  LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " CIC start-up sequence.." << RESET;
-                  exit(0);
-              }
-              fBeBoardInterface->ChipReSync ( cBoard );
-              LOG (INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cFe->getFeId()%2) << " connected to link " << +cFe->getLinkId() <<  RESET ;
-              LOG (INFO) << BOLDGREEN << "####################################################################################" << RESET;
-          
-              // hard reset to all readout chips
-              //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadoutChipReset();
               // Configure readout-chips [CBCs, MPAs, SSAs]
-              static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
               for (auto& cReadoutChip : cFe->fReadoutChipVector)
               {
                   if ( !bIgnoreI2c ) 

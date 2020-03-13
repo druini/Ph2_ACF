@@ -226,6 +226,9 @@ void DataChecker::print(std::vector<uint8_t> pChipIds )
 }
 void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , std::pair<uint8_t,int> pExpectedStub) 
 {
+    // LOG (INFO) << BOLDMAGENTA << "Let's see what's on the stub lines" << RESET;
+    // (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,5);
+        
     // get trigger multiplicity from register 
     size_t cTriggerMult = fBeBoardInterface->ReadBoardReg (pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     

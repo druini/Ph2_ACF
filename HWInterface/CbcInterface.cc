@@ -157,19 +157,18 @@ namespace Ph2_HwInterface
     std::vector<uint8_t> CbcInterface::createHitListFromStubs(uint8_t pSeed, bool pSeedLayer )
     {
         std::vector<uint8_t> cChannelList(0);
-        int cNchannels = 1+ (pSeed%2!=0);
         uint32_t cFirstStrip = 2*std::floor(pSeed/2.0) + 1;
-        
         uint32_t cSeedStrip = std::floor(pSeed/2.0); // counting from 1 
-        LOG (INFO) << BOLDMAGENTA << "Seed of " << +pSeed << " means first hit is in strip " << +cSeedStrip << RESET;
+        LOG (DEBUG) << BOLDMAGENTA << "Seed of " << +pSeed << " means first hit is in strip " << +cSeedStrip << RESET;
         size_t cNumberOfChannels = 1 + (pSeed%2 != 0);    
         for(size_t cIndex = 0 ; cIndex < cNumberOfChannels ; cIndex ++ )
         {
             uint32_t cSeedChannel = 2*(cSeedStrip-1) + !pSeedLayer + 2*cIndex;
-            LOG (INFO) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
+            LOG (DEBUG) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
             cChannelList.push_back( static_cast<uint32_t>(cSeedChannel) );
         }
         
+        // int cNchannels = 1+ (pSeed%2!=0);
         // uint32_t cFirstChannel = 2*(std::ceil(pSeed*0.5)-1) - 2*(pSeed%2);
         // for( int cIndex = 0; cIndex < cNchannels; cIndex++)
         // {
@@ -186,7 +185,7 @@ namespace Ph2_HwInterface
     {
 
         bool cLayerSwap = ( this->ReadChipReg(pChip , "LayerSwap") == 1 );
-        LOG (INFO) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." <<  RESET;   
+        LOG (DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." <<  RESET;   
         double cSeedStrip = (pStubAddress*0.5);
         std::vector<uint8_t> cSeedHits = createHitListFromStubs(pStubAddress,!cLayerSwap);
         //try it here first 

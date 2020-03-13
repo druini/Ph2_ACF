@@ -1458,7 +1458,6 @@ void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
         this->Trigger(0);
 
     auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
-    LOG (INFO) << BOLDBLUE << "Stub debug ...." << RESET;
     size_t cLine=0;
     do
     { 
@@ -2156,7 +2155,7 @@ bool D19cFWInterface::PhaseTuning (BeBoard* pBoard, uint8_t pFeId, uint8_t pChip
         //LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
         cAttempts++;
     }while(!cSuccess && cAttempts <10);
-    if( pLineId == 5 && fFirmwareFrontEndType == FrontEndType::CBC3 ) 
+    if( pLineId == 1 && fFirmwareFrontEndType == FrontEndType::CBC3 ) 
     {
         // force L1A line to match phase tuning result for first stub lines to match 
         uint8_t pDelay = pTuner.fDelay;
