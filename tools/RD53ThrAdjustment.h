@@ -68,11 +68,11 @@ class ThrAdjustment : public PixelAlive
 
   DetectorDataContainer theThrContainer;
 
-  void                                   fillHisto                    ();
-  void                                   bitWiseScanGlobal            (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+  void fillHisto                                                      ();
+  void bitWiseScanGlobal                                              (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
   std::shared_ptr<DetectorDataContainer> bitWiseScanGlobal_MeasureThr (const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
-  void                                   chipErrorReport              ();
-  void                                   saveChipRegisters            (int currentRun);
+  void chipErrorReport                                                ();
+  void saveChipRegisters                                              (int currentRun);
 
 
  protected:
