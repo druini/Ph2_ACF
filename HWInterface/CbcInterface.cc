@@ -188,7 +188,7 @@ namespace Ph2_HwInterface
         LOG (DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." <<  RESET;   
         double cSeedStrip = (pStubAddress*0.5);
         std::vector<uint8_t> cSeedHits = createHitListFromStubs(pStubAddress,!cLayerSwap);
-        //try it here first 
+        // //try it here first 
         uint8_t cCorrelated = pStubAddress + pStubBend; // start counting strips from 0
         std::vector<uint8_t> cCorrelatedHits = createHitListFromStubs(cCorrelated, cLayerSwap);
 

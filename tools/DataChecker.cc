@@ -816,58 +816,65 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
     }
 
     // zero containers
-    this->zeroContainers();
-    // measure     
-    for (auto cBoard : this->fBoardVector)
+    for( uint8_t cPackageDelay = 0 ; cPackageDelay < 8; cPackageDelay++)
     {
-        uint16_t cBoardTriggerMult = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        uint16_t cBoardTriggerRate = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
-        LOG (DEBUG) << BOLDBLUE << "Trigger rate is set to " << +cBoardTriggerRate << " kHz" << RESET ; 
-        LOG (DEBUG) << BOLDBLUE << "Trigger multiplicity is set to " << +cBoardTriggerMult << " consecutive triggers per L1A." << RESET ; 
-        if( cConfigureTrigger && pWithNoise)
+        this->zeroContainers();
+        // measure     
+        for (auto cBoard : this->fBoardVector)
         {
-            LOG (DEBUG) << BOLDBLUE << "Modifying trigger rate to be " << +cTriggerRate << " kHz for DataTest" << RESET;
-            fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cTriggerRate);
-        }
-        if( cConfigureTriggerMult )
-        {
-            LOG (DEBUG) << BOLDBLUE << "Modifying trigger multiplicity to be " << +(1+cTriggerMult) << " consecutive triggers per L1A for DataTest" << RESET;
-            fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMult);
-        }
-        
-        // using charge injection 
-        if( !pWithNoise)
-        {
-            // configure test pulse trigger 
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(fTPconfig.firmwareTPdelay ,fTPconfig.tpDelay ,fTPconfig.tpSequence, fTPconfig.tpFastReset );
-            // set trigger latency 
-            uint16_t cLatency = fTPconfig.tpDelay+cLatencyOffset;//+1;
-            this->setSameDacBeBoard(cBoard, "TriggerLatency", cLatency);
-            // set stub latency 
-            uint16_t cStubLatency = cLatency - 1*cStubDelay ;
-            fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
-            LOG (DEBUG) << BOLDBLUE << "Latency set to " << +cLatency << "...\tStub latency set to " << +cStubLatency << RESET;
-            fBeBoardInterface->ChipReSync ( cBoard );
-        }
-        // read N events and compare hits and stubs to injected stub 
-        for( size_t cAttempt=0; cAttempt < cAttempts ; cAttempt++)
-        {
-            fAttempt = cAttempt;
-            LOG (INFO) << BOLDBLUE << "Iteration# " << +fAttempt << RESET;
-            // send a resync
-            if( cResync)
-                fBeBoardInterface->ChipReSync ( cBoard );
-            this->ReadNEvents ( cBoard , cEventsPerPoint);
-            this->matchEvents( cBoard , pChipIds ,cStub);
-            this->print(pChipIds);
-        }
-        
+            LOG (INFO) << BOLDMAGENTA << "Setting stub package delay to " << +cPackageDelay << RESET;
+            fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Bx0Alignment();
 
-        // and set it back to what it was 
-        if( cConfigureTrigger )
-            fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cBoardTriggerRate);
-        if( cConfigureTriggerMult )
-            fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cBoardTriggerMult);
+            uint16_t cBoardTriggerMult = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+            uint16_t cBoardTriggerRate = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
+            LOG (DEBUG) << BOLDBLUE << "Trigger rate is set to " << +cBoardTriggerRate << " kHz" << RESET ; 
+            LOG (DEBUG) << BOLDBLUE << "Trigger multiplicity is set to " << +cBoardTriggerMult << " consecutive triggers per L1A." << RESET ; 
+            if( cConfigureTrigger && pWithNoise)
+            {
+                LOG (DEBUG) << BOLDBLUE << "Modifying trigger rate to be " << +cTriggerRate << " kHz for DataTest" << RESET;
+                fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cTriggerRate);
+            }
+            if( cConfigureTriggerMult )
+            {
+                LOG (DEBUG) << BOLDBLUE << "Modifying trigger multiplicity to be " << +(1+cTriggerMult) << " consecutive triggers per L1A for DataTest" << RESET;
+                fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMult);
+            }
+            
+            // using charge injection 
+            if( !pWithNoise)
+            {
+                // configure test pulse trigger 
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(fTPconfig.firmwareTPdelay ,fTPconfig.tpDelay ,fTPconfig.tpSequence, fTPconfig.tpFastReset );
+                // set trigger latency 
+                uint16_t cLatency = fTPconfig.tpDelay+cLatencyOffset;//+1;
+                this->setSameDacBeBoard(cBoard, "TriggerLatency", cLatency);
+                // set stub latency 
+                uint16_t cStubLatency = cLatency - 1*cStubDelay ;
+                fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
+                LOG (DEBUG) << BOLDBLUE << "Latency set to " << +cLatency << "...\tStub latency set to " << +cStubLatency << RESET;
+                fBeBoardInterface->ChipReSync ( cBoard );
+            }
+            // read N events and compare hits and stubs to injected stub 
+            for( size_t cAttempt=0; cAttempt < cAttempts ; cAttempt++)
+            {
+                fAttempt = cAttempt;
+                LOG (INFO) << BOLDBLUE << "Iteration# " << +fAttempt << RESET;
+                // send a resync
+                if( cResync)
+                    fBeBoardInterface->ChipReSync ( cBoard );
+                this->ReadNEvents ( cBoard , cEventsPerPoint);
+                this->matchEvents( cBoard , pChipIds ,cStub);
+                this->print(pChipIds);
+            }
+            
+
+            // and set it back to what it was 
+            if( cConfigureTrigger )
+                fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cBoardTriggerRate);
+            if( cConfigureTriggerMult )
+                fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cBoardTriggerMult);
+        }
     }
 
     // if TP was used - disable it

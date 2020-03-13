@@ -829,7 +829,7 @@ namespace Ph2_HwInterface {
         LOG (INFO) << BOLDBLUE <<  ".... Starting CIC start-up ........ on hybrid " << +pChip->getFeId() << RESET;
 
         bool cClkTermination = true; // true
-        bool cRxTermination = (pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;//true
+        bool cRxTermination = (pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;// true, false
         std::string cRegName = "SLVS_PADS_CONFIG";
         uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
         auto cIterator = fTxDriveStrength.find(pDriveStrength); 
@@ -846,20 +846,6 @@ namespace Ph2_HwInterface {
             LOG (INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec <<  RESET;
         }
 
-        cSuccess = this->SetAutomaticPhaseAlignment( pChip , false);
-        if( !cSuccess ) 
-        {
-            LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " set automatic phase aligner in CIC... " << RESET;
-            exit(0);
-        }
-        
-        // check if we need a soft RESET
-        cSuccess = this->CheckSoftReset(pChip);
-        if( !cSuccess ) 
-        {
-            LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC... " << RESET;
-            exit(0);
-        }
         // reset DLL for each of the 12 phy ports 
         cSuccess = this->ResetDLL(pChip);
         if( !cSuccess ) 
@@ -875,8 +861,22 @@ namespace Ph2_HwInterface {
             exit(0);
         }
         LOG (INFO) << BOLDBLUE << "DLL in CIC " << BOLDGREEN << " LOCKED." << RESET; 
-        cSuccess = this->CheckReSync(pChip);
+        
 
+        cSuccess = this->SetAutomaticPhaseAlignment( pChip , false);
+        if( !cSuccess ) 
+        {
+            LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " set automatic phase aligner in CIC... " << RESET;
+            exit(0);
+        }
+        // check if we need a soft RESET
+        cSuccess = this->CheckSoftReset(pChip);
+        if( !cSuccess ) 
+        {
+            LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC... " << RESET;
+            exit(0);
+        }
+        
         // select fast command edge 
         bool cNegEdge=true;
         if( cNegEdge)

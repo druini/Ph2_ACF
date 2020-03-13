@@ -619,9 +619,10 @@ namespace Ph2_HwInterface
             //cGBTx.gbtxResetPhaseShifterClocks(this);
             cGBTx.gbtxConfigureChargePumps(this);
             cGBTx.gbtxResetPhaseShifterClocks(this);
-            cGBTx.gbtxSetClocks(this, 0x3 , 0xa );
+            cGBTx.gbtxSetClocks(this, 0x3 , 0xa ); // 0xa
             cGBTx.gbtxConfigure(this);
             cGBTx.gbtxSetPhase(this, fGBTphase) ; 
+            //cGBTx.gbtxSelectEdgeTx(this, false) ; 
             cGBTx.scaConfigureGPIO(this); 
         }
     }

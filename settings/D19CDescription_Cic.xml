@@ -132,7 +132,7 @@
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
                     <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 5 </Register>
+                    <Register name="common_stubdata_delay"> 51 </Register>
             </Register>
     	</Register>
 	<!-- DIO5 Block -->
@@ -186,9 +186,23 @@
     <Setting name="PlotSCurves">1</Setting>
 
     <!--Signal Scan Fit-->
-	  <Setting name="InitialVcth">0x78</Setting>
-	  <Setting name="SignalScanStep">2</Setting>
-      <Setting name="FitSignal">0</Setting>
+    <Setting name="InitialVcth">0x78</Setting>
+    <Setting name="SignalScanStep">2</Setting>
+    <Setting name="FitSignal">0</Setting>
+
+    <!--[>DataTest<]-->
+    <Setting name="UseNoise">1</Setting>
+    <Setting name="Attempts">1</Setting>
+    <Setting name="LatencyOffset">-1</Setting>
+    <Setting name="TriggerRate">1</Setting>
+    <Setting name="TriggerMultiplicity">0</Setting>
+    <Setting name="StubDelay">49</Setting>
+    <Setting name="StubSeed">2</Setting>
+    <Setting name="StubBend">0</Setting>
+    <Setting name="Mode">0</Setting> <!-- 0 == sampled , 1 == latched -->
+    <!-- <Setting name="ManualPhaseAlignment">8</Setting> -->
+    <Setting name="ReSync">0</Setting>
+
 </Settings>
 </HwDescription>
 
