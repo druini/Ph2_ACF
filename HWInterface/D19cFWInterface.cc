@@ -622,7 +622,7 @@ namespace Ph2_HwInterface
             cGBTx.gbtxSetClocks(this, 0x3 , 0xa ); // 0xa
             cGBTx.gbtxConfigure(this);
             cGBTx.gbtxSetPhase(this, fGBTphase) ; 
-            //cGBTx.gbtxSelectEdgeTx(this, false) ; 
+            // cGBTx.gbtxSelectEdgeTx(this, true) ; 
             cGBTx.scaConfigureGPIO(this); 
         }
     }
