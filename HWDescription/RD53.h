@@ -124,6 +124,23 @@ namespace Ph2_HwDescription
     static constexpr size_t nRows = NROWS;
     static constexpr size_t nCols = NCOLS;
 
+    struct FrontEnd {
+      const char* name;
+      const char* thresholdReg;
+      const char* gainReg;
+      size_t nTdacValues;
+      size_t colStart;
+      size_t colStop;
+    };
+
+    static constexpr FrontEnd SYNC = {"SYNC", "VTH_SYNC", "IBIAS_KRUM_SYNC", 0, 0, 127};
+    static constexpr FrontEnd LIN = {"LIN", "Vthreshold_LIN", "KRUM_CURR_LIN", 16, 128, 263};
+    static constexpr FrontEnd DIFF = {"DIFF", "VTH1_DIFF", "VFF_DIFF", 31, 264, 399};
+
+    static const FrontEnd* frontEnds[];
+
+    static const FrontEnd* getMajorityFE(size_t colStart, size_t colStop);
+
     RD53 (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName);
     RD53 (const RD53& chipObj);
 

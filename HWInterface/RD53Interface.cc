@@ -161,34 +161,31 @@ namespace Ph2_HwInterface
   {
     this->setBoard(pChip->getBeBoardId());
 
-    std::vector<std::pair<uint16_t,uint16_t>> regReadback;
-    unsigned int pixMode = 0;
-    unsigned int row     = 0;
     uint16_t address     = pChip->getRegItem(pRegNode).fAddress;
 
     RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), address, data));
     if ((pRegNode == "VCAL_HIGH") || (pRegNode == "VCAL_MED")) usleep(VCALSLEEP); // @TMP@
 
+    // @TMP@ Mauro: I rearanged things a bit here, it does the same thing I promise
     if (pVerifLoop == true)
       {
-        if (pRegNode == "PIX_PORTAL")                     pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
-        if (pixMode == 0)                             regReadback = RD53Interface::ReadRD53Reg(pChip, pRegNode);
-        if ((pRegNode == "PIX_PORTAL") && (pixMode == 0)) row     = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
-
-        if (regReadback.size() != 0) // @TMP@
-          {
-            if ((pixMode == 0) &&
-                (((pRegNode == "PIX_PORTAL") && (regReadback[0].first != row))     ||
-                 ((pRegNode != "PIX_PORTAL") && (regReadback[0].first != address)) ||
-                 (regReadback[0].second != data)))
+        if (pRegNode == "PIX_PORTAL") {
+          auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
+          if (pixMode == 0) {
+            auto regReadback = RD53Interface::ReadRD53Reg(pChip, pRegNode);
+            auto row = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
+            if (regReadback.size() == 0 || regReadback[0].first != row || regReadback[0].second != data)
               {
                 LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
                 return false;
               }
-            else pChip->setReg(pRegNode, data);
           }
+        }
+        else if (data != RD53Interface::ReadChipReg(pChip, pRegNode)) // I'd rather use ReadChipReg because it retries when it fails and this is needed sometimes
+          return false;
       }
 
+    pChip->setReg(pRegNode, data);
     return true;
   }
 
@@ -238,6 +235,24 @@ namespace Ph2_HwInterface
     return regReadback;
   }
 
+  // Encodes the configuration for a pixel pair
+  // In the LIN FE tdac is unsigned and increasing it reduces the local threshold, 
+  // In the DIFF FE tdac is signed and increasing it reduces the local threshold
+  // To prevent having to deal with that in the rest of the code, we map the tdac range of the DIFF FE like so:
+  // -15 -> 30, -14 -> 29, ... 0 -> 15, ... 15 -> 0
+  // So for the rest of the code the tdac range of the DIFF FE is [0, 30] and the only difference with the LIN FE is the number of possible values
+  uint16_t getPixelConfig(const std::vector<perPixelData>& mask, uint16_t row, uint16_t col, bool highGain) {
+    if (col <= RD53::SYNC.colStop)
+      return bits::pack<8, 8>(bits::pack<1, 1, 1>(mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
+                              bits::pack<1, 1, 1>(mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
+    else if (col <= RD53::LIN.colStop)
+      return bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 1].TDAC[row], mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
+                              bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 0].TDAC[row], mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
+    else 
+      return bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(mask[col + 1].TDAC[row] > 15, abs(15 - mask[col + 1].TDAC[row]), mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
+                              bits::pack<1, 4, 1, 1, 1>(mask[col + 0].TDAC[row] > 15, abs(15 - mask[col + 0].TDAC[row]), mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
+  }
+
   void RD53Interface::WriteRD53Mask (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop)
   {
     this->setBoard(pRD53->getBeBoardId());
@@ -255,7 +270,10 @@ namespace Ph2_HwInterface
     // ##########################
     // # Disable default config #
     // ##########################
-    RD53Interface::WriteChipReg(pRD53, "PIX_DEFAULT_CONFIG", 0x0, pVerifLoop);
+    if (pRD53->getRegItem("PIX_DEFAULT_CONFIG").fValue != 0)
+      RD53Interface::WriteChipReg(pRD53, "PIX_DEFAULT_CONFIG", 0x0, pVerifLoop);
+    else
+      RD53Interface::WriteChipReg(pRD53, "PIX_DEFAULT_CONFIG", 0x0, false);
 
     // ############
     // # PIX_MODE #
@@ -275,17 +293,18 @@ namespace Ph2_HwInterface
 
         uint16_t data;
 
-        // for (auto col = 0; col < RD53::nCols-1; col+=2) // @TMP@
-        for (auto col = 128; col < 263; col+=2)
+        for (auto col = 0u; col < RD53::nCols; col+=2)
           {
+            if (mask[col].Enable.none()) // skip columns with no enabled pixels
+              continue;
+            
             RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
 
             for (auto row = 0u; row < RD53::nRows; row++)
               {
                 if ((mask[col].Enable[row] == 1) || (mask[col+1].Enable[row] == 1))
                   {
-                    data = bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 1].TDAC[row], mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
-                                            bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 0].TDAC[row], mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
+                    data = getPixelConfig(mask, row, col, highGain);
 
                     RD53Cmd::WrReg(chipID, REGION_ROW_ADDR, row).appendTo(commandList);
                     RD53Cmd::WrReg(chipID, PIX_PORTAL_ADDR, data).appendTo(commandList);
@@ -305,16 +324,14 @@ namespace Ph2_HwInterface
 
         std::vector<uint16_t> data;
 
-        // for (auto col = 0; col < RD53::nCols-1; col+=2) // @TMP@
-        for (auto col = 128; col < 263; col+=2)
+        for (auto col = 0u; col < RD53::nCols; col+=2)
           {
             RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
             RD53Cmd::WrReg(chipID, REGION_ROW_ADDR, 0x0).appendTo(commandList);
 
             for (auto row = 0u; row < RD53::nRows; row++)
               {
-                data.push_back(bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 1].TDAC[row], mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
-                                                bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 0].TDAC[row], mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row])));
+                data.push_back(getPixelConfig(mask, row, col, highGain));
 
                 if ((row % RD53Constants::NREGIONS_LONGCMD) == (RD53Constants::NREGIONS_LONGCMD - 1))
                   {

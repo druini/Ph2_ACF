@@ -37,7 +37,13 @@ void ThrMinimization::ConfigureCalibration ()
   doUpdateChip    = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData  = this->findValueInSettings("SaveBinaryData");
 
+  frontEnd = RD53::getMajorityFE(colStart, colStop);
 
+  colStart = std::max(colStart, frontEnd->colStart);
+  colStop = std::min(colStop, frontEnd->colStop);
+
+  LOG (INFO) << BOLDBLUE << "\t--> ThrMinimization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << BOLDBLUE << "]" << RESET;
+  
   // #######################
   // # Initialize progress #
   // #######################
@@ -111,7 +117,7 @@ void ThrMinimization::initializeFiles (const std::string fileRes_, int currentRu
 
 void ThrMinimization::run ()
 {
-  ThrMinimization::bitWiseScanGlobal("Vthreshold_LIN", nEvents, targetOccupancy, ThrStart, ThrStop);
+  ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, nEvents, targetOccupancy, ThrStart, ThrStop);
 
 
   // ############################
@@ -121,7 +127,7 @@ void ThrMinimization::run ()
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        theThrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<RD53*>(cChip)->getReg("Vthreshold_LIN");
+        theThrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<RD53*>(cChip)->getReg(frontEnd->thresholdReg);
 
 
   // ################
