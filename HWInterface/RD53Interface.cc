@@ -233,6 +233,7 @@ namespace Ph2_HwInterface
     return regReadback;
   }
 
+  // @TMP@
   uint16_t getPixelConfig (const std::vector<perColumnPixelData>& mask, uint16_t row, uint16_t col, bool highGain)
   // #################################################################################################################################################
   // # Encodes the configuration for a pixel pair                                                                                                    #

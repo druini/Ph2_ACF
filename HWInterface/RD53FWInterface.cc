@@ -221,8 +221,8 @@ namespace Ph2_HwInterface
   // #############################################
   {
     size_t n32bitWords = (data.size() / 2) + (data.size() % 2);
-    bool retry;
-    int  nAttempts = 0;
+    bool   retry;
+    int    nAttempts = 0;
 
 
     // #####################
@@ -876,39 +876,45 @@ namespace Ph2_HwInterface
     std::tie(tdc, l1a_counter) = bits::unpack<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
     bx_counter = data[3];
 
+
     std::vector<size_t> event_sizes;
-    auto current = data + 4;
-    while (current < data + n - dummy_size * NWORDS_DDR3) {
-      if (*current >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) != RD53FWEvtEncoder::FRAME_HEADER) {
-        evtStatus |= RD53FWEvtEncoder::FRSIZE;
+    size_t index = 4;
+    while (index < n - dummy_size * NWORDS_DDR3)
+      {
+        if (data[index] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) != RD53FWEvtEncoder::FRAME_HEADER)
+          {
+            evtStatus |= RD53FWEvtEncoder::FRSIZE;
+            return;
+          }
+        size_t size = (data[index] & ((1 << RD53FWEvtEncoder::NBIT_L1ASIZE) - 1)) * NWORDS_DDR3;
+        event_sizes.push_back(size);
+        index += size;
+      }
+
+    if (index != n - dummy_size * NWORDS_DDR3)
+      {
+        evtStatus |= RD53FWEvtEncoder::MISSCHIP;
         return;
       }
-      size_t size = (*current & ((1 << RD53FWEvtEncoder::NBIT_L1ASIZE) - 1)) * NWORDS_DDR3;
-      event_sizes.push_back(size);
-      current += size;
-    }
 
-    if (current != data + n - dummy_size * NWORDS_DDR3) {
-      evtStatus |= RD53FWEvtEncoder::MISSCHIP;
-      return;
-    }
 
     // #################################
     // # Decoding frames and chip data #
     // #################################
     chip_frames.reserve(event_sizes.size());
     chip_events.reserve(event_sizes.size());
-    size_t index = 4;
+    index = 4;
     for (auto size : event_sizes)
       {
         chip_frames.emplace_back(data[index], data[index + 1]);
 
-        if (chip_frames.back().error_code != 0) {
-          evtStatus |= RD53FWEvtEncoder::FWERR;
-          chip_frames.clear();
-          chip_events.clear();
-          return;
-        }
+        if (chip_frames.back().error_code != 0)
+          {
+            evtStatus |= RD53FWEvtEncoder::FWERR;
+            chip_frames.clear();
+            chip_events.clear();
+            return;
+          }
 
         chip_events.emplace_back(&data[index + 2], size - 2);
 
@@ -942,8 +948,7 @@ namespace Ph2_HwInterface
   {
     if (cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
-    if (cfg->autozero_source == AutozeroSource::FastCMDFSM)
-      WriteChipCommand(RD53Cmd::WrReg(8, 44, 1 << 14).getFrames(), -1); // GLOBAL_PULSE_RT = autozero
+    if (cfg->autozero_source == AutozeroSource::FastCMDFSM) WriteChipCommand(RD53Cmd::WrReg(8, 44, 1 << 14).getFrames(), -1); // GLOBAL_PULSE_RT = "Acquire Zero level in SYNC FE"
 
     // ##################################
     // # Configuring fast command block #
@@ -980,8 +985,8 @@ namespace Ph2_HwInterface
         // ################################
         // # @TMP@ Autozero configuration #
         // ################################
-        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source", (uint32_t)cfg->autozero_source},
-        {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(8, 0, 8, 0)}
+        {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",          (uint32_t)cfg->autozero_source},
+        {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",           (uint32_t)bits::pack<4, 1, 4, 1>(8, 0, 8, 0)}
         // {"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",  0},
       });
 
@@ -1050,35 +1055,36 @@ namespace Ph2_HwInterface
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = INJdelay::SecondCal;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = nClkDelays; // (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
 
-        if (enableAutozero) {
-          std::cout << "autozero enabled\n";
-          RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::FastCMDFSM;
-          RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en = true;
-          RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr = 512;
-          RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
-        }
+        // @TMP@
+        if (enableAutozero == true)
+          {
+            RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
+          }
       }
     else if (injType == INJtype::None)
       {
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = nClkDelays; // (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
 
-        if (enableAutozero) {
-          std::cout << "autozero enabled\n";
-          RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::FastCMDFSM;
-          RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = nClkDelays;
-          RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = 0;
-        }
+        // @TMP@
+        if (enableAutozero == true)
+          {
+            RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop           = 0;
+          }
       }
     else LOG (ERROR) << BOLDRED << "Option not recognized " << injType << RESET;
 
-    
 
     // ##############################
     // # Download the configuration #
