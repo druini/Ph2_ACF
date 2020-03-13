@@ -88,8 +88,8 @@ namespace Ph2_HwInterface
   class RD53FWInterface: public BeBoardFWInterface
   {
   public:
-    RD53FWInterface (const char* pId, const char* pUri, const char* pAddressTable);
-    ~RD53FWInterface() { delete fFileHandler; }
+    RD53FWInterface  (const char* pId, const char* pUri, const char* pAddressTable);
+    ~RD53FWInterface () { delete fFileHandler; }
 
     void      setFileHandler (FileHandler* pHandler) override;
     uint32_t  getBoardInfo   ()                      override;
@@ -165,6 +165,17 @@ namespace Ph2_HwInterface
       Undefined = 0
     };
 
+    // ########
+    // # SYNC #
+    // ########
+    enum class AutozeroSource : uint32_t
+    {
+      IPBus = 1,
+      FastCMDFSM,
+      UserDefined,
+      Disabled = 0
+    };
+
     struct FastCmdFSMConfig
     {
       bool ecr_en        = false;
@@ -184,7 +195,8 @@ namespace Ph2_HwInterface
 
     struct FastCommandsConfig
     {
-      TriggerSource trigger_source = TriggerSource::FastCMDFSM;
+      TriggerSource trigger_source   = TriggerSource::FastCMDFSM;
+      AutozeroSource autozero_source = AutozeroSource::IPBus;
 
       bool initial_ecr_en  = false;
       bool backpressure_en = false;
@@ -199,7 +211,7 @@ namespace Ph2_HwInterface
     };
 
     void ConfigureFromXML            (const Ph2_HwDescription::BeBoard* pBoard);
-    void SetAndConfigureFastCommands (const Ph2_HwDescription::BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0);
+    void SetAndConfigureFastCommands (const Ph2_HwDescription::BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0, bool enableAutozero = false);
 
     struct DIO5Config
     {

@@ -12,11 +12,12 @@
 #include "RD53PixelAliveHistograms.h"
 #include "RD53SCurveHistograms.h"
 #include "RD53GainHistograms.h"
-#include "RD53LatencyHistograms.h"
 #include "RD53GainOptimizationHistograms.h"
-#include "RD53ThrMinimizationHistograms.h"
-#include "RD53InjectionDelayHistograms.h"
 #include "RD53ThrEqualizationHistograms.h"
+#include "RD53ThresholdHistograms.h"
+#include "RD53LatencyHistograms.h"
+#include "RD53InjectionDelayHistograms.h"
+#include "RD53ClockDelayHistograms.h"
 #include "RD53PhysicsHistograms.h"
 #include "SSAPhysicsHistograms.h"
 
@@ -112,16 +113,20 @@ void DQMInterface::configure(std::string const &calibrationName, std::string con
 		fDQMHistogrammerVector.push_back(new SCurveHistograms());
 	else if (calibrationName == "gain")
 		fDQMHistogrammerVector.push_back(new GainHistograms());
-	else if (calibrationName == "latency")
-		fDQMHistogrammerVector.push_back(new LatencyHistograms());
 	else if (calibrationName == "gainopt")
 		fDQMHistogrammerVector.push_back(new GainOptimizationHistograms());
-	else if (calibrationName == "thrmin")
-		fDQMHistogrammerVector.push_back(new ThrMinimizationHistograms());
-	else if (calibrationName == "injdelay")
-		fDQMHistogrammerVector.push_back(new InjectionDelayHistograms());
 	else if (calibrationName == "threqu")
 		fDQMHistogrammerVector.push_back(new ThrEqualizationHistograms());
+	else if (calibrationName == "thrmin")
+		fDQMHistogrammerVector.push_back(new ThresholdHistograms());
+	else if (calibrationName == "thradj")
+		fDQMHistogrammerVector.push_back(new ThresholdHistograms());
+	else if (calibrationName == "latency")
+		fDQMHistogrammerVector.push_back(new LatencyHistograms());
+	else if (calibrationName == "injdelay")
+		fDQMHistogrammerVector.push_back(new InjectionDelayHistograms());
+	else if (calibrationName == "clockdelay")
+		fDQMHistogrammerVector.push_back(new ClockDelayHistograms());
 	else if (calibrationName == "physics")
 		fDQMHistogrammerVector.push_back(new PhysicsHistograms());
 	else if (calibrationName == "ssaphysics")

@@ -19,7 +19,7 @@ namespace Ph2_HwInterface
   {
     this->setBoard(pChip->getBeBoardId());
 
-    ChipRegMap pRD53RegMap = pChip->getRegMap();
+    ChipRegMap& pRD53RegMap = pChip->getRegMap();
 
 
     // ###################################
@@ -60,20 +60,40 @@ namespace Ph2_HwInterface
         "CLK_DATA_DELAY_DATA_DELAY",
         "I_MONITOR_SELECT",
         "V_MONITOR_SELECT",
-        "ADC_MONITOR_CONFIG",
-        "BG_MONITOR_CONFIG",
-        "ADC_OFFSET",
-        "ACTUAL_VREF_ADC",
+        "ADC_OFFSET_VOLT",
+        "ADC_MAXIMUM_VOLT",
         "TEMPSENS_IDEAL_FACTOR"
       };
 
     for (const auto& cRegItem : pRD53RegMap)
       if (cRegItem.second.fPrmptCfg == true)
-      {
-        auto i = 0u;
-        for (i = 0u; i < arraySize(registerBlackList); i++) if (cRegItem.first == registerBlackList[i]) break;
-        if (i == arraySize(registerBlackList)) RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, true);
-      }
+        {
+          auto i = 0u;
+          for (i = 0u; i < arraySize(registerBlackList); i++) if (cRegItem.first == registerBlackList[i]) break;
+          if (i == arraySize(registerBlackList))
+            {
+              std::string regName = cRegItem.first;
+              uint16_t value      = cRegItem.second.fValue;
+
+              // #################
+              // # Special cases #
+              // #################
+              if (cRegItem.first == "ADC_MONITOR_CONFIG")
+                {
+                  value = cRegItem.second.fValue |
+                    (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) ^ RD53Shared::setBits(cRegItem.second.fBitSize)));
+                  regName = "MONITOR_CONFIG";
+                }
+              else if (cRegItem.first == "BG_MONITOR_CONFIG")
+                {
+                  value = (cRegItem.second.fValue << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize) |
+                    (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) ^ (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize)));
+                  regName = "MONITOR_CONFIG";
+                }
+
+              RD53Interface::WriteChipReg(pChip, regName, value, true);
+            }
+        }
 
 
     // ###################################
@@ -141,34 +161,29 @@ namespace Ph2_HwInterface
   {
     this->setBoard(pChip->getBeBoardId());
 
-    std::vector<std::pair<uint16_t,uint16_t>> regReadback;
-    unsigned int pixMode = 0;
-    unsigned int row     = 0;
-    uint16_t address     = pChip->getRegItem(pRegNode).fAddress;
-
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), address, data));
+    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), pChip->getRegItem(pRegNode).fAddress, data));
     if ((pRegNode == "VCAL_HIGH") || (pRegNode == "VCAL_MED")) usleep(VCALSLEEP); // @TMP@
 
     if (pVerifLoop == true)
       {
-        if (pRegNode == "PIX_PORTAL")                     pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
-        if (pixMode == 0)                             regReadback = RD53Interface::ReadRD53Reg(pChip, pRegNode);
-        if ((pRegNode == "PIX_PORTAL") && (pixMode == 0)) row     = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
-
-        if (regReadback.size() != 0) // @TMP@
+        if (pRegNode == "PIX_PORTAL")
           {
-            if ((pixMode == 0) &&
-                (((pRegNode == "PIX_PORTAL") && (regReadback[0].first != row))     ||
-                 ((pRegNode != "PIX_PORTAL") && (regReadback[0].first != address)) ||
-                 (regReadback[0].second != data)))
+            auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
+            if (pixMode == 0)
               {
-                LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
-                return false;
+                auto regReadback = RD53Interface::ReadRD53Reg(pChip, pRegNode);
+                auto row         = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
+                if (regReadback.size() == 0 /* @TMP@ */ || regReadback[0].first != row || regReadback[0].second != data)
+                  {
+                    LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
+                    return false;
+                  }
               }
-            else pChip->setReg(pRegNode, data);
           }
+        else if (data != RD53Interface::ReadChipReg(pChip, pRegNode)) return false;
       }
 
+    pChip->setReg(pRegNode, data);
     return true;
   }
 
@@ -218,6 +233,28 @@ namespace Ph2_HwInterface
     return regReadback;
   }
 
+  // @TMP@
+  uint16_t getPixelConfig (const std::vector<perColumnPixelData>& mask, uint16_t row, uint16_t col, bool highGain)
+  // #################################################################################################################################################
+  // # Encodes the configuration for a pixel pair                                                                                                    #
+  // # In the LIN FE tdac is unsigned and increasing it reduces the local threshold                                                                  #
+  // # In the DIFF FE tdac is signed and increasing it reduces the local threshold                                                                   #
+  // # To prevent having to deal with that in the rest of the code, we map the tdac range of the DIFF FE like so:                                    #
+  // # -15 -> 30, -14 -> 29, ... 0 -> 15, ... 15 -> 0                                                                                                #
+  // # So for the rest of the code the tdac range of the DIFF FE is [0, 30] and the only difference with the LIN FE is the number of possible values #
+  // #################################################################################################################################################
+  {
+    if (col <= RD53::SYNC.colStop)
+      return bits::pack<8, 8>(bits::pack<1, 1, 1>(mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
+                              bits::pack<1, 1, 1>(mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
+    else if (col <= RD53::LIN.colStop)
+      return bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 1].TDAC[row], mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
+                              bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 0].TDAC[row], mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
+    else
+      return bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(mask[col + 1].TDAC[row] > 15, abs(15 - mask[col + 1].TDAC[row]), mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
+                              bits::pack<1, 4, 1, 1, 1>(mask[col + 0].TDAC[row] > 15, abs(15 - mask[col + 0].TDAC[row]), mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
+  }
+
   void RD53Interface::WriteRD53Mask (RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop)
   {
     this->setBoard(pRD53->getBeBoardId());
@@ -230,7 +267,7 @@ namespace Ph2_HwInterface
     const uint8_t  highGain         = pRD53->getRegItem("HighGain_LIN").fValue;
     const uint8_t  chipID           = pRD53->getChipId();
 
-    std::vector<perPixelData>& mask = doDefault ? *pRD53->getPixelsMaskDefault() : *pRD53->getPixelsMask();
+    std::vector<perColumnPixelData>& mask = doDefault ? *pRD53->getPixelsMaskDefault() : *pRD53->getPixelsMask();
 
     // ##########################
     // # Disable default config #
@@ -255,17 +292,17 @@ namespace Ph2_HwInterface
 
         uint16_t data;
 
-        // for (auto col = 0; col < RD53::nCols-1; col+=2) // @TMP@
-        for (auto col = 128; col < 263; col+=2)
+        for (auto col = 0u; col < RD53::nCols; col+=2)
           {
+            if (mask[col].Enable.none()) continue;
+
             RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
 
             for (auto row = 0u; row < RD53::nRows; row++)
               {
                 if ((mask[col].Enable[row] == 1) || (mask[col+1].Enable[row] == 1))
                   {
-                    data = bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 1].TDAC[row], mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
-                                            bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 0].TDAC[row], mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
+                    data = getPixelConfig(mask, row, col, highGain);
 
                     RD53Cmd::WrReg(chipID, REGION_ROW_ADDR, row).appendTo(commandList);
                     RD53Cmd::WrReg(chipID, PIX_PORTAL_ADDR, data).appendTo(commandList);
@@ -285,16 +322,14 @@ namespace Ph2_HwInterface
 
         std::vector<uint16_t> data;
 
-        // for (auto col = 0; col < RD53::nCols-1; col+=2) // @TMP@
-        for (auto col = 128; col < 263; col+=2)
+        for (auto col = 0u; col < RD53::nCols; col+=2)
           {
             RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
             RD53Cmd::WrReg(chipID, REGION_ROW_ADDR, 0x0).appendTo(commandList);
 
             for (auto row = 0u; row < RD53::nRows; row++)
               {
-                data.push_back(bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 1].TDAC[row], mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
-                                                bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 0].TDAC[row], mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row])));
+                data.push_back(getPixelConfig(mask, row, col, highGain));
 
                 if ((row % RD53Constants::NREGIONS_LONGCMD) == (RD53Constants::NREGIONS_LONGCMD - 1))
                   {
@@ -561,8 +596,8 @@ namespace Ph2_HwInterface
     // # actualVrefADC = 839 [mV]     Lower than VrefADC due to parasitics #
     // #####################################################################
     const float resistorI2V   = 10000; // [Ohm]
-    const float ADCoffset     = pChip->getRegItem("ADC_OFFSET").fValue / 1e4;
-    const float actualVrefADC = pChip->getRegItem("ACTUAL_VREF_ADC").fValue / 1e3;
+    const float ADCoffset     = pChip->getRegItem("ADC_OFFSET_VOLT").fValue / 1e4;
+    const float actualVrefADC = pChip->getRegItem("ADC_MAXIMUM_VOLT").fValue / 1e3;
 
     const float ADCslope = (actualVrefADC - ADCoffset) / (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1); // [V/ADC]
     const float voltage  = ADCoffset + ADCslope * value;

@@ -9,7 +9,7 @@
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 02/03/2020
++ Last change made to this section: 12/03/2020
 ```
 
 Suggested software and firmware versions:
@@ -68,9 +68,10 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 6. Threshold equalization
 7. Gain optimization
 8. Threshold minimization
-9. Injection delay scan
-10. Clock delay scan
-11. Physics
+9. Threshold adjustment
+10. Injection delay scan
+11. Clock delay scan
+12. Physics
 ```
 Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 

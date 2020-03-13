@@ -48,9 +48,6 @@ class GainOptimization : public Gain
   }
 
 
-  // ########
-  // # ROOT #
-  // ########
 #ifdef __USE_ROOT__
   GainOptimizationHistograms* histos;
 #endif
@@ -68,6 +65,8 @@ class GainOptimization : public Gain
   size_t KrumCurrStart;
   size_t KrumCurrStop;
   bool   doFast;
+
+  const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
   DetectorDataContainer theKrumCurrContainer;
 

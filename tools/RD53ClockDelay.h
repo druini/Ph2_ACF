@@ -42,9 +42,6 @@ class ClockDelay : public PixelAlive
   size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue); }
 
 
-  // ########
-  // # ROOT #
-  // ########
 #ifdef __USE_ROOT__
   ClockDelayHistograms* histos;
 #endif
