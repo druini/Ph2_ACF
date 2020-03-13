@@ -272,8 +272,8 @@ namespace Ph2_System
                   }
               }
           }
+
           static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning (cBoard);
-          
         }
         else
           {
@@ -299,7 +299,6 @@ namespace Ph2_System
             // # Configuring from XML #
             // ########################
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->ConfigureFromXML(cBoard);
-
 
 
             // ###################

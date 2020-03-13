@@ -38,12 +38,11 @@ void ThrMinimization::ConfigureCalibration ()
   saveBinaryData  = this->findValueInSettings("SaveBinaryData");
 
   frontEnd = RD53::getMajorityFE(colStart, colStop);
-
   colStart = std::max(colStart, frontEnd->colStart);
-  colStop = std::min(colStop, frontEnd->colStop);
-
+  colStop  = std::min(colStop, frontEnd->colStop);
   LOG (INFO) << BOLDBLUE << "\t--> ThrMinimization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << BOLDBLUE << "]" << RESET;
-  
+
+
   // #######################
   // # Initialize progress #
   // #######################

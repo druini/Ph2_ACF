@@ -161,28 +161,26 @@ namespace Ph2_HwInterface
   {
     this->setBoard(pChip->getBeBoardId());
 
-    uint16_t address     = pChip->getRegItem(pRegNode).fAddress;
-
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), address, data));
+    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), pChip->getRegItem(pRegNode).fAddress, data));
     if ((pRegNode == "VCAL_HIGH") || (pRegNode == "VCAL_MED")) usleep(VCALSLEEP); // @TMP@
 
-    // @TMP@ Mauro: I rearanged things a bit here, it does the same thing I promise
     if (pVerifLoop == true)
       {
-        if (pRegNode == "PIX_PORTAL") {
-          auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
-          if (pixMode == 0) {
-            auto regReadback = RD53Interface::ReadRD53Reg(pChip, pRegNode);
-            auto row = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
-            if (regReadback.size() == 0 || regReadback[0].first != row || regReadback[0].second != data)
+        if (pRegNode == "PIX_PORTAL")
+          {
+            auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
+            if (pixMode == 0)
               {
-                LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
-                return false;
+                auto regReadback = RD53Interface::ReadRD53Reg(pChip, pRegNode);
+                auto row         = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
+                if (regReadback.size() == 0 /* @TMP@ */ || regReadback[0].first != row || regReadback[0].second != data)
+                  {
+                    LOG (ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
+                    return false;
+                  }
               }
           }
-        }
-        else if (data != RD53Interface::ReadChipReg(pChip, pRegNode)) // I'd rather use ReadChipReg because it retries when it fails and this is needed sometimes
-          return false;
+        else if (data != RD53Interface::ReadChipReg(pChip, pRegNode)) return false;
       }
 
     pChip->setReg(pRegNode, data);
@@ -235,20 +233,23 @@ namespace Ph2_HwInterface
     return regReadback;
   }
 
-  // Encodes the configuration for a pixel pair
-  // In the LIN FE tdac is unsigned and increasing it reduces the local threshold, 
-  // In the DIFF FE tdac is signed and increasing it reduces the local threshold
-  // To prevent having to deal with that in the rest of the code, we map the tdac range of the DIFF FE like so:
-  // -15 -> 30, -14 -> 29, ... 0 -> 15, ... 15 -> 0
-  // So for the rest of the code the tdac range of the DIFF FE is [0, 30] and the only difference with the LIN FE is the number of possible values
-  uint16_t getPixelConfig(const std::vector<perPixelData>& mask, uint16_t row, uint16_t col, bool highGain) {
+  uint16_t getPixelConfig (const std::vector<perColumnPixelData>& mask, uint16_t row, uint16_t col, bool highGain)
+  // #################################################################################################################################################
+  // # Encodes the configuration for a pixel pair                                                                                                    #
+  // # In the LIN FE tdac is unsigned and increasing it reduces the local threshold                                                                  #
+  // # In the DIFF FE tdac is signed and increasing it reduces the local threshold                                                                   #
+  // # To prevent having to deal with that in the rest of the code, we map the tdac range of the DIFF FE like so:                                    #
+  // # -15 -> 30, -14 -> 29, ... 0 -> 15, ... 15 -> 0                                                                                                #
+  // # So for the rest of the code the tdac range of the DIFF FE is [0, 30] and the only difference with the LIN FE is the number of possible values #
+  // #################################################################################################################################################
+  {
     if (col <= RD53::SYNC.colStop)
       return bits::pack<8, 8>(bits::pack<1, 1, 1>(mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
                               bits::pack<1, 1, 1>(mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
     else if (col <= RD53::LIN.colStop)
       return bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 1].TDAC[row], mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
                               bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 0].TDAC[row], mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
-    else 
+    else
       return bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(mask[col + 1].TDAC[row] > 15, abs(15 - mask[col + 1].TDAC[row]), mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
                               bits::pack<1, 4, 1, 1, 1>(mask[col + 0].TDAC[row] > 15, abs(15 - mask[col + 0].TDAC[row]), mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
   }
@@ -270,10 +271,7 @@ namespace Ph2_HwInterface
     // ##########################
     // # Disable default config #
     // ##########################
-    if (pRD53->getRegItem("PIX_DEFAULT_CONFIG").fValue != 0)
-      RD53Interface::WriteChipReg(pRD53, "PIX_DEFAULT_CONFIG", 0x0, pVerifLoop);
-    else
-      RD53Interface::WriteChipReg(pRD53, "PIX_DEFAULT_CONFIG", 0x0, false);
+    RD53Interface::WriteChipReg(pRD53, "PIX_DEFAULT_CONFIG", 0x0, pVerifLoop);
 
     // ############
     // # PIX_MODE #
@@ -295,9 +293,8 @@ namespace Ph2_HwInterface
 
         for (auto col = 0u; col < RD53::nCols; col+=2)
           {
-            if (mask[col].Enable.none()) // skip columns with no enabled pixels
-              continue;
-            
+            if (mask[col].Enable.none()) continue;
+
             RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
 
             for (auto row = 0u; row < RD53::nRows; row++)
