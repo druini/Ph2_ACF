@@ -1444,6 +1444,7 @@ void D19cFWInterface::L1ADebug()
         }
         LOG (INFO) << BOLDBLUE << cOutput << RESET;
     }
+    
     this->ResetReadout(); 
 }
 void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
@@ -1458,21 +1459,29 @@ void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
 
     auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
     LOG (INFO) << BOLDBLUE << "Stub debug ...." << RESET;
-    for( auto cWord : cWords )
-    {  
+    size_t cLine=0;
+    do
+    { 
+      std::vector<std::string> cOutputWords(0);
+      for( size_t cIndex=0; cIndex < 5; cIndex++)
+      {
+        auto cWord = cWords[cLine*10+cIndex];
         auto cString=std::bitset<32>(cWord).to_string();
-        std::vector<std::string> cOutputWords(0);
-        for( size_t cIndex = 0 ; cIndex < 4 ; cIndex++)
+        for( size_t cOffset=0; cOffset < 4; cOffset++)
         {
-            cOutputWords.push_back(cString.substr(cIndex*8, 8) );
+          cOutputWords.push_back(cString.substr(cOffset*8, 8) );
         }
-        std::string cOutput="";
-        for( auto cIt = cOutputWords.end()-1 ; cIt >= cOutputWords.begin() ; cIt--)
-        {
-            cOutput += *cIt + " "; 
-        }
-        LOG (INFO) << BOLDBLUE << cOutput << RESET;
-    }
+      }
+
+      std::string cOutput="";
+      for( auto cIt = cOutputWords.end()-1 ; cIt >= cOutputWords.begin() ; cIt--)
+      {
+          cOutput += *cIt + " "; 
+      }
+      LOG (INFO) << BOLDBLUE <<  "Line " << +cLine << " : " << cOutput << RESET;
+
+      cLine++;
+    }while( cLine < pNlines );
     // disbale stub debug
     this->WriteReg("fc7_daq_cnfg.stub_debug.enable",0x00);
     this->ResetReadout(); 
@@ -2147,7 +2156,7 @@ bool D19cFWInterface::PhaseTuning (BeBoard* pBoard, uint8_t pFeId, uint8_t pChip
         //LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
         cAttempts++;
     }while(!cSuccess && cAttempts <10);
-    if( pLineId == 1 && fFirmwareFrontEndType == FrontEndType::CBC3 ) 
+    if( pLineId == 5 && fFirmwareFrontEndType == FrontEndType::CBC3 ) 
     {
         // force L1A line to match phase tuning result for first stub lines to match 
         uint8_t pDelay = pTuner.fDelay;

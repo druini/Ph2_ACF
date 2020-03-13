@@ -273,7 +273,9 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
             // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5 strips
             uint8_t cBendCode = cBendLUT[ (cBend/2. - (-7.0))/0.5 ]; 
             std::vector<uint8_t> cExpectedHits = static_cast<CbcInterface*>(fReadoutChipInterface)->stubInjectionPattern( cChip, cSeed, cBend ); 
-            
+            LOG (INFO) << BOLDMAGENTA << "Injected a stub with seed " << +cSeed << " with bend " << +cBend << RESET;
+            for(auto cHitExpected : cExpectedHits )
+                LOG (INFO) << BOLDMAGENTA << "\t.. expect a hit in channel " << +cHitExpected << RESET;
             auto cEventIterator = cEvents.begin();
             size_t cEventCounter=0;
             LOG (DEBUG) << BOLDMAGENTA << "CBC" << +cChip->getChipId() << RESET;
@@ -699,9 +701,12 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
             for (auto& cFe : cBoard->fModuleVector)
             {
                 auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
-                for(auto cChipId : pChipIds )
+                if( cCic != NULL )
                 {
-                    bool cConfigured = fCicInterface->SetStaticPhaseAlignment(  cCic , cChipId ,  0 , fPhaseTap);
+                    for(auto cChipId : pChipIds )
+                    {
+                        bool cConfigured = fCicInterface->SetStaticPhaseAlignment(  cCic , cChipId ,  0 , fPhaseTap);
+                    }
                 }
             }
             fBeBoardInterface->ChipReSync ( cBoard );

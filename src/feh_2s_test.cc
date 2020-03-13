@@ -294,30 +294,37 @@ int main ( int argc, char* argv[] )
     if( cCheckData )
     {
         t.start();
-        for( auto& cBoard : cTool.fBoardVector )
-        {
-            for (auto& cFe : cBoard->fModuleVector)
-            {
-                // matching 
-                for (auto& cChip : cFe->fReadoutChipVector) 
-                {
-                    if( cChip->getChipId()%2 == 0 )
-                        static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
-                    else
-                        static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
-                }
-            }
-            cTool.ReadNEvents( cBoard, 10 );
-            const std::vector<Event*>& cEvents = cTool.GetEvents ( cBoard );
-            uint32_t cN=0;
-            for ( auto& cEvent : cEvents )
-            {
-                LOG (INFO) << ">>> Event #" << cN++ ;
-                outp.str ("");
-                outp << *cEvent;
-                LOG (INFO) << outp.str();
-            }
-        }
+        // for( auto& cBoard : cTool.fBoardVector )
+        // {
+        //     for (auto& cFe : cBoard->fModuleVector)
+        //     {
+        //         // matching 
+        //         for (auto& cChip : cFe->fReadoutChipVector) 
+        //         {
+        //             if( cChip->getChipId()%2 == 0 )
+        //                 static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
+        //             else
+        //                 static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
+        //         }
+        //     }
+        //     cTool.ReadNEvents( cBoard, 10 );
+        //     const std::vector<Event*>& cEvents = cTool.GetEvents ( cBoard );
+        //     uint32_t cN=0;
+        //     for ( auto& cEvent : cEvents )
+        //     {
+        //         LOG (INFO) << ">>> Event #" << cN++ ;
+        //         outp.str ("");
+        //         outp << *cEvent;
+        //         LOG (INFO) << outp.str();
+        //     }
+        // }
+
+        DataChecker cDataChecker;
+        cDataChecker.Inherit (&cTool);
+        cDataChecker.Initialise ( );
+        cDataChecker.zeroContainers();
+        cDataChecker.DataCheck({0});
+
         // // now create a PedestalEqualization object
         // DataChecker cDataChecker;
         // cDataChecker.Inherit (&cTool);
