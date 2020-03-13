@@ -592,7 +592,7 @@ namespace Ph2_HwInterface
   float RD53Interface::convertADC2VorI (Chip* pChip, uint32_t value, bool isCurrentNotVoltage)
   {
     // #####################################################################
-    // # ADCoffset     = 63  [1/10mV] Offset due to ground shift           #
+    // # ADCoffset     =  63 [1/10mV] Offset due to ground shift           #
     // # actualVrefADC = 839 [mV]     Lower than VrefADC due to parasitics #
     // #####################################################################
     const float resistorI2V   = 10000; // [Ohm]

@@ -196,7 +196,7 @@ namespace Ph2_HwInterface
     struct FastCommandsConfig
     {
       TriggerSource trigger_source   = TriggerSource::FastCMDFSM;
-      AutozeroSource autozero_source = AutozeroSource::IPBus;
+      AutozeroSource autozero_source = AutozeroSource::Disabled;
 
       bool initial_ecr_en  = false;
       bool backpressure_en = false;
