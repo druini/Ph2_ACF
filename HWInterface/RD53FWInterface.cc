@@ -868,15 +868,18 @@ namespace Ph2_HwInterface
       }
 
 
-    // #########################
-    // # Decoding event header #
-    // #########################
+    // #######################
+    // # Decode event header #
+    // #######################
     bool dummy_size;
     std::tie(tlu_trigger_id, data_format_ver, dummy_size) = bits::unpack<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_FMTVER, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
     std::tie(tdc, l1a_counter) = bits::unpack<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
     bx_counter = data[3];
 
 
+    // ############################
+    // # Search for frame lengths #
+    // ############################
     std::vector<size_t> event_sizes;
     size_t index = 4;
     while (index < n - dummy_size * NWORDS_DDR3)
@@ -898,9 +901,9 @@ namespace Ph2_HwInterface
       }
 
 
-    // #################################
-    // # Decoding frames and chip data #
-    // #################################
+    // ##############################
+    // # Decode frame and chip data #
+    // ##############################
     chip_frames.reserve(event_sizes.size());
     chip_events.reserve(event_sizes.size());
     index = 4;
