@@ -165,14 +165,12 @@ namespace Ph2_HwInterface
       Undefined = 0
     };
 
-    // ########
-    // # SYNC #
-    // ########
+    // @TMP@
     enum class AutozeroSource : uint32_t
     {
       IPBus = 1,
       FastCMDFSM,
-      UserDefined,
+      UserDefined, // --> need to set IPbus register "autozero_freq"
       Disabled = 0
     };
 
