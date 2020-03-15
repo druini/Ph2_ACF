@@ -61,23 +61,24 @@ void CicFEAlignment::Initialise ()
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     
     // read original thresholds from chips ... 
-    fDetectorDataContainer = &fThresholds;
     ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, fThresholds);  
     // read original logic configuration from chips .. [Pipe&StubInpSel&Ptwidth , HIP&TestMode]
-    fDetectorDataContainer = &fLogic;
-    fDetectorDataContainer = &fHIPs;
     ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, fLogic);  
     ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, fHIPs);  
+    ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, fPtCuts);  
+    
     for (auto cBoard : this->fBoardVector)
     {
         auto& cThresholdsThisBoard = fThresholds.at(cBoard->getIndex());
         auto& cLogicThisBoard = fLogic.at(cBoard->getIndex());
         auto& cHIPsThisBoard = fHIPs.at(cBoard->getIndex());
+        auto& cPtCutThisBoard = fPtCuts.at(cBoard->getIndex());
         for (auto& cFe : cBoard->fModuleVector)
         {
             auto& cThresholdsThisHybrid = cThresholdsThisBoard->at(cFe->getIndex());
             auto& cLogicThisHybrid = cLogicThisBoard->at(cFe->getIndex());
             auto& cHIPsThisHybrid = cHIPsThisBoard->at(cFe->getIndex());
+            auto& cPtCutThisHybrid = cPtCutThisBoard->at(cFe->getIndex());
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
             //configure CBCs 
             for (auto& cChip : cFe->fReadoutChipVector)
@@ -85,6 +86,7 @@ void CicFEAlignment::Initialise ()
                 cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "VCth" );
                 cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "Pipe&StubInpSel&Ptwidth" );
                 cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "HIP&TestMode" );
+                cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "PtCut" );
             }
         }
     }
@@ -235,6 +237,8 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
                 static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "HitOr", 0);
                 //enable stub logic
                 static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode( static_cast<ReadoutChip*>(cChip), "Sampled", true, true); 
+                // set pT cut to maximum 
+                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( static_cast<ReadoutChip*>(cChip), "PtCut", 14); 
             }
         }
         //this->setSameDacBeBoard(cBoard, "TestPulseDelay", 0);  
@@ -326,11 +330,13 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
         auto& cThresholdsThisBoard = fThresholds.at(cBoard->getIndex());
         auto& cLogicThisBoard = fLogic.at(cBoard->getIndex());
         auto& cHIPsThisBoard = fHIPs.at(cBoard->getIndex());
+        auto& cPtCutThisBoard = fPtCuts.at(cBoard->getIndex());
         for (auto& cFe : cBoard->fModuleVector)
         {
             auto& cThresholdsThisHybrid = cThresholdsThisBoard->at(cFe->getIndex());
             auto& cLogicThisHybrid = cLogicThisBoard->at(cFe->getIndex());
             auto& cHIPsThisHybrid = cHIPsThisBoard->at(cFe->getIndex());
+            auto& cPtCutThisHybrid = cPtCutThisBoard->at(cFe->getIndex());
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
             //configure CBCs 
             for (auto& cChip : cFe->fReadoutChipVector)
@@ -339,6 +345,7 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
                 static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
                 static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "Pipe&StubInpSel&Ptwidth" , cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
                 static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "HIP&TestMode" , cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "PtCut" , cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
             }
         }
         LOG (INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
@@ -357,7 +364,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
         auto& cThresholdsThisBoard = fThresholds.at(cBoard->getIndex());
         auto& cLogicThisBoard = fLogic.at(cBoard->getIndex());
         auto& cHIPsThisBoard = fHIPs.at(cBoard->getIndex());
-        
+        auto& cPtCutThisBoard = fPtCuts.at(cBoard->getIndex());
 
         ChannelGroup<NCHANNELS,1> cChannelMask; cChannelMask.disableAllChannels();
         for( uint8_t cChannel=0; cChannel<NCHANNELS; cChannel+=2) cChannelMask.enableChannel( cChannel);//generate a hit in every Nth channel
@@ -370,7 +377,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
             // disable all output from CBCs
             for (auto& cChip : cFe->fReadoutChipVector)
             {
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);
+                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);
             }
             // enable automatic phase aligner 
             fCicInterface->SetAutomaticPhaseAlignment( static_cast<OuterTrackerModule*>(cFe)->fCic , true);
@@ -392,7 +399,9 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                 static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode( static_cast<ReadoutChip*>(cChip), "Sampled", true, true); 
                 // switch on HitOr
                 static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "HitOr", 1);
-                    
+                // set PtCut to maximum 
+                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "PtCut", 14);
+                
                 // read bend LUT
                 uint8_t cBendCode_phAlign = 0xa;
                 std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( cChip );
@@ -482,6 +491,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
             auto& cThresholdsThisHybrid = cThresholdsThisBoard->at(cFe->getIndex());
             auto& cLogicThisHybrid = cLogicThisBoard->at(cFe->getIndex());
             auto& cHIPsThisHybrid = cHIPsThisBoard->at(cFe->getIndex());
+            auto& cPtCutThisHybrid = cPtCutThisBoard->at(cFe->getIndex());
             
             for (auto& cChip : cFe->fReadoutChipVector)
             {
@@ -489,6 +499,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                 static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
                 static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "Pipe&StubInpSel&Ptwidth" , cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
                 static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "HIP&TestMode" , cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "PtCut" , cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
                 // enable all output from CBCs 
                 static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 1);
             }
@@ -512,12 +523,15 @@ bool CicFEAlignment::WordAlignment(bool pAuto, uint16_t pWait_ms)
         auto& cThresholdsThisBoard = fThresholds.at(cBoard->getIndex());
         auto& cLogicThisBoard = fLogic.at(cBoard->getIndex());
         auto& cHIPsThisBoard = fHIPs.at(cBoard->getIndex());
+        auto& cPtCutThisBoard = fPtCuts.at(cBoard->getIndex());
+
         
         for (auto& cFe : cBoard->fModuleVector)
         {
             auto& cThresholdsThisHybrid = cThresholdsThisBoard->at(cFe->getIndex());
             auto& cLogicThisHybrid = cLogicThisBoard->at(cFe->getIndex());
             auto& cHIPsThisHybrid = cHIPsThisBoard->at(cFe->getIndex());
+            auto& cPtCutThisHybrid = cPtCutThisBoard->at(cFe->getIndex());
             
 
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
@@ -537,6 +551,8 @@ bool CicFEAlignment::WordAlignment(bool pAuto, uint16_t pWait_ms)
                     static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode( static_cast<ReadoutChip*>(cChip), "Sampled", true, true); 
                     // switch on HitOr
                     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "HitOr", 0);
+                    // set PtCut to maxmim 
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "PtCut", 14);
                     
                     std::vector<uint8_t> cStubs{ cAlignmentPatterns[0] , cAlignmentPatterns[1], cAlignmentPatterns[2]};
                     std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( cChip );
@@ -588,6 +604,7 @@ bool CicFEAlignment::WordAlignment(bool pAuto, uint16_t pWait_ms)
                     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
                     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "Pipe&StubInpSel&Ptwidth" , cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
                     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "HIP&TestMode" , cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "PtCut" , cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
                 }
                 // check if a resync is needed
                 //fCicInterface->CheckReSync( static_cast<OuterTrackerModule*>(cFe)->fCic); 

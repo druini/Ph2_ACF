@@ -184,6 +184,15 @@ int main ( int argc, char* argv[] )
             exit(0);
         }
         LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET; 
+
+        //automatic alignment 
+        bool cBxAligned = cCicAligner.Bx0Alignment(0,4,1,100);
+        if( !cBxAligned ) 
+        {
+            LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET ; 
+            exit(0);
+        }
+        LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
     }
     // measure some of the AMUX output voltages using ADC on UIB 
     // MonitorAmux & hybridTester does not exist in this branch, nor it should...
@@ -307,7 +316,8 @@ int main ( int argc, char* argv[] )
         cDataChecker.Inherit (&cTool);
         cDataChecker.Initialise ( );
         cDataChecker.zeroContainers();
-        cDataChecker.DataCheck(cFEsToCheck);
+        cDataChecker.TestPulse(cFEsToCheck);
+        //cDataChecker.DataCheck(cFEsToCheck);
 
 
         // for( auto& cBoard : cTool.fBoardVector )
@@ -343,9 +353,8 @@ int main ( int argc, char* argv[] )
         // uint8_t cBendCode=0;
         // cDataChecker.DataCheck({1}, {cSeed} , {cBendCode});
 
-        // cDataChecker.writeObjects();
-        // cDataChecker.dumpConfigFiles();
-        // cDataChecker.resetPointers();
+        cDataChecker.writeObjects();
+        cDataChecker.resetPointers();
         t.show ( "Time to check data of the front-ends on the system: " );
     }
 

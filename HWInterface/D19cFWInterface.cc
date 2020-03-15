@@ -2359,8 +2359,8 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
 
     uint32_t cTimeoutCounter = 0 ;
-    uint32_t cTimeoutValue = cTimeSingleTrigger_ms*pNEvents*1.1;
-    uint32_t cPause = static_cast<uint32_t>(cTimeSingleTrigger_ms*1e3);
+    uint32_t cTimeoutValue = cTimeSingleTrigger_ms*(pNEvents+2);
+    uint32_t cPause = 1*static_cast<uint32_t>(cTimeSingleTrigger_ms*1e3);
     LOG (DEBUG) << BOLDMAGENTA << "Waiting " << +cPause << " microseconds between attempts at checking readout req... waiting for a maximum of " <<  +cTimeoutValue << " iterations." << RESET;
     do
     {

@@ -664,6 +664,15 @@ namespace Ph2_HwInterface
             if (!cFailed) pCbc->setReg ( "LayerSwap&CluWidth", cRegItem.fValue );
             return (cRegItem.fValue & 0x08) >> 3;
         }
+        else if( pRegNode == "PtCut" )
+        {
+            cRegItem = pCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
+            fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getChipId(), cVecReq, true, false );
+            fBoardFW->ReadChipBlockReg (  cVecReq );
+            fBoardFW->DecodeReg ( cRegItem, cCbcId, cVecReq[0], cRead, cFailed );
+            if (!cFailed) pCbc->setReg ( "Pipe&StubInpSel&Ptwidth", cRegItem.fValue );
+            return (cRegItem.fValue & 0x0F);
+        }
         else
         {
             cRegItem = pCbc->getRegItem ( pRegNode );

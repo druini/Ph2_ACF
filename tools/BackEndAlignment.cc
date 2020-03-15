@@ -130,87 +130,90 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard )
 
     for (auto& cFe : pBoard->fModuleVector)
     {
-      static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
-      for (auto& cReadoutChip : cFe->fReadoutChipVector)
-      {
-        
-        fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cReadoutChip->getChipId() );
-        // original mask
-        const ChannelGroup<NCHANNELS>* cOriginalMask  = static_cast<const ChannelGroup<NCHANNELS>*>(cReadoutChip->getChipOriginalMask());
-        // original threshold 
-        uint16_t cThreshold = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cReadoutChip, "VCth" );
-        // original HIT OR setting 
-        uint16_t cHitOR = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cReadoutChip, "HitOr" );
-        
-        // make sure hit OR is turned off 
-        static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cReadoutChip , "HitOr" , 0); 
-
-        LOG (INFO) << BOLDBLUE << "Running phase tuning and word alignment on FE" << +cFe->getFeId() << " CBC" << +cReadoutChip->getId() << "..." << RESET;
-        uint8_t cBendCode_phAlign = 2;
-        std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( cReadoutChip );
-        auto cIterator = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
-        // if bend code isn't there ... quit
-        if( cIterator == cBendLUT.end() )
-            continue;
-
-        int cPosition = std::distance( cBendLUT.begin(), cIterator);
-        double cBend_strips = -7. + 0.5*cPosition; 
-        LOG (DEBUG) << BOLDBLUE << "Bend code of " << +cBendCode_phAlign << " found in register " << cPosition << " so a bend of " << cBend_strips << RESET;
-        
-        uint8_t cSuccess = 0x00;
-        std::vector<uint8_t> cSeeds{0x82,0x8E, 0x9E};
-        std::vector<int> cBends ( cSeeds.size() , static_cast<int>( cBend_strips*2));
-        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cReadoutChip , cSeeds , cBends);
-        //LOG (DEBUG) << BOLDMAGENTA << "Before alignment ... stub lines : "<< RESET;
-        //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,5);
-        // first align lines with stub seeds 
-        uint8_t cLineId=1;
-        for(size_t cIndex=0; cIndex < 3 ; cIndex++)
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
+        for (auto& cReadoutChip : cFe->fReadoutChipVector)
         {
-            cSuccess = cSuccess | (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cFe->getFeId(), cReadoutChip->getChipId() , cLineId , cSeeds[cIndex] , 8) << cIndex);
-            cLineId++;
-        }
-        //LOG (DEBUG) << BOLDMAGENTA << "After alignment ... stub lines with seeds : "<< RESET;
-        //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,3);
-        // then align lines with stub bends
-        uint8_t cAlignmentPattern = (cBendCode_phAlign << 4) | cBendCode_phAlign;
-        // first align lines with stub seeds 
-        //LOG (DEBUG) << BOLDMAGENTA << "Before alignment ... stub lines 0-4: alignment pattern is  "<< std::bitset<8>(cAlignmentPattern) << RESET;
-        //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true,4);
-        cSuccess = cSuccess | ( static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cFe->getFeId(), cReadoutChip->getChipId() , cLineId , cAlignmentPattern , 8) << (cLineId-1)) ;
-        cLineId++;
-        //LOG (DEBUG) << BOLDMAGENTA << "After alignment ... stub lines 0-4 : "<< RESET;
-        //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,4);
-        // finally align lines with sync bit
-        //LOG (DEBUG) << BOLDMAGENTA << "Before alignment of last stub line ... stub lines 0-5: "<< RESET;
-        //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,5);
-        cAlignmentPattern = (1 << 7) | cBendCode_phAlign; // sync bit + bend 
-        bool cTuned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cFe->getFeId(), cReadoutChip->getChipId() , cLineId , cAlignmentPattern , 8);
-        if( !cTuned )
-        {
-            LOG (INFO) << BOLDMAGENTA << "Checking if error bit is set ..."<< RESET;
-            // check if error bit is set 
-            cAlignmentPattern = (1 << 7) | (1 << 6) | cBendCode_phAlign;
+            fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cReadoutChip->getChipId() );
+            // original mask
+            const ChannelGroup<NCHANNELS>* cOriginalMask  = static_cast<const ChannelGroup<NCHANNELS>*>(cReadoutChip->getChipOriginalMask());
+            // original threshold 
+            uint16_t cThreshold = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cReadoutChip, "VCth" );
+            // original HIT OR setting 
+            uint16_t cHitOR = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cReadoutChip, "HitOr" );
+            
+            // make sure hit OR is turned off 
+            static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cReadoutChip , "HitOr" , 0); 
+            // make sure pT cut is set to maximum 
+            // make sure hit OR is turned off 
+            auto cPtCut = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg( cReadoutChip , "PtCut" ); 
+            static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cReadoutChip , "PtCut" , 14); 
+
+            LOG (INFO) << BOLDBLUE << "Running phase tuning and word alignment on FE" << +cFe->getFeId() << " CBC" << +cReadoutChip->getId() << "..." << RESET;
+            uint8_t cBendCode_phAlign = 2;
+            std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( cReadoutChip );
+            auto cIterator = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
+            // if bend code isn't there ... quit
+            if( cIterator == cBendLUT.end() )
+                continue;
+
+            int cPosition = std::distance( cBendLUT.begin(), cIterator);
+            double cBend_strips = -7. + 0.5*cPosition; 
+            LOG (DEBUG) << BOLDBLUE << "Bend code of " << +cBendCode_phAlign << " found in register " << cPosition << " so a bend of " << cBend_strips << RESET;
+            
+            uint8_t cSuccess = 0x00;
+            std::vector<uint8_t> cSeeds{0x82,0x8E, 0x9E};
+            std::vector<int> cBends ( cSeeds.size() , static_cast<int>( cBend_strips*2));
+            static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cReadoutChip , cSeeds , cBends);
+            //LOG (DEBUG) << BOLDMAGENTA << "Before alignment ... stub lines : "<< RESET;
+            //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,5);
+            // first align lines with stub seeds 
+            uint8_t cLineId=1;
+            for(size_t cIndex=0; cIndex < 3 ; cIndex++)
+            {
+                cSuccess = cSuccess | (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cFe->getFeId(), cReadoutChip->getChipId() , cLineId , cSeeds[cIndex] , 8) << cIndex);
+                cLineId++;
+            }
+            //LOG (DEBUG) << BOLDMAGENTA << "After alignment ... stub lines with seeds : "<< RESET;
+            //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,3);
+            // then align lines with stub bends
+            uint8_t cAlignmentPattern = (cBendCode_phAlign << 4) | cBendCode_phAlign;
+            // first align lines with stub seeds 
+            //LOG (DEBUG) << BOLDMAGENTA << "Before alignment ... stub lines 0-4: alignment pattern is  "<< std::bitset<8>(cAlignmentPattern) << RESET;
+            //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true,4);
             cSuccess = cSuccess | ( static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cFe->getFeId(), cReadoutChip->getChipId() , cLineId , cAlignmentPattern , 8) << (cLineId-1)) ;
+            cLineId++;
+            //LOG (DEBUG) << BOLDMAGENTA << "After alignment ... stub lines 0-4 : "<< RESET;
+            //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,4);
+            // finally align lines with sync bit
+            //LOG (DEBUG) << BOLDMAGENTA << "Before alignment of last stub line ... stub lines 0-5: "<< RESET;
+            //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,5);
+            cAlignmentPattern = (1 << 7) | cBendCode_phAlign; // sync bit + bend 
+            bool cTuned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cFe->getFeId(), cReadoutChip->getChipId() , cLineId , cAlignmentPattern , 8);
+            if( !cTuned )
+            {
+                LOG (INFO) << BOLDMAGENTA << "Checking if error bit is set ..."<< RESET;
+                // check if error bit is set 
+                cAlignmentPattern = (1 << 7) | (1 << 6) | cBendCode_phAlign;
+                cSuccess = cSuccess | ( static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cFe->getFeId(), cReadoutChip->getChipId() , cLineId , cAlignmentPattern , 8) << (cLineId-1)) ;
+            }
+            else
+                cSuccess = cSuccess | ( static_cast<uint8_t>(cTuned) << (cLineId-1)) ;
+            
+            
+            // LOG (INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>(cSeeds[0]) << ", " << std::bitset<8>(cSeeds[1]) << ", " << std::bitset<8>(cSeeds[2]) << " on stub lines  0, 1 and 2." << RESET;
+            // LOG (INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((cBendCode_phAlign <<4)| cBendCode_phAlign) << " on stub line  4." << RESET;
+            // LOG (INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((1 << 7) | cBendCode_phAlign) << " on stub line  5." << RESET;
+            // LOG (INFO) << BOLDMAGENTA << "After alignment of last stub line ... stub lines 0-5: "<< RESET;
+            // (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,5);
+            
+            //now unmask all channels and set threshold and hit or logic back to their original values
+            fReadoutChipInterface-> maskChannelsGroup (cReadoutChip, cOriginalMask);
+            std::this_thread::sleep_for (std::chrono::milliseconds (50) );
+            LOG (INFO) << BOLDBLUE << "Setting threshold and HitOR back to orginal value [ " << +cThreshold << " ] DAC units." << RESET;
+            fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth" , cThreshold);
+            fReadoutChipInterface->WriteChipReg(cReadoutChip, "HitOr" , cHitOR);
+            fReadoutChipInterface->WriteChipReg( cReadoutChip , "PtCut" , cPtCut ); 
         }
-        else
-            cSuccess = cSuccess | ( static_cast<uint8_t>(cTuned) << (cLineId-1)) ;
-        
-        
-        // LOG (INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>(cSeeds[0]) << ", " << std::bitset<8>(cSeeds[1]) << ", " << std::bitset<8>(cSeeds[2]) << " on stub lines  0, 1 and 2." << RESET;
-        // LOG (INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((cBendCode_phAlign <<4)| cBendCode_phAlign) << " on stub line  4." << RESET;
-        // LOG (INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((1 << 7) | cBendCode_phAlign) << " on stub line  5." << RESET;
-        // LOG (INFO) << BOLDMAGENTA << "After alignment of last stub line ... stub lines 0-5: "<< RESET;
-        // (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,5);
-        
-        //now unmask all channels and set threshold and hit or logic back to their original values
-        fReadoutChipInterface-> maskChannelsGroup (cReadoutChip, cOriginalMask);
-        std::this_thread::sleep_for (std::chrono::milliseconds (50) );
-        LOG (INFO) << BOLDBLUE << "Setting threshold and HitOR back to orginal value [ " << +cThreshold << " ] DAC units." << RESET;
-        fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth" , cThreshold);
-        fReadoutChipInterface->WriteChipReg(cReadoutChip, "HitOr" , cHitOR);
-
-       }
     }
     
     return cAligned;
