@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
     <BeBoard Id="0" boardType="D19C" eventType="VR">
-      <!-- <connection id="board" uri="chtcp-2.0://pchpdaq01.cern.ch:10203?target=192.168.0.19:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  -->
-      <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.8:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+      <connection id="board" uri="chtcp-2.0://pchpdaq01.cern.ch:10203?target=192.168.0.19:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+      <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.8:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  -->
     
     <CDCE configure="0" clockRate="120"/>
    
     <GBT_Links>
-        <GBT Id="0" phaseTap="7" enable="0"/>
+        <GBT Id="0" phaseTap="7" enable="1"/>
     </GBT_Links>
     
     <!-- RHS --> 
@@ -16,11 +16,24 @@
             <Settings threshold="550" latency="19"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
             <ClusterStub clusterwidth="4" ptwidth="2" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-            <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="1" dll="1"/>
+            <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="11"/>
             <ChannelMask disable=""/>
             <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
         </Global>
 
+        <CBC_Files path="./settings/CbcFiles/" />
+        <CBC Id="0" configfile="CBC3_default.txt" />
+        <CBC Id="1" configfile="CBC3_default.txt" />
+        <CBC Id="2" configfile="CBC3_default.txt" />
+        <CBC Id="3" configfile="CBC3_default.txt" />
+        <CBC Id="4" configfile="CBC3_default.txt" />
+        <CBC Id="5" configfile="CBC3_default.txt" />
+        <CBC Id="6" configfile="CBC3_default.txt" />
+        <CBC Id="7" configfile="CBC3_default.txt" />
+
+        <CIC_Files path="./settings/CicFiles/" />
+        <CIC2 Id="8" configfile="CIC2_default.txt" />
+<!-- 
         <CBC_Files path="./Results/FEH_2S_xxxx_Electron_15-03-20_19h14m04/" />
         <CBC Id="0" configfile="BE0_FE0_Chip0.txt" />
         <CBC Id="1" configfile="BE0_FE0_Chip1.txt" />
@@ -32,7 +45,7 @@
         <CBC Id="7" configfile="BE0_FE0_Chip7.txt" />
 
         <CIC_Files path="./settings/CicFiles/" />
-        <CIC2 Id="8" configfile="CIC2_default.txt" />
+        <CIC2 Id="8" configfile="CIC2_default.txt" /> -->
     </Module>
 
     <!-- LHS --> 
@@ -84,7 +97,7 @@
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
 		<Register name="trigger_source"> 3 </Register>
-		<Register name="user_trigger_frequency"> 10 </Register>
+		<Register name="user_trigger_frequency"> 100 </Register>
 		<Register name="stubs_mask"> 0 </Register>
                 <!--this is the delay for the stub trigger-->
 		<Register name="stub_trigger_delay_value"> 10 </Register>
@@ -174,7 +187,7 @@
 
 <Settings>
    <!--PedestalEqualization-->
-    <Setting name="Nevents">100</Setting>
+    <Setting name="Nevents">1000</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
@@ -191,18 +204,27 @@
 
     <!--PulseShape-->
     <Setting name="PulseShapeNevents"       >100</Setting>
-    <Setting name="PulseShapeInitialVcth"   >590</Setting>
-    <Setting name="PulseShapeFinalVcth"     >590</Setting>
-    <Setting name="PulseShapeVCthStep"      >  1</Setting>
+    <Setting name="PulseShapeInitialVcth"   >575</Setting>
+    <Setting name="PulseShapeFinalVcth"     >576</Setting>
+    <Setting name="PulseShapeVCthStep"      >  5</Setting>
     <Setting name="PulseShapeInitialDelay"  >  0</Setting>
     <Setting name="PulseShapeFinalDelay"    >  1</Setting>
-    <Setting name="PulseShapeDelayStep"     >  1</Setting>
+    <Setting name="PulseShapeDelayStep"     >  5</Setting>
     <Setting name="PulseShapePulseAmplitude"> 15</Setting>
+    <Setting name="PulseShapeInitialPulseAmplitude"   >5</Setting>
+    <Setting name="PulseShapeFinalPulseAmplitude"     >101</Setting>
+    <Setting name="PulseShapeAmplitudeStep"     >  1</Setting>
+
+
+    <!-- Window Offset-->
+    <Setting name="WindowOffsetInitial">  0</Setting>
+    <Setting name="WindowOffsetFinal"> 0</Setting>
 
     <!--[>DataTest<]-->
+    <Setting name="Threshold">575</Setting>
     <Setting name="UseNoise">0</Setting>
     <Setting name="Attempts">1</Setting>
-    <Setting name="LatencyOffset">-2</Setting>
+    <Setting name="LatencyOffset">1</Setting>
     <Setting name="TriggerRate">1</Setting>
     <Setting name="TriggerMultiplicity">0</Setting>
     <Setting name="StubDelay">49</Setting>
@@ -219,6 +241,12 @@
     <Setting name="AntennaDelay">200</Setting>
     <Setting name="AntennaGroup">0</Setting>
     <Setting name="ScanRange">5</Setting>
+
+
+    <!-- Latency scan -->
+    <Setting name="LatencyStart">3</Setting>
+    <Setting name="LatencyStop">2</Setting>
+
 </Settings>
 </HwDescription>
 

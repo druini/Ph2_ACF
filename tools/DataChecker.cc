@@ -25,14 +25,15 @@ DataChecker::~DataChecker()
 void DataChecker::Initialise ()
 {
     // get threshold range  
-    auto cSetting = fSettingsMap.find ( "PulseShapeInitialVcth" );
-    uint16_t cInitialThreshold = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 400;
-    cSetting = fSettingsMap.find ( "PulseShapeFinalVcth" );
-    uint16_t cFinalThreshold = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 600;
-    cSetting = fSettingsMap.find ( "PulseShapeVCthStep" );
-    uint16_t cThresholdStep = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 5;
-
-   
+    auto cSetting = fSettingsMap.find ( "PulseShapeInitialPulseAmplitude" );
+    uint16_t cInitialAmpl = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 400;
+    cSetting = fSettingsMap.find ( "PulseShapeFinalPulseAmplitude" );
+    uint16_t cFinalAmpl = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 600;
+    cSetting = fSettingsMap.find ( "PulseShapeAmplitudeStep" );
+    uint16_t cAmplStep = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 5;
+    int cAmplSteps = std::ceil((cFinalAmpl-cInitialAmpl)/(float)cAmplStep);
+    LOG (INFO) << BOLDMAGENTA << "pulse shape will be scanned from " << +cInitialAmpl << " to " << +cFinalAmpl << " in " << +cAmplSteps << " steps." << RESET;
+    
     // this is needed if you're going to use groups anywhere
     fChannelGroupHandler = new CBCChannelGroupHandler();//This will be erased in tool.resetPointers()
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
@@ -84,20 +85,20 @@ void DataChecker::Initialise ()
                 cName = Form ( "h_TestPulse_Fe%dCbc%d", cFe->getFeId() , cChip->getChipId() );
                 cObj = gROOT->FindObject ( cName );
                 if ( cObj ) delete cObj;
-                cProfile2D = new TProfile2D ( cName, Form("Number of matched hits - CBC%d; Time [ns]; Threshold",(int)cChip->getChipId()) ,  500 , -250 , 250 , (cFinalThreshold-cInitialThreshold)/(float)cThresholdStep , cInitialThreshold , cFinalThreshold);
+                cProfile2D = new TProfile2D ( cName, Form("Number of matched hits - CBC%d; Time [ns]; Test Pulse Amplitude [DAC units]",(int)cChip->getChipId()) ,  500 , -250 , 250 , cAmplSteps , cInitialAmpl , cFinalAmpl);
                 bookHistogram ( cChip , "MatchedHits_TestPulse", cProfile2D );
 
                 cName = Form ( "h_StubLatency_Fe%dCbc%d", cFe->getFeId() , cChip->getChipId() );
                 cObj = gROOT->FindObject ( cName );
                 if ( cObj ) delete cObj;
-                cProfile2D = new TProfile2D ( cName, Form("Number of matched stubs - CBC%d; Latency [40 MHz clock cycles]; Threshold",(int)cChip->getChipId()) ,  512/(1.0/25.) , 0 , 512 , (cFinalThreshold-cInitialThreshold)/(float)cThresholdStep , cInitialThreshold , cFinalThreshold);
+                cProfile2D = new TProfile2D ( cName, Form("Number of matched stubs - CBC%d; Latency [40 MHz clock cycles]; Test Pulse Amplitude [DAC units]",(int)cChip->getChipId()) ,  512, 0 , 512 , cAmplSteps , cInitialAmpl , cFinalAmpl);
                 bookHistogram ( cChip , "StubLatency", cProfile2D );
                 
 
                 cName = Form ( "h_HitLatency_Fe%dCbc%d", cFe->getFeId() , cChip->getChipId() );
                 cObj = gROOT->FindObject ( cName );
                 if ( cObj ) delete cObj;
-                cProfile2D = new TProfile2D ( cName, Form("Number of matched hits - CBC%d; Latency [40 MHz clock cycles]; Threshold",(int)cChip->getChipId()) ,  512/(1.0/25.) , 0 , 512 , (cFinalThreshold-cInitialThreshold)/(float)cThresholdStep , cInitialThreshold , cFinalThreshold);
+                cProfile2D = new TProfile2D ( cName, Form("Number of matched hits - CBC%d; Latency [40 MHz clock cycles]; Test Pulse Amplitude [DAC units]",(int)cChip->getChipId()) ,  512 , 0 , 512 , cAmplSteps , cInitialAmpl , cFinalAmpl);
                 bookHistogram ( cChip , "HitLatency", cProfile2D );
                 
 
@@ -561,14 +562,16 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
     cSetting = fSettingsMap.find ( "PulseShapePulseAmplitude" );
     fTPconfig.tpAmplitude = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100; 
 
+    // get TP amplitude range 
     // get threshold range  
-    cSetting = fSettingsMap.find ( "PulseShapeInitialVcth" );
-    uint16_t cInitialThreshold = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 400;
-    cSetting = fSettingsMap.find ( "PulseShapeFinalVcth" );
-    uint16_t cFinalThreshold = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 600;
-    cSetting = fSettingsMap.find ( "PulseShapeVCthStep" );
-    uint16_t cThresholdStep = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 5;
-
+    cSetting = fSettingsMap.find ( "PulseShapeInitialPulseAmplitude" );
+    uint16_t cInitialAmpl = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 400;
+    cSetting = fSettingsMap.find ( "PulseShapeFinalPulseAmplitude" );
+    uint16_t cFinalAmpl = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 600;
+    cSetting = fSettingsMap.find ( "PulseShapeAmplitudeStep" );
+    uint16_t cAmplStep = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 5;
+    
+    
     // get TP delay range 
     cSetting = fSettingsMap.find ( "PulseShapeInitialDelay" );
     uint16_t cInitialTPdleay = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
@@ -683,32 +686,34 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
             fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMult);
         }
         
-        // configure L1A 
-        uint16_t cLatency = fTPconfig.tpDelay;
-        this->setSameDacBeBoard(cBoard, "TriggerLatency", cLatency);
-        fBeBoardInterface->ChipReSync ( cBoard ); // NEED THIS!
-        // set stub latency 
-        uint16_t cStubLatency = cLatency - 1*cStubDelay ;
-        fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
-        
-        // now move the TP with respect to the trigger  
-        for( int cLatencyOffset=-1+cLatencyOffsetStart; cLatencyOffset <= cLatencyOffsetStop ; cLatencyOffset++)
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(fTPconfig.firmwareTPdelay ,fTPconfig.tpDelay ,fTPconfig.tpSequence, fTPconfig.tpFastReset );
+        // change the chip latency 
+        int cStartLatency = (cLatencyOffsetStart > cLatencyOffsetStop) ? (fTPconfig.tpDelay-1*cLatencyOffsetStart) : (fTPconfig.tpDelay+cLatencyOffsetStart); 
+        int cStopLatency = (cLatencyOffsetStart > cLatencyOffsetStop) ? (fTPconfig.tpDelay+cLatencyOffsetStop) : (fTPconfig.tpDelay+cLatencyOffsetStop+1); 
+        LOG (INFO) << BOLDMAGENTA << "Scanning L1A latency between " << +cStartLatency << " and " << +cStopLatency << RESET;
+        for( uint16_t cLatency=cStartLatency; cLatency < cStopLatency; cLatency++)
         {
             // configure TP trigger machine 
-            double cDeltaTrigger = fTPconfig.tpDelay-cLatencyOffset; // number of clock cycles after TP
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(fTPconfig.firmwareTPdelay ,cDeltaTrigger ,fTPconfig.tpSequence, fTPconfig.tpFastReset );
-            fBeBoardInterface->ChipReSync ( cBoard ); //?
+            double cDeltaTrigger = fTPconfig.tpDelay; // number of clock cycles after TP
+            // configure hit latency on all chips  
+            this->setSameDacBeBoard(cBoard, "TriggerLatency", cLatency);
+            // set stub latency on back-end board 
+            uint16_t cStubLatency = cLatency - 1*cStubDelay ;
+            fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
+            fBeBoardInterface->ChipReSync ( cBoard ); // NEED THIS!
             for(uint8_t cTPdelay=cInitialTPdleay; cTPdelay < cFinalTPdleay ; cTPdelay+=cTPdelayStep)
             {
                 setSameGlobalDac("TestPulseDelay", cTPdelay);
                 fBeBoardInterface->ChipReSync ( cBoard ); //?
-                // set stub window offset
-                for( int cOffset=cInitialWindowOffset; cOffset <= cFinalWindowOffset; cOffset++)
+                // set TP size  
+                for( uint16_t cTPamplitude=cInitialAmpl; cTPamplitude < cFinalAmpl; cTPamplitude+= cAmplStep)
                 {
-                    // st threshold 
-                    for( uint16_t cThreshold=cInitialThreshold; cThreshold <= cFinalThreshold; cThreshold+= cThresholdStep)
+                    fTPconfig.tpAmplitude = cTPamplitude;
+                    LOG (INFO) << BOLDMAGENTA << "TP amplitude set to " << +fTPconfig.tpAmplitude << RESET;
+                    // set stub window offset
+                    for( int cOffset=cInitialWindowOffset; cOffset <= cFinalWindowOffset; cOffset++)
                     {
-                        LOG (INFO) << BOLDMAGENTA << "Threshold set to " << +cThreshold << RESET;
+                        LOG (INFO) << BOLDMAGENTA << "Correlation window offset set to " << +cOffset << RESET;
                         for (auto& cFe : cBoard->fModuleVector)
                         {
                             for (auto& cChip : cFe->fReadoutChipVector) 
@@ -728,7 +733,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                                     fReadoutChipInterface->WriteChipReg ( cChip, "CoincWind&Offset12", cOffetReg );
                                     fReadoutChipInterface->WriteChipReg ( cChip, "CoincWind&Offset34", cOffetReg );
                                 }
-                                fReadoutChipInterface->WriteChipReg( cChip, "VCth", cThreshold);
+                                fReadoutChipInterface->WriteChipReg(cChip, "TestPulsePotNodeSel",  0xFF-fTPconfig.tpAmplitude );
                             }
                         }   
 
@@ -770,17 +775,17 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                                     
                                     auto cEventIterator = cEvents.begin();
                                     size_t cEventCounter=0;
-                                    LOG (DEBUG) << BOLDMAGENTA << "CBC" << +cChip->getChipId() << RESET;
+                                    LOG (INFO) << BOLDMAGENTA << "CBC" << +cChip->getChipId() << RESET;
                                     size_t cMatchedHits=0;
                                     size_t cMatchedStubs=0;
-                                    int cLatencyEq = cLatencyOffset;
                                     for( size_t cEventIndex=0; cEventIndex < cEventsPerPoint ; cEventIndex++) // for each event 
                                     {
                                         uint32_t cPipeline_first=0; 
                                         uint32_t cBxId_first=0; 
                                         bool cMissedEvent=false;
-                                        
-                                        LOG (DEBUG) << BOLDMAGENTA << "Event " << +cEventIndex << RESET;
+
+                                        if( cEventIndex == 0 )
+                                            LOG (INFO) << BOLDMAGENTA << "'\tEvent " << +cEventIndex << RESET;
                                         bool cIncorrectPipeline=false;
                                         for(size_t cTriggerIndex=0; cTriggerIndex <= cTriggerMult; cTriggerIndex++) // cTriggerMult consecutive triggers were sent 
                                         {
@@ -794,23 +799,29 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                                             bool cCountEvent = ( static_cast<size_t>(cPipeline - cPipeline_first) == cTriggerIndex );
                                             if(cCountEvent)
                                             {
-                                                cLatencyEq = cLatencyOffset  + (cPipeline - cPipeline_first) ;
-                                                double cTime_ns = static_cast<float>(cDeltaTrigger - (cLatency-cTriggerIndex))*25. + (25.0 - cTPdelay);
                                                 //hits
                                                 auto cHits = cEvent->GetHits( cFeId, cChipId ) ;
                                                 size_t cMatched=0;
+                                                int cLatency_eq = cLatency  - (cPipeline - cPipeline_first);
+                                                double cTime_ns = 1*(static_cast<float>(fTPconfig.tpDelay - cLatency_eq)*25. + (25.0 - cTPdelay));
                                                 for( auto cExpectedHit : cExpectedHits ) 
                                                 {
                                                     bool cMatchFound = std::find(  cHits.begin(), cHits.end(), cExpectedHit) != cHits.end();
-                                                    cMatchedHitsTP->Fill( cTime_ns , cThreshold , cMatchFound);
-                                                    cMatchedHitsLatency->Fill( cLatencyEq  + (25 - cTPdelay)/25. , cThreshold , cMatchFound );
                                                     cMatched += cMatchFound;
                                                     //cMatchedHits->Fill(cTriggerIndex,cPipeline, static_cast<int>(cMatchFound) );
                                                     //cMatchedHitsEye->Fill(fPhaseTap, cTriggerIndex, static_cast<int>(cMatchFound) );
                                                 }
                                                 if( cMatched == cExpectedHits.size() )
+                                                {
                                                     cMatchedHits ++;
-
+                                                    cMatchedHitsLatency->Fill( cLatency_eq , cTPamplitude , 1 );
+                                                    cMatchedHitsTP->Fill( cTime_ns , cTPamplitude , 1);
+                                                }
+                                                else
+                                                {
+                                                    cMatchedHitsLatency->Fill( cLatency_eq , cTPamplitude , 0 );
+                                                    cMatchedHitsTP->Fill( cTime_ns , cTPamplitude , 0);
+                                                }
                                                 //stubs
                                                 auto cStubs = cEvent->StubVector( cFeId, cChipId );
                                                 int cNmatchedStubs=0;
@@ -819,15 +830,20 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                                                     LOG (DEBUG) << BOLDMAGENTA << "\t.. expected seed is " << +cStub.first << " measured seed is " << +cFeStub.getPosition() << RESET;
                                                     LOG (DEBUG) << BOLDMAGENTA << "\t.. expected bend code is 0x" << std::hex << +cBendCode << std::dec << " measured bend code is 0x" << std::hex <<  +cFeStub.getBend() << std::dec << RESET;
                                                     bool cMatchFound = (cFeStub.getPosition() == cStub.first && cFeStub.getBend() == cBendCode); 
-                                                    cMatchedStubsLatency->Fill( cLatencyEq + cStubDelay + (25 - cTPdelay)/25. , cThreshold , cMatchFound );
                                                     cMatchedStubsHist->Fill( cOffset , cMatchFound);
                                                     cNmatchedStubs += static_cast<int>(cMatchFound);
                                                 }
                                                 if( cNmatchedStubs == 1 )
+                                                {
                                                     cMatchedStubs ++;
-                                                int cBin = cMatchedHitsLatency->GetXaxis()->FindBin( cLatencyEq + cTPdelay*(1.0/25) );
+                                                    cMatchedStubsLatency->Fill( cLatency_eq + cStubDelay  , cTPamplitude , 1 );
+                                                }
+                                                else
+                                                    cMatchedStubsLatency->Fill( cLatency_eq + cStubDelay  , cTPamplitude , 0 );
+                                                
+                                                int cBin = cMatchedHitsLatency->GetXaxis()->FindBin( cLatency_eq + cTPdelay*(1.0/25) );
                                                 if( cEventIndex == 0 )
-                                                    LOG (INFO) << BOLDMAGENTA << "\t.. Trigger " << +cTriggerIndex << " Pipeline is " << +cPipeline << " -Latency is  " << +cLatency << " , trigger sent " << fTPconfig.tpDelay+cLatencyOffset << " clocks after fast reset, TP delay is " << +cTPdelay << " Eq. latency is " << cLatencyEq << " clocks. Time in ns is " << +cTime_ns << " .Found " << +cMatched << " matched hits and " <<  +cNmatchedStubs << " matched stubs." <<RESET; 
+                                                    LOG (INFO) << BOLDMAGENTA << "\t\t.. Trigger " << +cTriggerIndex << " Pipeline is " << +cPipeline << " -Latency is  " << +cLatency_eq << " , trigger sent " << fTPconfig.tpDelay+cLatencyOffset << " clocks after fast reset, TP delay is " << +cTPdelay << " L1A " << cLatency << " clocks. Time in ns is " << +cTime_ns << " .Found " << +cMatched << " matched hits and " <<  +cNmatchedStubs << " matched stubs." <<RESET; 
                                             }
                                             else
                                                 cIncorrectPipeline = cIncorrectPipeline || true;

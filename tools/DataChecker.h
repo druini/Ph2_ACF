@@ -55,7 +55,7 @@ class DataChecker : public Tool
     public:
       uint8_t  firmwareTPdelay = 80;
       uint16_t tpDelay = 200;
-      uint16_t tpSequence = 200;
+      uint16_t tpSequence = 500;
       uint16_t tpFastReset = 1;
       uint8_t  tpAmplitude=100;
     };
