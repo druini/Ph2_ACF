@@ -66,6 +66,12 @@ void PixelAlive::ConfigureCalibration ()
   // # Initialize progress #
   // #######################
   RD53RunProgress::total() += PixelAlive::getNumberIterations();
+
+
+  // ############################################################
+  // # Create directory for: raw data, config files, histograms #
+  // ############################################################
+  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void PixelAlive::Start (int currentRun)
@@ -162,7 +168,6 @@ void PixelAlive::draw (int currentRun)
 
   if (currentRun >= 0)
     {
-      this->CreateResultDirectory(RESULTDIR, false, false);
       this->InitResultFile(fileRes);
       LOG (INFO) << BOLDBLUE << "\t--> PixelAlive saving histograms..." << RESET;
     }

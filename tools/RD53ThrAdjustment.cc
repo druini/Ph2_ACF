@@ -32,7 +32,7 @@ void ThrAdjustment::ConfigureCalibration ()
   nEvents         = this->findValueInSettings("nEvents");
   VCalStart       = this->findValueInSettings("VCalHstart");
   VCalStop        = this->findValueInSettings("VCalHstop");
-  targetThreshold = this->findValueInSettings("TargetThreshold");
+  targetThreshold = this->findValueInSettings("TargetThr");
   ThrStart        = this->findValueInSettings("ThrStart");
   ThrStop         = this->findValueInSettings("ThrStop");
   doDisplay       = this->findValueInSettings("DisplayHisto");
@@ -49,6 +49,12 @@ void ThrAdjustment::ConfigureCalibration ()
   // # Initialize progress #
   // #######################
   RD53RunProgress::total() += ThrAdjustment::getNumberIterations();
+
+
+  // ############################################################
+  // # Create directory for: raw data, config files, histograms #
+  // ############################################################
+  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void ThrAdjustment::Start (int currentRun)
@@ -146,7 +152,6 @@ void ThrAdjustment::draw (int currentRun)
 
   if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
   LOG (INFO) << BOLDBLUE << "\t--> ThrAdjustment saving histograms..." << RESET;
 

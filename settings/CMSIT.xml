@@ -176,7 +176,7 @@
 
     <Setting name="ThrStart">         340 </Setting>
     <Setting name="ThrStop">          440 </Setting>
-    <Setting name="TargetThreshold"> 2000 </Setting>
+    <Setting name="TargetThr">       2000 </Setting>
     <Setting name="TargetOcc">       1e-6 </Setting>
 
     <Setting name="DoFast">             0 </Setting>

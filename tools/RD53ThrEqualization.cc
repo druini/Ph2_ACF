@@ -68,6 +68,12 @@ void ThrEqualization::ConfigureCalibration ()
   // # Initialize progress #
   // #######################
   RD53RunProgress::total() += ThrEqualization::getNumberIterations();
+
+
+  // ############################################################
+  // # Create directory for: raw data, config files, histograms #
+  // ############################################################
+  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void ThrEqualization::Start (int currentRun)
@@ -192,7 +198,6 @@ void ThrEqualization::draw (int currentRun)
 
   if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
   LOG (INFO) << BOLDBLUE << "\t--> ThrEqualization saving histograms..." << RESET;
 

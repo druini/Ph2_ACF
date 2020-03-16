@@ -47,6 +47,12 @@ void ThrMinimization::ConfigureCalibration ()
   // # Initialize progress #
   // #######################
   RD53RunProgress::total() += ThrMinimization::getNumberIterations();
+
+
+  // ############################################################
+  // # Create directory for: raw data, config files, histograms #
+  // ############################################################
+  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void ThrMinimization::Start (int currentRun)
@@ -144,7 +150,6 @@ void ThrMinimization::draw (int currentRun)
 
   if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
   LOG (INFO) << BOLDBLUE << "\t--> ThrMinimization saving histograms..." << RESET;
 

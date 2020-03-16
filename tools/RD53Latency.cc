@@ -48,6 +48,12 @@ void Latency::ConfigureCalibration ()
   // # Initialize progress #
   // #######################
   RD53RunProgress::total() += Latency::getNumberIterations();
+
+
+  // ############################################################
+  // # Create directory for: raw data, config files, histograms #
+  // ############################################################
+  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void Latency::Start (int currentRun)
@@ -135,7 +141,6 @@ void Latency::draw (int currentRun)
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
   LOG (INFO) << BOLDBLUE << "\t--> Latency saving histograms..." << RESET;
 

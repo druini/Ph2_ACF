@@ -170,7 +170,7 @@ namespace Ph2_HwInterface
     {
       IPBus = 1,
       FastCMDFSM,
-      UserDefined, // --> need to set IPbus register "autozero_freq"
+      UserDefined, // --> It needs to set IPbus register "autozero_freq"
       Disabled = 0
     };
 
