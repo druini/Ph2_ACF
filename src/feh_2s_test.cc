@@ -11,6 +11,7 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/DataChecker.h"
 #include "Utils/argvparser.h"
+#include "ExtraChecks.h"
 
 #ifdef __USE_ROOT__
     #include "TROOT.h"
@@ -79,8 +80,9 @@ int main ( int argc, char* argv[] )
     
     cmd.defineOption ( "antennaDelay", "Delay between the antenna pulse and the delay [25 ns]", ArgvParser::OptionRequiresValue );
     cmd.defineOption ( "latencyRange", "Range of latencies around pulse to scan [25 ns]", ArgvParser::OptionRequiresValue );
+    cmd.defineOption ( "evaluate", "Run some more detailed tests... ", ArgvParser::OptionRequiresValue );
+    cmd.defineOptionAlternative ( "evaluate", "e" );
     
-
     cmd.defineOption ( "withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute );
 
     int result = cmd.parse ( argc, argv );
@@ -101,6 +103,7 @@ int main ( int argc, char* argv[] )
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
     bool cAllChan = ( cmd.foundOption ( "allChan" ) ) ? true : false;
     bool cCheckData = ( cmd.foundOption ( "checkData" ) ) ;
+    bool cEvaluate = ( cmd.foundOption ( "evaluate" ) ) ;
     
     int  cAntennaDelay = ( cmd.foundOption ( "antennaDelay" ) )   ?  convertAnyInt ( cmd.optionValue ( "antennaDelay" ).c_str() ) : -1;
     int  cLatencyRange = ( cmd.foundOption ( "latencyRange" ) )   ?  convertAnyInt ( cmd.optionValue ( "latencyRange" ).c_str() ) :  -1;
@@ -298,6 +301,20 @@ int main ( int argc, char* argv[] )
         // V(pulse) = V_DDA*(255-cAmplitude)/255
         cShortFinder.FindShorts(cThreshold, cAmplitude);
     }
+
+    if( cEvaluate )
+    {
+        int cSigma = cmd.foundOption ( "evaluate" ) ?  convertAnyInt ( cmd.optionValue ( "evaluate" ).c_str() ) :  3;
+        // some extra stuff ... 
+        ExtraChecks cExtra;
+        cExtra.Inherit (&cTool);
+        cExtra.Initialise ();
+        LOG (INFO) << BOLDBLUE << "Measuring noise and setting thresholds to " << +cSigma << " noise units away from pedestal...." << RESET;
+        cExtra.Evaluate(cSigma, 0, true);
+        cExtra.writeObjects();
+        cExtra.resetPointers();
+    }
+
 
     //inject hits and stubs using mask and compare input against output 
     if( cCheckData )

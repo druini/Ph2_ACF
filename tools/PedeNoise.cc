@@ -269,7 +269,7 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
 void PedeNoise::measureSCurves (uint16_t pStartValue)
 {
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan! 
-    float cLimit = 1e-2;
+    float cLimit = 0;
     int cMinBreakCount = 10;
 
     bool     cAllZero        = false;

@@ -664,7 +664,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                     fReadoutChipInterface->WriteChipReg ( cChip, "CoincWind&Offset34", cOffetReg );
                     */
                     fReadoutChipInterface->enableInjection(cChip, true);
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTargetThreshold);
+                    //static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTargetThreshold);
                 }
                 else
                    static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels( cChip, true);

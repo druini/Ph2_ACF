@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
     <BeBoard Id="0" boardType="D19C" eventType="VR">
-      <connection id="board" uri="chtcp-2.0://pchpdaq01.cern.ch:10203?target=192.168.0.19:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+      <!-- <connection id="board" uri="chtcp-2.0://pchpdaq01.cern.ch:10203?target=192.168.0.19:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  -->
       <!-- <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.11:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" />  -->
-      <!-- <connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />   -->
+      <connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  
       <!-- <connection id="board" uri="chtcp-2.0://jadsdesktop.cern.ch:10203?target=192.168.2.100:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" />  -->
     
     <CDCE configure="0" clockRate="120"/>
@@ -174,8 +174,8 @@
   </BeBoard>
 
 <Settings>
-    <!--PedestalEqualization-->
-    <Setting name="Nevents">100</Setting>
+     <!--PedestalEqualization-->
+    <Setting name="Nevents">1000</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
@@ -192,13 +192,16 @@
 
     <!--PulseShape-->
     <Setting name="PulseShapeNevents"       >100</Setting>
-    <Setting name="PulseShapeInitialVcth"   >585</Setting>
-    <Setting name="PulseShapeFinalVcth"     >585</Setting>
-    <Setting name="PulseShapeVCthStep"      >  1</Setting>
+    <Setting name="PulseShapeInitialVcth"   >575</Setting>
+    <Setting name="PulseShapeFinalVcth"     >576</Setting>
+    <Setting name="PulseShapeVCthStep"      >  5</Setting>
     <Setting name="PulseShapeInitialDelay"  >  0</Setting>
-    <Setting name="PulseShapeFinalDelay"    > 1</Setting>
-    <Setting name="PulseShapeDelayStep"     >  1</Setting>
+    <Setting name="PulseShapeFinalDelay"    >  1</Setting>
+    <Setting name="PulseShapeDelayStep"     >  5</Setting>
     <Setting name="PulseShapePulseAmplitude"> 15</Setting>
+    <Setting name="PulseShapeInitialPulseAmplitude"   >0</Setting>
+    <Setting name="PulseShapeFinalPulseAmplitude"     >101</Setting>
+    <Setting name="PulseShapeAmplitudeStep"     >  1</Setting>
 
     <!-- Window Offset-->
     <Setting name="WindowOffsetInitial">  0</Setting>
@@ -209,7 +212,7 @@
     <Setting name="Threshold">575</Setting>
     <Setting name="UseNoise">0</Setting>
     <Setting name="Attempts">1</Setting>
-    <Setting name="LatencyOffset">-1</Setting>
+    <Setting name="LatencyOffset">1</Setting>
     <Setting name="TriggerRate">1</Setting>
     <Setting name="TriggerMultiplicity">0</Setting>
     <Setting name="StubDelay">49</Setting>
@@ -226,6 +229,10 @@
     <Setting name="AntennaDelay">200</Setting>
     <Setting name="AntennaGroup">0</Setting>
     <Setting name="ScanRange">5</Setting>
+    
+    <!-- Latency scan -->
+    <Setting name="LatencyStart">3</Setting>
+    <Setting name="LatencyStop">2</Setting>
 
 </Settings>
 </HwDescription>

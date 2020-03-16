@@ -156,7 +156,7 @@
 	<Setting name="PulseShapeFinalDelay"    >  1</Setting>
 	<Setting name="PulseShapeDelayStep"     >  5</Setting>
     <Setting name="PulseShapePulseAmplitude"> 15</Setting>
-    <Setting name="PulseShapeInitialPulseAmplitude"   >5</Setting>
+    <Setting name="PulseShapeInitialPulseAmplitude"   >0</Setting>
     <Setting name="PulseShapeFinalPulseAmplitude"     >101</Setting>
     <Setting name="PulseShapeAmplitudeStep"     >  1</Setting>
 
