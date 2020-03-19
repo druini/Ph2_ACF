@@ -2344,7 +2344,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
 
     // data hadnshake has to be enabled in that mode
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
-    cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.packet_nbr", pNEvents} );
+    cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.packet_nbr", pNEvents-1} );
     cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1} );
     cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents} );
     cVecReg.push_back ( {"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1} );
@@ -2361,7 +2361,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
 
     uint32_t cTimeoutCounter = 0 ;
-    uint32_t cTimeoutValue = cTimeSingleTrigger_ms*(pNEvents+10);
+    uint32_t cTimeoutValue = cTimeSingleTrigger_ms*(pNEvents+1);
     uint32_t cPause = 1*static_cast<uint32_t>(cTimeSingleTrigger_ms*1e3);
     LOG (DEBUG) << BOLDMAGENTA << "Waiting " << +cPause << " microseconds between attempts at checking readout req... waiting for a maximum of " <<  +cTimeoutValue << " iterations." << RESET;
     do
@@ -2370,8 +2370,8 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
         cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
         cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
         cTimeoutCounter++;
-    }while (cReadoutReq == 0 && ( cTimeoutCounter < cTimeoutValue ) );
-    pFailed = (cReadoutReq == 0 || ( cTimeoutCounter >= cTimeoutValue ) ); // fails if either one of these is true 
+    }while (cReadoutReq == 0 && ( cTimeoutCounter <= cTimeoutValue ) );
+    pFailed = (cReadoutReq == 0 || ( cTimeoutCounter > cTimeoutValue ) ); // fails if either one of these is true 
 
     if(cReadoutReq==0)
     {
@@ -2387,7 +2387,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     {
         // check the amount of words
         cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-        //LOG (DEBUG) << BOLDBLUE << "Read back " << +cNWords << " words from DDR3 memory in FC7." << RESET;
+        LOG (INFO) << BOLDBLUE << "Read back " << +cNWords << " words from DDR3 memory in FC7." << RESET;
         
         if (pBoard->getEventType() == EventType::VR)
         {

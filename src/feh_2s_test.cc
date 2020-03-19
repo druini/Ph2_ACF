@@ -319,10 +319,10 @@ int main ( int argc, char* argv[] )
     //inject hits and stubs using mask and compare input against output 
     if( cCheckData )
     {
-        // desperate times...
-        cTool.SetTestAllChannels(true);
-        cTool.setSameLocalDac("ChannelOffset", 120);
-        cTool.bitWiseScan("VCth", 30, 0.56);
+        // desperate
+        // cTool.SetTestAllChannels(true);
+        // cTool.setSameLocalDac("ChannelOffset", 120);
+        // cTool.bitWiseScan("VCth", 30, 0.56);
 
 
         // std::string sFEsToCheck = cmd.optionValue ( "checkData" );
@@ -343,30 +343,30 @@ int main ( int argc, char* argv[] )
         // //cDataChecker.DataCheck(cFEsToCheck);
 
 
-        // for( auto& cBoard : cTool.fBoardVector )
-        // {
-        //     for (auto& cFe : cBoard->fModuleVector)
-        //     {
-        //         // matching 
-        //         for (auto& cChip : cFe->fReadoutChipVector) 
-        //         {
-        //             if( cChip->getChipId()%2 == 0 )
-        //                 static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
-        //             else
-        //                 static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
-        //         }
-        //     }
-        //     cTool.ReadNEvents( cBoard, 10 );
-        //     const std::vector<Event*>& cEvents = cTool.GetEvents ( cBoard );
-        //     uint32_t cN=0;
-        //     for ( auto& cEvent : cEvents )
-        //     {
-        //         LOG (INFO) << ">>> Event #" << cN++ ;
-        //         outp.str ("");
-        //         outp << *cEvent;
-        //         LOG (INFO) << outp.str();
-        //     }
-        // }
+        for( auto& cBoard : cTool.fBoardVector )
+        {
+            for (auto& cFe : cBoard->fModuleVector)
+            {
+                // matching 
+                for (auto& cChip : cFe->fReadoutChipVector) 
+                {
+                    if( cChip->getChipId()%2 == 0 )
+                        static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
+                    else
+                        static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
+                }
+            }
+            cTool.ReadNEvents( cBoard, 10 );
+            const std::vector<Event*>& cEvents = cTool.GetEvents ( cBoard );
+            uint32_t cN=0;
+            for ( auto& cEvent : cEvents )
+            {
+                LOG (INFO) << ">>> Event #" << cN++ ;
+                outp.str ("");
+                outp << *cEvent;
+                LOG (INFO) << outp.str();
+            }
+        }
 
         // // now create a PedestalEqualization object
         // DataChecker cDataChecker;
