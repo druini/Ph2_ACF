@@ -878,7 +878,7 @@ namespace Ph2_HwInterface {
         }
         
         // select fast command edge 
-        bool cNegEdge=true;
+        bool cNegEdge=false;
         if( cNegEdge)
             LOG (INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
         else
