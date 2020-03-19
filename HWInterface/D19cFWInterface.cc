@@ -2335,7 +2335,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     auto cTriggerRate = (cTriggerSource == 5 || cTriggerSource == 6 ) ? 1 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz 
     uint32_t  cTimeSingleTrigger_ms = std::ceil(1.0/(cTriggerRate));
 
-    LOG (DEBUG) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << " trigger rate is " << +cTriggerRate << RESET;
+    LOG (DEBUG) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << " trigger rate is " << +cTriggerRate << " trigger source is " << +cTriggerSource << RESET;
     this->ResetReadout();
     pNEvents = pNEvents*(cMultiplicity+1);
     // check 
@@ -2421,7 +2421,19 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
         LOG (INFO) << BOLDRED << "Failed to readout all events after " << cTimeoutValue << " trials, Retrying..." << RESET;
         pData.clear();
         this->Stop();
-        this->ResetReadout();
+        
+        // reset trigger 
+        this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
+        std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+        // make sure trigger config is what you want 
+        this->WriteStackReg ( cVecReg );
+        cVecReg.clear();
+        // load new trigger configuration 
+        this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+        std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+        // reset readout 
+        this->ResetReadout(); 
+        
         this->ReadNEvents (pBoard, pNEvents, pData);
     }        
 
