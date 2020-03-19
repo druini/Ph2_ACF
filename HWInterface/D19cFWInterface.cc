@@ -2344,7 +2344,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
 
     // data hadnshake has to be enabled in that mode
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
-    cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.packet_nbr", pNEvents-1} );
+    cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.packet_nbr", pNEvents-2} );
     cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1} );
     cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents} );
     cVecReg.push_back ( {"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1} );
