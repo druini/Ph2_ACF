@@ -2330,7 +2330,9 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
 {
     // RESET the readout
     auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    auto cTriggerRate = this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz 
+    // 1 kHz 
+    auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source 
+    auto cTriggerRate = (cTriggerSource == 5 || cTriggerSource == 6 ) ? 1 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz 
     uint32_t  cTimeSingleTrigger_ms = std::ceil(1.0/(cTriggerRate));
 
     LOG (DEBUG) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << " trigger rate is " << +cTriggerRate << RESET;
