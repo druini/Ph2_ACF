@@ -2334,7 +2334,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     uint32_t  cTimeSingleTrigger_ms = std::ceil(1.0/(cTriggerRate));
 
     LOG (DEBUG) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << " trigger rate is " << +cTriggerRate << RESET;
-    //this->ResetReadout();
+    this->ResetReadout();
     pNEvents = pNEvents*(cMultiplicity+1);
     // check 
     //LOG (INFO) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
@@ -2988,24 +2988,24 @@ bool D19cFWInterface::Bx0Alignment()
 // configure trigger FSMs on the fly ...
 void D19cFWInterface::ConfigureTestPulseFSM(uint16_t pDelayAfterFastReset, uint16_t pDelayAfterTP, uint16_t pDelayBeforeNextTP, uint8_t pEnableFastReset, uint8_t pEnableTP, uint8_t pEnableL1A ) 
 {
-    //reset readout and trigger
-    this->ResetReadout();
-    WriteReg ("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
-    std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-    //configure trigger
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
+    //configure trigger
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable",0});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", pDelayAfterFastReset});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", pDelayAfterTP});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", pDelayBeforeNextTP});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", pEnableFastReset});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_test_pulse", pEnableTP});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_l1a", pEnableL1A});
+    // reset trigger 
+    cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.reset",0x1});
+    // write register
     this->WriteStackReg( cVecReg ); 
     std::this_thread::sleep_for (std::chrono::milliseconds (100) ); 
     // load new trigger configuration 
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    // reset readout 
     this->ResetReadout(); 
 }
 // periodic triggers
