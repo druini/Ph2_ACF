@@ -62,6 +62,12 @@ void InjectionDelay::ConfigureCalibration ()
   // # Initialize progress #
   // #######################
   RD53RunProgress::total() += InjectionDelay::getNumberIterations();
+
+
+  // ############################################################
+  // # Create directory for: raw data, config files, histograms #
+  // ############################################################
+  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void InjectionDelay::Start (int currentRun)
@@ -204,7 +210,6 @@ void InjectionDelay::draw (int currentRun)
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
   LOG (INFO) << BOLDBLUE << "\t--> InjectionDelay saving histograms..." << RESET;
 

@@ -526,6 +526,7 @@ namespace Ph2_HwInterface
     const uint8_t  chipID             = pChip->getChipId();
     const uint16_t trimADC            = bits::pack<1, 5, 6>(true, pChip->getRegItem("BG_MONITOR_CONFIG").fValue, pChip->getRegItem("ADC_MONITOR_CONFIG").fValue);
     // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should give an average VrefADC of 0.9 V
+    const uint16_t GlbPulseVal        = RD53Interface::ReadChipReg(pChip, "GLOBAL_PULSE_ROUTE");
 
     std::vector<uint16_t> commandList;
 
@@ -537,6 +538,7 @@ namespace Ph2_HwInterface
     RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_SELECT").fAddress, data).appendTo(commandList); // 14 bits: bit 13 enable, bits 7:12 I-Mon, bits 0:6 V-Mon
     RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x1000).appendTo(commandList); // Trigger Monitor Data to start conversion
     RD53Cmd::GlobalPulse(pChip->getChipId(),   0x0004).appendTo(commandList);
+    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, GlbPulseVal).appendTo(commandList); // Restore value in Global Pulse Route
 
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getFeId());
 
@@ -592,7 +594,7 @@ namespace Ph2_HwInterface
   float RD53Interface::convertADC2VorI (Chip* pChip, uint32_t value, bool isCurrentNotVoltage)
   {
     // #####################################################################
-    // # ADCoffset     = 63  [1/10mV] Offset due to ground shift           #
+    // # ADCoffset     =  63 [1/10mV] Offset due to ground shift           #
     // # actualVrefADC = 839 [mV]     Lower than VrefADC due to parasitics #
     // #####################################################################
     const float resistorI2V   = 10000; // [Ohm]

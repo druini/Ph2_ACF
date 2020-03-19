@@ -42,16 +42,20 @@ void Physics::ConfigureCalibration ()
   theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
 
-  // ###########################################
-  // # Initialize directory and data container #
-  // ###########################################
+  // ##############################
+  // # Initialize data containers #
+  // ##############################
   const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
   const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
-
-  this->CreateResultDirectory(RESULTDIR, false, false);
   ContainerFactory::copyAndInitStructure<OccupancyAndPh,GenericDataVector>(*fDetectorContainer, theOccContainer);
   ContainerFactory::copyAndInitChip<GenericDataArray<BCIDsize>> (*fDetectorContainer, theBCIDContainer);
   ContainerFactory::copyAndInitChip<GenericDataArray<TrgIDsize>>(*fDetectorContainer, theTrgIDContainer);
+
+
+  // ############################################################
+  // # Create directory for: raw data, config files, histograms #
+  // ############################################################
+  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void Physics::Start (int currentRun)
