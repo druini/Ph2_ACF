@@ -2334,7 +2334,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     auto cTriggerRate = (cTriggerSource == 5 || cTriggerSource == 6 ) ? 1 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz .. if external trigger assume 1 kHz as lowest possible rate
     uint32_t  cTimeSingleTrigger_us = std::ceil(1.5e3/(cTriggerRate));
 
-    //this->ResetReadout();
+    this->ResetReadout();
     pNEvents = pNEvents*(cMultiplicity+1);
     // check 
     //LOG (INFO) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;

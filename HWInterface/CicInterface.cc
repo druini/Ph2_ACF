@@ -829,7 +829,7 @@ namespace Ph2_HwInterface {
         LOG (INFO) << BOLDBLUE <<  ".... Starting CIC start-up ........ on hybrid " << +pChip->getFeId() << RESET;
 
         bool cClkTermination = true; // true
-        bool cRxTermination = (pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;// true, false
+        bool cRxTermination = (pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;// true, false -- this needs to be false for the crate set-up .. how to fix this?!?!
         std::string cRegName = "SLVS_PADS_CONFIG";
         uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
         auto cIterator = fTxDriveStrength.find(pDriveStrength); 

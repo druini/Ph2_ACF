@@ -436,8 +436,11 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
                             uint32_t cL1Id = cEvent->L1Id( cFe->getFeId(), cChip->getChipId() );
                             uint32_t cPipeline = cEvent->PipelineAddress( cFe->getFeId(), cChip->getChipId() );
                             uint32_t cError = cEvent->Error( cFe->getFeId() , cChip->getChipId() );
+                            uint32_t cStatus = static_cast<D19cCic2Event*>(cEvent)->Status( cFe->getFeId() );
                             if( (cEventCount % 10) == 0 )
-                                LOG (DEBUG) << BOLDBLUE << "\t\t....Event " << +cEventCount << " ----  L1Id " << +cL1Id << " Pipeline address " << +cPipeline << RESET;
+                            {    
+                                LOG (DEBUG) << BOLDBLUE << "\t\t....Event " << +cEventCount << " ----  L1Id " << +cL1Id << " Pipeline address " << +cPipeline << " status bits from " << std::bitset<9>(cStatus) << RESET;
+                            }
                             cHistPipeline->Fill( cEventCounter, cVcth, cPipeline);
                             cHistErrors->Fill( cEventCounter, cVcth, 1+ cError);
                             cHistL1Id->Fill( cEventCounter, cVcth , cL1Id);
