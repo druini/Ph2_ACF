@@ -78,6 +78,7 @@
             <Register name="backpressure_enable"> 1 </Register>
             <Register name="stubOR"> 1 </Register>
             <Register name="initial_fast_reset_enable"> 0 </Register>
+            <Register name="trigger_multiplicity"> 14 </Register>
         </Register>
         </Register>
         <!-- I2C manager -->

@@ -2330,13 +2330,11 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
 {
     // RESET the readout
     auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    // 1 kHz 
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source 
-    auto cTriggerRate = (cTriggerSource == 5 || cTriggerSource == 6 ) ? 1 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz 
-    uint32_t  cTimeSingleTrigger_ms = std::ceil(1.0/(cTriggerRate));
+    auto cTriggerRate = (cTriggerSource == 5 || cTriggerSource == 6 ) ? 1 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz .. if external trigger assume 1 kHz as lowest possible rate
+    uint32_t  cTimeSingleTrigger_us = std::ceil(1.5e3/(cTriggerRate));
 
-    LOG (INFO) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << " trigger rate is " << +cTriggerRate << " trigger source is " << +cTriggerSource << RESET;
-    this->ResetReadout();
+    //this->ResetReadout();
     pNEvents = pNEvents*(cMultiplicity+1);
     // check 
     //LOG (INFO) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
@@ -2361,17 +2359,20 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
 
     uint32_t cTimeoutCounter = 0 ;
-    uint32_t cTimeoutValue = cTimeSingleTrigger_ms*(pNEvents+1);
-    uint32_t cPause = 1*static_cast<uint32_t>(cTimeSingleTrigger_ms*1e3);
+    uint32_t cTimeoutValue = 100; // maximum number of times I allow the word counter not to increment ..
+    uint32_t cPause = 1*static_cast<uint32_t>(cTimeSingleTrigger_us);
+    LOG (DEBUG) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << " trigger rate is " << +cTriggerRate << " trigger source is " << +cTriggerSource << RESET;
     LOG (DEBUG) << BOLDMAGENTA << "Waiting " << +cPause << " microseconds between attempts at checking readout req... waiting for a maximum of " <<  +cTimeoutValue << " iterations." << RESET;
+    uint32_t cNWords_previous = cNWords;
     do
     {
         std::this_thread::sleep_for (std::chrono::microseconds (cPause) );
         cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
         cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-        cTimeoutCounter++;
-    }while (cReadoutReq == 0 && ( cTimeoutCounter <= cTimeoutValue ) );
-    pFailed = (cReadoutReq == 0 || ( cTimeoutCounter > cTimeoutValue ) ); // fails if either one of these is true 
+        cTimeoutCounter += (cNWords == cNWords_previous );
+        cNWords_previous = cNWords;
+    }while (cReadoutReq == 0 && ( cTimeoutCounter < cTimeoutValue ) );
+    pFailed = (cReadoutReq == 0 || ( cTimeoutCounter >= cTimeoutValue ) ); // fails if either one of these is true 
 
     if(cReadoutReq==0)
     {
@@ -2387,7 +2388,7 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     {
         // check the amount of words
         cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-        LOG (INFO) << BOLDBLUE << "Read back " << +cNWords << " words from DDR3 memory in FC7." << RESET;
+        LOG (DEBUG) << BOLDBLUE << "Read back " << +cNWords << " words from DDR3 memory in FC7." << RESET;
         
         if (pBoard->getEventType() == EventType::VR)
         {
