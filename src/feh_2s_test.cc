@@ -325,48 +325,48 @@ int main ( int argc, char* argv[] )
         // cTool.bitWiseScan("VCth", 30, 0.56);
 
 
-        // std::string sFEsToCheck = cmd.optionValue ( "checkData" );
-        // std::vector<uint8_t> cFEsToCheck;
-        // std::stringstream ssFEsToCheck( sFEsToCheck );
-        // int i;
-        // while ( ssFEsToCheck >> i )
-        // {
-        //     cFEsToCheck.push_back( i );
-        //     if ( ssFEsToCheck.peek() == ',' ) ssFEsToCheck.ignore();
-        // };
-        // t.start();
-        // DataChecker cDataChecker;
-        // cDataChecker.Inherit (&cTool);
-        // cDataChecker.Initialise ( );
-        // cDataChecker.zeroContainers();
-        // cDataChecker.TestPulse(cFEsToCheck);
-        // //cDataChecker.DataCheck(cFEsToCheck);
-
-
-        for( auto& cBoard : cTool.fBoardVector )
+        std::string sFEsToCheck = cmd.optionValue ( "checkData" );
+        std::vector<uint8_t> cFEsToCheck;
+        std::stringstream ssFEsToCheck( sFEsToCheck );
+        int i;
+        while ( ssFEsToCheck >> i )
         {
-            for (auto& cFe : cBoard->fModuleVector)
-            {
-                // matching 
-                for (auto& cChip : cFe->fReadoutChipVector) 
-                {
-                    if( cChip->getChipId()%2 == 0 )
-                        static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
-                    else
-                        static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
-                }
-            }
-            cTool.ReadNEvents( cBoard, 10 );
-            const std::vector<Event*>& cEvents = cTool.GetEvents ( cBoard );
-            uint32_t cN=0;
-            for ( auto& cEvent : cEvents )
-            {
-                LOG (INFO) << ">>> Event #" << cN++ ;
-                outp.str ("");
-                outp << *cEvent;
-                LOG (INFO) << outp.str();
-            }
-        }
+            cFEsToCheck.push_back( i );
+            if ( ssFEsToCheck.peek() == ',' ) ssFEsToCheck.ignore();
+        };
+        t.start();
+        DataChecker cDataChecker;
+        cDataChecker.Inherit (&cTool);
+        cDataChecker.Initialise ( );
+        cDataChecker.zeroContainers();
+        //cDataChecker.TestPulse(cFEsToCheck);
+        cDataChecker.DataCheck(cFEsToCheck);
+
+
+        // for( auto& cBoard : cTool.fBoardVector )
+        // {
+        //     for (auto& cFe : cBoard->fModuleVector)
+        //     {
+        //         // matching 
+        //         for (auto& cChip : cFe->fReadoutChipVector) 
+        //         {
+        //             if( cChip->getChipId()%2 == 0 )
+        //                 static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
+        //             else
+        //                 static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
+        //         }
+        //     }
+        //     cTool.ReadNEvents( cBoard, 10 );
+        //     const std::vector<Event*>& cEvents = cTool.GetEvents ( cBoard );
+        //     uint32_t cN=0;
+        //     for ( auto& cEvent : cEvents )
+        //     {
+        //         LOG (INFO) << ">>> Event #" << cN++ ;
+        //         outp.str ("");
+        //         outp << *cEvent;
+        //         LOG (INFO) << outp.str();
+        //     }
+        // }
 
         // // now create a PedestalEqualization object
         // DataChecker cDataChecker;
@@ -378,7 +378,7 @@ int main ( int argc, char* argv[] )
 
         // cDataChecker.writeObjects();
         // cDataChecker.resetPointers();
-        // t.show ( "Time to check data of the front-ends on the system: " );
+        t.show ( "Time to check data of the front-ends on the system: " );
     }
 
     cTool.SaveResults();

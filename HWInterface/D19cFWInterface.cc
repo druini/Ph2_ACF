@@ -1507,10 +1507,10 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard , bool pScope)
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
     // reset trigger 
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
-    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    std::this_thread::sleep_for (std::chrono::microseconds (10) ); 
     // load new trigger configuration 
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
-    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    std::this_thread::sleep_for (std::chrono::microseconds (10) ); 
     // reset readout 
     this->ResetReadout(); 
     std::this_thread::sleep_for (std::chrono::microseconds (10) );
@@ -2330,25 +2330,28 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
 {
     // RESET the readout
     auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    pNEvents = pNEvents*(cMultiplicity+1);
+    
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source 
     auto cTriggerRate = (cTriggerSource == 5 || cTriggerSource == 6 ) ? 1 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz .. if external trigger assume 1 kHz as lowest possible rate
     uint32_t  cTimeSingleTrigger_us = std::ceil(1.5e3/(cTriggerRate));
 
-    this->ResetReadout();
-    pNEvents = pNEvents*(cMultiplicity+1);
     // check 
     //LOG (INFO) << BOLDBLUE << "Reading " << +pNEvents << " from BE board." << RESET;
     //LOG (DEBUG) << BOLDBLUE << "Initial fast reset " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable") << RESET;
-
     // data hadnshake has to be enabled in that mode
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
     cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.packet_nbr", pNEvents-1} );
     cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1} );
     cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents} );
-    cVecReg.push_back ( {"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1} );
     this->WriteStackReg ( cVecReg );
     std::this_thread::sleep_for (std::chrono::microseconds (10) );
-    
+    // load new trigger configuration 
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+    std::this_thread::sleep_for (std::chrono::microseconds (10) );
+    // reset readout 
+    this->ResetReadout(); 
+        
     // start triggering machine which will collect N events
     this->Start();
 
@@ -2426,14 +2429,6 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
         // reset trigger 
         this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
         std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
-        // make sure trigger config is what you want 
-        this->WriteStackReg ( cVecReg );
-        cVecReg.clear();
-        // load new trigger configuration 
-        this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
-        std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
-        // reset readout 
-        this->ResetReadout(); 
         
         this->ReadNEvents (pBoard, pNEvents, pData);
     }        
