@@ -275,6 +275,15 @@ int main ( int argc, char* argv[] )
                 }
             }
             cExtra.ReadNEvents ( cBoard , 1);
+            const std::vector<Event*>& cEvents = cExtra.GetEvents ( cBoard );
+            uint32_t cN=0;
+            for ( auto& cEvent : cEvents )
+            {
+                LOG (INFO) << ">>> Event #" << cN++ ;
+                outp.str ("");
+                outp << *cEvent;
+                LOG (INFO) << outp.str();
+            }
         }
     }
     

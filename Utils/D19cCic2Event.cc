@@ -557,66 +557,64 @@ namespace Ph2_HwInterface {
         const int LINE_WIDTH = 32;
         const int LAST_LINE_WIDTH = 8; 
         uint8_t cFeId=0;
-        // still need to work this out 
-        // auto& cList = (fIsSparsified) ? fEventHitList : fEventRawList;
-        // if(fIsSparsified)
-        // {   
-        //     for(auto& cHybridEvent : cList ) 
-        //     {
-        //         for( size_t cReadoutChipId = 0 ; cReadoutChipId < 8 ; cReadoutChipId++)
-        //         {
-        //             // print out information
-        //             //printL1Header (os, cFeId, cReadoutChipId);
+        //still need to work this out for sparsified data
+        if(!fIsSparsified)
+        {   
+            for(uint8_t cFeId=0; cFeId < fEventRawList.size(); cFeId++ ) 
+            {
+                for( size_t cReadoutChipId = 0 ; cReadoutChipId < fEventRawList[cFeId].second.size() ; cReadoutChipId++)
+                {
+                    // print out information
+                    printL1Header (os, cFeId, cReadoutChipId);
                     
-        //             std::vector<uint32_t> cHits = this->GetHits (cFeId, cReadoutChipId);
-        //             if (cHits.size() == NCHANNELS)
-        //                 os << BOLDRED << "All channels firing!" << RESET << std::endl;
-        //             else
-        //             {
-        //                 int cCounter = 0;
-        //                 for (auto& cHit : cHits )
-        //                 {
-        //                     os << std::setw (3) << cHit << " ";
-        //                     cCounter++;
-        //                     if (cCounter == 10)
-        //                     {
-        //                         os << std::endl;
-        //                         cCounter = 0;
-        //                     }
-        //                 }
-        //                 os << RESET << std::endl;
-        //             }
-        //             // channel data 
-        //             std::string data ( this->DataBitString ( cFeId, cReadoutChipId ) ); 
-        //             os << "Ch. Data:      ";
-        //             for (int i = 0; i < FIRST_LINE_WIDTH; i += 2)
-        //                 os << data.substr ( i, 2 ) << " ";
+                    std::vector<uint32_t> cHits = this->GetHits (cFeId, cReadoutChipId);
+                    if (cHits.size() == NCHANNELS)
+                        os << BOLDRED << "All channels firing!" << RESET << std::endl;
+                    else
+                    {
+                        int cCounter = 0;
+                        for (auto& cHit : cHits )
+                        {
+                            os << std::setw (3) << cHit << " ";
+                            cCounter++;
+                            if (cCounter == 10)
+                            {
+                                os << std::endl;
+                                cCounter = 0;
+                            }
+                        }
+                        os << RESET << std::endl;
+                    }
+                    // channel data 
+                    std::string data ( this->DataBitString ( cFeId, cReadoutChipId ) ); 
+                    os << "Ch. Data:      ";
+                    for (int i = 0; i < FIRST_LINE_WIDTH; i += 2)
+                        os << data.substr ( i, 2 ) << " ";
 
-        //             os << std::endl;
+                    os << std::endl;
 
-        //             for ( int i = 0; i < 7; ++i )
-        //             {
-        //                 for (int j = 0; j < LINE_WIDTH; j += 2)
-        //                     os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * i + j, 2 ) << " ";
+                    for ( int i = 0; i < 7; ++i )
+                    {
+                        for (int j = 0; j < LINE_WIDTH; j += 2)
+                            os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * i + j, 2 ) << " ";
 
-        //                 os << std::endl;
-        //             }
-        //             for (int i = 0; i < LAST_LINE_WIDTH; i += 2)
-        //                 os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i, 2 ) << " ";
-        //             os << std::endl;
-        //             // stubs
-        //             uint8_t cCounter=0;
-        //             os << BOLDCYAN << "List of Stubs: " << RESET << std::endl;
-        //             for (auto& cStub : this->StubVector (cFeId, cReadoutChipId ) )
-        //             {
-        //                 os << CYAN << "Stub: " << +cCounter << " Position: " << +cStub.getPosition() << " Bend: " << +cStub.getBend() << " Strip: " << cStub.getCenter() << RESET << std::endl;
-        //                 cCounter++;
-        //             }
-        //             cReadoutChipId++;
-        //         }
-        //         cFeId++;
-        //     }
-        // }
+                        os << std::endl;
+                    }
+                    for (int i = 0; i < LAST_LINE_WIDTH; i += 2)
+                        os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i, 2 ) << " ";
+                    os << std::endl;
+                    // stubs
+                    uint8_t cCounter=0;
+                    os << BOLDCYAN << "List of Stubs: " << RESET << std::endl;
+                    for (auto& cStub : this->StubVector (cFeId, cReadoutChipId ) )
+                    {
+                        os << CYAN << "Stub: " << +cCounter << " Position: " << +cStub.getPosition() << " Bend: " << +cStub.getBend() << " Strip: " << cStub.getCenter() << RESET << std::endl;
+                        cCounter++;
+                    }
+                }
+                cFeId++;
+            }
+        }
         os << std::endl;
     }
     std::vector<Cluster> D19cCic2Event::clusterize( uint8_t pFeId ) const 

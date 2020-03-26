@@ -358,6 +358,10 @@ int main ( int argc, char* argv[] )
             }
             cBackEndAligner.ReadNEvents ( cBoard , 1);
         }
+
+        
+
+
         // // now create a PedestalEqualization object
         // DataChecker cDataChecker;
         // cDataChecker.Inherit (&cTool);
