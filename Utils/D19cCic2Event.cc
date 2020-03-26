@@ -20,6 +20,8 @@
 
 using namespace Ph2_HwDescription;
 
+const unsigned N2SMODULES=12; 
+
 namespace Ph2_HwInterface {
 
     // Event implementation
@@ -55,7 +57,7 @@ namespace Ph2_HwInterface {
         auto cNHybrids = pBoard->fModuleVector.size(); 
         fEventHitList.clear();
         fEventStubList.clear();
-        for( size_t cFeIndex=0; cFeIndex < cNHybrids ; cFeIndex++)
+        for( size_t cFeIndex=0; cFeIndex < N2SMODULES*2 ; cFeIndex++)
         {
             FeData cFeData;
             fEventStubList.push_back( cFeData );
@@ -125,7 +127,7 @@ namespace Ph2_HwInterface {
             }
 
             uint8_t cFeId = ( cL1Header & 0xFF0000) >> 16;
-            LOG (INFO) << BOLDBLUE << "\t.. FE Id from firmware " << +cFeId << " .. putting data in event list .. offset " << +cOffset << RESET;
+            LOG (DEBUG) << BOLDBLUE << "\t.. FE Id from firmware " << +cFeId << " .. putting data in event list .. offset " << +cOffset << RESET;
             std::pair<uint16_t,uint16_t> cL1Information; 
             uint32_t cL1DataSize = (cL1Header & 0xFFF)*4;
             uint32_t cFrameDelay = *(cIterator + 1) & 0xFFF; 
