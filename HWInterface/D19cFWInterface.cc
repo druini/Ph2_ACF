@@ -1503,6 +1503,8 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard , bool pScope)
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
     auto cTriggerRate =  this->ReadReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 10);
+    auto cTriggerSource = this->ReadReg ("fc7_daq_cnfg.fast_command_block.trigger_source");
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.trigger_source", 3);
     // disable back-pressure 
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
     // reset trigger 
@@ -1562,6 +1564,7 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard , bool pScope)
     // reconfigure trigger 
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cTriggerRate);
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSource);
     // reconfigure original trigger configu 
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
     for ( auto const& it : cRegisterMap )
@@ -1603,18 +1606,20 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard , bool pScope)
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
     auto cTriggerRate =  this->ReadReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 10);
+    auto cTriggerSource = this->ReadReg ("fc7_daq_cnfg.fast_command_block.trigger_source");
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.trigger_source", 3);
     // disable back-pressure 
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable",0);
     // reset trigger 
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
-    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    std::this_thread::sleep_for (std::chrono::microseconds (10) ); 
     // load new trigger configuration 
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
-    std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
+    std::this_thread::sleep_for (std::chrono::microseconds (10) ); 
     // reset readout 
     this->ResetReadout(); 
     std::this_thread::sleep_for (std::chrono::microseconds (10) );
-    
+
     // back-end tuning on l1 lines
     for (auto& cFe : pBoard->fModuleVector)
     {
@@ -1713,6 +1718,7 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard , bool pScope)
     // reconfigure trigger 
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
     this->WriteReg ("fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cTriggerRate);
+    this->WriteReg ("fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSource);
     // reconfigure original trigger configu 
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
     for ( auto const& it : cRegisterMap )
