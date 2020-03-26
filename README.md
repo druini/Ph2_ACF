@@ -9,7 +9,7 @@
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section:262/03/2020
++ Last change made to this section: 26/03/2020
 ```
 
 Suggested software and firmware versions:
