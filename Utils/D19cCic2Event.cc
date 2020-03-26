@@ -612,7 +612,6 @@ namespace Ph2_HwInterface {
                         cCounter++;
                     }
                 }
-                cFeId++;
             }
         }
         os << std::endl;
