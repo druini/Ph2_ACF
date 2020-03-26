@@ -2426,10 +2426,6 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
         pData.clear();
         this->Stop();
         
-        // reset trigger 
-        this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
-        std::this_thread::sleep_for (std::chrono::milliseconds (10) ); 
-        
         this->ReadNEvents (pBoard, pNEvents, pData);
     }        
 

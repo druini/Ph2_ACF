@@ -261,85 +261,21 @@ int main ( int argc, char* argv[] )
         uint8_t cBendCode=0;
 
         t.start();
-        // now create a PedestalEqualization object
-        DataChecker cDataChecker;
-        cDataChecker.Inherit (&cTool);
-        cDataChecker.Initialise ( );
-        cDataChecker.zeroContainers();
-        
-        cDataChecker.DataCheck({0});
-        //cDataChecker.TestPulse({0});
-        // //cDataChecker.L1Eye({4});
-        // cDataChecker.writeObjects();
-        // cDataChecker.dumpConfigFiles();
-        // cDataChecker.resetPointers();
-        // t.show ( "Time to check data of the front-ends on the system: " );
-
-        //cExtra.DataCheckTP( {0}, 0xFF - 100 , 2 , 0);
-        // //std::string cRawFileName = "RawData.raw";
-        // //cTool.addFileHandler ( cRawFileName, 'w' );
-        // //LOG (INFO) << "Writing RAW File to:   " << cRawFileName << " - ConditionData, if present, parsed from " << cHWFile ;
-    
-        // //FileHeader cHeader = (cTool.fFileHandler)->getHeader();
-        // std::string cDAQFileName = "SlinkData.daq";
-        // //FileHandler* cDAQFileHandler = new FileHandler (cDAQFileName, 'w', cHeader);
-        // LOG (INFO) << "Writing DAQ File to:   " << cDAQFileName << " - ConditionData, if present, parsed from " << cHWFile ;
-        // LOG (INFO) << BOLDBLUE << "Setting threshold on all chips to " << +cVcth << RESET;
-        // for( auto& cBoard : cCicAligner.fBoardVector )
-        // {
-        //     for (auto& cFe : cBoard->fModuleVector)
-        //     {
-        //         static_cast<D19cFWInterface*>(cExtra.fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
-        //         for (auto& cChip : cFe->fReadoutChipVector)
-        //         {
-        //             static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cVcth);
-        //         }
-        //     }
-        // }
-
-        //dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0, cTriggerRate);
-        // for( auto& cBoard : cCicAligner.fBoardVector )
-        // {
-        //     for (auto& cFe : cBoard->fModuleVector)
-        //     {
-        //         // matching 
-        //         for (auto& cChip : cFe->fReadoutChipVector) 
-        //         {
-        //             if( cFe->getFeId()%2 == 0 )
-        //                 static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
-        //             else
-        //                 static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
-        //         }
-        //     }
-        //     cCicAligner.ReadNEvents ( cBoard , 10 );
-        //     const std::vector<Event*>& cEvents = cCicAligner.GetEvents ( cBoard );
-        //     // size_t cEventIndex=0;
-        //     // for ( auto& cEvent : cEvents )
-        //     // {
-        //     //     LOG (INFO) << BOLDBLUE << "Event " << +cEventIndex << RESET;
-        //     //     for (auto& cFe : cBoard->fModuleVector)
-        //     //     {
-        //     //         for (auto& cChip : cFe->fReadoutChipVector)
-        //     //         {
-        //     //             auto cNhits = cEvent->GetNHits ( cFe->getFeId() , cChip->getChipId() );
-        //     //             LOG (INFO) << BOLDBLUE << "\t\t ... " << +cNhits << " hits found." << RESET;
-        //     //         }
-        //     //     }
-        //     //     cEventIndex++;
-        //     // }
-        //     uint32_t cN=0;
-        //     for ( auto& cEvent : cEvents )
-        //     {
-        //         LOG (INFO) << ">>> Event #" << cN++ ;
-        //         outp.str ("");
-        //         outp << *cEvent;
-        //         LOG (INFO) << outp.str();
-        //         //SLinkEvent cSLev = cEvent->GetSLinkEvent (cBoard);
-        //         //cDAQFileHandler->set (cSLev.getData<uint32_t>() );
-        //         //cSLev.print (std::cout);
-        //     }
-        // }
-        //delete cDAQFileHandler;
+        for( auto& cBoard : cExtra.fBoardVector )
+        {
+            for (auto& cFe : cBoard->fModuleVector)
+            {
+                // matching 
+                for (auto& cChip : cFe->fReadoutChipVector) 
+                {
+                    if( cChip->getChipId()%2 == 0 )
+                        static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
+                    else
+                        static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
+                }
+            }
+            cExtra.ReadNEvents ( cBoard , 1);
+        }
     }
     
     //reconstruct TP 
