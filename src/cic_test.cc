@@ -266,12 +266,14 @@ int main ( int argc, char* argv[] )
             for (auto& cFe : cBoard->fModuleVector)
             {
                 // matching 
+                uint16_t cTh1 = (cFe->getFeId()%2==0) ? 900 : 1; 
+                uint16_t cTh2 = (cFe->getFeId()%2==0) ? 1 : 900; 
                 for (auto& cChip : cFe->fReadoutChipVector) 
                 {
                     if( cChip->getChipId()%2 == 0 )
-                        static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
+                        static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTh1);
                     else
-                        static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
+                        static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTh2);
                 }
             }
             cExtra.ReadNEvents ( cBoard , 1);
