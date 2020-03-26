@@ -155,19 +155,7 @@ int main ( int argc, char* argv[] )
         cAntenna.close();
     #endif
 
-    // align back-end .. if this moves to firmware then we can get rid of this step 
-    BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit (&cTool);
-    cBackEndAligner.Initialise();
-    bool cAligned = cBackEndAligner.Align();
-    cBackEndAligner.resetPointers();
-    if(!cAligned )
-    {
-        LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
-        exit(0);
-    }
-
-    // if CIC is enabled 
+    // if CIC is enabled then align CIC first 
     if( cWithCIC )
     {
         CicFEAlignment cCicAligner;
@@ -197,6 +185,18 @@ int main ( int argc, char* argv[] )
         }
         LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
     }
+    // align back-end 
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit (&cTool);
+    cBackEndAligner.Initialise();
+    bool cAligned = cBackEndAligner.Align();
+    cBackEndAligner.resetPointers();
+    if(!cAligned )
+    {
+        LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
+        exit(0);
+    }
+
     // measure some of the AMUX output voltages using ADC on UIB 
     // MonitorAmux & hybridTester does not exist in this branch, nor it should...
     // HybridTester cHybridTester;
@@ -341,37 +341,36 @@ int main ( int argc, char* argv[] )
         // cDataChecker.zeroContainers();
         // //cDataChecker.TestPulse(cFEsToCheck);
         // cDataChecker.DataCheck(cFEsToCheck);
+        // cDataChecker.writeObjects();
+        // cDataChecker.resetPointers();
 
-
+        t.start();
         for( auto& cBoard : cBackEndAligner.fBoardVector )
         {
             for (auto& cFe : cBoard->fModuleVector)
             {
                 // matching 
+                uint16_t cTh1 = (cFe->getFeId()%2==0) ? 900 : 1; 
+                uint16_t cTh2 = (cFe->getFeId()%2==0) ? 1 : 900; 
                 for (auto& cChip : cFe->fReadoutChipVector) 
                 {
                     if( cChip->getChipId()%2 == 0 )
-                        static_cast<CbcInterface*>(cBackEndAligner.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
+                        static_cast<CbcInterface*>(cBackEndAligner.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTh1);
                     else
-                        static_cast<CbcInterface*>(cBackEndAligner.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
+                        static_cast<CbcInterface*>(cBackEndAligner.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTh2);
                 }
             }
             cBackEndAligner.ReadNEvents ( cBoard , 1);
+            const std::vector<Event*>& cEvents = cBackEndAligner.GetEvents ( cBoard );
+            uint32_t cN=0;
+            for ( auto& cEvent : cEvents )
+            {
+                LOG (INFO) << ">>> Event #" << cN++ ;
+                outp.str ("");
+                outp << *cEvent;
+                LOG (INFO) << outp.str();
+            }
         }
-
-        
-
-
-        // // now create a PedestalEqualization object
-        // DataChecker cDataChecker;
-        // cDataChecker.Inherit (&cTool);
-        // cDataChecker.Initialise ( );
-        // uint8_t cSeed=1;
-        // uint8_t cBendCode=0;
-        // cDataChecker.DataCheck({1}, {cSeed} , {cBendCode});
-
-        // cDataChecker.writeObjects();
-        // cDataChecker.resetPointers();
         t.show ( "Time to check data of the front-ends on the system: " );
     }
 

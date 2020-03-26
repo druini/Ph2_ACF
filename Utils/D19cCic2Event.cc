@@ -107,7 +107,7 @@ namespace Ph2_HwInterface {
 
         
         auto cIterator = list.begin() + EVENT_HEADER_SIZE;
-        LOG (INFO) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
+        LOG (DEBUG) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
         do
         {
             // L1 
@@ -172,19 +172,18 @@ namespace Ph2_HwInterface {
                 {
                     std::bitset<RAW_L1_CBC> cBitset(0);
                     size_t cPosition=0;
-                    //LOG (INFO) << BOLDBLUE << "\t...  chip " << +cChipIndex << RESET;
                     for( size_t cBlockIndex =0; cBlockIndex < RAW_L1_CBC/L1_BLOCK_SIZE ; cBlockIndex ++) // RAW_L1_CBC/L1_BLOCK_SIZE blocks per chip
                     {
                         auto cIndex = cChipIndex + cReadoutChips.size()*cBlockIndex; 
                         auto& cL1block = cL1Words[cIndex];
-                        LOG (INFO) << BOLDBLUE << "\t\t... L1 block " << +cIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
+                        LOG (DEBUG) << BOLDBLUE << "\t\t... L1 block " << +cIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
                         for(size_t cNbit=0; cNbit < cL1block.size() ; cNbit++ )
                         {
                             cBitset[cBitset.size()-1-cPosition] = cL1block[cL1block.size()-1-cNbit];
                             cPosition++;
                         }
                     }
-                    LOG (INFO) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
+                    LOG (DEBUG) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
                     fEventRawList[cFeId].second.push_back( cBitset );
                 }
             }
