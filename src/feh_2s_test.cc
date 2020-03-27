@@ -319,58 +319,26 @@ int main ( int argc, char* argv[] )
     //inject hits and stubs using mask and compare input against output 
     if( cCheckData )
     {
-        // desperate
-        // cTool.SetTestAllChannels(true);
-        // cTool.setSameLocalDac("ChannelOffset", 120);
-        // cTool.bitWiseScan("VCth", 30, 0.56);
-
-
-        // std::string sFEsToCheck = cmd.optionValue ( "checkData" );
-        // std::vector<uint8_t> cFEsToCheck;
-        // std::stringstream ssFEsToCheck( sFEsToCheck );
-        // int i;
-        // while ( ssFEsToCheck >> i )
-        // {
-        //     cFEsToCheck.push_back( i );
-        //     if ( ssFEsToCheck.peek() == ',' ) ssFEsToCheck.ignore();
-        // };
-        // t.start();
-        // DataChecker cDataChecker;
-        // cDataChecker.Inherit (&cTool);
-        // cDataChecker.Initialise ( );
-        // cDataChecker.zeroContainers();
-        // //cDataChecker.TestPulse(cFEsToCheck);
-        // cDataChecker.DataCheck(cFEsToCheck);
-        // cDataChecker.writeObjects();
-        // cDataChecker.resetPointers();
+        std::string sFEsToCheck = cmd.optionValue ( "checkData" );
+        std::vector<uint8_t> cFEsToCheck;
+        std::stringstream ssFEsToCheck( sFEsToCheck );
+        int i;
+        while ( ssFEsToCheck >> i )
+        {
+            cFEsToCheck.push_back( i );
+            if ( ssFEsToCheck.peek() == ',' ) ssFEsToCheck.ignore();
+        };
 
         t.start();
-        for( auto& cBoard : cBackEndAligner.fBoardVector )
-        {
-            for (auto& cFe : cBoard->fModuleVector)
-            {
-                // matching 
-                uint16_t cTh1 = (cFe->getFeId()%2==0) ? 900 : 1; 
-                uint16_t cTh2 = (cFe->getFeId()%2==0) ? 1 : 900; 
-                for (auto& cChip : cFe->fReadoutChipVector) 
-                {
-                    if( cChip->getChipId()%2 == 0 )
-                        static_cast<CbcInterface*>(cBackEndAligner.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTh1);
-                    else
-                        static_cast<CbcInterface*>(cBackEndAligner.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTh2);
-                }
-            }
-            cBackEndAligner.ReadNEvents ( cBoard , 1);
-            const std::vector<Event*>& cEvents = cBackEndAligner.GetEvents ( cBoard );
-            uint32_t cN=0;
-            for ( auto& cEvent : cEvents )
-            {
-                LOG (INFO) << ">>> Event #" << cN++ ;
-                outp.str ("");
-                outp << *cEvent;
-                LOG (INFO) << outp.str();
-            }
-        }
+        DataChecker cDataChecker;
+        cDataChecker.Inherit (&cTool);
+        cDataChecker.Initialise ( );
+        cDataChecker.zeroContainers();
+        cDataChecker.ReadDataTest();
+        //cDataChecker.TestPulse(cFEsToCheck);
+        // cDataChecker.DataCheck(cFEsToCheck);
+        cDataChecker.writeObjects();
+        cDataChecker.resetPointers();
         t.show ( "Time to check data of the front-ends on the system: " );
     }
 

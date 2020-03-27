@@ -455,6 +455,93 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
         }
    }
 }
+void DataChecker::ReadDataTest()
+{
+    std::stringstream outp;
+    for(auto cBoard : this->fBoardVector)
+    {
+        for (auto& cFe : cBoard->fModuleVector)
+        {
+            // matching 
+            uint16_t cTh1 = (cFe->getFeId()%2==0) ? 900 : 1; 
+            uint16_t cTh2 = (cFe->getFeId()%2==0) ? 1 : 900; 
+            for (auto& cChip : cFe->fReadoutChipVector) 
+            {
+                if( cChip->getChipId()%2 == 0 )
+                    fReadoutChipInterface->WriteChipReg( cChip, "VCth" , cTh1);
+                else
+                    fReadoutChipInterface->WriteChipReg( cChip, "VCth" , cTh2);
+            }
+        }
+        
+        LOG (INFO) << BOLDRED << "Opening shutter ... press any key to close .." << RESET;
+        fBeBoardInterface->Start(cBoard);
+        do
+        {
+            std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+        }while( std::cin.get()!='\n');
+        //std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+        fBeBoardInterface->Stop(cBoard);
+        
+        LOG (INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
+        this->ReadData( cBoard , true);
+        const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
+        LOG (INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
+        // LOG (INFO) << BOLDRED << "Press any key to to see the event printout .." << RESET;
+        // do
+        // {
+        //     std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+        // }while( std::cin.get()!='\n');
+
+        // uint32_t cN=0;
+        // for ( auto& cEvent : cEvents )
+        // {
+        //     LOG (INFO) << ">>> Event #" << cN++ ;
+        //     outp.str ("");
+        //     outp << *cEvent;
+        //     LOG (INFO) << outp.str();
+        // }
+    }
+    LOG (INFO) << BOLDBLUE << "Done!" << RESET;
+
+}
+void DataChecker::ReadNeventsTest()
+{
+    auto cSetting = fSettingsMap.find ( "Nevents" );
+    uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
+    std::stringstream outp;
+    for(auto cBoard : this->fBoardVector)
+    {
+        for (auto& cFe : cBoard->fModuleVector)
+        {
+            // matching 
+            uint16_t cTh1 = (cFe->getFeId()%2==0) ? 900 : 1; 
+            uint16_t cTh2 = (cFe->getFeId()%2==0) ? 1 : 900; 
+            for (auto& cChip : cFe->fReadoutChipVector) 
+            {
+                if( cChip->getChipId()%2 == 0 )
+                    fReadoutChipInterface->WriteChipReg( cChip, "VCth" , cTh1);
+                else
+                    fReadoutChipInterface->WriteChipReg( cChip, "VCth" , cTh2);
+            }
+        }
+        
+        this->ReadNEvents( cBoard , cNevents);
+        const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
+        LOG (INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
+        uint32_t cN=0;
+        for ( auto& cEvent : cEvents )
+        {
+            LOG (INFO) << ">>> Event #" << cN++ ;
+            outp.str ("");
+            outp << *cEvent;
+            if( cN%1000 == 0)
+                LOG (INFO) << outp.str();
+        }
+    }
+    LOG (INFO) << BOLDBLUE << "Done!" << RESET;
+
+}
 // void DataChecker::noiseCheck(BeBoard* pBoard, std::vector<uint8_t>pChipIds , std::pair<uint8_t,int> pExpectedStub) 
 // {
 //     // get number of events from xml

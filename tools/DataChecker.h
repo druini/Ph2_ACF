@@ -42,6 +42,9 @@ class DataChecker : public Tool
 
     void noiseCheck(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t>pChipIds , std::pair<uint8_t,int> pExpectedStub);
     void matchEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t>pChipIds , std::pair<uint8_t,int> pExpectedStub);
+    void ReadDataTest();
+    void ReadNeventsTest();
+    
     void zeroContainers();
     void print(std::vector<uint8_t> pChipIds); 
     void Start(int currentRun) override;

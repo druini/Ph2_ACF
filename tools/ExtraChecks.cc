@@ -403,7 +403,7 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
             this->setSameDacBeBoard(cBoard, "VCth", cVcth);
             for( size_t cIteration = 0 ; cIteration < cAttempts ; cIteration ++)
             {
-               fBeBoardInterface->ChipReSync ( cBoard );
+                //fBeBoardInterface->ChipReSync ( cBoard );
                 this->ReadNEvents ( cBoard , cNevents );
                 const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
                 if( cIteration == 0 && cStepCount%10 == 0 )
@@ -628,24 +628,24 @@ void ExtraChecks::ExternalTriggers(uint16_t pNconsecutive, const std::string& pS
         }while( std::cin.get()!='\n');
         fBeBoardInterface->Stop(cBoard);
         
-        // LOG (INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
-        // this->ReadData( cBoard , true);
-        // const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
-        // LOG (INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
-        // for (auto& cFe : cBoard->fModuleVector)
-        // {
-        //     for (auto& cChip : cFe->fReadoutChipVector) 
-        //     {
-        //         for( auto cEvent : cEvents ) 
-        //         {
-        //             uint32_t cPipeline = cEvent->PipelineAddress( cFe->getFeId(), cChip->getChipId() );
-        //             auto cEventCount = cEvent->GetEventCount(); 
-        //             //uint32_t cL1Id = static_cast<D19cCicEvent*>(cEvent)->L1Id( cFe->getFeId(), cChip->getChipId() );
-        //             LOG (INFO) << BOLDBLUE << "Event " << +cEventCount << "\t\t....CBC" << +cChip->getChipId() << " on FE" << +cFe->getFeId() << " ----  Pipeline address " << +cPipeline << RESET;
-        //         }
-        //         LOG (INFO) << RESET;
-        //     }
-        // }
+        LOG (INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
+        this->ReadData( cBoard , true);
+        const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
+        LOG (INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
+        for (auto& cFe : cBoard->fModuleVector)
+        {
+            for (auto& cChip : cFe->fReadoutChipVector) 
+            {
+                for( auto cEvent : cEvents ) 
+                {
+                    uint32_t cPipeline = cEvent->PipelineAddress( cFe->getFeId(), cChip->getChipId() );
+                    auto cEventCount = cEvent->GetEventCount(); 
+                    //uint32_t cL1Id = static_cast<D19cCicEvent*>(cEvent)->L1Id( cFe->getFeId(), cChip->getChipId() );
+                    LOG (INFO) << BOLDBLUE << "Event " << +cEventCount << "\t\t....CBC" << +cChip->getChipId() << " on FE" << +cFe->getFeId() << " ----  Pipeline address " << +cPipeline << RESET;
+                }
+                LOG (INFO) << RESET;
+            }
+        }
     }
     LOG (INFO) << BOLDBLUE << "Done!" << RESET;
 }

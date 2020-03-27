@@ -350,7 +350,6 @@ namespace Ph2_System
   {
     uint32_t cNPackets = fBeBoardInterface->ReadData(pBoard, false, pData, pWait);
     this->DecodeData(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType(pBoard));
-
     return cNPackets;
   }
 
@@ -409,7 +408,7 @@ namespace Ph2_System
         EventType fEventType = pBoard->getEventType();
         uint32_t fNFe = pBoard->getNFe();
         uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
-        LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
+        LOG (INFO) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
 
         if (fEventType == EventType::SSA)
         {
@@ -422,29 +421,23 @@ namespace Ph2_System
 
         if (fEventType != EventType::ZS)
         {
-            auto it = pData.begin();
             size_t cEventIndex=0;
-            bool cCondition = (pNevents > 0 ) ? (it != pData.end() && cEventIndex < pNevents) : (it != pData.end()) ;
-            while(cCondition)
+            auto cEventIterator = pData.begin();
+            do
             {
-              cCondition = (pNevents > 0 ) ? (it != pData.end() && cEventIndex < pNevents) : (it != pData.end()) ;
-              uint32_t cEventSize = (0x0000FFFF & (*it))*4 ; // event size is given in 128 bit words
-              auto cEnd = ( (it+cEventSize) > pData.end() ) ? pData.end() : (it + cEventSize) ;
-              bool cCondition2 = (pNevents > 0 ) ?  (cEnd <= pData.end() && cEventIndex < pNevents) : (cEnd <= pData.end());
-              if( cCondition2 )
+              uint32_t cEventSize = (0x0000FFFF & (*cEventIterator))*4 ; // event size is given in 128 bit words
+              auto cEnd = ( (cEventIterator+cEventSize) > pData.end() ) ? pData.end() : (cEventIterator + cEventSize) ;
+              // retrieve chunck of data vector belonging to this event
+              if( cEnd - cEventIterator == cEventSize )
               {
-                // retrieve chunck of data vector belonging to this event
-                std::vector<uint32_t> cEvent(it, cEnd);
-                // some useful debug information
-                LOG (DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " : " << std::bitset<32>(cEvent[0]) << " : " << +cEventSize <<  " 32 bit words..." << RESET;
-                // currently some problem with the dummy words..
-                // push back event into event list
+                std::vector<uint32_t> cEvent(cEventIterator, cEnd);
+                //some useful debug information
+                LOG (DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of " << +cEventSize <<  " 32 bit words..." << RESET;
                 if( pBoard->getFrontEndType() == FrontEndType::CBC3 )
                 {
                   fNevents   = static_cast<uint32_t>(pNevents);
-                  fEventSize = static_cast<uint32_t>((pData.size()) / fNevents);
+                  fEventSize = static_cast<uint32_t>(cEventSize);
 
-                  LOG (DEBUG) << BOLDBLUE << "CBC3 events..." << RESET;
                   fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
                   fEventList.push_back ( new D19cCbc3Event ( pBoard, fNCbc, fNFe , cEvent ) );
                 }
@@ -463,8 +456,8 @@ namespace Ph2_System
                 }
                 cEventIndex++;
               }
-              it = cEnd;
-            }
+              cEventIterator += cEventSize;
+            }while( cEventIterator < pData.end());
         }
         // moved the ZS case to here ... to be tackled afterwards
         else
@@ -551,6 +544,8 @@ namespace Ph2_System
             }
           }
         }
+        LOG (INFO) << BOLDBLUE << "Completed event decoding.." << RESET;
+
     }
   }
 }
