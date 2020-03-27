@@ -85,7 +85,7 @@
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
 		<Register name="trigger_source"> 3 </Register>
-		<Register name="user_trigger_frequency"> 1 </Register>
+		<Register name="user_trigger_frequency"> 100 </Register>
 		<Register name="stubs_mask"> 0 </Register>
                 <!--this is the delay for the stub trigger-->
 		<Register name="stub_trigger_delay_value"> 10 </Register>
@@ -124,9 +124,9 @@
     </Register>
 	<!-- Readout Block -->
     	<Register name="readout_block">
-            <Register name="packet_nbr"> 99 </Register>
+            <Register name="packet_nbr"> 999 </Register>
             <Register name="global">
-		    <Register name="data_handshake_enable"> 1 </Register>
+		    <Register name="data_handshake_enable"> 0 </Register>
                     <Register name="int_trig_enable"> 0 </Register>
                     <Register name="int_trig_rate"> 0 </Register>
                     <Register name="trigger_type"> 0 </Register>
