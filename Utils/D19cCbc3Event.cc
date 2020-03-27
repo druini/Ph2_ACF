@@ -77,92 +77,92 @@ namespace Ph2_HwInterface {
         fNCbc = pNbCbc;
         fEventDataSize = fEventSize;
 
-        // auto cIterator = list.begin() + D19C_EVENT_HEADER1_SIZE_32_CBC3;
-        // LOG (DEBUG) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
-        // do
-        // {
-        //     // L1 
-        //     uint32_t cL1Header = *cIterator; 
-        //     uint8_t  cHeader = (cL1Header & 0xF0000000) >> 28 ; 
-        //     if( cHeader != 0xa ) 
-        //     {
-        //         LOG (ERROR) << BOLDRED << "Invalid header found in L1 packet." << RESET;
-        //         exit(1);
-        //     }
-        //     uint8_t cErrorCode = (cL1Header & 0xF000000) >> 24;
-        //     if( cErrorCode !=0 ) 
-        //     {
-        //         LOG (ERROR) << BOLDRED << "Error Code " << +cErrorCode << RESET;
-        //         exit(1);
-        //     }
-
-        //     uint8_t cFeId = ( cL1Header & 0xFF0000) >> 16;
-        //     LOG (DEBUG) << BOLDBLUE << "\t.. FE Id from firmware " << +cFeId << " .. putting data in event list ... " << RESET;
-        //     uint32_t cL1DataSize = (cL1Header & 0xFFF)*4;
-        //     uint8_t cCbcId = (cL1Header >> 12) & 0xF;
-        //     uint32_t cStubHeader = *(cIterator + cL1DataSize );
-        //     cHeader = (cStubHeader & 0xF0000000) >> 28 ;
-        //     if( cHeader != 0x5 )
-        //     {
-        //         LOG (ERROR) << BOLDRED << "Invalid header found in stub packet." << RESET;
-        //         exit(1);
-        //     }
-        //     uint32_t cStubDataSize = (cStubHeader & 0xFFF)*4;
-        //     // pack now
-        //     uint32_t cDataSize = cL1DataSize + cStubDataSize; 
-        //     auto cEnd = ( (cIterator+cDataSize) > list.end() ) ? list.end() : (cIterator + cDataSize) ;
-        //     if( cEnd - cIterator == cDataSize )
-        //     {
-        //         // just use board to figure out how many CBCs there are 
-        //         size_t cHybridIndex=0;
-        //         for (auto& cFe : pBoard->fModuleVector)
-        //         {
-        //             if( cFe->getFeId()== cFeId )
-        //                 cHybridIndex = cFe->getIndex();
-        //         }
-        //         auto& cReadoutChips = pBoard->fModuleVector[cHybridIndex]->fReadoutChipVector; 
-        //         std::vector<uint32_t> cCbcData(cIterator, cIterator+cDataSize);
-        //         fEventDataVector[encodeVectorIndex(cFeId, cCbcId,cReadoutChips.size())] = cCbcData;
-        //     }
-        //     cIterator += cL1DataSize + cStubDataSize;     
-        // }while( cIterator < list.end() - fDummySize );
-
-        //not iterate through modules
-        uint32_t address_offset = D19C_EVENT_HEADER1_SIZE_32_CBC3;
-        while(address_offset < fEventSize-fDummySize) 
+        auto cIterator = list.begin() + D19C_EVENT_HEADER1_SIZE_32_CBC3;
+        LOG (DEBUG) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
+        do
         {
-            if (((list.at(address_offset) >> 28) & 0xF) == 0xA) 
+            // L1 
+            uint32_t cL1Header = *cIterator; 
+            uint8_t  cHeader = (cL1Header & 0xF0000000) >> 28 ; 
+            if( cHeader != 0xa ) 
             {
-                uint8_t cFeId = (list.at(address_offset) >> 16) & 0xFF;
-                uint8_t cCbcId = (list.at(address_offset) >> 12) & 0xF;
-                uint32_t cL1ADataSize = (list.at(address_offset) >> 0) & 0xFFF;
-                cL1ADataSize *= 4; // now in 128 bit words
-                //now stub
-                if (((list.at(address_offset+cL1ADataSize) >> 28) & 0xF) == 0x5) {
-                    uint32_t cStubDataSize = (list.at(address_offset+cL1ADataSize) >> 0) & 0xFFF;
-                    cStubDataSize *= 4; // now in 128 bit words
-
-                    // pack now
-                    uint32_t begin = address_offset;
-                    uint32_t end = begin + (cL1ADataSize+cStubDataSize);
-                    std::vector<uint32_t> cCbcData (std::next (std::begin (list), begin), std::next (std::begin (list), end) );
-                    fEventDataVector[encodeVectorIndex(cFeId, cCbcId,fNCbc)] = cCbcData;
-                    
-                    // increment
-                    address_offset += (cL1ADataSize+cStubDataSize);
-                } 
-                else 
-                {
-                    LOG (ERROR) << "Stub header does not match 0b0101 - possible data corruption";
-                    exit(1);
-                }
-            } 
-            else 
-            {
-                LOG (ERROR) << "Chip header does not match 0b1010 - possible data corruption";
+                LOG (ERROR) << BOLDRED << "Invalid header found in L1 packet." << RESET;
                 exit(1);
             }
-        }
+            uint8_t cErrorCode = (cL1Header & 0xF000000) >> 24;
+            if( cErrorCode !=0 ) 
+            {
+                LOG (ERROR) << BOLDRED << "Error Code " << +cErrorCode << RESET;
+                exit(1);
+            }
+
+            uint8_t cFeId = ( cL1Header & 0xFF0000) >> 16;
+            LOG (DEBUG) << BOLDBLUE << "\t.. FE Id from firmware " << +cFeId << " .. putting data in event list ... " << RESET;
+            uint32_t cL1DataSize = (cL1Header & 0xFFF)*4;
+            uint8_t cCbcId = (cL1Header >> 12) & 0xF;
+            uint32_t cStubHeader = *(cIterator + cL1DataSize );
+            cHeader = (cStubHeader & 0xF0000000) >> 28 ;
+            if( cHeader != 0x5 )
+            {
+                LOG (ERROR) << BOLDRED << "Invalid header found in stub packet." << RESET;
+                exit(1);
+            }
+            uint32_t cStubDataSize = (cStubHeader & 0xFFF)*4;
+            // pack now
+            uint32_t cDataSize = cL1DataSize + cStubDataSize; 
+            auto cEnd = ( (cIterator+cDataSize) > list.end() ) ? list.end() : (cIterator + cDataSize) ;
+            if( cEnd - cIterator == cDataSize )
+            {
+                // just use board to figure out how many CBCs there are 
+                size_t cHybridIndex=0;
+                for (auto& cFe : pBoard->fModuleVector)
+                {
+                    if( cFe->getFeId()== cFeId )
+                        cHybridIndex = cFe->getIndex();
+                }
+                auto& cReadoutChips = pBoard->fModuleVector[cHybridIndex]->fReadoutChipVector; 
+                std::vector<uint32_t> cCbcData(cIterator, cIterator+cDataSize);
+                fEventDataVector[encodeVectorIndex(cFeId, cCbcId,cReadoutChips.size())] = cCbcData;
+            }
+            cIterator += cL1DataSize + cStubDataSize;     
+        }while( cIterator < list.end() - fDummySize );
+
+        //not iterate through modules
+        // uint32_t address_offset = D19C_EVENT_HEADER1_SIZE_32_CBC3;
+        // while(address_offset < fEventSize-fDummySize) 
+        // {
+        //     if (((list.at(address_offset) >> 28) & 0xF) == 0xA) 
+        //     {
+        //         uint8_t cFeId = (list.at(address_offset) >> 16) & 0xFF;
+        //         uint8_t cCbcId = (list.at(address_offset) >> 12) & 0xF;
+        //         uint32_t cL1ADataSize = (list.at(address_offset) >> 0) & 0xFFF;
+        //         cL1ADataSize *= 4; // now in 128 bit words
+        //         //now stub
+        //         if (((list.at(address_offset+cL1ADataSize) >> 28) & 0xF) == 0x5) {
+        //             uint32_t cStubDataSize = (list.at(address_offset+cL1ADataSize) >> 0) & 0xFFF;
+        //             cStubDataSize *= 4; // now in 128 bit words
+
+        //             // pack now
+        //             uint32_t begin = address_offset;
+        //             uint32_t end = begin + (cL1ADataSize+cStubDataSize);
+        //             std::vector<uint32_t> cCbcData (std::next (std::begin (list), begin), std::next (std::begin (list), end) );
+        //             fEventDataVector[encodeVectorIndex(cFeId, cCbcId,fNCbc)] = cCbcData;
+                    
+        //             // increment
+        //             address_offset += (cL1ADataSize+cStubDataSize);
+        //         } 
+        //         else 
+        //         {
+        //             LOG (ERROR) << "Stub header does not match 0b0101 - possible data corruption";
+        //             exit(1);
+        //         }
+        //     } 
+        //     else 
+        //     {
+        //         LOG (ERROR) << "Chip header does not match 0b1010 - possible data corruption";
+        //         exit(1);
+        //     }
+        // }
     }
 
 
