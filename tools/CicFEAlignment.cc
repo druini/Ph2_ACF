@@ -389,6 +389,7 @@ bool CicFEAlignment::ManualPhaseAlignment(uint16_t pPhase)
             auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
             if( cCic != NULL )
             {
+                fCicInterface->SetAutomaticPhaseAlignment(cCic, false);
                 for (auto& cChip : cFe->fReadoutChipVector)
                 {
                     for( int cLineId=0; cLineId < 6; cLineId++)
@@ -415,7 +416,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
         auto& cPtCutThisBoard = fPtCuts.at(cBoard->getIndex());
 
         ChannelGroup<NCHANNELS,1> cChannelMask; cChannelMask.disableAllChannels();
-        for( uint8_t cChannel=0; cChannel<NCHANNELS; cChannel+=2) cChannelMask.enableChannel( cChannel);//generate a hit in every Nth channel
+        for( uint8_t cChannel=0; cChannel<NCHANNELS; cChannel+=10) cChannelMask.enableChannel( cChannel);//generate a hit in every Nth channel
         
         for (auto& cFe : cBoard->fModuleVector)
         {
@@ -457,7 +458,6 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                     static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph3 , cBends_ph3,true);
                     std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
                 }
-                fCicInterface->CheckPhaseAlignerLock( static_cast<OuterTrackerModule*>(cFe)->fCic);
                 fReadoutChipInterface-> maskChannelsGroup (cChip, cOriginalMask);
             }
             LOG (INFO) << BOLDBLUE << "Generating HIT patterns needed for phase alignment on FE" << +cFe->getFeId() << RESET;
@@ -465,7 +465,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
             {
                 // original mask
                 const ChannelGroup<NCHANNELS>* cOriginalMask  = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
-                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 1);
+                //fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 1);
                 fReadoutChipInterface-> maskChannelsGroup (cChip, &cChannelMask);
                 //send triggers ...
                 for( auto cTrigger=0; cTrigger < 100 ; cTrigger++)
@@ -475,7 +475,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                 }
                 // make sure you've returned channels to their original masked value 
                 fReadoutChipInterface->maskChannelsGroup( cChip ,cOriginalMask );
-                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);
+                //fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);
             }
             bool cLocked=fCicInterface->CheckPhaseAlignerLock( static_cast<OuterTrackerModule*>(cFe)->fCic);
             // 4 channels per phyPort ... 12 phyPorts per CIC 
