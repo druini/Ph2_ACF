@@ -311,7 +311,7 @@ namespace Ph2_HwInterface
             icWrite(pInterface, cChannelReg+2 , 0x00 ) ;
         }
         // set phase 
-        std::vector<uint16_t> cRegisters = { 66, 90, 114 , 138, 143 , 162 , 186, 210};
+        std::vector<uint16_t> cRegisters = { 66, 90, 114 , 138, 162 , 186, 210};
         for( auto cChannelReg : cRegisters ) 
         {
             for( size_t cIndex=0; cIndex < 12 ; cIndex++)

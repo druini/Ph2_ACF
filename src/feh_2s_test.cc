@@ -334,9 +334,9 @@ int main ( int argc, char* argv[] )
         cDataChecker.Inherit (&cTool);
         cDataChecker.Initialise ( );
         cDataChecker.zeroContainers();
-        cDataChecker.ReadDataTest();
+        //cDataChecker.ReadDataTest();
         //cDataChecker.TestPulse(cFEsToCheck);
-        // cDataChecker.DataCheck(cFEsToCheck);
+        cDataChecker.DataCheck(cFEsToCheck);
         cDataChecker.writeObjects();
         cDataChecker.resetPointers();
         t.show ( "Time to check data of the front-ends on the system: " );
