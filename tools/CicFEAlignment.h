@@ -57,7 +57,8 @@ class CicFEAlignment : public Tool
   private:
     // Containers
     DetectorDataContainer  fThresholds, fLogic, fHIPs, fPtCuts;
-    
+    DetectorDataContainer fRegMapContainer;
+
     // Canvases
     // Counters
 

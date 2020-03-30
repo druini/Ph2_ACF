@@ -2184,7 +2184,7 @@ uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::v
 
     bool pFailed = false; 
     int cCounter = 0 ; 
-    while (cNWords == 0 && !pFailed )
+    while (cNWords == 0 && cCounter < 1000 )
     {
         cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
         if(cCounter % 100 == 0 && cCounter > 0) 
@@ -2196,7 +2196,8 @@ uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::v
         if (!pWait) 
             return 0;
         std::this_thread::sleep_for (std::chrono::microseconds (10) );
-    }    
+    }
+    pFailed =  (cNWords == 0 || cCounter >= 1000 );
 
     uint32_t cNEvents = 0;
     uint32_t cNtriggers = 0; 

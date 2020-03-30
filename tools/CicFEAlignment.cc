@@ -13,10 +13,13 @@ using namespace Ph2_System;
 CicFEAlignment::CicFEAlignment() :
     Tool            ()
 {
+
+    fRegMapContainer.reset();
 }
 
 CicFEAlignment::~CicFEAlignment()
 {
+
     // delete fOffsetCanvas;
     // delete fOccupancyCanvas;
 }
@@ -87,6 +90,21 @@ void CicFEAlignment::Initialise ()
                 cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "Pipe&StubInpSel&Ptwidth" );
                 cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "HIP&TestMode" );
                 cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "PtCut" );
+            }
+        }
+    }
+
+    // retreive original settings for all chips 
+    ContainerFactory::copyAndInitStructure<ChipRegMap>(*fDetectorContainer, fRegMapContainer);
+    for (auto cBoard : this->fBoardVector)
+    {
+        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        for (auto& cFe : cBoard->fModuleVector)
+        {
+            auto& cRegMapThisHybrid = cRegMapThisBoard->at(cFe->getIndex());
+            for (auto& cChip : cFe->fReadoutChipVector)
+            {
+                cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>() = cChip->getRegMap();
             }
         }
     }
@@ -202,6 +220,7 @@ bool CicFEAlignment::SetBx0Delay(uint8_t pDelay, uint8_t pStubPackageDelay)
 }
 bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, uint16_t pWait_ms, int cNtrials )
 { 
+
     // set threshold 
     uint8_t cTestPulseAmplitude = 0xFF-100; 
     uint16_t cThreshold = 450;
@@ -225,9 +244,12 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
     // inject stubs in all FE chips 
     for (auto cBoard : this->fBoardVector)
     {
+        // read back register map before you've done anything 
+        auto cBoardRegisterMap = cBoard->getBeBoardRegMap();
+        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        
         for (auto& cFe : cBoard->fModuleVector)
         {
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
             //configure CBCs 
             for (auto& cChip : cFe->fReadoutChipVector)
             {
@@ -240,17 +262,7 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
                 // set pT cut to maximum 
                 static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( static_cast<ReadoutChip*>(cChip), "PtCut", 14); 
             }
-        }
-        //this->setSameDacBeBoard(cBoard, "TestPulseDelay", 0);  
-        fBeBoardInterface->ChipReSync ( cBoard );
-    }
-    
-    // configure Bx0 alignment patterns in CIC  
-    for (auto cBoard : this->fBoardVector)
-    {   
-        for (auto& cFe : cBoard->fModuleVector)
-        {
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
+            // configure Bx0 alignment patterns in CIC 
             if( static_cast<OuterTrackerModule*>(cFe)->fCic != NULL ) 
             {
                 uint8_t cSLVS3 =(cBendCode << 4) | cBendCode;
@@ -263,18 +275,16 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
                 }
             }
         }
-    }
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(pDelay,200);
-    for (auto cBoard : this->fBoardVector)
-    {
+
         // make sure you're only sending one trigger at a time here
         auto cMult = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
         fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
-       
+        
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(pDelay,200);
+    
+        // check status of lock on CIC 
         for (auto& cFe : cBoard->fModuleVector)
         {
-            // check status of lock on CIC 
-            //configure CICs
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
             if( static_cast<OuterTrackerModule*>(cFe)->fCic != NULL ) 
             {
@@ -293,8 +303,23 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
                     LOG (INFO) << BOLDBLUE << "Automated BX0 alignment on CIC" << +cFe->getFeId() << " : " << BOLDRED << " FAILED!." << RESET;
             }
         }
+
+        // reset original trigger configuration 
         fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cMult);
-       
+        // re-load configuration of fast command block from register map loaded from xml file 
+        LOG (INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
+        std::vector< std::pair<std::string, uint32_t> > cVecReg;
+        for ( auto const& it : cBoardRegisterMap )
+        {
+            auto cRegName = it.first;
+            if( cRegName.find("fc7_daq_cnfg.fast_command_block.") != std::string::npos ) 
+            {
+                //LOG (DEBUG) << BOLDBLUE << "Setting " << cRegName << " : " << it.second << RESET;
+                cVecReg.push_back ( {it.first, it.second} );
+            }
+        }
+        fBeBoardInterface->WriteBoardMultReg ( cBoard, cVecReg);
+        fBeBoardInterface->ChipReSync ( cBoard );
     }
     if( !cSuccess ) 
     {
