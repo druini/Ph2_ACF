@@ -161,10 +161,9 @@ namespace Ph2_System
                 // CIC start-up sequence
                 uint8_t cDriveStrength = 5;
                 cSuccess = fCicInterface->StartUp(cCic , cDriveStrength);
-                if(!cSuccess)
+                for (auto& cChip : cFe->fReadoutChipVector)
                 {
-                    LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " CIC start-up sequence.." << RESET;
-                    exit(0);
+                    fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 1);
                 }
                 fBeBoardInterface->ChipReSync ( cBoard );
                 LOG (INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cFe->getFeId()%2) << " connected to link " << +cFe->getLinkId() <<  RESET ;
@@ -408,7 +407,7 @@ namespace Ph2_System
         EventType fEventType = pBoard->getEventType();
         uint32_t fNFe = pBoard->getNFe();
         uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
-        LOG (INFO) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
+        LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
 
         if (fEventType == EventType::SSA)
         {
@@ -457,8 +456,6 @@ namespace Ph2_System
               cEventIterator += cEventSize;
             }while( cEventIterator < pData.end());
         }
-        LOG (INFO) << BOLDBLUE << "Completed event decoding.." << RESET;
-
     }
   }
 }

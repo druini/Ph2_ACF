@@ -52,6 +52,8 @@ class CicFEAlignment : public Tool
     void Resume() override;
     void writeObjects();
 
+    // injection 
+    void WordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, std::vector<uint8_t> pAlignmentPatterns);
 
   protected:
 

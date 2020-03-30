@@ -419,20 +419,13 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
         
         for (auto& cFe : cBoard->fModuleVector)
         {
-            // disable all output from CBCs
-            for (auto& cChip : cFe->fReadoutChipVector)
-            {
-                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);
-            }
             // enable automatic phase aligner 
             fCicInterface->SetAutomaticPhaseAlignment( static_cast<OuterTrackerModule*>(cFe)->fCic , true);
-            fCicInterface->ResetPhaseAligner(static_cast<OuterTrackerModule*>(cFe)->fCic, 200 );
             
             // generate alignment pattern on all stub lines  
             LOG (INFO) << BOLDBLUE << "Generating STUB patterns needed for phase alignment on FE" << +cFe->getFeId() << RESET;
             for (auto& cChip : cFe->fReadoutChipVector)
             {
-                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 1);
                 // original mask
                 const ChannelGroup<NCHANNELS>* cOriginalMask  = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
                 //enable stub logic 
@@ -453,20 +446,19 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                     LOG (DEBUG) << BOLDBLUE << "Bend code of " << std::bitset<4>( cBendCode_phAlign ) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." << RESET;
                     
                     // first pattern - stubs lines 0, 1 , 3  
-                    std::vector<uint8_t> cSeeds_ph1{ 0x55 , 0xAA };
+                    std::vector<uint8_t> cSeeds_ph1{ 0x55 };
                     std::vector<int>     cBends_ph1( 2, static_cast<int>(cBend_strips*2) ); 
                     static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph1 , cBends_ph1,true);
                     std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
-                    fCicInterface->CheckPhaseAlignerLock( static_cast<OuterTrackerModule*>(cFe)->fCic);
            
-                    // second pattern - 1, 2, 3 , 4 
-                    // std::vector<uint8_t> cSeeds_ph3{ 42, 0x55 , 0xAA };
-                    // std::vector<int>     cBends_ph3(3, static_cast<int>(cBend_strips*2) ); 
-                    // static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph3 , cBends_ph3,true);
-                    // std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
+                    //econd pattern - 1, 2, 3 , 4 
+                    std::vector<uint8_t> cSeeds_ph3{ 42, 0x55 , 0xAA };
+                    std::vector<int>     cBends_ph3(3, static_cast<int>(cBend_strips*2) ); 
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph3 , cBends_ph3,true);
+                    std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
                 }
+                fCicInterface->CheckPhaseAlignerLock( static_cast<OuterTrackerModule*>(cFe)->fCic);
                 fReadoutChipInterface-> maskChannelsGroup (cChip, cOriginalMask);
-                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);
             }
             LOG (INFO) << BOLDBLUE << "Generating HIT patterns needed for phase alignment on FE" << +cFe->getFeId() << RESET;
             for (auto& cChip : cFe->fReadoutChipVector)
@@ -546,12 +538,39 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
     }
     return cAligned;
 }
+void CicFEAlignment::WordAlignmentPattern(ReadoutChip* pChip, std::vector<uint8_t> pAlignmentPatterns)
+{
+    //enable stub logic 
+    static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode( pChip, "Sampled", true, true); 
+    // switch on HitOr
+    fReadoutChipInterface->WriteChipReg ( pChip, "HitOr", 0);
+    // set PtCut to maxmim 
+    fReadoutChipInterface->WriteChipReg ( pChip, "PtCut", 14);
+    
+    std::vector<uint8_t> cStubs{ pAlignmentPatterns[0] , pAlignmentPatterns[1], pAlignmentPatterns[2]};
+    std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( pChip );
+    std::vector<uint8_t> cBendCodes{ static_cast<uint8_t>(pAlignmentPatterns[3] & 0x0F) , static_cast<uint8_t>( (pAlignmentPatterns[3] & 0xF0) >> 4) , static_cast<uint8_t>(pAlignmentPatterns[4] & 0x0F) };
+    std::vector<int> cBends(3,0);
+    for( size_t cIndex=0; cIndex <  cBendCodes.size() ; cIndex+=1 ) 
+    {
+        auto cIterator = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCodes[cIndex] );
+        if( cIterator != cBendLUT.end() )
+        {
+            int cPosition = std::distance( cBendLUT.begin(), cIterator);
+            double cBend_strips = -7. + 0.5*cPosition; 
+            cBends[cIndex] = cBend_strips*2; 
+            LOG (DEBUG) << BOLDBLUE << "Bend code of " << std::bitset<4>( cBendCodes[cIndex] ) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." << RESET; 
+        } 
+    }
+    static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( pChip , cStubs , cBends);
+}
 bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
 {
     LOG (INFO) << BOLDBLUE << "Starting CIC automated word alignment procedure .... " << RESET;
 
     // phase alignment step - first 85 [] , 170 [] 
     bool cAligned=true;
+    std::vector<uint8_t> cAlignmentPatterns{ 0x7A, 0xBC, 0xD4, 0x31, 0x81}; 
     for (auto cBoard : this->fBoardVector)
     {
         // original threshold + logic values 
@@ -572,39 +591,16 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
             if( static_cast<OuterTrackerModule*>(cFe)->fCic != NULL ) 
             {
-              std::vector<uint8_t> cAlignmentPatterns{ 0x7A, 0xBC, 0xD4, 0x31, 0x81}; 
                 // now inject stubs that can generate word alignment pattern 
                 for (auto& cChip : cFe->fReadoutChipVector)
                 {
-                    //enable stub logic 
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode( static_cast<ReadoutChip*>(cChip), "Sampled", true, true); 
-                    // switch on HitOr
-                    fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "HitOr", 0);
-                    // set PtCut to maxmim 
-                    fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "PtCut", 14);
-                    
-                    std::vector<uint8_t> cStubs{ cAlignmentPatterns[0] , cAlignmentPatterns[1], cAlignmentPatterns[2]};
-                    std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( cChip );
-                    std::vector<uint8_t> cBendCodes{ static_cast<uint8_t>(cAlignmentPatterns[3] & 0x0F) , static_cast<uint8_t>( (cAlignmentPatterns[3] & 0xF0) >> 4) , static_cast<uint8_t>(cAlignmentPatterns[4] & 0x0F) };
-                    std::vector<int> cBends(3,0);
-                    for( size_t cIndex=0; cIndex <  cBendCodes.size() ; cIndex+=1 ) 
-                    {
-                        auto cIterator = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCodes[cIndex] );
-                        if( cIterator != cBendLUT.end() )
-                        {
-                            int cPosition = std::distance( cBendLUT.begin(), cIterator);
-                            double cBend_strips = -7. + 0.5*cPosition; 
-                            cBends[cIndex] = cBend_strips*2; 
-                            LOG (DEBUG) << BOLDBLUE << "Bend code of " << std::bitset<4>( cBendCodes[cIndex] ) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." << RESET; 
-                        } 
-                    }
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cStubs , cBends);
+                  this->WordAlignmentPattern(cChip, cAlignmentPatterns);
                 }
                 // now send a fast reset 
                 fBeBoardInterface->ChipReSync ( cBoard );
                 
                 // run automated word alignment 
-                cAligned = cAligned && fCicInterface->AutomatedWordAlignment( static_cast<OuterTrackerModule*>(cFe)->fCic ,cAlignmentPatterns, 500);
+                cAligned = cAligned && fCicInterface->AutomatedWordAlignment( static_cast<OuterTrackerModule*>(cFe)->fCic ,cAlignmentPatterns, pWait_ms);
                 std::vector<std::vector<uint8_t>> cWordAlignmentValues = fCicInterface->ReadWordAlignmentValues( static_cast<OuterTrackerModule*>(cFe)->fCic);
                 if( cAligned )
                 {

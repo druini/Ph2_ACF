@@ -161,14 +161,14 @@ int main ( int argc, char* argv[] )
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit (&cTool);
         cCicAligner.Initialise ();
-        bool cPhaseAligned = cCicAligner.ManualPhaseAlignment();//PhaseAlignment(50);
+        bool cPhaseAligned = cCicAligner.PhaseAlignment(50); //cCicAligner.ManualPhaseAlignment();
         if( !cPhaseAligned ) 
         {
             LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " phase alignment step on CIC input .. " << RESET; 
             exit(0);
         }
         LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET; 
-        bool cWordAligned = cCicAligner.WordAlignment(10);
+        bool cWordAligned = cCicAligner.WordAlignment(100);
         if( !cWordAligned ) 
         {
             LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET; 
