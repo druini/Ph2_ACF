@@ -320,6 +320,14 @@ namespace Ph2_HwInterface
             }
         }
     }
+    void GbtInterface::gbtxSetDriveStrength(BeBoardFWInterface* pInterface, uint8_t pStrength)
+    {
+        std::vector<uint16_t> cRegs{ 327, 328, 329, 330 , 331 };
+        for( auto cReg : cRegs ) 
+        {
+            icWrite(pInterface, cReg , (pStrength << 4 ) || pStrength ) ;
+        }
+    }
     void GbtInterface::gbtxConfigureChargePumps(BeBoardFWInterface* pInterface, uint8_t pStrength ) 
     {
         LOG (INFO) << BOLDBLUE << "Setting DLLs charge-pump control registers to " << std::dec << +pStrength << RESET;

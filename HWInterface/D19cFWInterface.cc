@@ -623,7 +623,7 @@ namespace Ph2_HwInterface
             cGBTx.gbtxConfigure(this);
             cGBTx.gbtxSetPhase(this, fGBTphase) ; 
             cGBTx.gbtxSelectEdgeTx(this, false) ; 
-            cGBTx.gbtxSelectTerminationRx(this, true);
+            cGBTx.gbtxSelectTerminationRx(this, false);
             cGBTx.scaConfigureGPIO(this); 
         }
     }

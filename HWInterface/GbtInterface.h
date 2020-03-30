@@ -76,6 +76,7 @@ namespace Ph2_HwInterface
         void gbtxFrameAlignerDLL(Ph2_HwInterface::BeBoardFWInterface* pInterface, std::vector<uint8_t> pGroups, uint8_t pDLLcurrent = 11, uint8_t pLockMode = 7);
         void gbtxConfigure(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pDLLcurrent=11 , uint8_t pDLLlockMode=7);
         void gbtxSelectTerminationRx(Ph2_HwInterface::BeBoardFWInterface* pInterface, bool pEnable=true);
+        void gbtxSetDriveStrength(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pStrength=0xA);
 
         uint8_t cbcGetPageRegister(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId ) ;
         uint8_t cbcSetPage(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage ) ;
