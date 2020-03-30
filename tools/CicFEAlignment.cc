@@ -379,6 +379,29 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
     
     return cSuccess;
 }
+bool CicFEAlignment::ManualPhaseAlignment(uint16_t pPhase)
+{
+    bool cConfigured = true;
+    for (auto cBoard : this->fBoardVector)
+    {
+        for (auto& cFe : cBoard->fModuleVector)
+        {
+            auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
+            if( cCic != NULL )
+            {
+                for (auto& cChip : cFe->fReadoutChipVector)
+                {
+                    for( int cLineId=0; cLineId < 6; cLineId++)
+                    {
+                        cConfigured = cConfigured && fCicInterface->SetStaticPhaseAlignment(  cCic , cChip->getChipId() , cLineId , pPhase);
+                    }
+                }
+            }
+        }
+        fBeBoardInterface->ChipReSync ( cBoard );
+    }
+    return cConfigured;
+}
 bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms) 
 {
     bool cAligned=true;
@@ -401,10 +424,9 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
             {
                 fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);
             }
-            fCicInterface->ResetPhaseAligner(static_cast<OuterTrackerModule*>(cFe)->fCic, 200 );
             // enable automatic phase aligner 
             fCicInterface->SetAutomaticPhaseAlignment( static_cast<OuterTrackerModule*>(cFe)->fCic , true);
-            fBeBoardInterface->ChipReSync ( cBoard );
+            fCicInterface->ResetPhaseAligner(static_cast<OuterTrackerModule*>(cFe)->fCic, 200 );
             
             // generate alignment pattern on all stub lines  
             LOG (INFO) << BOLDBLUE << "Generating STUB patterns needed for phase alignment on FE" << +cFe->getFeId() << RESET;
@@ -435,12 +457,13 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                     std::vector<int>     cBends_ph1( 2, static_cast<int>(cBend_strips*2) ); 
                     static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph1 , cBends_ph1,true);
                     std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
-                    
-                    // third pattern - 1, 2, 3 , 4 
-                    std::vector<uint8_t> cSeeds_ph3{ 42, 0x55 , 0xAA };
-                    std::vector<int>     cBends_ph3(3, static_cast<int>(cBend_strips*2) ); 
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph3 , cBends_ph3,true);
-                    std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
+                    fCicInterface->CheckPhaseAlignerLock( static_cast<OuterTrackerModule*>(cFe)->fCic);
+           
+                    // second pattern - 1, 2, 3 , 4 
+                    // std::vector<uint8_t> cSeeds_ph3{ 42, 0x55 , 0xAA };
+                    // std::vector<int>     cBends_ph3(3, static_cast<int>(cBend_strips*2) ); 
+                    // static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph3 , cBends_ph3,true);
+                    // std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
                 }
                 fReadoutChipInterface-> maskChannelsGroup (cChip, cOriginalMask);
                 fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);

@@ -161,7 +161,7 @@ int main ( int argc, char* argv[] )
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit (&cTool);
         cCicAligner.Initialise ();
-        bool cPhaseAligned = cCicAligner.PhaseAlignment(10);
+        bool cPhaseAligned = cCicAligner.ManualPhaseAlignment();//PhaseAlignment(50);
         if( !cPhaseAligned ) 
         {
             LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " phase alignment step on CIC input .. " << RESET; 

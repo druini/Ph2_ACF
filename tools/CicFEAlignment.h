@@ -39,6 +39,7 @@ class CicFEAlignment : public Tool
 
     void Initialise ( );
     bool PhaseAlignment(uint16_t pWait_ms=100);
+    bool ManualPhaseAlignment(uint16_t pPhase=10);
     bool WordAlignment(uint16_t pWait_ms=100);
     bool Bx0Alignment(uint8_t pFe=0, uint8_t pLine=4, uint16_t pDelay=1 , uint16_t pWait_ms=100, int cNrials=3);
     bool SetBx0Delay(uint8_t pDelay=8, uint8_t pStubPackageDelay=3);
