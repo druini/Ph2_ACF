@@ -168,7 +168,7 @@ int main ( int argc, char* argv[] )
             exit(0);
         }
         LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET; 
-        bool cWordAligned = cCicAligner.WordAlignment(false);
+        bool cWordAligned = cCicAligner.WordAlignment(10);
         if( !cWordAligned ) 
         {
             LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET; 

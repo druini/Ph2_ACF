@@ -401,14 +401,10 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
             {
                 fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);
             }
+            fCicInterface->ResetPhaseAligner(static_cast<OuterTrackerModule*>(cFe)->fCic, 200 );
             // enable automatic phase aligner 
             fCicInterface->SetAutomaticPhaseAlignment( static_cast<OuterTrackerModule*>(cFe)->fCic , true);
-            //fCicInterface->ResetPhaseAligner(static_cast<OuterTrackerModule*>(cFe)->fCic, 200 );
-        
-            // check if reset is needed
-            LOG (INFO) << BOLDBLUE << "Checking Reset/Resync for CIC on hybrid " << +cFe->getFeId() << RESET;
-            // check if a resync is needed
-            fCicInterface->CheckReSync( static_cast<OuterTrackerModule*>(cFe)->fCic); 
+            fBeBoardInterface->ChipReSync ( cBoard );
             
             // generate alignment pattern on all stub lines  
             LOG (INFO) << BOLDBLUE << "Generating STUB patterns needed for phase alignment on FE" << +cFe->getFeId() << RESET;
@@ -434,26 +430,17 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                     double cBend_strips = -7. + 0.5*cPosition; 
                     LOG (DEBUG) << BOLDBLUE << "Bend code of " << std::bitset<4>( cBendCode_phAlign ) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." << RESET;
                     
-                    for( size_t cAttempt=0; cAttempt<1; cAttempt++)
-                    {
-                        // first pattern - stubs lines 0,1,3
-                        std::vector<uint8_t> cSeeds_ph1{ 85, 170 };
-                        std::vector<int>     cBends_ph1( 2, static_cast<int>(cBend_strips*2) ); 
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph1 , cBends_ph1,true);
-                        std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
-                        
-                        // second pattern - remaining stub lines 2,4 
-                        std::vector<uint8_t> cSeeds_ph2{ 64, 128 , 170 };
-                        std::vector<int>     cBends_ph2(3, static_cast<int>(cBend_strips*2) ); 
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph2 , cBends_ph2,true);
-                        std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
-
-                        // third pattern - all lines at once 
-                        std::vector<uint8_t> cSeeds_ph3{ 42, 85 , 165 };
-                        std::vector<int>     cBends_ph3(3, static_cast<int>(cBend_strips*2) ); 
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph3 , cBends_ph3,true);
-                        std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
-                    }
+                    // first pattern - stubs lines 0, 1 , 3  
+                    std::vector<uint8_t> cSeeds_ph1{ 0x55 , 0xAA };
+                    std::vector<int>     cBends_ph1( 2, static_cast<int>(cBend_strips*2) ); 
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph1 , cBends_ph1,true);
+                    std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
+                    
+                    // third pattern - 1, 2, 3 , 4 
+                    std::vector<uint8_t> cSeeds_ph3{ 42, 0x55 , 0xAA };
+                    std::vector<int>     cBends_ph3(3, static_cast<int>(cBend_strips*2) ); 
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph3 , cBends_ph3,true);
+                    std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
                 }
                 fReadoutChipInterface-> maskChannelsGroup (cChip, cOriginalMask);
                 fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);
@@ -536,7 +523,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
     }
     return cAligned;
 }
-bool CicFEAlignment::WordAlignment(bool pAuto, uint16_t pWait_ms)
+bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
 {
     LOG (INFO) << BOLDBLUE << "Starting CIC automated word alignment procedure .... " << RESET;
 
