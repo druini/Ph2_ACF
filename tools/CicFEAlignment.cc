@@ -256,11 +256,11 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
                 //first pattern - stubs lines 0,1,3
                 static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds , cBends, false );
                 // switch off HitOr
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "HitOr", 0);
+                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "HitOr", 0);
                 //enable stub logic
                 static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode( static_cast<ReadoutChip*>(cChip), "Sampled", true, true); 
                 // set pT cut to maximum 
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( static_cast<ReadoutChip*>(cChip), "PtCut", 14); 
+                fReadoutChipInterface->WriteChipReg( static_cast<ReadoutChip*>(cChip), "PtCut", 14); 
             }
             // configure Bx0 alignment patterns in CIC 
             if( static_cast<OuterTrackerModule*>(cFe)->fCic != NULL ) 
@@ -367,10 +367,10 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
             for (auto& cChip : cFe->fReadoutChipVector)
             {
                 LOG (DEBUG) << BOLDBLUE << "Setting threshold on CBC" << +cChip->getChipId() << " back to " << +cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() << RESET ;
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "Pipe&StubInpSel&Ptwidth" , cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "HIP&TestMode" , cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "PtCut" , cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                fReadoutChipInterface->WriteChipReg( cChip, "VCth" , cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                fReadoutChipInterface->WriteChipReg( cChip, "Pipe&StubInpSel&Ptwidth" , cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                fReadoutChipInterface->WriteChipReg( cChip, "HIP&TestMode" , cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                fReadoutChipInterface->WriteChipReg( cChip, "PtCut" , cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
             }
         }
         LOG (INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
@@ -396,9 +396,6 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
         
         for (auto& cFe : cBoard->fModuleVector)
         {
-            // select link [ if optical ]
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
-            
             // disable all output from CBCs
             for (auto& cChip : cFe->fReadoutChipVector)
             {
@@ -406,7 +403,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
             }
             // enable automatic phase aligner 
             fCicInterface->SetAutomaticPhaseAlignment( static_cast<OuterTrackerModule*>(cFe)->fCic , true);
-            fCicInterface->ResetPhaseAligner(static_cast<OuterTrackerModule*>(cFe)->fCic, 200 );
+            //fCicInterface->ResetPhaseAligner(static_cast<OuterTrackerModule*>(cFe)->fCic, 200 );
         
             // check if reset is needed
             LOG (INFO) << BOLDBLUE << "Checking Reset/Resync for CIC on hybrid " << +cFe->getFeId() << RESET;
@@ -414,18 +411,18 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
             fCicInterface->CheckReSync( static_cast<OuterTrackerModule*>(cFe)->fCic); 
             
             // generate alignment pattern on all stub lines  
+            LOG (INFO) << BOLDBLUE << "Generating STUB patterns needed for phase alignment on FE" << +cFe->getFeId() << RESET;
             for (auto& cChip : cFe->fReadoutChipVector)
             {
-                LOG (INFO) << BOLDBLUE << "Generating STUB patterns needed for phase alignment on FE" << +cFe->getFeId() << " CBC" << +cChip->getChipId() << RESET;
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 1);
+                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 1);
                 // original mask
                 const ChannelGroup<NCHANNELS>* cOriginalMask  = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
                 //enable stub logic 
                 static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode( static_cast<ReadoutChip*>(cChip), "Sampled", true, true); 
                 // switch on HitOr
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "HitOr", 1);
+                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "HitOr", 1);
                 // set PtCut to maximum 
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "PtCut", 14);
+                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "PtCut", 14);
                 
                 // read bend LUT
                 uint8_t cBendCode_phAlign = 0xa;
@@ -446,40 +443,37 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                         std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
                         
                         // second pattern - remaining stub lines 2,4 
-                        // std::vector<uint8_t> cSeeds_ph2{ 64, 128 , 170 };
-                        // std::vector<int>     cBends_ph2(3, static_cast<int>(cBend_strips*2) ); 
-                        // static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph2 , cBends_ph2,true);
-                        // std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
+                        std::vector<uint8_t> cSeeds_ph2{ 64, 128 , 170 };
+                        std::vector<int>     cBends_ph2(3, static_cast<int>(cBend_strips*2) ); 
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph2 , cBends_ph2,true);
+                        std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
 
                         // third pattern - all lines at once 
                         std::vector<uint8_t> cSeeds_ph3{ 42, 85 , 165 };
                         std::vector<int>     cBends_ph3(3, static_cast<int>(cBend_strips*2) ); 
                         static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cSeeds_ph3 , cBends_ph3,true);
                         std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
-
                     }
                 }
-                fCicInterface->CheckPhaseAlignerLock( static_cast<OuterTrackerModule*>(cFe)->fCic); 
                 fReadoutChipInterface-> maskChannelsGroup (cChip, cOriginalMask);
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);
+                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);
             }
+            LOG (INFO) << BOLDBLUE << "Generating HIT patterns needed for phase alignment on FE" << +cFe->getFeId() << RESET;
             for (auto& cChip : cFe->fReadoutChipVector)
             {
                 // original mask
                 const ChannelGroup<NCHANNELS>* cOriginalMask  = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
-                LOG (INFO) << BOLDBLUE << "Generating HIT patterns needed for phase alignment on FE" << +cFe->getFeId() << " CBC" << +cChip->getChipId() << RESET;
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 1);
+                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 1);
                 fReadoutChipInterface-> maskChannelsGroup (cChip, &cChannelMask);
                 //send triggers ...
-                for( auto cTrigger=0; cTrigger < 1000 ; cTrigger++)
+                for( auto cTrigger=0; cTrigger < 100 ; cTrigger++)
                 {
                     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Trigger(0);
                     std::this_thread::sleep_for (std::chrono::microseconds (10) );
                 }
-                fCicInterface->CheckPhaseAlignerLock( static_cast<OuterTrackerModule*>(cFe)->fCic); 
                 // make sure you've returned channels to their original masked value 
                 fReadoutChipInterface->maskChannelsGroup( cChip ,cOriginalMask );
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);
+                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 0);
             }
             bool cLocked=fCicInterface->CheckPhaseAlignerLock( static_cast<OuterTrackerModule*>(cFe)->fCic);
             // 4 channels per phyPort ... 12 phyPorts per CIC 
@@ -489,6 +483,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
             // read back phase aligner values 
             if( cLocked ) 
             {
+                LOG (INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and swithcing to static phase " << RESET;
                 TH2D* cCheck = static_cast<TH2D*> ( getHist ( cFe, "PhaseAlignment" ) );
                 cPhaseTaps = fCicInterface->GetOptimalTaps( static_cast<OuterTrackerModule*>(cFe)->fCic);
                 cPhaseTapsFEs = this->SortOptimalTaps( cPhaseTaps ); 
@@ -506,6 +501,11 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                 // put phase aligner in static mode
                 fCicInterface->SetStaticPhaseAlignment( static_cast<OuterTrackerModule*>(cFe)->fCic, cPhaseTaps); 
             }
+            else
+            {
+                LOG (INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDRED << " FAILED to lock " << BOLDBLUE << " ... stopping procedure." << RESET;
+                exit(1);
+            }
         }
       
         // check if reset is needed and return everything back to original state 
@@ -521,12 +521,12 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
             for (auto& cChip : cFe->fReadoutChipVector)
             {
                 LOG (DEBUG) << BOLDBLUE << "Setting threshold on CBC" << +cChip->getChipId() << " back to " << +cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() << RESET ;
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "Pipe&StubInpSel&Ptwidth" , cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "HIP&TestMode" , cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "PtCut" , cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                fReadoutChipInterface->WriteChipReg( cChip, "VCth" , cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                fReadoutChipInterface->WriteChipReg( cChip, "Pipe&StubInpSel&Ptwidth" , cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                fReadoutChipInterface->WriteChipReg( cChip, "HIP&TestMode" , cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                fReadoutChipInterface->WriteChipReg( cChip, "PtCut" , cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
                 // enable all output from CBCs 
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 1);
+                fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 1);
             }
 
             LOG (INFO) << BOLDBLUE << "Checking Reset/Resync for CIC on hybrid " << +cFe->getFeId() << RESET;
@@ -562,22 +562,16 @@ bool CicFEAlignment::WordAlignment(bool pAuto, uint16_t pWait_ms)
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
             if( static_cast<OuterTrackerModule*>(cFe)->fCic != NULL ) 
             {
-                // // make sure threshold on all readout chips is very high
-                // for (auto& cChip : cFe->fReadoutChipVector)
-                // {
-                //     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 100 );
-                // }
-
-                std::vector<uint8_t> cAlignmentPatterns{ 0x7A, 0xBC, 0xD4, 0x31, 0x81}; 
+              std::vector<uint8_t> cAlignmentPatterns{ 0x7A, 0xBC, 0xD4, 0x31, 0x81}; 
                 // now inject stubs that can generate word alignment pattern 
                 for (auto& cChip : cFe->fReadoutChipVector)
                 {
                     //enable stub logic 
                     static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode( static_cast<ReadoutChip*>(cChip), "Sampled", true, true); 
                     // switch on HitOr
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "HitOr", 0);
+                    fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "HitOr", 0);
                     // set PtCut to maxmim 
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "PtCut", 14);
+                    fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "PtCut", 14);
                     
                     std::vector<uint8_t> cStubs{ cAlignmentPatterns[0] , cAlignmentPatterns[1], cAlignmentPatterns[2]};
                     std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( cChip );
@@ -595,7 +589,6 @@ bool CicFEAlignment::WordAlignment(bool pAuto, uint16_t pWait_ms)
                         } 
                     }
                     static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , cStubs , cBends);
-                    //std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );  
                 }
                 // now send a fast reset 
                 fBeBoardInterface->ChipReSync ( cBoard );
@@ -626,10 +619,10 @@ bool CicFEAlignment::WordAlignment(bool pAuto, uint16_t pWait_ms)
                 LOG (INFO) << BOLDBLUE << "Setting thresholds and logic detect modes back to their original values [Hybrid " << +cFe->getFeId() << " ]." << RESET;
                 for (auto& cChip : cFe->fReadoutChipVector)
                 {
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "Pipe&StubInpSel&Ptwidth" , cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "HIP&TestMode" , cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg( cChip, "PtCut" , cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                    fReadoutChipInterface->WriteChipReg( cChip, "VCth" , cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                    fReadoutChipInterface->WriteChipReg( cChip, "Pipe&StubInpSel&Ptwidth" , cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                    fReadoutChipInterface->WriteChipReg( cChip, "HIP&TestMode" , cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                    fReadoutChipInterface->WriteChipReg( cChip, "PtCut" , cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
                 }
                 // check if a resync is needed
                 //fCicInterface->CheckReSync( static_cast<OuterTrackerModule*>(cFe)->fCic); 

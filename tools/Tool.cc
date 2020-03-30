@@ -616,6 +616,13 @@ void Tool::dumpConfigFiles()
                 	LOG (DEBUG) << BOLDBLUE << "Dumping readout chip configuration to " << cFilename << RESET;
                   static_cast<ReadoutChip*>(chip)->saveRegMap ( cFilename.data() );
                 }
+                auto& cCic = static_cast<OuterTrackerModule*>(module)->fCic;
+                if( cCic != NULL ) 
+            	{
+            		std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_FE" + std::to_string(module->getId()) + ".txt";
+                	LOG (INFO) << BOLDBLUE << "Dumping CIC configuration to " << cFilename << RESET;
+                	cCic->saveRegMap ( cFilename.data() );
+                }
             }
         }
       LOG (INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fDirectoryName << RESET;

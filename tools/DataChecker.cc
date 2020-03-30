@@ -1407,7 +1407,6 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
     {
         for (auto& cFe : cBoard->fModuleVector)
         {
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
             //configure CBCs 
             for (auto& cChip : cFe->fReadoutChipVector)
             {
@@ -1467,15 +1466,15 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
     }
 
     // zero containers
-    //for( uint8_t cPackageDelay = 0 ; cPackageDelay < 8; cPackageDelay++)
-    //{
+    for( uint8_t cPackageDelay = 0 ; cPackageDelay < 8; cPackageDelay++)
+    {
         this->zeroContainers();
         // measure     
         for (auto cBoard : this->fBoardVector)
         {
-            //LOG (INFO) << BOLDMAGENTA << "Setting stub package delay to " << +cPackageDelay << RESET;
-            //fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
-            //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Bx0Alignment();
+            LOG (INFO) << BOLDMAGENTA << "Setting stub package delay to " << +cPackageDelay << RESET;
+            fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Bx0Alignment();
 
             uint16_t cBoardTriggerMult = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
             uint16_t cBoardTriggerRate = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
@@ -1526,7 +1525,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
             if( cConfigureTriggerMult )
                 fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cBoardTriggerMult);
         }
-    //}
+    }
 
     // if TP was used - disable it
     if(!pWithNoise)

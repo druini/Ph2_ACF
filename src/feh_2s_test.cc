@@ -161,7 +161,7 @@ int main ( int argc, char* argv[] )
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit (&cTool);
         cCicAligner.Initialise ();
-        bool cPhaseAligned = cCicAligner.PhaseAlignment(100);
+        bool cPhaseAligned = cCicAligner.PhaseAlignment(10);
         if( !cPhaseAligned ) 
         {
             LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " phase alignment step on CIC input .. " << RESET; 
@@ -184,6 +184,8 @@ int main ( int argc, char* argv[] )
             exit(0);
         }
         LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
+        cCicAligner.dumpConfigFiles();
+        cCicAligner.resetPointers();
     }
     // align back-end 
     BackEndAlignment cBackEndAligner;
