@@ -157,29 +157,47 @@ namespace Ph2_HwInterface
     std::vector<uint8_t> CbcInterface::createHitListFromStubs(uint8_t pSeed, bool pSeedLayer )
     {
         std::vector<uint8_t> cChannelList(0);
-        int cNchannels = 1+ (pSeed%2!=0);
-        uint32_t cFirstChannel = 2*(std::ceil(pSeed*0.5)-1) - 2*(pSeed%2);
-        for( int cIndex = 0; cIndex < cNchannels; cIndex++)
+        uint32_t cFirstStrip = 2*std::floor(pSeed/2.0) + 1;
+        uint32_t cSeedStrip = std::floor(pSeed/2.0); // counting from 1 
+        LOG (DEBUG) << BOLDMAGENTA << "Seed of " << +pSeed << " means first hit is in strip " << +cSeedStrip << RESET;
+        size_t cNumberOfChannels = 1 + (pSeed%2 != 0);    
+        for(size_t cIndex = 0 ; cIndex < cNumberOfChannels ; cIndex ++ )
         {
-            int cChannel  = cFirstChannel + 2*cIndex + !pSeedLayer;
-            if( cChannel >= 0 )
-            {
-                cChannelList.push_back( static_cast<uint32_t>(cChannel) );
-                //LOG (DEBUG) << BOLDBLUE << "Unmasking channel .... " << +cChannel <<  " [in register " << +cChannel/8 << " ]" << RESET;
-            }
+            uint32_t cSeedChannel = 2*(cSeedStrip-1) + !pSeedLayer + 2*cIndex;
+            LOG (DEBUG) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
+            cChannelList.push_back( static_cast<uint32_t>(cSeedChannel) );
         }
+        
+        // int cNchannels = 1+ (pSeed%2!=0);
+        // uint32_t cFirstChannel = 2*(std::ceil(pSeed*0.5)-1) - 2*(pSeed%2);
+        // for( int cIndex = 0; cIndex < cNchannels; cIndex++)
+        // {
+        //     int cChannel  = cFirstChannel + 2*cIndex + !pSeedLayer;
+        //     if( cChannel >= 0 )
+        //     {
+        //         cChannelList.push_back( static_cast<uint32_t>(cChannel) );
+        //     }
+        // }
         return cChannelList;
     } 
 
     std::vector<uint8_t> CbcInterface::stubInjectionPattern( ReadoutChip* pChip, uint8_t pStubAddress, int pStubBend ) 
     {
-        //LOG (DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." <<  RESET;   
-        std::vector<uint8_t> cSeedHits = createHitListFromStubs(pStubAddress,true);
-        // then in correlation layer 
-        // first lets just use a bend of 0 
-        double cCorrelationHit = (pStubAddress*0.5) + pStubBend*0.5 ; // start counting strips from 0
-        pStubAddress = cCorrelationHit*2; 
-        std::vector<uint8_t> cCorrelatedHits = createHitListFromStubs(pStubAddress,false);
+
+        bool cLayerSwap = ( this->ReadChipReg(pChip , "LayerSwap") == 1 );
+        LOG (DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." <<  RESET;   
+        double cSeedStrip = (pStubAddress*0.5);
+        std::vector<uint8_t> cSeedHits = createHitListFromStubs(pStubAddress,!cLayerSwap);
+        // //try it here first 
+        uint8_t cCorrelated = pStubAddress + pStubBend; // start counting strips from 0
+        std::vector<uint8_t> cCorrelatedHits = createHitListFromStubs(cCorrelated, cLayerSwap);
+
+        // // then in correlation layer 
+        // // first lets just use a bend of 0 
+        // double cCorrelationHit = (pStubAddress*0.5) + pStubBend*0.5 ; // start counting strips from 0
+        // pStubAddress = cCorrelationHit*2; 
+        // std::vector<uint8_t> cCorrelatedHits = createHitListFromStubs(pStubAddress,false);
+
         //merge two lists and unmask 
         cSeedHits.insert( cSeedHits.end(), cCorrelatedHits.begin(), cCorrelatedHits.end());
         return cSeedHits;
@@ -627,6 +645,33 @@ namespace Ph2_HwInterface
             if (!cFailed) pCbc->setReg ( "Pipe&StubInpSel&Ptwidth", cRegItem.fValue );
 
             return (cRegItem.fValue & 0x30) >> 4;
+        }
+        else if( pRegNode == "HitOr" ) 
+        {
+            cRegItem = pCbc->getRegItem ( "40MhzClk&Or254" );
+            fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getChipId(), cVecReq, true, false );
+            fBoardFW->ReadChipBlockReg (  cVecReq );
+            fBoardFW->DecodeReg ( cRegItem, cCbcId, cVecReq[0], cRead, cFailed );
+            if (!cFailed) pCbc->setReg ( "40MhzClk&Or254", cRegItem.fValue );
+            return (cRegItem.fValue & 0x40) >> 6;
+        }
+        else if( pRegNode == "LayerSwap" ) 
+        {
+            cRegItem = pCbc->getRegItem ( "LayerSwap&CluWidth" );
+            fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getChipId(), cVecReq, true, false );
+            fBoardFW->ReadChipBlockReg (  cVecReq );
+            fBoardFW->DecodeReg ( cRegItem, cCbcId, cVecReq[0], cRead, cFailed );
+            if (!cFailed) pCbc->setReg ( "LayerSwap&CluWidth", cRegItem.fValue );
+            return (cRegItem.fValue & 0x08) >> 3;
+        }
+        else if( pRegNode == "PtCut" )
+        {
+            cRegItem = pCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
+            fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getChipId(), cVecReq, true, false );
+            fBoardFW->ReadChipBlockReg (  cVecReq );
+            fBoardFW->DecodeReg ( cRegItem, cCbcId, cVecReq[0], cRead, cFailed );
+            if (!cFailed) pCbc->setReg ( "Pipe&StubInpSel&Ptwidth", cRegItem.fValue );
+            return (cRegItem.fValue & 0x0F);
         }
         else
         {

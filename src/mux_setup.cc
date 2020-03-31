@@ -104,45 +104,45 @@ int main ( int argc, char** argv )
 
     // if you've tried to configure the mux .. then try and configure hardware that is on it 
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
-    if( cMuxConfigure || cMuxAutoConfigure )
-    {
-        cTool.ConfigureHw ();
-        cTool.CreateResultDirectory ( cDirectory );
-        cTool.InitResultFile ( "CicResults" );
-        //t.start();
+    // if( cMuxConfigure || cMuxAutoConfigure )
+    // {
+    //     cTool.ConfigureHw ();
+    //     cTool.CreateResultDirectory ( cDirectory );
+    //     cTool.InitResultFile ( "CicResults" );
+    //     //t.start();
 
-        //CIC FE alignment tool 
-        CicFEAlignment cCicAligner;
-        cCicAligner.Inherit (&cTool);
-        cCicAligner.Initialise ();
-        bool cPhaseAligned = cCicAligner.PhaseAlignment(50);
-        if( !cPhaseAligned ) 
-        {
-            LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " phase alignment step on CIC input .. " << RESET; 
-            exit(0);
-        }
-        LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET; 
-        bool cWordAligned = cCicAligner.WordAlignment(false);
-        if( !cWordAligned ) 
-        {
-            LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET; 
-            exit(0);
-        }
-        LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET; 
+    //     //CIC FE alignment tool 
+    //     CicFEAlignment cCicAligner;
+    //     cCicAligner.Inherit (&cTool);
+    //     cCicAligner.Initialise ();
+    //     bool cPhaseAligned = cCicAligner.PhaseAlignment(50);
+    //     if( !cPhaseAligned ) 
+    //     {
+    //         LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " phase alignment step on CIC input .. " << RESET; 
+    //         exit(0);
+    //     }
+    //     LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET; 
+    //     bool cWordAligned = cCicAligner.WordAlignment(false);
+    //     if( !cWordAligned ) 
+    //     {
+    //         LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET; 
+    //         exit(0);
+    //     }
+    //     LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET; 
         
-        // align back-end .. if this moves to firmware then we can get rid of this step 
-        BackEndAlignment cBackEndAligner;
-        cBackEndAligner.Inherit (&cTool);
-        cBackEndAligner.Initialise();
-        bool cAligned = cBackEndAligner.Align();
-        cBackEndAligner.resetPointers();
-        if(!cAligned )
-        {
-            LOG (ERROR) << BOLDRED << "FAILED " << BOLDBLUE << " to align back-end " << RESET; 
-            exit(0);
-        }
+    //     // align back-end .. if this moves to firmware then we can get rid of this step 
+    //     BackEndAlignment cBackEndAligner;
+    //     cBackEndAligner.Inherit (&cTool);
+    //     cBackEndAligner.Initialise();
+    //     bool cAligned = cBackEndAligner.Align();
+    //     cBackEndAligner.resetPointers();
+    //     if(!cAligned )
+    //     {
+    //         LOG (ERROR) << BOLDRED << "FAILED " << BOLDBLUE << " to align back-end " << RESET; 
+    //         exit(0);
+    //     }
 
-    }
+    // }
     LOG (INFO) << "*** End of the operation ***" ;
     cTool.Destroy();
 

@@ -8,6 +8,7 @@
 #include "../HWDescription/Definition.h"
 #include "../tools/PedestalEqualization.h"
 #include "../tools/PedeNoise.h"
+#include "tools/BackEndAlignment.h"
 #include "../Utils/argvparser.h"
 #include "TROOT.h"
 #include "TApplication.h"
@@ -97,6 +98,19 @@ int main ( int argc, char* argv[] )
     cTool.CreateResultDirectory ( cDirectory );
     cTool.InitResultFile ( "PedestalEqualizationResults" );
     cTool.StartHttpServer();
+    
+    // align back-end .. if this moves to firmware then we can get rid of this step 
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit (&cTool);
+    cBackEndAligner.Initialise();
+    bool cAligned = cBackEndAligner.Align();
+    cBackEndAligner.resetPointers();
+    if(!cAligned )
+    {
+        LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
+        exit(0);
+    }
+    
     //cTool.ConfigureHw ();
     //if ( !cOld )
     //{

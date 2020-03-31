@@ -35,7 +35,7 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
     fCheckLoop                   = findValueInSettings("VerificationLoop"                  ,    1);
     fTestPulseAmplitude          = findValueInSettings("PedestalEqualizationPulseAmplitude",    0);
     fEventsPerPoint              = findValueInSettings("Nevents"                           ,   10);
-    fTargetOffset = 0x80;
+    fTargetOffset = 0x7F;
     fTargetVcth   =  0x0;
 
     this->SetSkipMaskedChannels( fSkipMaskedChannels );

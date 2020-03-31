@@ -10,6 +10,7 @@
 #include "../tools/PedeNoise.h"
 #include "../tools/AntennaTester.h"
 #include "../tools/CBCPulseShape.h"
+#include "tools/BackEndAlignment.h"
 
 #include "../Utils/argvparser.h"
 #include "TROOT.h"
@@ -94,7 +95,7 @@ int main ( int argc, char* argv[] )
     bool cStubLatency = ( cmd.foundOption ( "stublatency" ) ) ? true : false;
     bool cSignal = ( cmd.foundOption ( "signal" ) ) ? true : false;
     bool cSignalFit = ( cmd.foundOption ( "signalFit" ) ) ? true : false;
-//    bool cHitOR = ( cmd.foundOption ( "hitOR" ) ) ? true : false;
+    //bool cHitOR = ( cmd.foundOption ( "hitOR" ) ) ? true : false;
     bool cNoise = ( cmd.foundOption ( "noise" ) ) ? true : false;
     bool cAntenna = (cmd.foundOption ("antenna") )? true : false;
     bool cPulseShape = (cmd.foundOption ("pulseShape") )? true : false;
@@ -136,6 +137,18 @@ int main ( int argc, char* argv[] )
     cTool.InitResultFile ( cResultfile );
     cTool.StartHttpServer();
     cTool.ConfigureHw ();
+
+    // align back-end .. if this moves to firmware then we can get rid of this step 
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit (&cTool);
+    cBackEndAligner.Initialise();
+    bool cAligned = cBackEndAligner.Align();
+    cBackEndAligner.resetPointers();
+    if(!cAligned )
+    {
+        LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
+        exit(0);
+    }
 
     #ifdef __ANTENNA__
     AntennaTester cAntennaTester;
