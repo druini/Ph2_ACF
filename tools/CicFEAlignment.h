@@ -14,19 +14,12 @@
 #define CicFEAlignment_h__
 
 #include "Tool.h"
-
-
 #include <map>
-#ifdef __USE_ROOT__
-    #include "TCanvas.h"
-    #include "TH2.h"
-    #include "TProfile.h"
-    #include "TProfile2D.h"
-    #include "TString.h"
-    #include "TGraphErrors.h"
-    #include "TString.h"
-    #include "TText.h"
-#endif
+
+// add break codes here 
+const uint8_t FAILED_PHASE_ALIGNMENT = 1;
+const uint8_t FAILED_WORD_ALIGNMENT = 2;
+const uint8_t FAILED_BX_ALIGNMENT = 3;
 
 class CicFEAlignment : public Tool
 {

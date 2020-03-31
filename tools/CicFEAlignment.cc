@@ -142,14 +142,14 @@ void CicFEAlignment::Start(int currentRun)
     if( !cPhaseAligned ) 
     {
         LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " phase alignment step on CIC input .. " << RESET; 
-        exit(0);
+        exit(FAILED_PHASE_ALIGNMENT);
     }
     LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET; 
     bool cWordAligned = this->WordAlignment();
     if( !cWordAligned ) 
     {
         LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET; 
-        exit(0);
+        exit(FAILED_WORD_ALIGNMENT);
     }
     LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET; 
 
@@ -158,7 +158,7 @@ void CicFEAlignment::Start(int currentRun)
     if( !cBxAligned ) 
     {
         LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET ; 
-        exit(0);
+        exit(FAILED_BX_ALIGNMENT);
     }
     LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
     fSuccess = (cPhaseAligned && cWordAligned && cBxAligned );

@@ -16,16 +16,6 @@
 #include "Tool.h"
 
 #include <map>
-#ifdef __USE_ROOT__
-    #include "TCanvas.h"
-    #include "TH2.h"
-    #include "TProfile.h"
-    #include "TProfile2D.h"
-    #include "TString.h"
-    #include "TGraphErrors.h"
-    #include "TString.h"
-    #include "TText.h"
-#endif
 
 namespace Ph2_HwInterface
 {
@@ -53,7 +43,7 @@ class BackEndAlignment : public Tool
     void Resume() override;
     void writeObjects();
     void Reset();
-    
+
     // get alignment results 
     bool    getStatus() const { return fSuccess;}
 
