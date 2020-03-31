@@ -161,7 +161,7 @@ int main ( int argc, char* argv[] )
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit (&cTool);
         cCicAligner.Initialise ();
-        bool cPhaseAligned = cCicAligner.PhaseAlignment(100); //
+        bool cPhaseAligned = cCicAligner.PhaseAlignment(10); //
         //bool cPhaseAligned =  cCicAligner.ManualPhaseAlignment(7);
         if( !cPhaseAligned ) 
         {

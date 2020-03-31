@@ -52,29 +52,24 @@ class CicFEAlignment : public Tool
     void Resume() override;
     void writeObjects();
 
+
     // injection 
     void WordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, std::vector<uint8_t> pAlignmentPatterns);
-
+    // get alignment results 
+    uint8_t getPhaseAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::Module* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine );
+    uint8_t getWordAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::Module* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine );
   protected:
 
   private:
     // Containers
     DetectorDataContainer  fThresholds, fLogic, fHIPs, fPtCuts;
+    DetectorDataContainer  fPhaseAlignmentValues;
+    DetectorDataContainer  fWordAlignmentValues;
     DetectorDataContainer fRegMapContainer;
-
-    // Canvases
-    // Counters
-
-    // Settings
 
     // mapping of FEs for CIC 
     std::vector<uint8_t> fFEMapping{ 3,2,1,0,4,5,6,7 }; // FE --> FE CIC
     void SetStubWindowOffsets( uint8_t pBendCode , int pBend );
-
-    // booking histograms 
-    #ifdef __USE_ROOT__
-    //  DQMHistogramCic fDQMHistogram;
-    #endif
 
 };
 

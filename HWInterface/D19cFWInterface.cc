@@ -624,6 +624,7 @@ namespace Ph2_HwInterface
             cGBTx.gbtxSetPhase(this, fGBTphase) ; 
             cGBTx.gbtxSelectEdgeTx(this, false) ; 
             cGBTx.gbtxSelectTerminationRx(this, false);
+            cGBTx.gbtxSetDriveStrength(this,0xa);
             cGBTx.scaConfigureGPIO(this); 
         }
     }

@@ -1,5 +1,4 @@
 #include "CicFEAlignment.h"
-#ifdef __USE_ROOT__
 
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
@@ -19,9 +18,6 @@ CicFEAlignment::CicFEAlignment() :
 
 CicFEAlignment::~CicFEAlignment()
 {
-
-    // delete fOffsetCanvas;
-    // delete fOccupancyCanvas;
 }
 
 void CicFEAlignment::Initialise ()
@@ -29,36 +25,7 @@ void CicFEAlignment::Initialise ()
     // this is needed if you're going to use groups anywhere
     fChannelGroupHandler = new CBCChannelGroupHandler();//This will be erased in tool.resetPointers()
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
-    #ifdef __USE_ROOT__
-    //    fDQMHistogram.book(fResultFile,*fDetectorContainer);
-    #endif
-    for (auto cBoard : this->fBoardVector)
-    {
-        for (auto& cFe : cBoard->fModuleVector)
-        {
-            // histograms per cbc 
-            for (auto& cChip : cFe->fReadoutChipVector)
-            {
-                TString cName = Form ( "h_BendCheck_Fe%dCbc%d", cFe->getFeId() , cChip->getChipId() );
-                TObject* cObj = gROOT->FindObject ( cName );
-                if ( cObj ) delete cObj; 
-                //TProfile* cProfile = new TProfile ( cName, Form("Bend Check CBC%d; Stub Latency; Matched Fraction",(int)cChip->getId()) , 512 ,  0 -0.5 , 512 - 0.5 );
-                //bookHistogram ( static_cast<ReadoutChip*>(cChip), "BendCheck", cProfile );
-                cName = Form ( "h_Bx0Alignment_Fe%dCbc%d", cFe->getFeId() , cChip->getChipId() );
-                cObj = gROOT->FindObject ( cName );
-                if ( cObj ) delete cObj;
-                TH2D* cHist = new TH2D ( cName, Form("Bx0 Alignment [CIC --> CBC%d]; Line Id; Alignment Value",(int)cChip->getChipId()) , 5, 0-0.5 , 5-0.5 , 20, 0-0.5 , 20-0.5 );
-                bookHistogram ( static_cast<ReadoutChip*>(cChip), "Bx0Alignment", cHist );
-            }
-            TString cName = Form ( "h_PhaseAlignment_Fe%d", cFe->getFeId()  );
-            TObject* cObj = gROOT->FindObject ( cName );
-            if ( cObj ) delete cObj; 
-            TH2D* cHist = new TH2D ( cName, Form("Phase Alignment [CIC%d <--> FE ASICs]; Fe Id; Line Id",(int)cFe->getFeId()) , 8, 0-0.5 , 8-0.5 , 6, 0-0.5 , 6-0.5 );
-            bookHistogram ( cFe , "PhaseAlignment", cHist );
-            
-        }
-    }
-    //
+    
     DetectorDataContainer         theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -69,6 +36,8 @@ void CicFEAlignment::Initialise ()
     ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, fLogic);  
     ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, fHIPs);  
     ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, fPtCuts);  
+    ContainerFactory::copyAndInitStructure<std::vector<uint8_t>>(*fDetectorContainer, fPhaseAlignmentValues);  
+    ContainerFactory::copyAndInitStructure<std::vector<uint8_t>>(*fDetectorContainer, fWordAlignmentValues);  
     
     for (auto cBoard : this->fBoardVector)
     {
@@ -76,13 +45,17 @@ void CicFEAlignment::Initialise ()
         auto& cLogicThisBoard = fLogic.at(cBoard->getIndex());
         auto& cHIPsThisBoard = fHIPs.at(cBoard->getIndex());
         auto& cPtCutThisBoard = fPtCuts.at(cBoard->getIndex());
+        auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.at(cBoard->getIndex());
+        auto& cWordAlignmentThisBoard = fWordAlignmentValues.at(cBoard->getIndex());
         for (auto& cFe : cBoard->fModuleVector)
         {
             auto& cThresholdsThisHybrid = cThresholdsThisBoard->at(cFe->getIndex());
             auto& cLogicThisHybrid = cLogicThisBoard->at(cFe->getIndex());
             auto& cHIPsThisHybrid = cHIPsThisBoard->at(cFe->getIndex());
             auto& cPtCutThisHybrid = cPtCutThisBoard->at(cFe->getIndex());
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
+            auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisBoard->at(cFe->getIndex());
+            auto& cWordAlignmentThisHybrid = cWordAlignmentThisBoard->at(cFe->getIndex());
+
             //configure CBCs 
             for (auto& cChip : cFe->fReadoutChipVector)
             {
@@ -90,6 +63,16 @@ void CicFEAlignment::Initialise ()
                 cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "Pipe&StubInpSel&Ptwidth" );
                 cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "HIP&TestMode" );
                 cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "PtCut" );
+                // prepare alignment value result 
+                cPhaseAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>().clear();
+                cWordAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>().clear();
+                // 5 stub lines + 1 L1 line 
+                for( int cLine=0; cLine < 6; cLine++)
+                {
+                    cPhaseAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>().push_back(0);
+                    if( cLine < 5 )
+                        cWordAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>().push_back(0);
+                }
             }
         }
     }
@@ -414,6 +397,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
         auto& cLogicThisBoard = fLogic.at(cBoard->getIndex());
         auto& cHIPsThisBoard = fHIPs.at(cBoard->getIndex());
         auto& cPtCutThisBoard = fPtCuts.at(cBoard->getIndex());
+        auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.at(cBoard->getIndex());
 
         ChannelGroup<NCHANNELS,1> cChannelMask; cChannelMask.disableAllChannels();
         for( uint8_t cChannel=0; cChannel<NCHANNELS; cChannel+=10) cChannelMask.enableChannel( cChannel);//generate a hit in every Nth channel
@@ -485,8 +469,8 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
             // read back phase aligner values 
             if( cLocked ) 
             {
+                auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisBoard->at(cFe->getIndex());
                 LOG (INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and swithcing to static phase " << RESET;
-                TH2D* cCheck = static_cast<TH2D*> ( getHist ( cFe, "PhaseAlignment" ) );
                 cPhaseTaps = fCicInterface->GetOptimalTaps( static_cast<OuterTrackerModule*>(cFe)->fCic);
                 cPhaseTapsFEs = this->SortOptimalTaps( cPhaseTaps ); 
                 for (auto& cChip : cFe->fReadoutChipVector)
@@ -496,7 +480,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                     {
                         char cBuffer[80]; sprintf(cBuffer,"%.2d ", cPhaseTapsFEs[cChip->getChipId()][cInput]);
                         cOutput += cBuffer;
-                        cCheck->Fill(cChip->getChipId(), cInput, cPhaseTapsFEs[cChip->getChipId()][cInput]);
+                        cPhaseAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>()[cInput] = cPhaseTapsFEs[cChip->getChipId()][cInput];
                     }
                     LOG (INFO) << BOLDBLUE << "Optimal tap found on FE" << +cChip->getChipId() << " : " << cOutput << RESET;
                 }
@@ -578,7 +562,8 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
         auto& cLogicThisBoard = fLogic.at(cBoard->getIndex());
         auto& cHIPsThisBoard = fHIPs.at(cBoard->getIndex());
         auto& cPtCutThisBoard = fPtCuts.at(cBoard->getIndex());
-
+        auto& cWordAlignmentThisBoard = fWordAlignmentValues.at(cBoard->getIndex());
+        
         
         for (auto& cFe : cBoard->fModuleVector)
         {
@@ -586,9 +571,8 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
             auto& cLogicThisHybrid = cLogicThisBoard->at(cFe->getIndex());
             auto& cHIPsThisHybrid = cHIPsThisBoard->at(cFe->getIndex());
             auto& cPtCutThisHybrid = cPtCutThisBoard->at(cFe->getIndex());
-            
+            auto& cWordAlignmentThisHybrid = cWordAlignmentThisBoard->at(cFe->getIndex());
 
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cFe->getLinkId());
             if( static_cast<OuterTrackerModule*>(cFe)->fCic != NULL ) 
             {
                 // now inject stubs that can generate word alignment pattern 
@@ -613,11 +597,10 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                         {
                             char cBuffer[80]; sprintf(cBuffer,"%.2d ", cValues[cChip->getChipId()][cLine]);
                             cOutput += cBuffer;
+                            cWordAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>()[cLine] = cValues[cChip->getChipId()][cLine];
                         }
                         LOG (INFO) << BOLDBLUE << "Word alignment values for FE" << +cChip->getChipId() << " : " << cOutput << RESET;
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels( cChip, false); 
                     }
-
                 }
                 else
                     LOG (INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
@@ -629,9 +612,8 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                     fReadoutChipInterface->WriteChipReg( cChip, "Pipe&StubInpSel&Ptwidth" , cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
                     fReadoutChipInterface->WriteChipReg( cChip, "HIP&TestMode" , cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
                     fReadoutChipInterface->WriteChipReg( cChip, "PtCut" , cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() );
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels( cChip, false); 
                 }
-                // check if a resync is needed
-                //fCicInterface->CheckReSync( static_cast<OuterTrackerModule*>(cFe)->fCic); 
             }
         }
         // now send a fast reset 
@@ -639,7 +621,18 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
     }
     return cAligned;
 }
-
+uint8_t CicFEAlignment::getPhaseAlignmentValue(BeBoard* pBoard, Module* pFe, ReadoutChip* pChip, uint8_t pLine )
+{
+    auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.at(pBoard->getIndex());
+    auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisBoard->at(pFe->getIndex());
+    return cPhaseAlignmentThisHybrid->at(pChip->getIndex())->getSummary<std::vector<uint8_t>>()[pLine];
+}
+uint8_t CicFEAlignment::getWordAlignmentValue(BeBoard* pBoard, Module* pFe, ReadoutChip* pChip, uint8_t pLine )
+{
+    auto& cWordAlignmentThisBoard = fWordAlignmentValues.at(pBoard->getIndex());
+    auto& cWordAlignmentThisHybrid = cWordAlignmentThisBoard->at(pFe->getIndex());
+    return cWordAlignmentThisHybrid->at(pChip->getIndex())->getSummary<std::vector<uint8_t>>()[pLine];
+}
 void CicFEAlignment::Stop()
 {
     this->SaveResults();
@@ -658,5 +651,3 @@ void CicFEAlignment::Pause()
 void CicFEAlignment::Resume()
 {
 }
-
-#endif
