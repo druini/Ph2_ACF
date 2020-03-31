@@ -18,6 +18,31 @@ CicFEAlignment::CicFEAlignment() :
 
 CicFEAlignment::~CicFEAlignment()
 {
+    // set everything back to original values .. like I wasn't here 
+    for (auto cBoard : this->fBoardVector)
+    {
+        LOG (INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getBeBoardId() << RESET;
+        auto& cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        std::vector< std::pair<std::string, uint32_t> > cVecBeBoardRegs; cVecBeBoardRegs.clear();
+        for(auto cReg : cBeRegMap )
+            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
+        fBeBoardInterface->WriteBoardMultReg ( cBoard, cVecBeBoardRegs);
+
+        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        for (auto& cFe : cBoard->fModuleVector)
+        {
+            auto& cRegMapThisHybrid = cRegMapThisBoard->at(cFe->getIndex());
+            LOG (INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cFe->getFeId() ) << " back to their original values..." << RESET;
+            for (auto& cChip : cFe->fReadoutChipVector)
+            {
+                auto& cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>(); 
+                std::vector< std::pair<std::string, uint16_t> > cVecRegisters; cVecRegisters.clear();
+                for(auto cReg : cRegMapThisChip )
+                    cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+                fReadoutChipInterface->WriteChipMultReg ( cChip , cVecRegisters );
+            }
+        }
+    }
 }
 
 void CicFEAlignment::Initialise ()
@@ -77,10 +102,12 @@ void CicFEAlignment::Initialise ()
         }
     }
 
-    // retreive original settings for all chips 
+    // retreive original settings for all chips and all back-end boards 
     ContainerFactory::copyAndInitStructure<ChipRegMap>(*fDetectorContainer, fRegMapContainer);
+    ContainerFactory::copyAndInitStructure<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for (auto cBoard : this->fBoardVector)
     {
+        fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>() = cBoard->getBeBoardRegMap();
         auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
         for (auto& cFe : cBoard->fModuleVector)
         {
@@ -91,7 +118,6 @@ void CicFEAlignment::Initialise ()
             }
         }
     }
-
 }
 
 void CicFEAlignment::writeObjects()
@@ -229,8 +255,6 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
     {
         // read back register map before you've done anything 
         auto cBoardRegisterMap = cBoard->getBeBoardRegMap();
-        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
-        
         for (auto& cFe : cBoard->fModuleVector)
         {
             //configure CBCs 
@@ -359,7 +383,6 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
         LOG (INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFastCommandBlock(cBoard);
     }
-    
     return cSuccess;
 }
 bool CicFEAlignment::ManualPhaseAlignment(uint16_t pPhase)
