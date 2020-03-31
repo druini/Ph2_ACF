@@ -17,6 +17,7 @@
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
 #include "../tools/RD53InjectionDelay.h"
+#include "../tools/RD53ThrAdjustment.h"
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53PixelAlive.h"
 #include "../tools/RD53Latency.h"
@@ -114,7 +115,7 @@ int main (int argc, char** argv)
   cmd.defineOption("file","Hardware description file. Default value: CMSIT.xml", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative("file", "f");
 
-  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin injdelay clockdelay physics eudaq]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+  cmd.defineOption ("calib", "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj injdelay clockdelay physics eudaq]. Default: pixelalive", CommandLineProcessing::ArgvParser::OptionRequiresValue);
   cmd.defineOptionAlternative ("calib", "c");
 
   cmd.defineOption ("binary", "Binary file to decode.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
@@ -444,6 +445,21 @@ int main (int argc, char** argv)
           tm.run();
           tm.analyze();
           tm.draw(runNumber);
+        }
+      else if (whichCalib == "thradj")
+        {
+          // ##############################
+          // # Run Threshold Minimization #
+          // ##############################
+          LOG (INFO) << BOLDMAGENTA << "@@@ Performing Threshold Adjustment @@@" << RESET;
+
+          std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrAdjustment");
+          ThrAdjustment ta;
+          ta.Inherit(&mySysCntr);
+          ta.localConfigure(fileName, runNumber);
+          ta.run();
+          ta.analyze();
+          ta.draw(runNumber);
         }
       else if (whichCalib == "injdelay")
         {

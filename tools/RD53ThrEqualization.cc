@@ -39,6 +39,16 @@ void ThrEqualization::ConfigureCalibration ()
   doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
+  frontEnd = RD53::getMajorityFE(colStart, colStop);
+  if (frontEnd == &RD53::SYNC)
+    {
+      LOG (ERROR) << BOLDRED << "ThrEqualization cannot be used on the Synchronous FE, please change the selected columns" << RESET;
+      exit(EXIT_FAILURE);
+    }
+  colStart = std::max(colStart, frontEnd->colStart);
+  colStop  = std::min(colStop, frontEnd->colStop);
+  LOG (INFO) << BOLDBLUE << "\t--> ThrEqualization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << BOLDBLUE << "]" << RESET;
+
 
   // ########################
   // # Custom channel group #
@@ -145,7 +155,7 @@ void ThrEqualization::run ()
   this->fChannelGroupHandler = theChnGroupHandler.get();
   this->SetTestPulse(true);
   this->fMaskChannelsFromOtherGroups = true;
-  ThrEqualization::bitWiseScanLocal("PIX_PORTAL", nEvents, TARGETEFF, nEvtsBurst);
+  ThrEqualization::bitWiseScanLocal(frontEnd->name, nEvents, TARGETEFF, nEvtsBurst);
 
 
   // #################################################
@@ -332,7 +342,7 @@ void ThrEqualization::bitWiseScanGlobal (const std::string& regName, uint32_t nE
 void ThrEqualization::bitWiseScanLocal (const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
 {
   uint16_t init;
-  uint16_t numberOfBits = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0))->getNumberOfBits(regName);
+  unsigned int numberOfBits = ceil(log2(frontEnd->nTDACvalues));
 
   DetectorDataContainer minDACcontainer;
   DetectorDataContainer midDACcontainer;
@@ -343,7 +353,7 @@ void ThrEqualization::bitWiseScanLocal (const std::string& regName, uint32_t nEv
 
   ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, minDACcontainer, init = 0);
   ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, midDACcontainer);
-  ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, maxDACcontainer, init = (RD53Shared::setBits(numberOfBits) + 1));
+  ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, maxDACcontainer, init = frontEnd->nTDACvalues);
 
   ContainerFactory::copyAndInitChannel<uint16_t> (*fDetectorContainer, bestDACcontainer);
   ContainerFactory::copyAndInitChannel<OccupancyAndPh>(*fDetectorContainer, bestContainer);

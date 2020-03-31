@@ -51,9 +51,6 @@ class ThrEqualization : public PixelAlive
   }
 
 
-  // ########
-  // # ROOT #
-  // ########
 #ifdef __USE_ROOT__
   ThrEqualizationHistograms* histos;
 #endif
@@ -70,6 +67,8 @@ class ThrEqualization : public PixelAlive
   size_t stopValue;
   size_t nHITxCol;
   bool   doFast;
+
+  const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
   std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
   DetectorDataContainer theOccContainer;

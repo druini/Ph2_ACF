@@ -40,6 +40,11 @@ void GainOptimization::ConfigureCalibration ()
   doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData = this->findValueInSettings("SaveBinaryData");
 
+  frontEnd = RD53::getMajorityFE(colStart, colStop);
+  colStart = std::max(colStart, frontEnd->colStart);
+  colStop  = std::min(colStop, frontEnd->colStop);
+  LOG (INFO) << BOLDBLUE << "\t--> GainOptimization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << BOLDBLUE << "]" << RESET;
+
 
   // #######################
   // # Initialize progress #
@@ -114,7 +119,7 @@ void GainOptimization::initializeFiles (const std::string fileRes_, int currentR
 
 void GainOptimization::run ()
 {
-  GainOptimization::bitWiseScanGlobal("KRUM_CURR_LIN", nEvents, targetCharge, KrumCurrStart, KrumCurrStop);
+  GainOptimization::bitWiseScanGlobal(frontEnd->gainReg, nEvents, targetCharge, KrumCurrStart, KrumCurrStop);
 
 
   // #######################################
@@ -124,7 +129,7 @@ void GainOptimization::run ()
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        theKrumCurrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<RD53*>(cChip)->getReg("KRUM_CURR_LIN");
+        theKrumCurrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<RD53*>(cChip)->getReg(frontEnd->gainReg);
 
 
   // ################

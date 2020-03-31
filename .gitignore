@@ -23,4 +23,4 @@ settings/connections_186.xml
 consoledump.log
 src/test.cc
 build/
-rundir/
+rundir*

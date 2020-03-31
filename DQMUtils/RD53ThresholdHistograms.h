@@ -1,6 +1,6 @@
 /*!
-  \file                  RD53ThrMinimizationHistograms.h
-  \brief                 Header file of ThrMinimization calibration histograms
+  \file                  RD53ThresholdHistograms.h
+  \brief                 Header file of Threshold calibration histograms
   \author                Alkiviadis PAPADOPOULOS
   \version               1.0
   \date                  28/06/18
@@ -8,8 +8,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef RD53ThrMinimizationHistograms_H
-#define RD53ThrMinimizationHistograms_H
+#ifndef RD53ThresholdHistograms_H
+#define RD53ThresholdHistograms_H
 
 #include "../System/SystemController.h"
 #include "../Utils/ContainerFactory.h"
@@ -19,7 +19,7 @@
 #include <TH1F.h>
 
 
-class ThrMinimizationHistograms : public DQMHistogramBase
+class ThresholdHistograms : public DQMHistogramBase
 {
  public:
   void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;

@@ -42,9 +42,6 @@ class Latency : public PixelAlive
   size_t getNumberIterations () { return PixelAlive::getNumberIterations()*(stopValue - startValue)/nTRIGxEvent; }
 
 
-  // ########
-  // # ROOT #
-  // ########
 #ifdef __USE_ROOT__
   LatencyHistograms* histos;
 #endif
