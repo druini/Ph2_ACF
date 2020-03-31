@@ -15,6 +15,8 @@
 
 #include "Tool.h"
 #include <map>
+#ifdef __USE_ROOT__
+
 
 // add break codes here 
 const uint8_t FAILED_PHASE_ALIGNMENT = 1;
@@ -72,4 +74,5 @@ class CicFEAlignment : public Tool
 };
 
 
+#endif
 #endif

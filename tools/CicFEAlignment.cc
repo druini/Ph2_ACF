@@ -1,5 +1,7 @@
 #include "CicFEAlignment.h"
 
+#ifdef __USE_ROOT__
+
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
@@ -698,3 +700,5 @@ void CicFEAlignment::Pause()
 void CicFEAlignment::Resume()
 {
 }
+
+#endif
