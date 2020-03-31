@@ -20,17 +20,48 @@ BackEndAlignment::BackEndAlignment() :
 BackEndAlignment::~BackEndAlignment()
 {
 }
+void BackEndAlignment::Reset()
+{
+    // set everything back to original values .. like I wasn't here 
+    for (auto cBoard : this->fBoardVector)
+    {
+        LOG (INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getBeBoardId() << RESET;
+        auto& cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        std::vector< std::pair<std::string, uint32_t> > cVecBeBoardRegs; cVecBeBoardRegs.clear();
+        for(auto cReg : cBeRegMap )
+            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
+        fBeBoardInterface->WriteBoardMultReg ( cBoard, cVecBeBoardRegs);
 
+        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        for (auto& cFe : cBoard->fModuleVector)
+        {
+            auto& cRegMapThisHybrid = cRegMapThisBoard->at(cFe->getIndex());
+            LOG (INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cFe->getFeId() ) << " back to their original values..." << RESET;
+            for (auto& cChip : cFe->fReadoutChipVector)
+            {
+                auto& cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>(); 
+                std::vector< std::pair<std::string, uint16_t> > cVecRegisters; cVecRegisters.clear();
+                for(auto cReg : cRegMapThisChip )
+                    cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+                fReadoutChipInterface->WriteChipMultReg ( cChip , cVecRegisters );
+            }
+        }
+    }
+    resetPointers();
+}
 void BackEndAlignment::Initialise ()
 {
+    fSuccess=false;
     // this is needed if you're going to use groups anywhere
     fChannelGroupHandler = new CBCChannelGroupHandler();//This will be erased in tool.resetPointers()
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
     
-    // retreive original settings for all chips 
+    // retreive original settings for all chips and all back-end boards 
     ContainerFactory::copyAndInitStructure<ChipRegMap>(*fDetectorContainer, fRegMapContainer);
+    ContainerFactory::copyAndInitStructure<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for (auto cBoard : this->fBoardVector)
     {
+        fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>() = cBoard->getBeBoardRegMap();
         auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
         for (auto& cFe : cBoard->fModuleVector)
         {
@@ -251,6 +282,12 @@ void BackEndAlignment::writeObjects()
 void BackEndAlignment::Start(int currentRun)
 {
     Initialise ();
+    fSuccess = this->Align();
+    if(!fSuccess )
+    {
+        LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
+        exit(0);
+    }
 }
 
 void BackEndAlignment::Stop()

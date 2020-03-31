@@ -160,45 +160,19 @@ int main ( int argc, char* argv[] )
     {
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit (&cTool);
-        cCicAligner.Initialise ();
-        bool cPhaseAligned = cCicAligner.PhaseAlignment(10); //
-        //bool cPhaseAligned =  cCicAligner.ManualPhaseAlignment(7);
-        if( !cPhaseAligned ) 
-        {
-            LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " phase alignment step on CIC input .. " << RESET; 
-            exit(0);
-        }
-        LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET; 
-        bool cWordAligned = cCicAligner.WordAlignment(100);
-        if( !cWordAligned ) 
-        {
-            LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET; 
-            exit(0);
-        }
-        LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET; 
-
-        //automatic alignment 
-        bool cBxAligned = cCicAligner.Bx0Alignment(0,4,1,100);
-        if( !cBxAligned ) 
-        {
-            LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET ; 
-            exit(0);
-        }
-        LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
+        cCicAligner.Start(0);
+        //reset all chip and board registers 
+        // to what they were before this tool was called 
+        cCicAligner.Reset(); 
         cCicAligner.dumpConfigFiles();
-        cCicAligner.resetPointers();
     }
     // align back-end 
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit (&cTool);
-    cBackEndAligner.Initialise();
-    bool cAligned = cBackEndAligner.Align();
-    cBackEndAligner.resetPointers();
-    if(!cAligned )
-    {
-        LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
-        exit(0);
-    }
+    cBackEndAligner.Start(0);
+    //reset all chip and board registers 
+    // to what they were before this tool was called 
+    cBackEndAligner.Reset(); 
 
     // measure some of the AMUX output voltages using ADC on UIB 
     // MonitorAmux & hybridTester does not exist in this branch, nor it should...
@@ -252,6 +226,44 @@ int main ( int argc, char* argv[] )
         t.stop();
         t.show ( "Time to Scan Pedestals and Noise" );
     }
+    if( cEvaluate )
+    {
+        int cSigma = cmd.foundOption ( "evaluate" ) ?  convertAnyInt ( cmd.optionValue ( "evaluate" ).c_str() ) :  3;
+        // some extra stuff ... 
+        ExtraChecks cExtra;
+        cExtra.Inherit (&cTool);
+        cExtra.Initialise ();
+        LOG (INFO) << BOLDBLUE << "Measuring noise and setting thresholds to " << +cSigma << " noise units away from pedestal...." << RESET;
+        cExtra.Evaluate(cSigma, 0, true);
+        cExtra.writeObjects();
+        cExtra.resetPointers();
+    }
+    //inject hits and stubs using mask and compare input against output 
+    if( cCheckData )
+    {
+        std::string sFEsToCheck = cmd.optionValue ( "checkData" );
+        std::vector<uint8_t> cFEsToCheck;
+        std::stringstream ssFEsToCheck( sFEsToCheck );
+        int i;
+        while ( ssFEsToCheck >> i )
+        {
+            cFEsToCheck.push_back( i );
+            if ( ssFEsToCheck.peek() == ',' ) ssFEsToCheck.ignore();
+        };
+
+        t.start();
+        DataChecker cDataChecker;
+        cDataChecker.Inherit (&cTool);
+        cDataChecker.Initialise ( );
+        cDataChecker.zeroContainers();
+        //cDataChecker.ReadDataTest();
+        //cDataChecker.TestPulse(cFEsToCheck);
+        cDataChecker.DataCheck(cFEsToCheck);
+        cDataChecker.writeObjects();
+        cDataChecker.resetPointers();
+        t.show ( "Time to check data of the front-ends on the system: " );
+    }
+
 
     // For next step... set all thresholds on CBCs to 560 
     cTool.setSameDac("VCth", cThreshold);
@@ -303,46 +315,6 @@ int main ( int argc, char* argv[] )
         int cAmplitude = 25; // TODO: make this configureable
         // V(pulse) = V_DDA*(255-cAmplitude)/255
         cShortFinder.FindShorts(cThreshold, cAmplitude);
-    }
-
-    if( cEvaluate )
-    {
-        int cSigma = cmd.foundOption ( "evaluate" ) ?  convertAnyInt ( cmd.optionValue ( "evaluate" ).c_str() ) :  3;
-        // some extra stuff ... 
-        ExtraChecks cExtra;
-        cExtra.Inherit (&cTool);
-        cExtra.Initialise ();
-        LOG (INFO) << BOLDBLUE << "Measuring noise and setting thresholds to " << +cSigma << " noise units away from pedestal...." << RESET;
-        cExtra.Evaluate(cSigma, 0, true);
-        cExtra.writeObjects();
-        cExtra.resetPointers();
-    }
-
-
-    //inject hits and stubs using mask and compare input against output 
-    if( cCheckData )
-    {
-        std::string sFEsToCheck = cmd.optionValue ( "checkData" );
-        std::vector<uint8_t> cFEsToCheck;
-        std::stringstream ssFEsToCheck( sFEsToCheck );
-        int i;
-        while ( ssFEsToCheck >> i )
-        {
-            cFEsToCheck.push_back( i );
-            if ( ssFEsToCheck.peek() == ',' ) ssFEsToCheck.ignore();
-        };
-
-        t.start();
-        DataChecker cDataChecker;
-        cDataChecker.Inherit (&cTool);
-        cDataChecker.Initialise ( );
-        cDataChecker.zeroContainers();
-        //cDataChecker.ReadDataTest();
-        //cDataChecker.TestPulse(cFEsToCheck);
-        cDataChecker.DataCheck(cFEsToCheck);
-        cDataChecker.writeObjects();
-        cDataChecker.resetPointers();
-        t.show ( "Time to check data of the front-ends on the system: " );
     }
 
     cTool.SaveResults();

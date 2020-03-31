@@ -52,15 +52,22 @@ class BackEndAlignment : public Tool
     void Pause() override;
     void Resume() override;
     void writeObjects();
-
+    void Reset();
+    
+    // get alignment results 
+    bool    getStatus() const { return fSuccess;}
 
   protected:
     bool fL1Debug=false;
     bool fStubDebug=false;
 
   private:
+    // status 
+    bool fSuccess; 
     // Containers
     DetectorDataContainer fRegMapContainer;
+    DetectorDataContainer fBoardRegContainer;
+
     // booking histograms 
     #ifdef __USE_ROOT__
     //  DQMHistogramCic fDQMHistogram;

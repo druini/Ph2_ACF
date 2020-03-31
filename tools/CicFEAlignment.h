@@ -50,6 +50,7 @@ class CicFEAlignment : public Tool
     void Stop() override;
     void Pause() override;
     void Resume() override;
+    void Reset();
     void writeObjects();
 
 
@@ -58,9 +59,12 @@ class CicFEAlignment : public Tool
     // get alignment results 
     uint8_t getPhaseAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::Module* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine );
     uint8_t getWordAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::Module* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine );
+    bool    getStatus() const { return fSuccess;}
   protected:
 
   private:
+    // status 
+    bool fSuccess; 
     // Containers
     DetectorDataContainer  fThresholds, fLogic, fHIPs, fPtCuts;
     DetectorDataContainer  fPhaseAlignmentValues;

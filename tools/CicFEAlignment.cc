@@ -18,6 +18,9 @@ CicFEAlignment::CicFEAlignment() :
 
 CicFEAlignment::~CicFEAlignment()
 {
+}
+void CicFEAlignment::Reset()
+{
     // set everything back to original values .. like I wasn't here 
     for (auto cBoard : this->fBoardVector)
     {
@@ -43,10 +46,12 @@ CicFEAlignment::~CicFEAlignment()
             }
         }
     }
+    resetPointers();
 }
 
 void CicFEAlignment::Initialise ()
 {
+    fSuccess = false;
     // this is needed if you're going to use groups anywhere
     fChannelGroupHandler = new CBCChannelGroupHandler();//This will be erased in tool.resetPointers()
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
@@ -133,6 +138,30 @@ void CicFEAlignment::writeObjects()
 void CicFEAlignment::Start(int currentRun)
 {
     Initialise ();
+    bool cPhaseAligned = this->PhaseAlignment();
+    if( !cPhaseAligned ) 
+    {
+        LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " phase alignment step on CIC input .. " << RESET; 
+        exit(0);
+    }
+    LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET; 
+    bool cWordAligned = this->WordAlignment();
+    if( !cWordAligned ) 
+    {
+        LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET; 
+        exit(0);
+    }
+    LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET; 
+
+    //automatic alignment 
+    bool cBxAligned = this->Bx0Alignment(0,4,1,100);
+    if( !cBxAligned ) 
+    {
+        LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET ; 
+        exit(0);
+    }
+    LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
+    fSuccess = (cPhaseAligned && cWordAligned && cBxAligned );
 }
 std::vector<std::vector<uint8_t>> CicFEAlignment::SortWordAlignmentValues( std::vector<std::vector<uint8_t>> pWordAlignmentValues ) 
 {
@@ -658,12 +687,7 @@ uint8_t CicFEAlignment::getWordAlignmentValue(BeBoard* pBoard, Module* pFe, Read
 }
 void CicFEAlignment::Stop()
 {
-    this->SaveResults();
-    fResultFile->Flush();
     dumpConfigFiles();
-
-    SaveResults();
-    CloseResultFile();
     Destroy();
 }
 
