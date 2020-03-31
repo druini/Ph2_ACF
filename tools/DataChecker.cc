@@ -787,7 +787,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(fTPconfig.firmwareTPdelay ,fTPconfig.tpDelay ,fTPconfig.tpSequence, fTPconfig.tpFastReset );
         for(uint16_t cDelay = cInitialTPdleay; cDelay <= cFinalTPdleay; cDelay+=cTPdelayStep)
         {
-            uint8_t  cDelayDAC   = cDelay%25;
+            uint8_t  cDelayDAC   = 25 - cDelay%25;
             uint16_t cLatencyDAC = fTPconfig.tpDelay - cDelay/25;
             //configure TP delay on all chips
             setSameGlobalDac("TestPulseDelay", cDelayDAC);
@@ -798,7 +798,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
             fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
             fBeBoardInterface->ChipReSync ( cBoard ); // NEED THIS! ?? 
             // loop over threshold here 
-            LOG (INFO) <<  BOLDMAGENTA << "TP delay is " << +cDelayDAC << " latency DAC set to " << +cLatencyDAC << RESET;
+            LOG (INFO) <<  BOLDMAGENTA << "Delay is " << -1*cDelay << " TP delay is " << +cDelayDAC << " latency DAC set to " << +cLatencyDAC << RESET;
             for( uint16_t cThreshold = cInitialTh ; cThreshold < cFinalTh ; cThreshold+= cThStep )
             {
                 LOG (DEBUG) <<  BOLDMAGENTA << "\t\t...Threshold is " << +cThreshold << RESET;
@@ -812,7 +812,17 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                     }
                 }   
 
-                this->ReadNEvents ( cBoard , cEventsPerPoint);
+                // start triggers 
+                fBeBoardInterface->Start(cBoard);
+                auto cNtriggers = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+                do
+                {
+                    std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+                    cNtriggers = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+                }while( cNtriggers < 100 );
+                fBeBoardInterface->Stop(cBoard);
+                //this->ReadNEvents ( cBoard , cEventsPerPoint);
+                this->ReadData( cBoard , true);
                 const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
                 // matching 
                 for (auto& cFe : cBoard->fModuleVector)
@@ -826,11 +836,6 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                         if( std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end() )
                             continue;
 
-                        TProfile2D* cMatchedHitsTP = static_cast<TProfile2D*> ( getHist ( cChip, "MatchedHits_TestPulse" ) );
-                        TProfile2D* cMatchedHitsLatency = static_cast<TProfile2D*> ( getHist ( cChip, "HitLatency" ) );
-                        TProfile2D* cMatchedStubsLatency = static_cast<TProfile2D*> ( getHist ( cChip, "StubLatency" ) );
-                        TProfile* cMatchedStubsHist = static_cast<TProfile*>( getHist(cChip, "PtCut") );
-
                         std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( cChip );
                         // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5 strips
                         uint8_t cBendCode = cBendLUT[ ((cStub.second+cOffset)/2. - (-7.0))/0.5 ]; 
@@ -843,8 +848,9 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                         auto cEventIterator = cEvents.begin();
                         size_t cEventCounter=0;
                         LOG (DEBUG) << BOLDMAGENTA << "CBC" << +cChip->getChipId() << RESET;
-                        size_t cMatchedHits=0;
                         size_t cMatchedStubs=0;
+                        // vector to keep track of number of matches
+                        std::vector<uint32_t> cHitMatches(cExpectedHits.size(),0); 
                         for( size_t cEventIndex=0; cEventIndex < cEventsPerPoint ; cEventIndex++) // for each event 
                         {
                             uint32_t cPipeline_first=0; 
@@ -871,24 +877,15 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                                     size_t cMatched=0;
                                     int cLatency_eq = cLatencyDAC  - (cPipeline - cPipeline_first);
                                     double cTime_ns = -1*(cLatency_eq - fTPconfig.tpDelay)*25 + cDelayDAC ;
-                                    for( auto cExpectedHit : cExpectedHits ) 
+                                    auto cIterator =  cExpectedHits.begin(); 
+                                    do
                                     {
-                                        bool cMatchFound = std::find(  cHits.begin(), cHits.end(), cExpectedHit) != cHits.end();
+                                        bool cMatchFound = std::find(  cHits.begin(), cHits.end(), *cIterator) != cHits.end();
+                                        cHitMatches[ std::distance( cExpectedHits.begin() , cIterator )] += cMatchFound;
                                         cMatched += cMatchFound;
-                                        //cMatchedHits->Fill(cTriggerIndex,cPipeline, static_cast<int>(cMatchFound) );
-                                        //cMatchedHitsEye->Fill(fPhaseTap, cTriggerIndex, static_cast<int>(cMatchFound) );
-                                    }
-                                    if( cMatched == cExpectedHits.size() )
-                                    {
-                                        cMatchedHits ++;
-                                        cMatchedHitsLatency->Fill( cLatency_eq , cThreshold , 1 );
-                                        cMatchedHitsTP->Fill( cTime_ns , cThreshold , 1);
-                                    }
-                                    else
-                                    {
-                                        cMatchedHitsLatency->Fill( cLatency_eq , cThreshold , 0 );
-                                        cMatchedHitsTP->Fill( cTime_ns , cThreshold , 0);
-                                    }
+                                        cIterator++;
+                                    }while( cIterator < cExpectedHits.end() );
+                                    
                                     //stubs
                                     auto cStubs = cEvent->StubVector( cFeId, cChipId );
                                     int cNmatchedStubs=0;
@@ -897,16 +894,12 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                                         LOG (DEBUG) << BOLDMAGENTA << "\t.. expected seed is " << +cStub.first << " measured seed is " << +cFeStub.getPosition() << RESET;
                                         LOG (DEBUG) << BOLDMAGENTA << "\t.. expected bend code is 0x" << std::hex << +cBendCode << std::dec << " measured bend code is 0x" << std::hex <<  +cFeStub.getBend() << std::dec << RESET;
                                         bool cMatchFound = (cFeStub.getPosition() == cStub.first && cFeStub.getBend() == cBendCode); 
-                                        cMatchedStubsHist->Fill( cOffset , cMatchFound);
                                         cNmatchedStubs += static_cast<int>(cMatchFound);
                                     }
                                     if( cNmatchedStubs == 1 )
                                     {
                                         cMatchedStubs ++;
-                                        //cMatchedStubsLatency->Fill( cLatency_eq - cStubDelay  , cTPamplitude , 1 );
                                     }
-                                    //else
-                                    //    cMatchedStubsLatency->Fill( cLatency_eq - cStubDelay  , cTPamplitude , 0 );
                                     
                                     if( cEventIndex == 0 )
                                         LOG (DEBUG) << BOLDMAGENTA << "\t\t.. Threshold of " << +cThreshold << " [Trigger " << +cTriggerIndex << " Pipeline is " << +cPipeline << "] Delay of " << +cTime_ns << " ns [ " << +cDelay << " ] after the TP ... Found " << +cMatched << " matched hits and " <<  +cNmatchedStubs << " matched stubs." <<RESET; 
@@ -917,6 +910,10 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                             }
                             // if missed on pipeline .. count this event
 
+                        }
+                        for( auto cIterator = cHitMatches.begin(); cIterator < cHitMatches.end() ; cIterator++)
+                        {
+                            LOG (INFO) << BOLDMAGENTA << "\t.. " << +(*cIterator) << " events out of a possible " << +cEvents.size() << " with a hit in channel " << +cExpectedHits[ std::distance( cHitMatches.begin() , cIterator )] <<  RESET;
                         }
                     }
                 }
@@ -1251,9 +1248,6 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         
     }
         
-    
-
-
     // if TP was used - disable it
     // disable TP 
     this->enableTestPulse(false);

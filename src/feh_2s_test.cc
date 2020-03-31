@@ -155,6 +155,7 @@ int main ( int argc, char* argv[] )
         cAntenna.close();
     #endif
 
+   
     // if CIC is enabled then align CIC first 
     if( cWithCIC )
     {
@@ -166,6 +167,7 @@ int main ( int argc, char* argv[] )
         cCicAligner.Reset(); 
         cCicAligner.dumpConfigFiles();
     }
+    
     // align back-end 
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit (&cTool);
@@ -173,6 +175,7 @@ int main ( int argc, char* argv[] )
     //reset all chip and board registers 
     // to what they were before this tool was called 
     cBackEndAligner.Reset(); 
+    
 
     // measure some of the AMUX output voltages using ADC on UIB 
     // MonitorAmux & hybridTester does not exist in this branch, nor it should...
@@ -257,8 +260,8 @@ int main ( int argc, char* argv[] )
         cDataChecker.Initialise ( );
         cDataChecker.zeroContainers();
         //cDataChecker.ReadDataTest();
-        //cDataChecker.TestPulse(cFEsToCheck);
-        cDataChecker.DataCheck(cFEsToCheck);
+        cDataChecker.TestPulse(cFEsToCheck);
+        //cDataChecker.DataCheck(cFEsToCheck);
         cDataChecker.writeObjects();
         cDataChecker.resetPointers();
         t.show ( "Time to check data of the front-ends on the system: " );

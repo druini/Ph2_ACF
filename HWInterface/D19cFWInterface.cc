@@ -1341,6 +1341,9 @@ void D19cFWInterface::InitFMCPower()
 
     void D19cFWInterface::ResetReadout()
     {
+        // Do I need this here??!
+        this->ChipReSync();
+            
         //LOG (DEBUG) << BOLDBLUE << "Resetting readout..." << RESET;
         WriteReg ("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
         std::this_thread::sleep_for (std::chrono::microseconds (10) );
@@ -2213,7 +2216,7 @@ uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::v
         // uint32_t cNWords_prev = cNWords;
         uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req"); 
         cCounter = 0 ; 
-        while (cReadoutReq == 0 && !pFailed )
+        while (cReadoutReq == 0 )
         {
             if (!pWait) 
             {
@@ -2224,29 +2227,28 @@ uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::v
             cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
             cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
-            LOG (INFO) << BOLDBLUE << "Received " << +cNtriggers << " --- have " << +cNWords << " in the readout." << RESET;
+            LOG (DEBUG) << BOLDBLUE << "Received " << +cNtriggers << " --- have " << +cNWords << " in the readout." << RESET;
             
             if( cNtriggers == cNtriggers_prev && cCounter > 0 )
             {
                 if( cCounter % 100 == 0 )
-                    LOG (INFO) << BOLDRED << " ..... waiting for more triggers .... got " << +cNtriggers << " so far." << RESET ;
+                    LOG (DEBUG) << BOLDRED << " ..... waiting for more triggers .... got " << +cNtriggers << " so far." << RESET ;
 
             }
             cCounter++;
             std::this_thread::sleep_for (std::chrono::microseconds (10) );
         }
-
         cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
        
         // for zs it's impossible to check, so it'll count later during event assignment
         cNEvents = cPackageSize;
 
         // read all the words
-        LOG (INFO) << BOLDRED << +cNWords << " words in the reaodut." << RESET; 
+        LOG (DEBUG) << BOLDRED << +cNWords << " words in the reaodut." << RESET; 
         if (fIsDDR3Readout) 
         {
             pData = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNWords, fDDR3Offset);
-            LOG (INFO) << BOLDGREEN << "DDR3 offset is now " << +fDDR3Offset << RESET;
+            LOG (DEBUG) << BOLDGREEN << "DDR3 offset is now " << +fDDR3Offset << RESET;
             uint32_t cEventSize = 0x0000FFFF & pData.at(0) ;
             cEventSize *= 4; // block size is in 128 bit words
             //in the handshake mode offset is cleared after each handshake
@@ -2458,7 +2460,7 @@ uint32_t D19cFWInterface::computeEventSize ( BeBoard* pBoard )
     if( fNCic != 0 ) 
     {
         uint32_t cSparsified = ReadReg( "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable" ) ;
-        LOG (INFO) << BOLDBLUE << "CIC sparsification expected to be : " << +cSparsified << RESET;
+        LOG (DEBUG) << BOLDBLUE << "CIC sparsification expected to be : " << +cSparsified << RESET;
     }
     else
     if (cNCbc>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNCbc * D19C_EVENT_SIZE_32_CBC3;

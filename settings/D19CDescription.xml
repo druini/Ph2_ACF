@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR">
-    <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.10:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.10:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" />
 
     <CDCE configure="0" clockRate="120"/>
        
@@ -158,17 +158,16 @@
 	<Setting name="SignalScanStep">2</Setting>
     <Setting name="FitSignal">0</Setting>
 
-    <!--PulseShape-->
     <Setting name="PulseShapeNevents"       >100</Setting>
-    <Setting name="PulseShapeInitialVcth"   >500</Setting>
-    <Setting name="PulseShapeFinalVcth"     >620</Setting>
-    <Setting name="PulseShapeVCthStep"      >  1</Setting>
+    <Setting name="PulseShapeInitialVcth"   >590</Setting>
+    <Setting name="PulseShapeFinalVcth"     >591</Setting>
+    <Setting name="PulseShapeVCthStep"      > 10</Setting>
     <Setting name="PulseShapeInitialDelay"  >  0</Setting>
     <Setting name="PulseShapeFinalDelay"    > 75</Setting>
     <Setting name="PulseShapeDelayStep"     >  1</Setting>
     <Setting name="PulseShapePulseAmplitude"> 15</Setting>
-    <Setting name="PulseShapeInitialPulseAmplitude"   >15</Setting>
-    <Setting name="PulseShapeFinalPulseAmplitude"     >16</Setting>
+    <!--  <Setting name="PulseShapeInitialPulseAmplitude"   >100</Setting>
+    <Setting name="PulseShapeFinalPulseAmplitude"     >101</Setting> -->
     <Setting name="PulseShapeAmplitudeStep"     >  1</Setting>
 
     <!-- Window Offset-->
