@@ -27,29 +27,19 @@ void CBCPulseShape::Initialise (void)
 {
 
     fEventsPerPoint = findValueInSettings("PulseShapeNevents"       ,  10);
-    fInitialVcth    = findValueInSettings("PulseShapeInitialVcth"   , 250);
-    fFinalVcth      = findValueInSettings("PulseShapeFinalVcth"     , 600);
-    fVCthStep       = findValueInSettings("PulseShapeVCthStep"      ,  10);
-    fInitialLatency = findValueInSettings("PulseShapeInitialLatency", 199);
+    fInitialLatency = findValueInSettings("PulseShapeInitialLatency", 200);
     fInitialDelay   = findValueInSettings("PulseShapeInitialDelay"  ,   0);
     fFinalDelay     = findValueInSettings("PulseShapeFinalDelay"    ,  25);
     fDelayStep      = findValueInSettings("PulseShapeDelayStep"     ,   1);
     fPulseAmplitude = findValueInSettings("PulseShapePulseAmplitude", 150);
     fChannelGroup   = findValueInSettings("PulseShapeChannelGroup"  ,  -1);
-
-    uint16_t maxVCth = 1023;
-    if(fFinalVcth>maxVCth)
-    {
-        fFinalVcth = maxVCth;
-        LOG(WARNING) << BOLDRED << __PRETTY_FUNCTION__ << " fFinalVcth = " << fFinalVcth << " is not a legal value, setting it to " << maxVCth << RESET;
-    }
-
+    
     LOG (INFO) << "Parsed settings:" ;
     LOG (INFO) << " Nevents = " << fEventsPerPoint ;
 
     if(fChannelGroup >= 8) throw Exception( std::string(__PRETTY_FUNCTION__) + " fChannelGroup cannot be grater than 7" );
     if(fChannelGroup <  0) fChannelGroupHandler = new CBCChannelGroupHandler();
-    else                   fChannelGroupHandler = new CBCChannelGroupHandler(std::bitset<NCHANNELS>(CBC_CHANNEL_GROUP_BITSET) << fChannelGroup);
+    else                   fChannelGroupHandler = new CBCChannelGroupHandler(std::bitset<NCHANNELS>(CBC_CHANNEL_GROUP_BITSET) << (fChannelGroup*2));
 
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
 
@@ -90,6 +80,7 @@ void CBCPulseShape::runCBCPulseShape(void)
 
         measureSCurves( findPedestal() );
         extractPedeNoise();
+        LOG(INFO) << BOLDYELLOW << "The threshold = " << fThresholdAndNoiseContainer.at(0)->at(0)->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold << RESET;
 
         #ifdef __USE_ROOT__
             fCBCHistogramPulseShape.fillCBCPulseShapePlots(delay, fThresholdAndNoiseContainer);
