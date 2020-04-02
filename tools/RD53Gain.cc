@@ -90,22 +90,17 @@ void Gain::Start (int currentRun)
 
 void Gain::sendData ()
 {
-  auto theOccStream              = prepareChannelContainerStreamer<OccupancyAndPh>  ("Occ");
-  auto theGainAndInterceptStream = prepareChannelContainerStreamer<GainAndIntercept>("GainAndIntercept");
+  auto theOccStream              = prepareChannelContainerStreamer<OccupancyAndPh,uint16_t>("Occ");
+  auto theGainAndInterceptStream = prepareChannelContainerStreamer<GainAndIntercept>       ("GainAndIntercept");
 
   if (fStreamerEnabled == true)
     {
       size_t index = 0;
       for (const auto theOccContainer : detectorContainerVector)
         {
-          auto theVCalStream = prepareChannelContainerStreamer<OccupancyAndPh,uint16_t>("VCal");
-          theVCalStream.setHeaderElement(dacList[index]-offset);
+          theOccStream.setHeaderElement(dacList[index]-offset);
 
-          for (const auto cBoard : *theOccContainer)
-            {
-              theOccStream .streamAndSendBoard(cBoard, fNetworkStreamer);
-              theVCalStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-            }
+          for (const auto cBoard : *theOccContainer) theOccStream .streamAndSendBoard(cBoard, fNetworkStreamer);
 
           index++;
         }

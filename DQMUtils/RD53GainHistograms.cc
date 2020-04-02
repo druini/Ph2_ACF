@@ -51,14 +51,13 @@ void GainHistograms::book (TFile* theOutputFile, const DetectorContainer& theDet
 
 bool GainHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<OccupancyAndPh>          theOccStreamer             ("GainOcc");
-  ChannelContainerStream<OccupancyAndPh,uint16_t> theVCal                    ("GainVCal");
+  ChannelContainerStream<OccupancyAndPh,uint16_t> theOccStreamer             ("GainOcc");
   ChannelContainerStream<GainAndIntercept>        theGainAndInterceptStreamer("GainGainAndIntercept");
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
       theOccStreamer.decodeChipData(DetectorData);
-      GainHistograms::fillOccupancy(DetectorData,theVCal.getHeaderElement());
+      GainHistograms::fillOccupancy(DetectorData,theOccStreamer.getHeaderElement());
       DetectorData.cleanDataStored();
       return true;
     }
