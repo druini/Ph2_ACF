@@ -84,7 +84,8 @@ void CBCPulseShape::runCBCPulseShape(void)
         uint8_t  delayDAC   = delay%25;
         uint16_t latencyDAC = fInitialLatency - delay/25;
         LOG(INFO) << BOLDBLUE << "Scanning VcThr for delay = " << +delayDAC << " and latency = " << +latencyDAC << RESET;
-        setSameDac("TestPulseDel&ChanGroup", reverseBits(delayDAC));
+        // setSameDac("TestPulseDel&ChanGroup", reverseBits(delayDAC));
+        setSameDac("TestPulseDelay"        , delayDAC  );
         setSameDac("TriggerLatency"        , latencyDAC);
 
         measureSCurves( findPedestal() );
