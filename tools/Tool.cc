@@ -1015,7 +1015,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 
 	for(int iBit = numberOfBits-1; iBit>=0; --iBit)
 	{
-		LOG (INFO) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
+		LOG (DEBUG) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
 		for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
 		{
 			for ( auto cChip : *cFe )
