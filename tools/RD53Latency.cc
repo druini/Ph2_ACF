@@ -48,12 +48,6 @@ void Latency::ConfigureCalibration ()
   // # Initialize progress #
   // #######################
   RD53RunProgress::total() += Latency::getNumberIterations();
-
-
-  // ############################################################
-  // # Create directory for: raw data, config files, histograms #
-  // ############################################################
-  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void Latency::Start (int currentRun)

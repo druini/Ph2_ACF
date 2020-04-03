@@ -42,19 +42,13 @@ void ThrAdjustment::ConfigureCalibration ()
   frontEnd = RD53::getMajorityFE(colStart, colStop);
   colStart = std::max(colStart, frontEnd->colStart);
   colStop  = std::min(colStop, frontEnd->colStop);
-  LOG (INFO) << BOLDBLUE << "\t--> ThrAdjustment will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << BOLDBLUE << "]" << RESET;
+  LOG (INFO) << GREEN << "ThrAdjustment will run on the " << frontEnd->name << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop << RESET << GREEN << "]" << RESET;
 
 
   // #######################
   // # Initialize progress #
   // #######################
   RD53RunProgress::total() += ThrAdjustment::getNumberIterations();
-
-
-  // ############################################################
-  // # Create directory for: raw data, config files, histograms #
-  // ############################################################
-  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void ThrAdjustment::Start (int currentRun)

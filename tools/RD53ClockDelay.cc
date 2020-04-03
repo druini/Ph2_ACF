@@ -64,12 +64,6 @@ void ClockDelay::ConfigureCalibration ()
   // # Initialize progress #
   // #######################
   RD53RunProgress::total() += ClockDelay::getNumberIterations();
-
-
-  // ############################################################
-  // # Create directory for: raw data, config files, histograms #
-  // ############################################################
-  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void ClockDelay::Start (int currentRun)

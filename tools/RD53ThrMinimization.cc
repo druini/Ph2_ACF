@@ -40,19 +40,13 @@ void ThrMinimization::ConfigureCalibration ()
   frontEnd = RD53::getMajorityFE(colStart, colStop);
   colStart = std::max(colStart, frontEnd->colStart);
   colStop  = std::min(colStop, frontEnd->colStop);
-  LOG (INFO) << BOLDBLUE << "\t--> ThrMinimization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << BOLDBLUE << "]" << RESET;
+  LOG (INFO) << GREEN << "ThrMinimization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << RESET << GREEN << "]" << RESET;
 
 
   // #######################
   // # Initialize progress #
   // #######################
   RD53RunProgress::total() += ThrMinimization::getNumberIterations();
-
-
-  // ############################################################
-  // # Create directory for: raw data, config files, histograms #
-  // ############################################################
-  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void ThrMinimization::Start (int currentRun)
