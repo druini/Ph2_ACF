@@ -11,6 +11,7 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/DataChecker.h"
 #include "Utils/argvparser.h"
+#include "ExtraChecks.h"
 
 #ifdef __USE_ROOT__
     #include "TROOT.h"
@@ -75,12 +76,13 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "hybridId", "Serial Number of mezzanine . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
     cmd.defineOption ( "threshold", "Threshold value to set on chips for open and short finding",  ArgvParser::OptionRequiresValue );
 
-    cmd.defineOption ( "checkData", "Compare injected hits and stubs with output", ArgvParser::OptionRequiresValue );
+    cmd.defineOption ( "checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue );
     
     cmd.defineOption ( "antennaDelay", "Delay between the antenna pulse and the delay [25 ns]", ArgvParser::OptionRequiresValue );
     cmd.defineOption ( "latencyRange", "Range of latencies around pulse to scan [25 ns]", ArgvParser::OptionRequiresValue );
+    cmd.defineOption ( "evaluate", "Run some more detailed tests... ", ArgvParser::OptionRequiresValue );
+    cmd.defineOptionAlternative ( "evaluate", "e" );
     
-
     cmd.defineOption ( "withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute );
 
     int result = cmd.parse ( argc, argv );
@@ -101,6 +103,7 @@ int main ( int argc, char* argv[] )
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
     bool cAllChan = ( cmd.foundOption ( "allChan" ) ) ? true : false;
     bool cCheckData = ( cmd.foundOption ( "checkData" ) ) ;
+    bool cEvaluate = ( cmd.foundOption ( "evaluate" ) ) ;
     
     int  cAntennaDelay = ( cmd.foundOption ( "antennaDelay" ) )   ?  convertAnyInt ( cmd.optionValue ( "antennaDelay" ).c_str() ) : -1;
     int  cLatencyRange = ( cmd.foundOption ( "latencyRange" ) )   ?  convertAnyInt ( cmd.optionValue ( "latencyRange" ).c_str() ) :  -1;
@@ -152,39 +155,28 @@ int main ( int argc, char* argv[] )
         cAntenna.close();
     #endif
 
-    // align back-end .. if this moves to firmware then we can get rid of this step 
-    BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit (&cTool);
-    cBackEndAligner.Initialise();
-    bool cAligned = cBackEndAligner.Align();
-    cBackEndAligner.resetPointers();
-    if(!cAligned )
-    {
-        LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
-        exit(0);
-    }
-
-    // if CIC is enabled 
+   
+    // if CIC is enabled then align CIC first 
     if( cWithCIC )
     {
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit (&cTool);
-        cCicAligner.Initialise ();
-        bool cPhaseAligned = cCicAligner.PhaseAlignment(100);
-        if( !cPhaseAligned ) 
-        {
-            LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " phase alignment step on CIC input .. " << RESET; 
-            exit(0);
-        }
-        LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET; 
-        bool cWordAligned = cCicAligner.WordAlignment(false);
-        if( !cWordAligned ) 
-        {
-            LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET; 
-            exit(0);
-        }
-        LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET; 
+        cCicAligner.Start(0);
+        //reset all chip and board registers 
+        // to what they were before this tool was called 
+        cCicAligner.Reset(); 
+        cCicAligner.dumpConfigFiles();
     }
+    
+    // align back-end 
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit (&cTool);
+    cBackEndAligner.Start(0);
+    //reset all chip and board registers 
+    // to what they were before this tool was called 
+    cBackEndAligner.Reset(); 
+    
+
     // measure some of the AMUX output voltages using ADC on UIB 
     // MonitorAmux & hybridTester does not exist in this branch, nor it should...
     // HybridTester cHybridTester;
@@ -237,6 +229,44 @@ int main ( int argc, char* argv[] )
         t.stop();
         t.show ( "Time to Scan Pedestals and Noise" );
     }
+    if( cEvaluate )
+    {
+        int cSigma = cmd.foundOption ( "evaluate" ) ?  convertAnyInt ( cmd.optionValue ( "evaluate" ).c_str() ) :  3;
+        // some extra stuff ... 
+        ExtraChecks cExtra;
+        cExtra.Inherit (&cTool);
+        cExtra.Initialise ();
+        LOG (INFO) << BOLDBLUE << "Measuring noise and setting thresholds to " << +cSigma << " noise units away from pedestal...." << RESET;
+        cExtra.Evaluate(cSigma, 0, true);
+        cExtra.writeObjects();
+        cExtra.resetPointers();
+    }
+    //inject hits and stubs using mask and compare input against output 
+    if( cCheckData )
+    {
+        std::string sFEsToCheck = cmd.optionValue ( "checkData" );
+        std::vector<uint8_t> cFEsToCheck;
+        std::stringstream ssFEsToCheck( sFEsToCheck );
+        int i;
+        while ( ssFEsToCheck >> i )
+        {
+            cFEsToCheck.push_back( i );
+            if ( ssFEsToCheck.peek() == ',' ) ssFEsToCheck.ignore();
+        };
+
+        t.start();
+        DataChecker cDataChecker;
+        cDataChecker.Inherit (&cTool);
+        cDataChecker.Initialise ( );
+        cDataChecker.zeroContainers();
+        //cDataChecker.ReadDataTest();
+        cDataChecker.TestPulse(cFEsToCheck);
+        //cDataChecker.DataCheck(cFEsToCheck);
+        cDataChecker.writeObjects();
+        cDataChecker.resetPointers();
+        t.show ( "Time to check data of the front-ends on the system: " );
+    }
+
 
     // For next step... set all thresholds on CBCs to 560 
     cTool.setSameDac("VCth", cThreshold);
@@ -288,48 +318,6 @@ int main ( int argc, char* argv[] )
         int cAmplitude = 25; // TODO: make this configureable
         // V(pulse) = V_DDA*(255-cAmplitude)/255
         cShortFinder.FindShorts(cThreshold, cAmplitude);
-    }
-
-    //inject hits and stubs using mask and compare input against output 
-    if( cCheckData )
-    {
-        t.start();
-        for( auto& cBoard : cTool.fBoardVector )
-        {
-            for (auto& cFe : cBoard->fModuleVector)
-            {
-                // matching 
-                for (auto& cChip : cFe->fReadoutChipVector) 
-                {
-                    if( cChip->getChipId()%2 == 0 )
-                        static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 900);
-                    else
-                        static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , 1);
-                }
-            }
-            cTool.ReadNEvents( cBoard, 10 );
-            const std::vector<Event*>& cEvents = cTool.GetEvents ( cBoard );
-            uint32_t cN=0;
-            for ( auto& cEvent : cEvents )
-            {
-                LOG (INFO) << ">>> Event #" << cN++ ;
-                outp.str ("");
-                outp << *cEvent;
-                LOG (INFO) << outp.str();
-            }
-        }
-        // // now create a PedestalEqualization object
-        // DataChecker cDataChecker;
-        // cDataChecker.Inherit (&cTool);
-        // cDataChecker.Initialise ( );
-        // uint8_t cSeed=1;
-        // uint8_t cBendCode=0;
-        // cDataChecker.DataCheck({1}, {cSeed} , {cBendCode});
-
-        // cDataChecker.writeObjects();
-        // cDataChecker.dumpConfigFiles();
-        // cDataChecker.resetPointers();
-        t.show ( "Time to check data of the front-ends on the system: " );
     }
 
     cTool.SaveResults();

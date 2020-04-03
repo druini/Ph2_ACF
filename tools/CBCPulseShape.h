@@ -35,9 +35,6 @@ class CBCPulseShape : public PedeNoise
     void Stop                 (void) override;
   
   private:
-    uint16_t fInitialVcth    { 0} ;
-    uint16_t fFinalVcth      { 0} ;
-    uint16_t fVCthStep       { 0} ;
     uint16_t fInitialLatency { 0} ;
     uint16_t fInitialDelay   { 0} ;
     uint16_t fFinalDelay     { 0} ;

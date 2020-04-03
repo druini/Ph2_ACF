@@ -298,10 +298,10 @@ namespace Ph2_HwInterface {
 
         std::string cRegName = (pChip->getFrontEndType() == FrontEndType::CIC ) ? "USE_EXT_WA_DELAY" : "MISC_CTRL";
         uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
-        uint16_t cToggleOff = (pChip->getFrontEndType() == FrontEndType::CIC ) ? 0x00 : ( (cRegValue & 0x1D) | (0x0 << 1) );
-        uint16_t cToggleOn = (pChip->getFrontEndType() == FrontEndType::CIC ) ? 0x01 : ( (cRegValue & 0x1D) | (0x1 << 1) );
+        uint16_t cToggleOff = (pChip->getFrontEndType() == FrontEndType::CIC ) ? 0x01 : ( (cRegValue & 0x1D) | (0x1 << 1) );
+        uint16_t cToggleOn = (pChip->getFrontEndType() == FrontEndType::CIC ) ? 0x00 : ( (cRegValue & 0x1D) | (0x0 << 1) );
 
-        cSuccess = this->WriteChipReg( pChip , cRegName, cToggleOff);
+        cSuccess = this->WriteChipReg( pChip , cRegName, cToggleOn);
         if( !cSuccess )
         {
             LOG (INFO) << BOLDRED << "Cannot disable external word alignment value on CIC.." << RESET;
@@ -478,6 +478,7 @@ namespace Ph2_HwInterface {
             }
         }
         std::this_thread::sleep_for (std::chrono::milliseconds (pWait_ms) );
+        this->CheckPhaseAlignerLock(pChip, 0x00 );
         // release channel reset 
         LOG (INFO) << BOLDBLUE << "\t... Disabling RESET on all phase aligner inputs" << RESET;
         for( uint8_t cIndex=0; cIndex < 2 ; cIndex+=1 )
@@ -492,8 +493,7 @@ namespace Ph2_HwInterface {
                 exit(0);
             }
         }
-        //this->CheckPhaseAlignerLock(pChip, 0x00 );
-        return cSuccess;    
+       return cSuccess;    
     }
     bool CicInterface::SetStaticPhaseAlignment(Chip* pChip, uint8_t pReadoutChipId , uint8_t pLineId, uint8_t pPhase) 
     {
@@ -828,8 +828,8 @@ namespace Ph2_HwInterface {
         bool cSuccess = this->SoftReset(pChip);
         LOG (INFO) << BOLDBLUE <<  ".... Starting CIC start-up ........ on hybrid " << +pChip->getFeId() << RESET;
 
-        bool cClkTermination = true; // true
-        bool cRxTermination = (pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;//true
+        bool cClkTermination = true; 
+        bool cRxTermination =  false; //(pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;// true, false -- this needs to be false for the crate set-up .. how to fix this?!?!
         std::string cRegName = "SLVS_PADS_CONFIG";
         uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
         auto cIterator = fTxDriveStrength.find(pDriveStrength); 
@@ -846,20 +846,6 @@ namespace Ph2_HwInterface {
             LOG (INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec <<  RESET;
         }
 
-        cSuccess = this->SetAutomaticPhaseAlignment( pChip , false);
-        if( !cSuccess ) 
-        {
-            LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " set automatic phase aligner in CIC... " << RESET;
-            exit(0);
-        }
-        
-        // check if we need a soft RESET
-        cSuccess = this->CheckSoftReset(pChip);
-        if( !cSuccess ) 
-        {
-            LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC... " << RESET;
-            exit(0);
-        }
         // reset DLL for each of the 12 phy ports 
         cSuccess = this->ResetDLL(pChip);
         if( !cSuccess ) 
@@ -875,8 +861,25 @@ namespace Ph2_HwInterface {
             exit(0);
         }
         LOG (INFO) << BOLDBLUE << "DLL in CIC " << BOLDGREEN << " LOCKED." << RESET; 
-        cSuccess = this->CheckReSync(pChip);
-
+        
+        cSuccess = this->SetAutomaticPhaseAlignment( pChip , true);
+        if( !cSuccess ) 
+        {
+            LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " set automatic phase aligner in CIC... " << RESET;
+            exit(0);
+        }
+        this->EnableFEs(pChip, {0,1,2,3,4,5,6,7} , false);
+        this->ResetPhaseAligner(pChip, 200 );
+        this->EnableFEs(pChip, {0,1,2,3,4,5,6,7} , true);
+        
+        // check if we need a soft RESET
+        cSuccess = this->CheckSoftReset(pChip);
+        if( !cSuccess ) 
+        {
+            LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC... " << RESET;
+            exit(0);
+        }
+        
         // select fast command edge 
         bool cNegEdge=true;
         if( cNegEdge)

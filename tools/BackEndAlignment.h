@@ -16,17 +16,11 @@
 #include "Tool.h"
 
 #include <map>
-#ifdef __USE_ROOT__
-    #include "TCanvas.h"
-    #include "TH2.h"
-    #include "TProfile.h"
-    #include "TProfile2D.h"
-    #include "TString.h"
-    #include "TGraphErrors.h"
-    #include "TString.h"
-    #include "TText.h"
-#endif
 
+namespace Ph2_HwInterface
+{
+   class BackendAlignmentInterface;
+}
 
 class BackEndAlignment : public Tool
 {
@@ -36,9 +30,11 @@ class BackEndAlignment : public Tool
 
     void Initialise ( );
     bool Align();
+
     void SetL1Debug(bool pDebug){ fL1Debug=pDebug;};
     void SetStubDebug(bool pDebug){ fStubDebug=pDebug;};
-    bool L1Alignment2S(Ph2_HwDescription::BeBoard* pBoard);
+
+    
     bool CICAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard );
     void Start(int currentRun) override;
@@ -46,15 +42,22 @@ class BackEndAlignment : public Tool
     void Pause() override;
     void Resume() override;
     void writeObjects();
+    void Reset();
 
+    // get alignment results 
+    bool    getStatus() const { return fSuccess;}
 
   protected:
     bool fL1Debug=false;
     bool fStubDebug=false;
 
   private:
+    // status 
+    bool fSuccess; 
     // Containers
     DetectorDataContainer fRegMapContainer;
+    DetectorDataContainer fBoardRegContainer;
+
     // booking histograms 
     #ifdef __USE_ROOT__
     //  DQMHistogramCic fDQMHistogram;

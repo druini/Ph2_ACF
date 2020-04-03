@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
+
 <node id="FPGA1" address="0x00000000" >
 	<!-- FC7 system register address table -->
         <node id="sysreg" address="0x00000000" module="file://fc7_system_address_table.xml"/>
@@ -97,7 +98,6 @@
                 <node id="power_enable"                     mask="0x00000008"/>
                 <node id="fast_commands_enable"             mask="0x00000010"/>
                 <node id="stub_package_delay"               mask="0x00700000"/>
-                <node id="debug_select"                     mask="0x00F00000"/>
             </node>
             <node id="i2c"				address="0x001">
                     <node id="frequency"			    mask="0x0000000f"/>
@@ -110,6 +110,14 @@
                 <node id="rtn_fcmd_test"                    mask="0x00001000" description="return fast commands from SSAs test regime, predefined number of trigger commands is sent"/>
                 <node id="backplane_select_tri"             mask="0x00002000" description="control tri-state buffer"/>
                 <node id="card_select_tri"                  mask="0x00004000" description="control tri-state buffer"/>
+            </node>
+
+            <node id="fe_for_ps_roh"                    address="0x040">
+                <node id="fe_for_ps_roh_data_player_pattern"                 mask="0x000000ff"/>
+            </node>
+
+            <node id="slvs_debug" address = "0x000">
+                <node id="chip_select"                     mask="0x000F0000"/>
             </node>
        </node>
 
@@ -155,7 +163,7 @@
             </node>
         </node>
 	
-	<node id="optical_block"			address="0xD000">
+	<!-- <node id="optical_block"			address="0xD000">
             <node id="sca">
                 <node id="address"                    address = "0x001" mask="0x000000FF"/>
                 <node id="id"                         address = "0x001" mask="0x0000FF00"/>
@@ -172,7 +180,38 @@
                 <node id="data"                          mask="0x0000FF00"/>
             </node>
             <node id="mux"                               address = "0x005" mask="0x0000000F"/>
+    </node> -->
+    <node id="optical_block"            address="0xD000">
+            <node id="enable"                              address="0x000">
+                <node id="l8"                           mask="0x000000FF" description=""/>
+                <node id="l12"                          mask="0x0FFF0000" description=""/>
+            </node>
+            <node id="sca">
+                <node id="address"                    address = "0x001" mask="0x000000FF"/>
+                <node id="id"                         address = "0x001" mask="0x0000FF00"/>
+                <node id="channel"                    address = "0x001" mask="0x00FF0000"/>
+                <node id="cmd"                        address = "0x001" mask="0xFF000000"/>
+                <node id="data"                       address = "0x003" mask="0xFFFFFFFF"/>
+            </node>
+            <node id="ic"                              address="0x002">
+                <node id="register"                       mask="0x0000FFFF"/>
+                <node id="nwords"                         mask="0xFFFF0000"/>
+            </node>
+            <node id="gbtx"                              address="0x004">
+                <node id="address"                       mask="0x000000FF"/>
+                <node id="data"                          mask="0x0000FF00"/>
+            </node>
+            <node id="mux"                               address = "0x005" mask="0x0000000F"/>
+            <node id="tx_polarity"                              address="0x006">
+                <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
+                <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
+            </node>
+            <node id="rx_polarity"                              address="0x007">
+                <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
+                <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
+            </node>
     </node>
+    
 
 	<node id="tlu_block"			address="0x7000">
 		<node id="handshake_mode"		address="0x000" mask="0x00000003"/>
@@ -248,6 +287,12 @@
                 <node id="check_return_clock"               mask="0x00000004" description="user request to check the return clock from SSAs"/>
                 <node id="check_payload_ntriggers"          mask="0x00000ff0" description="user required number of trigger commands to test the paylaod of the return fast command from SSAs"/>
             </node>
+
+            <node id="fe_for_ps_roh"              address="0x019">
+                <node id="start_fe_for_ps_roh_data_player"                  mask="0x00000001"/>
+                <node id="stop_fe_for_ps_roh_data_player"                 mask="0x00000002"/>
+            </node>
+
         </node>
 
         <node id="readout_block"                address="0x5000">
@@ -388,6 +433,11 @@
                 <node id="backplanes_disconnected"                  mask="0x40000000" description="backplanes are disconnected after running       "/>
                 <node id="cards_disconnected"                mask="0x80000000" description="cards are disconnected after running            "/>
             </node>
+
+            <node id="fe_for_ps_roh"              address="0x00E">
+                <node id="stat_fe_for_ps_roh_data_player"                  mask="0x00001000"/>
+            </node>
+
             <node id="ps_return"                address="0x00E">
                 <node id="clock_from_ssa1_test_done"            mask="0x00000001" description="test of the return clock from SSA1 done           "/>
                 <node id="clock_from_ssa2_test_done"            mask="0x00000002" description="test of the return clock from SSA2 done           "/>

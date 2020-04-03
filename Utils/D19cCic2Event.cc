@@ -20,6 +20,8 @@
 
 using namespace Ph2_HwDescription;
 
+const unsigned N2SMODULES=12; 
+
 namespace Ph2_HwInterface {
 
     // Event implementation
@@ -55,7 +57,7 @@ namespace Ph2_HwInterface {
         auto cNHybrids = pBoard->fModuleVector.size(); 
         fEventHitList.clear();
         fEventStubList.clear();
-        for( size_t cFeIndex=0; cFeIndex < cNHybrids ; cFeIndex++)
+        for( size_t cFeIndex=0; cFeIndex < N2SMODULES*2 ; cFeIndex++)
         {
             FeData cFeData;
             fEventStubList.push_back( cFeData );
@@ -103,104 +105,109 @@ namespace Ph2_HwInterface {
         fBunch = 0xFFFFFFFF & list.at (3);
         LOG (DEBUG) << BOLDBLUE << "Event" << +fEventCount << " -- BxId " << +fBunch << RESET;
 
-        // L1 
-        uint32_t cL1Header = list.at(EVENT_HEADER_SIZE); 
-        uint8_t  cHeader = (cL1Header & 0xF0000000) >> 28 ; 
-        if( cHeader != 0xa ) 
-        {
-            LOG (ERROR) << BOLDRED << "Invalid header found in L1 packet." << RESET;
-            exit(1);
-        }
-        uint8_t cErrorCode = (cL1Header & 0xF000000) >> 24;
-        if( cErrorCode !=0 ) 
-        {
-            LOG (ERROR) << BOLDRED << "Error Code " << +cErrorCode << RESET;
-            exit(1);
-        }
-        auto cIterator = list.begin() + 0;
-        //LOG (DEBUG) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
-        cIterator = list.begin() + EVENT_HEADER_SIZE;  
         
-        uint8_t cFeId = ( cL1Header & 0xFF0000) >> 16;
-        size_t cOffset=0;
-        size_t cFeIndex=0;
-        for (auto& cFe : pBoard->fModuleVector)
+        auto cIterator = list.begin() + EVENT_HEADER_SIZE;
+        LOG (DEBUG) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
+        do
         {
-            cFeIndex = cFe->getIndex();
-            if( cFe->getFeId() >= cFeId )
-                continue;
-            cOffset += cFe->fReadoutChipVector.size();
-        }
-        //LOG (DEBUG) << BOLDBLUE << "\t.. FE Id from firmware " << +cFeId << " .. putting data in event list with an offset of " << +cOffset << " [ index " << +cFeIndex << " ]." << RESET;
-
-        //using HitData = std::pair< std::pair<uint16_t,uint16_t>, std::vector<std::bitset<NCHANNELS>> >;
-        std::pair<uint16_t,uint16_t> cL1Information; 
-        uint32_t cL1DataSize = (cL1Header & 0xFFF)*4;
-        uint32_t cFrameDelay = *(cIterator + 1) & 0xFFF; 
-        cL1Information.first = ( *(cIterator + 2)  & 0x7FC000 ) >> 14;
-        cL1Information.second = ( *(cIterator + 2)  & 0xFF800000 ) >> 23;
-        LOG (DEBUG) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +cL1DataSize << " status " << std::bitset<9>(cL1Information.second) << RESET;
-        if( fIsSparsified )
-        {
-            uint8_t cNClusters =  ( *(cIterator + 2)  & 0x7F);
-            // clusters/hit data first 
-            std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNClusters, 0);
-            this->splitStream(list , cL1Words , EVENT_HEADER_SIZE+3 , cNClusters ); // split 32 bit words in std::vector of CLUSTER_WORD_SIZE bits
-            size_t cClusterId=0;
-            fEventHitList[cFeIndex].first = cL1Information;
-            fEventHitList[cFeIndex].second.clear();
-            for(auto cL1Word : cL1Words)
-            {   
-                fEventHitList[cFeIndex].second.push_back( cL1Word.to_ulong() );
-            }
-        }
-        else
-        {
-            auto& cHybrid = pBoard->fModuleVector[cFeIndex];
-            auto& cReadoutChips = cHybrid->fReadoutChipVector; 
-            
-            const size_t cNblocks = RAW_L1_CBC*cReadoutChips.size()/L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits 
-            std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks , 0);
-            this->splitStream(list , cL1Words , EVENT_HEADER_SIZE+3 , cNblocks ); // split 32 bit words in std::vector of CLUSTER_WORD_SIZE bits
-            // now try and arrange them by CBC again ... 
-            fEventRawList[cFeIndex].first = cL1Information;
-            fEventRawList[cFeIndex].second.clear();
-            for(size_t cChipIndex=0; cChipIndex < cReadoutChips.size() ; cChipIndex++)
+            // L1 
+            size_t cOffset= std::distance( list.begin() , cIterator );
+            uint32_t cL1Header = *cIterator; 
+            uint8_t  cHeader = (cL1Header & 0xF0000000) >> 28 ; 
+            if( cHeader != 0xa ) 
             {
-                std::bitset<RAW_L1_CBC> cBitset(0);
-                size_t cPosition=0;
-                for( size_t cBlockIndex =0; cBlockIndex < RAW_L1_CBC/L1_BLOCK_SIZE ; cBlockIndex ++) // RAW_L1_CBC/L1_BLOCK_SIZE
-                {
-                    auto& cL1block = cL1Words[cChipIndex + cReadoutChips.size()*cBlockIndex];
-                    //LOG (INFO) << BOLDBLUE << "\t... L1 block " << +cBlockIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
-                    for(size_t cNbit=0; cNbit < cL1block.size() ; cNbit++ )
-                    {
-                        cBitset[cBitset.size()-1-cPosition] = cL1block[cL1block.size()-1-cNbit];
-                        cPosition++;
-                    }
-                }
-                fEventRawList[cFeIndex].second.push_back( cBitset );
+                LOG (ERROR) << BOLDRED << "Invalid header found in L1 packet." << RESET;
+                exit(1);
             }
-        }
-        // then stubs 
-        // using StubData = std::pair< std::pair<uint16_t,uint16_t>, std::vector<uint16_t>>;
-        // using EventStubList = std::vector<StubData> ;
-        std::pair<uint16_t,uint16_t> cStubInformation; 
-        uint32_t cStubHeader = *(cIterator + cL1DataSize );
-        uint32_t cStubDataSize = (cStubHeader & 0xFFF)*4;
-        uint8_t cNStubs =  ( *(cIterator + cL1DataSize + 1)  & (0x3F << 16)) >> 16 ;
-        cStubInformation.first = ( *(cIterator + cL1DataSize + 1)  & 0xFFF);
-        cStubInformation.second = ( *(cIterator + cL1DataSize + 1)  & (0x1FF << 22)) >> 22 ;
-        //LOG (DEBUG) << BOLDBLUE << "BxId for this event : " << +cStubInformation.first << " . Stub data size is " << +cStubDataSize << " status " << std::bitset<9>(cStubInformation.second) << " -- number of stubs in packet : " << +cNStubs << RESET;
-        std::vector<std::bitset<STUB_WORD_SIZE>> cStubWords(cNStubs, 0);
-        this->splitStream(list , cStubWords , EVENT_HEADER_SIZE + cL1DataSize + 2 , cNStubs ); // split 32 bit words in std::vector of STUB_WORD_SIZE bits
-        size_t cStubId=0;
-        fEventStubList[cFeIndex].first = cStubInformation;
-        fEventStubList[cFeIndex].second.clear();
-        for(auto cStubWord : cStubWords)
-        {   
-            fEventStubList[cFeIndex].second.push_back( cStubWord.to_ulong() );
-        }
+            uint8_t cErrorCode = (cL1Header & 0xF000000) >> 24;
+            if( cErrorCode !=0 ) 
+            {
+                LOG (ERROR) << BOLDRED << "Error Code " << +cErrorCode << RESET;
+                exit(1);
+            }
+
+            uint8_t cFeId = ( cL1Header & 0xFF0000) >> 16;
+            LOG (DEBUG) << BOLDBLUE << "\t.. FE Id from firmware " << +cFeId << " .. putting data in event list .. offset " << +cOffset << RESET;
+            std::pair<uint16_t,uint16_t> cL1Information; 
+            uint32_t cL1DataSize = (cL1Header & 0xFFF)*4;
+            uint32_t cFrameDelay = *(cIterator + 1) & 0xFFF; 
+            cL1Information.first = ( *(cIterator + 2)  & 0x7FC000 ) >> 14;
+            cL1Information.second = ( *(cIterator + 2)  & 0xFF800000 ) >> 23;
+            LOG (DEBUG) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +(cL1DataSize) << " status " << std::bitset<9>(cL1Information.second) << RESET;
+
+            if( fIsSparsified )
+            {
+                uint8_t cNClusters =  ( *(cIterator + 2)  & 0x7F);
+                // clusters/hit data first 
+                std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNClusters, 0);
+                this->splitStream(list , cL1Words , cOffset+3 , cNClusters ); // split 32 bit words in std::vector of CLUSTER_WORD_SIZE bits
+                size_t cClusterId=0;
+                fEventHitList[cFeId].first = cL1Information;
+                fEventHitList[cFeId].second.clear();
+                for(auto cL1Word : cL1Words)
+                {   
+                    fEventHitList[cFeId].second.push_back( cL1Word.to_ulong() );
+                }
+            }
+            else
+            {
+                //for( uint32_t cIndex=EVENT_HEADER_SIZE+3; cIndex < cL1DataSize; cIndex++)
+                //  LOG (INFO) << BOLDBLUE << std::bitset<32>(*(cIterator+cIndex)) << RESET;
+
+                size_t cHybridIndex=0;
+                for (auto& cFe : pBoard->fModuleVector)
+                {
+                    if( cFe->getFeId()== cFeId )
+                        cHybridIndex = cFe->getIndex();
+                }
+                auto& cReadoutChips = pBoard->fModuleVector[cHybridIndex]->fReadoutChipVector; 
+                const size_t cNblocks = RAW_L1_CBC*cReadoutChips.size()/L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits 
+                std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks , 0);
+                this->splitStream(list , cL1Words , cOffset+3 , cNblocks ); // split 32 bit words in  blocks of 11 bits 
+                
+                // now try and arrange them by CBC again ... 
+                fEventRawList[cFeId].first = cL1Information;
+                fEventRawList[cFeId].second.clear();
+                for(size_t cChipIndex=0; cChipIndex < cReadoutChips.size() ; cChipIndex++)
+                {
+                    std::bitset<RAW_L1_CBC> cBitset(0);
+                    size_t cPosition=0;
+                    for( size_t cBlockIndex =0; cBlockIndex < RAW_L1_CBC/L1_BLOCK_SIZE ; cBlockIndex ++) // RAW_L1_CBC/L1_BLOCK_SIZE blocks per chip
+                    {
+                        auto cIndex = cChipIndex + cReadoutChips.size()*cBlockIndex; 
+                        auto& cL1block = cL1Words[cIndex];
+                        LOG (DEBUG) << BOLDBLUE << "\t\t... L1 block " << +cIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
+                        for(size_t cNbit=0; cNbit < cL1block.size() ; cNbit++ )
+                        {
+                            cBitset[cBitset.size()-1-cPosition] = cL1block[cL1block.size()-1-cNbit];
+                            cPosition++;
+                        }
+                    }
+                    LOG (DEBUG) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
+                    fEventRawList[cFeId].second.push_back( cBitset );
+                }
+            }
+            // then stubs 
+            // using StubData = std::pair< std::pair<uint16_t,uint16_t>, std::vector<uint16_t>>;
+            // using EventStubList = std::vector<StubData> ;
+            std::pair<uint16_t,uint16_t> cStubInformation; 
+            uint32_t cStubHeader = *(cIterator + cL1DataSize );
+            uint32_t cStubDataSize = (cStubHeader & 0xFFF)*4;
+            uint8_t cNStubs =  ( *(cIterator + cL1DataSize + 1)  & (0x3F << 16)) >> 16 ;
+            cStubInformation.first = ( *(cIterator + cL1DataSize + 1)  & 0xFFF);
+            cStubInformation.second = ( *(cIterator + cL1DataSize + 1)  & (0x1FF << 22)) >> 22 ;
+            //LOG (DEBUG) << BOLDBLUE << "BxId for this event : " << +cStubInformation.first << " . Stub data size is " << +cStubDataSize << " status " << std::bitset<9>(cStubInformation.second) << " -- number of stubs in packet : " << +cNStubs << RESET;
+            std::vector<std::bitset<STUB_WORD_SIZE>> cStubWords(cNStubs, 0);
+            this->splitStream(list , cStubWords , cOffset + cL1DataSize + 2 , cNStubs ); // split 32 bit words in std::vector of STUB_WORD_SIZE bits
+            size_t cStubId=0;
+            fEventStubList[cFeId].first = cStubInformation;
+            fEventStubList[cFeId].second.clear();
+            for(auto cStubWord : cStubWords)
+            {   
+                fEventStubList[cFeId].second.push_back( cStubWord.to_ulong() );
+            }
+            cIterator += cL1DataSize + cStubDataSize; 
+        }while( cIterator < list.end() - fDummySize );
        
     }
 
@@ -549,66 +556,63 @@ namespace Ph2_HwInterface {
         const int LINE_WIDTH = 32;
         const int LAST_LINE_WIDTH = 8; 
         uint8_t cFeId=0;
-        // still need to work this out 
-        // auto& cList = (fIsSparsified) ? fEventHitList : fEventRawList;
-        // if(fIsSparsified)
-        // {   
-        //     for(auto& cHybridEvent : cList ) 
-        //     {
-        //         for( size_t cReadoutChipId = 0 ; cReadoutChipId < 8 ; cReadoutChipId++)
-        //         {
-        //             // print out information
-        //             //printL1Header (os, cFeId, cReadoutChipId);
+        //still need to work this out for sparsified data
+        if(!fIsSparsified)
+        {   
+            for(uint8_t cFeId=0; cFeId < fEventRawList.size(); cFeId++ ) 
+            {
+                for( size_t cReadoutChipId = 0 ; cReadoutChipId < fEventRawList[cFeId].second.size() ; cReadoutChipId++)
+                {
+                    // print out information
+                    printL1Header (os, cFeId, cReadoutChipId);
                     
-        //             std::vector<uint32_t> cHits = this->GetHits (cFeId, cReadoutChipId);
-        //             if (cHits.size() == NCHANNELS)
-        //                 os << BOLDRED << "All channels firing!" << RESET << std::endl;
-        //             else
-        //             {
-        //                 int cCounter = 0;
-        //                 for (auto& cHit : cHits )
-        //                 {
-        //                     os << std::setw (3) << cHit << " ";
-        //                     cCounter++;
-        //                     if (cCounter == 10)
-        //                     {
-        //                         os << std::endl;
-        //                         cCounter = 0;
-        //                     }
-        //                 }
-        //                 os << RESET << std::endl;
-        //             }
-        //             // channel data 
-        //             std::string data ( this->DataBitString ( cFeId, cReadoutChipId ) ); 
-        //             os << "Ch. Data:      ";
-        //             for (int i = 0; i < FIRST_LINE_WIDTH; i += 2)
-        //                 os << data.substr ( i, 2 ) << " ";
+                    std::vector<uint32_t> cHits = this->GetHits (cFeId, cReadoutChipId);
+                    if (cHits.size() == NCHANNELS)
+                        os << BOLDRED << "All channels firing!" << RESET << std::endl;
+                    else
+                    {
+                        int cCounter = 0;
+                        for (auto& cHit : cHits )
+                        {
+                            os << std::setw (3) << cHit << " ";
+                            cCounter++;
+                            if (cCounter == 10)
+                            {
+                                os << std::endl;
+                                cCounter = 0;
+                            }
+                        }
+                        os << RESET << std::endl;
+                    }
+                    // channel data 
+                    std::string data ( this->DataBitString ( cFeId, cReadoutChipId ) ); 
+                    os << "Ch. Data:      ";
+                    for (int i = 0; i < FIRST_LINE_WIDTH; i += 2)
+                        os << data.substr ( i, 2 ) << " ";
 
-        //             os << std::endl;
+                    os << std::endl;
 
-        //             for ( int i = 0; i < 7; ++i )
-        //             {
-        //                 for (int j = 0; j < LINE_WIDTH; j += 2)
-        //                     os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * i + j, 2 ) << " ";
+                    for ( int i = 0; i < 7; ++i )
+                    {
+                        for (int j = 0; j < LINE_WIDTH; j += 2)
+                            os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * i + j, 2 ) << " ";
 
-        //                 os << std::endl;
-        //             }
-        //             for (int i = 0; i < LAST_LINE_WIDTH; i += 2)
-        //                 os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i, 2 ) << " ";
-        //             os << std::endl;
-        //             // stubs
-        //             uint8_t cCounter=0;
-        //             os << BOLDCYAN << "List of Stubs: " << RESET << std::endl;
-        //             for (auto& cStub : this->StubVector (cFeId, cReadoutChipId ) )
-        //             {
-        //                 os << CYAN << "Stub: " << +cCounter << " Position: " << +cStub.getPosition() << " Bend: " << +cStub.getBend() << " Strip: " << cStub.getCenter() << RESET << std::endl;
-        //                 cCounter++;
-        //             }
-        //             cReadoutChipId++;
-        //         }
-        //         cFeId++;
-        //     }
-        // }
+                        os << std::endl;
+                    }
+                    for (int i = 0; i < LAST_LINE_WIDTH; i += 2)
+                        os << data.substr ( FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i, 2 ) << " ";
+                    os << std::endl;
+                    // stubs
+                    uint8_t cCounter=0;
+                    os << BOLDCYAN << "List of Stubs: " << RESET << std::endl;
+                    for (auto& cStub : this->StubVector (cFeId, cReadoutChipId ) )
+                    {
+                        os << CYAN << "Stub: " << +cCounter << " Position: " << +cStub.getPosition() << " Bend: " << +cStub.getBend() << " Strip: " << cStub.getCenter() << RESET << std::endl;
+                        cCounter++;
+                    }
+                }
+            }
+        }
         os << std::endl;
     }
     std::vector<Cluster> D19cCic2Event::clusterize( uint8_t pFeId ) const 
