@@ -33,28 +33,30 @@ namespace Ph2_HwInterface {
 
     void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
     {
-        for(auto module: *boardContainer)
+        for(auto opticalGroup : *boardContainer)
     	{
-            LOG (DEBUG) << BOLDBLUE << "Filling data container for module " << module->getId() << RESET;
-            for(auto chip: *module)
-    		{
-                std::vector<uint32_t> cHits = this->GetHits ( module->getId(), chip->getId() );
-                //LOG (DEBUG) << "\t.... " << +cHits.size() << " hits in chip." << RESET;
-                for( auto cHit : cHits ) 
+            for(auto hybrid : *opticalGroup)
+            {
+                LOG (DEBUG) << BOLDBLUE << "Filling data container for hybrid " << hybrid->getId() << RESET;
+                for(auto chip : *hybrid)
                 {
-                    if( cTestChannelGroup->isChannelEnabled(cHit)) 
+                    std::vector<uint32_t> cHits = this->GetHits ( hybrid->getId(), chip->getId() );
+                    //LOG (DEBUG) << "\t.... " << +cHits.size() << " hits in chip." << RESET;
+                    for( auto cHit : cHits ) 
                     {
-                        chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
+                        if( cTestChannelGroup->isChannelEnabled(cHit)) 
+                        {
+                            chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
+                        }
                     }
                 }
-    		}
+            }
     	}
     }
     void D19cCic2Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
         fIsSparsified=pBoard->getSparsification();
         LOG (DEBUG) << BOLDBLUE << " Found " << +pBoard->fModuleVector.size() << " FE connected to this board.." << RESET;
-        auto cNHybrids = pBoard->fModuleVector.size(); 
         fEventHitList.clear();
         fEventStubList.clear();
         for( size_t cFeIndex=0; cFeIndex < N2SMODULES*2 ; cFeIndex++)
@@ -130,7 +132,6 @@ namespace Ph2_HwInterface {
             LOG (DEBUG) << BOLDBLUE << "\t.. FE Id from firmware " << +cFeId << " .. putting data in event list .. offset " << +cOffset << RESET;
             std::pair<uint16_t,uint16_t> cL1Information; 
             uint32_t cL1DataSize = (cL1Header & 0xFFF)*4;
-            uint32_t cFrameDelay = *(cIterator + 1) & 0xFFF; 
             cL1Information.first = ( *(cIterator + 2)  & 0x7FC000 ) >> 14;
             cL1Information.second = ( *(cIterator + 2)  & 0xFF800000 ) >> 23;
             LOG (DEBUG) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +(cL1DataSize) << " status " << std::bitset<9>(cL1Information.second) << RESET;
@@ -141,7 +142,6 @@ namespace Ph2_HwInterface {
                 // clusters/hit data first 
                 std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNClusters, 0);
                 this->splitStream(list , cL1Words , cOffset+3 , cNClusters ); // split 32 bit words in std::vector of CLUSTER_WORD_SIZE bits
-                size_t cClusterId=0;
                 fEventHitList[cFeId].first = cL1Information;
                 fEventHitList[cFeId].second.clear();
                 for(auto cL1Word : cL1Words)
@@ -199,7 +199,6 @@ namespace Ph2_HwInterface {
             //LOG (DEBUG) << BOLDBLUE << "BxId for this event : " << +cStubInformation.first << " . Stub data size is " << +cStubDataSize << " status " << std::bitset<9>(cStubInformation.second) << " -- number of stubs in packet : " << +cNStubs << RESET;
             std::vector<std::bitset<STUB_WORD_SIZE>> cStubWords(cNStubs, 0);
             this->splitStream(list , cStubWords , cOffset + cL1DataSize + 2 , cNStubs ); // split 32 bit words in std::vector of STUB_WORD_SIZE bits
-            size_t cStubId=0;
             fEventStubList[cFeId].first = cStubInformation;
             fEventStubList[cFeId].second.clear();
             for(auto cStubWord : cStubWords)
@@ -555,7 +554,6 @@ namespace Ph2_HwInterface {
         const int FIRST_LINE_WIDTH = 22;
         const int LINE_WIDTH = 32;
         const int LAST_LINE_WIDTH = 8; 
-        uint8_t cFeId=0;
         //still need to work this out for sparsified data
         if(!fIsSparsified)
         {   
@@ -665,7 +663,6 @@ namespace Ph2_HwInterface {
     {
         uint32_t cEvtCount = this->GetEventCount();
         uint16_t cBunch = static_cast<uint16_t> (this->GetBunch() );
-        uint32_t cBeStatus = this->fBeStatus;
         SLinkEvent cEvent (EventType::VR, pBoard->getConditionDataSet()->getDebugMode(), FrontEndType::CBC3, cEvtCount, cBunch, SOURCE_ID );
         
         // // get link Ids 

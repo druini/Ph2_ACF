@@ -682,7 +682,6 @@ namespace Ph2_HwInterface {
         }
         
         size_t cInputLineCounter = 0 ;
-        size_t cLineCounter=0;
         //std::vector<std::bitset<6>> cFeStates(8,0);
         cPortCounter=0;
         for( size_t cFeCounter=0; cFeCounter < 8; cFeCounter++)

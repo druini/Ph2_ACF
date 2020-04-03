@@ -368,7 +368,7 @@ namespace Ph2_HwInterface
             this->WriteStackReg( cVecReg ); 
             uint32_t cReadBack = this->ReadReg("sysreg.spi.rx_data");
             cReadBack = this->ReadReg("sysreg.spi.rx_data");
-            //LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
+            LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
         }
         cVecReg.clear();
         std::this_thread::sleep_for (std::chrono::milliseconds (500) );
@@ -454,7 +454,7 @@ namespace Ph2_HwInterface
         this->WriteReg("sysreg.spi.tx_data",cBufferValue);
         uint32_t cReadBack = this->ReadReg("sysreg.spi.rx_data");
         cReadBack = this->ReadReg("sysreg.spi.rx_data");
-        //LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
+        LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
       }
       // store in EEprom
       std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
@@ -508,7 +508,7 @@ namespace Ph2_HwInterface
         this->WriteReg("sysreg.spi.command", cSPIcommand);
         uint32_t cReadBack = this->ReadReg("sysreg.spi.rx_data");
         cReadBack = this->ReadReg("sysreg.spi.rx_data");
-        //LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
+        LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
     }
     void D19cFWInterface::powerAllFMCs(bool pEnable)
     {
@@ -1528,11 +1528,9 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard , bool pScope)
     // back-end tuning on l1 lines
     for (auto& cFe : pBoard->fModuleVector)
     {
-        uint8_t cBitslip=0;
         selectLink (cFe->getLinkId());
         uint8_t cHybrid= cFe->getFeId() ;
         uint8_t cChip = 0;
-        auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
         int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
         // need to know the address 
         //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
@@ -1559,7 +1557,6 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard , bool pScope)
             this->Start();
             std::this_thread::sleep_for (std::chrono::milliseconds (100) );
             this->Stop();
-            uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
         }
     }
 
@@ -1632,7 +1629,6 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard , bool pScope)
         selectLink (cFe->getLinkId());
         uint8_t cHybrid= cFe->getFeId() ;
         uint8_t cChip = 0;
-        auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
         int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
         // need to know the address 
         //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
@@ -1656,7 +1652,6 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard , bool pScope)
                 this->Start();
                 std::this_thread::sleep_for (std::chrono::milliseconds (500) );
                 this->Stop();
-                uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, cChip, cLineId);
                 cSuccess = pTuner.fDone;
             }
             // if the above doesn't work.. try and find the correct bitslip manually in software 
@@ -1789,7 +1784,6 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                 std::this_thread::sleep_for (std::chrono::milliseconds (10) );
                 pTuner.SendControl(this, cHybrid, 0 , cLineId , "WordAlignment"); 
                 std::this_thread::sleep_for (std::chrono::milliseconds (50) );
-                uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid, 0, cLineId);
                 //LOG (DEBUG) << BOLDBLUE << "Line status " << +cLineStatus << RESET;
                 uint8_t cAttempts=0;
                 if( pTuner.fBitslip == 0 )
@@ -1807,7 +1801,6 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                         cGBTx.gbtxSetPhase(this, fGBTphase) ; 
                         pTuner.SendControl(this, cHybrid, 0 , cLineId , "WordAlignment"); 
                         std::this_thread::sleep_for (std::chrono::milliseconds (50) );
-                        cLineStatus = pTuner.GetLineStatus(this, cHybrid, 0, cLineId);
                         cAttempts++;
                     }while( pTuner.fBitslip == 0) ;
                 }
@@ -2113,7 +2106,6 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
                     {
                         cSuccess = cTuner.TuneLine(this,  cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId , cPattern , 8 , true);
                         std::this_thread::sleep_for (std::chrono::milliseconds (200) );
-                        uint8_t cLineStatus = cTuner.GetLineStatus(this,  cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId );
                         //LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
                         cAttempts++;
                     }while(!cSuccess && cAttempts <10);
@@ -2182,7 +2174,6 @@ bool D19cFWInterface::PhaseTuning (BeBoard* pBoard, uint8_t pFeId, uint8_t pChip
 
 uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
 {
-    uint32_t cEventSize = computeEventSize (pBoard);
     uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
     uint32_t data_handshake = ReadReg ("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
     uint32_t cPackageSize = ReadReg ("fc7_daq_cnfg.readout_block.packet_nbr") + 1;
@@ -2359,7 +2350,6 @@ void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vect
     // sta
     bool pFailed = false;
     uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
-    uint32_t cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
     uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
 
     uint32_t cTimeoutCounter = 0 ;
@@ -2651,7 +2641,6 @@ void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,
     {
         GbtInterface cGBTx;
         //assume that they are all the same just to test - multibyte write for CBC
-        uint8_t cFirstChip = (pVecSend[0] & (0x1F << 18) ) >> 18;
         uint8_t cWriteReq = !((pVecSend[0] & (0x1 <<16)) >> 16); 
         if( cWriteReq == 1 )  
         {

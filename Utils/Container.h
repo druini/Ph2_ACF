@@ -271,13 +271,23 @@ public:
 private:
 };
 
-class BoardContainer : public Container<ModuleContainer>
+class OpticalGroupContainer : public Container<ModuleContainer>
 {
 public:
-	BoardContainer(uint16_t id) : Container<ModuleContainer>(id){}
+	OpticalGroupContainer(uint16_t id) : Container<ModuleContainer>(id){}
 	template <class T>
 	T*               addModuleContainer(uint16_t id, T* module){return static_cast<T*>(Container<ModuleContainer>::addObject(id, module));}
 	ModuleContainer* addModuleContainer(uint16_t id)                 {return Container<ModuleContainer>::addObject(id, new ModuleContainer(id));}
+private:
+};
+
+class BoardContainer : public Container<OpticalGroupContainer>
+{
+public:
+	BoardContainer(uint16_t id) : Container<OpticalGroupContainer>(id){}
+	template <class T>
+	T*                     addOpticalGroupContainer(uint16_t id, T* opticalGroup){return static_cast<T*>(Container<OpticalGroupContainer>::addObject(id, opticalGroup));}
+	OpticalGroupContainer* addOpticalGroupContainer(uint16_t id)                 {return Container<OpticalGroupContainer>::addObject(id, new OpticalGroupContainer(id));}
 private:
 };
 

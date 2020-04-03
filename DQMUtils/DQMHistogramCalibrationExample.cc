@@ -51,25 +51,29 @@ void DQMHistogramCalibrationExample::fillCalibrationExamplePlots(DetectorDataCon
     for(auto board : theHitContainer) //for on boards - begin 
     {
         size_t boardIndex = board->getIndex();
-        for(auto module: *board) //for on module - begin 
+        for(auto opticalGroup: *board) //for on opticalGroup - begin 
         {
-            size_t moduleIndex = module->getIndex();
-            for(auto chip: *module) //for on chip - begin 
+            size_t opticalGroupIndex = opticalGroup->getIndex();
+            for(auto hybrid: *opticalGroup) //for on hybrid - begin 
             {
-                size_t chipIndex = chip->getIndex();
-                // Retreive the corresponging chip histogram:
-                TH1F *chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(moduleIndex)->at(chipIndex)
-                    ->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                uint channelBin=1;
-                // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip by chip and not in one shot)
-                if(chip->getChannelContainer<uint32_t>() == nullptr ) continue;
-                // Get channel data and fill the histogram
-                for(auto channel : *chip->getChannelContainer<uint32_t>()) //for on channel - begin 
+                size_t hybridIndex = hybrid->getIndex();
+                for(auto chip: *hybrid) //for on chip - begin 
                 {
-                    chipHitHistogram->SetBinContent(channelBin++,channel);
-                } //for on channel - end 
-            } //for on chip - end 
-        } //for on module - end 
+                    size_t chipIndex = chip->getIndex();
+                    // Retreive the corresponging chip histogram:
+                    TH1F *chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)
+                        ->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    uint channelBin=1;
+                    // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip by chip and not in one shot)
+                    if(chip->getChannelContainer<uint32_t>() == nullptr ) continue;
+                    // Get channel data and fill the histogram
+                    for(auto channel : *chip->getChannelContainer<uint32_t>()) //for on channel - begin 
+                    {
+                        chipHitHistogram->SetBinContent(channelBin++,channel);
+                    } //for on channel - end 
+                } //for on chip - end 
+            } //for on hybrid - end 
+        } //for on opticalGroup - end 
     } //for on boards - end 
 }
 
@@ -81,28 +85,32 @@ void DQMHistogramCalibrationExample::process()
     for(auto board : fDetectorHitHistograms) //for on boards - begin 
     {
         size_t boardIndex = board->getIndex();
-        for(auto module: *board) //for on module - begin 
+        for(auto opticalGroup: *board) //for on opticalGroup - begin 
         {
-            size_t moduleIndex = module->getIndex();
-
-            //Create a canvas do draw the plots
-            TCanvas *cValidation = new TCanvas(("Hits_module_" + std::to_string(module->getId())).data(),("Hits module " + std::to_string(module->getId())).data(),   0, 0, 650, 650 );
-            cValidation->Divide(module->size());
-
-            for(auto chip: *module)  //for on chip - begin 
+            size_t opticalGroupIndex = opticalGroup->getIndex();
+            for(auto hybrid: *opticalGroup) //for on hybrid - begin 
             {
-                size_t chipIndex = chip->getIndex();
-                cValidation->cd(chipIndex+1);
-                // Retreive the corresponging chip histogram:
-                TH1F *chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(moduleIndex)->at(chipIndex)
-                    ->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                size_t hybridIndex = hybrid->getIndex();
 
-                //Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you need)
-                chipHitHistogram->SetStats(false);
-                chipHitHistogram->SetLineColor(kRed);
-                chipHitHistogram->DrawCopy();
-            } //for on chip - end 
-        } //for on module - end 
+                //Create a canvas do draw the plots
+                TCanvas *cValidation = new TCanvas(("Hits_hybrid_" + std::to_string(hybrid->getId())).data(),("Hits hybrid " + std::to_string(hybrid->getId())).data(),   0, 0, 650, 650 );
+                cValidation->Divide(hybrid->size());
+
+                for(auto chip: *hybrid)  //for on chip - begin 
+                {
+                    size_t chipIndex = chip->getIndex();
+                    cValidation->cd(chipIndex+1);
+                    // Retreive the corresponging chip histogram:
+                    TH1F *chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)
+                        ->getSummary<HistContainer<TH1F>>().fTheHistogram;
+
+                    //Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you need)
+                    chipHitHistogram->SetStats(false);
+                    chipHitHistogram->SetLineColor(kRed);
+                    chipHitHistogram->DrawCopy();
+                } //for on chip - end 
+            } //for on hybrid - end 
+        } //for on opticalGroup - end 
     } //for on boards - end 
 }
 

@@ -16,6 +16,7 @@
 #include "../HWInterface/D19cFWInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/Chip.h"
+#include "../HWDescription/OpticalGroup.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/Exception.h"
 #include "../Utils/ConditionDataSet.h"
@@ -79,13 +80,14 @@ namespace Ph2_System
      */
     void parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile );
 
-    void parseBeBoard          (pugi::xml_node pBeBordNode,   BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os );
-    void parseRegister         (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os );
-    void parseSLink            (pugi::xml_node pSLinkNode,    Ph2_HwDescription::BeBoard* pBoard,               std::ostream& os );
-    void parseModuleContainer  (pugi::xml_node pModuleNode,   Ph2_HwDescription::BeBoard* pBoard,               std::ostream& os );
-    void parseCbcContainer     (pugi::xml_node pModuleNode,   Ph2_HwDescription::Module* cModule,               std::string cFilePrefix, std::ostream& os );
-    void parseCbcSettings      (pugi::xml_node pCbcNode,      Ph2_HwDescription::ReadoutChip* pCbc,             std::ostream& os);
-    void parseGlobalCbcSettings(pugi::xml_node pModuleNode,   Ph2_HwDescription::Module* pModule,               std::ostream& os);
+    void parseBeBoard                (pugi::xml_node pBeBordNode,   BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os );
+    void parseRegister               (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os );
+    void parseSLink                  (pugi::xml_node pSLinkNode       , Ph2_HwDescription::BeBoard*      pBoard       , std::ostream& os );
+    void parseOpticalGroupContainer  (pugi::xml_node pOpticalGroupNode, Ph2_HwDescription::BeBoard*      pBoard       , std::ostream& os );
+    void parseModuleContainer        (pugi::xml_node pModuleNode      , Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::ostream& os,  Ph2_HwDescription::BeBoard* pBoard);
+    void parseCbcContainer           (pugi::xml_node pModuleNode      , Ph2_HwDescription::Module*       cModule      , std::string cFilePrefix, std::ostream& os );
+    void parseCbcSettings            (pugi::xml_node pCbcNode         , Ph2_HwDescription::ReadoutChip*  pCbc         , std::ostream& os);
+    void parseGlobalCbcSettings      (pugi::xml_node pModuleNode      , Ph2_HwDescription::Module*       pModule      , std::ostream& os);
 
     void parseSSA         (pugi::xml_node pModuleNode,   Ph2_HwDescription::Module* cModule, std::string cFilePrefix);
     void parseSSASettings (pugi::xml_node pModuleNode,   Ph2_HwDescription::ReadoutChip* cSSA);

@@ -31,19 +31,22 @@ namespace Ph2_HwInterface {
 
     void D19cCbc3Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
     {
-        for(auto module: *boardContainer)
+        for(auto opticalGroup: *boardContainer)
     	{
-    		for(auto chip: *module)
-    		{
-                unsigned int i = 0;
-    			for(ChannelDataContainer<Occupancy>::iterator channel =  chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
-				{
-                    if(cTestChannelGroup->isChannelEnabled(i))
+            for(auto hybrid: *opticalGroup)
+            {
+                for(auto chip: *hybrid)
+                {
+                    unsigned int i = 0;
+                    for(ChannelDataContainer<Occupancy>::iterator channel =  chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                     {
-    					channel->fOccupancy  += (float)privateDataBit ( module->getId(), chip->getId(), i);
+                        if(cTestChannelGroup->isChannelEnabled(i))
+                        {
+                            channel->fOccupancy  += (float)privateDataBit ( hybrid->getId(), chip->getId(), i);
+                        }
                     }
-				}
-    		}
+                }
+            }
     	}
     }
 

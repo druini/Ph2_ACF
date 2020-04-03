@@ -157,7 +157,6 @@ namespace Ph2_HwInterface
     std::vector<uint8_t> CbcInterface::createHitListFromStubs(uint8_t pSeed, bool pSeedLayer )
     {
         std::vector<uint8_t> cChannelList(0);
-        uint32_t cFirstStrip = 2*std::floor(pSeed/2.0) + 1;
         uint32_t cSeedStrip = std::floor(pSeed/2.0); // counting from 1 
         LOG (DEBUG) << BOLDMAGENTA << "Seed of " << +pSeed << " means first hit is in strip " << +cSeedStrip << RESET;
         size_t cNumberOfChannels = 1 + (pSeed%2 != 0);    
@@ -186,7 +185,6 @@ namespace Ph2_HwInterface
 
         bool cLayerSwap = ( this->ReadChipReg(pChip , "LayerSwap") == 1 );
         LOG (DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." <<  RESET;   
-        double cSeedStrip = (pStubAddress*0.5);
         std::vector<uint8_t> cSeedHits = createHitListFromStubs(pStubAddress,!cLayerSwap);
         // //try it here first 
         uint8_t cCorrelated = pStubAddress + pStubBend; // start counting strips from 0
@@ -366,7 +364,6 @@ namespace Ph2_HwInterface
                      std::vector<std::pair<std::string, uint16_t> > cRegVec;
                     // TriggerLatency1 holds bits 0-7 and FeCtrl&TrgLate2 holds 8
                     uint16_t cLat1 = dacValue & 0x00FF;
-                    uint16_t cReg = pCbc->getReg("FeCtrl&TrgLat2"); 
                     uint16_t cLat2 = (pCbc->getReg ("FeCtrl&TrgLat2") & 0xFE) | ( (dacValue & 0x0100) >> 8);
                     cRegVec.emplace_back ("TriggerLatency1", cLat1);
                     cRegVec.emplace_back ("FeCtrl&TrgLat2", cLat2);
@@ -571,8 +568,6 @@ namespace Ph2_HwInterface
             {
                 char dacName1[20];
                 sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
-                ChipRegItem cRegItem = pCbc->getRegItem ( dacName1 );
-                cRegItem.fValue = localRegValues.getChannel<uint16_t>(iChannel);
                 // fBoardFW->EncodeReg ( cRegItem, pCbc->getFeId(), pCbc->getChipId(), cVec, pVerifLoop, true );
                 // #ifdef COUNT_FLAG
                 //     fRegisterCount++;

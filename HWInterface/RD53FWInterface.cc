@@ -792,10 +792,11 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::Event::fillDataContainer (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
   {
-    bool   vectorRequired = boardContainer->at(0)->at(0)->isSummaryContainerType<Summary<GenericDataVector,OccupancyAndPh>>();
+    bool   vectorRequired = boardContainer->at(0)->at(0)->at(0)->isSummaryContainerType<Summary<GenericDataVector,OccupancyAndPh>>();
     size_t chipIndx;
 
-    for (const auto& cModule : *boardContainer)
+    for (const auto& opticalReadout : *boardContainer)
+    for (const auto& cModule : *opticalReadout)
       for (const auto& cChip : *cModule)
         if (RD53FWInterface::Event::isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
           {

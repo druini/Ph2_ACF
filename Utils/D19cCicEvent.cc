@@ -34,21 +34,24 @@ namespace Ph2_HwInterface {
 
     void D19cCicEvent::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
     {
-        for(auto module: *boardContainer)
-    	{
-            LOG (DEBUG) << BOLDBLUE << "Filling data container for module " << module->getId() << RESET;
-            for(auto chip: *module)
-    		{
-                std::vector<uint32_t> cHits = this->GetHits ( module->getId(), chip->getId() );
-                LOG (DEBUG) << "\t.... " << +cHits.size() << " hits in chip." << RESET;
-                for( auto cHit : cHits ) 
+        for(auto opticalGroup : *boardContainer)
+        {
+            for(auto hybrid : *opticalGroup)
+            {
+                LOG (DEBUG) << BOLDBLUE << "Filling data container for hybrid " << hybrid->getId() << RESET;
+                for(auto chip: *hybrid)
                 {
-                    if( cTestChannelGroup->isChannelEnabled(cHit)) 
+                    std::vector<uint32_t> cHits = this->GetHits ( hybrid->getId(), chip->getId() );
+                    LOG (DEBUG) << "\t.... " << +cHits.size() << " hits in chip." << RESET;
+                    for( auto cHit : cHits ) 
                     {
-                        chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
+                        if( cTestChannelGroup->isChannelEnabled(cHit)) 
+                        {
+                            chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
+                        }
                     }
                 }
-    		}
+            }
     	}
     }
     // void D19cCicEvent::splitStream( std::vector<uint32_t> pData, const size_t pLength ) 

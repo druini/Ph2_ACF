@@ -244,13 +244,13 @@ namespace Ph2_System {
 
         os << BLUE <<  "|\t|" << RESET << std::endl;
 
-    // Iterate the module node
-    for ( pugi::xml_node pModuleNode = pBeBordNode.child ( "Module" ); pModuleNode; pModuleNode = pModuleNode.next_sibling() )
+    // Iterate the OpticalGroup node
+    for ( pugi::xml_node pOpticalGroupNode = pBeBordNode.child ( "OpticalGroup" ); pOpticalGroupNode; pOpticalGroupNode = pOpticalGroupNode.next_sibling() )
       {
-        if ( static_cast<std::string> ( pModuleNode.name() ) == "Module" )
+        if ( static_cast<std::string> ( pOpticalGroupNode.name() ) == "OpticalGroup" )
           {
                 // for now try and guess based on xml nodes what the FE is 
-            this->parseModuleContainer (pModuleNode, cBeBoard, os );
+            this->parseOpticalGroupContainer (pOpticalGroupNode, cBeBoard, os );
           }
       }
 
@@ -263,147 +263,24 @@ namespace Ph2_System {
     return;
 
   }
-  /*void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os )
+
+  void FileParser::parseOpticalGroupContainer  (pugi::xml_node pOpticalGroupNode, BeBoard* pBoard, std::ostream& os )
   {
-    uint32_t cBeId = pBeBordNode.attribute ( "Id" ).as_int();
-    BeBoard* cBeBoard = pDetectorContainer->addBoardContainer(cBeId, new BeBoard ( cBeId ));//FIX Change it to Reference!!!!
-    pBoardVector.emplace_back ( cBeBoard );
 
-    pugi::xml_attribute cBoardTypeAttribute = pBeBordNode.attribute ("boardType");
+    uint32_t cOpticalGroupId = pOpticalGroupNode.attribute ( "Id"    ).as_int();
+    uint32_t cFMCId          = pOpticalGroupNode.attribute ( "FMCId" ).as_int();
+    uint32_t cBoardId        = pBoard->getBeBoardId();
+    OpticalGroup* theOpticalGroup = pBoard->addOpticalGroupContainer(cBoardId, new OpticalGroup (cBoardId, cFMCId, cOpticalGroupId));
 
-    if (cBoardTypeAttribute == nullptr)
-      {
-        LOG (ERROR) << BOLDRED << "Error: Board Type not specified - aborting!" << RESET;
-        exit (1);
-      }
-    std::string cBoardType = cBoardTypeAttribute.value();
-
-        bool cWithOptical=false;
-        for (pugi::xml_node cChild: pBeBordNode.children("GBT_Links"))
-        {
-            std::string cName = cChild.name();
-            os << BOLDBLUE <<  "|"  << "----" <<  cName << "\n" << RESET; 
-            for (pugi::xml_node cGBT : cChild.children("GBT"))
-            {
-                for (pugi::xml_attribute cAttribute: cGBT.attributes())
-                {
-                    if( std::string ( cAttribute.name() ) == "enable")
-                        cWithOptical = cWithOptical | ( convertAnyInt ( cAttribute.value() ) ==1);
-                }
-            }
-        }
-        cBeBoard->setOptical( cWithOptical );
-        bool cConfigureCDCE=false;
-        for (pugi::xml_node cChild: pBeBordNode.children("CDCE"))
-        {
-            for (pugi::xml_attribute cAttribute: cChild.attributes())
-            {
-                if( std::string ( cAttribute.name() ) == "configure")
-                    cConfigureCDCE = cConfigureCDCE | ( convertAnyInt ( cAttribute.value() ) ==1);
-            }
-        }
-        cBeBoard->setCDCEconfiguration( cConfigureCDCE );
-
-        if( cWithOptical )
-            os << BOLDBLUE <<  "|"  << "----" << "Optical link is      " << BOLDGREEN << " is being used.\n" << RESET;
-        else
-            os << BOLDBLUE <<  "|"  << "----" << "Optical link is      " << BOLDRED << " is not being used.\n" << RESET;
-
-        if (cBoardType == "D19C")     cBeBoard->setBoardType (BoardType::D19C);
-    else if (cBoardType == "RD53") cBeBoard->setBoardType (BoardType::RD53);
-    else
-      {
-        LOG (ERROR) << "Error: Unknown Board Type: " << cBoardType << " - aborting!";
-        std::string errorstring = "Unknown Board Type " + cBoardType;
-        throw Exception (errorstring.c_str() );
-        exit (1);
-      }
-
-    pugi::xml_attribute cEventTypeAttribute = pBeBordNode.attribute ("eventType");
-    std::string cEventTypeString;
-
-    if (cEventTypeAttribute == nullptr)
-      {
-        //the HWDescription object does not have and EventType node, so assume EventType::VR
-            cBeBoard->setEventType (EventType::VR);
-            cEventTypeString = "VR";
-        }
-        else
-        {
-            cEventTypeString = cEventTypeAttribute.value();
-            if (cEventTypeString == "ZS") cBeBoard->setEventType (EventType::ZS);
-            else if (cEventTypeString == "SSA") cBeBoard->setEventType (EventType::SSA);
-            else if (cEventTypeString == "MPA") cBeBoard->setEventType (EventType::MPA);
-            else cBeBoard->setEventType (EventType::VR);
-        }
-
-        os << BOLDCYAN << "|" << "----" << pBeBordNode.name() << "  " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute ( "Id" ).value() << BOLDCYAN << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDCYAN << ", EventType: " << BOLDYELLOW << cEventTypeString << RESET << std:: endl;
-
-    pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child ("connection");
-
-    std::string cId = cBeBoardConnectionNode.attribute ( "id" ).value();
-    std::string cUri = cBeBoardConnectionNode.attribute ( "uri" ).value();
-    std::string cAddressTable = expandEnvironmentVariables (cBeBoardConnectionNode.attribute ( "address_table" ).value() );
-
-    if (cBeBoard->getBoardType() == BoardType::D19C)
-      {
-        pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
-            for (pugi::xml_node cChild: pBeBordNode.children("GBT_Links"))
-            {
-                for (pugi::xml_node cGBT : cChild.children("GBT"))
-                {
-                    for (pugi::xml_attribute cAttribute: cGBT.attributes())
-                    {
-                        if( std::string ( cAttribute.name() ) == "phaseTap") // T.B.D store this somewhere...but where 
-                        {
-                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setGBTxPhase( convertAnyInt (cAttribute.value()) );
-                            os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << " phase is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
-                        }
-                    }
-                }
-            }
-        }
-    else if (cBeBoard->getBoardType() == BoardType::RD53)
-      {
-            pBeBoardFWMap[cBeBoard->getBeBoardId()]   =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
-      }
-
-        os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
-
-    // Iterate over the BeBoardRegister Nodes
-    for ( pugi::xml_node cBeBoardRegNode = pBeBordNode.child ( "Register" ); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling() )
-      {
-        if (std::string (cBeBoardRegNode.name() ) == "Register")
-          {
-            std::string cNameString;
-            uint32_t cValue;
-            this->parseRegister (cBeBoardRegNode, cNameString, cValue, cBeBoard, os);
-                os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl << BOLDBLUE <<  "|    " << cNameString << " : " << +cValue << RESET; 
-                    //<< "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl << BOLDBLUE <<  "|" << "       " <<  "|"  << "----" << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl << BOLDBLUE << "|" << "       " <<  "|" << RESET << std::endl;
-          }
-      }
-
-        os << BLUE <<  "|\t|" << RESET << std::endl;
-
-    // Iterate the module node
-    for ( pugi::xml_node pModuleNode = pBeBordNode.child ( "Module" ); pModuleNode; pModuleNode = pModuleNode.next_sibling() )
+    for ( pugi::xml_node pModuleNode = pOpticalGroupNode.child ( "Module" ); pModuleNode; pModuleNode = pModuleNode.next_sibling() )
       {
         if ( static_cast<std::string> ( pModuleNode.name() ) == "Module" )
           {
                 // for now try and guess based on xml nodes what the FE is 
-            this->parseModuleContainer (pModuleNode, cBeBoard, os );
+            this->parseModuleContainer (pModuleNode, theOpticalGroup, os, pBoard);
           }
       }
-
-    //here parse the Slink Node
-    pugi::xml_node cSLinkNode = pBeBordNode.child ("SLink");
-    this->parseSLink (cSLinkNode, cBeBoard, os);
-
-    // pBoardVector.emplace_back( cBeBoard );
-
-    return;
-
-  }*/
+  }
 
 
   void FileParser::parseRegister (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os)
@@ -569,10 +446,10 @@ namespace Ph2_System {
 
     void FileParser::parseSSASettings (pugi::xml_node pModuleNode, ReadoutChip* pSSA)
     {
-        FrontEndType cType = pSSA->getFrontEndType();
+        // FrontEndType cType = pSSA->getFrontEndType();
     }
 
-  void FileParser::parseModuleContainer (pugi::xml_node pModuleNode, BeBoard* pBoard, std::ostream& os )
+  void FileParser::parseModuleContainer (pugi::xml_node pModuleNode, OpticalGroup* pOpticalGroup, std::ostream& os, BeBoard* pBoard)
   {
 
     bool cStatus = pModuleNode.attribute ( "Status" ).as_bool();
@@ -589,18 +466,17 @@ namespace Ph2_System {
         Module* cModule;
         if (pBoard->getBoardType() == BoardType::RD53)
           {
-                cModule = pBoard->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new Module ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
+                cModule = pOpticalGroup->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new Module ( pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
           }
         else
           {
-            cModule = pBoard->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new OuterTrackerModule ( pBoard->getBeBoardId(), pModuleNode.attribute ( "FMCId" ).as_int(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
+            cModule = pOpticalGroup->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new OuterTrackerModule ( pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
             cModule->setLinkId( pModuleNode.attribute ( "LinkId" ).as_int() );
           }
-        pBoard->addModule ( cModule );
+        // pOpticalGroup->addModule ( cModule );
 
             // now try and do the configruation in a slightly more readable
         std::string cConfigFileDirectory;
-            bool cWithCIC=false;
         for (pugi::xml_node cChild: pModuleNode.children())
           {
             std::string cName = cChild.name();
@@ -642,7 +518,6 @@ namespace Ph2_System {
                       }
                         else if( cName == "CIC" || cName == "CIC2") 
                       {
-                            cWithCIC=true;
                             bool cCIC1 = (cName == "CIC");
                             FrontEndType cType = cCIC1 ? FrontEndType::CIC : FrontEndType::CIC2 ;
                             
@@ -679,7 +554,6 @@ namespace Ph2_System {
                                     std::vector<std::string> cAttributes{"clockFrequency", "enableBend","enableLastLine", "enableSparsification"};
                                     std::vector<std::string> cRegNames{ "", "BEND_SEL", "N_OUTPUT_TRIGGER_LINES_SEL", "CBC_SPARSIFICATION_SEL"};
                                     std::vector<uint16_t> cBitPositions{ 1, 2 , 3 , 4 };
-                                    uint8_t cValue = 0;
                                     for( auto it = cRegNames.begin(); it != cRegNames.end(); ++it)
                                     {
                                         auto cIndex = std::distance(cRegNames.begin(), it); 

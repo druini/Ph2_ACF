@@ -73,32 +73,35 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
     for(auto board : theThresholdAndNoiseContainer) //for on boards - begin 
     {
         size_t boardIndex = board->getIndex();
-        for(auto module: *board) //for on module - begin 
+        for(auto opticalGroup: *board) //for on opticalGroup - begin 
         {
-            size_t moduleIndex = module->getIndex();
-
-            for(auto chip: *module) //for on chip - begin 
+            size_t opticalGroupIndex = opticalGroup->getIndex();
+            for(auto hybrid: *opticalGroup) //for on hybrid - begin 
             {
-                size_t chipIndex = chip->getIndex();
-                // Retreive the corresponging chip histogram:
-                if(chip->getSummaryContainer<ThresholdAndNoise,ThresholdAndNoise>() == nullptr ) continue;
-                TH1F *chipPulseShapeHistogram = fDetectorChipPulseShapeHistograms.at(boardIndex)->at(moduleIndex)->at(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                int currentBin = chipPulseShapeHistogram->FindBin(binCenterValue);
-                chipPulseShapeHistogram->SetBinContent(currentBin, chip->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold     );
-                chipPulseShapeHistogram->SetBinError  (currentBin, chip->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThresholdError);
-                // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip by chip and not in one shot)
-                // Get channel data and fill the histogram
-                uint8_t channelNumber = 0;
-                for(auto channel : *chip->getChannelContainer<ThresholdAndNoise>()) //for on channel - begin 
+                size_t hybridIndex = hybrid->getIndex();
+                for(auto chip: *hybrid) //for on chip - begin 
                 {
-                    TH1F *channelPulseShapeHistogram = fDetectorChannelPulseShapeHistograms.at(boardIndex)->at(moduleIndex)->at(chipIndex)->getChannel<HistContainer<TH1F>>(channelNumber).fTheHistogram;
-                    int currentBin = channelPulseShapeHistogram->FindBin(binCenterValue);
-                    channelPulseShapeHistogram->SetBinContent(currentBin, channel.fThreshold);
-                    channelPulseShapeHistogram->SetBinError  (currentBin, channel.fNoise    );
-                    ++channelNumber;
-                } //for on channel - end 
-            } //for on chip - end 
-        } //for on module - end 
+                    size_t chipIndex = chip->getIndex();
+                    // Retreive the corresponging chip histogram:
+                    if(chip->getSummaryContainer<ThresholdAndNoise,ThresholdAndNoise>() == nullptr ) continue;
+                    TH1F *chipPulseShapeHistogram = fDetectorChipPulseShapeHistograms.at(boardIndex)->at(opticalGroupIndex)->at(moduleIndex)->at(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    int currentBin = chipPulseShapeHistogram->FindBin(binCenterValue);
+                    chipPulseShapeHistogram->SetBinContent(currentBin, chip->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold     );
+                    chipPulseShapeHistogram->SetBinError  (currentBin, chip->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThresholdError);
+                    // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip by chip and not in one shot)
+                    // Get channel data and fill the histogram
+                    uint8_t channelNumber = 0;
+                    for(auto channel : *chip->getChannelContainer<ThresholdAndNoise>()) //for on channel - begin 
+                    {
+                        TH1F *channelPulseShapeHistogram = fDetectorChannelPulseShapeHistograms.at(boardIndex)->at(opticalGroupIndex)->at(moduleIndex)->at(chipIndex)->getChannel<HistContainer<TH1F>>(channelNumber).fTheHistogram;
+                        int currentBin = channelPulseShapeHistogram->FindBin(binCenterValue);
+                        channelPulseShapeHistogram->SetBinContent(currentBin, channel.fThreshold);
+                        channelPulseShapeHistogram->SetBinError  (currentBin, channel.fNoise    );
+                        ++channelNumber;
+                    } //for on channel - end 
+                } //for on chip - end 
+            } //for on module - end 
+        } //for on opticalGroup - end
     } //for on boards - end 
 }
 
