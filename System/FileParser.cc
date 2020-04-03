@@ -31,14 +31,14 @@ namespace Ph2_System
   {
     //FIXME-FR
     if (pIsFile && pFilename.find(".xml") != std::string::npos)
-      parseSettingsxml ( pFilename, pSettingsMap, os, pIsFile );
+      parseSettingsxml(pFilename, pSettingsMap, os, pIsFile);
     else if (!pIsFile)
-      parseSettingsxml ( pFilename, pSettingsMap, os, pIsFile );
+      parseSettingsxml(pFilename, pSettingsMap, os, pIsFile);
     else
       LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xm";
   }
 
-  void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
+  void FileParser::parseHWxml (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
   {
     int i, j;
 
@@ -47,7 +47,6 @@ namespace Ph2_System
 
     if (pIsFile) result = doc.load_file(pFilename.c_str());
     else         result = doc.load(pFilename.c_str());
-
 
     if (!result)
       {
@@ -74,11 +73,11 @@ namespace Ph2_System
     const std::string strUhalConfig = expandEnvironmentVariables (doc.child ( "HwDescription" ).child ( "Connections" ).attribute ( "name" ).value() );
 
     // Iterate over the BeBoard Nodes
-    for ( pugi::xml_node cBeBoardNode = doc.child ( "HwDescription" ).child ( "BeBoard" ); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling() )
+    for (pugi::xml_node cBeBoardNode = doc.child("HwDescription").child("BeBoard"); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
       {
-        if (static_cast<std::string> (cBeBoardNode.name() ) == "BeBoard")
+        if (static_cast<std::string>(cBeBoardNode.name()) == "BeBoard")
           {
-            this->parseBeBoard (cBeBoardNode, pBeBoardFWMap, pBoardVector, pDetectorContainer, os);
+            this->parseBeBoard(cBeBoardNode, pBeBoardFWMap, pBoardVector, pDetectorContainer, os);
           }
       }
 
@@ -102,7 +101,7 @@ namespace Ph2_System
     BeBoard* cBeBoard = pDetectorContainer->addBoardContainer(cBeId, new BeBoard(cBeId));//FIX Change it to Reference!!!!
     pBoardVector.emplace_back(cBeBoard);
 
-    pugi::xml_attribute cBoardTypeAttribute = pBeBordNode.attribute ("boardType");
+    pugi::xml_attribute cBoardTypeAttribute = pBeBordNode.attribute("boardType");
 
     if (cBoardTypeAttribute == nullptr)
       {
@@ -133,18 +132,18 @@ namespace Ph2_System
       {
         for (pugi::xml_attribute cAttribute: cChild.attributes())
           {
-            if( std::string ( cAttribute.name() ) == "configure")
-              cConfigureCDCE = cConfigureCDCE | ( convertAnyInt ( cAttribute.value() ) ==1);
+            if (std::string(cAttribute.name()) == "configure")
+              cConfigureCDCE = cConfigureCDCE | ( convertAnyInt(cAttribute.value()) == true);
           }
       }
-    cBeBoard->setCDCEconfiguration( cConfigureCDCE );
+    cBeBoard->setCDCEconfiguration(cConfigureCDCE);
 
-    if (cWithOptical)
+    if (cWithOptical == true)
       os << BOLDBLUE <<  "|"  << "----" << "Optical link: " << BOLDGREEN << "not being used\n" << RESET;
     else
       os << BOLDBLUE <<  "|"  << "----" << "Optical link: " << BOLDRED   << "not being used\n" << RESET;
 
-    if (cBoardType == "D19C")     cBeBoard->setBoardType (BoardType::D19C);
+    if (cBoardType == "D19C")      cBeBoard->setBoardType (BoardType::D19C);
     else if (cBoardType == "RD53") cBeBoard->setBoardType (BoardType::RD53);
     else
       {
@@ -167,8 +166,6 @@ namespace Ph2_System
       {
         cEventTypeString = cEventTypeAttribute.value();
         if (cEventTypeString == "ZS") cBeBoard->setEventType (EventType::ZS);
-        else if (cEventTypeString == "SSA") cBeBoard->setEventType (EventType::SSA);
-        else if (cEventTypeString == "MPA") cBeBoard->setEventType (EventType::MPA);
         else cBeBoard->setEventType (EventType::VR);
       }
 
@@ -179,9 +176,9 @@ namespace Ph2_System
 
     pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child ("connection");
 
-    std::string cId = cBeBoardConnectionNode.attribute ( "id" ).value();
-    std::string cUri = cBeBoardConnectionNode.attribute ( "uri" ).value();
-    std::string cAddressTable = expandEnvironmentVariables (cBeBoardConnectionNode.attribute ( "address_table" ).value() );
+    std::string cId  = cBeBoardConnectionNode.attribute( "id" ).value();
+    std::string cUri = cBeBoardConnectionNode.attribute( "uri" ).value();
+    std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute( "address_table" ).value());
 
     if (cBeBoard->getBoardType() == BoardType::D19C)
       {
@@ -190,12 +187,30 @@ namespace Ph2_System
           {
             for (pugi::xml_node cGBT : cChild.children("GBT"))
               {
+                uint8_t cGBTId = 0;
                 for (pugi::xml_attribute cAttribute: cGBT.attributes())
                   {
-                    if( std::string ( cAttribute.name() ) == "phaseTap") // T.B.D store this somewhere...but where
+                    if( std::string ( cAttribute.name() ) == "Id") // T.B.D store this somewhere...but where 
+                      {
+                        cGBTId = convertAnyInt (cAttribute.value());
+                        os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << " GBT :      " << BOLDYELLOW << +cGBTId << std::endl << RESET;
+                      }
+                    if( std::string ( cAttribute.name() ) == "phaseTap") // T.B.D store this somewhere...but where 
                       {
                         static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setGBTxPhase( convertAnyInt (cAttribute.value()) );
-                        os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << " phase is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
+                        os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " phase is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
+                      }
+                    if( std::string ( cAttribute.name() ) == "txPolarity") // T.B.D store this somewhere...but where 
+                      {
+                        auto cPolarity = convertAnyInt (cAttribute.value()); 
+                        static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setTxPolarity(cGBTId,cPolarity );
+                        os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " Tx Polarity is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
+                      }
+                    if( std::string ( cAttribute.name() ) == "rxPolarity") // T.B.D store this somewhere...but where 
+                      {
+                        auto cPolarity = convertAnyInt (cAttribute.value()); 
+                        static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setRxPolarity( cGBTId,cPolarity );
+                        os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " Rx Polairty is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
                       }
                   }
               }
@@ -223,9 +238,7 @@ namespace Ph2_System
         this->parseModuleContainer(pModuleNode, cBeBoard, os);
 
     pugi::xml_node cSLinkNode = pBeBordNode.child("SLink");
-    this->parseSLink(cSLinkNode, cBeBoard, os);
-
-    return;
+    this->parseSLink (cSLinkNode, cBeBoard, os);
   }
 
   void FileParser::parseRegister (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os)
@@ -257,7 +270,7 @@ namespace Ph2_System
 
   }
 
-  void FileParser::parseSLink (pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ostream& os)
+  void FileParser::parseSLink (pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ostream& os )
   {
     ConditionDataSet* cSet = new ConditionDataSet();
 
@@ -336,7 +349,7 @@ namespace Ph2_System
 
                     //ok, now I need to loop th CBCs to find page & address and the initial value
 
-                    for (auto cFe : pBoard->fModuleVector)
+                    for (auto cFe : pBoard->fModuleVector )
                       {
                         if (cFe->getFeId() != cFeId) continue;
 
@@ -478,7 +491,7 @@ namespace Ph2_System
                           os << RED << "CIC2";
 
                         os << RESET << std::endl;
-                        //now global settings
+                        // Now global settings
                         pugi::xml_node cGlobalSettingsNode = pModuleNode.child ("Global");
                         for (pugi::xml_node cChildGlobal: cGlobalSettingsNode.children())
                           {
@@ -558,9 +571,7 @@ namespace Ph2_System
         cCbc->setReg ( std::string ( cCbcRegisterNode.attribute ( "name" ).value() ), convertAnyInt ( cCbcRegisterNode.first_child().value() ) );
         os << BLUE << "|\t|\t|\t|----Register: " << std::string ( cCbcRegisterNode.attribute ( "name" ).value() ) << " : " << RED << std::hex << "0x" <<  convertAnyInt ( cCbcRegisterNode.first_child().value() ) << RESET << std::dec << std::endl;
       }
-
   }
-
 
   void FileParser::parseGlobalCbcSettings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os)
   {
@@ -739,7 +750,6 @@ namespace Ph2_System
 
         os << GREEN << "|\t|\t|\t|----Analog Mux " << "value: " << RED << +cAmuxValue << " (0x" << std::hex << +cAmuxValue << std::dec << ", 0b" << std::bitset<5> (cAmuxValue) << ")" << RESET << std::endl;
       }
-
 
     // CHANNEL MASK
     pugi::xml_node cDisableNode = pCbcNode.child ("ChannelMask");

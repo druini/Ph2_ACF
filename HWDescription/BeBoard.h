@@ -171,17 +171,18 @@ namespace Ph2_HwDescription {
         {
             fOptical = pOptical;
         };
-        void setCDCEconfiguration ( bool pConfigure )
+        void setCDCEconfiguration ( bool pConfigure, uint32_t pClockRate=120 )
         {
             fConfigureCDCE = pConfigure;
+            fClockRateCDCE = pClockRate;
         };
         bool ifOptical () const
         {
             return fOptical;
         }
-        bool configCDCE () const
+        std::pair<bool,uint32_t> configCDCE () const
         {
-            return fConfigureCDCE;
+            return std::make_pair(fConfigureCDCE,fClockRateCDCE);
         }
         /*!
         * \brief Set the Number of CBCs that are used to compute the data blob size of the BeBoard (according to FW version)
@@ -263,6 +264,7 @@ namespace Ph2_HwDescription {
         bool fOptical;
         bool fConfigureCDCE;
         bool fSparsifed;
+        uint32_t fClockRateCDCE;
       private:
 
         /*!

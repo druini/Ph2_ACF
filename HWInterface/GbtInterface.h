@@ -75,7 +75,9 @@ namespace Ph2_HwInterface
         void gbtxResetFrameAlignerDLL(Ph2_HwInterface::BeBoardFWInterface* pInterface, std::vector<uint8_t> pGroups ) ;
         void gbtxFrameAlignerDLL(Ph2_HwInterface::BeBoardFWInterface* pInterface, std::vector<uint8_t> pGroups, uint8_t pDLLcurrent = 11, uint8_t pLockMode = 7);
         void gbtxConfigure(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pDLLcurrent=11 , uint8_t pDLLlockMode=7);
-            
+        void gbtxSelectTerminationRx(Ph2_HwInterface::BeBoardFWInterface* pInterface, bool pEnable=true);
+        void gbtxSetDriveStrength(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pStrength=0xA);
+
         uint8_t cbcGetPageRegister(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId ) ;
         uint8_t cbcSetPage(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage ) ;
         uint32_t cbcRead(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage , uint8_t pRegisterAddress ) ;
@@ -106,7 +108,7 @@ namespace Ph2_HwInterface
         
     protected : 
         uint8_t fGBTxAddress=0x01;
-        uint16_t fSCAMaster = 14+3;
+        uint16_t fSCAMaster = 0x11; // I2C serial masters 14 (0x11) and 15 (0x12) are used on the SEH v3.1
         std::map <std::string,uint8_t> fScaAdcChnMap = {{"AMUX_L", 0}, {"AMUX_R",30}, {"VMIN", 14}, {"VM1V5", 21}, {"VM2V5", 27}, {"VRSSI", 24}, {"EXT_TEMP", 25}, {"INT_TEMP",31} };
         std::map <std::string,std::pair<int,int>> fScaAdcVoltageDeviderMap = { {"AMUX_L", std::make_pair( 0, 1)}, {"AMUX_R", std::make_pair(0,1)}, {"VMIN", std::make_pair( 91000,   4700)},
                                     {"VM1V5"     , std::make_pair(100000, 110000)},

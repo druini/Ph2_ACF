@@ -403,7 +403,7 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
             this->setSameDacBeBoard(cBoard, "VCth", cVcth);
             for( size_t cIteration = 0 ; cIteration < cAttempts ; cIteration ++)
             {
-               fBeBoardInterface->ChipReSync ( cBoard );
+                //fBeBoardInterface->ChipReSync ( cBoard );
                 this->ReadNEvents ( cBoard , cNevents );
                 const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
                 if( cIteration == 0 && cStepCount%10 == 0 )
@@ -436,8 +436,11 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
                             uint32_t cL1Id = cEvent->L1Id( cFe->getFeId(), cChip->getChipId() );
                             uint32_t cPipeline = cEvent->PipelineAddress( cFe->getFeId(), cChip->getChipId() );
                             uint32_t cError = cEvent->Error( cFe->getFeId() , cChip->getChipId() );
+                            uint32_t cStatus = static_cast<D19cCic2Event*>(cEvent)->Status( cFe->getFeId() );
                             if( (cEventCount % 10) == 0 )
-                                LOG (DEBUG) << BOLDBLUE << "\t\t....Event " << +cEventCount << " ----  L1Id " << +cL1Id << " Pipeline address " << +cPipeline << RESET;
+                            {    
+                                LOG (DEBUG) << BOLDBLUE << "\t\t....Event " << +cEventCount << " ----  L1Id " << +cL1Id << " Pipeline address " << +cPipeline << " status bits from " << std::bitset<9>(cStatus) << RESET;
+                            }
                             cHistPipeline->Fill( cEventCounter, cVcth, cPipeline);
                             cHistErrors->Fill( cEventCounter, cVcth, 1+ cError);
                             cHistL1Id->Fill( cEventCounter, cVcth , cL1Id);
@@ -625,24 +628,24 @@ void ExtraChecks::ExternalTriggers(uint16_t pNconsecutive, const std::string& pS
         }while( std::cin.get()!='\n');
         fBeBoardInterface->Stop(cBoard);
         
-        // LOG (INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
-        // this->ReadData( cBoard , true);
-        // const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
-        // LOG (INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
-        // for (auto& cFe : cBoard->fModuleVector)
-        // {
-        //     for (auto& cChip : cFe->fReadoutChipVector) 
-        //     {
-        //         for( auto cEvent : cEvents ) 
-        //         {
-        //             uint32_t cPipeline = cEvent->PipelineAddress( cFe->getFeId(), cChip->getChipId() );
-        //             auto cEventCount = cEvent->GetEventCount(); 
-        //             //uint32_t cL1Id = static_cast<D19cCicEvent*>(cEvent)->L1Id( cFe->getFeId(), cChip->getChipId() );
-        //             LOG (INFO) << BOLDBLUE << "Event " << +cEventCount << "\t\t....CBC" << +cChip->getChipId() << " on FE" << +cFe->getFeId() << " ----  Pipeline address " << +cPipeline << RESET;
-        //         }
-        //         LOG (INFO) << RESET;
-        //     }
-        // }
+        LOG (INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
+        this->ReadData( cBoard , true);
+        const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
+        LOG (INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
+        for (auto& cFe : cBoard->fModuleVector)
+        {
+            for (auto& cChip : cFe->fReadoutChipVector) 
+            {
+                for( auto cEvent : cEvents ) 
+                {
+                    uint32_t cPipeline = cEvent->PipelineAddress( cFe->getFeId(), cChip->getChipId() );
+                    auto cEventCount = cEvent->GetEventCount(); 
+                    //uint32_t cL1Id = static_cast<D19cCicEvent*>(cEvent)->L1Id( cFe->getFeId(), cChip->getChipId() );
+                    LOG (INFO) << BOLDBLUE << "Event " << +cEventCount << "\t\t....CBC" << +cChip->getChipId() << " on FE" << +cFe->getFeId() << " ----  Pipeline address " << +cPipeline << RESET;
+                }
+                LOG (INFO) << RESET;
+            }
+        }
     }
     LOG (INFO) << BOLDBLUE << "Done!" << RESET;
 }

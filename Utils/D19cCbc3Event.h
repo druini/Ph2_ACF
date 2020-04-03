@@ -232,8 +232,8 @@ namespace Ph2_HwInterface
         static constexpr uint32_t calculateChannelWordPosition (uint32_t channel) { return 3 + (channel-channel%32)/32; }
         static constexpr uint32_t calculateChannelBitPosition  (uint32_t channel) { return 31 - channel%32            ; }
         static constexpr size_t   encodeVectorIndex         (const uint8_t pFeId, const uint8_t pCbcId, const uint8_t numberOfCBCs) {return pCbcId + pFeId * numberOfCBCs; }
-        static constexpr uint8_t  getCbcIdFromVectorIndex   (const size_t vectorIndex, const uint8_t numberOfCBCs) {return vectorIndex / numberOfCBCs; }
-        static constexpr uint8_t  getFeIdFromVectorIndex    (const size_t vectorIndex, const uint8_t numberOfCBCs) {return vectorIndex % numberOfCBCs; }
+        static constexpr uint8_t  getCbcIdFromVectorIndex   (const size_t vectorIndex, const uint8_t numberOfCBCs) {return vectorIndex % numberOfCBCs; }
+        static constexpr uint8_t  getFeIdFromVectorIndex    (const size_t vectorIndex, const uint8_t numberOfCBCs) {return vectorIndex / numberOfCBCs; }
         
         EventDataVector fEventDataVector;
 

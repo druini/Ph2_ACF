@@ -21,6 +21,7 @@
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53Physics.h"
 #include "../tools/SSAPhysics.h"
+#include "../tools/BackEndAlignment.h"
 
 
 //========================================================================================================================
@@ -78,11 +79,11 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
     {
       LOG (INFO) << BOLDBLUE << "Configuring" << RESET;
 
-      if      (getVariableValue("Calibration",buffer) == "calibration")             theSystemController_ = new CombinedCalibration<PedestalEqualization>;
-      else if (getVariableValue("Calibration",buffer) == "pedenoise")               theSystemController_ = new CombinedCalibration<PedeNoise>;
-      else if (getVariableValue("Calibration",buffer) == "calibrationandpedenoise") theSystemController_ = new CombinedCalibration<PedestalEqualization,PedeNoise>();
-      else if (getVariableValue("Calibration",buffer) == "calibrationexample")      theSystemController_ = new CombinedCalibration<CalibrationExample>;
-      else if (getVariableValue("Calibration",buffer) == "cbcPulseShape")           theSystemController_ = new CombinedCalibration<CBCPulseShape>;
+      if      (getVariableValue("Calibration",buffer) == "calibration")             theSystemController_ = new CombinedCalibration<BackEndAlignment,PedestalEqualization>;
+      else if (getVariableValue("Calibration",buffer) == "pedenoise")               theSystemController_ = new CombinedCalibration<BackEndAlignment,PedeNoise>;
+      else if (getVariableValue("Calibration",buffer) == "calibrationandpedenoise") theSystemController_ = new CombinedCalibration<BackEndAlignment,PedestalEqualization,PedeNoise>;
+      else if (getVariableValue("Calibration",buffer) == "calibrationexample")      theSystemController_ = new CombinedCalibration<BackEndAlignment,CalibrationExample>;
+      else if (getVariableValue("Calibration",buffer) == "cbcPulseShape")           theSystemController_ = new CombinedCalibration<BackEndAlignment,CBCPulseShape>;
       else if (getVariableValue("Calibration",buffer) == "ssaphysics")              theSystemController_ = new SSAPhysics;
 
       else if (getVariableValue("Calibration",buffer) == "pixelalive")              theSystemController_ = new CombinedCalibration<PixelAlive>;

@@ -42,6 +42,9 @@ class DataChecker : public Tool
 
     void noiseCheck(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t>pChipIds , std::pair<uint8_t,int> pExpectedStub);
     void matchEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t>pChipIds , std::pair<uint8_t,int> pExpectedStub);
+    void ReadDataTest();
+    void ReadNeventsTest();
+    
     void zeroContainers();
     void print(std::vector<uint8_t> pChipIds); 
     void Start(int currentRun) override;
@@ -53,9 +56,9 @@ class DataChecker : public Tool
     class TPconfig
     {
     public:
-      uint8_t  firmwareTPdelay = 100;
-      uint16_t tpDelay = 100;
-      uint16_t tpSequence = 1000;
+      uint8_t  firmwareTPdelay = 80;
+      uint16_t tpDelay = 200;
+      uint16_t tpSequence = 400;
       uint16_t tpFastReset = 0;
       uint8_t  tpAmplitude=100;
     };

@@ -311,13 +311,21 @@ namespace Ph2_HwInterface
             icWrite(pInterface, cChannelReg+2 , 0x00 ) ;
         }
         // set phase 
-        std::vector<uint16_t> cRegisters = { 66, 90, 114 , 138, 143 , 162 , 186, 210};
+        std::vector<uint16_t> cRegisters = { 66, 90, 114 , 138, 162 , 186, 210};
         for( auto cChannelReg : cRegisters ) 
         {
             for( size_t cIndex=0; cIndex < 12 ; cIndex++)
             {
                 icWrite(pInterface, cChannelReg+cIndex , (pPhase << 4) | ( pPhase << 0 ) ) ;
             }
+        }
+    }
+    void GbtInterface::gbtxSetDriveStrength(BeBoardFWInterface* pInterface, uint8_t pStrength)
+    {
+        std::vector<uint16_t> cRegs{ 327, 328, 329, 330 , 331 };
+        for( auto cReg : cRegs ) 
+        {
+            icWrite(pInterface, cReg , (pStrength << 4 ) || pStrength ) ;
         }
     }
     void GbtInterface::gbtxConfigureChargePumps(BeBoardFWInterface* pInterface, uint8_t pStrength ) 
@@ -330,9 +338,9 @@ namespace Ph2_HwInterface
         }
         LOG (INFO) << BOLDBLUE << "Configuring PLL ..." << RESET; 
         // Programing the phase-shifter channels’ frequency
-            uint32_t cReadBack = icRead( pInterface, 16 , 1); 
+        uint32_t cReadBack = icRead( pInterface, 16 , 1); 
         icWrite(pInterface, 16, (cReadBack & 0xF0) |  (0x0F << 0) ) ;
-            // charge current + resistor for PLL
+        // charge current + resistor for PLL
         cReadBack = icRead( pInterface, 26 , 1); 
         //icWrite(pInterface, 26, (cReadBack & 0x8F) | 0xF ) ;
         icWrite(pInterface, 26, (0x7 << 4 ) | 0xF ) ;
@@ -536,6 +544,18 @@ namespace Ph2_HwInterface
         uint32_t cReadBack = icRead(pInterface, cRegister , 1 );
         icWrite( pInterface, cRegister , ( cReadBack & 0x8F) | (0x7 << 4) );
         icWrite( pInterface, cRegister , ( cReadBack & 0x8F) | (0x0 << 4) );
+    }
+    void GbtInterface::gbtxSelectTerminationRx(BeBoardFWInterface* pInterface, bool pEnable) 
+    {
+        // for e-links 
+        uint8_t cRegValue = (pEnable) ? 0xFF : 0x00 ;
+        for( int cGroup = 0 ; cGroup < 7 ; cGroup++)
+        {
+            uint16_t cRegister = 320 + cGroup;
+            icWrite( pInterface, cRegister , cRegValue );
+        }
+        // then for EC port 
+        uint16_t cRegister = 232;
     }
     void GbtInterface::gbtxFrameAlignerDLL(BeBoardFWInterface* pInterface, std::vector<uint8_t> pGroups, uint8_t pDLLcurrent, uint8_t pLockMode )
     {
