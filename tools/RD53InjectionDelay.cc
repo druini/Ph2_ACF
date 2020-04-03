@@ -62,12 +62,6 @@ void InjectionDelay::ConfigureCalibration ()
   // # Initialize progress #
   // #######################
   RD53RunProgress::total() += InjectionDelay::getNumberIterations();
-
-
-  // ############################################################
-  // # Create directory for: raw data, config files, histograms #
-  // ############################################################
-  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void InjectionDelay::Start (int currentRun)

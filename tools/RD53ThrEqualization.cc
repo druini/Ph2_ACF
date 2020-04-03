@@ -47,7 +47,7 @@ void ThrEqualization::ConfigureCalibration ()
     }
   colStart = std::max(colStart, frontEnd->colStart);
   colStop  = std::min(colStop, frontEnd->colStop);
-  LOG (INFO) << BOLDBLUE << "\t--> ThrEqualization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << BOLDBLUE << "]" << RESET;
+  LOG (INFO) << GREEN << "ThrEqualization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << GREEN << BOLDYELLOW << colStart << ", " << colStop << RESET << GREEN << "]" << RESET;
 
 
   // ########################
@@ -68,12 +68,6 @@ void ThrEqualization::ConfigureCalibration ()
   // # Initialize progress #
   // #######################
   RD53RunProgress::total() += ThrEqualization::getNumberIterations();
-
-
-  // ############################################################
-  // # Create directory for: raw data, config files, histograms #
-  // ############################################################
-  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void ThrEqualization::Start (int currentRun)
