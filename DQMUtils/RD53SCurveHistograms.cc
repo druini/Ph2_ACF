@@ -51,14 +51,13 @@ void SCurveHistograms::book (TFile* theOutputFile, const DetectorContainer& theD
 
 bool SCurveHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChannelContainerStream<OccupancyAndPh>          theOccStreamer        ("SCurveOcc");
-  ChannelContainerStream<OccupancyAndPh,uint16_t> theVCal               ("SCurveVCal");
+  ChannelContainerStream<OccupancyAndPh,uint16_t> theOccStreamer        ("SCurveOcc");
   ChannelContainerStream<ThresholdAndNoise>       theThrAndNoiseStreamer("SCurveThrAndNoise");
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
       theOccStreamer.decodeChipData(DetectorData);
-      SCurveHistograms::fillOccupancy(DetectorData,theVCal.getHeaderElement());
+      SCurveHistograms::fillOccupancy(DetectorData,theOccStreamer.getHeaderElement());
       DetectorData.cleanDataStored();
       return true;
     }

@@ -32,12 +32,17 @@ void ThrAdjustment::ConfigureCalibration ()
   nEvents         = this->findValueInSettings("nEvents");
   VCalStart       = this->findValueInSettings("VCalHstart");
   VCalStop        = this->findValueInSettings("VCalHstop");
-  targetThreshold = this->findValueInSettings("TargetThreshold");
+  targetThreshold = this->findValueInSettings("TargetThr");
   ThrStart        = this->findValueInSettings("ThrStart");
   ThrStop         = this->findValueInSettings("ThrStop");
   doDisplay       = this->findValueInSettings("DisplayHisto");
   doUpdateChip    = this->findValueInSettings("UpdateChipCfg");
   saveBinaryData  = this->findValueInSettings("SaveBinaryData");
+
+  frontEnd = RD53::getMajorityFE(colStart, colStop);
+  colStart = std::max(colStart, frontEnd->colStart);
+  colStop  = std::min(colStop, frontEnd->colStop);
+  LOG (INFO) << GREEN << "ThrAdjustment will run on the " << RESET<< BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop << RESET << GREEN << "]" << RESET;
 
 
   // #######################
@@ -113,7 +118,7 @@ void ThrAdjustment::initializeFiles (const std::string fileRes_, int currentRun)
 
 void ThrAdjustment::run ()
 {
-  ThrAdjustment::bitWiseScanGlobal("Vthreshold_LIN", nEvents, targetThreshold, ThrStart, ThrStop);
+  ThrAdjustment::bitWiseScanGlobal(frontEnd->thresholdReg, nEvents, targetThreshold, ThrStart, ThrStop);
 
 
   // ############################
@@ -123,7 +128,7 @@ void ThrAdjustment::run ()
   for (const auto cBoard : *fDetectorContainer)
     for (const auto cModule : *cBoard)
       for (const auto cChip : *cModule)
-        theThrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<RD53*>(cChip)->getReg("Vthreshold_LIN");
+        theThrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<RD53*>(cChip)->getReg(frontEnd->thresholdReg);
 
 
   // ################
@@ -141,7 +146,6 @@ void ThrAdjustment::draw (int currentRun)
 
   if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
   LOG (INFO) << BOLDBLUE << "\t--> ThrAdjustment saving histograms..." << RESET;
 
