@@ -20,8 +20,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package") 
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package") 
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
     MESSAGE(STATUS " ")
 
     cmake_minimum_required(VERSION 2.8)
@@ -66,10 +66,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif()
 
     MESSAGE(STATUS "")
-    MESSAGE(STATUS "${BoldYellow}COMPILATION FLAGS:${Reset}")
-    MESSAGE(STATUS "     CompileForShep = ${BoldRed}${CompileForShep}${Reset}")
-    MESSAGE(STATUS "     CompileForHerd = ${BoldRed}${CompileForHerd}${Reset}")
-    MESSAGE(STATUS "     NoDataShipping = ${BoldRed}${NoDataShipping}${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}COMPILATION FLAGS:${Reset}")
+    MESSAGE(STATUS "    CompileForShep = ${BoldRed}${CompileForShep}${Reset}")
+    MESSAGE(STATUS "    CompileForHerd = ${BoldRed}${CompileForHerd}${Reset}")
+    MESSAGE(STATUS "    NoDataShipping = ${BoldRed}${NoDataShipping}${Reset}")
 
     # If it's a recent gcc compiler, then let's add some
     # compiler options to avoid warnings promoted to errors

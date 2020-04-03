@@ -111,7 +111,7 @@ namespace Ph2_System
 
     std::string cBoardType = cBoardTypeAttribute.value();
 
-    bool cWithOptical=false;
+    bool cWithOptical = false;
     for (pugi::xml_node cChild: pBeBordNode.children("GBT_Links"))
       {
         std::string cName = cChild.name();
@@ -120,23 +120,26 @@ namespace Ph2_System
           {
             for (pugi::xml_attribute cAttribute: cGBT.attributes())
               {
-                if( std::string ( cAttribute.name() ) == "enable")
-                  cWithOptical = cWithOptical | ( convertAnyInt ( cAttribute.value() ) ==1);
+                if (std::string(cAttribute.name()) == "enable")
+                  cWithOptical = cWithOptical | (convertAnyInt(cAttribute.value()) == true);
               }
           }
       }
     cBeBoard->setOptical(cWithOptical);
 
     bool cConfigureCDCE = false;
+    uint32_t cClockRateCDCE = 120;
     for (pugi::xml_node cChild: pBeBordNode.children("CDCE"))
       {
         for (pugi::xml_attribute cAttribute: cChild.attributes())
           {
             if (std::string(cAttribute.name()) == "configure")
-              cConfigureCDCE = cConfigureCDCE | ( convertAnyInt(cAttribute.value()) == true);
+              cConfigureCDCE = cConfigureCDCE | (convertAnyInt(cAttribute.value()) ==1);
+            if (std::string(cAttribute.name()) == "clockRate")
+              cClockRateCDCE = convertAnyInt(cAttribute.value());
           }
       }
-    cBeBoard->setCDCEconfiguration(cConfigureCDCE);
+    cBeBoard->setCDCEconfiguration(cConfigureCDCE,cClockRateCDCE);
 
     if (cWithOptical == true)
       os << BOLDBLUE <<  "|"  << "----" << "Optical link: " << BOLDGREEN << "not being used\n" << RESET;
