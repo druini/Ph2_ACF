@@ -40,7 +40,7 @@ void ThrMinimization::ConfigureCalibration ()
   frontEnd = RD53::getMajorityFE(colStart, colStop);
   colStart = std::max(colStart, frontEnd->colStart);
   colStop  = std::min(colStop, frontEnd->colStop);
-  LOG (INFO) << BOLDBLUE << "\t--> ThrMinimization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << BOLDBLUE << "]" << RESET;
+  LOG (INFO) << GREEN << "ThrMinimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << RESET << GREEN << "]" << RESET;
 
 
   // #######################
@@ -144,7 +144,6 @@ void ThrMinimization::draw (int currentRun)
 
   if (doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
   LOG (INFO) << BOLDBLUE << "\t--> ThrMinimization saving histograms..." << RESET;
 

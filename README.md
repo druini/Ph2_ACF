@@ -9,12 +9,12 @@
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 12/03/2020
++ Last change made to this section: 26/03/2020
 ```
 
 Suggested software and firmware versions:
-- Software git branch / tag : `chipContainer` / `IT-v3.6`
-- Firmware tag: `3.1`
+- Software git branch / tag : `chipContainer` / `IT-v3.7`
+- Firmware tag: `3.2`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 FC7 setup:
@@ -172,9 +172,10 @@ For more information on the firmware, please check the doc directory of https://
 
         $> gcc --version
 
-2. On CC7 you also need to install boost v1.53 headers (default on this system) as they don't ship with uHAL any more:
+2. On CC7 you also need to install boost v1.53 headers (default on this system) and pugixml as they don't ship with uHAL any more:
 
         $> sudo yum install boost-devel
+        $> sudo yum install pugixml-devel
 
 2. Install uHAL. SW tested with uHAL version up to 2.7.1
 

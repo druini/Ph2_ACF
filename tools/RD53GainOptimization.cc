@@ -43,7 +43,7 @@ void GainOptimization::ConfigureCalibration ()
   frontEnd = RD53::getMajorityFE(colStart, colStop);
   colStart = std::max(colStart, frontEnd->colStart);
   colStop  = std::min(colStop, frontEnd->colStop);
-  LOG (INFO) << BOLDBLUE << "\t--> GainOptimization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << BOLDBLUE << "]" << RESET;
+  LOG (INFO) << GREEN << "GainOptimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop << RESET << GREEN << "]" << RESET;
 
 
   // #######################
@@ -147,7 +147,6 @@ void GainOptimization::draw (int currentRun)
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
   LOG (INFO) << BOLDBLUE << "\t--> GainOptimization saving histograms..." << RESET;
 

@@ -206,7 +206,6 @@ void ClockDelay::draw (int currentRun)
 
   if (doDisplay == true) myApp = new TApplication("myApp",nullptr,nullptr);
 
-  this->CreateResultDirectory(RESULTDIR, false, false);
   this->InitResultFile(fileRes);
   LOG (INFO) << BOLDBLUE << "\t--> ClockDelay saving histograms..." << RESET;
 

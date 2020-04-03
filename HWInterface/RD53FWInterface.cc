@@ -869,15 +869,18 @@ namespace Ph2_HwInterface
       }
 
 
-    // #########################
-    // # Decoding event header #
-    // #########################
+    // #######################
+    // # Decode event header #
+    // #######################
     bool dummy_size;
     std::tie(tlu_trigger_id, data_format_ver, dummy_size) = bits::unpack<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_FMTVER, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
     std::tie(tdc, l1a_counter) = bits::unpack<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
     bx_counter = data[3];
 
 
+    // ############################
+    // # Search for frame lengths #
+    // ############################
     std::vector<size_t> event_sizes;
     size_t index = 4;
     while (index < n - dummy_size * NWORDS_DDR3)
@@ -899,9 +902,9 @@ namespace Ph2_HwInterface
       }
 
 
-    // #################################
-    // # Decoding frames and chip data #
-    // #################################
+    // ##############################
+    // # Decode frame and chip data #
+    // ##############################
     chip_frames.reserve(event_sizes.size());
     chip_events.reserve(event_sizes.size());
     index = 4;
@@ -949,7 +952,7 @@ namespace Ph2_HwInterface
   {
     if (cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
-    if (cfg->autozero_source == AutozeroSource::FastCMDFSM) WriteChipCommand(RD53Cmd::WrReg(8, 44, 1 << 14).getFrames(), -1); // GLOBAL_PULSE_RT = "Acquire Zero level in SYNC FE"
+    if (cfg->autozero_source == AutozeroSource::FastCMDFSM) WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 44, 1 << 14).getFrames(), -1); // @TMP@ : GLOBAL_PULSE_RT = "Acquire Zero level in SYNC FE"
 
     // ##################################
     // # Configuring fast command block #
@@ -987,8 +990,7 @@ namespace Ph2_HwInterface
         // # @TMP@ Autozero configuration #
         // ################################
         {"user.ctrl_regs.fast_cmd_reg_2.autozero_source",          (uint32_t)cfg->autozero_source},
-        {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",           (uint32_t)bits::pack<4, 1, 4, 1>(8, 0, 8, 0)}
-        // {"user.ctrl_regs.fast_cmd_reg_7.autozero_freq",  0},
+        {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",           (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, 8, 0)}
       });
 
     SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");

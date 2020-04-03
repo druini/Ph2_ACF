@@ -64,6 +64,12 @@ void Gain::ConfigureCalibration ()
   // # Initialize progress #
   // #######################
   RD53RunProgress::total() += Gain::getNumberIterations();
+
+
+  // ############################################################
+  // # Create directory for: raw data, config files, histograms #
+  // ############################################################
+  this->CreateResultDirectory(RESULTDIR, false, false);
 }
 
 void Gain::Start (int currentRun)
@@ -72,7 +78,7 @@ void Gain::Start (int currentRun)
 
   if (saveBinaryData == true)
     {
-      this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Gain.raw", 'w');
+      this->addFileHandler(std::string(fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Gain.raw", 'w');
       this->initializeFileHandler();
     }
 
@@ -84,22 +90,17 @@ void Gain::Start (int currentRun)
 
 void Gain::sendData ()
 {
-  auto theOccStream              = prepareChannelContainerStreamer<OccupancyAndPh>  ("Occ");
-  auto theGainAndInterceptStream = prepareChannelContainerStreamer<GainAndIntercept>("GainAndIntercept");
+  auto theOccStream              = prepareChannelContainerStreamer<OccupancyAndPh,uint16_t>("Occ");
+  auto theGainAndInterceptStream = prepareChannelContainerStreamer<GainAndIntercept>       ("GainAndIntercept");
 
   if (fStreamerEnabled == true)
     {
       size_t index = 0;
       for (const auto theOccContainer : detectorContainerVector)
         {
-          auto theVCalStream = prepareChannelContainerStreamer<OccupancyAndPh,uint16_t>("VCal");
-          theVCalStream.setHeaderElement(dacList[index]-offset);
+          theOccStream.setHeaderElement(dacList[index]-offset);
 
-          for (const auto cBoard : *theOccContainer)
-            {
-              theOccStream .streamAndSendBoard(cBoard, fNetworkStreamer);
-              theVCalStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-            }
+          for (const auto cBoard : *theOccContainer) theOccStream .streamAndSendBoard(cBoard, fNetworkStreamer);
 
           index++;
         }
@@ -193,7 +194,6 @@ void Gain::draw (int currentRun)
 
   if (currentRun >= 0)
     {
-      this->CreateResultDirectory(RESULTDIR, false, false);
       this->InitResultFile(fileRes);
       LOG (INFO) << BOLDBLUE << "\t--> Gain saving histograms..." << RESET;
     }
@@ -210,6 +210,38 @@ void Gain::draw (int currentRun)
 
   if (doDisplay == true) myApp->Run(true);
 #endif
+
+
+  // #####################
+  // # @TMP@ : CalibFile #
+  // #####################
+  if (saveBinaryData == true)
+    {
+      for (const auto cBoard : *fDetectorContainer)
+        for (const auto cModule : *cBoard)
+          for (const auto cChip : *cModule)
+            {
+              std::stringstream myString;
+              myString.clear(); myString.str("");
+              myString << this->fDirectoryName + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Gain_"
+                       << "B"    << std::setfill('0') << std::setw(2) << cBoard->getId()  << "_"
+                       << "M"    << std::setfill('0') << std::setw(2) << cModule->getId() << "_"
+                       << "C"    << std::setfill('0') << std::setw(2) << cChip->getId()   << ".dat";
+              std::ofstream fileOutID(myString.str(),std::ios::out);
+              for (auto i = 0u; i < dacList.size(); i++)
+                {
+                  fileOutID << "Iteration " << i << " --- reg = " << dacList[i]-offset << std::endl;
+                  for (auto row = 0u; row < RD53::nRows; row++)
+                    for (auto col = 0u; col < RD53::nCols; col++)
+                      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+                        fileOutID << "r " << row << " c " << col
+                                  << " h " << detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy*nEvents
+                                  << " a " << detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh
+                                  << std::endl;
+                }
+              fileOutID.close();
+            }
+    }
 }
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze ()
@@ -269,39 +301,6 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze ()
                      << std::fixed << std::setprecision(4) << cChip->getSummary<GainAndIntercept,GainAndIntercept>().fGain << RESET << GREEN << " (ToT/Delta_VCal)" << std::setprecision(-1) << RESET;
           LOG (INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW << theMaxGainContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>() << RESET;
         }
-
-
-  // #####################
-  // # @TMP@ : CalibFile #
-  // #####################
-  if (saveBinaryData == true)
-    {
-      for (const auto cBoard : *fDetectorContainer)
-        for (const auto cModule : *cBoard)
-          for (const auto cChip : *cModule)
-            {
-              std::stringstream myString;
-              myString.clear(); myString.str("");
-              myString << "Gain_"
-                       << "B"    << std::setfill('0') << std::setw(2) << cBoard->getId()  << "_"
-                       << "M"    << std::setfill('0') << std::setw(2) << cModule->getId() << "_"
-                       << "C"    << std::setfill('0') << std::setw(2) << cChip->getId()   << ".dat";
-              std::ofstream fileOutID(myString.str(),std::ios::out);
-              for (auto i = 0u; i < dacList.size(); i++)
-                {
-                  fileOutID << "Iteration " << i << " --- reg = " << dacList[i]-offset << std::endl;
-                  for (auto row = 0u; row < RD53::nRows; row++)
-                    for (auto col = 0u; col < RD53::nCols; col++)
-                      if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
-                        fileOutID << "r " << row << " c " << col
-                                  << " h " << detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy*nEvents
-                                  << " a " << detectorContainerVector[i]->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fPh
-                                  << std::endl;
-                }
-              fileOutID.close();
-            }
-    }
-
 
   return theGainAndInterceptContainer;
 }
