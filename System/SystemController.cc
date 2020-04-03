@@ -196,7 +196,8 @@ namespace Ph2_System
             size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
             size_t injType     = SystemController::findValueInSettings("INJtype");
             size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, nClkDelays);
+            size_t colStart    = SystemController::findValueInSettings("COLstart");
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, nClkDelays, colStart < RD53::LIN.colStart);
             LOG (INFO) << GREEN << "Configured FSM fast command block" << RESET;
 
 
