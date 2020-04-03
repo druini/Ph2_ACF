@@ -47,7 +47,7 @@ void ThrEqualization::ConfigureCalibration ()
     }
   colStart = std::max(colStart, frontEnd->colStart);
   colStop  = std::min(colStop, frontEnd->colStop);
-  LOG (INFO) << GREEN << "ThrEqualization will run on the " << frontEnd->name << " FE, columns [" << GREEN << BOLDYELLOW << colStart << ", " << colStop << RESET << GREEN << "]" << RESET;
+  LOG (INFO) << GREEN << "ThrEqualization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << GREEN << BOLDYELLOW << colStart << ", " << colStop << RESET << GREEN << "]" << RESET;
 
 
   // ########################

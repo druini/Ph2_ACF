@@ -40,7 +40,7 @@ void ThrMinimization::ConfigureCalibration ()
   frontEnd = RD53::getMajorityFE(colStart, colStop);
   colStart = std::max(colStart, frontEnd->colStart);
   colStop  = std::min(colStop, frontEnd->colStop);
-  LOG (INFO) << GREEN << "ThrMinimization will run on the " << frontEnd->name << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << RESET << GREEN << "]" << RESET;
+  LOG (INFO) << GREEN << "ThrMinimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << RESET << GREEN << "]" << RESET;
 
 
   // #######################

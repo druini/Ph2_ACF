@@ -42,7 +42,7 @@ void ThrAdjustment::ConfigureCalibration ()
   frontEnd = RD53::getMajorityFE(colStart, colStop);
   colStart = std::max(colStart, frontEnd->colStart);
   colStop  = std::min(colStop, frontEnd->colStop);
-  LOG (INFO) << GREEN << "ThrAdjustment will run on the " << frontEnd->name << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop << RESET << GREEN << "]" << RESET;
+  LOG (INFO) << GREEN << "ThrAdjustment will run on the " << RESET<< BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop << RESET << GREEN << "]" << RESET;
 
 
   // #######################
