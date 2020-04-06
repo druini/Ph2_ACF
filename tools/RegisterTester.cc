@@ -20,43 +20,47 @@ void RegisterTester::TestRegisters()
     report.open (fDirectoryName + "/TestReport.txt", std::ofstream::out | std::ofstream::app);
     char line[240];
 
-    for ( auto cBoard : fBoardVector )
+    for ( auto cBoard : *fDetectorContainer )
     {
-        for ( auto cFe : cBoard->fModuleVector )
+        for(auto cOpticalGroup : *cBoard)
         {
-            for ( auto cCbc : cFe->fReadoutChipVector )
+            for ( auto cFe : *cOpticalGroup )
             {
-                ChipRegMap cMap = cCbc->getRegMap();
-
-                for ( const auto& cReg : cMap )
+                for ( auto cCbc : *cFe )
                 {
+                    ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
+                    ChipRegMap cMap = theCbc->getRegMap();
 
-                    if ( !fReadoutChipInterface->WriteChipReg ( cCbc, cReg.first, cFirstBitPattern, true ) )
+                    for ( const auto& cReg : cMap )
                     {
-                        sprintf (line, "# Writing 0x%.2x to CBC Register %s FAILED.\n", cFirstBitPattern, (cReg.first).c_str()  );
-                        LOG (INFO) << BOLDRED << line << RESET ;
-                        report << line ;
-                        fBadRegisters[cCbc->getChipId()] .insert ( cReg.first );
-                        fNBadRegisters++;
+
+                        if ( !fReadoutChipInterface->WriteChipReg ( theCbc, cReg.first, cFirstBitPattern, true ) )
+                        {
+                            sprintf (line, "# Writing 0x%.2x to CBC Register %s FAILED.\n", cFirstBitPattern, (cReg.first).c_str()  );
+                            LOG (INFO) << BOLDRED << line << RESET ;
+                            report << line ;
+                            fBadRegisters[cCbc->getId()] .insert ( cReg.first );
+                            fNBadRegisters++;
+                        }
+
+                        // sleep for 100 ns between register writes
+                        std::this_thread::sleep_for (std::chrono::nanoseconds (100) );
+
+                        if ( !fReadoutChipInterface->WriteChipReg ( theCbc, cReg.first, cSecondBitPattern, true ) )
+                        {
+                            sprintf (line, "# Writing 0x%.2x to CBC Register %s FAILED.\n", cSecondBitPattern, (cReg.first).c_str()  );
+                            LOG (INFO) << BOLDRED << line << RESET ;
+                            report << line ;
+                            fBadRegisters[cCbc->getId()] .insert ( cReg.first );
+                            fNBadRegisters++;
+                        }
+
+                        // sleep for 100 ns between register writes
+                        std::this_thread::sleep_for (std::chrono::nanoseconds (100) );
                     }
 
-                    // sleep for 100 ns between register writes
-                    std::this_thread::sleep_for (std::chrono::nanoseconds (100) );
-
-                    if ( !fReadoutChipInterface->WriteChipReg ( cCbc, cReg.first, cSecondBitPattern, true ) )
-                    {
-                        sprintf (line, "# Writing 0x%.2x to CBC Register %s FAILED.\n", cSecondBitPattern, (cReg.first).c_str()  );
-                        LOG (INFO) << BOLDRED << line << RESET ;
-                        report << line ;
-                        fBadRegisters[cCbc->getChipId()] .insert ( cReg.first );
-                        fNBadRegisters++;
-                    }
-
-                    // sleep for 100 ns between register writes
-                    std::this_thread::sleep_for (std::chrono::nanoseconds (100) );
+                    fBeBoardInterface->ChipReSync ( static_cast<BeBoard*>(cBoard) );
                 }
-
-                fBeBoardInterface->ChipReSync ( cBoard );
             }
         }
     }
@@ -70,32 +74,36 @@ void RegisterTester::TestRegisters()
 void RegisterTester::ReconfigureRegisters (std::string pDirectoryName )
 {
 
-    for (auto& cBoard : fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
-        fBeBoardInterface->ChipReset ( cBoard );
+        fBeBoardInterface->ChipReset ( static_cast<BeBoard*>(cBoard) );
 
-        for (auto& cFe : cBoard->fModuleVector)
+        for(auto cOpticalGroup : *cBoard)
         {
-            for (auto& cCbc : cFe->fReadoutChipVector)
+            for (auto cFe : *cOpticalGroup)
             {
-                std::string pRegFile ;
-
-                if ( pDirectoryName.empty() )
-                    pRegFile = "settings/CbcFiles/Cbc_default_electron.txt";
-                else
+                for (auto cCbc : *cFe)
                 {
-                    char buffer[120];
-                    sprintf (buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cCbc->getFeId(), cCbc->getChipId() );
-                    pRegFile = buffer;
-                }
+                    ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
+                    std::string pRegFile ;
 
-                cCbc->loadfRegMap (pRegFile);
-                fReadoutChipInterface->ConfigureChip ( cCbc );
-                LOG (INFO) << GREEN << "\t\t Successfully (re)configured CBC" << int ( cCbc->getChipId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
+                    if ( pDirectoryName.empty() )
+                        pRegFile = "settings/CbcFiles/Cbc_default_electron.txt";
+                    else
+                    {
+                        char buffer[120];
+                        sprintf (buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cFe->getId(), cCbc->getId() );
+                        pRegFile = buffer;
+                    }
+
+                    theCbc->loadfRegMap (pRegFile);
+                    fReadoutChipInterface->ConfigureChip ( theCbc );
+                    LOG (INFO) << GREEN << "\t\t Successfully (re)configured CBC" << int ( cCbc->getId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
+                }
             }
         }
 
-        fBeBoardInterface->ChipReSync ( cBoard );
+        fBeBoardInterface->ChipReSync ( static_cast<BeBoard*>(cBoard) );
     }
 }
 void RegisterTester::PrintTestReport()

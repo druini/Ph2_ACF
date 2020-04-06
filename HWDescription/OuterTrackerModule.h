@@ -55,15 +55,15 @@ namespace Ph2_HwDescription {
             fCic = nullptr;
         };
 
-        uint8_t getNMPA() const
-        {
-            return fMPAVector.size();
-        }
+        // uint8_t getNMPA() const
+        // {
+        //     return fMPAVector.size();
+        // }
 
-        uint8_t getNSSA() const
-        {
-            return fSSAVector.size();
-        }
+        // uint8_t getNSSA() const
+        // {
+        //     return fSSAVector.size();
+        // }
 
         // /*!
         //  * \brief Adding a Chip to the vector
@@ -97,18 +97,18 @@ namespace Ph2_HwDescription {
             pCic = nullptr;
         }
         
-        void addMPA ( MPA& pMPA )
-        {
-            fMPAVector.push_back ( &pMPA );
-        }
-        void addMPA ( MPA* pMPA )
-        {
-            fMPAVector.push_back ( pMPA );
-        }
+        // void addMPA ( MPA& pMPA )
+        // {
+        //     fMPAVector.push_back ( &pMPA );
+        // }
+        // void addMPA ( MPA* pMPA )
+        // {
+        //     fMPAVector.push_back ( pMPA );
+        // }
 
         Cic *fCic;
-        std::vector < MPA* > fMPAVector;
-        std::vector < SSA* > fSSAVector;
+        // std::vector < MPA* > fMPAVector;
+        // std::vector < SSA* > fSSAVector;
 
       protected:
 

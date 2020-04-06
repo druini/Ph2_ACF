@@ -14,6 +14,7 @@
 
 #include "Definition.h"
 #include "Module.h"
+#include "OpticalGroup.h"
 #include "../Utils/Visitor.h"
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConditionDataSet.h"
@@ -78,8 +79,8 @@ namespace Ph2_HwDescription {
         {
             pVisitor.visitBeBoard ( *this );
 
-            for ( auto& cFe : fModuleVector )
-                cFe->accept ( pVisitor );
+            for ( auto cOpticalGroup : *this )
+                static_cast<OpticalGroup*>(cOpticalGroup)->accept ( pVisitor );
         }
         // void accept( HwDescriptionVisitor& pVisitor ) const {
         //  pVisitor.visit( *this );
@@ -93,7 +94,9 @@ namespace Ph2_HwDescription {
         */
         uint8_t getNFe() const
         {
-            return fModuleVector.size();
+            uint16_t nFe = 0;
+            for(auto opticalGroup : *this) nFe += opticalGroup->size();
+            return nFe;
         }
 
         /*!
@@ -113,31 +116,31 @@ namespace Ph2_HwDescription {
          * \brief Adding a module to the vector
          * \param pModule
          */
-        void addModule ( Module& pModule )
-        {
-            fModuleVector.push_back ( &pModule );
-        }
-        void addModule ( Module* pModule )
-        {
-            fModuleVector.push_back ( pModule );
-        }
+        // void addModule ( Module& pModule )
+        // {
+        //     fModuleVector.push_back ( &pModule );
+        // }
+        // void addModule ( Module* pModule )
+        // {
+        //     fModuleVector.push_back ( pModule );
+        // }
 
-        /*!
-         * \brief Remove a Module from the vector
-         * \param pModuleId
-         * \return a bool which indicate if the removing was successful
-         */
-        bool removeModule ( uint8_t pModuleId );
-        /*!
-         * \brief Get a module from the vector
-         * \param pModuleId
-         * \return a pointer of module, so we can manipulate directly the module contained in the vector
-         */
-        Module* getModule ( uint8_t pModuleId ) const;
-        /*!
-        * \brief Get the Map of the registers
-        * \return The map of register
-        */
+        // /*!
+        //  * \brief Remove a Module from the vector
+        //  * \param pModuleId
+        //  * \return a bool which indicate if the removing was successful
+        //  */
+        // bool removeModule ( uint8_t pModuleId );
+        // /*!
+        //  * \brief Get a module from the vector
+        //  * \param pModuleId
+        //  * \return a pointer of module, so we can manipulate directly the module contained in the vector
+        //  */
+        // Module* getModule ( uint8_t pModuleId ) const;
+        // /*!
+        // * \brief Get the Map of the registers
+        // * \return The map of register
+        // */
         BeBoardRegMap getBeBoardRegMap() const
         {
             return fRegMap;
@@ -247,7 +250,7 @@ namespace Ph2_HwDescription {
             return fSparsifed;
         }
         // Vector of FEModules, each module is supposed to know which FMC slot it is connected to...
-        std::vector< Module* > fModuleVector;
+        // std::vector< Module* > fModuleVector;
 
         int dummyValue_ = 1989;
       protected:

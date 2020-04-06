@@ -77,7 +77,7 @@ namespace Ph2_HwInterface
 
         for (uint8_t cFe = 0; cFe < fNFe_software; cFe++)
         {
-            uint8_t cFeId = pBoard->fModuleVector.at (cFe)->getFeId();
+            uint8_t cFeId = pBoard->at(0)->at (cFe)->getId();
             fFeMask_software |= 1 << cFeId;
         }
 
@@ -97,7 +97,7 @@ namespace Ph2_HwInterface
 
         for (uint8_t cFe = 0; cFe < fNFe_software; cFe++)
         {
-            uint8_t cFeId = pBoard->fModuleVector.at(cFe)->getFeId();
+            uint8_t cFeId = pBoard->at(0)->at(cFe)->getId();
             if (((fFeMask_software >> cFeId) & 1) && ((fFeMask_event >> cFeId) & 1))
             {
                 //uint8_t chip_data_mask = static_cast<uint8_t> ( ( (0xFF000000) & list.at (address_offset + 0) ) >> 24);
@@ -835,9 +835,9 @@ namespace Ph2_HwInterface
         GenericPayload cPayload;
         GenericPayload cStubPayload;
 
-        for (auto cFe : pBoard->fModuleVector)
+        for (auto cFe : *pBoard->at(0))
         {
-            uint8_t cFeId = cFe->getFeId();
+            uint8_t cFeId = cFe->getId();
 
             // firt get the list of enabled front ends
             if (cEnabledFe.find (cFeId) == std::end (cEnabledFe) )
@@ -856,9 +856,9 @@ namespace Ph2_HwInterface
             //TODO
             cStatusPayload.append (this->GetEventCount(), 9);
 
-            for (auto cCbc : cFe->fReadoutChipVector)
+            for (auto cCbc : *cFe)
             {
-                uint8_t cCbcId = cCbc->getChipId();
+                uint8_t cCbcId = cCbc->getId();
                 uint16_t cKey = encodeId (cFeId, cCbcId);
                 EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 

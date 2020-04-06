@@ -36,13 +36,14 @@
 struct Channel
 {
 
-    Channel ( uint8_t pBeId, uint8_t pFeId, uint8_t pCbcId, uint8_t pChannelId );
+    Channel ( uint8_t pBeId, uint8_t pFeId, uint8_t pOpticalGroup, uint8_t pCbcId, uint8_t pChannelId );
     ~Channel();
 
     // members
     // Ids
     uint8_t fBeId;  /*!< Back End ID */
     uint8_t fFeId;  /*!< Front End ID */
+    uint8_t fOpticalGroup;  /*!< Optical Group ID */
     uint8_t fCbcId;  /*!< CBC ID*/
     uint8_t fChannelId;  /*!< Channel Number */
     bool fFitted; /*!< Flag to select the algroithm*/

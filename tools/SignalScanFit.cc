@@ -11,100 +11,103 @@ void SignalScanFit::Initialize ( )
     parseSettings();    
 
     // Initialize all the plots
-    for ( auto& cBoard : fBoardVector )
+    for ( auto cBoard : *fDetectorContainer )
     {
-        for ( auto& cFe : cBoard->fModuleVector )
+        for(auto cOpticalGroup : *cBoard)
         {
-
-            fVCthNbins = int( (1024 / double(fSignalScanStep)) + 1 ); 
-            fVCthMax = double( ( fVCthNbins * fSignalScanStep ) - (double(fSignalScanStep) / 2.) ); //"center" de bins
-            fVCthMin = 0. - ( double(fSignalScanStep) / 2. );
-
-            // Make a canvas for the live plot
-            uint32_t cFeId = cFe->getFeId();
-            fNCbc = 0;//cFe->getNChip();
-            for ( auto cCbc : cFe->fReadoutChipVector )
+            for ( auto cFe : *cOpticalGroup)
             {
-                fNCbc = ( cCbc->getChipId() >= fNCbc ) ? (cCbc->getChipId()+1) : fNCbc; 
-            }
-            TCanvas* ctmpCanvas = new TCanvas ( Form ( "c_online_canvas_fe%d", cFeId ), Form ( "FE%d  Online Canvas", cFeId ) ); 
-            fCanvasMap[cFe] = ctmpCanvas;
 
-            // Histograms
-            TString cName =  Form ( "h_module_thresholdScan_Fe%d", cFeId );
-            TObject* cObj = gROOT->FindObject ( cName );
+                fVCthNbins = int( (1024 / double(fSignalScanStep)) + 1 ); 
+                fVCthMax = double( ( fVCthNbins * fSignalScanStep ) - (double(fSignalScanStep) / 2.) ); //"center" de bins
+                fVCthMin = 0. - ( double(fSignalScanStep) / 2. );
 
-            if ( cObj ) delete cObj;
-            
-            // 2D-plot with all the channels on the x-axis, Vcth on the y-axis and #clusters on the z-axis.
-            cName =  Form ( "h_module_thresholdScan_SingleStripClusters_S0_Fe%d", cFeId );
-            TH2D* cSignalEven = new TH2D ( cName, "Signal threshold vs channel [half strips] ; Even Sensor Strip [half strips] ; Threshold; # of Hits", fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, fVCthNbins, fVCthMin, fVCthMax );
-            bookHistogram ( cFe, "SingleStripClusters_S0", cSignalEven );
-            
-            cName =  Form ( "h_module_thresholdScan_SingleStripClusters_S1_Fe%d", cFeId );
-            TH2D* cSignalOdd = new TH2D ( cName, "Signal threshold vs channel [half strips] ; Odd Sensor Strip [half strips] ; Threshold; # of Hits", fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, fVCthNbins, fVCthMin, fVCthMax );
-            bookHistogram ( cFe, "SingleStripClusters_S1", cSignalOdd );
+                // Make a canvas for the live plot
+                uint32_t cFeId = cFe->getId();
+                fNCbc = 0;//cFe->getNChip();
+                for ( auto cCbc : *cFe)
+                {
+                    fNCbc = ( cCbc->getId() >= fNCbc ) ? (cCbc->getId()+1) : fNCbc; 
+                }
+                TCanvas* ctmpCanvas = new TCanvas ( Form ( "c_online_canvas_fe%d", cFeId ), Form ( "FE%d  Online Canvas", cFeId ) ); 
+                fCanvasMap[cFe] = ctmpCanvas;
 
-            // 2D-plot with all the channels on the x-axis, Vcth on the y-axis and #clusters on the z-axis.
-            cName =  Form ( "h_module_thresholdScan_Fe%d", cFeId );
-            TH2D* cSignalHist = new TH2D ( cName, "Signal threshold vs channel ; Channel # ; Threshold; # of Hits", fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, fVCthNbins, fVCthMin, fVCthMax );
-            bookHistogram ( cFe, "module_signal", cSignalHist );
+                // Histograms
+                TString cName =  Form ( "h_module_thresholdScan_Fe%d", cFeId );
+                TObject* cObj = gROOT->FindObject ( cName );
 
-            // 2D-plot with cluster width on the x-axis, Vcth on y-axis, counts of certain clustersize on z-axis.
-            TH2D* cVCthClusterSizeHist = new TH2D ( Form ( "h_module_clusterSize_per_Vcth_Fe%d", cFeId ), "Cluster size vs Vcth ; Cluster size [strips] ; Threshold [Vcth] ; # clusters", 15, -0.5, 14.5, fVCthNbins, fVCthMin, fVCthMax );
-            bookHistogram ( cFe, "vcth_ClusterSize", cVCthClusterSizeHist );
-
-            // 1D-plot with the number of triggers per VCth
-            TProfile* cNumberOfTriggers = new TProfile ( Form("h_module_totalNumberOfTriggers_Fe%d", cFeId), Form ( "Total number of triggers received ; Threshold [Vcth] ; Number of triggers" ), fVCthNbins, fVCthMin, fVCthMax);
-            bookHistogram ( cFe, "number_of_triggers", cNumberOfTriggers );
-
-            // 1D-plot with the timeout value per VCth
-            TH1D* cNclocks = new TH1D ( Form("h_module_nClocks_Fe%d", cFeId), Form ( "Number of clock cycles spent at each Vcth value ; Threshold [Vcth] ; Number of clocks to wait" ), fVCthNbins, fVCthMin, fVCthMax);
-            bookHistogram ( cFe, "number_of_clocks", cNclocks );
-
-            uint32_t cCbcCount = 0;
-            uint32_t cCbcIdMax = 0;
-
-            for ( auto cCbc : cFe->fReadoutChipVector )
-            {
-                uint32_t cCbcId = cCbc->getChipId();
-                cCbcCount++;
-
-                if ( cCbcId > cCbcIdMax ) cCbcIdMax = cCbcId;
-
-                TString cHistname;
-                TH1D* cHist;
-                TH2D* cHist2D;
-
-                cHistname = Form ( "Fe%dCBC%d_Hits_even", cFeId, cCbcId );
-                cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of hits", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
-                bookHistogram ( cCbc, "Cbc_Hits_even", cHist );
-
-                cHistname = Form ( "Fe%dCBC%d_Hits_odd", cFeId, cCbcId );
-                cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of hits", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
-                bookHistogram ( cCbc, "Cbc_Hits_odd", cHist );
-
-                cHistname = Form ( "Fe%dCBC%d_Clusters2D_even", cFeId, cCbcId );
-                cHist2D = new TH2D ( cHistname, Form("%s ; Threshold [Vcth] ; Cluster Size [strips];Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax , 20 , 0-0.5 , 20-0.5 );
-                bookHistogram ( cCbc, "Cbc_Clusters2D_even", cHist2D );
+                if ( cObj ) delete cObj;
                 
-                cHistname = Form ( "Fe%dCBC%d_Clusters_even", cFeId, cCbcId );
-                cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
-                bookHistogram ( cCbc, "Cbc_Clusters_even", cHist );
-
-                cHistname = Form ( "Fe%dCBC%d_Clusters_odd", cFeId, cCbcId );
-                cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
-                bookHistogram ( cCbc, "Cbc_Clusters_odd", cHist );
+                // 2D-plot with all the channels on the x-axis, Vcth on the y-axis and #clusters on the z-axis.
+                cName =  Form ( "h_module_thresholdScan_SingleStripClusters_S0_Fe%d", cFeId );
+                TH2D* cSignalEven = new TH2D ( cName, "Signal threshold vs channel [half strips] ; Even Sensor Strip [half strips] ; Threshold; # of Hits", fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, fVCthNbins, fVCthMin, fVCthMax );
+                bookHistogram ( cFe, "SingleStripClusters_S0", cSignalEven );
                 
-                cHistname = Form ( "Fe%dCBC%d_Clusters2D_odd", cFeId, cCbcId );
-                cHist2D = new TH2D ( cHistname, Form("%s ; Threshold [Vcth] ; Cluster Size [strips];Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax , 20 , 0-0.5 , 20-0.5 );
-                bookHistogram ( cCbc, "Cbc_Clusters2D_odd", cHist2D );
+                cName =  Form ( "h_module_thresholdScan_SingleStripClusters_S1_Fe%d", cFeId );
+                TH2D* cSignalOdd = new TH2D ( cName, "Signal threshold vs channel [half strips] ; Odd Sensor Strip [half strips] ; Threshold; # of Hits", fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, fVCthNbins, fVCthMin, fVCthMax );
+                bookHistogram ( cFe, "SingleStripClusters_S1", cSignalOdd );
 
-                cHistname = Form ( "Fe%dCBC%d_ClusterSize_even", cFeId, cCbcId );
-                bookHistogram ( cCbc, "Cbc_ClusterSize_even", cHist );
+                // 2D-plot with all the channels on the x-axis, Vcth on the y-axis and #clusters on the z-axis.
+                cName =  Form ( "h_module_thresholdScan_Fe%d", cFeId );
+                TH2D* cSignalHist = new TH2D ( cName, "Signal threshold vs channel ; Channel # ; Threshold; # of Hits", fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, fVCthNbins, fVCthMin, fVCthMax );
+                bookHistogram ( cFe, "module_signal", cSignalHist );
 
-                cHistname = Form ( "Fe%dCBC%d_ClusterSize_odd", cFeId, cCbcId );
-                bookHistogram ( cCbc, "Cbc_ClusterSize_odd", cHist );
+                // 2D-plot with cluster width on the x-axis, Vcth on y-axis, counts of certain clustersize on z-axis.
+                TH2D* cVCthClusterSizeHist = new TH2D ( Form ( "h_module_clusterSize_per_Vcth_Fe%d", cFeId ), "Cluster size vs Vcth ; Cluster size [strips] ; Threshold [Vcth] ; # clusters", 15, -0.5, 14.5, fVCthNbins, fVCthMin, fVCthMax );
+                bookHistogram ( cFe, "vcth_ClusterSize", cVCthClusterSizeHist );
+
+                // 1D-plot with the number of triggers per VCth
+                TProfile* cNumberOfTriggers = new TProfile ( Form("h_module_totalNumberOfTriggers_Fe%d", cFeId), Form ( "Total number of triggers received ; Threshold [Vcth] ; Number of triggers" ), fVCthNbins, fVCthMin, fVCthMax);
+                bookHistogram ( cFe, "number_of_triggers", cNumberOfTriggers );
+
+                // 1D-plot with the timeout value per VCth
+                TH1D* cNclocks = new TH1D ( Form("h_module_nClocks_Fe%d", cFeId), Form ( "Number of clock cycles spent at each Vcth value ; Threshold [Vcth] ; Number of clocks to wait" ), fVCthNbins, fVCthMin, fVCthMax);
+                bookHistogram ( cFe, "number_of_clocks", cNclocks );
+
+                uint32_t cCbcCount = 0;
+                uint32_t cCbcIdMax = 0;
+
+                for ( auto cCbc : *cFe )
+                {
+                    uint32_t cCbcId = cCbc->getId();
+                    cCbcCount++;
+
+                    if ( cCbcId > cCbcIdMax ) cCbcIdMax = cCbcId;
+
+                    TString cHistname;
+                    TH1D* cHist;
+                    TH2D* cHist2D;
+
+                    cHistname = Form ( "Fe%dCBC%d_Hits_even", cFeId, cCbcId );
+                    cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of hits", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
+                    bookHistogram ( cCbc, "Cbc_Hits_even", cHist );
+
+                    cHistname = Form ( "Fe%dCBC%d_Hits_odd", cFeId, cCbcId );
+                    cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of hits", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
+                    bookHistogram ( cCbc, "Cbc_Hits_odd", cHist );
+
+                    cHistname = Form ( "Fe%dCBC%d_Clusters2D_even", cFeId, cCbcId );
+                    cHist2D = new TH2D ( cHistname, Form("%s ; Threshold [Vcth] ; Cluster Size [strips];Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax , 20 , 0-0.5 , 20-0.5 );
+                    bookHistogram ( cCbc, "Cbc_Clusters2D_even", cHist2D );
+                    
+                    cHistname = Form ( "Fe%dCBC%d_Clusters_even", cFeId, cCbcId );
+                    cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
+                    bookHistogram ( cCbc, "Cbc_Clusters_even", cHist );
+
+                    cHistname = Form ( "Fe%dCBC%d_Clusters_odd", cFeId, cCbcId );
+                    cHist = new TH1D ( cHistname, Form("%s ; Threshold [Vcth] ; Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax );
+                    bookHistogram ( cCbc, "Cbc_Clusters_odd", cHist );
+                    
+                    cHistname = Form ( "Fe%dCBC%d_Clusters2D_odd", cFeId, cCbcId );
+                    cHist2D = new TH2D ( cHistname, Form("%s ; Threshold [Vcth] ; Cluster Size [strips];Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax , 20 , 0-0.5 , 20-0.5 );
+                    bookHistogram ( cCbc, "Cbc_Clusters2D_odd", cHist2D );
+
+                    cHistname = Form ( "Fe%dCBC%d_ClusterSize_even", cFeId, cCbcId );
+                    bookHistogram ( cCbc, "Cbc_ClusterSize_even", cHist );
+
+                    cHistname = Form ( "Fe%dCBC%d_ClusterSize_odd", cFeId, cCbcId );
+                    bookHistogram ( cCbc, "Cbc_ClusterSize_odd", cHist );
+                }
             }
         }
     }
@@ -133,33 +136,34 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength )
     {
         LOG (DEBUG) << BLUE << "Threshold: " << +cVCth << " - Iteration " << i << " - Taking data for x*25ns time (see triggers_to_accept in HWDesciption file.)" << RESET;
         // Take Data for all Boards
-        for ( BeBoard* pBoard : fBoardVector )
+        for ( auto pBoard : *fDetectorContainer )
         {
+            BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
             uint32_t cTotalEvents = 0;
-            uint32_t cTriggerSource = fBeBoardInterface->ReadBoardReg( pBoard , "fc7_daq_cnfg.fast_command_block.trigger_source"); // check trigger source
+            uint32_t cTriggerSource = fBeBoardInterface->ReadBoardReg( theBoard , "fc7_daq_cnfg.fast_command_block.trigger_source"); // check trigger source
             double cTime=0;
             uint32_t cTimeout=0;
             if( cTriggerSource == 2 ) 
             {
                 // start the trigger FSM
-                fBeBoardInterface->Start (pBoard);
+                fBeBoardInterface->Start (theBoard);
                 std::this_thread::sleep_for (std::chrono::microseconds (100) );
                 // if timeout is enabled ... then wait here until the trigger FMS is ready 
-                while ( fBeBoardInterface->ReadBoardReg (pBoard, "fc7_daq_stat.fast_command_block.general.fsm_state" ) !=  0 )
+                while ( fBeBoardInterface->ReadBoardReg (theBoard, "fc7_daq_stat.fast_command_block.general.fsm_state" ) !=  0 )
                 {
                     std::this_thread::sleep_for (std::chrono::microseconds (100) );
                 }
-                ReadData( pBoard, false);
-                fBeBoardInterface->Stop (pBoard);
+                ReadData( theBoard, false);
+                fBeBoardInterface->Stop (theBoard);
                 std::this_thread::sleep_for (std::chrono::microseconds (100) );
-                cTimeout = fBeBoardInterface->ReadBoardReg( pBoard , "fc7_daq_cnfg.fast_command_block.triggers_to_accept"); // in units of 25ns periods
+                cTimeout = fBeBoardInterface->ReadBoardReg( theBoard , "fc7_daq_cnfg.fast_command_block.triggers_to_accept"); // in units of 25ns periods
                 cTime = cTimeout*25.0; 
             }
             else 
             {
                 LOG (INFO) << BOLDBLUE << "Generating periodic triggers : sending " << +fNevents << " triggers." << RESET;
                 // start the trigger FSM
-                fBeBoardInterface->Start (pBoard);
+                fBeBoardInterface->Start (theBoard);
                 std::this_thread::sleep_for (std::chrono::microseconds (100) );
                 // if timeout is enabled ... then wait here until the trigger FMS is ready 
                 uint8_t cCounter=0;
@@ -168,13 +172,13 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength )
                     std::this_thread::sleep_for (std::chrono::milliseconds (10) );
                     cCounter+=1;
                 }
-                fBeBoardInterface->Stop (pBoard);
+                fBeBoardInterface->Stop (theBoard);
                 std::this_thread::sleep_for (std::chrono::microseconds (10) );
-                ReadData( pBoard, false);
+                ReadData( theBoard, false);
                 cTimeout = 10e-3;
                 cTime = fNevents * 1e-3;
             }
-            const std::vector<Event*>& cEvents = GetEvents ( pBoard ); // Get the events and play with them    
+            const std::vector<Event*>& cEvents = GetEvents ( theBoard ); // Get the events and play with them    
             double   cTriggerRate = (cEvents.size())/cTime; 
             cTotalEvents = cEvents.size();
             LOG (INFO) << BOLDBLUE << "Vcth: " << +cVCth << ". Recorded " << cTotalEvents << " Events [ average trigger rate " << cTriggerRate << " ]"<< RESET;
@@ -188,71 +192,74 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength )
             {
                 //if( (uint32_t)cEventCounter > cMaxEvents_toProcess ) 
                 //    continue;
-                for ( auto cFe : pBoard->fModuleVector )
+                for(auto cOpticalGroup : *cBoard)
                 {
-                    TH1D* cClocksHist       = static_cast<TH1D*> ( getHist ( cFe, "number_of_clocks" ) );  
-                    TH2D* cClustersS0       = static_cast<TH2D*> ( getHist ( cFe, "SingleStripClusters_S0") );
-                    TH2D* cClustersS1       = static_cast<TH2D*> ( getHist ( cFe, "SingleStripClusters_S1") );
-                    TH2D* cSignalHist       = static_cast<TH2D*> ( getHist ( cFe, "module_signal") );
-                    TH2D* cVcthClusters     = static_cast<TH2D*> ( getHist ( cFe, "vcth_ClusterSize" ) );
-                    TProfile* cEventsHist   = static_cast<TProfile*> ( getHist ( cFe, "number_of_triggers" ) );
-                    if( cEventCounter == 0 )
+                    for ( auto cFe : *cOpticalGroup )
                     {
-                        cClocksHist->Fill( cVCth, cTimeout );
-                        cEventsHist->Fill( cVCth, cTotalEvents );
-                    }
-                    for ( auto cCbc : cFe->fReadoutChipVector )
-                    {
-                        TH1D* cHitsEvenHist         = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_even" ) );
-                        TH1D* cHitsOddHist          = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_odd" ) );
-                        TH1D* cClustersEvenHist     = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Clusters_even" ) );
-                        TH1D* cClustersOddHist      = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Clusters_odd" ) );
-                        TProfile* cClusterSizeEven  = static_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterSize_even" ) );
-                        TProfile* cClusterSizeOdd   = static_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterSize_odd" ) );
-                        TH2D* cClusters2DEvenHist     = dynamic_cast<TH2D*> ( getHist ( cCbc, "Cbc_Clusters2D_even" ) );
-                        TH2D* cClusters2DOddHist      = dynamic_cast<TH2D*> ( getHist ( cCbc, "Cbc_Clusters2D_odd" ) );
-                        std::vector<uint32_t> cHits = cEvent->GetHits( cCbc->getFeId() , cCbc->getChipId() );
-                        LOG (DEBUG) << BOLDBLUE << "Found " << +cHits.size() << " hits in CBC" << +cCbc->getChipId() << RESET;
-                        for ( auto cId : cHits ) 
+                        TH1D* cClocksHist       = static_cast<TH1D*> ( getHist ( cFe, "number_of_clocks" ) );  
+                        TH2D* cClustersS0       = static_cast<TH2D*> ( getHist ( cFe, "SingleStripClusters_S0") );
+                        TH2D* cClustersS1       = static_cast<TH2D*> ( getHist ( cFe, "SingleStripClusters_S1") );
+                        TH2D* cSignalHist       = static_cast<TH2D*> ( getHist ( cFe, "module_signal") );
+                        TH2D* cVcthClusters     = static_cast<TH2D*> ( getHist ( cFe, "vcth_ClusterSize" ) );
+                        TProfile* cEventsHist   = static_cast<TProfile*> ( getHist ( cFe, "number_of_triggers" ) );
+                        if( cEventCounter == 0 )
                         {
-                            LOG (DEBUG) << BOLDBLUE << "\t.... Hit found in channel " << +cId << " i.e. sensor " << (int)(cId%2) << RESET;
-                            // Check which sensor we are on
-                            if ( ( int (cId) % 2 ) == 0 ) 
-                                cHitsEvenHist->Fill( cVCth );
-                            else 
-                                cHitsOddHist->Fill( cVCth );
-
-                            cSignalHist->Fill (cCbc->getChipId() * NCHANNELS + cId, cVCth );
-                            cEventHits++;
-                        }//end for cId 
-                        // Fill the cluster histos, use the middleware clustering
-                        std::vector<Cluster> cClusters = cEvent->getClusters (cCbc->getFeId(), cCbc->getChipId() ); 
-                        cEventClusters += cClusters.size();
-                        // Now fill the ClusterWidth per VCth plots:
-                        for ( auto& cCluster : cClusters )
-                        {
-                            double cClusterSize = cCluster.fClusterWidth;
-                            cVcthClusters->Fill( cClusterSize, cCluster.fClusterWidth ); // Cluster size counter
-                            uint32_t cStrip = cCluster.getBaricentre()*2 + cCbc->getChipId()*127*2;
-                            LOG (DEBUG) << BOLDBLUE << "\t " << cClusterSize << " strip cluster found with center in strip " << cStrip << " [half-strips] of sensor " << +cCluster.fSensor << RESET;
-                            if ( cCluster.fSensor == 0 ) 
-                            {
-                                if( cCluster.fClusterWidth == 1 )
-                                    cClustersS0->Fill( cStrip, cVCth );
-                                cClustersEvenHist->Fill ( cVCth );
-                                cClusterSizeEven->Fill ( cVCth, cClusterSize );
-                                cClusters2DEvenHist->Fill( cVCth, cClusterSize);
-                            } 
-                            else if ( cCluster.fSensor == 1 ) 
-                            {
-                                if( cCluster.fClusterWidth == 1 )
-                                    cClustersS1->Fill( cStrip , cVCth);
-                                cClustersOddHist->Fill ( cVCth );
-                                cClusterSizeOdd->Fill ( cVCth, cClusterSize );
-                                cClusters2DOddHist->Fill( cVCth, cClusterSize);
-                            }
+                            cClocksHist->Fill( cVCth, cTimeout );
+                            cEventsHist->Fill( cVCth, cTotalEvents );
                         }
+                        for ( auto cCbc : *cFe)
+                        {
+                            TH1D* cHitsEvenHist         = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_even" ) );
+                            TH1D* cHitsOddHist          = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Hits_odd" ) );
+                            TH1D* cClustersEvenHist     = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Clusters_even" ) );
+                            TH1D* cClustersOddHist      = dynamic_cast<TH1D*> ( getHist ( cCbc, "Cbc_Clusters_odd" ) );
+                            TProfile* cClusterSizeEven  = static_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterSize_even" ) );
+                            TProfile* cClusterSizeOdd   = static_cast<TProfile*> ( getHist ( cCbc, "Cbc_ClusterSize_odd" ) );
+                            TH2D* cClusters2DEvenHist     = dynamic_cast<TH2D*> ( getHist ( cCbc, "Cbc_Clusters2D_even" ) );
+                            TH2D* cClusters2DOddHist      = dynamic_cast<TH2D*> ( getHist ( cCbc, "Cbc_Clusters2D_odd" ) );
+                            std::vector<uint32_t> cHits = cEvent->GetHits( cFe->getId(), cCbc->getId() );
+                            LOG (DEBUG) << BOLDBLUE << "Found " << +cHits.size() << " hits in CBC" << +cCbc->getChipId() << RESET;
+                            for ( auto cId : cHits ) 
+                            {
+                                LOG (DEBUG) << BOLDBLUE << "\t.... Hit found in channel " << +cId << " i.e. sensor " << (int)(cId%2) << RESET;
+                                // Check which sensor we are on
+                                if ( ( int (cId) % 2 ) == 0 ) 
+                                    cHitsEvenHist->Fill( cVCth );
+                                else 
+                                    cHitsOddHist->Fill( cVCth );
 
+                                cSignalHist->Fill (cCbc->getId() * NCHANNELS + cId, cVCth );
+                                cEventHits++;
+                            }//end for cId 
+                            // Fill the cluster histos, use the middleware clustering
+                            std::vector<Cluster> cClusters = cEvent->getClusters (cFe->getId(), cCbc->getId() ); 
+                            cEventClusters += cClusters.size();
+                            // Now fill the ClusterWidth per VCth plots:
+                            for ( auto& cCluster : cClusters )
+                            {
+                                double cClusterSize = cCluster.fClusterWidth;
+                                cVcthClusters->Fill( cClusterSize, cCluster.fClusterWidth ); // Cluster size counter
+                                uint32_t cStrip = cCluster.getBaricentre()*2 + cCbc->getId()*127*2;
+                                LOG (DEBUG) << BOLDBLUE << "\t " << cClusterSize << " strip cluster found with center in strip " << cStrip << " [half-strips] of sensor " << +cCluster.fSensor << RESET;
+                                if ( cCluster.fSensor == 0 ) 
+                                {
+                                    if( cCluster.fClusterWidth == 1 )
+                                        cClustersS0->Fill( cStrip, cVCth );
+                                    cClustersEvenHist->Fill ( cVCth );
+                                    cClusterSizeEven->Fill ( cVCth, cClusterSize );
+                                    cClusters2DEvenHist->Fill( cVCth, cClusterSize);
+                                } 
+                                else if ( cCluster.fSensor == 1 ) 
+                                {
+                                    if( cCluster.fClusterWidth == 1 )
+                                        cClustersS1->Fill( cStrip , cVCth);
+                                    cClustersOddHist->Fill ( cVCth );
+                                    cClusterSizeOdd->Fill ( cVCth, cClusterSize );
+                                    cClusters2DOddHist->Fill( cVCth, cClusterSize);
+                                }
+                            }
+
+                        }
                     }
                 }
                 cEventCounter+=1;

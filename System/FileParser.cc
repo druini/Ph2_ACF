@@ -10,16 +10,16 @@ using namespace Ph2_HwInterface;
 
 namespace Ph2_System
 {
-  void FileParser::parseHW (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
+  void FileParser::parseHW (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
   {
     //FIXME-FR
     if (pIsFile && pFilename.find(".xml") != std::string::npos)
       {
-        parseHWxml(pFilename, pBeBoardFWMap, pBoardVector, pDetectorContainer, os, pIsFile);
+        parseHWxml(pFilename, pBeBoardFWMap, pDetectorContainer, os, pIsFile);
       }
     else if (!pIsFile)
       {
-        parseHWxml(pFilename, pBeBoardFWMap, pBoardVector, pDetectorContainer, os, pIsFile);
+        parseHWxml(pFilename, pBeBoardFWMap, pDetectorContainer, os, pIsFile);
       }
     else
       {
@@ -38,7 +38,7 @@ namespace Ph2_System
       LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xm";
   }
 
-  void FileParser::parseHWxml (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
+  void FileParser::parseHWxml (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
   {
     int i, j;
 
@@ -77,7 +77,7 @@ namespace Ph2_System
       {
         if (static_cast<std::string>(cBeBoardNode.name()) == "BeBoard")
           {
-            this->parseBeBoard(cBeBoardNode, pBeBoardFWMap, pBoardVector, pDetectorContainer, os);
+            this->parseBeBoard(cBeBoardNode, pBeBoardFWMap, pDetectorContainer, os);
           }
       }
 
@@ -95,12 +95,11 @@ namespace Ph2_System
       os << "*";
   }
 
-  void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os)
+  void FileParser::parseBeBoard (pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
   {
     uint32_t cBeId = pBeBordNode.attribute("Id").as_int();
     BeBoard* cBeBoard = pDetectorContainer->addBoardContainer(cBeId, new BeBoard(cBeId));//FIX Change it to Reference!!!!
-    pBoardVector.emplace_back(cBeBoard);
-
+    
     pugi::xml_attribute cBoardTypeAttribute = pBeBordNode.attribute("boardType");
 
     if (cBoardTypeAttribute == nullptr)
@@ -378,24 +377,25 @@ namespace Ph2_System
 
                     //ok, now I need to loop th CBCs to find page & address and the initial value
 
-                    for (auto cFe : pBoard->fModuleVector )
-                      {
-                        if (cFe->getFeId() != cFeId) continue;
+                    for(auto cOpticalGroup : *pBoard)
+                      for (auto cHybrid : *cOpticalGroup)
+                        {
+                          if (cHybrid->getId() != cFeId) continue;
 
-                        for (auto cCbc : cFe->fReadoutChipVector )
-                          {
-                            if (cCbc->getChipId() != cCbcId) continue;
-                            else if (cCbc->getFeId() == cFeId && cCbc->getChipId() == cCbcId)
-                              {
-                                ChipRegItem cRegItem = cCbc->getRegItem ( cRegName );
-                                cPage = cRegItem.fPage;
-                                cAddress = cRegItem.fAddress;
-                                cValue = cRegItem.fValue;
-                              }
-                            else
-                              LOG (ERROR) << RED << "SLINK ERROR: no Chip with Id " << +cCbcId << " on Fe " << +cFeId << " - check your SLink Settings!";
-                          }
-                      }
+                          for (auto cCbc : *cHybrid)
+                            {
+                              if (cCbc->getId() != cCbcId) continue;
+                              else if (cHybrid->getId() == cFeId && cCbc->getId() == cCbcId)
+                                {
+                                  ChipRegItem cRegItem = static_cast<ReadoutChip*>(cCbc)->getRegItem ( cRegName );
+                                  cPage = cRegItem.fPage;
+                                  cAddress = cRegItem.fAddress;
+                                  cValue = cRegItem.fValue;
+                                }
+                              else
+                                LOG (ERROR) << RED << "SLINK ERROR: no Chip with Id " << +cCbcId << " on Fe " << +cFeId << " - check your SLink Settings!";
+                            }
+                        }
                   }
 
                 cSet->addCondData (cRegName, cUID, cFeId, cCbcId, cPage, cAddress, cValue);
@@ -423,8 +423,7 @@ namespace Ph2_System
                 cFileName = cFilePrefix + expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
             }
             else cFileName = expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
-        ReadoutChip* cSSA = pModule->addChipContainer(cChipId, new SSA ( pModule->getBeId(), pModule->getFMCId(), pModule->getFeId(), cChipId, 0, cFileName ));
-            pModule->addReadoutChip (cSSA);
+          ReadoutChip* cSSA = pModule->addChipContainer(cChipId, new SSA ( pModule->getBeId(), pModule->getFMCId(), pModule->getFeId(), cChipId, 0, cFileName ));
             cSSA->setNumberOfChannels(120);
         this->parseSSASettings (pModuleNode, cSSA);
     }
@@ -456,7 +455,7 @@ namespace Ph2_System
         else
           {
             cModule = pOpticalGroup->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new OuterTrackerModule ( pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
-            cModule->setLinkId( pModuleNode.attribute ( "LinkId" ).as_int() );
+            static_cast<OuterTrackerModule*>(cModule)->setLinkId( pModuleNode.attribute ( "LinkId" ).as_int() );
           }
         // pOpticalGroup->addModule ( cModule );
 
@@ -588,7 +587,6 @@ namespace Ph2_System
 
     uint32_t cChipId = pCbcNode.attribute ( "Id" ).as_int();
     ReadoutChip* cCbc = cModule->addChipContainer( cChipId, new Cbc ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId, cFileName ));
-    cModule->addReadoutChip (cCbc);
     cCbc->setNumberOfChannels(254);
 
     // parse the specific CBC settings so that Registers take precedence
@@ -616,14 +614,14 @@ namespace Ph2_System
 
         int cCounter = 0;
 
-        for (auto cCbc : pModule->fReadoutChipVector)
+          for (auto cCbc : *pModule)
           {
             if (cCounter == 0)
-              this->parseCbcSettings (cGlobalCbcSettingsNode, cCbc, os);
+              this->parseCbcSettings (cGlobalCbcSettingsNode, static_cast<ReadoutChip*>(cCbc), os);
             else
               {
                 std::ofstream cDummy;
-                this->parseCbcSettings (cGlobalCbcSettingsNode, cCbc, cDummy);
+                this->parseCbcSettings (cGlobalCbcSettingsNode, static_cast<ReadoutChip*>(cCbc), cDummy);
               }
 
             cCounter++;
@@ -638,8 +636,8 @@ namespace Ph2_System
             std::string regname = std::string ( cCbcGlobalNode.attribute ( "name" ).value() );
             uint32_t regvalue = convertAnyInt ( cCbcGlobalNode.first_child().value() ) ;
 
-            for (auto cCbc : pModule->fReadoutChipVector)
-              cCbc->setReg ( regname, uint8_t ( regvalue ) ) ;
+            for (auto cCbc : *pModule)
+              static_cast<ReadoutChip*>(cCbc)->setReg ( regname, uint8_t ( regvalue ) ) ;
 
             os << BOLDGREEN << "|" << " " << "|" << "   " << "|" << "----" << cCbcGlobalNode.name()
                << "  " << cCbcGlobalNode.first_attribute().name() << " :"
@@ -889,7 +887,6 @@ namespace Ph2_System
 
     this->parseRD53Settings(theChipNode, theChip, os);
 
-    cModule->addReadoutChip(theChip);
   }
 
   void FileParser::parseGlobalRD53Settings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os)
@@ -905,7 +902,7 @@ namespace Ph2_System
             uint16_t regvalue   = convertAnyInt(attr.value());
             os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
 
-            for (auto theChip : pModule->fReadoutChipVector) theChip->setReg(regname,regvalue,true);
+            for (auto theChip : *pModule) static_cast<ReadoutChip*>(theChip)->setReg(regname,regvalue,true);
           }
       }
   }

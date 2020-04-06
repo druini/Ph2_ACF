@@ -84,7 +84,7 @@ class StubTool : public Tool
     std::vector<Channel *> fChannelVector;
 
     //for our convenience
-    Ph2_HwDescription::Chip* fCbc;
+    Ph2_HwDescription::ReadoutChip* fCbc;
     Ph2_HwDescription::BeBoard* fBoard;
 
     //root stuff

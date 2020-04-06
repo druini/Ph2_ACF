@@ -62,30 +62,32 @@ void LatencyHistograms::fillOccupancy (const DetectorDataContainer& OccupancyCon
   const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
   for (const auto cBoard : OccupancyContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          if (cChip->getSummaryContainer<GenericDataArray<LatencySize>>() == nullptr) continue;
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cHybrid : *cOpticalGroup)
+        for (const auto cChip : *cHybrid)
+          {
+            if (cChip->getSummaryContainer<GenericDataArray<LatencySize>>() == nullptr) continue;
 
-          auto* Occupancy1DHist = Occupancy1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+            auto* Occupancy1DHist = Occupancy1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          for (size_t i = startValue; i <= stopValue; i+=nTRIGxEvent)
-            Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<LatencySize>>().data[(i-startValue)/nTRIGxEvent]);
-        }
+            for (size_t i = startValue; i <= stopValue; i+=nTRIGxEvent)
+              Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<LatencySize>>().data[(i-startValue)/nTRIGxEvent]);
+          }
 }
 
 void LatencyHistograms::fillLatency (const DetectorDataContainer& LatencyContainer)
 {
   for (const auto cBoard : LatencyContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          if (cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cHybrid : *cOpticalGroup)
+        for (const auto cChip : *cHybrid)
+          {
+            if (cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-          auto* LatencyHist = Latency.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+            auto* LatencyHist = Latency.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          for (auto i = 0u; i < nTRIGxEvent; i++) LatencyHist->Fill(cChip->getSummary<uint16_t>() - i);
-        }
+            for (auto i = 0u; i < nTRIGxEvent; i++) LatencyHist->Fill(cChip->getSummary<uint16_t>() - i);
+          }
 }
 
 void LatencyHistograms::process ()

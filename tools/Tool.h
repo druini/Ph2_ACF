@@ -49,9 +49,9 @@ class Tool : public Ph2_System::SystemController
 {
 
     #ifdef __USE_ROOT__
-        using ChipHistogramMap = std::map<Ph2_HwDescription::Chip*, std::map<std::string, TObject*> >;
-        using ModuleHistogramMap = std::map<Ph2_HwDescription::Module*, std::map<std::string, TObject*> >;
-        using BeBoardHistogramMap = std::map<Ph2_HwDescription::BeBoard*, std::map<std::string, TObject*> >;
+        using ChipHistogramMap = std::map<ChipContainer*, std::map<std::string, TObject*> >;
+        using ModuleHistogramMap = std::map<ModuleContainer*, std::map<std::string, TObject*> >;
+        using BeBoardHistogramMap = std::map<BoardContainer*, std::map<std::string, TObject*> >;
         using CanvasMap = std::map<Ph2_HwDescription::FrontEndDescription*, TCanvas*>;
     #endif
 
@@ -82,17 +82,17 @@ class Tool : public Ph2_System::SystemController
     void SoftDestroy  ();
 
     #ifdef __USE_ROOT__
-        void bookHistogram ( Ph2_HwDescription::Chip* pChip, std::string pName, TObject* pObject );
+        void bookHistogram ( ChipContainer* pChip, std::string pName, TObject* pObject );
 
-        void bookHistogram ( Ph2_HwDescription::Module* pModule, std::string pName, TObject* pObject );
+        void bookHistogram ( ModuleContainer* pModule, std::string pName, TObject* pObject );
 
-        void bookHistogram ( Ph2_HwDescription::BeBoard* pBeBoard, std::string pName, TObject* pObject );
+        void bookHistogram ( BoardContainer* pBeBoard, std::string pName, TObject* pObject );
 
-        TObject* getHist ( Ph2_HwDescription::Chip* pChip, std::string pName );
+        TObject* getHist ( ChipContainer* pChip, std::string pName );
 
-        TObject* getHist ( Ph2_HwDescription::Module* pModule, std::string pName );
+        TObject* getHist ( ModuleContainer* pModule, std::string pName );
         
-        TObject* getHist ( Ph2_HwDescription::BeBoard* pBeBoard, std::string pName );
+        TObject* getHist ( BoardContainer* pBeBoard, std::string pName );
 
         void WriteRootFile();
     #endif

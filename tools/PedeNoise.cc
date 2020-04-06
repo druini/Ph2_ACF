@@ -66,37 +66,43 @@ void PedeNoise::disableStubLogic()
 
     for (auto cBoard : *fDetectorContainer)
     {
-        for ( auto cFe : *cBoard )
+        for(auto cOpticalGroup : *cBoard)
         {
-            for ( auto cCbc : *cFe )
+            for ( auto cHybrid : *cOpticalGroup )
             {
-                LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET ;
-                fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth");
-                fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode"           );
-                fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth", 0x23);
-                fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode", 0x00);
+                for ( auto cCbc : *cHybrid )
+                {
+                    LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET ;
+                    fStubLogicValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth");
+                    fHIPCountValue .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode"           );
+                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth", 0x23);
+                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode", 0x00);
+                }
             }
         }
-
     }
 }
 
 void PedeNoise::reloadStubLogic()
 {
     //re-enable stub logic
-    for ( auto cBoard : *fDetectorContainer )
+
+    for (auto cBoard : *fDetectorContainer)
     {
-        for ( auto cFe : *cBoard )
+        for(auto cOpticalGroup : *cBoard)
         {
-            for ( auto cCbc : *cFe )
+            for ( auto cHybrid : *cOpticalGroup )
             {
-                RegisterVector cRegVec;
+                for ( auto cCbc : *cHybrid )
+                {
+                    RegisterVector cRegVec;
 
-                LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
-                cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
-                cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
+                    LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
+                    cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
+                    cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
 
-                fReadoutChipInterface->WriteChipMultReg (static_cast<Cbc*>(cCbc), cRegVec);
+                    fReadoutChipInterface->WriteChipMultReg (static_cast<Cbc*>(cCbc), cRegVec);
+                }
             }
         }
     }
@@ -198,29 +204,31 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
 
     for ( auto cBoard : *fDetectorContainer )
     {
-        for ( auto cFe : *cBoard )
+        for(auto cOpticalGroup : *cBoard)
         {
-            // std::cout << __PRETTY_FUNCTION__ << " The Module Occupancy = " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-
-            for ( auto cCbc : *cFe )
+            for ( auto cFe : *cOpticalGroup )
             {
-                RegisterVector cRegVec;
+                // std::cout << __PRETTY_FUNCTION__ << " The Module Occupancy = " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
 
-                for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
+                for ( auto cCbc : *cFe )
                 {
-                    float occupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
-                    if( occupancy > float ( pNoiseStripThreshold * 0.001 ) )
+                    RegisterVector cRegVec;
+
+                    for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
                     {
-                        char cRegName[11];
-                        sprintf(cRegName, "Channel%03d", iChan + 1 );
-                        // cRegName = Form ( "Channel%03d", iChan + 1 );
-                        cRegVec.push_back ({cRegName, 0xFF });
-                        LOG (INFO) << RED << "Found a noisy channel on CBC " << +cCbc->getId() << " Channel " << iChan  << " with an occupancy of " << occupancy << "; setting offset to " << +0xFF << RESET ;
+                        float occupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
+                        if( occupancy > float ( pNoiseStripThreshold * 0.001 ) )
+                        {
+                            char cRegName[11];
+                            sprintf(cRegName, "Channel%03d", iChan + 1 );
+                            // cRegName = Form ( "Channel%03d", iChan + 1 );
+                            cRegVec.push_back ({cRegName, 0xFF });
+                            LOG (INFO) << RED << "Found a noisy channel on CBC " << +cCbc->getId() << " Channel " << iChan  << " with an occupancy of " << occupancy << "; setting offset to " << +0xFF << RESET ;
+                        }
                     }
+
+                    fReadoutChipInterface->WriteChipMultReg (static_cast<Cbc*>(cCbc), cRegVec);
                 }
-
-                fReadoutChipInterface->WriteChipMultReg (static_cast<Cbc*>(cCbc), cRegVec);
-
             }
         }
 
@@ -247,13 +255,16 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
 
     for (auto cBoard : *fDetectorContainer)
     {
-        for ( auto cFe : *cBoard )
+        for(auto cOpticalGroup : *cBoard)
         {
-            for ( auto cCbc : *cFe )
+            for ( auto cFe : *cOpticalGroup )
             {
-                uint16_t tmpVthr = (static_cast<ReadoutChip*>(cCbc)->getReg("VCth1") + (static_cast<ReadoutChip*>(cCbc)->getReg("VCth2")<<8));
-                cMean+=tmpVthr;
-                ++nCbc;
+                for ( auto cCbc : *cFe )
+                {
+                    uint16_t tmpVthr = (static_cast<ReadoutChip*>(cCbc)->getReg("VCth1") + (static_cast<ReadoutChip*>(cCbc)->getReg("VCth2")<<8));
+                    cMean+=tmpVthr;
+                    ++nCbc;
+                }
             }
         }
     }
@@ -376,26 +387,29 @@ void PedeNoise::extractPedeNoise ()
 
         for ( auto board : *fDetectorContainer)
         {
-            for ( auto module : *board)
+            for ( auto opticalGroup : *board)
             {
-                for ( auto chip : *module )
+                for ( auto hybrid : *opticalGroup)
                 {
-                    for(uint8_t iChannel=0; iChannel<chip->size(); ++iChannel)
+                    for ( auto chip : *hybrid )
                     {
-                        if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
-                        float previousOccupancy = (previousIterator)->second->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
-                        float currentOccupancy  = mIt->second->at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
-                        float binCenter = (mIt->first + (previousIterator)->first)/2.;
+                        for(uint8_t iChannel=0; iChannel<chip->size(); ++iChannel)
+                        {
+                            if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
+                            float previousOccupancy = (previousIterator)->second->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
+                            float currentOccupancy  = mIt->second->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
+                            float binCenter = (mIt->first + (previousIterator)->first)/2.;
 
-                        fThresholdAndNoiseContainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getChannel<ThresholdAndNoise>(iChannel).fThreshold +=
-                            binCenter * (previousOccupancy - currentOccupancy);
+                            fThresholdAndNoiseContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<ThresholdAndNoise>(iChannel).fThreshold +=
+                                binCenter * (previousOccupancy - currentOccupancy);
 
-                        fThresholdAndNoiseContainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getChannel<ThresholdAndNoise>(iChannel).fNoise +=
-                            binCenter * binCenter * (previousOccupancy - currentOccupancy);
+                            fThresholdAndNoiseContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<ThresholdAndNoise>(iChannel).fNoise +=
+                                binCenter * binCenter * (previousOccupancy - currentOccupancy);
 
-                        fThresholdAndNoiseContainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getChannel<ThresholdAndNoise>(iChannel).fThresholdError +=
-                            previousOccupancy - currentOccupancy;
+                            fThresholdAndNoiseContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<ThresholdAndNoise>(iChannel).fThresholdError +=
+                                previousOccupancy - currentOccupancy;
 
+                        }
                     }
                 }
             }
@@ -409,18 +423,21 @@ void PedeNoise::extractPedeNoise ()
     
     for ( auto board : fThresholdAndNoiseContainer)
     {
-        for ( auto module : *board)
+        for ( auto opticalGroup : *board)
         {
-            for ( auto chip : *module )
+            for ( auto module : *opticalGroup)
             {
-                for(uint8_t iChannel=0; iChannel<chip->size(); ++iChannel)
+                for ( auto chip : *module )
                 {
-                    if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
-                    chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold/=chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
-                    chip->getChannel<ThresholdAndNoise>(iChannel).fNoise/=chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
-                    chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise - (chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold * chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold));
-                    chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError = 1;
-                    chip->getChannel<ThresholdAndNoise>(iChannel).fNoiseError = 1;
+                    for(uint8_t iChannel=0; iChannel<chip->size(); ++iChannel)
+                    {
+                        if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
+                        chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold/=chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
+                        chip->getChannel<ThresholdAndNoise>(iChannel).fNoise/=chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
+                        chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise - (chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold * chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold));
+                        chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError = 1;
+                        chip->getChannel<ThresholdAndNoise>(iChannel).fNoiseError = 1;
+                    }
                 }
             }
         }
@@ -444,23 +461,26 @@ void PedeNoise::producePedeNoisePlots()
 
 void PedeNoise::setThresholdtoNSigma (BoardContainer* board, uint32_t pNSigma)
 {
-    for ( auto module : *board)
+    for ( auto opticalGroup : *board)
     {
-        for ( auto chip : *module )
+        for ( auto hybrid : *opticalGroup)
         {
-            uint32_t cCbcId = chip->getId();
-            
-            uint16_t cPedestal = round (fThresholdAndNoiseContainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold);
-            uint16_t cNoise    = round (fThresholdAndNoiseContainer.at(board->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fNoise);
-            int cDiff = -pNSigma * cNoise;
-            uint16_t cValue = cPedestal + cDiff;
+            for ( auto chip : *hybrid )
+            {
+                uint32_t cCbcId = chip->getId();
+                
+                uint16_t cPedestal = round (fThresholdAndNoiseContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold);
+                uint16_t cNoise    = round (fThresholdAndNoiseContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fNoise);
+                int cDiff = -pNSigma * cNoise;
+                uint16_t cValue = cPedestal + cDiff;
 
 
-            if (pNSigma > 0) LOG (INFO) << "Changing Threshold on CBC " << +cCbcId << " by " << cDiff << " to " << cPedestal + cDiff << " VCth units to supress noise!" ;
-            else LOG (INFO) << "Changing Threshold on CBC " << +cCbcId << " back to the pedestal at " << +cPedestal ;
+                if (pNSigma > 0) LOG (INFO) << "Changing Threshold on CBC " << +cCbcId << " by " << cDiff << " to " << cPedestal + cDiff << " VCth units to supress noise!" ;
+                else LOG (INFO) << "Changing Threshold on CBC " << +cCbcId << " back to the pedestal at " << +cPedestal ;
 
-            ThresholdVisitor cThresholdVisitor (fReadoutChipInterface, cValue);
-            static_cast<ReadoutChip*>(chip)->accept (cThresholdVisitor);
+                ThresholdVisitor cThresholdVisitor (fReadoutChipInterface, cValue);
+                static_cast<ReadoutChip*>(chip)->accept (cThresholdVisitor);
+            }
         }
     }
 }

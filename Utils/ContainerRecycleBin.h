@@ -8,21 +8,25 @@
 template<typename... Ts>
 using TestType = decltype(ContainerFactory::copyAndInitStructure(std::declval<const DetectorContainer&>(), std::declval<DetectorDataContainer&>(), std::declval<Ts&>()...))(const DetectorContainer&, DetectorDataContainer&, Ts&...);
 
-template<typename T, typename SC, typename SM, typename SB, typename SD>
-void reinitializeContainer(DetectorDataContainer *theDataContainer, T& channel, SC& chipSummary, SM& moduleSummary, SB& boardSummary, SD& detectorSummary)
+template<typename T, typename SC, typename SM, typename SO, typename SB, typename SD>
+void reinitializeContainer(DetectorDataContainer *theDataContainer, T& channel, SC& chipSummary, SM& moduleSummary, SO& opticalGroupSummary, SB& boardSummary, SD& detectorSummary)
 {
     theDataContainer->resetSummary<SD, SB>(detectorSummary);
     for(auto board : *theDataContainer)
     {
-        board->resetSummary<SB, SM>(boardSummary);
-        for(auto module : *board)
+        board->resetSummary<SB, SO>(boardSummary);
+        for(auto opticalGroup : *board)
         {
-            module->resetSummary<SM, SC>(moduleSummary);
-            for(auto chip : *module)
+            opticalGroup->resetSummary<SO, SM>(opticalGroupSummary);
+            for(auto module : *opticalGroup)
             {
-                chip->resetSummary<SC, T>(chipSummary);
-                chip->resetChannels<T>(channel);
-            }   
+                module->resetSummary<SM, SC>(moduleSummary);
+                for(auto chip : *module)
+                {
+                    chip->resetSummary<SC, T>(chipSummary);
+                    chip->resetChannels<T>(channel);
+                }   
+            }
         }
     }
 }
@@ -30,13 +34,13 @@ void reinitializeContainer(DetectorDataContainer *theDataContainer, T& channel, 
 template<typename T, typename S>
 void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel, S& summay)
 {
-    reinitializeContainer<T,S,S,S,S>(theDataContainer, channel, summay, summay, summay, summay);
+    reinitializeContainer<T,S,S,S,S,S>(theDataContainer, channel, summay, summay, summay, summay, summay);
 }
 
 template<typename T>
 void reinitializeContainer(DetectorDataContainer *theDataContainer, T& channel)
 {
-    reinitializeContainer<T,T,T,T,T>(theDataContainer, channel, channel, channel, channel, channel); 
+    reinitializeContainer<T,T,T,T,T,T>(theDataContainer, channel, channel, channel, channel, channel, channel); 
 }
 
 

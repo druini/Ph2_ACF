@@ -57,14 +57,15 @@ void ShortFinder::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(cFirmwareTPdelay,cFirmwareTriggerDelay,1000);
 
     // check that the hits are there... so find test pulse
-    for (auto cBoard : this->fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
+        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         //first, set VCth to the target value for each CBC
-        this->setSameDacBeBoard(cBoard , "VCth", pThreshold);
+        this->setSameDacBeBoard(theBoard , "VCth", pThreshold);
         auto& cThisShortsContainer = fShortsContainer.at(cBoard->getIndex());
         uint16_t cMinValue=0;
-        uint16_t cDelay = fBeBoardInterface->ReadBoardReg( cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse") ;
-        this->setSameDacBeBoard(cBoard, "TriggerLatency", cDelay-1);
+        uint16_t cDelay = fBeBoardInterface->ReadBoardReg( theBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse") ;
+        this->setSameDacBeBoard(theBoard, "TriggerLatency", cDelay-1);
         uint8_t cTestGroup=0;
         for(auto cGroup : *fChannelGroupHandler)
         {
@@ -72,36 +73,39 @@ void ShortFinder::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
             // bitset for this group
             std::bitset<NCHANNELS> cBitset = std::bitset<NCHANNELS>( static_cast<const ChannelGroup<NCHANNELS>*>(cGroup)->getBitset() );
             LOG (INFO) << "Injecting charge into front-end object using test capacitor " << +cTestGroup << " : L1A latency set to " << +cDelay << RESET; 
-            this->ReadNEvents ( cBoard , fEventsPerPoint );
-            const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
-            for (auto& cFe : cBoard->fModuleVector)
+            this->ReadNEvents ( theBoard , fEventsPerPoint );
+            const std::vector<Event*>& cEvents = this->GetEvents ( theBoard );
+            for(auto cOpticalGroup : *cBoard)
             {
-                auto& cHybridShorts = cThisShortsContainer->at(cFe->getIndex());
-                for (auto& cChip : cFe->fReadoutChipVector) 
+                for (auto cFe : *cOpticalGroup)
                 {
-                    auto& cReadoutChipShorts = cHybridShorts->at(cChip->getIndex());
-                    int cNhits=0;
-                    for( auto cEvent : cEvents ) 
+                    auto& cHybridShorts = cThisShortsContainer->at(cOpticalGroup->getIndex())->at(cFe->getIndex());
+                    for (auto cChip : *cFe) 
                     {
-                        // Debug information
-                        auto cEventCount = cEvent->GetEventCount(); 
-                        // Hits
-                        auto cHits = cEvent->GetHits( cFe->getId(), cChip->getId() ) ;
-                        LOG (INFO) << BOLDBLUE << "\t\tGroup " << +cTestGroup << " FE" << +cFe->getFeId() << " .. CBC" << +cChip->getId() << ".. Event " << +cEventCount << " FE" << +cFe->getId() << " - " << +cHits.size() << " hits found/" << +cBitset.count() << " channels in test group" << RESET;
-                        for ( auto cHit : cHits )
+                        auto& cReadoutChipShorts = cHybridShorts->at(cChip->getIndex());
+                        int cNhits=0;
+                        for( auto cEvent : cEvents ) 
                         {
-                            if (cBitset[cHit] == 0) 
+                            // Debug information
+                            auto cEventCount = cEvent->GetEventCount(); 
+                            // Hits
+                            auto cHits = cEvent->GetHits( cFe->getId(), cChip->getId() ) ;
+                            LOG (INFO) << BOLDBLUE << "\t\tGroup " << +cTestGroup << " OG" << +cOpticalGroup->getId() <<  " FE" << +cFe->getId() << " .. CBC" << +cChip->getId() << ".. Event " << +cEventCount << " FE" << +cFe->getId() << " - " << +cHits.size() << " hits found/" << +cBitset.count() << " channels in test group" << RESET;
+                            for ( auto cHit : cHits )
                             {
-                                cReadoutChipShorts->getChannelContainer<int>()->at(cHit)+=1;
+                                if (cBitset[cHit] == 0) 
+                                {
+                                    cReadoutChipShorts->getChannelContainer<int>()->at(cHit)+=1;
+                                }
                             }
+                            cNhits += cHits.size();
                         }
-                        cNhits += cHits.size();
+                        // get list of channels with hits; remember - I've only added a hit if the channel is not in this test group 
+                        auto cShorts = cReadoutChipShorts->getChannelContainer<int>();
+                        float cNshorts = cShorts->size() - std::count (cShorts->begin(), cShorts->end(), 0) ; //
+                        LOG (INFO) << BOLDBLUE << "\t\t\t FE" << +cFe->getId() << " CBC" << +cChip->getId() << " : number of shorts is  " << cNshorts << RESET;
+                
                     }
-                    // get list of channels with hits; remember - I've only added a hit if the channel is not in this test group 
-                    auto cShorts = cReadoutChipShorts->getChannelContainer<int>();
-                    float cNshorts = cShorts->size() - std::count (cShorts->begin(), cShorts->end(), 0) ; //
-                    LOG (INFO) << BOLDBLUE << "\t\t\t FE" << +cFe->getFeId() << " CBC" << +cChip->getId() << " : number of shorts is  " << cNshorts << RESET;
-            
                 }
             }
             cTestGroup++;

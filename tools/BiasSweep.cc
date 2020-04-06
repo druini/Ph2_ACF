@@ -119,34 +119,38 @@ void BiasSweep::Initialize()
     //initialize empty bias sweep object
     fData = new BiasSweepData();
 
-    for (auto cBoard : fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
-        for (auto cFe : cBoard->fModuleVector)
+        for(auto cOpticalGroup : *cBoard)
         {
-            fType = cFe->getFrontEndType();
-
-            for (auto cCbc : cFe->fReadoutChipVector)
+            for (auto cHybrid : *cOpticalGroup)
             {
-                cName = Form ("BiasSweep_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getChipId() );
-                cObj = gROOT->FindObject (cName);
+                Module* theHybrid = static_cast<Module*>(cHybrid);
+                fType = theHybrid->getFrontEndType();
 
-                if (cObj) delete cObj;
+                for (auto cCbc : *cHybrid)
+                {
+                    cName = Form ("BiasSweep_Fe%d_Cbc%d", cHybrid->getId(), cCbc->getId() );
+                    cObj = gROOT->FindObject (cName);
 
-                TTree* cTmpTree = new TTree (cName, cName);
-                //cTmpTree->Branch (Form ("BiasSweepData_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getChipId() ), "BiasSweepData", &fData);
-                cTmpTree->Branch ("Bias", &fData->fBias);
-                cTmpTree->Branch ("Fe", &fData->fFeId, "Fe/s" );
-                cTmpTree->Branch ("Chip", &fData->fCbcId, "Chip/s" );
-                cTmpTree->Branch ("Time", &fData->fTimestamp, "Time/l" );
-                cTmpTree->Branch ("Unit", &fData->fUnit, "Unit/C" );
-                cTmpTree->Branch ("InitialBiasValue", &fData->fInitialXValue, "InitialDAC/s");
-                cTmpTree->Branch ("InitialDMMValue", &fData->fInitialYValue, "InitialDMM/F");
-                cTmpTree->Branch ("BiasValues", &fData->fXValues);
-                cTmpTree->Branch ("DMMValues", &fData->fYValues);
+                    if (cObj) delete cObj;
 
-                this->bookHistogram (cCbc, "DataTree", cTmpTree);
+                    TTree* cTmpTree = new TTree (cName, cName);
+                    //cTmpTree->Branch (Form ("BiasSweepData_Fe%d_Cbc%d", cHybrid->getId(), cCbc->getId() ), "BiasSweepData", &fData);
+                    cTmpTree->Branch ("Bias", &fData->fBias);
+                    cTmpTree->Branch ("Fe", &fData->fFeId, "Fe/s" );
+                    cTmpTree->Branch ("Chip", &fData->fCbcId, "Chip/s" );
+                    cTmpTree->Branch ("Time", &fData->fTimestamp, "Time/l" );
+                    cTmpTree->Branch ("Unit", &fData->fUnit, "Unit/C" );
+                    cTmpTree->Branch ("InitialBiasValue", &fData->fInitialXValue, "InitialDAC/s");
+                    cTmpTree->Branch ("InitialDMMValue", &fData->fInitialYValue, "InitialDMM/F");
+                    cTmpTree->Branch ("BiasValues", &fData->fXValues);
+                    cTmpTree->Branch ("DMMValues", &fData->fYValues);
 
-                LOG (INFO) << "TTree for BiasSweep data for Fe " << +cCbc->getFeId() << " Chip " << +cCbc->getChipId() << " created!";
+                    this->bookHistogram (cCbc, "DataTree", cTmpTree);
+
+                    LOG (INFO) << "TTree for BiasSweep data for Fe " << +cHybrid->getId() << " Chip " << +cCbc->getId() << " created!";
+                }
             }
         }
 

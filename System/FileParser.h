@@ -51,7 +51,7 @@ namespace Ph2_System
     FileParser()  {}
     ~FileParser() {}
 
-    void parseHW      (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile );
+    void parseHW      (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile );
     void parseSettings(const std::string& pFilename, SettingsMap&  pSettingsMap,                                                                   std::ostream& os, bool pIsFile );
 
   protected:
@@ -71,7 +71,7 @@ namespace Ph2_System
      * \param pFilename : HW Description file
      *\param os : ostream to dump output
      */
-    void parseHWxml (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile);
+    void parseHWxml (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile);
 
     /*!
      * \brief Initialize the hardware via xml config file
@@ -80,7 +80,7 @@ namespace Ph2_System
      */
     void parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile );
 
-    void parseBeBoard                (pugi::xml_node pBeBordNode,   BeBoardFWMap& pBeBoardFWMap, BeBoardVec& pBoardVector, DetectorContainer* pDetectorContainer, std::ostream& os );
+    void parseBeBoard                (pugi::xml_node pBeBordNode,   BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os );
     void parseRegister               (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os );
     void parseSLink                  (pugi::xml_node pSLinkNode       , Ph2_HwDescription::BeBoard*      pBoard       , std::ostream& os );
     void parseOpticalGroupContainer  (pugi::xml_node pOpticalGroupNode, Ph2_HwDescription::BeBoard*      pBoard       , std::ostream& os );

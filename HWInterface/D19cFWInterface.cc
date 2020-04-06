@@ -522,20 +522,24 @@ namespace Ph2_HwInterface
         // get link Ids 
         std::vector<uint8_t> cLinkIds;
         
-        for (auto& cFe : pBoard->fModuleVector)
+        for (auto cOpticalReadout : *pBoard)
         {
-            LOG (INFO) << BOLDBLUE << "Link " << +cFe->getLinkId() << RESET;
-            if ( std::find(cLinkIds.begin(), cLinkIds.end(), cFe->getLinkId() ) == cLinkIds.end() )
+            for (auto cHybrid : *cOpticalReadout)
             {
-                cLinkIds.push_back(cFe->getLinkId() );
-                //GBTInterface cControlGBTx;
-                //uint32_t cReadBack = cControlGBTx.icRead( this, 50 , 1); //watchdog on
-                //cControlGBTx.icWrite(this, 50, (cReadBack & 0xF8) |  0x7 );
+                Module* theHybrid = static_cast<Module*>(cHybrid);
+                LOG (INFO) << BOLDBLUE << "Link " << +theHybrid->getLinkId() << RESET;
+                if ( std::find(cLinkIds.begin(), cLinkIds.end(), theHybrid->getLinkId() ) == cLinkIds.end() )
+                {
+                    cLinkIds.push_back(theHybrid->getLinkId() );
+                    //GBTInterface cControlGBTx;
+                    //uint32_t cReadBack = cControlGBTx.icRead( this, 50 , 1); //watchdog on
+                    //cControlGBTx.icWrite(this, 50, (cReadBack & 0xF8) |  0x7 );
 
-                //cControlGBTx.icWrite(this, 50, (cReadBack & 0xC7) |  (0x7 << 3 ));
-                //std::this_thread::sleep_for (std::chrono::milliseconds (200) );
-                //cControlGBTx.icWrite(this, 50, (cReadBack & 0xC7) |  (0x0 << 3 ));
-                //std::this_thread::sleep_for (std::chrono::milliseconds (200) );
+                    //cControlGBTx.icWrite(this, 50, (cReadBack & 0xC7) |  (0x7 << 3 ));
+                    //std::this_thread::sleep_for (std::chrono::milliseconds (200) );
+                    //cControlGBTx.icWrite(this, 50, (cReadBack & 0xC7) |  (0x0 << 3 ));
+                    //std::this_thread::sleep_for (std::chrono::milliseconds (200) );
+                }
             }
         }
         //reset GBT-FPGA
@@ -597,10 +601,15 @@ namespace Ph2_HwInterface
     void D19cFWInterface::configureLink(const BeBoard* pBoard )
     {
         std::vector<uint8_t> cLinkIds(0);
-        for (auto& cFe : pBoard->fModuleVector)
+
+        for (auto& cOpticalReadout : *pBoard)
         {
-            if ( std::find(cLinkIds.begin(), cLinkIds.end(), cFe->getLinkId() ) == cLinkIds.end() )
-                cLinkIds.push_back(cFe->getLinkId() );
+            for (auto& cHybrid : *cOpticalReadout)
+            {
+                Module* theHybrid = static_cast<Module*>(cHybrid);
+                if ( std::find(cLinkIds.begin(), cLinkIds.end(), theHybrid->getLinkId() ) == cLinkIds.end() )
+                    cLinkIds.push_back(theHybrid->getLinkId() );
+            }
         }
 
         // now configure SCA + GBTx 
@@ -647,6 +656,7 @@ namespace Ph2_HwInterface
           std::this_thread::sleep_for (std::chrono::milliseconds (100) );
         }
     }
+
     void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
     {
         //this is where I should get all the clocking and FastCommandInterface settings
@@ -782,10 +792,14 @@ namespace Ph2_HwInterface
         }
         // unique link Ids
         std::vector<uint8_t> cLinkIds(0);
-        for (auto& cFe : pBoard->fModuleVector)
+        for (auto& cOpticalReadout : *pBoard)
         {
-            if ( std::find(cLinkIds.begin(), cLinkIds.end(), cFe->getLinkId() ) == cLinkIds.end() )
-                cLinkIds.push_back(cFe->getLinkId() );
+            for (auto& cHybrid : *cOpticalReadout)
+            {
+                Module* theHybrid = static_cast<Module*>(cHybrid);
+                if ( std::find(cLinkIds.begin(), cLinkIds.end(), theHybrid->getLinkId() ) == cLinkIds.end() )
+                    cLinkIds.push_back(theHybrid->getLinkId() );
+            }
         }
 
         // read info about current firmware
@@ -821,7 +835,7 @@ namespace Ph2_HwInterface
         if( fFirmwareFrontEndType == FrontEndType::CIC ||  fFirmwareFrontEndType == FrontEndType::CIC2 ) 
         {
             // assuming only one type of CIC per board ... 
-            auto& cCic = static_cast<OuterTrackerModule*>(pBoard->fModuleVector[0])->fCic;
+            auto& cCic = static_cast<OuterTrackerModule*>(pBoard->at(0)->at(0))->fCic;
             std::vector< std::pair<std::string, uint32_t> > cVecReg;
                 // make sure CIC is receiving clock 
             //cVecReg.push_back( {"fc7_daq_cnfg.physical_interface_block.cic.clock_enable" , 1 } ) ;
@@ -829,7 +843,7 @@ namespace Ph2_HwInterface
             cVecReg.push_back( {"fc7_daq_cnfg.stub_debug.enable" , 0 } ) ;
             std::string cFwRegName = "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable";
             std::string cRegName = ( cCic->getFrontEndType()  == FrontEndType::CIC ) ? "CBC_SPARSIFICATION_SEL" : "FE_CONFIG"; 
-            ChipRegItem cRegItem = static_cast<OuterTrackerModule*>(pBoard->fModuleVector[0])->fCic->getRegItem (cRegName);
+            ChipRegItem cRegItem = static_cast<OuterTrackerModule*>(pBoard->at(0)->at(0))->fCic->getRegItem (cRegName);
             uint8_t cRegValue = (cCic->getFrontEndType()  == FrontEndType::CIC ) ? cRegItem.fValue  :  (cRegItem.fValue & 0x10) >> 4;
             LOG (INFO) << BOLDBLUE << "Sparsification set to " << +cRegValue << RESET;
             cVecReg.push_back( { cFwRegName , (cCic->getFrontEndType()  == FrontEndType::CIC ) ? cRegItem.fValue  :  (cRegItem.fValue & 0x10) >> 4}  ) ;
@@ -861,12 +875,16 @@ namespace Ph2_HwInterface
         // after firmware loading it seems that I need this ... so putting it in
         if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
         {
-            for (Module* cModule : pBoard->fModuleVector)
+            for (auto cOpticalGroup : *pBoard)
             {
+                for (auto cHybrid : *cOpticalGroup)
+                {
+                    Module* theHybrid = static_cast<Module*>(cHybrid);
                     if( pBoard->ifOptical() )
-                        this->selectLink(  cModule->getLinkId() );
+                        this->selectLink(  theHybrid->getLinkId() );
                     this->ChipReset();
-            }
+                }
+            }  
         }
         else
         {
@@ -893,72 +911,76 @@ namespace Ph2_HwInterface
         this->ChipReSync();
 
         // now check that I2C communication is functioning
-        for (Module* cFe : pBoard->fModuleVector)
+        for(auto cOpticalGroup : *pBoard)
         {
-            this->selectLink( cFe->getLinkId() );
-            std::vector<uint32_t> cVec; 
-            std::vector<uint32_t> cReplies;
-            uint8_t cChipsEnable=0x00;
-            LOG (INFO) << BOLDBLUE << "Enabling FE hybrid : " << +cFe->getFeId() << " - link Id " << +cFe->getLinkId() << RESET;
-            for ( Chip* cReadoutChip : cFe->fReadoutChipVector)
+            for (auto cHybrid : *cOpticalGroup)
             {
-                cVec.clear();       
+                Module* theHybrid = static_cast<Module*>(cHybrid);
+                this->selectLink( theHybrid->getLinkId() );
+                std::vector<uint32_t> cVec; 
+                std::vector<uint32_t> cReplies;
+                uint8_t cChipsEnable=0x00;
+                LOG (INFO) << BOLDBLUE << "Enabling FE hybrid : " << +theHybrid->getFeId() << " - link Id " << +theHybrid->getLinkId() << RESET;
+                for (auto cReadoutChip : *theHybrid)
+                {
+                    ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
+                    cVec.clear();       
+                    cReplies.clear();
+                    // find first non-zero register in the map 
+                    size_t cIndex=0;
+                    auto cRegisterMap = theReadoutChip->getRegMap();
+                    auto cIterator = cRegisterMap.begin();
+                    do
+                    {
+                    cIndex++;
+                    if( (*cIterator).second.fValue != 0 )
+                        cIterator++;
+                    }while( (*cIterator).second.fValue != 0 && cIndex < cRegisterMap.size() );
+                    ChipRegItem cRegItem = theReadoutChip->getRegItem (  (*cIterator).first );
+                    bool cWrite=false;
+                    this->EncodeReg( cRegItem, cHybrid->getId(), cReadoutChip->getId() , cVec , true, cWrite ) ; 
+                    bool cWriteSuccess = !this->WriteI2C ( cVec, cReplies, true, false);
+                    if( cWriteSuccess) 
+                    {
+                        LOG (INFO) << BOLDGREEN << "Successful read from " << (*cIterator).first << " [first non-zero I2C register of CBC] on hybrid " << +cHybrid->getId() << " .... Enabling CBC" << +cReadoutChip->getId() << RESET;
+                        cChipsEnable |= ( 1 << cReadoutChip->getId());
+                        fNReadoutChip++;
+                    }
+                }
+                char name[50];
+                std::sprintf (name, "fc7_daq_cnfg.global.chips_enable_hyb_%02d", cHybrid->getId() );
+                std::string name_str (name);
+                cVecReg.push_back ({name_str, cChipsEnable});
+                LOG (INFO) << BOLDBLUE << "Setting chips enable register on hybrid" << +cHybrid->getId() << " to " << std::bitset<32>( cChipsEnable ) << RESET;
+                
+                cVec.clear();
                 cReplies.clear();
-                // find first non-zero register in the map 
-                size_t cIndex=0;
-                auto cRegisterMap = cReadoutChip->getRegMap();
-                auto cIterator = cRegisterMap.begin();
-                do
+                if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
                 {
-                  cIndex++;
-                  if( (*cIterator).second.fValue != 0 )
-                    cIterator++;
-                }while( (*cIterator).second.fValue != 0 && cIndex < cRegisterMap.size() );
-                ChipRegItem cRegItem = cReadoutChip->getRegItem (  (*cIterator).first );
-                bool cWrite=false;
-                this->EncodeReg( cRegItem, cFe->getFeId(), cReadoutChip->getChipId() , cVec , true, cWrite ) ; 
-                bool cWriteSuccess = !this->WriteI2C ( cVec, cReplies, true, false);
-                if( cWriteSuccess) 
-                {
-                    LOG (INFO) << BOLDGREEN << "Successful read from " << (*cIterator).first << " [first non-zero I2C register of CBC] on hybrid " << +cFe->getFeId() << " .... Enabling CBC" << +cReadoutChip->getChipId() << RESET;
-                    cChipsEnable |= ( 1 << cReadoutChip->getChipId());
-                    fNReadoutChip++;
+                    auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                    size_t cIndex=0;
+                    auto cRegisterMap = cCic->getRegMap();
+                    auto cIterator = cRegisterMap.begin();
+                    do
+                    {
+                    cIndex++;
+                    if( (*cIterator).second.fValue != 0 )
+                        cIterator++;
+                    }while( (*cIterator).second.fValue != 0 && cIndex < cRegisterMap.size() );
+                    ChipRegItem cRegItem = cCic->getRegItem ( (*cIterator).first );
+                    bool cWrite=false;
+                    this->EncodeReg( cRegItem, cHybrid->getId(), cCic->getChipId() , cVec , true, cWrite ) ; 
+                    bool cWriteSuccess = !this->WriteI2C ( cVec, cReplies, true, false);
+                    if( cWriteSuccess) 
+                    {
+                        LOG (INFO) << BOLDGREEN << "Successful read from " << (*cIterator).first << " [first non-zero I2C register of CIC] on hybrid " << +cHybrid->getId() << " .... Enabling CIC" << +cCic->getChipId() << RESET;
+                        hybrid_enable |= 1 << cHybrid->getId();
+                        fNCic++;
+                    }
                 }
+                else if( fNReadoutChip == cHybrid->size() )
+                    hybrid_enable |= 1 << cHybrid->getId();
             }
-            char name[50];
-            std::sprintf (name, "fc7_daq_cnfg.global.chips_enable_hyb_%02d", cFe->getFeId() );
-            std::string name_str (name);
-            cVecReg.push_back ({name_str, cChipsEnable});
-            LOG (INFO) << BOLDBLUE << "Setting chips enable register on hybrid" << +cFe->getFeId() << " to " << std::bitset<32>( cChipsEnable ) << RESET;
-            
-            cVec.clear();
-            cReplies.clear();
-            if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
-            {
-                auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
-                size_t cIndex=0;
-                auto cRegisterMap = cCic->getRegMap();
-                auto cIterator = cRegisterMap.begin();
-                do
-                {
-                  cIndex++;
-                  if( (*cIterator).second.fValue != 0 )
-                    cIterator++;
-                }while( (*cIterator).second.fValue != 0 && cIndex < cRegisterMap.size() );
-                ChipRegItem cRegItem = cCic->getRegItem ( (*cIterator).first );
-                bool cWrite=false;
-                this->EncodeReg( cRegItem, cFe->getFeId(), cCic->getChipId() , cVec , true, cWrite ) ; 
-                bool cWriteSuccess = !this->WriteI2C ( cVec, cReplies, true, false);
-                if( cWriteSuccess) 
-                {
-                    LOG (INFO) << BOLDGREEN << "Successful read from " << (*cIterator).first << " [first non-zero I2C register of CIC] on hybrid " << +cFe->getFeId() << " .... Enabling CIC" << +cCic->getChipId() << RESET;
-                    hybrid_enable |= 1 << cFe->getFeId();
-                    fNCic++;
-                }
-            }
-            else if( fNReadoutChip == cFe->fReadoutChipVector.size() )
-                hybrid_enable |= 1 << cFe->getFeId();
-
         }
         LOG (INFO) << BOLDBLUE << +fNCic <<  " CICs enabled." << RESET;
         cVecReg.push_back ({"fc7_daq_cnfg.global.hybrid_enable", hybrid_enable});
@@ -1526,37 +1548,40 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard , bool pScope)
     PhaseTuner pTuner; 
     bool cSuccess=true;
     // back-end tuning on l1 lines
-    for (auto& cFe : pBoard->fModuleVector)
+    for(auto cOpticalGroup : *pBoard)
     {
-        selectLink (cFe->getLinkId());
-        uint8_t cHybrid= cFe->getFeId() ;
-        uint8_t cChip = 0;
-        int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
-        // need to know the address 
-        //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
-        // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging 
-        
-        uint8_t cLineId=0;
-        // tune phase on l1A line - don't have t do anything on the FEs
-        if( fOptical )
+        for (auto cHybrid : *cOpticalGroup)
         {
-            LOG (INFO) << BOLDBLUE << "Optical readout .. don't have to do anything here" << RESET;
-        }
-        else 
-        {
-            this->ChipReSync();
-            LOG (INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid << " Chip" << +cChipId << RESET;
-            uint16_t cPattern = 0xAA;
-            // configure pattern
-            pTuner.SetLineMode(this, cHybrid, cChip  , cLineId, 0 );    
-            pTuner.SetLinePattern( this, cHybrid, cChip, cLineId , cPattern, 8);
-            std::this_thread::sleep_for (std::chrono::microseconds (10) );
-            // start phase aligner 
-            pTuner.SendControl(this, cHybrid, cChip, cLineId, "PhaseAlignment");
-            std::this_thread::sleep_for (std::chrono::microseconds (10) );
-            this->Start();
-            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-            this->Stop();
+            selectLink (static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+            uint8_t cHybridId= cHybrid->getId() ;
+            uint8_t cChip = 0;
+            int cChipId = static_cast<OuterTrackerModule*>(cHybrid)->fCic->getChipId();
+            // need to know the address 
+            //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybridId) ;
+            // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging 
+            
+            uint8_t cLineId=0;
+            // tune phase on l1A line - don't have t do anything on the FEs
+            if( fOptical )
+            {
+                LOG (INFO) << BOLDBLUE << "Optical readout .. don't have to do anything here" << RESET;
+            }
+            else 
+            {
+                this->ChipReSync();
+                LOG (INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybridId << " Chip" << +cChipId << RESET;
+                uint16_t cPattern = 0xAA;
+                // configure pattern
+                pTuner.SetLineMode(this, cHybridId, cChip  , cLineId, 0 );    
+                pTuner.SetLinePattern( this, cHybridId, cChip, cLineId , cPattern, 8);
+                std::this_thread::sleep_for (std::chrono::microseconds (10) );
+                // start phase aligner 
+                pTuner.SendControl(this, cHybridId, cChip, cLineId, "PhaseAlignment");
+                std::this_thread::sleep_for (std::chrono::microseconds (10) );
+                this->Start();
+                std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+                this->Stop();
+            }
         }
     }
 
@@ -1623,93 +1648,96 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard , bool pScope)
     std::this_thread::sleep_for (std::chrono::microseconds (10) );
 
     // back-end tuning on l1 lines
-    for (auto& cFe : pBoard->fModuleVector)
+    for(auto cOpticalReadout : *pBoard)
     {
-        uint8_t cBitslip=0;
-        selectLink (cFe->getLinkId());
-        uint8_t cHybrid= cFe->getFeId() ;
-        uint8_t cChip = 0;
-        int cChipId = static_cast<OuterTrackerModule*>(cFe)->fCic->getChipId();
-        // need to know the address 
-        //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
-        // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging 
-        
-        uint8_t cLineId=0;
-        this->ChipReSync();
-        LOG (INFO) << BOLDBLUE << "Performing word alignment [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid << " Chip" << +cChipId << RESET;
-        uint16_t cPattern = 0xFE;
-        // configure pattern
-        pTuner.SetLineMode(this, cHybrid, cChip  , cLineId, 0 );    
-        if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
-        {    
-            for(uint16_t cPatternLength=40; cPatternLength < 41; cPatternLength++)
-            {
-                pTuner.SetLinePattern( this, cHybrid, cChip, cLineId , cPattern, cPatternLength);
-                std::this_thread::sleep_for (std::chrono::microseconds (10) );
-                // start word aligner 
-                pTuner.SendControl(this, cHybrid, cChip, cLineId, "WordAlignment");
-                std::this_thread::sleep_for (std::chrono::microseconds (10) );
-                this->Start();
-                std::this_thread::sleep_for (std::chrono::milliseconds (500) );
-                this->Stop();
-                cSuccess = pTuner.fDone;
-            }
-            // if the above doesn't work.. try and find the correct bitslip manually in software 
-            if( !cSuccess)
-            {
-                LOG (INFO) << BOLDBLUE << "Going to try and align manually in software..." << RESET; 
-                for( cBitslip=0; cBitslip < 8; cBitslip++)
+        for (auto cHybrid : *cOpticalReadout)
+        {
+            uint8_t cBitslip=0;
+            selectLink (static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+            uint8_t cHybridId= cHybrid->getId() ;
+            uint8_t cChip = 0;
+            int cChipId = static_cast<OuterTrackerModule*>(cHybrid)->fCic->getChipId();
+            // need to know the address 
+            //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybridId) ;
+            // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging 
+            
+            uint8_t cLineId=0;
+            this->ChipReSync();
+            LOG (INFO) << BOLDBLUE << "Performing word alignment [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybridId << " Chip" << +cChipId << RESET;
+            uint16_t cPattern = 0xFE;
+            // configure pattern
+            pTuner.SetLineMode(this, cHybridId, cChip  , cLineId, 0 );    
+            if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
+            {    
+                for(uint16_t cPatternLength=40; cPatternLength < 41; cPatternLength++)
                 {
-                    LOG (INFO) << BOLDMAGENTA << "Manually setting bitslip to " << +cBitslip << RESET;
-                    pTuner.SetLineMode( this, cHybrid , cChip , cLineId , 2 , 0, cBitslip, 0, 0 );
-                     this->Start();
-                    std::this_thread::sleep_for (std::chrono::microseconds (100) );
+                    pTuner.SetLinePattern( this, cHybridId, cChip, cLineId , cPattern, cPatternLength);
+                    std::this_thread::sleep_for (std::chrono::microseconds (10) );
+                    // start word aligner 
+                    pTuner.SendControl(this, cHybridId, cChip, cLineId, "WordAlignment");
+                    std::this_thread::sleep_for (std::chrono::microseconds (10) );
+                    this->Start();
+                    std::this_thread::sleep_for (std::chrono::milliseconds (500) );
                     this->Stop();
-                    
-                    auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
-                    std::string cBuffer = "";
-                    bool cAligned=false;
-                    std::string cOutput="\n";
-                    for( auto cWord : cWords )
+                    cSuccess = pTuner.fDone;
+                }
+                // if the above doesn't work.. try and find the correct bitslip manually in software 
+                if( !cSuccess)
+                {
+                    LOG (INFO) << BOLDBLUE << "Going to try and align manually in software..." << RESET; 
+                    for( cBitslip=0; cBitslip < 8; cBitslip++)
                     {
-                        auto cString=std::bitset<32>(cWord).to_string();
-                        std::vector<std::string> cOutputWords(0);
-                        for( size_t cIndex = 0 ; cIndex < 4 ; cIndex++)
+                        LOG (INFO) << BOLDMAGENTA << "Manually setting bitslip to " << +cBitslip << RESET;
+                        pTuner.SetLineMode( this, cHybridId , cChip , cLineId , 2 , 0, cBitslip, 0, 0 );
+                        this->Start();
+                        std::this_thread::sleep_for (std::chrono::microseconds (100) );
+                        this->Stop();
+                        
+                        auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+                        std::string cBuffer = "";
+                        bool cAligned=false;
+                        std::string cOutput="\n";
+                        for( auto cWord : cWords )
                         {
-                            auto c8bitWord = cString.substr(cIndex*8, 8) ;
-                            cOutputWords.push_back(c8bitWord);
-                            cAligned = (cAligned | (std::stoi( c8bitWord , nullptr,2 ) == cPattern) );
+                            auto cString=std::bitset<32>(cWord).to_string();
+                            std::vector<std::string> cOutputWords(0);
+                            for( size_t cIndex = 0 ; cIndex < 4 ; cIndex++)
+                            {
+                                auto c8bitWord = cString.substr(cIndex*8, 8) ;
+                                cOutputWords.push_back(c8bitWord);
+                                cAligned = (cAligned | (std::stoi( c8bitWord , nullptr,2 ) == cPattern) );
+                            }
+                            for( auto cIt = cOutputWords.end()-1 ; cIt >= cOutputWords.begin() ; cIt--)
+                            {
+                                cOutput += *cIt + " "; 
+                            }
+                            cOutput += "\n";
                         }
-                        for( auto cIt = cOutputWords.end()-1 ; cIt >= cOutputWords.begin() ; cIt--)
+                        if( cAligned)
                         {
-                            cOutput += *cIt + " "; 
+                            LOG (INFO) << BOLDGREEN << cOutput << RESET;
+                            this->ResetReadout();
+                            cSuccess=true;
+                            break;
                         }
-                        cOutput += "\n";
+                        else
+                            LOG (INFO) << BOLDRED << cOutput << RESET;
+                        this->ResetReadout(); 
                     }
-                    if( cAligned)
-                    {
-                        LOG (INFO) << BOLDGREEN << cOutput << RESET;
-                        this->ResetReadout();
-                        cSuccess=true;
-                        break;
-                    }
-                    else
-                        LOG (INFO) << BOLDRED << cOutput << RESET;
-                    this->ResetReadout(); 
                 }
             }
-        }
-        else if( fFirmwareFrontEndType == FrontEndType::CBC3 )
-        {
+            else if( fFirmwareFrontEndType == FrontEndType::CBC3 )
+            {
 
-        }
-        else if( fFirmwareFrontEndType == FrontEndType::SSA )
-        {
+            }
+            else if( fFirmwareFrontEndType == FrontEndType::SSA )
+            {
 
-        }
-        else
-        {
-            LOG (INFO) << BOLDBLUE << "Word alignment in the back-end not implemented for this firmware type.." << RESET;
+            }
+            else
+            {
+                LOG (INFO) << BOLDBLUE << "Word alignment in the back-end not implemented for this firmware type.." << RESET;
+            }
         }
     }
     if( pScope )
@@ -1758,62 +1786,65 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
     bool cSuccess=true;
 
     // back-end tuning on stub lines
-    for (auto& cFe : pBoard->fModuleVector)
+    for(auto cOpticalGroup : *pBoard)
     {
-        selectLink (cFe->getLinkId());
-        uint8_t cHybrid= cFe->getFeId() ;
-        auto& cCic = static_cast<OuterTrackerModule*>(cFe)->fCic;
-
-        if( cCic == NULL )
-            continue;
-
-        //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
-        if( pScope) 
-          this->StubDebug ();
-
-        LOG (INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid << " Chip" << +cCic->getChipId() << RESET;
-        uint8_t cNlines=6;
-        for( uint8_t cLineId=1; cLineId < cNlines; cLineId+=1)
+        for (auto& cHybrid : *cOpticalGroup)
         {
-            if( fOptical )
+            selectLink (static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+            uint8_t cHybridId= cHybrid->getId() ;
+            auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+
+            if( cCic == NULL )
+                continue;
+
+            //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybridId) ;
+            if( pScope) 
+            this->StubDebug ();
+
+            LOG (INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybridId << " Chip" << +cCic->getChipId() << RESET;
+            uint8_t cNlines=6;
+            for( uint8_t cLineId=1; cLineId < cNlines; cLineId+=1)
             {
-                LOG (INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
-                pTuner.SetLineMode( this, cHybrid , 0 , cLineId , 2 , 0, 1, 0, 0 );
-                std::this_thread::sleep_for (std::chrono::milliseconds (10) );
-                pTuner.SetLineMode(this, cHybrid, 0  , cLineId, 0 );    
-                std::this_thread::sleep_for (std::chrono::milliseconds (10) );
-                pTuner.SendControl(this, cHybrid, 0 , cLineId , "WordAlignment"); 
-                std::this_thread::sleep_for (std::chrono::milliseconds (50) );
-                //LOG (DEBUG) << BOLDBLUE << "Line status " << +cLineStatus << RESET;
-                uint8_t cAttempts=0;
-                if( pTuner.fBitslip == 0 )
+                if( fOptical )
                 {
-                    do
+                    LOG (INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
+                    pTuner.SetLineMode( this, cHybridId , 0 , cLineId , 2 , 0, 1, 0, 0 );
+                    std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+                    pTuner.SetLineMode(this, cHybridId, 0  , cLineId, 0 );    
+                    std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+                    pTuner.SendControl(this, cHybridId, 0 , cLineId , "WordAlignment"); 
+                    std::this_thread::sleep_for (std::chrono::milliseconds (50) );
+                    //LOG (DEBUG) << BOLDBLUE << "Line status " << +cLineStatus << RESET;
+                    uint8_t cAttempts=0;
+                    if( pTuner.fBitslip == 0 )
                     {
-                        if( cAttempts > 10 )
+                        do
                         {
-                            LOG (INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
-                            exit(0);
-                        }
-                        // try again 
-                        LOG (INFO) << BOLDBLUE << "Trying to reset phase on GBTx... bit slip of 0!" << RESET;
-                        GbtInterface cGBTx;
-                        cGBTx.gbtxSetPhase(this, fGBTphase) ; 
-                        pTuner.SendControl(this, cHybrid, 0 , cLineId , "WordAlignment"); 
-                        std::this_thread::sleep_for (std::chrono::milliseconds (50) );
-                        cAttempts++;
-                    }while( pTuner.fBitslip == 0) ;
+                            if( cAttempts > 10 )
+                            {
+                                LOG (INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
+                                exit(0);
+                            }
+                            // try again 
+                            LOG (INFO) << BOLDBLUE << "Trying to reset phase on GBTx... bit slip of 0!" << RESET;
+                            GbtInterface cGBTx;
+                            cGBTx.gbtxSetPhase(this, fGBTphase) ; 
+                            pTuner.SendControl(this, cHybridId, 0 , cLineId , "WordAlignment"); 
+                            std::this_thread::sleep_for (std::chrono::milliseconds (50) );
+                            cAttempts++;
+                        }while( pTuner.fBitslip == 0) ;
+                    }
                 }
-            }
-            else
-            {
-                pTuner.TuneLine(this,  cHybrid , 0 , cLineId , 0xEA , 8 , true);   
-                cSuccess = cSuccess && pTuner.fDone;
-            }
-            if( pTuner.fDone != 1  ) 
-            {
-                LOG (ERROR) << BOLDRED << "FAILED " << BOLDBLUE << " to tune stub line " << +(cLineId-1) << " in the back-end." << RESET;
-                exit(0);
+                else
+                {
+                    pTuner.TuneLine(this,  cHybridId , 0 , cLineId , 0xEA , 8 , true);   
+                    cSuccess = cSuccess && pTuner.fDone;
+                }
+                if( pTuner.fDone != 1  ) 
+                {
+                    LOG (ERROR) << BOLDRED << "FAILED " << BOLDBLUE << " to tune stub line " << +(cLineId-1) << " in the back-end." << RESET;
+                    exit(0);
+                }
             }
         }
     }
@@ -1840,25 +1871,28 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
 
                 cVecReq.clear();
 
-                for (auto cFe : pBoard->fModuleVector)
+                for(auto cOpticalReadout : *pBoard)
                 {
-                    for (auto cCbc : cFe->fReadoutChipVector)
+                    for (auto cHybrid : *cOpticalReadout)
                     {
+                        for (auto cCbc : *cHybrid)
+                        {
+                            ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
+                            uint8_t cOriginalStubLogicInput = theCbc->getReg ("Pipe&StubInpSel&Ptwidth");
+                            uint8_t cOriginalHipReg = theCbc->getReg ("HIP&TestMode");
+                            cStubLogictInputMap[theCbc] = cOriginalStubLogicInput;
+                            cHipRegMap[theCbc] = cOriginalHipReg;
 
-                        uint8_t cOriginalStubLogicInput = cCbc->getReg ("Pipe&StubInpSel&Ptwidth");
-                        uint8_t cOriginalHipReg = cCbc->getReg ("HIP&TestMode");
-                        cStubLogictInputMap[cCbc] = cOriginalStubLogicInput;
-                        cHipRegMap[cCbc] = cOriginalHipReg;
 
+                            ChipRegItem cRegItem = theCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
+                            cRegItem.fValue = (cOriginalStubLogicInput & 0xCF) | (0x20 & 0x30);
+                            this->EncodeReg (cRegItem, cHybrid->getId(), cCbc->getId(), cVecReq, true, true);
 
-                        ChipRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
-                        cRegItem.fValue = (cOriginalStubLogicInput & 0xCF) | (0x20 & 0x30);
-                        this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getChipId(), cVecReq, true, true);
+                            cRegItem = theCbc->getRegItem ( "HIP&TestMode" );
+                            cRegItem.fValue = (cOriginalHipReg & ~ (0x1 << 4) );
+                            this->EncodeReg (cRegItem, cHybrid->getId(), cCbc->getId(), cVecReq, true, true);
 
-                        cRegItem = cCbc->getRegItem ( "HIP&TestMode" );
-                        cRegItem.fValue = (cOriginalHipReg & ~ (0x1 << 4) );
-                        this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getChipId(), cVecReq, true, true);
-
+                        }
                     }
                 }
 
@@ -1876,19 +1910,22 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
                     {
                         LOG(ERROR) << BOLDRED << "Failed phase tuning, debug information: " << RESET;
                         // print statuses
-                        for (auto cFe : pBoard->fModuleVector)
+                        for(auto cOpticalGroup : *pBoard)
                         {
-                            for (auto cCbc : cFe->fReadoutChipVector)
+                            for (auto cHybrid : *cOpticalGroup)
                             {
-                            pTuner.GetLineStatus(this, cFe->getFeId(), cCbc->getChipId(), 5);//
-                            //PhaseTuningGetLineStatus(cFe->getFeId(), cCbc->getChipId(), 5);
+                                for (auto cCbc : *cHybrid)
+                                {
+                                pTuner.GetLineStatus(this, cHybrid->getId(), cCbc->getId(), 5);//
+                                //PhaseTuningGetLineStatus(cFe->getFeId(), cCbc->getChipId(), 5);
+                                }
                             }
                         }
                         exit (1);
                     }
 
-        this->ChipReSync();
-        usleep (10);
+                    this->ChipReSync();
+                    usleep (10);
                     // reset  the timing tuning
                     WriteReg ("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
 
@@ -1898,19 +1935,21 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
 
                     //re-enable the stub logic
                 cVecReq.clear();
-                for (auto cFe : pBoard->fModuleVector)
+                for(auto cOpticalGroup : *pBoard)
                 {
-                    for (auto cCbc : cFe->fReadoutChipVector)
+                    for (auto cHybrid : *cOpticalGroup)
                     {
+                        for (auto cCbc : *cHybrid)
+                        {
+                            ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
+                            ChipRegItem cRegItem = theCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
+                            cRegItem.fValue = cStubLogictInputMap[theCbc];
+                            //this->EncodeReg (cRegItem, theCbc->getFeId(), theCbc->getChipId(), cVecReq, true, true);
 
-                        ChipRegItem cRegItem = cCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );
-                        cRegItem.fValue = cStubLogictInputMap[cCbc];
-                        //this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getChipId(), cVecReq, true, true);
-
-                        cRegItem = cCbc->getRegItem ( "HIP&TestMode" );
-                        cRegItem.fValue = cHipRegMap[cCbc];
-                        this->EncodeReg (cRegItem, cCbc->getFeId(), cCbc->getChipId(), cVecReq, true, true);
-
+                            cRegItem = theCbc->getRegItem ( "HIP&TestMode" );
+                            cRegItem.fValue = cHipRegMap[theCbc];
+                            this->EncodeReg (cRegItem, cHybrid->getId(), cCbc->getId(), cVecReq, true, true);
+                        }
                     }
                 }
 
@@ -1924,27 +1963,33 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
             uint8_t cDelay = 15;
             uint8_t cBitslip=3;
                 // manual mode apply
-            for (auto cFe : pBoard->fModuleVector)
+            for (auto cOpticalGroup : *pBoard)
             {
-                for (auto cCbc : cFe->fReadoutChipVector)
+                for (auto cHybrid : *cOpticalGroup)
                 {
-                    uint8_t cMode=2;
-                    uint8_t cMasterLine=0;
-                    uint8_t cEnableL1=0;
-                    for( uint8_t cLineId=0; cLineId<6; cLineId+=1)
-                        pTuner.SetLineMode( this, cCbc->getFeId() , cCbc->getChipId() , cLineId , cMode , cDelay, cBitslip, cEnableL1, cMasterLine );
+                    for (auto cCbc : *cHybrid)
+                    {
+                        uint8_t cMode=2;
+                        uint8_t cMasterLine=0;
+                        uint8_t cEnableL1=0;
+                        for( uint8_t cLineId=0; cLineId<6; cLineId+=1)
+                            pTuner.SetLineMode( this, cHybrid->getId() , cCbc->getId() , cLineId , cMode , cDelay, cBitslip, cEnableL1, cMasterLine );
 
+                    }
+                    }
+                    LOG (INFO) << GREEN << "CBC3 Phase tuning " << RESET << RED << "APPLIED" << RESET << GREEN <<" succesfully" << RESET;
                 }
-                }
-                LOG (INFO) << GREEN << "CBC3 Phase tuning " << RESET << RED << "APPLIED" << RESET << GREEN <<" succesfully" << RESET;
             }
                 // print statuses
-            for (auto cFe : pBoard->fModuleVector)
+            for (auto cOpticalGroup : *pBoard)
             {
-                for (auto cCbc : cFe->fReadoutChipVector)
+                for (auto cHybrid : *cOpticalGroup)
                 {
-                pTuner.GetLineStatus(this, cFe->getFeId(), cCbc->getChipId(), 5);//
-                //PhaseTuningGetLineStatus(cFe->getFeId(), cCbc->getChipId(), 5);
+                    for (auto cCbc : *cHybrid)
+                    {
+                    pTuner.GetLineStatus(this, cHybrid->getId(), cCbc->getId(), 5);//
+                    //PhaseTuningGetLineStatus(cHybrid->getFeId(), cCbc->getChipId(), 5);
+                    }
                 }
             }
 
@@ -1953,40 +1998,43 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
     else if (fFirmwareFrontEndType == FrontEndType::MPA)
     {
             // first need to set the proper i2c settings of the chip for the phase alignment
-            std::map<MPA*, uint8_t> cReadoutModeMap;
-            std::map<MPA*, uint8_t> cStubModeMap;
+            std::map<ChipContainer*, uint8_t> cReadoutModeMap;
+            std::map<ChipContainer*, uint8_t> cStubModeMap;
             std::vector<uint32_t> cVecReq;
 
             cVecReq.clear();
 
-            for (auto cFe : pBoard->fModuleVector)
+            for (auto cOpticalGroup : *pBoard)
             {
-                for (auto cMpa : static_cast<OuterTrackerModule*>(cFe)->fMPAVector)
+                for (auto *cHybrid : *cOpticalGroup)
                 {
+                    for (auto cMpa : *cHybrid)
+                    {
+                        ReadoutChip *theMpa = static_cast<ReadoutChip*>(cMpa);
+                        uint8_t cOriginalReadoutMode = theMpa->getReg ("ReadoutMode");
+                        uint8_t cOriginalStubMode = theMpa->getReg ("ECM");
+                        cReadoutModeMap[theMpa] = cOriginalReadoutMode;
+                        cStubModeMap[theMpa] = cOriginalStubMode;
 
-                    uint8_t cOriginalReadoutMode = cMpa->getReg ("ReadoutMode");
-                    uint8_t cOriginalStubMode = cMpa->getReg ("ECM");
-                    cReadoutModeMap[cMpa] = cOriginalReadoutMode;
-                    cStubModeMap[cMpa] = cOriginalStubMode;
+                            // sync mode
+                        ChipRegItem cRegItem = theMpa->getRegItem ( "ReadoutMode" );
+                        cRegItem.fValue = 0x00;
+                        this->EncodeReg (cRegItem, cHybrid->getId(), cMpa->getId(), cVecReq, true, true);
 
-                        // sync mode
-                    ChipRegItem cRegItem = cMpa->getRegItem ( "ReadoutMode" );
-                    cRegItem.fValue = 0x00;
-                    this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
+                        uint8_t cWriteAttempts = 0;
+                        this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
+                        cVecReq.clear();
 
-                    uint8_t cWriteAttempts = 0;
-                    this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
-                    cVecReq.clear();
+                            // ps stub mode
+                        cRegItem = theMpa->getRegItem ( "ECM" );
+                        cRegItem.fValue = 0x08;
+                        this->EncodeReg (cRegItem, cHybrid->getId(), cMpa->getId(), cVecReq, true, true);
 
-                        // ps stub mode
-                    cRegItem = cMpa->getRegItem ( "ECM" );
-                    cRegItem.fValue = 0x08;
-                    this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
+                        cWriteAttempts = 0;
+                        this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
+                        cVecReq.clear();
 
-                    cWriteAttempts = 0;
-                    this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
-                    cVecReq.clear();
-
+                    }
                 }
             }
 
@@ -1999,27 +2047,30 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
 
             //re-enable everything back
             cVecReq.clear();
-            for (auto cFe : pBoard->fModuleVector)
+            for (auto cOpticalGroup : *pBoard)
             {
-                for (auto cMpa : static_cast<OuterTrackerModule*>(cFe)->fMPAVector)
+                for (auto *cHybrid : *cOpticalGroup)
                 {
+                    for (auto cMpa : *cHybrid)
+                    {
+                        ReadoutChip *theMpa = static_cast<ReadoutChip*>(cMpa);
+                        ChipRegItem cRegItem = theMpa->getRegItem ( "ReadoutMode" );
+                        cRegItem.fValue = cReadoutModeMap[theMpa];
+                        this->EncodeReg (cRegItem, cHybrid->getId(), cMpa->getId(), cVecReq, true, true);
 
-                    ChipRegItem cRegItem = cMpa->getRegItem ( "ReadoutMode" );
-                    cRegItem.fValue = cReadoutModeMap[cMpa];
-                    this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
+                        cWriteAttempts = 0;
+                        this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
+                        cVecReq.clear();
 
-                    cWriteAttempts = 0;
-                    this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
-                    cVecReq.clear();
+                        cRegItem = theMpa->getRegItem ( "ECM" );
+                        cRegItem.fValue = cStubModeMap[cMpa];
+                        this->EncodeReg (cRegItem, cHybrid->getId(), cMpa->getId(), cVecReq, true, true);
 
-                    cRegItem = cMpa->getRegItem ( "ECM" );
-                    cRegItem.fValue = cStubModeMap[cMpa];
-                    this->EncodeReg (cRegItem, cMpa->getFeId(), cMpa->getMPAId(), cVecReq, true, true);
+                        cWriteAttempts = 0;
+                        this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
+                        cVecReq.clear();
 
-                    cWriteAttempts = 0;
-                    this->WriteChipBlockReg (cVecReq, cWriteAttempts, true);
-                    cVecReq.clear();
-
+                    }
                 }
             }
 
@@ -2033,104 +2084,110 @@ void D19cFWInterface::PhaseTuning (const BeBoard* pBoard)
     {
         LOG (INFO) << GREEN << "Trying Phase Tuning for SSA Chip(s)" << RESET;
 
-        std::map<Chip*, uint8_t> cReadoutModeMap; // stores mode settings of chips
-        std::map<Chip*, uint8_t> cStubModeMap; // stores stub output settings of chips
+        std::map<ChipContainer*, uint8_t> cReadoutModeMap; // stores mode settings of chips
+        std::map<ChipContainer*, uint8_t> cStubModeMap; // stores stub output settings of chips
         std::vector<uint32_t> cVecReq; // for communication (will be re-used... make sure it's cleared?)
 
         cVecReq.clear(); // bam
 
         // read back original values 
-        for (auto cFe : pBoard->fModuleVector) // probably could do this one step outside?
+        for (auto cOpticalGroup : *pBoard)
         {
-            for (auto cReadoutChip : cFe->fReadoutChipVector) // fills the modes to be stored (and re-applied later)
+            for (auto *cHybrid : *cOpticalGroup)
             {
-
-                uint8_t cOriginalReadoutMode = cReadoutChip->getReg ("ReadoutMode");
-                uint8_t cOriginalStubMode = cReadoutChip->getReg ("OutPattern0");
-                cReadoutModeMap[cReadoutChip] = cOriginalReadoutMode;
-                cStubModeMap[cReadoutChip] = cOriginalStubMode;
+                for (auto cReadoutChip : *cHybrid)
+                {
+                    uint8_t cOriginalReadoutMode = static_cast<ReadoutChip*>(cReadoutChip)->getReg ("ReadoutMode");
+                    uint8_t cOriginalStubMode = static_cast<ReadoutChip*>(cReadoutChip)->getReg ("OutPattern0");
+                    cReadoutModeMap[cReadoutChip] = cOriginalReadoutMode;
+                    cStubModeMap[cReadoutChip] = cOriginalStubMode;
+                }
             }
         }
 
         // configure patterns 
         std::vector<uint32_t> cVec(0); std::vector<uint32_t> cReplies(0); // might be superceding cVecReq?
-        for (auto cFe : pBoard->fModuleVector)
+        for (auto cOpticalGroup : *pBoard)
         {
-            for (auto cReadoutChip : cFe->fReadoutChipVector) // for each chip (makes sense)
+            for (auto *cHybrid : *cOpticalGroup)
             {
-                // configure SLVS drive strength and readout mode 
-                std::vector<std::string> cRegNames{ "SLVS_pad_current" , "ReadoutMode" };
-                std::vector<uint8_t> cRegValues{0x7 , 2}; 
-                uint16_t cOriginalMode=0;
-                for( size_t cIndex = 0 ;cIndex < 2 ; cIndex ++ )
+                for (auto cReadoutChip : *cHybrid)
                 {
-                    auto cRegItem = static_cast<ChipRegItem>(cReadoutChip->getRegItem ( cRegNames[cIndex] ));
-                    // read back original mode 
-                    if( cRegNames[cIndex] == "ReadoutMode") 
-                        cOriginalMode = cRegItem.fValue;
-                    
-                    cRegItem.fValue = cRegValues[cIndex];
+                    ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
+                    // configure SLVS drive strength and readout mode 
+                    std::vector<std::string> cRegNames{ "SLVS_pad_current" , "ReadoutMode" };
+                    std::vector<uint8_t> cRegValues{0x7 , 2}; 
+                    uint16_t cOriginalMode=0;
+                    for( size_t cIndex = 0 ;cIndex < 2 ; cIndex ++ )
+                    {
+                        auto cRegItem = static_cast<ChipRegItem>(theReadoutChip->getRegItem ( cRegNames[cIndex] ));
+                        // read back original mode 
+                        if( cRegNames[cIndex] == "ReadoutMode") 
+                            cOriginalMode = cRegItem.fValue;
+                        
+                        cRegItem.fValue = cRegValues[cIndex];
+                        bool cWrite = true; 
+                        this->EncodeReg (cRegItem, cHybrid->getId(), cReadoutChip->getId(), cVec, true, cWrite);
+                        if( WriteI2C ( cVec, cReplies, true, false) )// return true if failed 
+                        {
+                            LOG (INFO) << BOLDRED << "Failed to write to I2C register..." << RESET;
+                            exit(0);
+                        }
+                        cVec.clear(); cReplies.clear();
+                    } // all that did was set our pad current to max and our readout mode to transmit known patterns
+
+                    // configure output pattern on sutb lines 
+                    uint8_t cPattern = 0x80;
+                    for( uint8_t cLineId = 1 ; cLineId < 3 ; cLineId ++ )
+                    {
+                        PhaseTuner cTuner;
+                        char cBuffer[11];
+                        sprintf(cBuffer,"OutPattern%d", cLineId-1); 
+                        std::string cRegName = (cLineId == 8 ) ? "OutPattern7/FIFOconfig" : std::string(cBuffer,sizeof(cBuffer));
+                        auto cRegItem = static_cast<ChipRegItem>(theReadoutChip->getRegItem ( cRegName ));
+                        cRegItem.fValue = cPattern; 
+                        bool cWrite = true; 
+                        this->EncodeReg (cRegItem, cHybrid->getId(), cReadoutChip->getId(), cVec, true, cWrite);
+                        if( WriteI2C ( cVec, cReplies, true, false) )// return true if failed 
+                        {
+                            LOG (INFO) << BOLDRED << "Failed to write to I2C register..." << RESET;
+                            exit(0);
+                        }
+                        cVec.clear(); cReplies.clear();
+
+                        unsigned int cAttempts=0;
+                        bool cSuccess = false;
+                        cTuner.SetLineMode( this, cHybrid->getId() , cReadoutChip->getId() , cLineId , 2 , 0, 0, 0, 0 );
+                        do 
+                        {
+                            cSuccess = cTuner.TuneLine(this,  cHybrid->getId() , cReadoutChip->getId() , cLineId , cPattern , 8 , true);
+                            std::this_thread::sleep_for (std::chrono::milliseconds (200) );
+                            //LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
+                            cAttempts++;
+                        }while(!cSuccess && cAttempts <10);
+                        if( cLineId == 1 && cSuccess ) 
+                        {
+                            // force L1A line to match phase tuning result for first stub lines to match 
+                            uint8_t cEnableL1=0; 
+                            uint8_t cDelay = cTuner.fDelay;
+                            uint8_t cMode=2;
+                            uint8_t cBitslip = cTuner.fBitslip;
+                            cTuner.SetLineMode( this, cHybrid->getId() , cReadoutChip->getId() , 0 , cMode , cDelay, cBitslip, cEnableL1, 0 );
+                        }
+                    }
+
+                    // set readout mode back to original value 
+                    auto cRegItem = static_cast<ChipRegItem>(theReadoutChip->getRegItem ( "ReadoutMode" ));
+                    cRegItem.fValue = cOriginalMode;
                     bool cWrite = true; 
-                    this->EncodeReg (cRegItem, cReadoutChip->getFeId(), cReadoutChip->getChipId(), cVec, true, cWrite);
+                    this->EncodeReg (cRegItem, cHybrid->getId(), cReadoutChip->getId(), cVec, true, cWrite);
                     if( WriteI2C ( cVec, cReplies, true, false) )// return true if failed 
                     {
                         LOG (INFO) << BOLDRED << "Failed to write to I2C register..." << RESET;
                         exit(0);
                     }
                     cVec.clear(); cReplies.clear();
-                } // all that did was set our pad current to max and our readout mode to transmit known patterns
-
-                // configure output pattern on sutb lines 
-                uint8_t cPattern = 0x80;
-                for( uint8_t cLineId = 1 ; cLineId < 3 ; cLineId ++ )
-                {
-                    PhaseTuner cTuner;
-                    char cBuffer[11];
-                    sprintf(cBuffer,"OutPattern%d", cLineId-1); 
-                    std::string cRegName = (cLineId == 8 ) ? "OutPattern7/FIFOconfig" : std::string(cBuffer,sizeof(cBuffer));
-                    auto cRegItem = static_cast<ChipRegItem>(cReadoutChip->getRegItem ( cRegName ));
-                    cRegItem.fValue = cPattern; 
-                    bool cWrite = true; 
-                    this->EncodeReg (cRegItem, cReadoutChip->getFeId(), cReadoutChip->getChipId(), cVec, true, cWrite);
-                    if( WriteI2C ( cVec, cReplies, true, false) )// return true if failed 
-                    {
-                        LOG (INFO) << BOLDRED << "Failed to write to I2C register..." << RESET;
-                        exit(0);
-                    }
-                    cVec.clear(); cReplies.clear();
-
-                    unsigned int cAttempts=0;
-                    bool cSuccess = false;
-                    cTuner.SetLineMode( this, cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId , 2 , 0, 0, 0, 0 );
-                    do 
-                    {
-                        cSuccess = cTuner.TuneLine(this,  cReadoutChip->getFeId() , cReadoutChip->getChipId() , cLineId , cPattern , 8 , true);
-                        std::this_thread::sleep_for (std::chrono::milliseconds (200) );
-                        //LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
-                        cAttempts++;
-                    }while(!cSuccess && cAttempts <10);
-                    if( cLineId == 1 && cSuccess ) 
-                    {
-                        // force L1A line to match phase tuning result for first stub lines to match 
-                        uint8_t cEnableL1=0; 
-                        uint8_t cDelay = cTuner.fDelay;
-                        uint8_t cMode=2;
-                        uint8_t cBitslip = cTuner.fBitslip;
-                        cTuner.SetLineMode( this, cReadoutChip->getFeId() , cReadoutChip->getChipId() , 0 , cMode , cDelay, cBitslip, cEnableL1, 0 );
-                    }
                 }
-
-                // set readout mode back to original value 
-                auto cRegItem = static_cast<ChipRegItem>(cReadoutChip->getRegItem ( "ReadoutMode" ));
-                cRegItem.fValue = cOriginalMode;
-                bool cWrite = true; 
-                this->EncodeReg (cRegItem, cReadoutChip->getFeId(), cReadoutChip->getChipId(), cVec, true, cWrite);
-                if( WriteI2C ( cVec, cReplies, true, false) )// return true if failed 
-                {
-                    LOG (INFO) << BOLDRED << "Failed to write to I2C register..." << RESET;
-                    exit(0);
-                }
-                cVec.clear(); cReplies.clear();
             }
         }
         LOG (INFO) << GREEN << "SSA Phase tuning finished succesfully" << RESET;
@@ -2441,11 +2498,14 @@ uint32_t D19cFWInterface::computeEventSize ( BeBoard* pBoard )
 
     uint32_t cNEventSize32 = 0;
 
-    for (const auto& cFe : pBoard->fModuleVector)
+    for(const auto cOpticalGroup : *pBoard)
     {
-        cNCbc += cFe->getNChip();
-        cNMPA += static_cast<OuterTrackerModule*>(cFe)->getNMPA();
-        cNSSA += static_cast<OuterTrackerModule*>(cFe)->getNSSA();
+        for (const auto cHybrid : *cOpticalGroup)
+        {
+            cNCbc += cHybrid->size();
+            cNMPA += cHybrid->size();
+            cNSSA += cHybrid->size();
+        }
     }
     if( fNCic != 0 ) 
     {

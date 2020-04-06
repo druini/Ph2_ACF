@@ -115,12 +115,13 @@ void AntennaTester::InitialiseSettings()
 ///fBeBoardInterface->ReadBoardReg (cBoard, getDelAfterTPString ( cBoard->getBoardType() ) );
 //trigSource =ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source");
 //         LOG (INFO)  <<int (trigSource);
-    for (auto& cBoard : fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
 
-        trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
+        BeBoard *theBoard = static_cast<BeBoard*>(cBoard)
+        trigSource = fBeBoardInterface->ReadBoardReg (theBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
          LOG (INFO)  <<int (trigSource);
-}
+    }
 
 }
 void AntennaTester::InitializeHists()
@@ -184,36 +185,40 @@ void AntennaTester::UpdateHistsMerged()
 }
 void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 {
-    for (auto& cBoard : fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
-        fBeBoardInterface->ChipReset ( cBoard );
+        BeBoard *theBoard = static_cast<BeBoard*>(cBoard)
+        fBeBoardInterface->ChipReset ( theBoard );
 
-        trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
+        trigSource = fBeBoardInterface->ReadBoardReg (theBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
          LOG (INFO)  <<int (trigSource);
 
-        trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
+        trigSource = fBeBoardInterface->ReadBoardReg (theBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
          LOG (INFO)  <<int (trigSource);
 
-        for (auto& cFe : cBoard->fModuleVector)
-        {
-            for (auto& cCbc : cFe->fReadoutChipVector)
+        for (auto cOpticalGroup : *cBoard)
+
+            for (auto cHybrid : *cOpticalGroup)
             {
-                std::string pRegFile ;
-                char buffer[120];
+                for (auto cCbc : *cHybrid)
+                {
+                    Cbc* theCBC = static_cast<Cbc*>(cCbc);
+                    std::string pRegFile ;
+                    char buffer[120];
 
-                if ( pDirectoryName.empty() )
-                    sprintf (buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cCbc->getFeId(), cCbc->getChipId() );
-                else
-                    sprintf (buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cCbc->getFeId(), cCbc->getChipId() );
+                    if ( pDirectoryName.empty() )
+                        sprintf (buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cHybrid->getId(), cCbc->getId() );
+                    else
+                        sprintf (buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cHybrid->getId(), cCbc->getId() );
 
-                pRegFile = buffer;
-                cCbc->loadfRegMap (pRegFile);
-                fReadoutChipInterface->ConfigureChip ( cCbc );
-                LOG (INFO)  << GREEN << "\t\t Successfully reconfigured CBC" << int ( cCbc->getChipId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
+                    pRegFile = buffer;
+                    Cbc->loadfRegMap (pRegFile);
+                    fReadoutChipInterface->ConfigureChip ( Cbc );
+                    LOG (INFO)  << GREEN << "\t\t Successfully reconfigured CBC" << int ( cCbc->getId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
+                }
             }
-        }
 
-        fBeBoardInterface->ChipReSync ( cBoard );
+        fBeBoardInterface->ChipReSync ( theBoard );
     }
 }
 

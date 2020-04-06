@@ -6,9 +6,10 @@
 
 
 
-Channel::Channel ( uint8_t pBeId, uint8_t pFeId, uint8_t pCbcId, uint8_t pChannelId ) :
+Channel::Channel ( uint8_t pBeId, uint8_t pFeId, uint8_t pOpticalGroup, uint8_t pCbcId, uint8_t pChannelId ) :
     fBeId ( pBeId ),
     fFeId ( pFeId ),
+    fOpticalGroup ( pOpticalGroup ),
     fCbcId ( pCbcId ),
     fChannelId ( pChannelId )
 {

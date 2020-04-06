@@ -62,7 +62,7 @@ namespace ContainerFactory
 		{
 			BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
 			copy.back()->initialize<SB,SO>();
-			for(const OpticalGroupDataContainer *opticalGroup : *board)
+			for(const OpticalGroupContainer *opticalGroup : *board)
 			{
 				OpticalGroupDataContainer* copyOpticalGroup = copyBoard->addOpticalGroupDataContainer(opticalGroup->getId());
 				copyBoard->back()->initialize<SO,SM>();
@@ -138,10 +138,10 @@ namespace ContainerFactory
 		{
 			BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
 			static_cast<BoardDataContainer*>(copy.back())->initialize<SB,SO>(boardSummary);
-			for(const OpticalGroupDataContainer *opticalGroup : *board)
+			for(const OpticalGroupContainer *opticalGroup : *board)
 			{
 				OpticalGroupDataContainer* copyOpticalGroup = copyBoard->addOpticalGroupDataContainer(opticalGroup->getId());
-				static_cast<BoardDataContainer*>(copyBoard->back())->initialize<SO,SM>(opticalGroupSummary);
+				static_cast<OpticalGroupDataContainer*>(copyBoard->back())->initialize<SO,SM>(opticalGroupSummary);
 				for(const ModuleContainer* hybrid : *opticalGroup)
 				{
 					ModuleDataContainer* copyModule = copyOpticalGroup->addModuleDataContainer(hybrid->getId());

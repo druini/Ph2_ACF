@@ -54,6 +54,7 @@ class ExtraChecks : public PedeNoise
 
   private:
     // Containers
+    void zeroContainers();
     DetectorDataContainer fNoiseContainer,  fPedestalContainer, fOccupancyContainer, fShortsContainer;
     DetectorDataContainer fHitCheckContainer, fStubCheckContainer;
     DetectorDataContainer  fThresholds, fLogic, fHIPs;

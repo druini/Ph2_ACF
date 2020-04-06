@@ -681,12 +681,12 @@ namespace Ph2_HwInterface
         }
     }
 
-    void CbcInterface::WriteModuleBroadcastChipReg ( const Module* pModule, const std::string& pRegNode, uint16_t pValue )
+    void CbcInterface::WriteModuleBroadcastChipReg ( const Module* pHybrid, const std::string& pRegNode, uint16_t pValue )
     {
         //first set the correct BeBoard
-        setBoard ( pModule->getBeBoardId() );
+        setBoard ( pHybrid->getBeBoardId() );
 
-        ChipRegItem cRegItem = pModule->fReadoutChipVector.at (0)->getRegItem ( pRegNode );
+        ChipRegItem cRegItem = static_cast<ReadoutChip*>(pHybrid->at(0))->getRegItem ( pRegNode );
         cRegItem.fValue = pValue;
 
         //vector for transaction
@@ -694,7 +694,7 @@ namespace Ph2_HwInterface
 
         // encode the reg specific to the FW, pVerifLoop decides if it should be read back, true means to write it
         // the 1st boolean could be true if I acually wanted to read back from each CBC but this somehow does not make sense!
-        fBoardFW->BCEncodeReg ( cRegItem, pModule->fReadoutChipVector.size(), cVec, false, true );
+        fBoardFW->BCEncodeReg ( cRegItem, pHybrid->size(), cVec, false, true );
 
         //true is the readback bit - the IC FW just checks that the transaction was successful and the
         //Strasbourg FW does nothing
@@ -707,15 +707,15 @@ namespace Ph2_HwInterface
 
         //update the HWDescription object -- not sure if the transaction was successfull
         if (cSuccess)
-            for (auto& cCbc : pModule->fReadoutChipVector)
-                cCbc->setReg ( pRegNode, pValue );
+            for (auto cCbc : *pHybrid)
+                static_cast<ReadoutChip*>(cCbc)->setReg ( pRegNode, pValue );
     }
 
 
-    void CbcInterface::WriteBroadcastCbcMultiReg (const Module* pModule, const std::vector<std::pair<std::string, uint8_t>> pVecReg)
+    void CbcInterface::WriteBroadcastCbcMultiReg (const Module* pHybrid, const std::vector<std::pair<std::string, uint8_t>> pVecReg)
     {
         //first set the correct BeBoard
-        setBoard ( pModule->getBeBoardId() );
+        setBoard ( pHybrid->getBeBoardId() );
 
         std::vector<uint32_t> cVec;
 
@@ -724,10 +724,10 @@ namespace Ph2_HwInterface
 
         for ( const auto& cReg : pVecReg )
         {
-            cRegItem = pModule->fReadoutChipVector.at (0)->getRegItem ( cReg.first );
+            cRegItem = static_cast<ReadoutChip*>(pHybrid->at(0))->getRegItem ( cReg.first );
             cRegItem.fValue = cReg.second;
 
-            fBoardFW->BCEncodeReg ( cRegItem, pModule->fReadoutChipVector.size(), cVec, false, true );
+            fBoardFW->BCEncodeReg ( cRegItem, pHybrid->size(), cVec, false, true );
             #ifdef COUNT_FLAG
                 fRegisterCount++;
             #endif
@@ -741,11 +741,11 @@ namespace Ph2_HwInterface
         #endif
 
         if (cSuccess)
-            for (auto& cCbc : pModule->fReadoutChipVector)
+            for (auto& cCbc : *pHybrid)
                 for (auto& cReg : pVecReg)
                 {
-                    cRegItem = cCbc->getRegItem ( cReg.first );
-                    cCbc->setReg ( cReg.first, cReg.second );
+                    cRegItem = static_cast<ReadoutChip*>(cCbc)->getRegItem ( cReg.first );
+                    static_cast<ReadoutChip*>(cCbc)->setReg ( cReg.first, cReg.second );
                 }
     }
 

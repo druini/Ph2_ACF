@@ -118,14 +118,14 @@ namespace Ph2_HwInterface {
             {
                 // just use board to figure out how many CBCs there are 
                 size_t cHybridIndex=0;
-                for (auto& cFe : pBoard->fModuleVector)
+                for (auto& cFe : *pBoard->at(0))
                 {
-                    if( cFe->getFeId()== cFeId )
+                    if( cFe->getId()== cFeId )
                         cHybridIndex = cFe->getIndex();
                 }
-                auto& cReadoutChips = pBoard->fModuleVector[cHybridIndex]->fReadoutChipVector; 
+                auto cReadoutChips = pBoard->at(0)->at(cHybridIndex); 
                 std::vector<uint32_t> cCbcData(cIterator, cIterator+cDataSize);
-                fEventDataVector[encodeVectorIndex(cFeId, cCbcId,cReadoutChips.size())] = cCbcData;
+                fEventDataVector[encodeVectorIndex(cFeId, cCbcId,cReadoutChips->size())] = cCbcData;
             }
             cIterator += cL1DataSize + cStubDataSize;     
         }while( cIterator < list.end() - fDummySize );
@@ -617,9 +617,9 @@ namespace Ph2_HwInterface {
         GenericPayload cPayload;
         GenericPayload cStubPayload;
 
-        for (auto cFe : pBoard->fModuleVector)
+        for (auto cFe : *pBoard->at(0))
         {
-            uint8_t cFeId = cFe->getFeId();
+            uint8_t cFeId = cFe->getId();
 
             // firt get the list of enabled front ends
             if (cEnabledFe.find (cFeId) == std::end (cEnabledFe) )
@@ -632,9 +632,9 @@ namespace Ph2_HwInterface {
             //stub counter per FE
             uint8_t cFeStubCounter = 0;
 
-            for (auto cCbc : cFe->fReadoutChipVector)
+            for (auto cCbc : *cFe)
             {
-                uint8_t cCbcId = cCbc->getChipId();
+                uint8_t cCbcId = cCbc->getId();
                 const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(cFeId, cCbcId,fNCbc));
                 
                 try

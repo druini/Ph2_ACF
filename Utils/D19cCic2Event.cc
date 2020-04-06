@@ -56,7 +56,7 @@ namespace Ph2_HwInterface {
     void D19cCic2Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
         fIsSparsified=pBoard->getSparsification();
-        LOG (DEBUG) << BOLDBLUE << " Found " << +pBoard->fModuleVector.size() << " FE connected to this board.." << RESET;
+        
         fEventHitList.clear();
         fEventStubList.clear();
         for( size_t cFeIndex=0; cFeIndex < N2SMODULES*2 ; cFeIndex++)
@@ -155,26 +155,26 @@ namespace Ph2_HwInterface {
                 //  LOG (INFO) << BOLDBLUE << std::bitset<32>(*(cIterator+cIndex)) << RESET;
 
                 size_t cHybridIndex=0;
-                for (auto& cFe : pBoard->fModuleVector)
+                for (auto cFe : *pBoard->at(0))
                 {
-                    if( cFe->getFeId()== cFeId )
+                    if( cFe->getId()== cFeId )
                         cHybridIndex = cFe->getIndex();
                 }
-                auto& cReadoutChips = pBoard->fModuleVector[cHybridIndex]->fReadoutChipVector; 
-                const size_t cNblocks = RAW_L1_CBC*cReadoutChips.size()/L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits 
+                auto cReadoutChips = pBoard->at(cHybridIndex); 
+                const size_t cNblocks = RAW_L1_CBC*cReadoutChips->size()/L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits 
                 std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks , 0);
                 this->splitStream(list , cL1Words , cOffset+3 , cNblocks ); // split 32 bit words in  blocks of 11 bits 
                 
                 // now try and arrange them by CBC again ... 
                 fEventRawList[cFeId].first = cL1Information;
                 fEventRawList[cFeId].second.clear();
-                for(size_t cChipIndex=0; cChipIndex < cReadoutChips.size() ; cChipIndex++)
+                for(size_t cChipIndex=0; cChipIndex < cReadoutChips->size() ; cChipIndex++)
                 {
                     std::bitset<RAW_L1_CBC> cBitset(0);
                     size_t cPosition=0;
                     for( size_t cBlockIndex =0; cBlockIndex < RAW_L1_CBC/L1_BLOCK_SIZE ; cBlockIndex ++) // RAW_L1_CBC/L1_BLOCK_SIZE blocks per chip
                     {
-                        auto cIndex = cChipIndex + cReadoutChips.size()*cBlockIndex; 
+                        auto cIndex = cChipIndex + cReadoutChips->size()*cBlockIndex; 
                         auto& cL1block = cL1Words[cIndex];
                         LOG (DEBUG) << BOLDBLUE << "\t\t... L1 block " << +cIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
                         for(size_t cNbit=0; cNbit < cL1block.size() ; cNbit++ )

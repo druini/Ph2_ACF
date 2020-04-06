@@ -80,8 +80,7 @@ void CBCPulseShape::runCBCPulseShape(void)
 
         measureSCurves( findPedestal() );
         extractPedeNoise();
-        LOG(INFO) << BOLDYELLOW << "The threshold = " << fThresholdAndNoiseContainer.at(0)->at(0)->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold << RESET;
-
+        
         #ifdef __USE_ROOT__
             fCBCHistogramPulseShape.fillCBCPulseShapePlots(delay, fThresholdAndNoiseContainer);
         #else

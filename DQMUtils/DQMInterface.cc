@@ -86,12 +86,11 @@ void DQMInterface::configure(std::string const &calibrationName, std::string con
 
 	Ph2_System::FileParser fParser;
 	std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface *> fBeBoardFWMap;
-	std::vector<Ph2_HwDescription::BeBoard *> fBoardVector;
 	std::stringstream out;
 	DetectorContainer fDetectorStructure;
 	Ph2_System::SettingsMap pSettingsMap;
 
-	fParser.parseHW(configurationFilePath, fBeBoardFWMap, fBoardVector, &fDetectorStructure, out, true);
+	fParser.parseHW(configurationFilePath, fBeBoardFWMap, &fDetectorStructure, out, true);
 	fParser.parseSettings(configurationFilePath, pSettingsMap, out, true);
 
 	if (calibrationName == "pedenoise")
