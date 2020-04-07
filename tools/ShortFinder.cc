@@ -44,7 +44,6 @@ void ShortFinder::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
     ContainerFactory::copyAndInitChannel<int>(*fDetectorContainer, fShortsContainer);
     uint8_t cFirmwareTPdelay=100;
     uint8_t cFirmwareTriggerDelay=200;
-    uint16_t cDefaultStubLatency=50; 
     
     // set-up for TP
     fAllChan = true;
@@ -63,7 +62,6 @@ void ShortFinder::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
         //first, set VCth to the target value for each CBC
         this->setSameDacBeBoard(theBoard , "VCth", pThreshold);
         auto& cThisShortsContainer = fShortsContainer.at(cBoard->getIndex());
-        uint16_t cMinValue=0;
         uint16_t cDelay = fBeBoardInterface->ReadBoardReg( theBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse") ;
         this->setSameDacBeBoard(theBoard, "TriggerLatency", cDelay-1);
         uint8_t cTestGroup=0;

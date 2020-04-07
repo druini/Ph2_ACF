@@ -240,26 +240,27 @@ int main ( int argc, char* argv[] )
                 cDog.Reset (5);
                 std::vector<std::string> cBiases{"VCth", "CAL_Vcasc", "VPLUS1", "VPLUS2", "VBGbias", "VBG_LDO", "Vpafb", "VDDA", "Nc50", "Ipa", "Ipre1", "Ipre2", "CAL_I", "Ibias", "Ipsf", "Ipaos", "Icomp", "Ihyst"};
 
-                for (auto cBoard : cBiasSweep.fBoardVector)
+                for (auto cBoard : *cBiasSweep.fDetectorContainer)
                 {
-                    for (auto cFe : cBoard->fModuleVector)
-                    {
-                        for (auto cCbc : cFe->fReadoutChipVector)
+                    for (auto cOpticalGroup : *cBoard)
+                        for (auto cFe : *cOpticalGroup)
                         {
-
-                            for (auto cBias : cBiases)
+                            for (auto cCbc : *cFe)
                             {
-                                cDog.Reset (160);
-                                t.start();
-                                cBiasSweep.SweepBias (cBias, cCbc);
-                                t.stop();
-                                t.show ("Time for this bias");
-                            }
 
-                            cDog.Reset (25);
-                            cBiasSweep.MeasureMinPower (cBoard, cCbc);
+                                for (auto cBias : cBiases)
+                                {
+                                    cDog.Reset (160);
+                                    t.start();
+                                    cBiasSweep.SweepBias (cBias, static_cast<ReadoutChip*>(cCbc));
+                                    t.stop();
+                                    t.show ("Time for this bias");
+                                }
+
+                                cDog.Reset (25);
+                                cBiasSweep.MeasureMinPower (static_cast<BeBoard*>(cBoard), static_cast<ReadoutChip*>(cCbc));
+                            }
                         }
-                    }
                 }
             #endif
         }
@@ -333,7 +334,7 @@ int main ( int argc, char* argv[] )
             cTool.addFileHandler (cBinaryDataFileName, 'w');
             cTool.initializeFileHandler();
             cTool.ConfigureHw();
-            BeBoard* pBoard = cTool.fBoardVector.at ( 0 );
+            BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at ( 0 ));
             uint32_t cN = 1;
             uint32_t cNthAcq = 0;
             uint32_t count = 0;

@@ -46,8 +46,6 @@ int main( int argc, char* argv[] )
 	LOG (INFO) << BOLDRED << "== 3 =============" << RESET;
 	cTool.InitializeSettings ( cHWFile, outp );
 	LOG (INFO) << BOLDRED << "== 4 =============" << RESET;
-	D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
-	LOG (INFO) << BOLDRED << "== 5 =============" << RESET;
 	cTool.ConfigureHw();	
-	LOG (INFO) << BOLDRED << "== 6 =============" << RESET;
+	LOG (INFO) << BOLDRED << "== 5 =============" << RESET;
 }

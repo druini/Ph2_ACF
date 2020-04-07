@@ -318,10 +318,13 @@ int main ( int argc, char** argv )
                     std::cout << std::endl;
 
                     // reset the counters
-                    for(auto& cFe : pBoard->fModuleVector) {
-                        for(auto& cCbc : cFe->fReadoutChipVector) {
-                            for(uint8_t ch = 0; ch < NCHANNELS; ch++) {
-                                cChannelCounters[cFe->getFeId()][cCbc->getChipId()][ch] = 0;
+                    for(auto cOpticalGroup : *pBoard)
+                    {
+                        for(auto cFe : *cOpticalGroup) {
+                            for(auto cCbc : *cFe) {
+                                for(uint8_t ch = 0; ch < NCHANNELS; ch++) {
+                                    cChannelCounters[cFe->getId()][cCbc->getId()][ch] = 0;
+                                }
                             }
                         }
                     }

@@ -41,10 +41,8 @@ int main ( int argc, char** argv )
     // get values
     std::string cRunControlAddress = ( cmd.foundOption ( "runcontrol" ) ) ? cmd.optionValue ( "runcontrol" ) : "tcp://localhost:44000";
     std::string cName = ( cmd.foundOption ( "name" ) ) ? cmd.optionValue ( "name" ) : "ph2producer";
-    bool cSaveToFile = false;     
     std::string cOutputFile;     
-    if ( cmd.foundOption ( "save" ) )  cSaveToFile = true ;
-
+    
     // create eudaq2 producer (if need can also create eudaq1 here)
     #ifdef __EUDAQ__
         Eudaq2Producer cProducer(cName, cRunControlAddress);

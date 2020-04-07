@@ -72,7 +72,7 @@ void BackEndAlignment::Initialise ()
         {
             for (auto cHybrid : *cOpticalReadout)
             {
-                auto& cRegMapThisHybrid = cRegMapThisBoard->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisBoard->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex());
                 for (auto cChip : *cHybrid)
                 {
                     cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap();
@@ -268,7 +268,6 @@ bool BackEndAlignment::Align()
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         // read back register map before you've done anything 
         auto cBoardRegisterMap = theBoard->getBeBoardRegMap();
-        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
         
         OuterTrackerModule* theFirstHibrid = static_cast<OuterTrackerModule*>(cBoard->at(0)->at(0));
         bool cWithCIC = theFirstHibrid->fCic != NULL;

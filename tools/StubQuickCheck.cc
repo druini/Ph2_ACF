@@ -159,7 +159,6 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
         auto cEventCount = cEvent->GetEventCount(); 
         auto cTDC = cEvent->GetTDC();
         std::vector<uint32_t> cBxIds(0);
-        bool cGoodEvent=false;
         
         LOG (DEBUG) << BOLDBLUE << "Event " << +cEventCount << " --- TDC  " << +cTDC << RESET;
         std::vector<double> cSeeds(0);
@@ -173,7 +172,6 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                 TH2D* cStubHitCorrelation = static_cast<TH2D*> ( getHist ( cFe, Form("StubHitCorrelation") ) );
 
                 auto cBxId = cEvent->BxId( cFe->getId() );
-                auto cStatus = static_cast<D19cCicEvent*>(cEvent)->Status ( cFe->getId() );
                 LOG (DEBUG) << BOLDBLUE << "FE" << +cFe->getId() << " BxId " << +cBxId << RESET; 
                 if ( std::find(cBxIds.begin(), cBxIds.end(), cBxId) == cBxIds.end() )
                     cBxIds.push_back(cBxId);

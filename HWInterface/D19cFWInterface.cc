@@ -2492,9 +2492,7 @@ uint32_t D19cFWInterface::computeEventSize ( BeBoard* pBoard )
     uint32_t cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
     fFirmwareFrontEndType = getFrontEndType(cFrontEndTypeCode);
     uint32_t cNFe = pBoard->getNFe();
-    uint32_t cNCbc = 0;
-    uint32_t cNMPA = 0;
-    uint32_t cNSSA = 0;
+    uint32_t cNChips = 0;
 
     uint32_t cNEventSize32 = 0;
 
@@ -2502,25 +2500,20 @@ uint32_t D19cFWInterface::computeEventSize ( BeBoard* pBoard )
     {
         for (const auto cHybrid : *cOpticalGroup)
         {
-            cNCbc += cHybrid->size();
-            cNMPA += cHybrid->size();
-            cNSSA += cHybrid->size();
+            cNChips += cHybrid->size();
         }
     }
+    FrontEndType theFrontEndType = static_cast<ReadoutChip*>(pBoard->at(0)->at(0)->at(0))->getFrontEndType();
     if( fNCic != 0 ) 
     {
         uint32_t cSparsified = ReadReg( "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable" ) ;
         LOG (DEBUG) << BOLDBLUE << "CIC sparsification expected to be : " << +cSparsified << RESET;
     }
     else
-    if (cNCbc>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNCbc * D19C_EVENT_SIZE_32_CBC3;
-    if (cNMPA>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNMPA * D19C_EVENT_SIZE_32_MPA;
-    if (cNSSA>0) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNSSA * D19C_EVENT_SIZE_32_SSA;
-    if (cNCbc>0 && cNMPA>0)
-    {
-        LOG(INFO) << "Not configurable for multiple chips";
-        exit (1);
-    }
+    if (theFrontEndType==FrontEndType::CBC3) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNChips * D19C_EVENT_SIZE_32_CBC3;
+    if (theFrontEndType==FrontEndType::MPA ) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_MPA;
+    if (theFrontEndType==FrontEndType::SSA ) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_SSA;
+    
     if (fIsDDR3Readout) 
     {
         uint32_t cNEventSize32_divided_by_8 = ((cNEventSize32 >> 3) << 3);
