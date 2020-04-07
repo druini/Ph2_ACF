@@ -22,11 +22,12 @@ void MultiplexingSetup::Initialise ( )
 // Scan multiplexing set-up
 void MultiplexingSetup::Scan()
 {
-    for (auto cBoard : this->fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
-        LOG (INFO) << BOLDBLUE << "Scanning all available backplanes and cards on BeBoard " << +cBoard->getBeBoardId() << RESET;
-        fBeBoardInterface->setBoard ( cBoard->getBeBoardId() );
-        fBeBoardInterface->getBoardInfo(cBoard);
+        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
+        LOG (INFO) << BOLDBLUE << "Scanning all available backplanes and cards on BeBoard " << +theBoardId << RESET;
+        fBeBoardInterface->setBoard ( theBoardId );
+        fBeBoardInterface->getBoardInfo(static_cast<BeBoard*>(cBoard));
         fAvailableCards = static_cast<D19cFWInterface*>( fBeBoardInterface->getFirmwareInterface())->ScanMultiplexingSetup();
         parseAvailable(false);
         printAvailableCards();
@@ -36,20 +37,22 @@ void MultiplexingSetup::Scan()
 // Disconnect multiplexing set-up
 void MultiplexingSetup::Disconnect()
 {
-    for (auto cBoard : this->fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
-        LOG (INFO) << BOLDBLUE << "Disconnecting all backplanes and cards on BeBoard " << +cBoard->getBeBoardId() << RESET;
-        fBeBoardInterface->setBoard ( cBoard->getBeBoardId() );
-        fBeBoardInterface->getBoardInfo(cBoard);
+        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
+        LOG (INFO) << BOLDBLUE << "Disconnecting all backplanes and cards on BeBoard " << +theBoardId << RESET;
+        fBeBoardInterface->setBoard ( theBoardId );
+        fBeBoardInterface->getBoardInfo(static_cast<BeBoard*>(cBoard));
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->DisconnectMultiplexingSetup();
     }
 }
 void MultiplexingSetup::ConfigureSingleCard(uint8_t pBackPlaneId, uint8_t pCardId)
 {
-    for (auto cBoard : this->fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
-        LOG (INFO) << BOLDBLUE << "Configuring backplane " << +pBackPlaneId << " card " << +pCardId << " on BeBoard " << +cBoard->getBeBoardId() << RESET;
-        fBeBoardInterface->setBoard ( cBoard->getBeBoardId() );
+        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
+        LOG (INFO) << BOLDBLUE << "Configuring backplane " << +pBackPlaneId << " card " << +pCardId << " on BeBoard " << +theBoardId << RESET;
+        fBeBoardInterface->setBoard ( theBoardId );
         fAvailableCards = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureMultiplexingSetup( pBackPlaneId, pCardId );
         parseAvailable();
         printAvailableCards();
@@ -57,10 +60,11 @@ void MultiplexingSetup::ConfigureSingleCard(uint8_t pBackPlaneId, uint8_t pCardI
 }
 void MultiplexingSetup::ConfigureAll()
 {
-    for (auto cBoard : this->fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
-        LOG (INFO) << BOLDBLUE << "Configuring all cards on BeBoard " << +cBoard->getBeBoardId() << RESET;
-        fBeBoardInterface->setBoard ( cBoard->getBeBoardId() );
+        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
+        LOG (INFO) << BOLDBLUE << "Configuring all cards on BeBoard " << +theBoardId << RESET;
+        fBeBoardInterface->setBoard ( theBoardId );
         fAvailableCards = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ScanMultiplexingSetup();
         parseAvailable(false);
         printAvailableCards();
@@ -75,9 +79,10 @@ void MultiplexingSetup::ConfigureAll()
 }
 void MultiplexingSetup::Power(bool pEnable)
 {
-    for (auto cBoard : this->fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
-        LOG (INFO) << BOLDBLUE << "Powering FMCs on " << +cBoard->getBeBoardId() << RESET;
+        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
+        LOG (INFO) << BOLDBLUE << "Powering FMCs on " << +theBoardId << RESET;
         //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->InitFMCPower();
     } 
 }

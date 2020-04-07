@@ -86,7 +86,7 @@ int main ( int argc, char* argv[] )
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit (&cTool);
     cCicAligner.Initialise ( );
-    BeBoard* pBoard = cCicAligner.fBoardVector.at(0);
+    BeBoard* pBoard = static_cast<BeBoard*>(cCicAligner.fDetectorContainer->at(0));
 
     bool cPhaseAligned = cCicAligner.PhaseAlignment();
     if( cPhaseAligned )
@@ -108,14 +108,17 @@ int main ( int argc, char* argv[] )
                     cCicAligner.accept (cThresholdVisitor);
                 else
                 {
-                    for (auto& cFe : pBoard->fModuleVector)
+                    for(auto cOpticalGroup : *pBoard)
                     {
-                        for (auto& cChip : cFe->fReadoutChipVector)
+                        for (auto cFe : *cOpticalGroup)
                         {
-                            if( cChip->getChipId() == cFeChip )
+                            for (auto cChip : *cFe)
                             {
-                                cThresholdVisitor.setThreshold(cVcth);
-                                cChip->accept (cThresholdVisitor);
+                                if( cChip->getId() == cFeChip )
+                                {
+                                    cThresholdVisitor.setThreshold(cVcth);
+                                    static_cast<ReadoutChip*>(cChip)->accept (cThresholdVisitor);
+                                }
                             }
                         }
                     }

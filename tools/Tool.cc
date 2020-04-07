@@ -74,7 +74,6 @@ Tool::Tool (const Tool& pTool)
 	fChipInterface               = pTool.fChipInterface;
     fCicInterface                = pTool.fCicInterface;
     fReadoutChipInterface        = pTool.fReadoutChipInterface;
-	fBoardVector                 = pTool.fBoardVector;
 	fBeBoardFWMap                = pTool.fBeBoardFWMap;
 	fSettingsMap                 = pTool.fSettingsMap;
 	fFileHandler                 = pTool.fFileHandler;
@@ -118,7 +117,6 @@ void Tool::Inherit (Tool* pTool)
 	fChipInterface               = pTool->fChipInterface;
 	fCicInterface                = pTool->fCicInterface;
 	fReadoutChipInterface        = pTool->fReadoutChipInterface;
-	fBoardVector                 = pTool->fBoardVector;
 	fBeBoardFWMap                = pTool->fBeBoardFWMap;
 	fSettingsMap                 = pTool->fSettingsMap;
 	fFileHandler                 = pTool->fFileHandler;
@@ -156,7 +154,6 @@ void Tool::Inherit (SystemController* pSystemController)
 	fReadoutChipInterface = pSystemController->fReadoutChipInterface;
 	fChipInterface        = pSystemController->fChipInterface;
 	fCicInterface         = pSystemController->fCicInterface;
-	fBoardVector          = pSystemController->fBoardVector;
 	fBeBoardFWMap         = pSystemController->fBeBoardFWMap;
 	fSettingsMap          = pSystemController->fSettingsMap;
 	fFileHandler          = pSystemController->fFileHandler;
@@ -244,7 +241,7 @@ void Tool::SoftDestroy()
 
 #ifdef __USE_ROOT__    
 
-	void Tool::bookHistogram ( Chip* pChip, std::string pName, TObject* pObject )
+	void Tool::bookHistogram ( ChipContainer* pChip, std::string pName, TObject* pObject )
 	{
 		TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
 		if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
@@ -255,7 +252,7 @@ void Tool::SoftDestroy()
 		if ( cChipHistMap == std::end ( fChipHistMap ) )
 		{
 			//Fabio: CBC specific -> to be moved out from Tool
-			LOG (INFO) << "Histo Map for CBC " << int ( pChip->getChipId() ) <<  " (FE " << int ( pChip->getFeId() ) << ") does not exist - creating " ;
+			LOG (INFO) << "Histo Map for CBC " << int ( pChip->getId() ) <<  " (FE " << int ( static_cast<ReadoutChip*>(pChip)->getFeId() ) << ") does not exist - creating " ;
 			std::map<std::string, TObject*> cTempChipMap;
 
 			fChipHistMap[pChip] = cTempChipMap;
@@ -274,7 +271,7 @@ void Tool::SoftDestroy()
 		#endif
 	}
 
-	void Tool::bookHistogram ( Module* pModule, std::string pName, TObject* pObject )
+	void Tool::bookHistogram ( ModuleContainer* pModule, std::string pName, TObject* pObject )
 	{
 		TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
 		if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
@@ -284,7 +281,7 @@ void Tool::SoftDestroy()
 
 		if ( cModuleHistMap == std::end ( fModuleHistMap ) )
 		{
-			LOG (INFO) << "Histo Map for Module " << int ( pModule->getFeId() ) << " does not exist - creating " ;
+			LOG (INFO) << "Histo Map for Module " << int ( pModule->getId() ) << " does not exist - creating " ;
 			std::map<std::string, TObject*> cTempModuleMap;
 
 			fModuleHistMap[pModule] = cTempModuleMap;
@@ -302,7 +299,7 @@ void Tool::SoftDestroy()
 		#endif
 	}
 
-	void Tool::bookHistogram ( BeBoard* pBeBoard, std::string pName, TObject* pObject )
+	void Tool::bookHistogram ( BoardContainer* pBeBoard, std::string pName, TObject* pObject )
 	{
 		TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
 		if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
@@ -312,7 +309,7 @@ void Tool::SoftDestroy()
 
 		if ( cBeBoardHistMap == std::end ( fBeBoardHistMap ) )
 		{
-			LOG (INFO) << "Histo Map for Module " << int ( pBeBoard->getBeId() ) << " does not exist - creating " ;
+			LOG (INFO) << "Histo Map for Module " << int ( pBeBoard->getId() ) << " does not exist - creating " ;
 			std::map<std::string, TObject*> cTempModuleMap;
 
 			fBeBoardHistMap[pBeBoard] = cTempModuleMap;
@@ -330,14 +327,14 @@ void Tool::SoftDestroy()
 		#endif
 	}
 
-	TObject* Tool::getHist ( Chip* pChip, std::string pName )
+	TObject* Tool::getHist ( ChipContainer* pChip, std::string pName )
 	{
 		auto cChipHistMap = fChipHistMap.find ( pChip );
 
 		if ( cChipHistMap == std::end ( fChipHistMap ) )
 		{
 			//Fabio: CBC specific -> to be moved out from Tool
-			LOG (ERROR) << RED << "Error: could not find the Histograms for CBC " << int ( pChip->getChipId() ) <<  " (FE " << int ( pChip->getFeId() ) << ")" << RESET ;
+			LOG (ERROR) << RED << "Error: could not find the Histograms for CBC " << int ( pChip->getId() ) <<  " (FE " << int ( static_cast<ReadoutChip*>(pChip)->getFeId() ) << ")" << RESET ;
 			return nullptr;
 		}
 		else
@@ -354,13 +351,13 @@ void Tool::SoftDestroy()
 		}
 	}
 
-	TObject* Tool::getHist ( Module* pModule, std::string pName )
+	TObject* Tool::getHist ( ModuleContainer* pModule, std::string pName )
 	{
 		auto cModuleHistMap = fModuleHistMap.find ( pModule );
 
 		if ( cModuleHistMap == std::end ( fModuleHistMap ) )
 		{
-			LOG (ERROR) << RED << "Error: could not find the Histograms for Module " << int ( pModule->getFeId() ) << RESET ;
+			LOG (ERROR) << RED << "Error: could not find the Histograms for Module " << int ( pModule->getId() ) << RESET ;
 			return nullptr;
 		}
 		else
@@ -376,13 +373,13 @@ void Tool::SoftDestroy()
 		}
 	}
 
-	TObject* Tool::getHist ( BeBoard* pBeBoard, std::string pName )
+	TObject* Tool::getHist ( BoardContainer* pBeBoard, std::string pName )
 	{
 		auto cBeBoardHistMap = fBeBoardHistMap.find ( pBeBoard );
 
 		if ( cBeBoardHistMap == std::end ( fBeBoardHistMap ) )
 		{
-			LOG (ERROR) << RED << "Error: could not find the Histograms for Module " << int ( pBeBoard->getBeId() ) << RESET ;
+			LOG (ERROR) << RED << "Error: could not find the Histograms for Module " << int ( pBeBoard->getId() ) << RESET ;
 			return nullptr;
 		}
 		else
@@ -418,9 +415,9 @@ void Tool::SaveResults()
 		}
 
 		// Now per FE
-		for ( const auto& cFe : fModuleHistMap )
+		for ( const auto& cHybrid : fModuleHistMap )
 		{
-			TString cDirName = Form ( "FE%d", cFe.first->getFeId() );
+			TString cDirName = Form ( "FE%d", cHybrid.first->getId() );
 			TObject* cObj = gROOT->FindObject ( cDirName );
 
 			//if ( cObj ) delete cObj;
@@ -429,7 +426,7 @@ void Tool::SaveResults()
 
 			fResultFile->cd ( cDirName );
 
-			for ( const auto& cHist : cFe.second )
+			for ( const auto& cHist : cHybrid.second )
 				cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
 
 			fResultFile->cd();
@@ -438,7 +435,7 @@ void Tool::SaveResults()
 		for ( const auto& cChip : fChipHistMap )
 		{
 			//Fabio: CBC specific -> to be moved out from Tool
-			TString cDirName = Form ( "FE%dCBC%d", cChip.first->getFeId(), cChip.first->getChipId() );
+			TString cDirName = Form ( "FE%dCBC%d", static_cast<ReadoutChip*>(cChip.first)->getFeId(), cChip.first->getId() );
 			TObject* cObj = gROOT->FindObject ( cDirName );
 
 			//if ( cObj ) delete cObj;
@@ -603,70 +600,77 @@ void Tool::CloseResultFile()
 
 void Tool::dumpConfigFiles()
 {
-  if (!fDirectoryName.empty())
-    {
-      //Fabio: CBC specific -> to be moved out from Tool
-      for(auto board : *fDetectorContainer)
-        {
-          for(auto module : *board)
-            {
-              for(auto chip : *module)
-                {
-                  std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_FE" + std::to_string(module->getId()) + "_Chip" + std::to_string(chip->getId()) + ".txt";
-                	LOG (DEBUG) << BOLDBLUE << "Dumping readout chip configuration to " << cFilename << RESET;
-                  static_cast<ReadoutChip*>(chip)->saveRegMap ( cFilename.data() );
-                }
-                auto& cCic = static_cast<OuterTrackerModule*>(module)->fCic;
-                if( cCic != NULL ) 
-            	{
-            		std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_FE" + std::to_string(module->getId()) + ".txt";
-                	LOG (INFO) << BOLDBLUE << "Dumping CIC configuration to " << cFilename << RESET;
-                	cCic->saveRegMap ( cFilename.data() );
-                }
-            }
-        }
-      LOG (INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fDirectoryName << RESET;
-    }
-  else LOG (ERROR) << "Error: no results Directory initialized" << RESET;
+	if (!fDirectoryName.empty())
+	{
+		//Fabio: CBC specific -> to be moved out from Tool
+		for(auto board : *fDetectorContainer)
+		{
+			for(auto opticalGroup : *board)
+			{
+				for(auto module : *opticalGroup)
+				{
+					for(auto chip : *module)
+					{
+						std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(module->getId()) + "_Chip" + std::to_string(chip->getId()) + ".txt";
+						LOG (DEBUG) << BOLDBLUE << "Dumping readout chip configuration to " << cFilename << RESET;
+						static_cast<ReadoutChip*>(chip)->saveRegMap ( cFilename.data() );
+					}
+					auto& cCic = static_cast<OuterTrackerModule*>(module)->fCic;
+					if( cCic != NULL ) 
+					{
+						std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(module->getId()) + ".txt";
+						LOG (INFO) << BOLDBLUE << "Dumping CIC configuration to " << cFilename << RESET;
+						cCic->saveRegMap ( cFilename.data() );
+					}
+				}
+			}
+		}
+		LOG (INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fDirectoryName << RESET;
+	}
+	else LOG (ERROR) << "Error: no results Directory initialized" << RESET;
 }
 
 void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTPState, bool pHoleMode )
 {
 
-	for (auto cBoard : this->fBoardVector)
+	for (auto cBoard : *fDetectorContainer)
 	{
-		for (auto cFe : cBoard->fModuleVector)
+        for(auto cOpticalGroup : *cBoard)
 		{
-			for (auto cChip : cFe->fReadoutChipVector)
+			for (auto cHybrid : *cOpticalGroup)
 			{
-				//Fabio: CBC specific but not used by common scans - BEGIN
-				//first, get the Amux Value
-				uint8_t cOriginalAmuxValue;
-				cOriginalAmuxValue = cChip->getReg ("MiscTestPulseCtrl&AnalogMux" );
-				//uint8_t cOriginalHitDetectSLVSValue = cChip->getReg ("HitDetectSLVS" );
-
-				std::vector<std::pair<std::string, uint16_t>> cRegVec;
-				uint8_t cRegValue =  to_reg ( 0, pTestGroup );
-
-				if (cChip->getFrontEndType() == FrontEndType::CBC3)
+				for (auto cChip : *cHybrid)
 				{
-					uint8_t cTPRegValue;
+                    ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
+					//Fabio: CBC specific but not used by common scans - BEGIN
+					//first, get the Amux Value
+					uint8_t cOriginalAmuxValue;
+					cOriginalAmuxValue = theChip->getReg ("MiscTestPulseCtrl&AnalogMux" );
+					//uint8_t cOriginalHitDetectSLVSValue = theChip->getReg ("HitDetectSLVS" );
 
-					if (pTPState) cTPRegValue  = (cOriginalAmuxValue |  0x1 << 6);
-					else if (!pTPState) cTPRegValue = (cOriginalAmuxValue & ~ (0x1 << 6) );
+					std::vector<std::pair<std::string, uint16_t>> cRegVec;
+					uint8_t cRegValue =  to_reg ( 0, pTestGroup );
 
-					//uint8_t cHitDetectSLVSValue = (cOriginalHitDetectSLVSValue & ~(0x1 << 6));
+					if (theChip->getFrontEndType() == FrontEndType::CBC3)
+					{
+						uint8_t cTPRegValue;
 
-					//cRegVec.push_back ( std::make_pair ( "HitDetectSLVS", cHitDetectSLVSValue ) );
-					cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux",  cTPRegValue ) );
-					cRegVec.push_back ( std::make_pair ( "TestPulseDel&ChanGroup",  cRegValue ) );
-					cRegVec.push_back ( std::make_pair ( "TestPulsePotNodeSel", pTPAmplitude ) );
-					LOG (DEBUG) << BOLDBLUE << "Read original Amux Value to be: " << std::bitset<8> (cOriginalAmuxValue) << " and changed to " << std::bitset<8> (cTPRegValue) << " - the TP is bit 6!" RESET;
+						if (pTPState) cTPRegValue  = (cOriginalAmuxValue |  0x1 << 6);
+						else if (!pTPState) cTPRegValue = (cOriginalAmuxValue & ~ (0x1 << 6) );
+
+						//uint8_t cHitDetectSLVSValue = (cOriginalHitDetectSLVSValue & ~(0x1 << 6));
+
+						//cRegVec.push_back ( std::make_pair ( "HitDetectSLVS", cHitDetectSLVSValue ) );
+						cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux",  cTPRegValue ) );
+						cRegVec.push_back ( std::make_pair ( "TestPulseDel&ChanGroup",  cRegValue ) );
+						cRegVec.push_back ( std::make_pair ( "TestPulsePotNodeSel", pTPAmplitude ) );
+						LOG (DEBUG) << BOLDBLUE << "Read original Amux Value to be: " << std::bitset<8> (cOriginalAmuxValue) << " and changed to " << std::bitset<8> (cTPRegValue) << " - the TP is bit 6!" RESET;
+					}
+
+					this->fReadoutChipInterface->WriteChipMultReg (theChip, cRegVec);
+					//Fabio: CBC specific but not used by common scans - END
+
 				}
-
-				this->fReadoutChipInterface->WriteChipMultReg (cChip, cRegVec);
-				//Fabio: CBC specific but not used by common scans - END
-
 			}
 		}
 	}
@@ -675,13 +679,17 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
 void Tool::enableTestPulse(bool enableTP)
 {
 	fTestPulse = enableTP;          
-	for (auto cBoard : this->fBoardVector)
+
+	for (auto cBoard : *fDetectorContainer)
 	{
-		for (auto cFe : cBoard->fModuleVector)
+        for(auto cOpticalGroup : *cBoard)
 		{
-			for (auto cChip : cFe->fReadoutChipVector)
+			for (auto cHybrid : *cOpticalGroup)
 			{
-				fReadoutChipInterface->enableInjection(cChip, enableTP);
+				for (auto cChip : *cHybrid)
+				{
+					fReadoutChipInterface->enableInjection(static_cast<ReadoutChip*>(cChip), enableTP);
+				}
 			}
 		}
 	}
@@ -716,11 +724,12 @@ void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
 
 void Tool::setFWTestPulse()
 {
-	for (auto& cBoard : fBoardVector)
+	for (auto& cBoard : *fDetectorContainer)
 	{
+        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
 		std::vector<std::pair<std::string, uint32_t> > cRegVec;
 
-		switch(cBoard->getBoardType())
+		switch(theBoard->getBoardType())
 		{
 		case BoardType::D19C :
 		{
@@ -731,14 +740,14 @@ void Tool::setFWTestPulse()
 
 		default :
 		{
-			LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " BeBoard type not recognized for Bebord "<< cBoard->getBeId() << ", aborting" << RESET;
+			LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " BeBoard type not recognized for Bebord "<< cBoard->getId() << ", aborting" << RESET;
 			throw ("[Tool::setFWTestPulse]\tError, BeBoard type not found");
 			break;
 		}
 
 		}
 
-		fBeBoardInterface->WriteBoardMultReg (cBoard, cRegVec);
+		fBeBoardInterface->WriteBoardMultReg (theBoard, cRegVec);
 	}
 }
 
@@ -791,7 +800,6 @@ std::pair<float,float> Tool::evalNoise(std::vector<float> pData, std::vector<flo
     std::transform(cWeights.begin(), cWeights.end(), pValues.begin(), pData.begin() , std::multiplies<float>()); 
     float cMean = std::accumulate(pData.begin(), pData.end() , 0.);
     cMean /= cSumOfWeights;
-    float cErrorOnMean = 1.0/std::sqrt(cSumOfWeights);
     //weighted sample variance of scan values to get noise
     std::transform(pValues.begin(), pValues.end(),  pData.begin() , [&](float el){ return (el - cMean)*(el-cMean);});
     std::transform(cWeights.begin(), cWeights.end(), pData.begin(), pData.begin() , std::multiplies<float>());
@@ -801,44 +809,6 @@ std::pair<float,float> Tool::evalNoise(std::vector<float> pData, std::vector<flo
     LOG (DEBUG) << BOLDBLUE << "Noise is " << cNoise << " -- sum of weights  " << cSumOfWeights  << " " << cN << " non zero-elements : correction of " << cCorrection << RESET;
     return std::make_pair(cMean, cNoise*cCorrection);
 		}
-
-
-
-// //method to mask a channel list
-// void Tool::maskChannelFromOtherGroups (Chip* pChip, int pTestGroup){
-
-//     std::vector<uint8_t> chipMask;
-//     bool chipHasMaskedChannels = pChip->hasMaskedChannels();
-//     if(chipHasMaskedChannels) chipMask = pChip->getChipMask();
-//     const std::vector<uint8_t> &groupMask = fMaskForTestGroupChannelMap[pTestGroup];
-
-//     RegisterVector cRegVec; 
-//     cRegVec.clear(); 
-
-//     switch(pChip->getFrontEndType())
-//     {
-//         case FrontEndType::CBC3 :
-//         {   
-//             for(uint8_t i=0; i<chipMask.size(); ++i){
-//                 if(chipHasMaskedChannels) cRegVec.push_back ( {fChannelMaskMapCBC3[i], chipMask[i] & groupMask[i] } );
-//                 else cRegVec.push_back ( {fChannelMaskMapCBC3[i], groupMask[i] } );
-//             }
-//             break;
-//         }
-
-//         default :
-//         {
-//             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord "<< 
-//                 pChip->getBeId() << " Module " << pChip->getFeId() << " Chip " << pChip->getChipId() << ", aborting" << RESET;
-//             throw ("[Tool::SetMaskAllChannels]\tError, FrontEnd type not found");
-//             break;
-//         }
-//     }
-
-//     fReadoutChipInterface->WriteChipMultReg ( pChip , cRegVec );
-
-//     return;
-// }
 
 
 
@@ -959,7 +929,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 
 	DetectorDataContainer *outputDataContainer = fDetectorDataContainer;
 
-	ReadoutChip *cChip = static_cast<BeBoard*>(fDetectorContainer->at(boardIndex))->fModuleVector.at(0)->fReadoutChipVector.at(0); //assumption: one BeBoard has only one type of chip;
+	ReadoutChip *cChip = static_cast<ReadoutChip*>(fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0)); //assumption: one BeBoard has only one type of chip;
 
 	bool localDAC = cChip->isDACLocal(dacName);
 	uint8_t numberOfBits = cChip->getNumberOfBits(dacName);
@@ -1016,27 +986,30 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 	for(int iBit = numberOfBits-1; iBit>=0; --iBit)
 	{
 		LOG (DEBUG) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
-		for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
+		for ( auto cOpticalGroup : *(fDetectorContainer->at(boardIndex)))
 		{
-			for ( auto cChip : *cFe )
+            for ( auto cHybrid : *cOpticalGroup )
 			{
-				if(localDAC)
+				for ( auto cChip : *cHybrid )
 				{
-					for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
+					if(localDAC)
 					{
+						for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
+						{
 
-						if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)
-								= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) + (1<<iBit);
-						else currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)
-								= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) & (0xFFFF - (1<<iBit));
+							if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)
+									= previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) + (1<<iBit);
+							else currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)
+									= previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) & (0xFFFF - (1<<iBit));
+						}
 					}
-				}
-				else
-				{
-					if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
-							= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() + (1<<iBit);
-					else currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
-							= previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1<<iBit));
+					else
+					{
+						if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
+								= previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() + (1<<iBit);
+						else currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
+								= previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1<<iBit));
+					}
 				}
 			}
 		}
@@ -1048,31 +1021,34 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 		measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
 		//Determine if it is better or not
-		for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
+		for ( auto cOpticalGroup : *(fDetectorContainer->at(boardIndex)))
 		{
-			for ( auto cChip : *cFe )
+            for ( auto cHybrid : *cOpticalGroup )
 			{
-				if(localDAC)
+				for ( auto cChip : *cHybrid )
 				{
-					for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
+					if(localDAC)
 					{
-						if( currentStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy <= targetOccupancy )
+						for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
 						{
-							previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)
-									= currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel);
-							previousStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy
-									= currentStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
+							if( currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy <= targetOccupancy )
+							{
+								previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)
+										= currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel);
+								previousStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy
+										= currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
+							}
 						}
 					}
-				}
-				else
-				{
-					if( currentStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy <= targetOccupancy )
+					else
 					{
-						previousDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
-								= currentDacList->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
-						previousStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy
-								= currentStepOccupancyContainer->at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy;
+						if( currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy <= targetOccupancy )
+						{
+							previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
+									= currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+							previousStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy
+									= currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy;
+						}
 					}
 				}
 			}
@@ -1166,13 +1142,16 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 	    {
 	      if(fMaskChannelsFromOtherGroups || fTestPulse)
 	        {
-	            for ( auto cFe : *(fDetectorContainer->at(boardIndex)))
-	            {
-	                for ( auto cChip : *cFe )
-	                {
-						fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), group,fMaskChannelsFromOtherGroups,fTestPulse);
-	                }
-	            }
+				for ( auto cOpticalGroup : *(fDetectorContainer->at(boardIndex)))
+				{
+					for ( auto cHybrid : *cOpticalGroup )
+					{
+						for ( auto cChip : *cHybrid )
+						{
+							fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), group,fMaskChannelsFromOtherGroups,fTestPulse);
+						}
+					}
+				}
 	        }
 
 	        groupScan->setGroup(group);
@@ -1181,12 +1160,15 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 
 	    if(fMaskChannelsFromOtherGroups)//re-enable all the channels and evaluate
 	    {
-	        for ( auto cFe : *(fDetectorContainer->at(boardIndex)) )
+	        for ( auto cOpticalGroup : *(fDetectorContainer->at(boardIndex)) )
 	        {
-	            for ( auto cChip : *cFe )
-	            {
-	                fReadoutChipInterface->ConfigureChipOriginalMask ( static_cast<ReadoutChip*>(cChip) );
-	            }
+				for ( auto cHybrid : *cOpticalGroup )
+				{
+					for ( auto cChip : *cHybrid )
+					{
+						fReadoutChipInterface->ConfigureChipOriginalMask ( static_cast<ReadoutChip*>(cChip) );
+					}
+				}
 	        }
 	    }
 	}
@@ -1339,11 +1321,14 @@ void Tool::scanBeBoardDac(uint16_t boardIndex, const std::string &dacName, const
 //Set global DAC for all CBCs in the BeBoard
 void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer)
 {
-	for ( auto cFe : *(fDetectorContainer->at(boardIndex)) )
+	for ( auto cOpticalGroup : *(fDetectorContainer->at(boardIndex)) )
 	{
-		for ( auto cChip : *cFe )
+		for ( auto cHybrid : *cOpticalGroup )
 		{
-			fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), dacName, globalDACContainer.at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>());
+			for ( auto cChip : *cHybrid )
+			{
+				fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), dacName, globalDACContainer.at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>());
+			}
 		}
 	}
 	return;
@@ -1352,12 +1337,15 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacNam
 // set local dac per BeBoard
 void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer)
 {   
-	for ( auto cFe : *(fDetectorContainer->at(boardIndex)) )
+	for ( auto cOpticalGroup : *(fDetectorContainer->at(boardIndex)) )
 	{
-		for ( auto cChip : *cFe )
+		for ( auto cHybrid : *cOpticalGroup )
 		{
-			std::vector<uint16_t> dacVector ;//= dacList.at(cFe->getModuleId()).at(cChip->getChipId());
-			fReadoutChipInterface->WriteChipAllLocalReg ( static_cast<ReadoutChip*>(cChip), dacName, *globalDACContainer.at(boardIndex)->at(cFe->getIndex())->at(cChip->getIndex()));
+			for ( auto cChip : *cHybrid )
+			{
+				std::vector<uint16_t> dacVector ;//= dacList.at(cHybrid->getModuleId()).at(cChip->getChipId());
+				fReadoutChipInterface->WriteChipAllLocalReg ( static_cast<ReadoutChip*>(cChip), dacName, *globalDACContainer.at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+			}
 		}
 	}
 	return;
@@ -1366,33 +1354,36 @@ void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName
 //Set same global DAC for all chips
 void Tool::setSameGlobalDac(const std::string &dacName, const uint16_t dacValue)
 {
-  for (auto& cBoard : fBoardVector)
-    setSameGlobalDacBeBoard(cBoard, dacName, dacValue);
+  for (auto cBoard : *fDetectorContainer)
+    setSameGlobalDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue);
 }
 
 //Set same global DAC for all chips in the BeBoard
 void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue)
 {
-  if (fDoBoardBroadcast == false)
-    {
-      for (auto cFe : pBoard->fModuleVector)
-        {
-          if (fDoModuleBroadcast == false)
-            for (auto cChip : cFe->fReadoutChipVector)
-              fReadoutChipInterface->WriteChipReg(cChip, dacName, dacValue);
-          else fReadoutChipInterface->WriteModuleBroadcastChipReg(cFe, dacName, dacValue);
-        }
-    }
-  else fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
+	if (fDoBoardBroadcast == false)
+	{
+        for(auto cOpticalGroup : *pBoard)
+		{
+			for (auto cHybrid : *cOpticalGroup)
+			{
+				if (fDoModuleBroadcast == false)
+				for (auto cChip : *cHybrid)
+					fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
+				else fReadoutChipInterface->WriteModuleBroadcastChipReg(static_cast<Module*>(cHybrid), dacName, dacValue);
+			}
+		}
+	}
+	else fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
 }
 
 // set same local dac for all BeBoard
 void Tool::setSameLocalDac(const std::string &dacName, const uint16_t dacValue)
 {
 
-	for (auto& cBoard : fBoardVector)
+	for (auto cBoard : *fDetectorContainer)
 	{
-		setSameLocalDacBeBoard(cBoard, dacName, dacValue);
+		setSameLocalDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue);
 	}
 
 	return;
@@ -1402,15 +1393,19 @@ void Tool::setSameLocalDac(const std::string &dacName, const uint16_t dacValue)
 // set same local dac per BeBoard
 void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue)
 {
-	for ( auto cFe : pBoard->fModuleVector )
-	{
-		for ( auto cChip : cFe->fReadoutChipVector )
+	for(auto cOpticalGroup : *pBoard)
+    {
+		for ( auto cHybrid : *cOpticalGroup )
 		{
-			ChannelContainer<uint16_t>* dacVector = new ChannelContainer<uint16_t>(cChip->getNumberOfChannels(),dacValue);
-			ChipContainer theChipContainer(cChip->getIndex(),cChip->getNumberOfRows(),cChip->getNumberOfCols());
-			theChipContainer.setChannelContainer(dacVector);
+			for ( auto cChip : *cHybrid )
+			{
+				ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
+				ChannelContainer<uint16_t>* dacVector = new ChannelContainer<uint16_t>(theChip->getNumberOfChannels(),dacValue);
+				ChipContainer theChipContainer(cChip->getIndex(),cChip->getNumberOfRows(),cChip->getNumberOfCols());
+				theChipContainer.setChannelContainer(dacVector);
 
-			fReadoutChipInterface->WriteChipAllLocalReg ( cChip, dacName, theChipContainer);
+				fReadoutChipInterface->WriteChipAllLocalReg ( theChip, dacName, theChipContainer);
+			}
 		}
 	}
 	return;
@@ -1419,7 +1414,7 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, c
 void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue)
 {
 	//Assumption: 1 BeBoard has only 1 chip flavor:
-	if(pBoard->fModuleVector.at(0)->fReadoutChipVector.at(0)->isDACLocal(dacName))
+	if(static_cast<ReadoutChip*>(pBoard->at(0)->at(0)->at(0))->isDACLocal(dacName))
 	{
 		setSameLocalDacBeBoard(pBoard, dacName, dacValue);
 	}
@@ -1432,9 +1427,9 @@ void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string &dacName, const 
 void Tool::setSameDac(const std::string &dacName, const uint16_t dacValue)
 {
 
-	for (auto& cBoard : fBoardVector)
+	for (auto cBoard : *fDetectorContainer)
 	{
-		setSameDacBeBoard(cBoard, dacName, dacValue);
+		setSameDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue);
 	}
 
 	return;

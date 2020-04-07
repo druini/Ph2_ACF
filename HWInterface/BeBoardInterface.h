@@ -89,7 +89,7 @@ namespace Ph2_HwInterface
      * \param pBoard
      * \param pHandler : pointer to FileHandler object
      */
-    void SetFileHandler (Ph2_HwDescription::BeBoard* pBoard, FileHandler* pHandler);
+    void SetFileHandler (const Ph2_HwDescription::BeBoard* pBoard, FileHandler* pHandler);
 
     /*!
      * \brief enable the file handler

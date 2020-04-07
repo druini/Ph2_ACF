@@ -109,7 +109,7 @@ int main ( int argc, char** argv )
         }while(cIter < 100);
     #endif
 
-    BeBoard* pBoard = cTool.fBoardVector.at(0);
+    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at ( 0 ));
     cTool.fBeBoardInterface->getBoardInfo(pBoard);
 
     bool cTestPulse = ( cmd.foundOption ( "testpulse" ) ) ? true : false;
@@ -163,7 +163,7 @@ int main ( int argc, char** argv )
 
 
             // be careful works only for one hybrid
-            std::vector < ReadoutChip* > &cCbcVector = pBoard->getModule(0)->fReadoutChipVector;
+            ModuleContainer* cCbcVector = pBoard->at(0)->at(0);
             /*for( auto cCbc : cCbcVector )
             {
                 static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->enableHipSuppression( cCbc, false, true,0);
@@ -171,7 +171,7 @@ int main ( int argc, char** argv )
                 std::vector<int>     cBends_ph1( 2, static_cast<int>(1*2) ); 
                 static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->injectStubs( cCbc , cSeeds_ph1 , cBends_ph1);
             }*/
-            uint32_t cNCbc = cCbcVector.size();
+            uint32_t cNCbc = cCbcVector->size();
 
             Timer t;
             t.start();
@@ -187,7 +187,7 @@ int main ( int argc, char** argv )
                     cN++;
 
                     double cAvgOccupancyHyb0 = 0;
-                    for(auto cCbc: cCbcVector) cAvgOccupancyHyb0 += ev->GetNHits(0,cCbc->getChipId());
+                    for(auto cCbc: *cCbcVector) cAvgOccupancyHyb0 += ev->GetNHits(0,cCbc->getId());
                     cAvgOccupancy += (cAvgOccupancyHyb0/cNCbc);
 
                     if ( cmd.foundOption ( "dqm" ) )
@@ -247,7 +247,7 @@ int main ( int argc, char** argv )
             // init threshold visitior
             ThresholdVisitor cThresholdVisitor (cTool.fReadoutChipInterface, 0);
             cTool.accept (cThresholdVisitor);
-            auto cFe0 = pBoard->fModuleVector.at(0);
+            auto cFe0 = pBoard->at(0)->at(0);
 
             // hybrid mask
             uint32_t cHybridMask = ( cmd.foundOption ( "mask" ) ) ? convertAnyInt ( cmd.optionValue ( "mask" ).c_str() ) : 0xFFFFFFFF;;
@@ -285,9 +285,9 @@ int main ( int argc, char** argv )
                 for (uint32_t cThreshold = cThresholdMin; cThreshold < cThresholdMax; cThreshold++) {
 
                     // set threshold
-                    for(auto& cCbc : cFe0->fReadoutChipVector) {
+                    for(auto cCbc : *cFe0) {
                         cThresholdVisitor.setThreshold(cThreshold);
-                        cCbc->accept(cThresholdVisitor);
+                        static_cast<ReadoutChip*>(cCbc)->accept(cThresholdVisitor);
                     }
 
                     // measure (equvuvalient tasks)
@@ -297,11 +297,14 @@ int main ( int argc, char** argv )
                         cTool.ReadNEvents( pBoard, cNEventsToCollect );
                         const std::vector<Event*>& events = cTool.GetEvents ( pBoard );
                         for ( auto& ev : events ) {
-                            for(auto& cFe : pBoard->fModuleVector) {
-                                for(auto& cCbc : cFe->fReadoutChipVector) {
-                                    for(uint8_t ch = 0; ch < NCHANNELS; ch++) {
-                                        if (ev->DataBit(cFe->getFeId(), cCbc->getChipId(), ch))
-                                            cChannelCounters[cFe->getFeId()][cCbc->getChipId()][ch]++;
+                            for(auto cOpticalGroup : *pBoard)
+                            {
+                                for(auto& cFe : *cOpticalGroup) {
+                                    for(auto& cCbc : *cFe) {
+                                        for(uint8_t ch = 0; ch < NCHANNELS; ch++) {
+                                            if (ev->DataBit(cFe->getId(), cCbc->getId(), ch))
+                                                cChannelCounters[cFe->getId()][cCbc->getId()][ch]++;
+                                        }
                                     }
                                 }
                             }
@@ -315,10 +318,13 @@ int main ( int argc, char** argv )
                     std::cout << std::endl;
 
                     // reset the counters
-                    for(auto& cFe : pBoard->fModuleVector) {
-                        for(auto& cCbc : cFe->fReadoutChipVector) {
-                            for(uint8_t ch = 0; ch < NCHANNELS; ch++) {
-                                cChannelCounters[cFe->getFeId()][cCbc->getChipId()][ch] = 0;
+                    for(auto cOpticalGroup : *pBoard)
+                    {
+                        for(auto cFe : *cOpticalGroup) {
+                            for(auto cCbc : *cFe) {
+                                for(uint8_t ch = 0; ch < NCHANNELS; ch++) {
+                                    cChannelCounters[cFe->getId()][cCbc->getId()][ch] = 0;
+                                }
                             }
                         }
                     }

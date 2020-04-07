@@ -62,39 +62,47 @@ void StubQuickCheck::Initialise ()
     }
     
 
-    for (auto cBoard : this->fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
-
-        for (auto& cFe : cBoard->fModuleVector)
+        for(auto cOpticalGroup : *cBoard)
         {
-            TString  cName = Form ( "h_StubBend");
-            TObject* cObj = gROOT->FindObject ( cName );
-            if ( cObj ) delete cObj;
-            TH1D* cBend = new TH1D ( cName, Form("Stub Bend - CIC%d; Bend",(int)cFe->getFeId()) , cBinsBend_Default.size()-1, cBinsBend_Default.data() );
-            bookHistogram ( cFe , "StubBend", cBend );
-            
-            cName = Form ( "h_StubInformation");
-            cObj = gROOT->FindObject ( cName );
-            TH2D* cStubInformation = new TH2D ( cName, Form("Stub Information - CIC%d ; Stub Bend; Stub Seed",(int)cFe->getFeId()) , cBinsBend_Default.size()-1, cBinsBend_Default.data(), 127*8/0.5, 0 , 127*8 );
-            bookHistogram ( cFe , "StubInformation", cStubInformation );
-            
-            cName = Form ( "h_StubHitCorrelation");
-            cObj = gROOT->FindObject ( cName );
-            TH2D* cStubHitCorrelation = new TH2D ( cName, Form("Stub & Hit correlation - CIC%d; Hit in Bottom Sensor ; Stub Seed",(int)cFe->getFeId()) , 127*8, 0 , 127*8 , 127*8/0.5, 0 , 127*8 );
-            bookHistogram ( cFe , "StubHitCorrelation", cStubHitCorrelation );
-            
-            // now want to loop over all other FEs 
-            for (auto& cOtherFe : cBoard->fModuleVector)
+            for (auto cFe : *cOpticalGroup)
             {
-                if( cFe->getFeId() == cOtherFe->getFeId() )
-                    continue;
-                
-                cName = Form ( "h_BxId_Cic%d_Cic%d", cFe->getFeId(), cOtherFe->getFeId());
-                cObj = gROOT->FindObject ( cName );
+                TString  cName = Form ( "h_StubBend");
+                TObject* cObj = gROOT->FindObject ( cName );
                 if ( cObj ) delete cObj;
-                TString cTitle = Form("BxId from 2 CICs [%d and %d] on links [%d and %d]; Bx Id [CIC %d]; BxId [CIC%d]", cFe->getFeId(), cOtherFe->getFeId(), cFe->getLinkId(), cOtherFe->getLinkId(), cFe->getFeId(), cOtherFe->getFeId());
-                TH2D* cHist2D = new TH2D( cName, cTitle , 3565 , 0 , 3565 , 3565 , 0 , 3565);
-                bookHistogram ( cFe , Form("BxId_CIC%d", cOtherFe->getFeId()), cHist2D );
+                TH1D* cBend = new TH1D ( cName, Form("Stub Bend - CIC%d; Bend",(int)cFe->getId()) , cBinsBend_Default.size()-1, cBinsBend_Default.data() );
+                bookHistogram ( cFe , "StubBend", cBend );
+                
+                cName = Form ( "h_StubInformation");
+                cObj = gROOT->FindObject ( cName );
+                TH2D* cStubInformation = new TH2D ( cName, Form("Stub Information - CIC%d ; Stub Bend; Stub Seed",(int)cFe->getId()) , cBinsBend_Default.size()-1, cBinsBend_Default.data(), 127*8/0.5, 0 , 127*8 );
+                bookHistogram ( cFe , "StubInformation", cStubInformation );
+                
+                cName = Form ( "h_StubHitCorrelation");
+                cObj = gROOT->FindObject ( cName );
+                TH2D* cStubHitCorrelation = new TH2D ( cName, Form("Stub & Hit correlation - CIC%d; Hit in Bottom Sensor ; Stub Seed",(int)cFe->getId()) , 127*8, 0 , 127*8 , 127*8/0.5, 0 , 127*8 );
+                bookHistogram ( cFe , "StubHitCorrelation", cStubHitCorrelation );
+                
+                // now want to loop over all other FEs 
+                for(auto cOtherOpticalGroup : *cBoard)
+                {
+                    if( cOpticalGroup->getId() == cOtherOpticalGroup->getId() )
+                        continue;
+
+                    for (auto& cOtherFe : *cOtherOpticalGroup)
+                    {
+                        if( cFe->getId() == cOtherFe->getId() )
+                            continue;
+                        
+                        cName = Form ( "h_BxId_Cic%d_Cic%d", cFe->getId(), cOtherFe->getId());
+                        cObj = gROOT->FindObject ( cName );
+                        if ( cObj ) delete cObj;
+                        TString cTitle = Form("BxId from 2 CICs [%d and %d] on links [%d and %d]; Bx Id [CIC %d]; BxId [CIC%d]", cFe->getId(), cOtherFe->getId(), static_cast<OuterTrackerModule*>(cFe)->getLinkId(), static_cast<OuterTrackerModule*>(cOtherFe)->getLinkId(), cFe->getId(), cOtherFe->getId());
+                        TH2D* cHist2D = new TH2D( cName, cTitle , 3565 , 0 , 3565 , 3565 , 0 , 3565);
+                        bookHistogram ( cFe , Form("BxId_CIC%d", cOtherFe->getId()), cHist2D );
+                    }
+                }
             }
         }
         
@@ -151,103 +159,110 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
         auto cEventCount = cEvent->GetEventCount(); 
         auto cTDC = cEvent->GetTDC();
         std::vector<uint32_t> cBxIds(0);
-        bool cGoodEvent=false;
         
         LOG (DEBUG) << BOLDBLUE << "Event " << +cEventCount << " --- TDC  " << +cTDC << RESET;
         std::vector<double> cSeeds(0);
 
-        for (auto& cFe : pBoard->fModuleVector)
+        for(auto cOpticalGroup : *pBoard)
         {
-            TH1D* cBendHistogram = static_cast<TH1D*> ( getHist ( cFe, Form("StubBend") ) );
-            TH2D* cStubInformation = static_cast<TH2D*> ( getHist ( cFe, Form("StubInformation") ) );
-            TH2D* cStubHitCorrelation = static_cast<TH2D*> ( getHist ( cFe, Form("StubHitCorrelation") ) );
-
-            auto cBxId = cEvent->BxId( cFe->getFeId() );
-            auto cStatus = static_cast<D19cCicEvent*>(cEvent)->Status ( cFe->getFeId() );
-            LOG (DEBUG) << BOLDBLUE << "FE" << +cFe->getFeId() << " BxId " << +cBxId << RESET; 
-            if ( std::find(cBxIds.begin(), cBxIds.end(), cBxId) == cBxIds.end() )
-                cBxIds.push_back(cBxId);
-
-            // correlation plot for BxIds 
-            for (auto& cOtherFe : pBoard->fModuleVector)
+            for (auto cFe : *cOpticalGroup)
             {
-                if( cFe->getFeId() == cOtherFe->getFeId() )
-                    continue;
-            
-                TH2D* cBxCorrelation = static_cast<TH2D*> ( getHist ( cFe, Form("BxId_CIC%d", cOtherFe->getFeId())  ) );
-                cBxCorrelation->Fill(cBxId ,  cEvent->BxId( cOtherFe->getFeId() ) );
-            }
-                
-            for (auto& cChip : cFe->fReadoutChipVector) 
-            {
-                auto cHits = cEvent->GetHits( cFe->getFeId() , cChip->getChipId() );
-                auto cStubs = cEvent->StubVector( cFe->getFeId(), cChip->getChipId()) ;
-                
-                // quick cut on exactly one hit in each layer 
-                if( cHits.size() > 2 ) 
-                    continue;
+                TH1D* cBendHistogram = static_cast<TH1D*> ( getHist ( cFe, Form("StubBend") ) );
+                TH2D* cStubInformation = static_cast<TH2D*> ( getHist ( cFe, Form("StubInformation") ) );
+                TH2D* cStubHitCorrelation = static_cast<TH2D*> ( getHist ( cFe, Form("StubHitCorrelation") ) );
 
-                bool cBottomSensor=false;
-                bool cTopSensor=false;
-                for( auto cHit : cHits )
+                auto cBxId = cEvent->BxId( cFe->getId() );
+                LOG (DEBUG) << BOLDBLUE << "FE" << +cFe->getId() << " BxId " << +cBxId << RESET; 
+                if ( std::find(cBxIds.begin(), cBxIds.end(), cBxId) == cBxIds.end() )
+                    cBxIds.push_back(cBxId);
+
+                // correlation plot for BxIds 
+                for(auto cOtherOpticalGroup : *pBoard)
                 {
-                    if( cHit%2 == 0 )
-                        cBottomSensor = true;
+                    if( cOpticalGroup->getId() == cOtherOpticalGroup->getId() )
+                        continue;
 
-                    if( cHit%2 != 0 )
-                        cTopSensor = true;
-                }
-                if( !(cBottomSensor&&cTopSensor) )
-                    continue;
-
-                for( auto cHit : cHits )
-                {
-                    if( cHit%2 == 0 ) 
+                    for (auto& cOtherFe : *cOtherOpticalGroup)
                     {
-                        auto cStripHit = cChip->getChipId()*127 + std::floor(cHit/2.0) ;
-                        auto cModuleStrip = (cFe->getFeId()%2 == 0 ) ? cStripHit :  (8*127 - 1 -  cStripHit) ; 
-                        for( auto cStub : cStubs )
-                        {
-                            auto cStripSeed = cChip->getChipId()*127 + cStub.getPosition()*0.5 ;
-                            auto cSeedModuleStrip = (cFe->getFeId()%2 == 0 ) ? cStripSeed :  (8*127 - 1 -  cStripSeed) ; 
-                            cStubHitCorrelation->Fill( cModuleStrip, cSeedModuleStrip );
-                        }
-                        if( cStubs.size() == 0 )
-                            cStubHitCorrelation->Fill( cModuleStrip, -1 ); // fill underflow bin if no stubs are present in the event
+                        if( cFe->getId() == cOtherFe->getId() )
+                            continue;
+                
+                        TH2D* cBxCorrelation = static_cast<TH2D*> ( getHist ( cFe, Form("BxId_CIC%d", cOtherFe->getId())  ) );
+                        cBxCorrelation->Fill(cBxId ,  cEvent->BxId( cOtherFe->getId() ) );
                     }
                 }
-
-                cCandidatesHist->Fill(cTDC);
-                cNevents+=1;
-                for( auto cStub : cStubs )
+                    
+                for (auto cChip : *cFe) 
                 {
+                    auto cHits = cEvent->GetHits( cFe->getId() , cChip->getId() );
+                    auto cStubs = cEvent->StubVector( cFe->getId(), cChip->getId()) ;
+                    
+                    // quick cut on exactly one hit in each layer 
+                    if( cHits.size() > 2 ) 
+                        continue;
 
-                    //cHist->Fill(cStub.getBend());
-                    std::vector<uint8_t> cExpectedHits = static_cast<CbcInterface*>(fReadoutChipInterface)->stubInjectionPattern( cChip, cStub.getPosition() , cStub.getBend() ); 
-                    bool cMatchFound=false;
-                    for( auto cExpectedHit : cExpectedHits )
+                    bool cBottomSensor=false;
+                    bool cTopSensor=false;
+                    for( auto cHit : cHits )
                     {
-                        auto cLookForMatch = std::find(cHits.begin(), cHits.end(), cExpectedHit);
-                        if( cLookForMatch != cHits.end() )
+                        if( cHit%2 == 0 )
+                            cBottomSensor = true;
+
+                        if( cHit%2 != 0 )
+                            cTopSensor = true;
+                    }
+                    if( !(cBottomSensor&&cTopSensor) )
+                        continue;
+
+                    for( auto cHit : cHits )
+                    {
+                        if( cHit%2 == 0 ) 
                         {
-                            cMatchFound = true;
+                            auto cStripHit = cChip->getId()*127 + std::floor(cHit/2.0) ;
+                            auto cModuleStrip = (cFe->getId()%2 == 0 ) ? cStripHit :  (8*127 - 1 -  cStripHit) ; 
+                            for( auto cStub : cStubs )
+                            {
+                                auto cStripSeed = cChip->getId()*127 + cStub.getPosition()*0.5 ;
+                                auto cSeedModuleStrip = (cFe->getId()%2 == 0 ) ? cStripSeed :  (8*127 - 1 -  cStripSeed) ; 
+                                cStubHitCorrelation->Fill( cModuleStrip, cSeedModuleStrip );
+                            }
+                            if( cStubs.size() == 0 )
+                                cStubHitCorrelation->Fill( cModuleStrip, -1 ); // fill underflow bin if no stubs are present in the event
                         }
                     }
-                    if( cMatchFound )
+
+                    cCandidatesHist->Fill(cTDC);
+                    cNevents+=1;
+                    for( auto cStub : cStubs )
                     {
-                        auto cBendValue = (cStub.getBend() & 0x7 );
-                        auto cBendSign = std::pow(-1, (cStub.getBend() & 0x8 ) >> 3 ) ;
-                        auto cBendDefLUT = (cBendSign < 0 ) ? cBendValue*cBendSign : cBendValue*cBendSign*0.5 ; 
-                        auto cStrip = cChip->getChipId()*127 + cStub.getPosition()*0.5 ;
-                        auto cModuleStrip = (cFe->getFeId()%2 == 0 ) ? cStrip :  (8*127 - 1 -  cStrip) ; 
-                        //LOG(DEBUG) << BOLDGREEN << "Stub seed " << +cStub.getPosition() << " - bend code " << std::bitset<4>(cStub.getBend()) << " -- bend value " << +cBendValue << " sign is " << +cBendSign << " --- " << +cBendDefLUT << RESET;
-                        //LOG(DEBUG) << BOLDGREEN << ">>>event " << +cEventCount << "\t..FE" << +cFe->getFeId() << "CBC" << +cChip->getChipId() << "\t.. MATCH FOUND! Stub seed " << +cStub.getPosition() << "-- TDC phase " << +cTDC << RESET;
-                        cBendHistogram->Fill( cBendDefLUT  );
-                        cStubInformation->Fill( cBendDefLUT, cModuleStrip );
-                        cNstubs +=1; 
-                        cMatchesHist->Fill(cTDC);
+
+                        //cHist->Fill(cStub.getBend());
+                        std::vector<uint8_t> cExpectedHits = static_cast<CbcInterface*>(fReadoutChipInterface)->stubInjectionPattern( static_cast<ReadoutChip*>(cChip), cStub.getPosition() , cStub.getBend() ); 
+                        bool cMatchFound=false;
+                        for( auto cExpectedHit : cExpectedHits )
+                        {
+                            auto cLookForMatch = std::find(cHits.begin(), cHits.end(), cExpectedHit);
+                            if( cLookForMatch != cHits.end() )
+                            {
+                                cMatchFound = true;
+                            }
+                        }
+                        if( cMatchFound )
+                        {
+                            auto cBendValue = (cStub.getBend() & 0x7 );
+                            auto cBendSign = std::pow(-1, (cStub.getBend() & 0x8 ) >> 3 ) ;
+                            auto cBendDefLUT = (cBendSign < 0 ) ? cBendValue*cBendSign : cBendValue*cBendSign*0.5 ; 
+                            auto cStrip = cChip->getId()*127 + cStub.getPosition()*0.5 ;
+                            auto cModuleStrip = (cFe->getId()%2 == 0 ) ? cStrip :  (8*127 - 1 -  cStrip) ; 
+                            //LOG(DEBUG) << BOLDGREEN << "Stub seed " << +cStub.getPosition() << " - bend code " << std::bitset<4>(cStub.getBend()) << " -- bend value " << +cBendValue << " sign is " << +cBendSign << " --- " << +cBendDefLUT << RESET;
+                            //LOG(DEBUG) << BOLDGREEN << ">>>event " << +cEventCount << "\t..FE" << +cFe->getId() << "CBC" << +cChip->getId() << "\t.. MATCH FOUND! Stub seed " << +cStub.getPosition() << "-- TDC phase " << +cTDC << RESET;
+                            cBendHistogram->Fill( cBendDefLUT  );
+                            cStubInformation->Fill( cBendDefLUT, cModuleStrip );
+                            cNstubs +=1; 
+                            cMatchesHist->Fill(cTDC);
+                        }
+                        cMatchingEfficiency->Fill( (float)cMatchFound , cTDC);
                     }
-                    cMatchingEfficiency->Fill( (float)cMatchFound , cTDC);
                 }
             }
         }

@@ -540,9 +540,9 @@ namespace Ph2_HwInterface
         GenericPayload cPayload;
         GenericPayload cStubPayload;
 
-        for (auto cFe : pBoard->fModuleVector)
+        for (auto cFe : *pBoard->at(0))
         {
-            uint8_t cFeId = cFe->getFeId();
+            uint8_t cFeId = cFe->getId();
 
             // firt get the list of enabled front ends
             if (cEnabledFe.find (cFeId) == std::end (cEnabledFe) )
@@ -555,9 +555,9 @@ namespace Ph2_HwInterface
             //stub counter per FE
             uint8_t cFeStubCounter = 0;
 
-            for (auto cMPA : static_cast<OuterTrackerModule*>(cFe)->fMPAVector)
+            for (auto cMPA : *cFe)
             {
-                uint8_t cMPAId = cMPA->getMPAId();
+                uint8_t cMPAId = cMPA->getId();
                 uint16_t cKey = encodeId (cFeId, cMPAId);
                 EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 

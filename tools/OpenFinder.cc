@@ -113,10 +113,10 @@ void OpenFinder::FindOpens(bool pExternalTrigger)
 
   // Set the antenna delay and compute the corresponding latency start and stop
   // and force the trigger source to be the antenna trigger (5)
-  for (auto &cBoard : fBoardVector)
+  for (auto cBoard : *fDetectorContainer)
   {
-    this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.antenna_trigger_delay_value", fParameters.antennaDelay);
-    this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", pExternalTrigger ? fParameters.fExternalTriggerSource : fParameters.fAntennaTriggerSource );
+    this->fBeBoardInterface->WriteBoardReg(static_cast<BeBoard*>(cBoard), "fc7_daq_cnfg.fast_command_block.antenna_trigger_delay_value", fParameters.antennaDelay);
+    this->fBeBoardInterface->WriteBoardReg(static_cast<BeBoard*>(cBoard), "fc7_daq_cnfg.fast_command_block.trigger_source", pExternalTrigger ? fParameters.fExternalTriggerSource : fParameters.fAntennaTriggerSource );
   }
   uint16_t cStart = fParameters.antennaDelay - 1;
   uint16_t cStop = fParameters.antennaDelay + (fParameters.latencyRange) + 1;
@@ -153,9 +153,9 @@ void OpenFinder::FindOpens(bool pExternalTrigger)
       auto &cContainer = cContainerVector.at(iLatency);
       uint16_t &cLatency = cListOfLatencies.at(iLatency);
       double averageOccupancy = 0;
-      for (auto &cBoard : this->fBoardVector)
+      for (auto cBoard : *fDetectorContainer)
         averageOccupancy += cContainer->at(cBoard->getIndex())->getSummary<Occupancy, Occupancy>().fOccupancy;
-      averageOccupancy /= fBoardVector.size();
+      averageOccupancy /= fDetectorContainer->size();
       LOG(DEBUG) << BOLDBLUE << "Latency value of " << +cLatency << " I have occupancy of " << averageOccupancy << RESET;
       if (averageOccupancy > maxOccupancy)
       {
@@ -172,23 +172,25 @@ void OpenFinder::FindOpens(bool pExternalTrigger)
     {
         auto& cOccupancy = cMeasurement.at(cBoard->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy;
         LOG (INFO) << BOLDBLUE << "Measured occupancy for a latency of " << bestLatency << " is " << cOccupancy << RESET;
-        for(auto cFe: *cBoard) // for on module - begin 
-        {
-            for(auto cChip: *cFe) // for on chip - begin 
-            {
-                //ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex()));
-                std::vector<uint8_t> cOpens(0);
-                std::vector<int> cConnectedChannels = cSearchAntennaMap->second.find( (int)cChip->getId() )->second;
-                for( auto cConnectedChannel : cConnectedChannels )
-                {
-                  auto cOccupancy = cChip->getChannel<Occupancy>(cConnectedChannel).fOccupancy;
-                  LOG (DEBUG) << BOLDBLUE << "\t.. channel " << +cConnectedChannel << " occupancy is " << cOccupancy << RESET;
-                  if( cOccupancy < fParameters.fThreshold ) 
-                    cOpens.push_back( cConnectedChannel );
-                }
-                LOG (INFO) << BOLDBLUE << "Found " << +cOpens.size() << " opens on readout chip with id " << +cChip->getId() << RESET;
-            } // for on chip - end 
-        } // for on module - end 
+        for(auto cOpticalGroup: *cBoard) // for on opticalGroup - begin 
+          for(auto cFe: *cOpticalGroup) // for on module - begin 
+          {
+              for(auto cChip: *cFe) // for on chip - begin 
+              {
+                  //ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex()));
+                  std::vector<uint8_t> cOpens(0);
+                  std::vector<int> cConnectedChannels = cSearchAntennaMap->second.find( (int)cChip->getId() )->second;
+                  for( auto cConnectedChannel : cConnectedChannels )
+                  {
+                    auto cOccupancy = cChip->getChannel<Occupancy>(cConnectedChannel).fOccupancy;
+                    LOG (DEBUG) << BOLDBLUE << "\t.. channel " << +cConnectedChannel << " occupancy is " << cOccupancy << RESET;
+                    if( cOccupancy < fParameters.fThreshold ) 
+                      cOpens.push_back( cConnectedChannel );
+                  }
+                  LOG (INFO) << BOLDBLUE << "Found " << +cOpens.size() << " opens on readout chip with id " << +cChip->getId() << RESET;
+              } // for on chip - end 
+          } // for on module - end 
+        } // for on opticalGroup - end 
     } // for on board - end 
   }
   cAntenna.TurnOnAnalogSwitchChannel (9);

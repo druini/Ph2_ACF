@@ -79,44 +79,44 @@ namespace Ph2_HwDescription {
 
     }
 
-    bool BeBoard::removeModule ( uint8_t pModuleId )
-    {
+    // bool BeBoard::removeModule ( uint8_t pModuleId )
+    // {
 
-        bool found = false;
-        std::vector<Module*>::iterator i;
+    //     bool found = false;
+    //     std::vector<Module*>::iterator i;
 
-        for ( i = fModuleVector.begin(); i != fModuleVector.end(); ++i )
-        {
-            if ( ( *i )->getModuleId() == pModuleId )
-            {
-                found = true;
-                break;
-            }
-        }
+    //     for ( i = fModuleVector.begin(); i != fModuleVector.end(); ++i )
+    //     {
+    //         if ( ( *i )->getModuleId() == pModuleId )
+    //         {
+    //             found = true;
+    //             break;
+    //         }
+    //     }
 
-        if ( found )
-        {
-            fModuleVector.erase ( i );
-            return true;
-        }
-        else
-        {
-            LOG (INFO) << "Error:The BeBoard: " << +fBeId
-                       << " doesn't have the module " << +pModuleId ;
-            return false;
-        }
-    }
+    //     if ( found )
+    //     {
+    //         fModuleVector.erase ( i );
+    //         return true;
+    //     }
+    //     else
+    //     {
+    //         LOG (INFO) << "Error:The BeBoard: " << +fBeId
+    //                    << " doesn't have the module " << +pModuleId ;
+    //         return false;
+    //     }
+    // }
 
-    Module* BeBoard::getModule ( uint8_t pModuleId ) const
-    {
-        for ( Module* m : fModuleVector )
-        {
-            if ( m->getModuleId() == pModuleId )
-                return m;
-        }
+    // Module* BeBoard::getModule ( uint8_t pModuleId ) const
+    // {
+    //     for ( Module* m : fModuleVector )
+    //     {
+    //         if ( m->getModuleId() == pModuleId )
+    //             return m;
+    //     }
 
-        return nullptr;
-    }
+    //     return nullptr;
+    // }
 
     void BeBoard::updateCondData (uint32_t& pTDCVal)
     {
@@ -131,17 +131,20 @@ namespace Ph2_HwDescription {
                 if (cCondItem.fUID == 3 ) cCondItem.fValue = pTDCVal;
                 else if (cCondItem.fUID == 1 )
                 {
-                    for (auto cFe : this->fModuleVector)
+                    for( auto cOpticalGroup : *this)
                     {
-                        if (cCondItem.fFeId != cFe->getFeId() ) continue;
-
-                        for (auto cCbc : cFe->fReadoutChipVector )
+                        for (auto cHybrid : *cOpticalGroup)
                         {
-                            if (cCondItem.fCbcId != cCbc->getChipId() ) continue;
-                            else if (cCbc->getFeId() == cCondItem.fFeId && cCbc->getChipId() == cCondItem.fCbcId)
+                            if (cCondItem.fFeId != cHybrid->getId() ) continue;
+
+                            for (auto cCbc : *cHybrid)
                             {
-                                ChipRegItem cRegItem = cCbc->getRegItem ( cCondItem.fRegName );
-                                cCondItem.fValue = cRegItem.fValue;
+                                if (cCondItem.fCbcId != cCbc->getId() ) continue;
+                                else if (cHybrid->getId() == cCondItem.fFeId && cCbc->getId() == cCondItem.fCbcId)
+                                {
+                                    ChipRegItem cRegItem = static_cast<ReadoutChip*>(cCbc)->getRegItem ( cCondItem.fRegName );
+                                    cCondItem.fValue = cRegItem.fValue;
+                                }
                             }
                         }
                     }

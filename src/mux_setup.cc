@@ -51,8 +51,7 @@ int main ( int argc, char** argv )
     bool cMuxScan = ( cmd.foundOption ( "mux_scan" ) ) ? true : false;
     bool cMuxConfigure = ( cmd.foundOption ( "mux_configure" ) ) ? true : false;
     bool cMuxAutoConfigure = ( cmd.foundOption ( "mux_auto_configure" ) ) ? true : false;
-    bool cPowerEnable = ( cmd.foundOption ( "enable_fmc_power" ) ) ? true : false;
-
+    
     // now query the parsing results
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/D19CHWDescription.xml";
 

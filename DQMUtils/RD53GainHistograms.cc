@@ -75,49 +75,51 @@ bool GainHistograms::fill (std::vector<char>& dataBuffer)
 void GainHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL)
 {
   for (const auto cBoard : OccupancyContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          if (cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cHybrid : *cOpticalGroup)
+        for (const auto cChip : *cHybrid)
+          {
+            if (cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
 
-          auto* hOcc2D             = Occupancy2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-          auto* ErrorReadOut2DHist = ErrorReadOut2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+            auto* hOcc2D             = Occupancy2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+            auto* ErrorReadOut2DHist = ErrorReadOut2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
-          for (auto row = 0u; row < RD53::nRows; row++)
-            for (auto col = 0u; col < RD53::nCols; col++)
-              {
-                if (cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy != RD53Shared::ISDISABLED)
-                  hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row,col).fPh);
-                if (cChip->getChannel<OccupancyAndPh>(row,col).readoutError == true) ErrorReadOut2DHist->Fill(col+1, row+1);
-              }
-        }
+            for (auto row = 0u; row < RD53::nRows; row++)
+              for (auto col = 0u; col < RD53::nCols; col++)
+                {
+                  if (cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy != RD53Shared::ISDISABLED)
+                    hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row,col).fPh);
+                  if (cChip->getChannel<OccupancyAndPh>(row,col).readoutError == true) ErrorReadOut2DHist->Fill(col+1, row+1);
+                }
+          }
 }
 
 void GainHistograms::fillGainAndIntercept (const DetectorDataContainer& GainAndInterceptContainer)
 {
   for (const auto cBoard : GainAndInterceptContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          if (cChip->getChannelContainer<GainAndIntercept>() == nullptr) continue;
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cHybrid : *cOpticalGroup)
+        for (const auto cChip : *cHybrid)
+          {
+            if (cChip->getChannelContainer<GainAndIntercept>() == nullptr) continue;
 
-          auto* Gain1DHist      = Gain1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-          auto* Intercept1DHist = Intercept1D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-          auto* Gain2DHist      = Gain2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-          auto* Intercept2DHist = Intercept2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-          auto* ErrorFit2DHist  = ErrorFit2D.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+            auto* Gain1DHist      = Gain1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+            auto* Intercept1DHist = Intercept1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+            auto* Gain2DHist      = Gain2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+            auto* Intercept2DHist = Intercept2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+            auto* ErrorFit2DHist  = ErrorFit2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
-          for (auto row = 0u; row < RD53::nRows; row++)
-            for (auto col = 0u; col < RD53::nCols; col++)
-              if (cChip->getChannel<GainAndIntercept>(row,col).fGain == RD53Shared::FITERROR) ErrorFit2DHist->Fill(col+1, row+1);
-              else if (cChip->getChannel<GainAndIntercept>(row,col).fGain != 0)
-                {
-                  Gain1DHist->Fill(cChip->getChannel<GainAndIntercept>(row,col).fGain);
-                  Intercept1DHist->Fill(cChip->getChannel<GainAndIntercept>(row,col).fIntercept);
-                  Gain2DHist->SetBinContent(col+1, row+1, cChip->getChannel<GainAndIntercept>(row,col).fGain);
-                  Intercept2DHist->SetBinContent(col+1, row+1, cChip->getChannel<GainAndIntercept>(row,col).fIntercept);
-                }
-        }
+            for (auto row = 0u; row < RD53::nRows; row++)
+              for (auto col = 0u; col < RD53::nCols; col++)
+                if (cChip->getChannel<GainAndIntercept>(row,col).fGain == RD53Shared::FITERROR) ErrorFit2DHist->Fill(col+1, row+1);
+                else if (cChip->getChannel<GainAndIntercept>(row,col).fGain != 0)
+                  {
+                    Gain1DHist->Fill(cChip->getChannel<GainAndIntercept>(row,col).fGain);
+                    Intercept1DHist->Fill(cChip->getChannel<GainAndIntercept>(row,col).fIntercept);
+                    Gain2DHist->SetBinContent(col+1, row+1, cChip->getChannel<GainAndIntercept>(row,col).fGain);
+                    Intercept2DHist->SetBinContent(col+1, row+1, cChip->getChannel<GainAndIntercept>(row,col).fIntercept);
+                  }
+          }
 }
 
 void GainHistograms::process ()

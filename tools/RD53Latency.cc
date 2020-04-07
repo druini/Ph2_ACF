@@ -156,15 +156,16 @@ void Latency::analyze ()
   ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theLatencyContainer);
 
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
         {
           auto best   = 0.;
           auto regVal = 0;
 
           for (auto i = 0u; i < dacList.size(); i++)
             {
-              auto current = theOccContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i];
+              auto current = theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i];
               if (current > best)
                 {
                   regVal = dacList[i];
@@ -173,17 +174,17 @@ void Latency::analyze ()
             }
 
           if (nTRIGxEvent > 1)
-            LOG (INFO) << GREEN << "Best latency for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is within ["
+            LOG (INFO) << GREEN << "Best latency for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is within ["
                        << BOLDYELLOW << regVal - nTRIGxEvent + 1 << "," << regVal << GREEN << "] (n.bx)" << RESET;
           else
-            LOG (INFO) << GREEN << "Best latency for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
+            LOG (INFO) << GREEN << "Best latency for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
                        << BOLDYELLOW << regVal << RESET << GREEN << " (n.bx)" << RESET;
 
 
           // ######################################################
           // # Fill latency container and download new DAC values #
           // ######################################################
-          theLatencyContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
+          theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
           this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", regVal, true);
         }
 }
@@ -222,11 +223,12 @@ void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& 
       // # Save output #
       // ###############
       for (const auto cBoard : *output)
-        for (const auto cModule : *cBoard)
-          for (const auto cChip : *cModule)
+        for (const auto cOpticalGroup : *cBoard)
+          for (const auto cModule : *cOpticalGroup)
+            for (const auto cChip : *cModule)
             {
               float occ = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy;
-              theContainer->at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i] = occ;
+              theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i] = occ;
             }
     }
 }
@@ -236,10 +238,11 @@ void Latency::chipErrorReport ()
   auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
         {
-          LOG (INFO) << GREEN << "Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+          LOG (INFO) << GREEN << "Readout chip error report for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
           LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
@@ -255,14 +258,15 @@ void Latency::saveChipRegisters (int currentRun)
   std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
 
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
         {
           static_cast<RD53*>(cChip)->copyMaskFromDefault();
           if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
           static_cast<RD53*>(cChip)->saveRegMap(fileReg);
           std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
           system(command.c_str());
-          LOG (INFO) << BOLDBLUE << "\t--> Latency saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> Latency saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 }

@@ -124,9 +124,9 @@ int main ( int argc, char* argv[] )
     // Set Vcth to pedestal, or overload with manual setting
     std::vector<double_t> cNoiseV;
     ThresholdVisitor cVisitor (cTool.fReadoutChipInterface, 0);
-    Module* cFe = cPedeNoise.fBoardVector.at (0)->fModuleVector.at (0);
+    ModuleContainer* cFe = cPedeNoise.fDetectorContainer->at(0)->at(0)->at(0);
     int i = 0;
-    for (auto cCbc : cFe->fReadoutChipVector)
+    for (auto cCbc : *cFe)
     {
 	uint16_t cPedestal = 0; //round (cPedeNoise.getPedestal (cCbc) );
 	double   cNoise    = 0.; //cPedeNoise.getNoise (cCbc);
@@ -134,9 +134,10 @@ int main ( int argc, char* argv[] )
 	
 	if (cManualVcth==0) 
 	{
+        ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
 	    cVisitor.setThreshold (cPedestal+cPedestalShift);
-	    cVisitor.visitChip(*cCbc);      // Visit a specific CBC
-	    cCbc->accept (cVisitor); // Should probably make a special Visitor to set a vector of Vcth's
+	    cVisitor.visitReadoutChip(*theCbc);      // Visit a specific CBC
+	    theCbc->accept (cVisitor); // Should probably make a special Visitor to set a vector of Vcth's
 	    LOG (INFO) << BOLDRED << "CBC" << i << ": set threshold to pedestal ("<<cPedestal<<") plus "<<cPedestalShift<<": "<< cPedestal+cPedestalShift << RESET;
 	}
 	else 

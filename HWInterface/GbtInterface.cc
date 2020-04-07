@@ -555,7 +555,6 @@ namespace Ph2_HwInterface
             icWrite( pInterface, cRegister , cRegValue );
         }
         // then for EC port 
-        uint16_t cRegister = 232;
     }
     void GbtInterface::gbtxFrameAlignerDLL(BeBoardFWInterface* pInterface, std::vector<uint8_t> pGroups, uint8_t pDLLcurrent, uint8_t pLockMode )
     {
@@ -819,13 +818,11 @@ namespace Ph2_HwInterface
     {
         // number of bytes to write at a time 
         uint8_t cNBytes = 2; 
-        uint8_t cNSimWrites = 1;
         // work in progress
         std::map<uint8_t, std::vector<uint32_t>> cI2C; 
         cI2C.clear();
 
         auto cIterator = pVecSend.begin();
-        size_t cRegisters=0;
         SCAI2C cSCAcommand;
         while( cIterator < pVecSend.end() ) 
         {
@@ -905,17 +902,17 @@ namespace Ph2_HwInterface
                     {
                         auto& cChipId = cChipIterator->first;
                         auto& cRegisters = cChipIterator->second;
-                        uint32_t cErrorCode=0;
-                        uint8_t cSlave = 0; 
+                        // uint32_t cErrorCode=0;
+                        // uint8_t cSlave = 0; 
                         if( cChipId < 8 ) // CBC 
                         {
-                            cSlave = 0x40 | (cChipId + 1 );
+                            // cSlave = 0x40 | (cChipId + 1 );
                             cNBytes=2;
-                            cErrorCode = this->cbcSetPage(pInterface,(cMaster-fSCAMaster), cChipId, cPage+1);
+                            // cErrorCode = this->cbcSetPage(pInterface,(cMaster-fSCAMaster), cChipId, cPage+1);
                         }
                         else
                         {
-                            cSlave = 0x60;
+                            // cSlave = 0x60;
                             cNBytes = 3 ;
                         }
 
@@ -926,14 +923,12 @@ namespace Ph2_HwInterface
                         cIterator = cRegisters.begin();
                         while( cIterator < cRegisters.end() ) 
                         {
-                            uint32_t cWord = *cIterator;
+                            // uint32_t cWord = *cIterator;
                             //upload data bytes to send in the DATA register
-                            uint8_t cAddress = ( cWord & (0xFF << 8) ) >> 8;
-                            uint8_t cValue = ( cWord & (0xFF << 0) ) >> 0;
-                            uint16_t cDataField = (cAddress << 8) | cValue ; 
-                            uint32_t pData = (cChipId < 8 ) ? ((cAddress << 8*3) | (cValue << 8*2)) : ( (cAddress << 16) | ( cValue << 8) );
-                            cErrorCode = ecWrite( pInterface, cMaster , 0x40 , pData  );
-                            cErrorCode = ecWrite(pInterface, cMaster , 0xDA , (cSlave << 3*8) );
+                            // uint8_t cAddress = ( cWord & (0xFF << 8) ) >> 8;
+                            // uint8_t cValue = ( cWord & (0xFF << 0) ) >> 0;
+                            // cErrorCode = ecWrite( pInterface, cMaster , 0x40 , pData  );
+                            // cErrorCode = ecWrite(pInterface, cMaster , 0xDA , (cSlave << 3*8) );
                             cIterator++;
                         }
                         cChipIterator++;

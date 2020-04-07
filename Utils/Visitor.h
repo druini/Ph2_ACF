@@ -27,6 +27,7 @@ namespace GUI
 namespace Ph2_HwDescription
 {
 	class BeBoard;
+	class OpticalGroup;
 	class Module;
 	class Chip;
     class ReadoutChip;
@@ -59,6 +60,11 @@ class HwDescriptionVisitor
 	 * \param pBeBoard
 	 */
 	virtual void visitBeBoard( Ph2_HwDescription::BeBoard& pBeBoard ) {}
+	/*!
+	 * \brief Visitor for OpticalGroup Class
+	 * \param pOpticalGroup
+	 */
+	virtual void visitOpticalGroup( Ph2_HwDescription::OpticalGroup& pOpticalGroup ) {}
 	/*!
 	 * \brief Visitor for Module Class
 	 * \param pModule

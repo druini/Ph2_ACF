@@ -40,61 +40,64 @@ void StubSweep::Initialize()
     uint32_t cCbcIdMax = 0;
     uint32_t cFeCount = 0;
 
-    for (auto cBoard : fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
-        for (auto cFe : cBoard->fModuleVector)
+        for(auto cOpticalGroup : *cBoard)
         {
-            uint32_t cFeId = cFe->getFeId();
-            cFeCount++;
-            fType = cFe->getFrontEndType();
-
-            for (auto cCbc : cFe->fReadoutChipVector)
+            for (auto cFe : *cOpticalGroup)
             {
-                uint32_t cCbcId = cCbc->getChipId();
-                cCbcCount++;
+                uint32_t cFeId = cFe->getId();
+                cFeCount++;
+                fType = static_cast<OuterTrackerModule*>(cFe)->getFrontEndType();
 
-                if ( cCbcId > cCbcIdMax ) cCbcIdMax = cCbcId;
+                for (auto cCbc : *cFe)
+                {
+                    uint32_t cCbcId = cCbc->getId();
+                    cCbcCount++;
 
-                cName = Form ("StubSweep_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getChipId() );
-                cObj = gROOT->FindObject (cName);
+                    if ( cCbcId > cCbcIdMax ) cCbcIdMax = cCbcId;
 
-                if (cObj) delete cObj;
+                    cName = Form ("StubSweep_Fe%d_Cbc%d", cFe->getId(), cCbc->getId() );
+                    cObj = gROOT->FindObject (cName);
 
-                // stub sweep
-                TProfile* cStubSweepHist = new TProfile ( cName, Form ( "Stub Sweep FE%d CBC%d ; Test Pulse Channel [1-254]; Stub Address", cFeId, cCbcId ), 254, -0.5, 254.5 );
-                cStubSweepHist->SetMarkerStyle ( 20 );
-                cStubSweepHist->SetStats (0);
-                cStubSweepHist->SetMarkerStyle (4);
-                cStubSweepHist->SetMarkerSize (0.5);
-                cStubSweepHist->SetLineColor (kBlue);
-                cStubSweepHist->SetMarkerColor (kBlue);
-                cStubSweepHist->GetYaxis()->SetTitleOffset (1.3);
-                cStubSweepHist->GetYaxis()->SetRangeUser (0, 255);
-                cStubSweepHist->GetXaxis()->SetRangeUser (0, 255);
+                    if (cObj) delete cObj;
 
-                bookHistogram ( cCbc, "StubAddresses", cStubSweepHist );
+                    // stub sweep
+                    TProfile* cStubSweepHist = new TProfile ( cName, Form ( "Stub Sweep FE%d CBC%d ; Test Pulse Channel [1-254]; Stub Address", cFeId, cCbcId ), 254, -0.5, 254.5 );
+                    cStubSweepHist->SetMarkerStyle ( 20 );
+                    cStubSweepHist->SetStats (0);
+                    cStubSweepHist->SetMarkerStyle (4);
+                    cStubSweepHist->SetMarkerSize (0.5);
+                    cStubSweepHist->SetLineColor (kBlue);
+                    cStubSweepHist->SetMarkerColor (kBlue);
+                    cStubSweepHist->GetYaxis()->SetTitleOffset (1.3);
+                    cStubSweepHist->GetYaxis()->SetRangeUser (0, 255);
+                    cStubSweepHist->GetXaxis()->SetRangeUser (0, 255);
 
-                // bend information
-                cName = Form ("StubBends_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getChipId() );
-                cObj = gROOT->FindObject (cName);
+                    bookHistogram ( cCbc, "StubAddresses", cStubSweepHist );
 
-                if (cObj) delete cObj;
+                    // bend information
+                    cName = Form ("StubBends_Fe%d_Cbc%d", cFe->getId(), cCbc->getId() );
+                    cObj = gROOT->FindObject (cName);
 
-                TProfile* cStubBendHist = new TProfile ( cName, Form ( "Bend Information FE%d CBC%d ; Test Pulse Channel [1-254]; Stub Bend", cFeId, cCbcId ), 254, -0.5, 254.5 );
-                cStubBendHist->SetMarkerStyle ( 20 );
-                cStubBendHist->SetStats (0);
-                cStubBendHist->SetMarkerStyle (4);
-                cStubBendHist->SetMarkerSize (0.5);
-                cStubBendHist->SetLineColor (kBlue);
-                cStubBendHist->SetMarkerColor (kBlue);
-                cStubBendHist->GetXaxis()->SetRangeUser (0, 255);
-                cStubBendHist->GetYaxis()->SetRangeUser (0.0, 15.0 );
-                cStubBendHist->GetYaxis()->SetTitleOffset (1.3);
+                    if (cObj) delete cObj;
 
-                bookHistogram ( cCbc, "StubBends", cStubBendHist );
+                    TProfile* cStubBendHist = new TProfile ( cName, Form ( "Bend Information FE%d CBC%d ; Test Pulse Channel [1-254]; Stub Bend", cFeId, cCbcId ), 254, -0.5, 254.5 );
+                    cStubBendHist->SetMarkerStyle ( 20 );
+                    cStubBendHist->SetStats (0);
+                    cStubBendHist->SetMarkerStyle (4);
+                    cStubBendHist->SetMarkerSize (0.5);
+                    cStubBendHist->SetLineColor (kBlue);
+                    cStubBendHist->SetMarkerColor (kBlue);
+                    cStubBendHist->GetXaxis()->SetRangeUser (0, 255);
+                    cStubBendHist->GetYaxis()->SetRangeUser (0.0, 15.0 );
+                    cStubBendHist->GetYaxis()->SetTitleOffset (1.3);
 
-                // mask all channels on the CBC here
-                maskAllChannels ( cCbc );
+                    bookHistogram ( cCbc, "StubBends", cStubBendHist );
+
+                    // mask all channels on the CBC here
+                    maskAllChannels ( static_cast<ReadoutChip*>(cCbc) );
+                }
             }
         }
 
@@ -119,146 +122,151 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
 {
     std::stringstream outp;
 
-    for (auto cBoard : fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
-        for (auto cFe : cBoard->fModuleVector)
+        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
+        for(auto cOpticalGroup : *cBoard)
         {
-            uint32_t cFeId = cFe->getFeId();
-
-            for (auto cCbc : cFe->fReadoutChipVector)
+            for (auto cFe : *cOpticalGroup)
             {
-                uint32_t cCbcId = cCbc->getChipId();
+                uint32_t cFeId = cFe->getId();
 
-                // before you do anything else make sure that the test pulse is enabled
-                configureTestPulse (cCbc, 1);
-
-                for ( uint8_t  cTestGroup = 0 ; cTestGroup < 8 ; cTestGroup++)
+                for (auto cCbc : *cFe)
                 {
-                    //re-run the phase finding at least at the end of each group
-                    // without this it looks like I loose sync with the FC7
-                    // [ get un-correlated stubs showing up in the CBC event]
-                    //fBeBoardInterface->FindPhase (cBoard);
+                    uint32_t cCbcId = cCbc->getId();
 
+                    // before you do anything else make sure that the test pulse is enabled
+                    ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
+                    configureTestPulse (theCbc, 1);
 
-                    // get channels in test group
-                    std::vector<uint8_t> cChannelVector;
-                    cChannelVector.clear();
-                    cChannelVector = findChannelsInTestGroup ( cTestGroup );
-
-                    // first, configure test pulse
-                    uint8_t cRegValue =  to_reg ( fDelay, cTestGroup );
-                    fReadoutChipInterface->WriteChipReg ( cCbc, "TestPulseDel&ChanGroup",  cRegValue  );
-
-
-                    // now un-mask channel in pairs
-                    bool isEven = ( (cChannelVector.size() % 2) == 0 ) ;
-                    unsigned int cNumberOfPairs = ( (isEven) ? 0 : 1) + cChannelVector.size() / 2;
-                    LOG (DEBUG) << "Test Group : " << +cTestGroup  ;
-
-                    for ( unsigned int i = 0 ; i < cNumberOfPairs ; i++ )
+                    for ( uint8_t  cTestGroup = 0 ; cTestGroup < 8 ; cTestGroup++)
                     {
-                        std::vector<uint8_t> cChannelPair;
-                        cChannelPair.clear();
-                        cChannelPair.push_back ( cChannelVector[2 * i]   );
+                        //re-run the phase finding at least at the end of each group
+                        // without this it looks like I loose sync with the FC7
+                        // [ get un-correlated stubs showing up in the CBC event]
+                        //fBeBoardInterface->FindPhase (cBoard);
 
-                        if ( ! (!isEven && i == cNumberOfPairs - 1) ) cChannelPair.push_back ( cChannelVector[2 * i + 1] );
 
-                        // if( cChannelPair.size() == 2 ) LOG (DEBUG) << "\t\t (" << +i << ") " << +cChannelPair[0] << " and " << +cChannelPair[1] ;
-                        // else LOG (DEBUG) << "\t\t (" << +i << ") " << +cChannelPair[0] ;
+                        // get channels in test group
+                        std::vector<uint8_t> cChannelVector;
+                        cChannelVector.clear();
+                        cChannelVector = findChannelsInTestGroup ( cTestGroup );
 
-                        //only un-mask channels in this test pair
-                        uint8_t cMaskRegValue = 0 ;
+                        // first, configure test pulse
+                        uint8_t cRegValue =  to_reg ( fDelay, cTestGroup );
+                        fReadoutChipInterface->WriteChipReg ( theCbc, "TestPulseDel&ChanGroup",  cRegValue  );
 
-                        for ( unsigned int j = 0 ; j < cChannelVector.size() ; j++ )
+
+                        // now un-mask channel in pairs
+                        bool isEven = ( (cChannelVector.size() % 2) == 0 ) ;
+                        unsigned int cNumberOfPairs = ( (isEven) ? 0 : 1) + cChannelVector.size() / 2;
+                        LOG (DEBUG) << "Test Group : " << +cTestGroup  ;
+
+                        for ( unsigned int i = 0 ; i < cNumberOfPairs ; i++ )
                         {
-                            uint8_t cBitShift = (cChannelVector[j] - 1) % 8;
+                            std::vector<uint8_t> cChannelPair;
+                            cChannelPair.clear();
+                            cChannelPair.push_back ( cChannelVector[2 * i]   );
 
-                            if ( std::find (cChannelPair.begin(), cChannelPair.end(), cChannelVector[j] ) != cChannelPair.end()  )
-                                cMaskRegValue |=  (1 << cBitShift);
-                        }
+                            if ( ! (!isEven && i == cNumberOfPairs - 1) ) cChannelPair.push_back ( cChannelVector[2 * i + 1] );
 
-                        // write the CBC mask registers
-                        uint8_t cRegisterIndex = (cChannelPair[0] - 1) / 8;
-                        std::string cRegName;
+                            // if( cChannelPair.size() == 2 ) LOG (DEBUG) << "\t\t (" << +i << ") " << +cChannelPair[0] << " and " << +cChannelPair[1] ;
+                            // else LOG (DEBUG) << "\t\t (" << +i << ") " << +cChannelPair[0] ;
 
-                        //LOG (DEBUG) << BLUE << "Un-masking channels " <<  +cChannelPair[0] << " and " << +cChannelPair[1] << RESET ;
-                        if (fType == FrontEndType::CBC3)
+                            //only un-mask channels in this test pair
+                            uint8_t cMaskRegValue = 0 ;
 
-                            cRegName = fChannelMaskMapCBC3[cRegisterIndex];
+                            for ( unsigned int j = 0 ; j < cChannelVector.size() ; j++ )
+                            {
+                                uint8_t cBitShift = (cChannelVector[j] - 1) % 8;
 
-                        // get value that is already in the register
-                        cRegValue = cCbc->getReg (cRegName );
-                        // write new mask to cbc register
-                        fReadoutChipInterface->WriteChipReg ( cCbc, cRegName,  cMaskRegValue  );
-                        //LOG (DEBUG) << "\t" << cRegName << MAGENTA << " wrote - " << std::bitset<8> (cMaskRegValue) << RESET  ;
+                                if ( std::find (cChannelPair.begin(), cChannelPair.end(), cChannelVector[j] ) != cChannelPair.end()  )
+                                    cMaskRegValue |=  (1 << cBitShift);
+                            }
+
+                            // write the CBC mask registers
+                            uint8_t cRegisterIndex = (cChannelPair[0] - 1) / 8;
+                            std::string cRegName;
+
+                            //LOG (DEBUG) << BLUE << "Un-masking channels " <<  +cChannelPair[0] << " and " << +cChannelPair[1] << RESET ;
+                            if (fType == FrontEndType::CBC3)
+
+                                cRegName = fChannelMaskMapCBC3[cRegisterIndex];
+
+                            // get value that is already in the register
+                            cRegValue = theCbc->getReg (cRegName );
+                            // write new mask to cbc register
+                            fReadoutChipInterface->WriteChipReg ( theCbc, cRegName,  cMaskRegValue  );
+                            //LOG (DEBUG) << "\t" << cRegName << MAGENTA << " wrote - " << std::bitset<8> (cMaskRegValue) << RESET  ;
 
 
-                        // Read an event from the cbc
-                        // I'm going to keep reading until i have the same number of hits as expected ...
-                        // this is to make sure that I'm not looking at noise on the chip
-                        // do this a maximum of fReadBackAttempts times
-                        uint32_t cNhits = 0 ;
-                        int cCounter = 0 ;
-                        uint8_t cStubPosition ;
-                        std::vector<Event*> cEvents;
-                        std::stringstream outp;
-
-                        do
-                        {
-                            cEvents.clear();
-                            ReadNEvents (cBoard, pNEvents);
-                            cEvents = GetEvents ( cBoard );
-                            unsigned int j = 0 ;
+                            // Read an event from the cbc
+                            // I'm going to keep reading until i have the same number of hits as expected ...
+                            // this is to make sure that I'm not looking at noise on the chip
+                            // do this a maximum of fReadBackAttempts times
+                            uint32_t cNhits = 0 ;
+                            int cCounter = 0 ;
+                            uint8_t cStubPosition ;
+                            std::vector<Event*> cEvents;
+                            std::stringstream outp;
 
                             do
                             {
-                                outp.str ("");
-                                outp << *cEvents[j];
+                                cEvents.clear();
+                                ReadNEvents (theBoard, pNEvents);
+                                cEvents = GetEvents ( theBoard );
+                                unsigned int j = 0 ;
 
-                                cNhits = cEvents[j]->GetNHits ( cFeId, cCbcId );
-                                std::vector<Stub> cStubs = cEvents[j]->StubVector (cFeId, cCbcId );
-                                cStubPosition = cStubs[0].getPosition();
-                                j++;
+                                do
+                                {
+                                    outp.str ("");
+                                    outp << *cEvents[j];
+
+                                    cNhits = cEvents[j]->GetNHits ( cFeId, cCbcId );
+                                    std::vector<Stub> cStubs = cEvents[j]->StubVector (cFeId, cCbcId );
+                                    cStubPosition = cStubs[0].getPosition();
+                                    j++;
+                                }
+                                while ( cNhits != cChannelPair.size() && j < cEvents.size() );
+
+                                cCounter++;
                             }
-                            while ( cNhits != cChannelPair.size() && j < cEvents.size() );
+                            while ( ( cStubPosition - cChannelPair[cChannelPair.size() - 1]  != 0) && cCounter < fReadBackAttempts  );
 
-                            cCounter++;
+                            //while( cNhits != cChannelPair.size() && cCounter < fReadBackAttempts );
+
+                            //LOG (DEBUG) << outp.str();
+                            //LOG (DEBUG) << "Channels : " << +cChannelPair[0] << " and " << +cChannelPair[1] << " -  got stub :  " << +cStubPosition << " with bend : " << +cStubBend << RESET ;
+                            if ( cStubPosition - cChannelPair[cChannelPair.size() - 1]  != 0  )
+                                LOG (INFO) << RED << "WARNING! Mismatch between injected test pulse and stub in channels " << +cChannelPair[0] << " and " << +cChannelPair[1] << " - got " << +cStubPosition << "." << RESET ;
+
+                            // //update histograms
+                            fillStubSweepHist ( theCbc,  cChannelPair, cStubPosition );
+
+                            // Re-configure the CBC mask register back to its original state
+                            fReadoutChipInterface->WriteChipReg ( theCbc, cRegName,  cRegValue  );
+
+                            //if( i%4 == 0 )
+                            updateHists ( "StubAddresses" );
                         }
-                        while ( ( cStubPosition - cChannelPair[cChannelPair.size() - 1]  != 0) && cCounter < fReadBackAttempts  );
-
-                        //while( cNhits != cChannelPair.size() && cCounter < fReadBackAttempts );
-
-                        //LOG (DEBUG) << outp.str();
-                        //LOG (DEBUG) << "Channels : " << +cChannelPair[0] << " and " << +cChannelPair[1] << " -  got stub :  " << +cStubPosition << " with bend : " << +cStubBend << RESET ;
-                        if ( cStubPosition - cChannelPair[cChannelPair.size() - 1]  != 0  )
-                            LOG (INFO) << RED << "WARNING! Mismatch between injected test pulse and stub in channels " << +cChannelPair[0] << " and " << +cChannelPair[1] << " - got " << +cStubPosition << "." << RESET ;
-
-                        // //update histograms
-                        fillStubSweepHist ( cCbc,  cChannelPair, cStubPosition );
-
-                        // Re-configure the CBC mask register back to its original state
-                        fReadoutChipInterface->WriteChipReg ( cCbc, cRegName,  cRegValue  );
-
-                        //if( i%4 == 0 )
-                        updateHists ( "StubAddresses" );
                     }
-                }
 
-                // and before you leave make sure that the test pulse is disabled
-                configureTestPulse (cCbc, 0);
+                    // and before you leave make sure that the test pulse is disabled
+                    configureTestPulse (theCbc, 0);
+                }
             }
         }
     }
 
     this->writeObjects();
 }
-void StubSweep::fillStubSweepHist ( Chip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubPosition )
+void StubSweep::fillStubSweepHist ( ReadoutChip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubPosition )
 {
     // Find the Occupancy histogram for the current Chip
     TProfile* cTmpProfile = static_cast<TProfile*> ( getHist ( pCbc, "StubAddresses" ) );
     cTmpProfile->Fill ( pChannelPair[1], pStubPosition );
 }
-void StubSweep::fillStubBendHist ( Chip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubBend )
+void StubSweep::fillStubBendHist ( ReadoutChip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubBend )
 {
     // Find the Occupancy histogram for the current Chip
     TProfile* cTmpProfile = static_cast<TProfile*> ( getHist ( pCbc, "StubBends" ) );

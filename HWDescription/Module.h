@@ -60,8 +60,8 @@ namespace Ph2_HwDescription {
         {
             pVisitor.visitModule ( *this );
 
-            for ( Chip* cChip : fReadoutChipVector )
-                cChip->accept ( pVisitor );
+            for ( auto cChip : *this )
+                static_cast<ReadoutChip*>(cChip)->accept ( pVisitor );
         }
         /*!
         * \brief Get the number of Chip connected to the Module
@@ -69,7 +69,7 @@ namespace Ph2_HwDescription {
         */
         uint8_t getNChip() const
         {
-            return fReadoutChipVector.size();
+            return this->size();
         }
 
         // void addReadoutChip ( ReadoutChip& pChip )
@@ -88,40 +88,40 @@ namespace Ph2_HwDescription {
 
         //     fReadoutChipVector.push_back ( &pChip );
         // }
-        void addReadoutChip ( ReadoutChip* pChip )
-        {
-            //get the FrontEndType of the Chip and set the module one accordingly
-            //this is the case when no chip type has been set so get the one from the Chip
-            if (fType == FrontEndType::UNDEFINED)
-                fType = pChip->getFrontEndType();
-            //else, the chip type has already been set - if it is different from another Chip, rais a warning
-            //no different chips should be on a module
-            else if (fType != pChip->getFrontEndType() )
-            {
-                LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
-                exit (1);
-            }
+        // void addReadoutChip ( ReadoutChip* pChip )
+        // {
+        //     //get the FrontEndType of the Chip and set the module one accordingly
+        //     //this is the case when no chip type has been set so get the one from the Chip
+        //     if (fType == FrontEndType::UNDEFINED)
+        //         fType = pChip->getFrontEndType();
+        //     //else, the chip type has already been set - if it is different from another Chip, rais a warning
+        //     //no different chips should be on a module
+        //     else if (fType != pChip->getFrontEndType() )
+        //     {
+        //         LOG (ERROR) << "Error, Chips of a module should not be of different type! - aborting";
+        //         exit (1);
+        //     }
 
-            fReadoutChipVector.push_back ( pChip );
-        }
+        //     fReadoutChipVector.push_back ( pChip );
+        // }
 
-        uint8_t getModuleId() const
-        {
-            return fModuleId;
-        };
+        // uint8_t getModuleId() const
+        // {
+        //     return fModuleId;
+        // };
 
         uint8_t getLinkId() const
         {
             return fLinkId;
         };
-        /*!
-         * \brief Set the Module Id
-         * \param pModuleId
-         */
-        void setModuleId ( uint8_t pModuleId )
-        {
-            fModuleId = pModuleId;
-        };
+        // /*!
+        //  * \brief Set the Module Id
+        //  * \param pModuleId
+        //  */
+        // void setModuleId ( uint8_t pModuleId )
+        // {
+        //     fModuleId = pModuleId;
+        // };
         void setLinkId ( uint8_t pLinkId )
         {
             fLinkId = pLinkId;
@@ -129,11 +129,11 @@ namespace Ph2_HwDescription {
 
 
         // std::vector < RD53* > fRD53Vector;
-        std::vector < ReadoutChip* > fReadoutChipVector;
+        // std::vector < ReadoutChip* > fReadoutChipVector;
 
 
       protected:
-        uint8_t fModuleId;
+        // uint8_t fModuleId;
         //link ID 
         uint8_t fLinkId;
     };

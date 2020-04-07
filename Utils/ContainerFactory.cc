@@ -19,12 +19,17 @@ void ContainerFactory::copyStructure(const DetectorContainer& original, Detector
 	for(const BoardContainer *board : original)
 	{
 		BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
-		for(const ModuleContainer* module : *board)
+		for(const OpticalGroupContainer *opticalGroup : *board)
 		{
-			ModuleDataContainer* copyModule = copyBoard->addModuleDataContainer(module->getId());
-			for(const ChipContainer* chip : *module)
+			OpticalGroupDataContainer* copyOpticalGroup = copyBoard->addOpticalGroupDataContainer(opticalGroup->getId());
+
+			for(const ModuleContainer* hybrid : *opticalGroup)
 			{
-				copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
+				ModuleDataContainer* copyModule = copyOpticalGroup->addModuleDataContainer(hybrid->getId());
+				for(const ChipContainer* chip : *hybrid)
+				{
+					copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
+				}
 			}
 		}
 	}

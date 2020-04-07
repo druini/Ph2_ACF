@@ -240,8 +240,6 @@ int main ( int argc, char* argv[] )
 
     // now query the parsing results
     std::string rawFilename = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "";
-    int cNevents = cmd.foundOption ( "events" ) ?  convertAnyInt ( cmd.optionValue ( "events" ).c_str() ) :  0;
-    bool cDecode = ( cmd.foundOption ( "decode" ) );
     
     if ( rawFilename.empty() )
     {
@@ -262,8 +260,8 @@ int main ( int argc, char* argv[] )
     auto cLastLocation = rawFilename.find(".raw");
     std::string cRunNumber = rawFilename.substr(cFirstLocation+1 , cLastLocation  -  cFirstLocation - 1 );
     std::string cDAQFileName = cRunNumber + ".daq";
-    FileHandler* cDAQFileHandler = nullptr;
-    cDAQFileHandler = new FileHandler(cDAQFileName, 'w');
+    // FileHandler* cDAQFileHandler = nullptr;
+    // cDAQFileHandler = new FileHandler(cDAQFileName, 'w');
     LOG (INFO) << "Writing DAQ File to:   " << cDAQFileName << " - ConditionData, if present, parsed from " << cHWFile ;
     
     TString cDirectory = Form("Results/MiniSlinkConverter_%s", cRunNumber.c_str() );
@@ -272,7 +270,6 @@ int main ( int argc, char* argv[] )
     std::stringstream outp;
     LOG (INFO) << "HWfile=" << cHWFile;
     cTool.InitializeHw ( cHWFile, outp );
-    BeBoard* cBoard = cTool.fBoardVector.at(0);
     
     // Add File handler
     cTool.addFileHandler ( rawFilename, 'r' );

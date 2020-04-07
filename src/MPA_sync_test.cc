@@ -48,11 +48,13 @@ int main( int argc, char* argv[] )
 	MPA* mpa1 = new MPA(0, 0, 0, 0,"settings/MPAFiles/MPA_default.txt");
 
 	mpa1->loadfRegMap("settings/MPAFiles/MPA_default.txt");
-	BeBoard* pBoard = mysyscontroller.fBoardVector.at( 0 );
+	BeBoard* pBoard = static_cast<BeBoard*>(mysyscontroller.fDetectorContainer->at(0));
 
-	OuterTrackerModule* MPAM = new OuterTrackerModule();
-	MPAM->addMPA(mpa1);
-	pBoard->addModule(MPAM);
+	// OuterTrackerModule* MPAM = new OuterTrackerModule();
+	// OpticalGroup* theOpticalGroup = new OpticalGroup();
+	// MPAM->emplace_back(mpa1);
+	// theOpticalGroup->emplace_back(MPAM);
+	// pBoard->emplace_back(theOpticalGroup);
 
 	std::chrono::milliseconds LongPOWait( 500 );
 	std::chrono::milliseconds ShortWait( 10 );

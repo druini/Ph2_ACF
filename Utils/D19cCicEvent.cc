@@ -34,21 +34,24 @@ namespace Ph2_HwInterface {
 
     void D19cCicEvent::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup)
     {
-        for(auto module: *boardContainer)
-    	{
-            LOG (DEBUG) << BOLDBLUE << "Filling data container for module " << module->getId() << RESET;
-            for(auto chip: *module)
-    		{
-                std::vector<uint32_t> cHits = this->GetHits ( module->getId(), chip->getId() );
-                LOG (DEBUG) << "\t.... " << +cHits.size() << " hits in chip." << RESET;
-                for( auto cHit : cHits ) 
+        for(auto opticalGroup : *boardContainer)
+        {
+            for(auto hybrid : *opticalGroup)
+            {
+                LOG (DEBUG) << BOLDBLUE << "Filling data container for hybrid " << hybrid->getId() << RESET;
+                for(auto chip: *hybrid)
                 {
-                    if( cTestChannelGroup->isChannelEnabled(cHit)) 
+                    std::vector<uint32_t> cHits = this->GetHits ( hybrid->getId(), chip->getId() );
+                    LOG (DEBUG) << "\t.... " << +cHits.size() << " hits in chip." << RESET;
+                    for( auto cHit : cHits ) 
                     {
-                        chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
+                        if( cTestChannelGroup->isChannelEnabled(cHit)) 
+                        {
+                            chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
+                        }
                     }
                 }
-    		}
+            }
     	}
     }
     // void D19cCicEvent::splitStream( std::vector<uint32_t> pData, const size_t pLength ) 
@@ -699,12 +702,13 @@ namespace Ph2_HwInterface {
         // get link Ids 
         std::vector<uint8_t> cLinkIds(0);
         std::set<uint8_t> cEnabledFe;
-        for (auto& cFe : pBoard->fModuleVector)
+        for (auto& cFe : *pBoard->at(0))
         {
-            if ( std::find(cLinkIds.begin(), cLinkIds.end(), cFe->getLinkId() ) == cLinkIds.end() )
+            uint8_t linkId = static_cast<OuterTrackerModule*>(cFe)->getLinkId();
+            if ( std::find(cLinkIds.begin(), cLinkIds.end(), linkId ) == cLinkIds.end() )
             {
-                cEnabledFe.insert (cFe->getLinkId());
-                cLinkIds.push_back(cFe->getLinkId() );
+                cEnabledFe.insert (linkId);
+                cLinkIds.push_back(linkId);
             }
         }
 
@@ -727,15 +731,16 @@ namespace Ph2_HwInterface {
             uint8_t cFeStubCounter = 0;
             auto cPositionStubs = cStubString.length(); 
             auto cPositionHits = cHitString.length();
-            for (auto cFe : pBoard->fModuleVector)
+            for (auto cFe : *pBoard->at(0))
             {
-                if( cFe->getLinkId() != cLinkId )
+                uint8_t linkId = static_cast<OuterTrackerModule*>(cFe)->getLinkId();
+                if( linkId != cLinkId )
                     continue;
                 
-                uint8_t cFeId = cFe->getFeId();
-                for (auto cChip : cFe->fReadoutChipVector)
+                uint8_t cFeId = cFe->getId();
+                for (auto cChip : *cFe)
                 {
-                    uint8_t cChipId = cChip->getChipId() ;
+                    uint8_t cChipId = cChip->getId() ;
                     auto cIndex = 7 - std::distance( fFeMapping.begin() , std::find( fFeMapping.begin(), fFeMapping.end() , cChipId ) ) ; 
                 	if( cIndex >= (int)fEventDataList[cFeId].second.size() ) 
                 	    continue;
@@ -745,7 +750,7 @@ namespace Ph2_HwInterface {
                     uint32_t cL1ACounter = this->L1Id( cFeId , cChipId);
                     uint32_t cStatusWord = cError << 18 | cPipeAddress << 9 | cL1ACounter;
                     
-                    auto cNHits = this->GetNHits(cFe->getFeId(), cChip->getChipId() );
+                    auto cNHits = this->GetNHits(cFe->getId(), cChip->getId() );
                     //now get the CBC status summary
                     if (pBoard->getConditionDataSet()->getDebugMode() == SLinkDebugMode::ERROR)
                        cStatusPayload.append ( (cError != 0) ? 1 : 0);
@@ -755,7 +760,7 @@ namespace Ph2_HwInterface {
                 
                     //generate the payload
                     //the first line sets the cbc presence bits
-                    cCbcPresenceWord |= 1 << (cChipId + 8*(cFe->getFeId()%2));
+                    cCbcPresenceWord |= 1 << (cChipId + 8*(cFe->getId()%2));
 
                     //254 channels + 2 padding bits at the end 
                     std::bitset<256> cBitsetHitData; 
@@ -767,18 +772,18 @@ namespace Ph2_HwInterface {
                     cHitString += cBitsetHitData.to_string();
                     if( cNHits > 0 )
                     {
-                        LOG (DEBUG) << BOLDBLUE << "Readout chip " << +cChip->getChipId() << " on link " << +cFe->getLinkId() << RESET;
+                        LOG (DEBUG) << BOLDBLUE << "Readout chip " << +cChip->getId() << " on link " << +linkId << RESET;
                         //" : " << cBitsetHitData.to_string() << RESET;
-                        auto cHits = this->GetHits(cFe->getFeId(), cChip->getChipId() );
-                        for( auto cHit : this->GetHits(cFe->getFeId(), cChip->getChipId() ) )
+                        auto cHits = this->GetHits(cFe->getId(), cChip->getId() );
+                        for( auto cHit : this->GetHits(cFe->getId(), cChip->getId() ) )
                         {
                             LOG (DEBUG) << BOLDBLUE << "\t... Hit in channel " << +cHit << RESET;
                         }
                     }
                     // now stubs
-                    for( auto cStub : this->StubVector (cFe->getFeId() , cChip->getChipId()) )
+                    for( auto cStub : this->StubVector (cFe->getId() , cChip->getId()) )
                     {
-                        std::bitset<16> cBitsetStubs( ( (cChip->getChipId() + 8*(cFe->getFeId()%2)) << 12) | (cStub.getPosition() << 4) | cStub.getBend() );
+                        std::bitset<16> cBitsetStubs( ( (cChip->getId() + 8*(cFe->getId()%2)) << 12) | (cStub.getPosition() << 4) | cStub.getBend() );
                         cStubString += cBitsetStubs.to_string();
                         LOG (DEBUG) << BOLDBLUE << "\t.. stub in seed " << +cStub.getPosition() << " and bench code " << std::bitset<4>(cStub.getBend()) << RESET;
                         cFeStubCounter+=1;
@@ -857,7 +862,7 @@ namespace Ph2_HwInterface {
 
     //     for (auto cFe : pBoard->fModuleVector)
     //     {
-    //         uint8_t cFeId = cFe->getFeId();
+    //         uint8_t cFeId = cFe->getId();
 
     //         // firt get the list of enabled front ends
     //         if (cEnabledFe.find (cFeId) == std::end (cEnabledFe) )
@@ -872,7 +877,7 @@ namespace Ph2_HwInterface {
 
     //         for (auto cCbc : cFe->fReadoutChipVector)
     //         {
-    //             uint8_t cCbcId = cCbc->getChipId();
+    //             uint8_t cCbcId = cCbc->getId();
     //             uint16_t cKey = encodeId (cFeId, cCbcId);
     //             EventDataMap::const_iterator cData = fEventDataMap.find (cKey);
 

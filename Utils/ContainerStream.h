@@ -89,6 +89,7 @@ public:
 	}
 
 	uint16_t fBoardId;
+	uint16_t fOpticalGroupId;
 
 } __attribute__((packed));
 
@@ -169,30 +170,34 @@ public:
 } __attribute__((packed));
 
 template <typename C, typename... I>
-class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamChannelContainer<C>>
+class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamChannelContainer<C>>
 {
 	enum HeaderId
 	{
+		OpticalGroupId,
 		ModuleId,
 		ChipId
 	};
 	static constexpr size_t getEnumSize() { return ChipId + 1; }
 
 public:
-	ChannelContainerStream(const std::string &creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamChannelContainer<C>>(creatorName) { ; }
+	ChannelContainerStream(const std::string &creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamChannelContainer<C>>(creatorName) { ; }
 	~ChannelContainerStream() { ; }
 
 	void streamAndSendBoard(BoardDataContainer *board, TCPPublishServer *networkStreamer)
 	{
-		for (auto module : *board)
+		for (auto opticalGroup : *board)
 		{
-			for (auto chip : *module)
+			for (auto hybrid : *opticalGroup)
 			{
-				retrieveChipData(board->getIndex(), module->getIndex(), chip);
-				const std::vector<char> &stream = this->encodeStream();
-				this->incrementStreamPacketNumber();
-				/* std::cout << __PRETTY_FUNCTION__ << "SENDING STREAM!" << std::endl; */
-				networkStreamer->broadcast(stream);
+				for (auto chip : *hybrid)
+				{
+					retrieveChipData(board->getIndex(), opticalGroup->getIndex(), hybrid->getIndex(), chip);
+					const std::vector<char> &stream = this->encodeStream();
+					this->incrementStreamPacketNumber();
+					/* std::cout << __PRETTY_FUNCTION__ << "SENDING STREAM!" << std::endl; */
+					networkStreamer->broadcast(stream);
+				}
 			}
 		}
 	}
@@ -200,6 +205,7 @@ public:
 	void decodeChipData(DetectorDataContainer &detectorContainer)
 	{
 		detectorContainer.getObject(this->fHeaderStream.fBoardId)
+			->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::OpticalGroupId>())
 			->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::ModuleId>())
 			->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::ChipId>())
 			->setChannelContainer(this->fDataStream.fChannelContainer);
@@ -222,9 +228,10 @@ public:
 	}
 
 protected:
-	void retrieveChipData(uint16_t boardId, uint16_t moduleId, ChipDataContainer *chip)
+	void retrieveChipData(uint16_t boardId, uint16_t opticalGroupId, uint16_t moduleId, ChipDataContainer *chip)
 	{
 		this->fHeaderStream.fBoardId = boardId;
+		this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroupId);
 		this->fHeaderStream.template setHeaderInfo<HeaderId::ModuleId>(moduleId);
 		this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getIndex());
 		this->fDataStream.fChannelContainer = chip->getChannelContainer<C>();
@@ -322,29 +329,33 @@ public:
 } __attribute__((packed));
 
 template <typename T, typename C, typename... I>
-class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamChipContainer<T, C>>
+class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamChipContainer<T, C>>
 {
 	enum HeaderId
 	{
+		OpticalGroupId,
 		ModuleId,
 		ChipId
 	};
 	static constexpr size_t getEnumSize() { return ChipId + 1; }
 
 public:
-	ChipContainerStream(const std::string &creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamChipContainer<T, C>>(creatorName) { ; }
+	ChipContainerStream(const std::string &creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamChipContainer<T, C>>(creatorName) { ; }
 	~ChipContainerStream() { ; }
 
 	void streamAndSendBoard(BoardDataContainer *board, TCPPublishServer *networkStreamer)
 	{
-		for (auto module : *board)
+		for (auto opticalGroup : *board)
 		{
-			for (auto chip : *module)
+			for (auto module : *opticalGroup)
 			{
-				retrieveChipData(board->getIndex(), module->getIndex(), chip);
-				const std::vector<char> &stream = this->encodeStream();
-				this->incrementStreamPacketNumber();
-				networkStreamer->broadcast(stream);
+				for (auto chip : *module)
+				{
+					retrieveChipData(board->getIndex(), opticalGroup->getIndex(), module->getIndex(), chip);
+					const std::vector<char> &stream = this->encodeStream();
+					this->incrementStreamPacketNumber();
+					networkStreamer->broadcast(stream);
+				}
 			}
 		}
 	}
@@ -352,11 +363,12 @@ public:
 	void decodeChipData(DetectorDataContainer &detectorContainer)
 	{
 		uint16_t boardId = this->fHeaderStream.fBoardId;
+		uint16_t opticalGroupId = this->fHeaderStream.template getHeaderInfo<HeaderId::OpticalGroupId>();
 		uint16_t moduleId = this->fHeaderStream.template getHeaderInfo<HeaderId::ModuleId>();
 		uint16_t chipId = this->fHeaderStream.template getHeaderInfo<HeaderId::ChipId>();
 
-		detectorContainer.at(boardId)->at(moduleId)->at(chipId)->setChannelContainer(this->fDataStream.fChannelContainer);
-		detectorContainer.at(boardId)->at(moduleId)->at(chipId)->setSummaryContainer(this->fDataStream.fChipSummaryContainer);
+		detectorContainer.at(boardId)->at(opticalGroupId)->at(moduleId)->at(chipId)->setChannelContainer(this->fDataStream.fChannelContainer);
+		detectorContainer.at(boardId)->at(opticalGroupId)->at(moduleId)->at(chipId)->setSummaryContainer(this->fDataStream.fChipSummaryContainer);
 		this->fDataStream.fChannelContainer = nullptr;
 		this->fDataStream.fChipSummaryContainer = nullptr;
 	}
@@ -377,9 +389,10 @@ public:
 	}
 
 protected:
-	void retrieveChipData(uint16_t boardId, uint16_t moduleId, ChipDataContainer *chip)
+	void retrieveChipData(uint16_t boardId, uint16_t opticalGroupId, uint16_t moduleId, ChipDataContainer *chip)
 	{
 		this->fHeaderStream.fBoardId = boardId;
+		this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroupId);
 		this->fHeaderStream.template setHeaderInfo<HeaderId::ModuleId>(moduleId);
 		this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getIndex());
 		if (chip->getChannelContainer<T>() != nullptr)
@@ -569,38 +582,43 @@ public:
 };
 
 template <typename T, typename C, typename M, typename... I>
-class ModuleContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, I...>, DataStreamModuleContainer<T, C, M>>
+class ModuleContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamModuleContainer<T, C, M>>
 {
 	enum HeaderId
 	{
+		OpticalGroupId,
 		ModuleId
 	};
 	static constexpr size_t getEnumSize() { return ModuleId + 1; }
 
 public:
-	ModuleContainerStream(const std::string &creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, I...>, DataStreamModuleContainer<T, C, M>>(creatorName) { ; }
+	ModuleContainerStream(const std::string &creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamModuleContainer<T, C, M>>(creatorName) { ; }
 	~ModuleContainerStream() { ; }
 
 	void streamAndSendBoard(BoardDataContainer *board, TCPPublishServer *networkStreamer)
 	{
-		for (auto module : *board)
+		for (auto opticalGroup : *board)
 		{
-			retrieveModuleData(board->getIndex(), module);
-			const std::vector<char> &stream = this->encodeStream();
-			this->incrementStreamPacketNumber();
-			networkStreamer->broadcast(stream);
+			for (auto module : *opticalGroup)
+			{
+				retrieveModuleData(board->getIndex(), opticalGroup->getIndex(), module);
+				const std::vector<char> &stream = this->encodeStream();
+				this->incrementStreamPacketNumber();
+				networkStreamer->broadcast(stream);
+			}
 		}
 	}
 
 	void decodeModuleData(DetectorDataContainer &detectorContainer)
 	{
 		uint16_t boardId = this->fHeaderStream.fBoardId;
+		uint16_t opticalGroupId = this->fHeaderStream.template getHeaderInfo<HeaderId::OpticalGroupId>();
 		uint16_t moduleId = this->fHeaderStream.template getHeaderInfo<HeaderId::ModuleId>();
 
-		detectorContainer.at(boardId)->at(moduleId)->setSummaryContainer(this->fDataStream.fModuleSummaryContainer);
+		detectorContainer.at(boardId)->at(opticalGroupId)->at(moduleId)->setSummaryContainer(this->fDataStream.fModuleSummaryContainer);
 		this->fDataStream.fModuleSummaryContainer = nullptr;
 
-		for (auto chip : *detectorContainer.at(boardId)->at(moduleId))
+		for (auto chip : *detectorContainer.at(boardId)->at(opticalGroupId)->at(moduleId))
 		{
 			if (this->fDataStream.fContainerCarried.isChipContainerCarried())
 			{
@@ -631,9 +649,10 @@ public:
 	}
 
 protected:
-	void retrieveModuleData(uint16_t boardId, ModuleDataContainer *module)
+	void retrieveModuleData(uint16_t boardId, uint16_t opticalGroupId, ModuleDataContainer *module)
 	{
 		this->fHeaderStream.fBoardId = boardId;
+		this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroupId);
 		this->fHeaderStream.template setHeaderInfo<HeaderId::ModuleId>(module->getIndex());
 		this->fDataStream.fNumberOfChips = module->size();
 		if (module->getSummaryContainer<M, C>() != nullptr)

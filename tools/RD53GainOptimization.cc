@@ -127,9 +127,10 @@ void GainOptimization::run ()
   // #######################################
   ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theKrumCurrContainer);
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        theKrumCurrContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<RD53*>(cChip)->getReg(frontEnd->gainReg);
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
+          theKrumCurrContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<RD53*>(cChip)->getReg(frontEnd->gainReg);
 
 
   // ################
@@ -166,10 +167,11 @@ void GainOptimization::draw (int currentRun)
 void GainOptimization::analyze ()
 {
   for (const auto cBoard : theKrumCurrContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        LOG(INFO) << GREEN << "Krummenacher Current for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
-                  << BOLDYELLOW << cChip->getSummary<uint16_t>() << RESET;
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
+          LOG(INFO) << GREEN << "Krummenacher Current for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
+                    << BOLDYELLOW << cChip->getSummary<uint16_t>() << RESET;
 }
 
 void GainOptimization::fillHisto ()
@@ -199,9 +201,10 @@ void GainOptimization::bitWiseScanGlobal (const std::string& regName, uint32_t n
   ContainerFactory::copyAndInitChip<OccupancyAndPh>(*fDetectorContainer, bestContainer);
 
   for (const auto cBoard : bestContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        cChip->getSummary<OccupancyAndPh>().fPh = 0;
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
+          cChip->getSummary<OccupancyAndPh>().fPh = 0;
 
 
   for (auto i = 0u; i <= numberOfBits; i++)
@@ -210,14 +213,15 @@ void GainOptimization::bitWiseScanGlobal (const std::string& regName, uint32_t n
       // # Download new DAC values #
       // ###########################
       for (const auto cBoard : *fDetectorContainer)
-        for (const auto cModule : *cBoard)
-          for (const auto cChip : *cModule)
+        for (const auto cOpticalGroup : *cBoard)
+          for (const auto cModule : *cOpticalGroup)
+            for (const auto cChip : *cModule)
             {
-              midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                (minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
-                 maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) / 2;
+              midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
+                 maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) / 2;
 
-              this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(), true);
+              this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(), true);
             }
 
 
@@ -233,8 +237,9 @@ void GainOptimization::bitWiseScanGlobal (const std::string& regName, uint32_t n
       // # Compute next step #
       // #####################
       for (const auto cBoard : *output)
-        for (const auto cModule : *cBoard)
-          for (const auto cChip : *cModule)
+        for (const auto cOpticalGroup : *cBoard)
+          for (const auto cModule : *cOpticalGroup)
+            for (const auto cChip : *cModule)
             {
               // ##############################################
               // # Search for maximum and build discriminator #
@@ -257,23 +262,23 @@ void GainOptimization::bitWiseScanGlobal (const std::string& regName, uint32_t n
               // ########################
               // # Save best DAC values #
               // ########################
-              float oldValue = bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh;
+              float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh;
               if (fabs(newValue - target) < fabs(oldValue - target))
                 {
-                  bestContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = newValue;
-                  bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                    midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                  bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = newValue;
+                  bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                    midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                 }
 
               if ((newValue > target) || (newValue < 0))
 
-                maxDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                  midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
 
               else
 
-                minDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                  midDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                  midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
             }
     }
 
@@ -282,9 +287,10 @@ void GainOptimization::bitWiseScanGlobal (const std::string& regName, uint32_t n
   // # Download new DAC values #
   // ###########################
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, bestDACcontainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(), true);
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
+          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(), true);
 
 
   // ################
@@ -299,10 +305,11 @@ void GainOptimization::chipErrorReport ()
   auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
         {
-          LOG (INFO) << GREEN << "Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+          LOG (INFO) << GREEN << "Readout chip error report for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
           LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
@@ -318,14 +325,15 @@ void GainOptimization::saveChipRegisters (int currentRun)
   std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
 
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
         {
           static_cast<RD53*>(cChip)->copyMaskFromDefault();
           if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
           static_cast<RD53*>(cChip)->saveRegMap(fileReg);
           std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
           system(command.c_str());
-          LOG (INFO) << BOLDBLUE << "\t--> GainOptimization saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> GainOptimization saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 }

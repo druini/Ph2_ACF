@@ -11,15 +11,16 @@ struct HistogramFiller  : public HwDescriptionVisitor
 
     HistogramFiller ( TH1F* pBotHist, TH1F* pTopHist, const Event* pEvent ) : fBotHist ( pBotHist ), fTopHist ( pTopHist ), fEvent ( pEvent ) {}
 
-    void visit ( Chip& pCbc )
+    void visit ( ChipContainer* pCbc )
     {
-        std::vector<bool> cDataBitVector = fEvent->DataBitVector ( pCbc.getFeId(), pCbc.getChipId() );
+        ReadoutChip* theCbc = static_cast<ReadoutChip*>(pCbc);
+        std::vector<bool> cDataBitVector = fEvent->DataBitVector ( theCbc->getFeId(), theCbc->getChipId() );
 
         for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
         {
             if ( cDataBitVector.at ( cId ) )
             {
-                uint32_t globalChannel = ( pCbc.getChipId() * 254 ) + cId;
+                uint32_t globalChannel = ( theCbc->getChipId() * 254 ) + cId;
 
                 //              LOG(INFO) << "Channel " << globalChannel << " VCth " << int(pCbc.getReg( "VCth" )) ;
                 // find out why histograms are not filling!
@@ -40,40 +41,43 @@ HybridTester::~HybridTester() {}
 
 void HybridTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 {
-    for (auto& cBoard : fBoardVector)
+    for (auto& cBoard : *fDetectorContainer)
     {
-        fBeBoardInterface->ChipReset ( cBoard );
+        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
+        fBeBoardInterface->ChipReset ( theBoard );
 
-        trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
+        trigSource = fBeBoardInterface->ReadBoardReg (theBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
          LOG (INFO)  <<int (trigSource);
 
 
 
-        trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
+        trigSource = fBeBoardInterface->ReadBoardReg (theBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
          LOG (INFO)  <<int (trigSource);
 
-
-
-        for (auto& cFe : cBoard->fModuleVector)
+        for(auto cOpticalGroup : *cBoard)
         {
-            for (auto& cCbc : cFe->fReadoutChipVector)
+            for ( auto cFe : *cOpticalGroup )
             {
-                std::string pRegFile ;
-                char buffer[120];
+                for (auto& cCbc : *cFe)
+                {
+                    ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
+                    std::string pRegFile ;
+                    char buffer[120];
 
-                if ( pDirectoryName.empty() )
-                    sprintf (buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cCbc->getFeId(), cCbc->getChipId() );
-                else
-                    sprintf (buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cCbc->getFeId(), cCbc->getChipId() );
+                    if ( pDirectoryName.empty() )
+                        sprintf (buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cFe->getId(), cCbc->getId() );
+                    else
+                        sprintf (buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cFe->getId(), cCbc->getId() );
 
-                pRegFile = buffer;
-                cCbc->loadfRegMap (pRegFile);
-                fReadoutChipInterface->ConfigureChip ( cCbc );
-                LOG (INFO) << GREEN << "\t\t Successfully reconfigured CBC" << int ( cCbc->getChipId() ) << "'s regsiters from " << pRegFile << " ." << RESET ;
+                    pRegFile = buffer;
+                    theCbc->loadfRegMap (pRegFile);
+                    fReadoutChipInterface->ConfigureChip ( theCbc );
+                    LOG (INFO) << GREEN << "\t\t Successfully reconfigured CBC" << int ( cCbc->getId() ) << "'s regsiters from " << pRegFile << " ." << RESET ;
+                }
             }
         }
 
-        fBeBoardInterface->ChipReSync ( cBoard );
+        fBeBoardInterface->ChipReSync ( theBoard );
     }
 }
 
@@ -148,39 +152,40 @@ void HybridTester::InitializeHists()
 
 
     // Now the Histograms for SCurves
-    for ( auto cBoard : fBoardVector )
+    for ( auto cBoard : *fDetectorContainer )
     {
-
-        for ( auto cFe : cBoard->fModuleVector )
+        for(auto cOpticalGroup : *cBoard)
         {
-            uint32_t cFeId = cFe->getFeId();
-            uint16_t cMaxRange = 1023;
-            fType = cFe->getFrontEndType();
-
-            for ( auto cCbc : cFe->fReadoutChipVector )
+            for ( auto cFe : *cOpticalGroup )
             {
+                uint32_t cFeId = cFe->getId();
+                uint16_t cMaxRange = 1023;
+                fType = static_cast<OuterTrackerModule*>(cFe)->getFrontEndType();
 
-                uint32_t cCbcId = cCbc->getChipId();
+                for ( auto cCbc : *cFe )
+                {
+                    uint32_t cCbcId = cCbc->getId();
 
-                TString cName = Form ( "SCurve_Fe%d_Cbc%d", cFeId, cCbcId );
-                TObject* cObject = static_cast<TObject*> ( gROOT->FindObject ( cName ) );
+                    TString cName = Form ( "SCurve_Fe%d_Cbc%d", cFeId, cCbcId );
+                    TObject* cObject = static_cast<TObject*> ( gROOT->FindObject ( cName ) );
 
-                if ( cObject ) delete cObject;
+                    if ( cObject ) delete cObject;
 
-                TH1F* cTmpScurve = new TH1F ( cName, Form ( "Noise Occupancy Chip%d; VCth; Counts", cCbcId ), cMaxRange, 0, cMaxRange );
-                cTmpScurve->SetMarkerStyle ( 8 );
-                bookHistogram ( cCbc, "Scurve", cTmpScurve );
-                fSCurveMap[cCbc] = cTmpScurve;
+                    TH1F* cTmpScurve = new TH1F ( cName, Form ( "Noise Occupancy Chip%d; VCth; Counts", cCbcId ), cMaxRange, 0, cMaxRange );
+                    cTmpScurve->SetMarkerStyle ( 8 );
+                    bookHistogram ( cCbc, "Scurve", cTmpScurve );
+                    fSCurveMap[cCbc] = cTmpScurve;
 
-                cName = Form ( "SCurveFit_Fe%d_Cbc%d", cFeId, cCbcId );
-                cObject = static_cast<TObject*> ( gROOT->FindObject ( cName ) );
+                    cName = Form ( "SCurveFit_Fe%d_Cbc%d", cFeId, cCbcId );
+                    cObject = static_cast<TObject*> ( gROOT->FindObject ( cName ) );
 
-                if ( cObject ) delete cObject;
+                    if ( cObject ) delete cObject;
 
-                TF1* cTmpFit = new TF1 ( cName, MyErf, 0, cMaxRange, 2 );
-                bookHistogram ( cCbc, "ScurveFit", cTmpFit );
+                    TF1* cTmpFit = new TF1 ( cName, MyErf, 0, cMaxRange, 2 );
+                    bookHistogram ( cCbc, "ScurveFit", cTmpFit );
 
-                fFitMap[cCbc] = cTmpFit;
+                    fFitMap[cCbc] = cTmpFit;
+                }
             }
         }
     }
@@ -201,10 +206,10 @@ void HybridTester::InitialiseSettings()
         // if ( cSetting != std::end ( fSettingsMap ) ) trigSource = cSetting->second;
         // LOG (INFO)  <<int (trigSource);
 
-    for (auto& cBoard : fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
 
-        trigSource = fBeBoardInterface->ReadBoardReg (cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
+        trigSource = fBeBoardInterface->ReadBoardReg (static_cast<BeBoard*>(cBoard), "fc7_daq_cnfg.fast_command_block.trigger_source" );
          LOG (INFO)  <<int (trigSource);
     }
     // LOG(INFO) << "Read the f llowing Settings: " ;
@@ -248,43 +253,46 @@ uint32_t HybridTester::fillSCurves ( BeBoard* pBoard,  const Event* pEvent, uint
 {
     uint32_t cHitCounter = 0;
 
-    for ( auto cFe : pBoard->fModuleVector )
+    for(auto cOpticalGroup : *pBoard)
     {
-        for ( auto cCbc : cFe->fReadoutChipVector )
+        for ( auto cFe : *cOpticalGroup )
         {
-            // SS
-            /*TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
-            uint32_t cbcEventCounter = 0;
-            for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
+            for ( auto cCbc : *cFe )
             {
-                if ( pEvent->DataBit( cCbc->getFeId(), cCbc->getChipId(), cId ) )
+                // SS
+                /*TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
+                uint32_t cbcEventCounter = 0;
+                for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
                 {
-                    sCurveHist->Fill( pValue );
-                    cHitCounter++;
-                    cbcEventCounter++;
+                    if ( pEvent->DataBit( cCbc->getFeId(), cCbc->getChipId(), cId ) )
+                    {
+                        sCurveHist->Fill( pValue );
+                        cHitCounter++;
+                        cbcEventCounter++;
+                    }
+                }*/
+
+                auto cScurve = fSCurveMap.find ( cCbc );
+
+                if ( cScurve == fSCurveMap.end() ) LOG (INFO) << "Error: could not find an Scurve object for Chip " << int ( cCbc->getId() ) ;
+                else
+                {
+                    //for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
+                    //{
+                    //if ( pEvent->DataBit ( cCbc->getFeId(), cCbc->getChipId(), cId ) )
+                    //{
+                    //cScurve->second->Fill ( pValue );
+                    //cHitCounter++;
+                    //}
+                    //}
+                    //experimental
+
+                    std::vector<uint32_t> cHits = pEvent->GetHits (cFe->getId(), cCbc->getId() );
+                    cHitCounter += cHits.size();
+
+                    for (__attribute__((unused)) auto cHit : cHits)
+                        cScurve->second->Fill (pValue);
                 }
-            }*/
-
-            auto cScurve = fSCurveMap.find ( cCbc );
-
-            if ( cScurve == fSCurveMap.end() ) LOG (INFO) << "Error: could not find an Scurve object for Chip " << int ( cCbc->getChipId() ) ;
-            else
-            {
-                //for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
-                //{
-                //if ( pEvent->DataBit ( cCbc->getFeId(), cCbc->getChipId(), cId ) )
-                //{
-                //cScurve->second->Fill ( pValue );
-                //cHitCounter++;
-                //}
-                //}
-                //experimental
-
-                std::vector<uint32_t> cHits = pEvent->GetHits (cCbc->getFeId(), cCbc->getChipId() );
-                cHitCounter += cHits.size();
-
-                for (__attribute__((unused)) auto cHit : cHits)
-                    cScurve->second->Fill (pValue);
             }
         }
     }
@@ -317,30 +325,31 @@ void HybridTester::ScanThresholds()
         fHistTop->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
         fHistBottom->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
 
-        for ( BeBoard* pBoard : fBoardVector )
+        for ( auto pBoard : *fDetectorContainer )
         {
+            BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
             uint32_t cN = 1;
             uint32_t cNthAcq = 0;
 
-            fBeBoardInterface->Start ( pBoard );
+            fBeBoardInterface->Start ( theBoard );
 
             while ( cN <=  fTotalEvents )
             {
-                // Run( pBoard, cNthAcq );
-                ReadData ( pBoard );
-                const std::vector<Event*>& events = GetEvents ( pBoard );
+                // Run( theBoard, cNthAcq );
+                ReadData ( theBoard );
+                const std::vector<Event*>& events = GetEvents ( theBoard );
 
                 // Loop over Events from this Acquisition
                 for ( auto& cEvent : events )
                 {
                     HistogramFiller cFiller ( fHistBottom, fHistTop, cEvent );
-                    pBoard->accept ( cFiller );
+                    theBoard->accept ( cFiller );
 
-                    fillSCurves ( pBoard,  cEvent, cVcth );
+                    fillSCurves ( theBoard,  cEvent, cVcth );
 
                     if ( cN % 100 == 0 )
                     {
-                        updateSCurveCanvas ( pBoard );
+                        updateSCurveCanvas ( theBoard );
                         UpdateHists();
                     }
 
@@ -350,7 +359,7 @@ void HybridTester::ScanThresholds()
                 cNthAcq++;
             }
 
-            fBeBoardInterface->Stop ( pBoard);
+            fBeBoardInterface->Stop ( theBoard);
         }
 
         fHistTop->Scale ( 100 / double_t ( fTotalEvents ) );
@@ -432,31 +441,34 @@ void HybridTester::ScanThreshold()
         // maybe restrict to pBoard? instead of looping?
         if ( cAllOne ) break;
 
-        for ( BeBoard* pBoard : fBoardVector )
+
+        for ( auto pBoard : *fDetectorContainer )
         {
-            fBeBoardInterface->Start ( pBoard );
+            BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
+
+            fBeBoardInterface->Start ( theBoard );
 
             while ( cN <=  cEventsperVcth )
             {
-                // Run( pBoard, cNthAcq );
-                ReadData ( pBoard );
-                const std::vector<Event*>& events = GetEvents ( pBoard );
+                // Run( theBoard, cNthAcq );
+                ReadData ( theBoard );
+                const std::vector<Event*>& events = GetEvents ( theBoard );
 
                 // Loop over Events from this Acquisition
                 for ( auto& cEvent : events )
                 {
                     // loop over Modules & Cbcs and count hits separately
-                    cHitCounter += fillSCurves ( pBoard,  cEvent, cVcth );
+                    cHitCounter += fillSCurves ( theBoard,  cEvent, cVcth );
                     cN++;
                 }
 
                 cNthAcq++;
             }
 
-            fBeBoardInterface->Stop ( pBoard);
+            fBeBoardInterface->Stop ( theBoard);
             // LOG(INFO) << +cVcth << " " << cHitCounter ;
             // Draw the thing after each point
-            updateSCurveCanvas ( pBoard );
+            updateSCurveCanvas ( theBoard );
 
             // check if the hitcounter is all ones
 
@@ -506,7 +518,7 @@ void HybridTester::processSCurves ( uint32_t pEventsperVcth )
 {
     for ( auto cScurve : fSCurveMap )
     {
-        fSCurveCanvas->cd ( cScurve.first->getChipId() + 1 );
+        fSCurveCanvas->cd ( cScurve.first->getId() + 1 );
 
         cScurve.second->Scale ( 1.0 / double_t ( pEventsperVcth * NCHANNELS ) );
         cScurve.second->Draw ( "P" );
@@ -561,7 +573,7 @@ void HybridTester::processSCurves ( uint32_t pEventsperVcth )
         // find the corresponding fit
         auto cFit = fFitMap.find ( cScurve.first );
 
-        if ( cFit == std::end ( fFitMap ) ) LOG (INFO) << "Error: could not find Fit for Chip " << int ( cScurve.first->getChipId() ) ;
+        if ( cFit == std::end ( fFitMap ) ) LOG (INFO) << "Error: could not find Fit for Chip " << int ( cScurve.first->getId() ) ;
         else
         {
             // Fit
@@ -582,7 +594,8 @@ void HybridTester::processSCurves ( uint32_t pEventsperVcth )
 
             uint16_t cThreshold = ceil ( pedestal + fSigmas * fabs ( noise ) );
 
-            LOG (INFO) << "Identified a noise Occupancy of 50% at VCth " << static_cast<int> ( pedestal ) << " -- increasing by " << fSigmas <<  " sigmas (=" << fabs ( noise ) << ") to " << +cThreshold << " for Chip " << int ( cScurve.first->getChipId() ) ;
+            LOG (INFO) << "Identified a noise Occupancy of 50% at VCth " << static_cast<int> ( pedestal ) << " -- increasing by " << fSigmas 
+                <<  " sigmas (=" << fabs ( noise ) << ") to " << +cThreshold << " for Chip " << int ( cScurve.first->getId() ) ;
 
             TLine* cLine = new TLine ( cThreshold, 0, cThreshold, 1 );
             cLine->SetLineWidth ( 3 );
@@ -590,7 +603,7 @@ void HybridTester::processSCurves ( uint32_t pEventsperVcth )
             cLine->Draw ( "same" );
 
             ThresholdVisitor cVisitor (fReadoutChipInterface, cThreshold);
-            cScurve.first->accept (cVisitor);
+            static_cast<ReadoutChip*>(cScurve.first)->accept (cVisitor);
         }
 
     }
@@ -621,18 +634,21 @@ void HybridTester::updateSCurveCanvas ( BeBoard* pBoard )
     // Here iterate over the fScurveMap and update
     fSCurveCanvas->cd();
 
-    for ( auto cFe : pBoard->fModuleVector )
-    {
-        for ( auto cCbc : cFe->fReadoutChipVector )
+    for ( auto cOpticalGroup : *pBoard )
         {
-            uint32_t cCbcId = cCbc->getChipId();
-            auto cScurve = fSCurveMap.find ( cCbc );
-
-            if ( cScurve == fSCurveMap.end() ) LOG (INFO) << "Error: could not find an Scurve object for Chip " << int ( cCbc->getChipId() ) ;
-            else
+        for ( auto cFe : *cOpticalGroup )
+        {
+            for ( auto cCbc : *cFe )
             {
-                fSCurveCanvas->cd ( cCbcId + 1 );
-                cScurve->second->DrawCopy ( "P" );
+                uint32_t cCbcId = cCbc->getId();
+                auto cScurve = fSCurveMap.find ( cCbc );
+
+                if ( cScurve == fSCurveMap.end() ) LOG (INFO) << "Error: could not find an Scurve object for Chip " << int ( cCbc->getId() ) ;
+                else
+                {
+                    fSCurveCanvas->cd ( cCbcId + 1 );
+                    cScurve->second->DrawCopy ( "P" );
+                }
             }
         }
     }
@@ -659,18 +675,20 @@ void HybridTester::TestRegisters()
                 fBadRegisters[cCbcIterator] = tempset;
         }
 
-        void visit ( Chip& pCbc )
+        void visit ( ChipContainer* pCbc )
         {
             uint8_t cFirstBitPattern = 0xAA;
             uint8_t cSecondBitPattern = 0x55;
 
-            ChipRegMap cMap = pCbc.getRegMap();
+            ReadoutChip* theCbc = static_cast<ReadoutChip*>(pCbc);
+
+            ChipRegMap cMap = theCbc->getRegMap();
 
             for ( const auto& cReg : cMap )
             {
-                if ( !fInterface->WriteChipReg ( &pCbc, cReg.first, cFirstBitPattern, true ) ) fBadRegisters[pCbc.getChipId()] .insert ( cReg.first );
+                if ( !fInterface->WriteChipReg ( theCbc, cReg.first, cFirstBitPattern, true ) ) fBadRegisters[pCbc->getId()] .insert ( cReg.first );
 
-                if ( !fInterface->WriteChipReg ( &pCbc, cReg.first, cSecondBitPattern, true ) ) fBadRegisters[pCbc.getChipId()] .insert ( cReg.first );
+                if ( !fInterface->WriteChipReg ( theCbc, cReg.first, cSecondBitPattern, true ) ) fBadRegisters[pCbc->getId()] .insert ( cReg.first );
             }
         }
 
@@ -915,16 +933,19 @@ void HybridTester::SetBeBoardForShortsFinding (BeBoard* pBoard)
 
 void HybridTester::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
 {
-    for (auto cFe : pBoard->fModuleVector)
+    for ( auto cOpticalGroup : *pBoard )
     {
-        for (auto cCbc : cFe->fReadoutChipVector)
+        for (auto cFe : *cOpticalGroup)
         {
-            std::vector<std::pair<std::string, uint16_t>> cRegVec;
-            uint16_t cRegValue = this->to_reg ( 0, pTestGroup );
+            for (auto cCbc : *cFe)
+            {
+                std::vector<std::pair<std::string, uint16_t>> cRegVec;
+                uint16_t cRegValue = this->to_reg ( 0, pTestGroup );
 
-            cRegVec.push_back ( std::make_pair ( "TestPulseDel&ChanGroup",  cRegValue ) );
-            
-            this->fReadoutChipInterface->WriteChipMultReg (cCbc, cRegVec);
+                cRegVec.push_back ( std::make_pair ( "TestPulseDel&ChanGroup",  cRegValue ) );
+                
+                this->fReadoutChipInterface->WriteChipMultReg (static_cast<ReadoutChip*>(cCbc), cRegVec);
+            }
         }
     }
 }
@@ -944,12 +965,13 @@ void HybridTester::FindShorts()
     fHistTop->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
     fHistBottom->GetYaxis()->SetRangeUser ( 0, fTotalEvents );
 
-    for ( BeBoard* pBoard : fBoardVector )
+    for ( auto pBoard : *fDetectorContainer )
     {
+        BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
         uint32_t cN = 1;
         uint32_t cNthAcq = 0;
 
-        SetBeBoardForShortsFinding (pBoard);
+        SetBeBoardForShortsFinding (theBoard);
 
         ss << "\nShorted channels searching procedure\nSides: Top - 0\tBottom - 1 (Channel numbering starts from 0)\n" << std::endl;
         ss << "      Side\t| Channel_ID\t| Group_ID\t| Shorted_With_Group_ID" << std::endl;
@@ -959,22 +981,22 @@ void HybridTester::FindShorts()
             cN = 1;
             cNthAcq = 0;
 
-            this->SetTestGroup(pBoard,(uint8_t)cTestPulseGroupId);
+            this->SetTestGroup(theBoard,(uint8_t)cTestPulseGroupId);
 
-            fBeBoardInterface->Start ( pBoard );
+            fBeBoardInterface->Start ( theBoard );
 
             while ( cN <=  fTotalEvents )
             {
-                //Run( pBoard, cNthAcq );
-                ReadData ( pBoard );
-                //ReadNEvents ( pBoard, cNthAcq );
-                const std::vector<Event*>& events = GetEvents ( pBoard );
+                //Run( theBoard, cNthAcq );
+                ReadData ( theBoard );
+                //ReadNEvents ( theBoard, cNthAcq );
+                const std::vector<Event*>& events = GetEvents ( theBoard );
 
                 // Loop over Events from this Acquisition
                 for ( auto& cEvent : events )
                 {
                     HistogramFiller cFiller ( fHistBottom, fHistTop, cEvent );
-                    pBoard->accept ( cFiller );
+                    theBoard->accept ( cFiller );
 
                     if ( cN % 100 == 0 )
                         UpdateHists();
@@ -985,7 +1007,7 @@ void HybridTester::FindShorts()
                 cNthAcq++;
             }
 
-            fBeBoardInterface->Stop ( pBoard);
+            fBeBoardInterface->Stop ( theBoard);
 
             std::vector<std::array<int, 5>> cShortedChannelsGroup;
 
@@ -1056,25 +1078,26 @@ void HybridTester::Measure()
 
 
 
-    for ( BeBoard* pBoard : fBoardVector )
+    for ( auto pBoard : *fDetectorContainer )
     {
+        BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
         uint32_t cN = 1;
         uint32_t cNthAcq = 0;
 
-        fBeBoardInterface->Start ( pBoard );
+        fBeBoardInterface->Start ( theBoard );
 
         while ( cN <=  fTotalEvents )
         {
-            //Run( pBoard, cNthAcq );
-            ReadData ( pBoard );
-            //ReadNEvents ( pBoard, cNthAcq );
-            const std::vector<Event*>& events = GetEvents ( pBoard );
+            //Run( theBoard, cNthAcq );
+            ReadData ( theBoard );
+            //ReadNEvents ( theBoard, cNthAcq );
+            const std::vector<Event*>& events = GetEvents ( theBoard );
 
             // Loop over Events from this Acquisition
             for ( auto& cEvent : events )
             {
                 HistogramFiller cFiller ( fHistBottom, fHistTop, cEvent );
-                pBoard->accept ( cFiller );
+                theBoard->accept ( cFiller );
 
                 if ( cN % 100 == 0 )
                     UpdateHists();
@@ -1085,7 +1108,7 @@ void HybridTester::Measure()
             cNthAcq++;
         }
 
-        fBeBoardInterface->Stop ( pBoard);
+        fBeBoardInterface->Stop ( theBoard);
     }
 
     for ( uint8_t i = 1 ; i < (fNCbc * 254u) / 2u ; i++ )
@@ -1211,26 +1234,27 @@ void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
 
         if (channel_position == 9) break;
 
-        for ( BeBoard* pBoard : this->fBoardVector )
+        for ( auto pBoard : *fDetectorContainer )
         {
+            BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
             uint32_t cN = 1;
             uint32_t cNthAcq = 0;
 
-            this->Start ( pBoard );
+            this->Start ( theBoard );
 
 
             while ( cN <=  fTotalEvents )
             {
-                // Run( pBoard, cNthAcq );
-                ReadData ( pBoard );
+                // Run( theBoard, cNthAcq );
+                ReadData ( theBoard );
 
-                const std::vector<Event*>& events = GetEvents ( pBoard );
+                const std::vector<Event*>& events = GetEvents ( theBoard );
 
                 // Loop over Events from this Acquisition
                 for ( auto& cEvent : events )
                 {
                     HistogramFiller cFiller ( fHistBottom, fHistTop, cEvent );
-                    pBoard->accept ( cFiller );
+                    theBoard->accept ( cFiller );
 
                     if ( cN % 100 == 0 ) UpdateHists();
 
@@ -1240,7 +1264,7 @@ void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
                 cNthAcq++;
             }
 
-            this->Stop ( pBoard);
+            this->Stop ( theBoard);
 
             /*Here the reconstruction of histograms happens*/
             for ( uint16_t channel_id = 1; channel_id < fNCbc * 127 + 1; channel_id++ )

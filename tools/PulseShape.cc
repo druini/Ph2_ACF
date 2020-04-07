@@ -16,59 +16,62 @@ void PulseShape::Initialize()
 
     std::cerr << "void PulseShape::Initialize()"  ;
 
-    for ( auto cBoard : fBoardVector )
+    for ( auto cBoard : *fDetectorContainer )
     {
     	LOG(INFO) << "Loop for board()";
-        uint32_t cBoardId = cBoard->getBeId();
+        uint32_t cBoardId = cBoard->getId();
         std::cerr << "cBoardId = " << cBoardId ;
         LOG(INFO) << "Before reading board parameter()";
         //fDelayAfterPulse = fBeBoardInterface->ReadBoardReg (cBoard, getDelAfterTPString ( cBoard->getBoardType() ) );
         fDelayAfterPulse = 196;
         LOG(INFO) << "After reading board parameter()";
 
-        for ( auto cFe : cBoard->fModuleVector )
+        for(auto cOpticalGroup : *cBoard)
         {
-		
-    	    LOG(INFO) << "Certain board()";
-            uint32_t cFeId = cFe->getFeId();
-            std::cerr << "cFeId = " << cFeId ;
-            fType = cFe->getFrontEndType();
-
-            for ( auto& cCbc : cFe->fReadoutChipVector )
+            for ( auto cFe : *cOpticalGroup)
             {
-                uint16_t cMaxValue = 1023;
-                uint32_t cCbcId = cCbc->getChipId();
-                std::cerr << "cCbcId = " << cCbcId ;
-                fNCbc++;
-                // Create the Canvas to draw
-                TCanvas* ctmpCanvas = new TCanvas ( Form ( "c_online_canvas_fe%dcbc%d", cFeId, cCbcId ), Form ( "FE%dCBC%d  Online Canvas", cFeId, cCbcId ) );
-                ctmpCanvas->Divide ( 2, 1 );
-                fCanvasMap[cCbc] = ctmpCanvas;
+            
+                LOG(INFO) << "Certain board()";
+                uint32_t cFeId = cFe->getId();
+                std::cerr << "cFeId = " << cFeId ;
+                fType = static_cast<OuterTrackerModule*>(cFe)->getFrontEndType();
 
-                //should set the canvas frames sane!
-		int cLow = ( fDelayAfterPulse + 3 ) * 25;
-                int cHigh = ( fDelayAfterPulse + 8 ) * 25;
-                //TH2I* cFrame = new TH2I ( "cFrame", "PulseShape; Delay [ns]; Amplitude [VCth]", 350, cLow, cHigh, cMaxValue, 0, cMaxValue );
-		TH2I* cFrame = new TH2I ( "cFrame", "PulseShape; Delay [ns]; Amplitude [VCth]", 350, 0, cHigh-cLow, cMaxValue, 0, cMaxValue ); //Jarne
-                cFrame->SetStats ( false );
-                ctmpCanvas->cd ( 2 );
-                cFrame->Draw( );
-                bookHistogram ( cCbc, "frame", cFrame );
-                // Create Multigraph Object for each CBC
-                TString cName =  Form ( "g_cbc_pulseshape_MultiGraph_Fe%dCbc%d", cFeId, cCbcId );
-                TObject* cObj = gROOT->FindObject ( cName );
+                for ( auto cCbc : *cFe)
+                {
+                    uint16_t cMaxValue = 1023;
+                    uint32_t cCbcId = cCbc->getId();
+                    std::cerr << "cCbcId = " << cCbcId ;
+                    fNCbc++;
+                    // Create the Canvas to draw
+                    TCanvas* ctmpCanvas = new TCanvas ( Form ( "c_online_canvas_fe%dcbc%d", cFeId, cCbcId ), Form ( "FE%dCBC%d  Online Canvas", cFeId, cCbcId ) );
+                    ctmpCanvas->Divide ( 2, 1 );
+                    fCanvasMap[cCbc] = ctmpCanvas;
 
-                if ( cObj ) delete cObj;
+                    //should set the canvas frames sane!
+            int cLow = ( fDelayAfterPulse + 3 ) * 25;
+                    int cHigh = ( fDelayAfterPulse + 8 ) * 25;
+                    //TH2I* cFrame = new TH2I ( "cFrame", "PulseShape; Delay [ns]; Amplitude [VCth]", 350, cLow, cHigh, cMaxValue, 0, cMaxValue );
+            TH2I* cFrame = new TH2I ( "cFrame", "PulseShape; Delay [ns]; Amplitude [VCth]", 350, 0, cHigh-cLow, cMaxValue, 0, cMaxValue ); //Jarne
+                    cFrame->SetStats ( false );
+                    ctmpCanvas->cd ( 2 );
+                    cFrame->Draw( );
+                    bookHistogram ( cCbc, "frame", cFrame );
+                    // Create Multigraph Object for each CBC
+                    TString cName =  Form ( "g_cbc_pulseshape_MultiGraph_Fe%dCbc%d", cFeId, cCbcId );
+                    TObject* cObj = gROOT->FindObject ( cName );
 
-                TMultiGraph* cMultiGraph = new TMultiGraph();
-                cMultiGraph->SetName ( cName );
-                bookHistogram ( cCbc, "cbc_pulseshape", cMultiGraph );
-                cName = Form ( "f_cbc_pulse_Fe%dCbc%d", cFeId, cCbcId );
-                cObj = gROOT->FindObject ( cName );
+                    if ( cObj ) delete cObj;
 
-                if ( cObj ) delete cObj;
+                    TMultiGraph* cMultiGraph = new TMultiGraph();
+                    cMultiGraph->SetName ( cName );
+                    bookHistogram ( cCbc, "cbc_pulseshape", cMultiGraph );
+                    cName = Form ( "f_cbc_pulse_Fe%dCbc%d", cFeId, cCbcId );
+                    cObj = gROOT->FindObject ( cName );
+
+                    if ( cObj ) delete cObj;
+                }
+
             }
-
         }
     }
 
@@ -141,25 +144,29 @@ void PulseShape::ScanVcth ( uint32_t pDelay , int cLow)
         int cNHits = 0;
 
         // Take Data for all Modules
-        for ( BeBoard* pBoard : fBoardVector )
+        for ( auto pBoard : *fDetectorContainer )
         {
-            for (Module* cFe : pBoard->fModuleVector)
+            BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
+            for(auto cOpticalGroup : *pBoard)
             {
-                cVisitor.setThreshold (cVcth);
-                cFe->accept (cVisitor);
+                for (auto cFe : *cOpticalGroup)
+                {
+                    cVisitor.setThreshold (cVcth);
+                    static_cast<OuterTrackerModule*>(cFe)->accept (cVisitor);
+                }
             }
 
 	    //LOG(INFO) << "Reading N Events";
-            ReadNEvents ( pBoard, fNevents );
+            ReadNEvents ( theBoard, fNevents );
 	    //LOG(INFO) << "End Reading N Events";
-            const std::vector<Event*>& events = GetEvents ( pBoard );
+            const std::vector<Event*>& events = GetEvents ( theBoard );
             if (events.empty())LOG (INFO) << " EMPTY EVENT VECTOR !!!" ;
            // LOG (INFO) <<"events size, VCTH value " << events.size()<< "  "<< (uint16_t) cVcth;
            // int iii=0;
             for ( auto& cEvent : events ){
                 //LOG (INFO) <<"EVENT ID "<< iii;
                 //iii++;
-                cNHits += fillVcthHist ( pBoard, cEvent, cVcth );
+                cNHits += fillVcthHist ( theBoard, cEvent, cVcth );
             }
             cNthAcq++;
 
@@ -237,7 +244,7 @@ void PulseShape::fitGraph ( int pLow )
     {
         for ( auto& cChannel : cCbc.second )
         {
-            TString cName = Form ( "f_cbc_pulse_Fe%dCbc%d_Channel%d", cCbc.first->getFeId(), cCbc.first->getChipId(), cChannel->fChannelId );
+            TString cName = Form ( "f_cbc_pulse_Fe%dCbc%d_Channel%d", static_cast<ReadoutChip*>(cCbc.first)->getFeId(), static_cast<ReadoutChip*>(cCbc.first)->getChipId(), cChannel->fChannelId );
             TObject* cObj = gROOT->FindObject ( cName );
 
             if ( cObj ) delete cObj;
@@ -365,14 +372,14 @@ void PulseShape::setDelayAndTesGroup ( uint32_t pDelay )
     LOG (INFO) << "cCoarseDelay: " << +cCoarseDelay ;
     LOG (INFO) << "Current Time: " << +pDelay ;
 
-    for (BeBoard* pBoard : fBoardVector)
+    for (auto pBoard : *fDetectorContainer)
     {
         //potentially have to reset the IC FW commissioning cycle state machine?
 
         LOG(INFO) << "Writing the delay values to the board";
 	//for (auto cReg : getDelAfterTPString (pBoard->getBoardType() ) )
         //        fBeBoardInterface->WriteBoardReg (pBoard, cReg, cCoarseDelay);
-	fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cCoarseDelay);
+	fBeBoardInterface->WriteBoardReg(static_cast<BeBoard*>(pBoard), "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cCoarseDelay);
     }
 
     LOG(INFO) << "Writing fine delay and test group, i2c...";
@@ -387,28 +394,29 @@ uint32_t PulseShape::fillVcthHist ( BeBoard* pBoard, Event* pEvent, uint32_t pVc
     uint32_t cHits = 0;
 
     // Loop over Events from this Acquisition
-    for ( auto cFe : pBoard->fModuleVector )
+    for(auto cOpticalGroup : *pBoard)
     {
-        for ( auto cCbc : cFe->fReadoutChipVector )
+        for ( auto cFe : *cOpticalGroup )
         {
-            //  get histogram to fill
-            auto cChannelVector = fChannelMap.find ( cCbc );
-
-            if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel vector mapped to this CBC ( " << +cCbc->getChipId() << " )" ;
-            else
+            for ( auto cCbc : *cFe )
             {
-                for ( auto& cChannel : cChannelVector->second )
+                //  get histogram to fill
+                auto cChannelVector = fChannelMap.find ( cCbc );
+
+                if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel vector mapped to this CBC ( " << +cCbc->getId() << " )" ;
+                else
                 {
-                    if ( pEvent->DataBit ( cFe->getFeId(), cCbc->getChipId(), cChannel->fChannelId - 1 ) )
+                    for ( auto& cChannel : cChannelVector->second )
                     {
-                        cChannel->fillHist ( pVcth );
-                        cHits++;
+                        if ( pEvent->DataBit ( cFe->getId(), cCbc->getId(), cChannel->fChannelId - 1 ) )
+                        {
+                            cChannel->fillHist ( pVcth );
+                            cHits++;
+                        }
                     }
                 }
             }
         }
-
-        return cHits;
     }
     return cHits;
 }
@@ -534,33 +542,36 @@ void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
 
     this->accept ( cWriter );
 
-    for ( auto& cBoard : fBoardVector )
+    for ( auto cBoard : *fDetectorContainer )
     {
-        uint32_t cBoardId = cBoard->getBeId();
-
-        for ( auto& cFe : cBoard->fModuleVector )
+        uint32_t cBoardId = cBoard->getId();
+        for(auto cOpticalGroup : *cBoard)
         {
-            uint32_t cFeId = cFe->getFeId();
-
-            for ( auto& cCbc : cFe->fReadoutChipVector )
+            uint32_t cOpticalGroupId = cOpticalGroup->getId();
+            for ( auto cFe : *cOpticalGroup)
             {
-                std::vector<Channel*> cChannelVector;
-                uint32_t cCbcId = cCbc->getChipId();
-                int cMakerColor = 1;
+                uint32_t cFeId = cFe->getId();
 
-                for ( auto& cChannelId : fChannelVector )
+                for ( auto cCbc : *cFe )
                 {
-                    Channel* cChannel = new Channel ( cBoardId, cFeId, cCbcId, cChannelId );
-                    TString cName =  Form ( "g_cbc_pulseshape_Fe%dCbc%d_Channel%d", cFeId, cCbcId, cChannelId );
-                    cChannel->initializePulse ( cName );
-                    cChannelVector.push_back ( cChannel );
-                    cChannel->fPulse->SetMarkerColor ( cMakerColor );
-                    cMakerColor++;
-                    TMultiGraph* cTmpGraph = static_cast<TMultiGraph*> ( getHist ( cCbc, "cbc_pulseshape" ) );
-                    cTmpGraph->Add ( cChannel->fPulse, "lp" );
-                }
+                    std::vector<Channel*> cChannelVector;
+                    uint32_t cCbcId = cCbc->getId();
+                    int cMakerColor = 1;
 
-                fChannelMap[cCbc] = cChannelVector;
+                    for ( auto& cChannelId : fChannelVector )
+                    {
+                        Channel* cChannel = new Channel ( cBoardId, cOpticalGroupId, cFeId, cCbcId, cChannelId );
+                        TString cName =  Form ( "g_cbc_pulseshape_Fe%dCbc%d_Channel%d", cFeId, cCbcId, cChannelId );
+                        cChannel->initializePulse ( cName );
+                        cChannelVector.push_back ( cChannel );
+                        cChannel->fPulse->SetMarkerColor ( cMakerColor );
+                        cMakerColor++;
+                        TMultiGraph* cTmpGraph = static_cast<TMultiGraph*> ( getHist ( cCbc, "cbc_pulseshape" ) );
+                        cTmpGraph->Add ( cChannel->fPulse, "lp" );
+                    }
+
+                    fChannelMap[cCbc] = cChannelVector;
+                }
             }
         }
     }
@@ -576,7 +587,7 @@ void PulseShape::updateHists ( std::string pHistName, bool pFinal )
         if ( pHistName == "" )
         {
             // now iterate over the channels in the channel map and draw
-            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ) );
+            auto cChannelVector = fChannelMap.find ( static_cast<ChipContainer*>(cCanvas.first) );
 
             if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
             else
@@ -595,7 +606,7 @@ void PulseShape::updateHists ( std::string pHistName, bool pFinal )
         if ( pHistName == "" && pFinal )
         {
             // now iterate over the channels in the channel map and draw
-            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ) );
+            auto cChannelVector = fChannelMap.find (static_cast<ChipContainer*>(cCanvas.first) );
 
             if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
             else
@@ -615,12 +626,12 @@ void PulseShape::updateHists ( std::string pHistName, bool pFinal )
         }
         else if ( pHistName == "cbc_pulseshape" )
         {
-            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ) );
+            auto cChannelVector = fChannelMap.find ( static_cast<ChipContainer*>(cCanvas.first) );
 
             if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
             else
             {
-                TH2I* cTmpFrame = static_cast<TH2I*> ( getHist ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ), "frame" ) );
+                TH2I* cTmpFrame = static_cast<TH2I*> ( getHist ( static_cast<ChipContainer*>(cCanvas.first), "frame" ) );
                 cCanvas.second->cd ( 2 );
                 cTmpFrame->Draw( );
                 TString cOption = "P same";
@@ -636,13 +647,13 @@ void PulseShape::updateHists ( std::string pHistName, bool pFinal )
         }
         else if ( pHistName == "cbc_pulseshape" && pFinal )
         {
-            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ) );
+            auto cChannelVector = fChannelMap.find ( static_cast<ChipContainer*>(cCanvas.first) );
 
             if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
             else
             {
                 cCanvas.second->cd ( 2 );
-                TMultiGraph* cMultiGraph = static_cast<TMultiGraph*> ( getHist ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ), "cbc_pulseshape" ) );
+                TMultiGraph* cMultiGraph = static_cast<TMultiGraph*> ( getHist ( static_cast<ChipContainer*>(cCanvas.first), "cbc_pulseshape" ) );
                 cMultiGraph->Draw ( "A" );
                 cCanvas.second->Modified();
             }

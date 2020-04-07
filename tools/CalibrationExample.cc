@@ -52,18 +52,21 @@ void CalibrationExample::runCalibrationExample(void)
 
         for ( auto &event : eventVector ) //for on events - begin 
         {
-            for(auto module: *board) // for on module - begin 
+            for(auto opticalGroup: *board)
             {
-                for(auto chip: *module) // for on chip - begin 
+                for(auto hybrid: *opticalGroup) // for on hybrid - begin 
                 {
-                    unsigned int channelNumber = 0;
-                    for(auto &channel : *chip->getChannelContainer<uint32_t>()) // for on channel - begin 
+                    for(auto chip: *hybrid) // for on chip - begin 
                     {
-                        //retreive data in the old way and add to the current number of hits of the corresponding channel
-                        channel += event->DataBit ( module->getId(), chip->getId(), channelNumber++);
-                    } // for on channel - end 
-                } // for on chip - end 
-            } // for on module - end 
+                        unsigned int channelNumber = 0;
+                        for(auto &channel : *chip->getChannelContainer<uint32_t>()) // for on channel - begin 
+                        {
+                            //retreive data in the old way and add to the current number of hits of the corresponding channel
+                            channel += event->DataBit ( hybrid->getId(), chip->getId(), channelNumber++);
+                        } // for on channel - end 
+                    } // for on chip - end 
+                } // for on hybrid - end 
+            } // for on opticalGroup - end 
         } // for on events - end 
     } // for on board - end 
 	

@@ -152,8 +152,8 @@ class HybridTester : public Tool
     bool fThresholdScan; /*!< Flag for SCurve Canvas */
     TCanvas* fSCurveCanvas;   /*!< Canvas for threshold scan */
 
-    std::map<Ph2_HwDescription::Chip*, TH1F*> fSCurveMap;  /*!< Histograms for SCurve */
-    std::map<Ph2_HwDescription::Chip*, TF1*> fFitMap;   /*!< fits for SCurve*/
+    std::map<ChipContainer*, TH1F*> fSCurveMap;  /*!< Histograms for SCurve */
+    std::map<ChipContainer*, TF1*> fFitMap;   /*!< fits for SCurve*/
 
     // noisy and dead channels on top/bottom sensors
     std::vector<int> fNoisyChannelsTop;

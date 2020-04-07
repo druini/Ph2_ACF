@@ -73,9 +73,10 @@ void Physics::Start (int currentRun)
   // # Download mask to the chips #
   // ##############################
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), theChnGroupHandler->allChannelGroup(), true, false);
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
+          fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), theChnGroupHandler->allChannelGroup(), true, false);
 
 
   for (const auto cBoard : *fDetectorContainer)
@@ -229,8 +230,9 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
   // # Clear container #
   // ###################
   for (const auto cBoard : theOccContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
         {
           for (auto row = 0u; row < RD53::nRows; row++)
             for (auto col = 0u; col < RD53::nCols; col++)
@@ -241,8 +243,8 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
                 cChip->getChannel<OccupancyAndPh>(row,col).readoutError = false;
               }
 
-          for (auto i = 0u; i < BCIDsize; i++)  theBCIDContainer .at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i]  = 0;
-          for (auto i = 0u; i < TrgIDsize; i++) theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
+          for (auto i = 0u; i < BCIDsize; i++)  theBCIDContainer .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i]  = 0;
+          for (auto i = 0u; i < TrgIDsize; i++) theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
         }
 
 
@@ -258,15 +260,16 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
   // # Copy register values for streaming #
   // ######################################
   for (const auto cBoard : theOccContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
         {
           for (auto i = 1u; i < cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.size(); i++)
             {
               int deltaBCID = cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] - cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
               deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
               if (deltaBCID >= int(BCIDsize)) LOG (ERROR) << BOLDBLUE <<"[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
-              else theBCIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
+              else theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
             }
           cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.clear();
 
@@ -275,7 +278,7 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
               int deltaTrgID = cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] - cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
               deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
               if (deltaTrgID >= int(TrgIDsize)) LOG (ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
-              else theTrgIDContainer.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
+              else theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
             }
           cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.clear();
         }
@@ -285,11 +288,12 @@ void Physics::fillDataContainer (BoardContainer* const& cBoard)
   // # Normalize container #
   // #######################
   for (const auto cBoard : theOccContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        for (auto row = 0u; row < RD53::nRows; row++)
-          for (auto col = 0u; col < RD53::nCols; col++)
-            cChip->getChannel<OccupancyAndPh>(row,col).normalize(events.size(), true);
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
+          for (auto row = 0u; row < RD53::nRows; row++)
+            for (auto col = 0u; col < RD53::nCols; col++)
+              cChip->getChannel<OccupancyAndPh>(row,col).normalize(events.size(), true);
 }
 
 void Physics::chipErrorReport ()
@@ -297,10 +301,11 @@ void Physics::chipErrorReport ()
   auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
         {
-          LOG (INFO) << GREEN << "Readout chip error report for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+          LOG (INFO) << GREEN << "Readout chip error report for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
           LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
           LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
@@ -316,15 +321,16 @@ void Physics::saveChipRegisters (int currentRun)
   std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
 
   for (const auto cBoard : *fDetectorContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cModule : *cOpticalGroup)
+        for (const auto cChip : *cModule)
         {
           static_cast<RD53*>(cChip)->copyMaskFromDefault();
           if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
           static_cast<RD53*>(cChip)->saveRegMap(fileReg);
           std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
           system(command.c_str());
-          LOG (INFO) << BOLDBLUE << "\t--> Physics saved the configuration file for [board/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+          LOG (INFO) << BOLDBLUE << "\t--> Physics saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
         }
 
 }

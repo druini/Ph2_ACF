@@ -48,31 +48,33 @@ int main( int argc, char* argv[] )
 	//IB->PSInterfaceBoard_PowerOff_SSA();
 	cTool.ConfigureHw();
 	
-	BeBoard* pBoard = cTool.fBoardVector.at(0);
-	std::vector < ReadoutChip* > &ChipVec = pBoard->getModule(0)->fReadoutChipVector;
+	BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
+	ModuleContainer* ChipVec = pBoard->at(0)->at(0);
 	TH2I *strip_v_thdac_31 = new TH2I("strip_v_thdac_31", "All TRIMDACs = 31;strip # ; THDAC (lsb)", 360, -60, 300, 25, 0, 25);
 	strip_v_thdac_31->SetStats(0);
-	for(auto cSSA: ChipVec)
+	for(auto cSSA: *ChipVec)
 	{
-		cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ReadoutMode", 0x0); // sync mode = 0
+		ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
+		cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ReadoutMode", 0x0); // sync mode = 0
 		for (int i = 1; i<=120;i++ ) // loop over all strips
 		{
-			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "THTRIMMING_S" + std::to_string(i), 31); // MAXIMIZE THE TRIM
-			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S" + std::to_string(i), 1); // ENABLE THE STRIP
+			cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 31); // MAXIMIZE THE TRIM
+			cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S" + std::to_string(i), 1); // ENABLE THE STRIP
 		}
 	}
-	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S100", 0x1);}
-	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S101", 0x1);}
-	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S102", 0x1);}
-	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S103", 0x1);}
-	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S104", 0x1);}
-	// for(auto cSSA: ChipVec){cTool.fReadoutChipInterface->WriteChipReg(cSSA, "ENFLAGS_S105", 0x1);}
+	// for(auto cSSA: *ChipVec){ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA); cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S100", 0x1);}
+	// for(auto cSSA: *ChipVec){ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA); cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S101", 0x1);}
+	// for(auto cSSA: *ChipVec){ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA); cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S102", 0x1);}
+	// for(auto cSSA: *ChipVec){ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA); cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S103", 0x1);}
+	// for(auto cSSA: *ChipVec){ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA); cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S104", 0x1);}
+	// for(auto cSSA: *ChipVec){ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA); cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S105", 0x1);}
 	for (int thd = 10; thd<=20; thd++)
 	{
-		for(auto cSSA: ChipVec)
+		for(auto cSSA: *ChipVec)
 		{
+			ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
 			std::cout<<"Setting threshold to " << thd << std::endl;
-			cTool.fReadoutChipInterface->WriteChipReg(cSSA, "Bias_THDAC", thd);
+			cTool.fReadoutChipInterface->WriteChipReg(theSSA, "Bias_THDAC", thd);
 		}
 	cTool.ReadNEvents(pBoard, 1);
 	const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
