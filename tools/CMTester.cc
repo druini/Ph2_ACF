@@ -145,7 +145,7 @@ void CMTester::Initialize()
                 }
 
                 // PER MODULE PLOTS
-                uint32_t cNCbc = cFe->getNChip();
+                uint32_t cNCbc = cHybrid->size();
 
                 // 2D profile for the combined odccupancy
                 TString cName =  Form ( "p_module_combinedoccupancy_Fe%d", cHybridId ) ;
@@ -154,7 +154,7 @@ void CMTester::Initialize()
                 if ( cObj ) delete cObj;
 
                 TProfile2D* c2DProfile = new TProfile2D ( cName, Form ( "Combined Occupancy FE%d; Strip; Strip; Occupancy", cHybridId ), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5, cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5 );
-                bookHistogram ( cFe, "module_combinedoccupancy", c2DProfile );
+                bookHistogram ( cHybrid, "module_combinedoccupancy", c2DProfile );
 
                 // 2D Hist for correlation coefficient
                 cName =  Form ( "p_module_correlation_Fe%d", cHybridId );
@@ -163,7 +163,7 @@ void CMTester::Initialize()
                 if ( cObj ) delete cObj;
 
                 TH2F* c2DHist = new TH2F ( cName, Form ( "Correlation FE%d; Strip; Strip; Correlation coefficient", cHybridId  ), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5, cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5 );
-                bookHistogram ( cFe, "module_correlation", c2DHist );
+                bookHistogram ( cHybrid, "module_correlation", c2DHist );
 
                 // 1D projection of the combined odccupancy
                 cName =  Form ( "p_module_occupancyprojection_Fe%d", cHybridId );
@@ -174,7 +174,7 @@ void CMTester::Initialize()
                 TProfile* cProfile = new TProfile ( cName, Form ( "Projection of combined Occupancy FE%d;  NNeighbors; Probability", cHybridId ), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5 );
                 cProfile->SetLineColor ( 9 );
                 cProfile->SetLineWidth ( 2 );
-                bookHistogram ( cFe, "module_occupancyprojection", cProfile );
+                bookHistogram ( cHybrid, "module_occupancyprojection", cProfile );
 
                 // 1D projection of the uncorrelated occupancy
                 cName = Form ( "p_module_uncorr_occupancyprojection_Fe%d", cHybridId );
@@ -185,7 +185,7 @@ void CMTester::Initialize()
                 cProfile = new TProfile ( cName, Form ( "Projection of uncorrelated Occupancy FE%d;  NNeighbors; Probability", cHybridId ),  cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5 );
                 cProfile->SetLineColor ( 2 );
                 cProfile->SetLineWidth ( 2 );
-                bookHistogram ( cFe, "module_uncorr_occupancyprojection", cProfile );
+                bookHistogram ( cHybrid, "module_uncorr_occupancyprojection", cProfile );
 
                 // 1D projection of the correlation
                 cName =  Form ( "p_module_correlationprojection_Fe%d", cHybridId );
@@ -196,7 +196,7 @@ void CMTester::Initialize()
                 cProfile = new TProfile ( cName, Form ( "Projection of Correlation FE%d;  NNeighbors; Correlation", cHybridId ),  cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5 );
                 cProfile->SetLineColor ( 9 );
                 cProfile->SetLineWidth ( 2 );
-                bookHistogram ( cFe, "module_correlationprojection", cProfile );
+                bookHistogram ( cHybrid, "module_correlationprojection", cProfile );
             }
         }
     }
@@ -249,6 +249,7 @@ void CMTester::ScanNoiseChannels()
                         }
                     }
                 }
+            }
 
             if ( cN % 100 == 0 )
                 // updateHists();
@@ -369,7 +370,7 @@ void CMTester::FinishRun()
     int iCbc = 0;
     for ( auto cCbc : fChipHistMap )
     {
-        cCbc.first->accept (cVisitor);
+        static_cast<ReadoutChip*>(cCbc.first)->accept (cVisitor);
         uint32_t cVcth = cVisitor.getThreshold();
 
         TH1F* cTmpNHits = dynamic_cast<TH1F*> ( getHist ( cCbc.first, "nhits" ) );
@@ -387,9 +388,9 @@ void CMTester::FinishRun()
 	float CMnoiseFrac = fabs ( cNHitsFit->GetParameter ( 1 ) );
 	float CMnoiseFracErr = fabs ( cNHitsFit->GetParError ( 1 ) );
 	if (fTotalNoise[iCbc]>0) 
-	    LOG (INFO) << BOLDRED << "Average noise on FE " << +cCbc.cHybrid->getId() << " CBC " << +cCbc.first->getId() << " : " << fTotalNoise[iCbc] << " . At Vcth " << cVcth << " CM is " << CMnoiseFrac << "+/-" <<  CMnoiseFracErr << "%, so "<<CMnoiseFrac*fTotalNoise[iCbc]<<" VCth." << RESET ;
+	    LOG (INFO) << BOLDRED << "Average noise on FE " << +static_cast<ReadoutChip*>(cCbc.first)->getFeId() << " CBC " << +cCbc.first->getId() << " : " << fTotalNoise[iCbc] << " . At Vcth " << cVcth << " CM is " << CMnoiseFrac << "+/-" <<  CMnoiseFracErr << "%, so "<<CMnoiseFrac*fTotalNoise[iCbc]<<" VCth." << RESET ;
 	else 
-	    LOG (INFO) << BOLDRED << "FE " << +cCbc.cHybrid->getId() << " CBC " << +cCbc.first->getId() << " . At Vcth " << cVcth << " CM is " << CMnoiseFrac << "+/-" <<  CMnoiseFracErr << "%" << RESET ;
+	    LOG (INFO) << BOLDRED << "FE " << +static_cast<ReadoutChip*>(cCbc.first)->getFeId() << " CBC " << +cCbc.first->getId() << " . At Vcth " << cVcth << " CM is " << CMnoiseFrac << "+/-" <<  CMnoiseFracErr << "%" << RESET ;
 
 
         // now compute the correlation coefficient and the uncorrelated probability
@@ -428,7 +429,7 @@ void CMTester::FinishRun()
     // now module wise
     for ( auto& cFe : fModuleHistMap )
     {
-        TString cName = Form ( "FE%d", cFe.cHybrid->getId() );
+        TString cName = Form ( "FE%d", cFe.first->getId() );
 
         // get histograms
         TProfile2D* cTmpOccProfile = dynamic_cast<TProfile2D*> ( getHist ( cFe.first, "module_combinedoccupancy" ) );
@@ -518,11 +519,11 @@ void CMTester::analyze ( BeBoard* pBoard, const Event* pEvent )
                     cModuleData.push_back ( chit );
 
                     //  count hits/event
-                    if ( chit  && !isMasked ( cCbc, cChan ) )
+                    if ( chit  && !isMasked ( static_cast<ReadoutChip*>(cCbc), cChan ) )
                         cNHits++;
 
                     // Fill Single Strip Efficiency
-                    if ( !isMasked ( cCbc, cChan ) ) cTmpHitProb->Fill ( cChan, int ( chit ) );
+                    if ( !isMasked ( static_cast<ReadoutChip*>(cCbc), cChan ) ) cTmpHitProb->Fill ( cChan, int ( chit ) );
 
                     // For combined occupancy 1D projection & 2D profile
                     for ( int cChan2 = 0; cChan2 < 254; cChan2++ )
@@ -536,7 +537,7 @@ void CMTester::analyze ( BeBoard* pBoard, const Event* pEvent )
 
                         if ( chit && chit2 ) cfillValue = 1;
 
-                        if ( !isMasked ( cCbc, cChan ) && !isMasked ( cCbc, cChan2 ) )
+                        if ( !isMasked ( static_cast<ReadoutChip*>(cCbc), cChan ) && !isMasked ( static_cast<ReadoutChip*>(cCbc), cChan2 ) )
                         {
                             // Fill 2D occupancy
                             cTmpOccProfile->Fill ( cChan, cChan2, cfillValue );
@@ -556,8 +557,8 @@ void CMTester::analyze ( BeBoard* pBoard, const Event* pEvent )
             }
 
             // Here deal with per-module Histograms
-            TProfile2D* cTmpOccProfile = dynamic_cast<TProfile2D*> ( getHist ( cFe,  "module_combinedoccupancy" ) );
-            TProfile* cTmpCombinedOcc = dynamic_cast<TProfile*> ( getHist ( cFe, "module_occupancyprojection" ) );
+            TProfile2D* cTmpOccProfile = dynamic_cast<TProfile2D*> ( getHist ( cHybrid,  "module_combinedoccupancy" ) );
+            TProfile* cTmpCombinedOcc = dynamic_cast<TProfile*> ( getHist ( cHybrid, "module_occupancyprojection" ) );
 
             uint32_t cChanCt1 = 0;
 
@@ -678,7 +679,7 @@ bool CMTester::randHit ( float pProbability )
     else return false;
 }
 
-bool CMTester::isMasked ( Chip* pCbc, int pChannel )
+bool CMTester::isMasked ( ReadoutChip* pCbc, int pChannel )
 {
     auto cNoiseStripSet = fNoiseStripMap.find ( pCbc );
 

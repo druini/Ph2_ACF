@@ -417,7 +417,7 @@ void Tool::SaveResults()
 		// Now per FE
 		for ( const auto& cHybrid : fModuleHistMap )
 		{
-			TString cDirName = Form ( "FE%d", cHybrid.first->getFeId() );
+			TString cDirName = Form ( "FE%d", cHybrid.first->getId() );
 			TObject* cObj = gROOT->FindObject ( cDirName );
 
 			//if ( cObj ) delete cObj;
@@ -435,7 +435,7 @@ void Tool::SaveResults()
 		for ( const auto& cChip : fChipHistMap )
 		{
 			//Fabio: CBC specific -> to be moved out from Tool
-			TString cDirName = Form ( "FE%dCBC%d", cChip.first->getFeId(), cChip.first->getChipId() );
+			TString cDirName = Form ( "FE%dCBC%d", static_cast<ReadoutChip*>(cChip.first)->getFeId(), cChip.first->getId() );
 			TObject* cObj = gROOT->FindObject ( cDirName );
 
 			//if ( cObj ) delete cObj;

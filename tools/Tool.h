@@ -52,7 +52,7 @@ class Tool : public Ph2_System::SystemController
         using ChipHistogramMap = std::map<ChipContainer*, std::map<std::string, TObject*> >;
         using ModuleHistogramMap = std::map<ModuleContainer*, std::map<std::string, TObject*> >;
         using BeBoardHistogramMap = std::map<BoardContainer*, std::map<std::string, TObject*> >;
-        using CanvasMap = std::map<Ph2_HwDescription::FrontEndDescription*, TCanvas*>;
+        using CanvasMap = std::map<BaseContainer*, TCanvas*>;
     #endif
 
     using TestGroupChannelMap =  std::map< int, std::vector<uint8_t> >;

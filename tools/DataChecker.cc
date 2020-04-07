@@ -183,9 +183,10 @@ void DataChecker::Initialise ()
             {
                 for(auto cChip : *cHybrid)
                 {
-                    fThresholds        .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "VCth" );
-                    fLogic             .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "Pipe&StubInpSel&Ptwidth" );
-                    fHIPs              .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "HIP&TestMode" );
+                    ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
+                    fThresholds        .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(theChip, "VCth" );
+                    fLogic             .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(theChip, "Pipe&StubInpSel&Ptwidth" );
+                    fHIPs              .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(theChip, "HIP&TestMode" );
                 }
             }
         }
@@ -261,7 +262,6 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
             auto& cHybridStubCheck = cThisStubCheckContainer->at(cHybrid->getIndex());  
         
 
-            auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
             auto cHybridId = cHybrid->getId();
             TH2D* cMatchedStubs = static_cast<TH2D*> ( getHist ( cHybrid, "MatchedStubs" ) );
             TH2D* cAllStubs = static_cast<TH2D*> ( getHist ( cHybrid, "Stubs" ) );
@@ -278,7 +278,6 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
                 TH2D* cAllHits = static_cast<TH2D*> ( getHist ( cChip, "Hits_perFe" ) );
                 TH2D* cMatchedHits = static_cast<TH2D*> ( getHist ( cChip, "MatchedHits_perFe" ) );
                 TProfile2D* cMatchedHitsEye = static_cast<TProfile2D*> ( getHist ( cChip, "MatchedHits_eye" ) );
-                TProfile2D* cMatchedHitsTP = static_cast<TProfile2D*> ( getHist ( cChip, "MatchedHits_TestPulse" ) );
                 
                 TH1D* cFlaggedEvents = static_cast<TH1D*> ( getHist ( cChip, "FlaggedEvents" ) );
                 
@@ -294,7 +293,6 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
                 for(auto cHitExpected : cExpectedHits )
                     LOG (INFO) << BOLDMAGENTA << "\t.. expect a hit in channel " << +cHitExpected << RESET;
                 auto cEventIterator = cEvents.begin();
-                size_t cEventCounter=0;
                 LOG (DEBUG) << BOLDMAGENTA << "CBC" << +cChip->getId() << RESET;
                 for( size_t cEventIndex=0; cEventIndex < cEventsPerPoint ; cEventIndex++) // for each event 
                 {
@@ -306,8 +304,6 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
                     {
                         auto cEvent = *cEventIterator;
                         auto cBxId = cEvent->BxId(cHybrid->getId());
-                        auto cErrorBit = cEvent->Error( cHybridId , cChipId );
-                        uint32_t cL1Id = cEvent->L1Id( cHybridId, cChipId );
                         uint32_t cPipeline = cEvent->PipelineAddress( cHybridId, cChipId );
                         cBxId_first = (cTriggerIndex == 0 ) ? cBxId : cBxId_first;
                         cPipeline_first = (cTriggerIndex == 0 ) ? cPipeline : cPipeline_first;
@@ -378,12 +374,10 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
         
                 std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( theChip );
                 // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5 strips
-                uint8_t cBendCode = cBendLUT[ (cBend/2. - (-7.0))/0.5 ]; 
                 std::vector<uint8_t> cExpectedHits = static_cast<CbcInterface*>(fReadoutChipInterface)->stubInjectionPattern( theChip, cSeed, cBend ); 
                 auto cHybridId = cHybrid->getId();
                 
                 auto cEventIterator = cEvents.begin();
-                size_t cEventCounter=0;
                 LOG (DEBUG) << BOLDMAGENTA << "CBC" << +cChip->getId() << RESET;
                 for( size_t cEventIndex=0; cEventIndex < cEventsPerPoint ; cEventIndex++) // for each event 
                 {
@@ -395,8 +389,6 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
                     {
                         auto cEvent = *cEventIterator;
                         auto cBxId = cEvent->BxId(cHybrid->getId());
-                        auto cErrorBit = cEvent->Error( cHybridId , cChipId );
-                        uint32_t cL1Id = cEvent->L1Id( cHybridId, cChipId );
                         uint32_t cPipeline = cEvent->PipelineAddress( cHybridId, cChipId );
                         cBxId_first = (cTriggerIndex == 0 ) ? cBxId : cBxId_first;
                         cPipeline_first = (cTriggerIndex == 0 ) ? cPipeline : cPipeline_first;
@@ -601,8 +593,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
     //get number of events from xml
     auto cSetting = fSettingsMap.find ( "Nevents" );
     uint32_t cEventsPerPoint = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
-    uint16_t cDefaultStubLatency=50;
-
+    
     // get trigger multiplicity from xml 
     cSetting = fSettingsMap.find ( "TriggerMultiplicity" );
     bool cConfigureTriggerMult = ( cSetting != std::end ( fSettingsMap ) );
@@ -615,20 +606,16 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
 
     // get target threshold 
     cSetting = fSettingsMap.find ( "Threshold" );
-    uint16_t cTargetThreshold = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 580  ; 
 
     // get number of attempts 
     cSetting = fSettingsMap.find ( "Attempts" );
-    size_t cAttempts = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10  ; 
     // get mode
     cSetting = fSettingsMap.find ( "Mode" );
     uint8_t cMode = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0  ; 
     // get latency offset
     cSetting = fSettingsMap.find ( "LatencyOffset" );
-    int cLatencyOffset = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0  ; 
     // resync between attempts 
     cSetting = fSettingsMap.find ( "ReSync" );
-    bool cResync = ( cSetting != std::end ( fSettingsMap ) ) ? (cSetting->second==1) : false  ; 
     
     // if TP is used - enable it 
     cSetting = fSettingsMap.find ( "PulseShapePulseAmplitude" );
@@ -636,12 +623,6 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
 
     // get TP amplitude range 
     // get threshold range  
-    cSetting = fSettingsMap.find ( "PulseShapeInitialPulseAmplitude" );
-    uint16_t cInitialAmpl = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 400;
-    cSetting = fSettingsMap.find ( "PulseShapeFinalPulseAmplitude" );
-    uint16_t cFinalAmpl = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 600;
-    cSetting = fSettingsMap.find ( "PulseShapeAmplitudeStep" );
-    uint16_t cAmplStep = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 5;
     
     // get threshold range  
     cSetting = fSettingsMap.find ( "PulseShapeInitialVcth" );
@@ -662,13 +643,6 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
     uint16_t cTPdelayStep = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 3;
     
 
-    // get offset range 
-    cSetting = fSettingsMap.find ( "WindowOffsetInitial" );
-    uint16_t cInitialWindowOffset = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
-    cSetting = fSettingsMap.find ( "WindowOffsetFinal" );
-    uint16_t cFinalWindowOffset = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 25;
-    
-
     // get injected stub from xmls 
     std::pair<uint8_t, int> cStub;
     cSetting = fSettingsMap.find ( "StubSeed" );
@@ -677,12 +651,6 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
     cStub.second = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0; 
     LOG (DEBUG) << BOLDBLUE << "Injecting a stub in position " << +cStub.first << " with bend " << cStub.second << " to test data integrity..." << RESET;
 
-    // latency range 
-    cSetting = fSettingsMap.find ( "LatencyStart" );
-    int cLatencyOffsetStart = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
-    cSetting = fSettingsMap.find ( "LatencyStop" );
-    int cLatencyOffsetStop = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 25;
-    
     // set-up for TP
     fAllChan = true;
     fMaskChannelsFromOtherGroups = !this->fAllChan;
@@ -717,7 +685,6 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
     }
 
     // generate stubs in exactly chips with IDs that match pChipIds
-    size_t cSeedIndex=0;
     std::vector<int> cExpectedHits(0);
     for(auto cBoard : *fDetectorContainer)
     {
@@ -732,13 +699,11 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                     {
                         std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( theChip );
                         // both stub and bend are in units of half strips 
-                        double cBend_strips = cStub.second/2.;
                         // if using TP then always inject a stub with bend 0 .. 
                         // later will use offset window to modify bend [ should probably put this in inject stub ]
                         uint8_t cBend_halfStrips = cStub.second ; 
                         static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( theChip , {cStub.first} , {cBend_halfStrips}, false );
                         // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5 strips
-                        uint8_t cBendCode = cBendLUT[ (cStub.second/2. - (-7.0))/0.5 ]; 
                         // set offsets
                         // needs to be fixed 
                         /*
@@ -844,7 +809,6 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                                 LOG (DEBUG) << BOLDMAGENTA << "\t.. expect a hit in channel " << +cHitExpected << RESET;
                             
                             auto cEventIterator = cEvents.begin();
-                            size_t cEventCounter=0;
                             LOG (DEBUG) << BOLDMAGENTA << "CBC" << +cChip->getId() << RESET;
                             size_t cMatchedStubs=0;
                             // vector to keep track of number of matches
@@ -853,8 +817,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                             {
                                 uint32_t cPipeline_first=0; 
                                 uint32_t cBxId_first=0; 
-                                bool cMissedEvent=false;
-
+                                
                                 if( cEventIndex == 0 )
                                     LOG (DEBUG) << BOLDMAGENTA << "'\tEvent " << +cEventIndex << RESET;
                                 bool cIncorrectPipeline=false;
@@ -862,8 +825,6 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                                 {
                                     auto cEvent = *cEventIterator;
                                     auto cBxId = cEvent->BxId(cHybrid->getId());
-                                    auto cErrorBit = cEvent->Error( cHybridId , cChipId );
-                                    uint32_t cL1Id = cEvent->L1Id( cHybridId, cChipId );
                                     uint32_t cPipeline = cEvent->PipelineAddress( cHybridId, cChipId );
                                     cBxId_first = (cTriggerIndex == 0 ) ? cBxId : cBxId_first;
                                     cPipeline_first = (cTriggerIndex == 0 ) ? cPipeline : cPipeline_first;
@@ -1315,8 +1276,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
     //get number of events from xml
     cSetting = fSettingsMap.find ( "Nevents" );
     uint32_t cEventsPerPoint = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
-    uint16_t cDefaultStubLatency=50;
-
+    
     // get trigger rate from xml
     cSetting = fSettingsMap.find ( "TriggerRate" );
     bool cConfigureTrigger = ( cSetting != std::end ( fSettingsMap ) );
@@ -1350,23 +1310,23 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
     cSetting = fSettingsMap.find ( "ManualPhaseAlignment" );
     if( ( cSetting != std::end ( fSettingsMap ) ) )
     {
-        fPhaseTap = cSetting->second ; 
+        // fPhaseTap = cSetting->second ; 
         for (auto cBoard : *fDetectorContainer)
         {
-            for(auto cOpticalGroup : *cBoard)
-            {
-                for (auto cHybrid : *cOpticalGroup)
-                {
-                    auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-                    if( cCic != NULL )
-                    {
-                        for(auto cChipId : pChipIds )
-                        {
-                            bool cConfigured = fCicInterface->SetStaticPhaseAlignment(  cCic , cChipId ,  0 , fPhaseTap);
-                        }
-                    }
-                }
-            }
+        //     for(auto cOpticalGroup : *cBoard)
+        //     {
+        //         for (auto cHybrid : *cOpticalGroup)
+        //         {
+        //             auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+        //             if( cCic != NULL )
+        //             {
+        //                 for(auto cChipId : pChipIds )
+        //                 {
+        //                     // bool cConfigured = fCicInterface->SetStaticPhaseAlignment(  cCic , cChipId ,  0 , fPhaseTap);
+        //                 }
+        //             }
+        //         }
+        //     }
             fBeBoardInterface->ChipReSync (static_cast<BeBoard*>(cBoard));
         }
     }
@@ -1431,7 +1391,6 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
     }
 
     // generate stubs in exactly chips with IDs that match pChipIds
-    size_t cSeedIndex=0;
     std::vector<int> cExpectedHits(0);
     for (auto cBoard : *fDetectorContainer)
     {
@@ -1446,13 +1405,11 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed , int p
                     {
                         std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( theChip );
                         // both stub and bend are in units of half strips 
-                        double cBend_strips = cStub.second/2.;
                         // if using TP then always inject a stub with bend 0 .. 
                         // later will use offset window to modify bend [ should probably put this in inject stub ]
                         uint8_t cBend_halfStrips = (pWithNoise) ? cStub.second : 0 ; 
                         static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( theChip , {cStub.first} , {cBend_halfStrips}, pWithNoise );
                         // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5 strips
-                        uint8_t cBendCode = cBendLUT[ (pBend/2. - (-7.0))/0.5 ]; 
                         // set offsets
                         // needs to be fixed 
                         /*
@@ -1608,20 +1565,20 @@ void DataChecker::L1Eye(std::vector<uint8_t> pChipIds )
         LOG (INFO) << BOLDBLUE << "Setting optimal phase tap in CIC to " << +cPhase << RESET;
         for (auto cBoard : *fDetectorContainer)
         {
-            for (auto cOpticalGroup : *cBoard)
-            {
-                for (auto& cHybrid : *cOpticalGroup)
-                {
-                    auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-                    //fCicInterface->ResetPhaseAligner(cCic);
-                    for(auto cChipId : pChipIds )
-                    {
-                        bool cConfigured = fCicInterface->SetStaticPhaseAlignment(  cCic , cChipId ,  0 , cPhase);
-                        // check if a resync is needed
-                        //fCicInterface->CheckReSync( static_cast<OuterTrackerModule*>(cHybrid)->fCic); 
-                    }
-                }
-            }
+            // for (auto cOpticalGroup : *cBoard)
+            // {
+            //     for (auto& cHybrid : *cOpticalGroup)
+            //     {
+            //         auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+            //         //fCicInterface->ResetPhaseAligner(cCic);
+            //         for(auto cChipId : pChipIds )
+            //         {
+            //             // bool cConfigured = fCicInterface->SetStaticPhaseAlignment(  cCic , cChipId ,  0 , cPhase);
+            //             // check if a resync is needed
+            //             //fCicInterface->CheckReSync( static_cast<OuterTrackerModule*>(cHybrid)->fCic); 
+            //         }
+            //     }
+            // }
             // send a resync
             fBeBoardInterface->ChipReSync ( static_cast<BeBoard*>(cBoard) );
             // re-do back-end alignment

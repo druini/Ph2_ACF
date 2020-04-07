@@ -260,13 +260,13 @@ void StubSweep::SweepStubs (uint32_t pNEvents )
 
     this->writeObjects();
 }
-void StubSweep::fillStubSweepHist ( Chip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubPosition )
+void StubSweep::fillStubSweepHist ( ReadoutChip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubPosition )
 {
     // Find the Occupancy histogram for the current Chip
     TProfile* cTmpProfile = static_cast<TProfile*> ( getHist ( pCbc, "StubAddresses" ) );
     cTmpProfile->Fill ( pChannelPair[1], pStubPosition );
 }
-void StubSweep::fillStubBendHist ( Chip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubBend )
+void StubSweep::fillStubBendHist ( ReadoutChip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubBend )
 {
     // Find the Occupancy histogram for the current Chip
     TProfile* cTmpProfile = static_cast<TProfile*> ( getHist ( pCbc, "StubBends" ) );

@@ -138,7 +138,7 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength )
         // Take Data for all Boards
         for ( auto pBoard : *fDetectorContainer )
         {
-            BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
+            BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
             uint32_t cTotalEvents = 0;
             uint32_t cTriggerSource = fBeBoardInterface->ReadBoardReg( theBoard , "fc7_daq_cnfg.fast_command_block.trigger_source"); // check trigger source
             double cTime=0;
@@ -182,7 +182,6 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength )
             double   cTriggerRate = (cEvents.size())/cTime; 
             cTotalEvents = cEvents.size();
             LOG (INFO) << BOLDBLUE << "Vcth: " << +cVCth << ". Recorded " << cTotalEvents << " Events [ average trigger rate " << cTriggerRate << " ]"<< RESET;
-            uint32_t cMaxEvents_toProcess=10000;
             //cTotalEvents = std::min(cMaxEvents_toProcess, (uint32_t)cEvents.size());
             int cEventHits = 0;
             int cEventClusters = 0;
@@ -192,7 +191,7 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength )
             {
                 //if( (uint32_t)cEventCounter > cMaxEvents_toProcess ) 
                 //    continue;
-                for(auto cOpticalGroup : *cBoard)
+                for(auto cOpticalGroup : *pBoard)
                 {
                     for ( auto cFe : *cOpticalGroup )
                     {
@@ -218,7 +217,7 @@ void SignalScanFit::ScanSignal ( int pSignalScanLength )
                             TH2D* cClusters2DEvenHist     = dynamic_cast<TH2D*> ( getHist ( cCbc, "Cbc_Clusters2D_even" ) );
                             TH2D* cClusters2DOddHist      = dynamic_cast<TH2D*> ( getHist ( cCbc, "Cbc_Clusters2D_odd" ) );
                             std::vector<uint32_t> cHits = cEvent->GetHits( cFe->getId(), cCbc->getId() );
-                            LOG (DEBUG) << BOLDBLUE << "Found " << +cHits.size() << " hits in CBC" << +cCbc->getChipId() << RESET;
+                            LOG (DEBUG) << BOLDBLUE << "Found " << +cHits.size() << " hits in CBC" << +cCbc->getId() << RESET;
                             for ( auto cId : cHits ) 
                             {
                                 LOG (DEBUG) << BOLDBLUE << "\t.... Hit found in channel " << +cId << " i.e. sensor " << (int)(cId%2) << RESET;

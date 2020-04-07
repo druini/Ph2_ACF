@@ -164,7 +164,6 @@ void HybridTester::InitializeHists()
 
                 for ( auto cCbc : *cFe )
                 {
-                    ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
                     uint32_t cCbcId = cCbc->getId();
 
                     TString cName = Form ( "SCurve_Fe%d_Cbc%d", cFeId, cCbcId );
@@ -1081,7 +1080,7 @@ void HybridTester::Measure()
 
     for ( auto pBoard : *fDetectorContainer )
     {
-        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
+        BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
         uint32_t cN = 1;
         uint32_t cNthAcq = 0;
 

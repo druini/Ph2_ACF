@@ -48,8 +48,8 @@ class LatencyScan : public Tool
     LatencyScan();
     ~LatencyScan();
     void Initialize (uint32_t pStartLatency, uint32_t pLatencyRange);
-    std::map<Ph2_HwDescription::Module*, uint8_t> ScanLatency ( uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
-    std::map<Ph2_HwDescription::Module*, uint8_t> ScanStubLatency ( uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20 );
+    std::map<ModuleContainer*, uint8_t> ScanLatency ( uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
+    std::map<ModuleContainer*, uint8_t> ScanStubLatency ( uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20 );
     void MeasureTriggerTDC();
     void ScanLatency2D(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
 

@@ -118,7 +118,7 @@ void AntennaTester::InitialiseSettings()
     for (auto cBoard : *fDetectorContainer)
     {
 
-        BeBoard *theBoard = static_cast<BeBoard*>(cBoard)
+        BeBoard *theBoard = static_cast<BeBoard*>(cBoard);
         trigSource = fBeBoardInterface->ReadBoardReg (theBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
          LOG (INFO)  <<int (trigSource);
     }
@@ -187,7 +187,7 @@ void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 {
     for (auto cBoard : *fDetectorContainer)
     {
-        BeBoard *theBoard = static_cast<BeBoard*>(cBoard)
+        BeBoard *theBoard = static_cast<BeBoard*>(cBoard);
         fBeBoardInterface->ChipReset ( theBoard );
 
         trigSource = fBeBoardInterface->ReadBoardReg (theBoard, "fc7_daq_cnfg.fast_command_block.trigger_source" );
@@ -202,7 +202,7 @@ void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
             {
                 for (auto cCbc : *cHybrid)
                 {
-                    Cbc* theCBC = static_cast<Cbc*>(cCbc);
+                    ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
                     std::string pRegFile ;
                     char buffer[120];
 
@@ -212,8 +212,8 @@ void AntennaTester::ReconfigureCBCRegisters (std::string pDirectoryName )
                         sprintf (buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cHybrid->getId(), cCbc->getId() );
 
                     pRegFile = buffer;
-                    Cbc->loadfRegMap (pRegFile);
-                    fReadoutChipInterface->ConfigureChip ( Cbc );
+                    theCbc->loadfRegMap (pRegFile);
+                    fReadoutChipInterface->ConfigureChip ( theCbc );
                     LOG (INFO)  << GREEN << "\t\t Successfully reconfigured CBC" << int ( cCbc->getId() ) << "'s regsiters from " << pRegFile << " ." << RESET;
                 }
             }

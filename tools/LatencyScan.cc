@@ -120,7 +120,7 @@ void LatencyScan::MeasureTriggerTDC()
     return;
 }
 
-std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uint8_t pLatencyRange)
+std::map<ModuleContainer*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uint8_t pLatencyRange)
 {    
 
     LOG (INFO) << "Scanning Latency ... " ;
@@ -158,14 +158,14 @@ std::map<Module*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLatency, uin
 
 
     // analyze the Histograms
-    std::map<Module*, uint8_t> cLatencyMap;
+    std::map<ModuleContainer*, uint8_t> cLatencyMap;
 
     updateHists ( "module_latency", true );
 
     return cLatencyMap;
 }
 
-std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency, uint8_t pLatencyRange )
+std::map<ModuleContainer*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency, uint8_t pLatencyRange )
 {
     // This is not super clean but should work
     // Take the default VCth which should correspond to the pedestal and add 8 depending on the mode to exclude noise
@@ -250,7 +250,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
     }
 
     // analyze the Histograms
-    std::map<Module*, uint8_t> cStubLatencyMap;
+    std::map<ModuleContainer*, uint8_t> cStubLatencyMap;
 
     LOG (INFO) << "Identified the Latency with the maximum number of Stubs at: " ;
 
@@ -267,7 +267,7 @@ std::map<Module*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency,
 
         //this->accept ( cLatWriter );
 
-        LOG (INFO) << "Stub Latency FE " << +cFe.first->getModuleId()  << ": " << +cStubLatency << " clock cycles!" ;
+        LOG (INFO) << "Stub Latency FE " << +cFe.first->getId()  << ": " << +cStubLatency << " clock cycles!" ;
     }
 
     return cStubLatencyMap;
@@ -424,7 +424,7 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
                 // }
 
                 LOG (INFO) << BOLDRED << "************************************************************************************" << RESET ;
-                LOG (INFO) << BOLDRED << "For FE" << +cFe->getFeId() << " found optimal latencies to be : " << RESET ; 
+                LOG (INFO) << BOLDRED << "For FE" << +cFe->getId() << " found optimal latencies to be : " << RESET ; 
                 LOG (INFO) << BOLDRED << "........ Stub Latency of " << +cOptimalLatencies.first << " and a Trigger Latency of " << +cOptimalLatencies.second << RESET; 
                 LOG (INFO) << BOLDRED << "************************************************************************************" << RESET ;
             }

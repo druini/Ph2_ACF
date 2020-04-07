@@ -85,9 +85,9 @@ void CicFEAlignment::Initialise ()
         auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.at(cBoard->getIndex());
         auto& cWordAlignmentThisBoard = fWordAlignmentValues.at(cBoard->getIndex());
 
-        for(auto cHybrid : *cBoard)
+        for(auto cOpticalGroup : *cBoard)
         {
-            for (auto cHybrid : *cHybrid)
+            for (auto cHybrid : *cOpticalGroup)
             {
                 auto& cThresholdsThisHybrid = cThresholdsThisBoard->at(cHybrid->getIndex());
                 auto& cLogicThisHybrid = cLogicThisBoard->at(cHybrid->getIndex());
@@ -328,11 +328,11 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
                     //first pattern - stubs lines 0,1,3
                     theCbcInterface->injectStubs( theChip , cSeeds , cBends, false );
                     // switch off HitOr
-                    fReadoutChipInterface->WriteChipReg ( theChip "HitOr", 0);
+                    fReadoutChipInterface->WriteChipReg ( theChip, "HitOr", 0);
                     //enable stub logic
-                    theCbcInterface->selectLogicMode( theChip "Sampled", true, true); 
+                    theCbcInterface->selectLogicMode( theChip, "Sampled", true, true); 
                     // set pT cut to maximum 
-                    fReadoutChipInterface->WriteChipReg( theChip "PtCut", 14); 
+                    fReadoutChipInterface->WriteChipReg( theChip, "PtCut", 14); 
                 }
                 // configure Bx0 alignment patterns in CIC 
                 if( theOuterTrackerHybrid->fCic != NULL ) 
@@ -445,10 +445,10 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
         {
             for (auto cHybrid : *cOpticalGroup)
             {
-                auto& cThresholdsThisHybrid = cThresholdsThisBoard->at(cFe->getIndex());
-                auto& cLogicThisHybrid = cLogicThisBoard->at(cFe->getIndex());
-                auto& cHIPsThisHybrid = cHIPsThisBoard->at(cFe->getIndex());
-                auto& cPtCutThisHybrid = cPtCutThisBoard->at(cFe->getIndex());
+                auto& cThresholdsThisHybrid = cThresholdsThisBoard->at(cHybrid->getIndex());
+                auto& cLogicThisHybrid = cLogicThisBoard->at(cHybrid->getIndex());
+                auto& cHIPsThisHybrid = cHIPsThisBoard->at(cHybrid->getIndex());
+                auto& cPtCutThisHybrid = cPtCutThisBoard->at(cHybrid->getIndex());
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
                 //configure CBCs 
                 for (auto cChip : *cHybrid)
@@ -588,7 +588,6 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                     cPhaseTapsFEs = this->SortOptimalTaps( cPhaseTaps ); 
                     for (auto& cChip : *cHybrid)
                     {
-                        ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cChip);
                         std::string cOutput;
                         for(uint8_t cInput = 0 ; cInput < 6 ; cInput+=1)
                         {
@@ -614,7 +613,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
         {
             for (auto cHybrid : *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cHybrid->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
                 
                 auto& cThresholdsThisHybrid = cThresholdsThisBoard->at(cHybrid->getIndex());
                 auto& cLogicThisHybrid = cLogicThisBoard->at(cHybrid->getIndex());

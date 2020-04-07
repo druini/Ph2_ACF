@@ -52,8 +52,8 @@ class StubSweep : public Tool
 
     // methods to fill/update histograms
     void updateHists ( std::string pHistname );
-    void fillStubBendHist ( Ph2_HwDescription::Chip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubBend );
-    void fillStubSweepHist ( Ph2_HwDescription::Chip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubPosition );
+    void fillStubBendHist ( Ph2_HwDescription::ReadoutChip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubBend );
+    void fillStubSweepHist ( Ph2_HwDescription::ReadoutChip* pCbc, std::vector<uint8_t> pChannelPair, uint8_t pStubPosition );
 
     // method to configure test pulse on the CBC
     void configureTestPulse (Ph2_HwDescription::Chip* pCbc, uint8_t pPulseState);

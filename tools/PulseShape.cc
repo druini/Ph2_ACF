@@ -244,7 +244,7 @@ void PulseShape::fitGraph ( int pLow )
     {
         for ( auto& cChannel : cCbc.second )
         {
-            TString cName = Form ( "f_cbc_pulse_Fe%dCbc%d_Channel%d", cCbc.first->getFeId(), cCbc.first->getChipId(), cChannel->fChannelId );
+            TString cName = Form ( "f_cbc_pulse_Fe%dCbc%d_Channel%d", static_cast<ReadoutChip*>(cCbc.first)->getFeId(), static_cast<ReadoutChip*>(cCbc.first)->getChipId(), cChannel->fChannelId );
             TObject* cObj = gROOT->FindObject ( cName );
 
             if ( cObj ) delete cObj;
@@ -587,7 +587,7 @@ void PulseShape::updateHists ( std::string pHistName, bool pFinal )
         if ( pHistName == "" )
         {
             // now iterate over the channels in the channel map and draw
-            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ) );
+            auto cChannelVector = fChannelMap.find ( static_cast<ChipContainer*>(cCanvas.first) );
 
             if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
             else
@@ -606,7 +606,7 @@ void PulseShape::updateHists ( std::string pHistName, bool pFinal )
         if ( pHistName == "" && pFinal )
         {
             // now iterate over the channels in the channel map and draw
-            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ) );
+            auto cChannelVector = fChannelMap.find (static_cast<ChipContainer*>(cCanvas.first) );
 
             if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
             else
@@ -626,12 +626,12 @@ void PulseShape::updateHists ( std::string pHistName, bool pFinal )
         }
         else if ( pHistName == "cbc_pulseshape" )
         {
-            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ) );
+            auto cChannelVector = fChannelMap.find ( static_cast<ChipContainer*>(cCanvas.first) );
 
             if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
             else
             {
-                TH2I* cTmpFrame = static_cast<TH2I*> ( getHist ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ), "frame" ) );
+                TH2I* cTmpFrame = static_cast<TH2I*> ( getHist ( static_cast<ChipContainer*>(cCanvas.first), "frame" ) );
                 cCanvas.second->cd ( 2 );
                 cTmpFrame->Draw( );
                 TString cOption = "P same";
@@ -647,13 +647,13 @@ void PulseShape::updateHists ( std::string pHistName, bool pFinal )
         }
         else if ( pHistName == "cbc_pulseshape" && pFinal )
         {
-            auto cChannelVector = fChannelMap.find ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ) );
+            auto cChannelVector = fChannelMap.find ( static_cast<ChipContainer*>(cCanvas.first) );
 
             if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
             else
             {
                 cCanvas.second->cd ( 2 );
-                TMultiGraph* cMultiGraph = static_cast<TMultiGraph*> ( getHist ( static_cast<Ph2_HwDescription::Chip*> ( cCanvas.first ), "cbc_pulseshape" ) );
+                TMultiGraph* cMultiGraph = static_cast<TMultiGraph*> ( getHist ( static_cast<ChipContainer*>(cCanvas.first), "cbc_pulseshape" ) );
                 cMultiGraph->Draw ( "A" );
                 cCanvas.second->Modified();
             }
