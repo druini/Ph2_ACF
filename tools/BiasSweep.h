@@ -13,7 +13,7 @@
 #ifndef __BIASSWEEP_H__
 #define __BIASSWEEP_H__
 
-// #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
 
 #include "Tool.h"
 #include <map>
@@ -131,4 +131,4 @@ class BiasSweep : public Tool
 
 
 #endif
-// #endif
+#endif

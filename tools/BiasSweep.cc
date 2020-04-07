@@ -1,5 +1,5 @@
 #include "BiasSweep.h"
-// #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
 
 void BiasSweep::InitializeAmuxMap()
 {
@@ -760,4 +760,4 @@ void BiasSweep::StopDAQ()
     //}
 }
 
-// #endif
+#endif
