@@ -366,7 +366,7 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
         // noise hits
         for (auto cHybrid : *cOpticalGroup)
         {
-            for (auto& cChip : *cHybrid) 
+            for (auto cChip : *cHybrid) 
             {
                 ReadoutChip *theChip = static_cast<ReadoutChip*>(cChip);
                 auto cChipId = cChip->getId();
@@ -692,7 +692,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         {
             for (auto cHybrid : *cOpticalGroup)
             {
-                for (auto& cChip : *cHybrid)
+                for (auto cChip : *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
                     if( std::find(pChipIds.begin(), pChipIds.end(), cChip->getId()) != pChipIds.end()  ) 

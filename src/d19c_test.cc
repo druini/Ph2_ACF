@@ -299,8 +299,8 @@ int main ( int argc, char** argv )
                         for ( auto& ev : events ) {
                             for(auto cOpticalGroup : *pBoard)
                             {
-                                for(auto& cFe : *cOpticalGroup) {
-                                    for(auto& cCbc : *cFe) {
+                                for(auto cFe : *cOpticalGroup) {
+                                    for(auto cCbc : *cFe) {
                                         for(uint8_t ch = 0; ch < NCHANNELS; ch++) {
                                             if (ev->DataBit(cFe->getId(), cCbc->getId(), ch))
                                                 cChannelCounters[cFe->getId()][cCbc->getId()][ch]++;

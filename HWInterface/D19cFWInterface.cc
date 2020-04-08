@@ -602,9 +602,9 @@ namespace Ph2_HwInterface
     {
         std::vector<uint8_t> cLinkIds(0);
 
-        for (auto& cOpticalReadout : *pBoard)
+        for (auto cOpticalReadout : *pBoard)
         {
-            for (auto& cHybrid : *cOpticalReadout)
+            for (auto cHybrid : *cOpticalReadout)
             {
                 Module* theHybrid = static_cast<Module*>(cHybrid);
                 if ( std::find(cLinkIds.begin(), cLinkIds.end(), theHybrid->getLinkId() ) == cLinkIds.end() )
@@ -792,9 +792,9 @@ namespace Ph2_HwInterface
         }
         // unique link Ids
         std::vector<uint8_t> cLinkIds(0);
-        for (auto& cOpticalReadout : *pBoard)
+        for (auto cOpticalReadout : *pBoard)
         {
-            for (auto& cHybrid : *cOpticalReadout)
+            for (auto cHybrid : *cOpticalReadout)
             {
                 Module* theHybrid = static_cast<Module*>(cHybrid);
                 if ( std::find(cLinkIds.begin(), cLinkIds.end(), theHybrid->getLinkId() ) == cLinkIds.end() )
@@ -1788,7 +1788,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
     // back-end tuning on stub lines
     for(auto cOpticalGroup : *pBoard)
     {
-        for (auto& cHybrid : *cOpticalGroup)
+        for (auto cHybrid : *cOpticalGroup)
         {
             selectLink (static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
             uint8_t cHybridId= cHybrid->getId() ;

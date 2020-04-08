@@ -41,7 +41,7 @@ HybridTester::~HybridTester() {}
 
 void HybridTester::ReconfigureCBCRegisters (std::string pDirectoryName )
 {
-    for (auto& cBoard : *fDetectorContainer)
+    for (auto cBoard : *fDetectorContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         fBeBoardInterface->ChipReset ( theBoard );
@@ -58,7 +58,7 @@ void HybridTester::ReconfigureCBCRegisters (std::string pDirectoryName )
         {
             for ( auto cFe : *cOpticalGroup )
             {
-                for (auto& cCbc : *cFe)
+                for (auto cCbc : *cFe)
                 {
                     ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
                     std::string pRegFile ;

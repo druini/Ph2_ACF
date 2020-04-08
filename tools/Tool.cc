@@ -1,3 +1,4 @@
+#include <numeric>
 #include "Tool.h"
 #ifdef __USE_ROOT__
 #include "TH1.h"
@@ -613,7 +614,7 @@ void Tool::dumpConfigFiles()
 					{
 						std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(module->getId()) + "_Chip" + std::to_string(chip->getId()) + ".txt";
 						LOG (DEBUG) << BOLDBLUE << "Dumping readout chip configuration to " << cFilename << RESET;
-						static_cast<ReadoutChip*>(chip)->saveRegMap ( cFilename.data() );
+						chip->saveRegMap ( cFilename.data() );
 					}
 					auto& cCic = static_cast<OuterTrackerModule*>(module)->fCic;
 					if( cCic != NULL ) 
@@ -641,17 +642,16 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
 			{
 				for (auto cChip : *cHybrid)
 				{
-                    ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
-					//Fabio: CBC specific but not used by common scans - BEGIN
+                    //Fabio: CBC specific but not used by common scans - BEGIN
 					//first, get the Amux Value
 					uint8_t cOriginalAmuxValue;
-					cOriginalAmuxValue = theChip->getReg ("MiscTestPulseCtrl&AnalogMux" );
-					//uint8_t cOriginalHitDetectSLVSValue = theChip->getReg ("HitDetectSLVS" );
+					cOriginalAmuxValue = cChip->getReg ("MiscTestPulseCtrl&AnalogMux" );
+					//uint8_t cOriginalHitDetectSLVSValue = cChip->getReg ("HitDetectSLVS" );
 
 					std::vector<std::pair<std::string, uint16_t>> cRegVec;
 					uint8_t cRegValue =  to_reg ( 0, pTestGroup );
 
-					if (theChip->getFrontEndType() == FrontEndType::CBC3)
+					if (cChip->getFrontEndType() == FrontEndType::CBC3)
 					{
 						uint8_t cTPRegValue;
 
@@ -667,7 +667,7 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
 						LOG (DEBUG) << BOLDBLUE << "Read original Amux Value to be: " << std::bitset<8> (cOriginalAmuxValue) << " and changed to " << std::bitset<8> (cTPRegValue) << " - the TP is bit 6!" RESET;
 					}
 
-					this->fReadoutChipInterface->WriteChipMultReg (theChip, cRegVec);
+					this->fReadoutChipInterface->WriteChipMultReg (cChip, cRegVec);
 					//Fabio: CBC specific but not used by common scans - END
 
 				}
@@ -688,7 +688,7 @@ void Tool::enableTestPulse(bool enableTP)
 			{
 				for (auto cChip : *cHybrid)
 				{
-					fReadoutChipInterface->enableInjection(static_cast<ReadoutChip*>(cChip), enableTP);
+					fReadoutChipInterface->enableInjection(cChip, enableTP);
 				}
 			}
 		}
@@ -724,12 +724,11 @@ void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
 
 void Tool::setFWTestPulse()
 {
-	for (auto& cBoard : *fDetectorContainer)
+	for (auto cBoard : *fDetectorContainer)
 	{
-        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
 		std::vector<std::pair<std::string, uint32_t> > cRegVec;
 
-		switch(theBoard->getBoardType())
+		switch(cBoard->getBoardType())
 		{
 		case BoardType::D19C :
 		{
@@ -747,7 +746,7 @@ void Tool::setFWTestPulse()
 
 		}
 
-		fBeBoardInterface->WriteBoardMultReg (theBoard, cRegVec);
+		fBeBoardInterface->WriteBoardMultReg (cBoard, cRegVec);
 	}
 }
 
@@ -888,7 +887,7 @@ void Tool::scanBeBoardDacDac(uint16_t boardIndex, const std::string &dac1Name, c
 		// el::LoggingFlag::NewLineForContainer (0);
 		if(boardIndex==0) LOG(INFO) << BOLDBLUE << " Scanning dac1 " << dac1Name << ", value = " << dac1List[dacIt] << " vs " << dac2Name <<  RESET ;
 		// el::LoggingFlag::NewLineForContainer (1);
-		setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)), dac1Name, dac1List[dacIt]);
+		setSameDacBeBoard(fDetectorContainer->at(boardIndex), dac1Name, dac1List[dacIt]);
 		scanBeBoardDac(boardIndex, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector[dacIt],numberOfEventsPerBurst);
 	}
 
@@ -929,7 +928,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 
 	DetectorDataContainer *outputDataContainer = fDetectorDataContainer;
 
-	ReadoutChip *cChip = static_cast<ReadoutChip*>(fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0)); //assumption: one BeBoard has only one type of chip;
+	ReadoutChip *cChip = fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0); //assumption: one BeBoard has only one type of chip;
 
 	bool localDAC = cChip->isDACLocal(dacName);
 	uint8_t numberOfBits = cChip->getNumberOfBits(dacName);
@@ -1088,7 +1087,7 @@ void Tool::setDacAndMeasureData(const std::string &dacName, const uint16_t dacVa
 // set dac and measure occupancy per BeBoard
 void Tool::setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string &dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
-	setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->at(boardIndex)), dacName, dacValue);
+	setSameDacBeBoard(fDetectorContainer->at(boardIndex), dacName, dacValue);
 	measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 	return;
 }
@@ -1148,7 +1147,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 					{
 						for ( auto cChip : *cHybrid )
 						{
-							fReadoutChipInterface->maskChannelsAndSetInjectionSchema(static_cast<ReadoutChip*>(cChip), group,fMaskChannelsFromOtherGroups,fTestPulse);
+							fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, group,fMaskChannelsFromOtherGroups,fTestPulse);
 						}
 					}
 				}
@@ -1166,7 +1165,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 				{
 					for ( auto cChip : *cHybrid )
 					{
-						fReadoutChipInterface->ConfigureChipOriginalMask ( static_cast<ReadoutChip*>(cChip) );
+						fReadoutChipInterface->ConfigureChipOriginalMask(cChip);
 					}
 				}
 	        }
@@ -1215,9 +1214,9 @@ public:
 			uint32_t currentNumberOfEvents = uint32_t(fNumberOfEventsPerBurst);
 			if(burstNumbers==1) currentNumberOfEvents = lastBurstNumberOfEvents;
 			
-			fTool->ReadNEvents ( static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)), currentNumberOfEvents );
+			fTool->ReadNEvents (fDetectorContainer->at(fBoardIndex), currentNumberOfEvents );
 			// Loop over Events from this Acquisition
-			const std::vector<Event*>& events = fTool->GetEvents ( static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)) );
+			const std::vector<Event*>& events = fTool->GetEvents (fDetectorContainer->at(fBoardIndex));
 			for ( auto& event : events )
 				event->fillDataContainer((fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
 			--burstNumbers;
@@ -1327,7 +1326,7 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacNam
 		{
 			for ( auto cChip : *cHybrid )
 			{
-				fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), dacName, globalDACContainer.at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>());
+				fReadoutChipInterface->WriteChipReg(cChip, dacName, globalDACContainer.at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>());
 			}
 		}
 	}
@@ -1344,7 +1343,7 @@ void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName
 			for ( auto cChip : *cHybrid )
 			{
 				std::vector<uint16_t> dacVector ;//= dacList.at(cHybrid->getModuleId()).at(cChip->getChipId());
-				fReadoutChipInterface->WriteChipAllLocalReg ( static_cast<ReadoutChip*>(cChip), dacName, *globalDACContainer.at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+				fReadoutChipInterface->WriteChipAllLocalReg (cChip, dacName, *globalDACContainer.at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 			}
 		}
 	}
@@ -1399,12 +1398,11 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, c
 		{
 			for ( auto cChip : *cHybrid )
 			{
-				ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
-				ChannelContainer<uint16_t>* dacVector = new ChannelContainer<uint16_t>(theChip->getNumberOfChannels(),dacValue);
+				ChannelContainer<uint16_t>* dacVector = new ChannelContainer<uint16_t>(cChip->getNumberOfChannels(),dacValue);
 				ChipContainer theChipContainer(cChip->getIndex(),cChip->getNumberOfRows(),cChip->getNumberOfCols());
 				theChipContainer.setChannelContainer(dacVector);
 
-				fReadoutChipInterface->WriteChipAllLocalReg ( theChip, dacName, theChipContainer);
+				fReadoutChipInterface->WriteChipAllLocalReg ( cChip, dacName, theChipContainer);
 			}
 		}
 	}

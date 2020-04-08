@@ -261,43 +261,104 @@ protected:
 	ChannelContainerBase* container_;
 };
 
-class ModuleContainer : public Container<ChipContainer>
+namespace Ph2_HwDescription
+{
+	class ReadoutChip;
+	class Module;
+	class OpticalGroup;
+	class BeBoard;
+}
+
+template<typename T, typename HW>
+class HWDescriptionContainer : public Container<T>
+{
+    public:
+
+    HWDescriptionContainer(uint16_t id) : Container<T>(id)  {;}
+    ~HWDescriptionContainer() {;}
+
+    class myIterator : public std::vector<T*>::iterator
+    {
+        public:
+            myIterator(typename std::vector<T*>::iterator theIterator) : std::vector<T*>::iterator(theIterator){};
+            HW* operator*() {return static_cast<HW*>(std::vector<T*>::iterator::operator*());}
+    };
+
+    class myConstIterator : public std::vector<T*>::const_iterator
+    {
+        public:
+            myConstIterator(typename std::vector<T*>::const_iterator theIterator) : std::vector<T*>::const_iterator(theIterator){};
+            HW* const operator*() const {return static_cast<HW* const>(std::vector<T*>::const_iterator::operator*());}
+    };
+
+    virtual myIterator begin()
+    {
+        return myIterator(std::vector<T*>::begin());
+    }
+
+    virtual myIterator end()
+    {
+        return myIterator(std::vector<T*>::end());
+    }
+
+    virtual myConstIterator begin() const
+    {
+        return myConstIterator(std::vector<T*>::begin());
+    }
+
+    virtual myConstIterator end() const
+    {
+        return myConstIterator(std::vector<T*>::end());
+    }
+
+	template<typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration is defined
+	theHW* at(size_t index)
+	{
+		return static_cast<theHW*>(this->std::vector<T*>::at(index));
+	}
+
+	template<typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration is defined
+	theHW* at(size_t index) const
+	{
+		return static_cast<theHW*>(this->std::vector<T*>::at(index));
+	}
+
+};
+
+class ModuleContainer : public HWDescriptionContainer<ChipContainer,Ph2_HwDescription::ReadoutChip>
 {
 public:
-	ModuleContainer(uint16_t id) : Container<ChipContainer>(id){}
+	ModuleContainer(uint16_t id) : HWDescriptionContainer<ChipContainer,Ph2_HwDescription::ReadoutChip>(id){}
 	template <typename T>
-	T*             addChipContainer(uint16_t id, T* chip)     {return static_cast<T*>(Container<ChipContainer>::addObject(id, chip));}
-	ChipContainer* addChipContainer(uint16_t id, uint16_t row, uint16_t col=1){return Container<ChipContainer>::addObject(id, new ChipContainer(id, row, col));}
+	T*             addChipContainer(uint16_t id, T* chip)     {return static_cast<T*>(HWDescriptionContainer<ChipContainer,Ph2_HwDescription::ReadoutChip>::addObject(id, chip));}
 private:
 };
 
-class OpticalGroupContainer : public Container<ModuleContainer>
+class OpticalGroupContainer : public HWDescriptionContainer<ModuleContainer,Ph2_HwDescription::Module>
 {
 public:
-	OpticalGroupContainer(uint16_t id) : Container<ModuleContainer>(id){}
+	OpticalGroupContainer(uint16_t id) : HWDescriptionContainer<ModuleContainer,Ph2_HwDescription::Module>(id){}
 	template <class T>
-	T*               addModuleContainer(uint16_t id, T* module){return static_cast<T*>(Container<ModuleContainer>::addObject(id, module));}
-	ModuleContainer* addModuleContainer(uint16_t id)                 {return Container<ModuleContainer>::addObject(id, new ModuleContainer(id));}
+	T*               addModuleContainer(uint16_t id, T* module){return static_cast<T*>(HWDescriptionContainer<ModuleContainer,Ph2_HwDescription::Module>::addObject(id, module));}
 private:
 };
 
-class BoardContainer : public Container<OpticalGroupContainer>
+class BoardContainer : public HWDescriptionContainer<OpticalGroupContainer,Ph2_HwDescription::OpticalGroup>
 {
 public:
-	BoardContainer(uint16_t id) : Container<OpticalGroupContainer>(id){}
+	BoardContainer(uint16_t id) : HWDescriptionContainer<OpticalGroupContainer,Ph2_HwDescription::OpticalGroup>(id){}
 	template <class T>
-	T*                     addOpticalGroupContainer(uint16_t id, T* opticalGroup){return static_cast<T*>(Container<OpticalGroupContainer>::addObject(id, opticalGroup));}
-	OpticalGroupContainer* addOpticalGroupContainer(uint16_t id)                 {return Container<OpticalGroupContainer>::addObject(id, new OpticalGroupContainer(id));}
+	T*                     addOpticalGroupContainer(uint16_t id, T* opticalGroup){return static_cast<T*>(HWDescriptionContainer<OpticalGroupContainer,Ph2_HwDescription::OpticalGroup>::addObject(id, opticalGroup));}
 private:
 };
 
-class DetectorContainer : public Container<BoardContainer>
+class DetectorContainer : public HWDescriptionContainer<BoardContainer,Ph2_HwDescription::BeBoard>
 {
 public:
-	DetectorContainer(uint16_t id=0) : Container<BoardContainer>(id){}
+	DetectorContainer(uint16_t id=0) : HWDescriptionContainer<BoardContainer,Ph2_HwDescription::BeBoard>(id){}
 	template <class T>
-	T*              addBoardContainer(uint16_t id, T* board){return static_cast<T*>(Container<BoardContainer>::addObject(id, board));}
-	BoardContainer* addBoardContainer(uint16_t id)                {return Container<BoardContainer>::addObject(id, new BoardContainer(id));}
+	T*              addBoardContainer(uint16_t id, T* board){return static_cast<T*>(HWDescriptionContainer<BoardContainer,Ph2_HwDescription::BeBoard>::addObject(id, board));}
+
 private:
 };
 

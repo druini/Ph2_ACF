@@ -251,7 +251,7 @@ int main ( int argc, char* argv[] )
         // data check with noise injection 
         
         t.start();
-        for( auto& cBoard : *cExtra.fDetectorContainer )
+        for( auto cBoard : *cExtra.fDetectorContainer )
         {
             BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
             for(auto cOpticalGroup : *cBoard)
@@ -261,7 +261,7 @@ int main ( int argc, char* argv[] )
                     // matching 
                     uint16_t cTh1 = (cFe->getId()%2==0) ? 900 : 1; 
                     uint16_t cTh2 = (cFe->getId()%2==0) ? 1 : 900; 
-                    for (auto& cChip : *cFe) 
+                    for (auto cChip : *cFe) 
                     {
                         ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
                         if( cChip->getId()%2 == 0 )

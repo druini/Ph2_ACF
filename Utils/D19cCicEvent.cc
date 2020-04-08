@@ -702,7 +702,7 @@ namespace Ph2_HwInterface {
         // get link Ids 
         std::vector<uint8_t> cLinkIds(0);
         std::set<uint8_t> cEnabledFe;
-        for (auto& cFe : *pBoard->at(0))
+        for (auto cFe : *pBoard->at(0))
         {
             uint8_t linkId = static_cast<OuterTrackerModule*>(cFe)->getLinkId();
             if ( std::find(cLinkIds.begin(), cLinkIds.end(), linkId ) == cLinkIds.end() )

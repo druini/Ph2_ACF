@@ -14,6 +14,7 @@
 
 #include "Event.h"
 #include <iterator>
+#include <numeric>
 
 
 namespace Ph2_HwInterface {
