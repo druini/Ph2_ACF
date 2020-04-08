@@ -387,7 +387,7 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
                 // stop trigger 
                 fBeBoardInterface->WriteBoardReg (cBeBoard, "fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
                 
-                if( cBx0Status.first ) 
+                if( cBx0Status.first &&  cBx0Status.second == 9 )
                 {
                     LOG (INFO) << BOLDBLUE << "Automated BX0 alignment on CIC" << +cHybrid->getId() << " : " << BOLDGREEN << " SUCCEEDED ...." << BOLDBLUE << "\t.... Bx0 delay found to be " << +cBx0Status.second << " clocks." <<  RESET;
                     cSuccess  = fCicInterface->ManualBx0Alignment( cCic , cBx0Status.second - pDelay);

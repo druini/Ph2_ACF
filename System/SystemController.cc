@@ -466,7 +466,7 @@ namespace Ph2_System
                         fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
                         fEventList.push_back ( new D19cCicEvent ( pBoard, fNCbc , fNFe, cEvent ) );
                       }
-                    else if(pBoard->getFrontEndType() == FrontEndType::CIC2 )
+                    else if(pBoard->getFrontEndType() == FrontEndType::CIC2   )
                       {
                         fNCbc = 8;
                         fNFe = 8*2; // maximum of 8 links x 2 FEHs per link

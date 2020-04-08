@@ -719,12 +719,12 @@ namespace Ph2_HwInterface
         auto cCDCEconfig = pBoard->configCDCE();
         if( cCDCEconfig.first )
         {
-            //configureCDCE_old(cCDCEconfig.second);
-            configureCDCE(cCDCEconfig.second, cCDCEselect);
+            configureCDCE_old(cCDCEconfig.second);
+            //configureCDCE(cCDCEconfig.second, cCDCEselect);
             std::this_thread::sleep_for (std::chrono::milliseconds (2000) );
         }
-        // // sync CDCE 
-        // syncCDCE();
+        // sync CDCE 
+        syncCDCE();
 
        
         // reset FC7 if not mux crate 
@@ -2990,8 +2990,8 @@ void D19cFWInterface::InitFMCPower()
         {
             LOG (INFO) << BOLDBLUE << "Bx0 alignment in back-end " << BOLDGREEN << "SUCCEEDED!" << BOLDBLUE << "\t... Stub package delay set to : " <<+cStubPackageDelay << RESET;
             cSuccess = true;
-            //this->ChipReSync();
-            this->ResetReadout();
+            this->ChipReSync();
+            //this->ResetReadout();
         }
         else
             LOG (INFO) << BOLDBLUE << "Bx0 alignment in back-end " << BOLDRED << "FAILED! State of alignment : " << +cValue <<  RESET;

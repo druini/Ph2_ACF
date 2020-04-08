@@ -255,7 +255,7 @@ void ShortFinder::FindShorts2S(BeBoard* pBoard)
                         auto& cReadoutChipHits = cHybridHits->at(cChip->getIndex());
         
                         auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId() ) ;
-                        LOG (INFO) << BOLDBLUE << "\t\tGroup " 
+                        LOG (DEBUG) << BOLDBLUE << "\t\tGroup " 
                             << +cTestGroup << " FE" << +cHybrid->getId() 
                             << " .. CBC" << +cChip->getId() 
                             << ".. Event " << +cEventCount 

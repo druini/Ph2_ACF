@@ -143,7 +143,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
             fCicInterface->SelectOutput( cCic, true );
         }
     }
-    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning (pBoard, fStubDebug);
+    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning (pBoard, true);
 
     // disable CIC output of pattern 
     for(auto cOpticalReadout : *pBoard)

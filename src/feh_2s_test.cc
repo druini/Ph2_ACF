@@ -153,7 +153,14 @@ int main ( int argc, char* argv[] )
         cAntenna.close();
     #endif
 
-   
+    // align back-end 
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit (&cTool);
+    cBackEndAligner.Start(0);
+    //reset all chip and board registers 
+    // to what they were before this tool was called 
+    cBackEndAligner.Reset(); 
+    
     // if CIC is enabled then align CIC first 
     if( cWithCIC )
     {
@@ -165,14 +172,6 @@ int main ( int argc, char* argv[] )
         cCicAligner.Reset(); 
         cCicAligner.dumpConfigFiles();
     }
-    
-    // align back-end 
-    BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit (&cTool);
-    cBackEndAligner.Start(0);
-    //reset all chip and board registers 
-    // to what they were before this tool was called 
-    cBackEndAligner.Reset(); 
     
 
     // measure some of the AMUX output voltages using ADC on UIB 
@@ -257,7 +256,9 @@ int main ( int argc, char* argv[] )
         cDataChecker.Inherit (&cTool);
         cDataChecker.Initialise ( );
         cDataChecker.zeroContainers();
-        cDataChecker.ReadDataTest();
+        cDataChecker.ReadNeventsTest();
+        //cDataChecker.DataCheck(cFEsToCheck,0,0);
+        //cDataChecker.ReadDataTest();
         //cDataChecker.HitCheck();
         cDataChecker.writeObjects();
         cDataChecker.resetPointers();
