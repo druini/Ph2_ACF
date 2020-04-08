@@ -6,7 +6,7 @@
 
 #include "uhal/log/log.hpp"
 
-// #include <boost/date_time/local_time/local_time.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
 
 bool operator== ( const fc7::Firmware& aFirmware1, const fc7::Firmware& aFirmware2 )
 {
@@ -232,8 +232,8 @@ namespace fc7
     //convert timestrings to time stamp
     std::stringstream ss;
     ss << lDate << " " << lTime;
-    // ss.imbue ( std::locale ( std::locale::classic(), new boost::local_time::local_time_input_facet ( "%Y/%m/%d %H:%M:%S" ) ) );
-    // ss.exceptions ( std::ios::failbit );
+    ss.imbue ( std::locale ( std::locale::classic(), new boost::local_time::local_time_input_facet ( "%Y/%m/%d %H:%M:%S" ) ) );
+    ss.exceptions ( std::ios::failbit );
     ss >> mTimeStamp;
     mBitStream = std::vector<uint8_t> ( lIt, lIt + lBitStreamLength );
     mBitSwapped = false;
