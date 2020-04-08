@@ -87,6 +87,7 @@ namespace Ph2_HwInterface {
         FileHandler* fFileHandler ;
         uint32_t fBroadcastCbcId;
         uint32_t fNReadoutChip;
+        uint32_t fNHybrids;
         uint32_t fNCic;
         uint32_t fFMCId;
 

@@ -137,12 +137,14 @@ namespace Ph2_System
             // CIC start-up
             for(auto cOpticalGroup : *cBoard)
             {
+              uint8_t cLinkId = cOpticalGroup->getId(); 
+              LOG (INFO) << BOLDMAGENTA << "CIC start-up seqeunce for hybrids on link " << +cLinkId << RESET;
               for (auto cHybrid : *cOpticalGroup)
                 {
                   OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>(cHybrid);
                   if( theOuterTrackerModule->fCic != NULL )
                     {
-                      static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (theOuterTrackerModule->getLinkId());
+                      static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cLinkId);
                       auto& cCic = theOuterTrackerModule->fCic;
 
                       // read CIC sparsification setting 
@@ -150,17 +152,21 @@ namespace Ph2_System
                       theBoard->setSparsification( cSparsified );
 
                       LOG (INFO) << BOLDBLUE << "Configuring CIC" << +(theOuterTrackerModule->getFeId()%2) << " on link " << +theOuterTrackerModule->getLinkId() << " on hybrid " << +theOuterTrackerModule->getFeId() << RESET;
-                      fCicInterface->ConfigureChip( theOuterTrackerModule->fCic);
+                      fCicInterface->ConfigureChip( cCic);
 
                       // CIC start-up
                       uint8_t cModeSelect = (static_cast<ReadoutChip*>(theOuterTrackerModule->at(0))->getFrontEndType() != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
                       // select CIC mode
-                      bool cSuccess = fCicInterface->SelectMode( theOuterTrackerModule->fCic, cModeSelect );
+                      bool cSuccess = fCicInterface->SelectMode( cCic, cModeSelect );
                       if(!cSuccess)
-                        {
-                          LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
-                          exit(0);
-                        }
+                      {
+                        LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
+                        exit(0);
+                      }
+                      LOG (INFO) << BOLDMAGENTA << "CIC configured for "
+                        << ((cModeSelect==0)? "2S" : "PS") 
+                        << " readout." 
+                        << RESET;
                       // CIC start-up sequence
                       uint8_t cDriveStrength = 5;
                       cSuccess = fCicInterface->StartUp(cCic , cDriveStrength);

@@ -99,12 +99,18 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
             // only produce L1A header .. so disable all FEs .. for CIC2 only
             if( !cSparsified && cCic->getFrontEndType() == FrontEndType::CIC2 ) 
                 fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 1);
-        
-            fCicInterface->SelectOutput( cCic, true );
+            
+            fCicInterface->EnableFEs(cCic , {0,1,2,3,4,5,6,7}, false );  
+            if( cCic->getFrontEndType() == FrontEndType::CIC )
+            {
+                // to get a 1010 pattern on the L1 line .. have to do something 
+                fCicInterface->SelectOutput( cCic, true );
+            }
         }
     }
-       
-    bool cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning (pBoard,fL1Debug);
+    bool cAligned=true;
+    if( !pBoard->ifOptical() )
+        cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning (pBoard,fL1Debug);
     if( !cAligned )
     {
         LOG (INFO) << BOLDBLUE << "L1A phase alignment in the back-end " << BOLDRED << " FAILED ..." << RESET;

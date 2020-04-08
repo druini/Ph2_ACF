@@ -206,7 +206,7 @@ namespace Ph2_HwInterface {
         if( !cSuccess )
             return cSuccess;
         cSuccess = cSuccess && this->WriteChipReg( pChip , "EXT_BX0_DELAY", pBx0delay);
-    	return cSuccess;
+        return cSuccess;
     }
     // run automated Bx0 alignment 
     bool CicInterface::ConfigureBx0Alignment(Chip* pChip , std::vector<uint8_t> pAlignmentPatterns, uint8_t pFEId , uint8_t pLineId)
@@ -234,16 +234,16 @@ namespace Ph2_HwInterface {
         cRegValue = this->ReadChipReg( pChip , cRegName ); 
         cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? pLineId : ( (cRegValue & 0xF8) | (pLineId << 0 ) );
         cSuccess = cSuccess && this->WriteChipReg( pChip , cRegName , cValue);
+        return cSuccess;
+    }
+    bool CicInterface::AutoBx0Alignment(Chip* pChip , uint8_t pStatus)
+    {
+        std::string cRegName = (pChip->getFrontEndType() == FrontEndType::CIC ) ? "AUTO_BX0_ALIGNMENT_REQUEST" : "BX0_ALIGN_CONFIG";
+        uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
+        uint16_t cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? 0x01 : ( (cRegValue & 0xF8) | (pStatus << 6 ) );
+        bool cSuccess = this->WriteChipReg( pChip , cRegName , cValue);
         if( !cSuccess )
             return cSuccess;
-
-        cRegName = (pChip->getFrontEndType() == FrontEndType::CIC ) ? "AUTO_BX0_ALIGNMENT_REQUEST" : "BX0_ALIGN_CONFIG";
-        cRegValue = this->ReadChipReg( pChip , cRegName ); 
-        cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? 0x01 : ( (cRegValue & 0xF8) | (0x01 << 6 ) );
-        cSuccess = cSuccess && this->WriteChipReg( pChip , cRegName , cValue);
-        if( !cSuccess )
-            return cSuccess;
-
         return cSuccess;
     }
     std::pair<bool, uint8_t> CicInterface::CheckBx0Alignment(Chip* pChip )
@@ -251,14 +251,12 @@ namespace Ph2_HwInterface {
         uint8_t cDelay=0;
         setBoard ( pChip->getBeBoardId() );
 
-        std::string cRegName = (pChip->getFrontEndType() == FrontEndType::CIC ) ? "AUTO_BX0_ALIGNMENT_REQUEST" : "BX0_ALIGN_CONFIG";
-        uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
-        uint16_t cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? 0x00 : ( (cRegValue & 0xF8) | (0x00 << 6 ) );
-        
-        bool cSuccess =  this->WriteChipReg( pChip , cRegName , cValue);
+        bool cSuccess =  this->AutoBx0Alignment(pChip , 0);
         if( !cSuccess )
             return std::make_pair(cSuccess,cDelay);
-        
+        // remember to send a resync 
+        fBoardFW->ChipReSync();
+
         // check status 
         ChipRegItem cRegItem;
         cRegItem.fPage = 0x00;
@@ -823,12 +821,17 @@ namespace Ph2_HwInterface {
     // with the BE or the other readout ASICs on the chip 
     bool CicInterface::StartUp( Chip* pChip, uint8_t pDriveStrength) 
     {
-
         bool cSuccess = this->SoftReset(pChip);
-        LOG (INFO) << BOLDBLUE <<  ".... Starting CIC start-up ........ on hybrid " << +pChip->getFeId() << RESET;
-
+        std::string cOut = ".... Starting CIC start-up ........ on hybrid " + std::to_string( pChip->getFeId() ); 
+        if( pChip->getFrontEndType() == FrontEndType::CIC )
+            cOut += " for CIC1.";
+        else
+            cOut += " for CIC2.";
+        LOG (INFO) << BOLDBLUE <<  cOut << RESET;
+        
         bool cClkTermination = true; 
-        bool cRxTermination =  false; //(pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;// true, false -- this needs to be false for the crate set-up .. how to fix this?!?!
+        bool cRxTermination =  false;
+        //(pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;// true, false -- this needs to be false for the crate set-up .. how to fix this?!?!
         std::string cRegName = "SLVS_PADS_CONFIG";
         uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
         auto cIterator = fTxDriveStrength.find(pDriveStrength); 
