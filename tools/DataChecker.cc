@@ -459,20 +459,15 @@ void DataChecker::ReadDataTest()
         this->ReadData( theBoard , true);
         const std::vector<Event*>& cEvents = this->GetEvents ( theBoard );
         LOG (INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
-        // LOG (INFO) << BOLDRED << "Press any key to to see the event printout .." << RESET;
-        // do
-        // {
-        //     std::this_thread::sleep_for (std::chrono::milliseconds (10) );
-        // }while( std::cin.get()!='\n');
-
-        // uint32_t cN=0;
-        // for ( auto& cEvent : cEvents )
-        // {
-        //     LOG (INFO) << ">>> Event #" << cN++ ;
-        //     outp.str ("");
-        //     outp << *cEvent;
-        //     LOG (INFO) << outp.str();
-        // }
+        
+        uint32_t cN=0;
+        for ( auto& cEvent : cEvents )
+        {
+            LOG (INFO) << ">>> Event #" << cN++ ;
+            outp.str ("");
+            outp << *cEvent;
+            LOG (INFO) << outp.str();
+        }
     }
     LOG (INFO) << BOLDBLUE << "Done!" << RESET;
 
@@ -508,11 +503,14 @@ void DataChecker::ReadNeventsTest()
         uint32_t cN=0;
         for ( auto& cEvent : cEvents )
         {
-            LOG (INFO) << ">>> Event #" << cN++ ;
-            outp.str ("");
-            outp << *cEvent;
-            if( cN%1000 == 0)
+            if( cN%5 == 0)
+            {
+                LOG (INFO) << ">>> Event #" << cN << RESET; ;
+                outp.str ("");
+                outp << *cEvent;
                 LOG (INFO) << outp.str();
+            }
+            cN++;
         }
     }
     LOG (INFO) << BOLDBLUE << "Done!" << RESET;

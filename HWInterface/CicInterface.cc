@@ -211,6 +211,7 @@ namespace Ph2_HwInterface {
     // run automated Bx0 alignment 
     bool CicInterface::ConfigureBx0Alignment(Chip* pChip , std::vector<uint8_t> pAlignmentPatterns, uint8_t pFEId , uint8_t pLineId)
     {
+        std::vector<uint8_t> cFeMapping{ 3,2,1,0,4,5,6,7 }; // FE --> FE CIC
         setBoard ( pChip->getBeBoardId() );
         LOG (DEBUG) << BOLDBLUE << "Running automated word alignment in CIC on FE" << +pChip->getFeId() <<  RESET;
         LOG (DEBUG) << BOLDBLUE << "Configuring word alignment patterns on CIC" <<  RESET;
@@ -225,7 +226,7 @@ namespace Ph2_HwInterface {
         
         cRegName = (pChip->getFrontEndType() == FrontEndType::CIC ) ? "BX0_ALIGNMENT_FE" : "BX0_ALIGN_CONFIG";
         cRegValue = this->ReadChipReg( pChip , cRegName ); 
-        cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? pFEId : ( (cRegValue & 0xC7) | (pFEId << 3 ) );
+        cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? pFEId : ( (cRegValue & 0xC7) | ( cFeMapping[pFEId] << 3 ) );
         cSuccess = cSuccess && this->WriteChipReg( pChip , cRegName, cValue);
         if( !cSuccess )
             return cSuccess;

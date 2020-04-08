@@ -258,9 +258,7 @@ int main ( int argc, char* argv[] )
         cDataChecker.Initialise ( );
         cDataChecker.zeroContainers();
         cDataChecker.ReadDataTest();
-        //cDataChecker.ReadDataTest();
-        //cDataChecker.TestPulse(cFEsToCheck);
-        //cDataChecker.DataCheck(cFEsToCheck);
+        //cDataChecker.HitCheck();
         cDataChecker.writeObjects();
         cDataChecker.resetPointers();
         t.show ( "Time to check data of the front-ends on the system: " );
@@ -268,13 +266,18 @@ int main ( int argc, char* argv[] )
 
 
     // For next step... set all thresholds on CBCs to 560 
-    cTool.setSameDac("VCth", cThreshold);
-    LOG (INFO) << BOLDBLUE << "Threshold for next steps is set to " << +cThreshold << " DAC units." << RESET;
+    if( cmd.foundOption ( "threshold" )  )
+    { 
+        cTool.setSameDac("VCth", cThreshold);
+        LOG (INFO) << BOLDBLUE << "Threshold for next steps is set to " << +cThreshold << " DAC units." << RESET;
+    }
     // Inject charge with antenna circuit and look for opens 
     if ( cFindOpens )
     {
         #ifdef __ANTENNA__
-
+            int  cAntennaDelay = ( cmd.foundOption ( "antennaDelay" ) )   ?  convertAnyInt ( cmd.optionValue ( "antennaDelay" ).c_str() ) : -1;
+            int  cLatencyRange = ( cmd.foundOption ( "latencyRange" ) )   ?  convertAnyInt ( cmd.optionValue ( "latencyRange" ).c_str() ) :  -1;
+    
             OpenFinder::Parameters cOfp;
             // hard coded for now TODO: make this configurable
             cOfp.potentiometer = 0x265;
@@ -314,9 +317,10 @@ int main ( int argc, char* argv[] )
     if ( cShortFinder )
     {
         ShortFinder cShortFinder;
-        int cAmplitude = 25; // TODO: make this configureable
-        // V(pulse) = V_DDA*(255-cAmplitude)/255
-        cShortFinder.FindShorts(cThreshold, cAmplitude);
+        cShortFinder.Inherit (&cTool);
+        cShortFinder.Initialise ();
+        cShortFinder.Start();
+        cShortFinder.Stop();
     }
 
     cTool.SaveResults();

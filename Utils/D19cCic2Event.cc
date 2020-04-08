@@ -155,12 +155,19 @@ namespace Ph2_HwInterface {
                 //  LOG (INFO) << BOLDBLUE << std::bitset<32>(*(cIterator+cIndex)) << RESET;
 
                 size_t cHybridIndex=0;
-                for (auto cFe : *pBoard->at(0))
+                size_t cModuleIndex=0; 
+                for( auto cModule : *pBoard ) 
                 {
-                    if( cFe->getId()== cFeId )
-                        cHybridIndex = cFe->getIndex();
+                    for (auto cFe : *cModule )
+                    {
+                        if( cFe->getId()== cFeId )
+                        {
+                            cModuleIndex = cModule->getIndex();
+                            cHybridIndex = cFe->getIndex();
+                        }
+                    }
                 }
-                auto cReadoutChips = pBoard->at(cHybridIndex); 
+                auto cReadoutChips = pBoard->at(cModuleIndex)->at(cHybridIndex); 
                 const size_t cNblocks = RAW_L1_CBC*cReadoutChips->size()/L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits 
                 std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks , 0);
                 this->splitStream(list , cL1Words , cOffset+3 , cNblocks ); // split 32 bit words in  blocks of 11 bits 
