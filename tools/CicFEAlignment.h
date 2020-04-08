@@ -52,8 +52,10 @@ class CicFEAlignment : public Tool
     // injection 
     void WordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, std::vector<uint8_t> pAlignmentPatterns);
     // get alignment results 
-    uint8_t getPhaseAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::Module* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine );
-    uint8_t getWordAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::Module* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine );
+    uint8_t getPhaseAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, 
+        Ph2_HwDescription::Module* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine );
+    uint8_t getWordAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, 
+        Ph2_HwDescription::Module* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine );
     bool    getStatus() const { return fSuccess;}
   protected:
 
