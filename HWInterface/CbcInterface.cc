@@ -166,41 +166,24 @@ namespace Ph2_HwInterface
             LOG (DEBUG) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
             cChannelList.push_back( static_cast<uint32_t>(cSeedChannel) );
         }
-        
-        // int cNchannels = 1+ (pSeed%2!=0);
-        // uint32_t cFirstChannel = 2*(std::ceil(pSeed*0.5)-1) - 2*(pSeed%2);
-        // for( int cIndex = 0; cIndex < cNchannels; cIndex++)
-        // {
-        //     int cChannel  = cFirstChannel + 2*cIndex + !pSeedLayer;
-        //     if( cChannel >= 0 )
-        //     {
-        //         cChannelList.push_back( static_cast<uint32_t>(cChannel) );
-        //     }
-        // }
         return cChannelList;
     } 
-
-    std::vector<uint8_t> CbcInterface::stubInjectionPattern( ReadoutChip* pChip, uint8_t pStubAddress, int pStubBend ) 
+    std::vector<uint8_t> CbcInterface::stubInjectionPattern(uint8_t pStubAddress, int pStubBend , bool pLayerSwap ) 
     {
-
-        bool cLayerSwap = ( this->ReadChipReg(pChip , "LayerSwap") == 1 );
         LOG (DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." <<  RESET;   
-        std::vector<uint8_t> cSeedHits = createHitListFromStubs(pStubAddress,!cLayerSwap);
-        // //try it here first 
+        std::vector<uint8_t> cSeedHits = createHitListFromStubs(pStubAddress,!pLayerSwap);
+        // correlation layer 
         uint8_t cCorrelated = pStubAddress + pStubBend; // start counting strips from 0
-        std::vector<uint8_t> cCorrelatedHits = createHitListFromStubs(cCorrelated, cLayerSwap);
-
-        // // then in correlation layer 
-        // // first lets just use a bend of 0 
-        // double cCorrelationHit = (pStubAddress*0.5) + pStubBend*0.5 ; // start counting strips from 0
-        // pStubAddress = cCorrelationHit*2; 
-        // std::vector<uint8_t> cCorrelatedHits = createHitListFromStubs(pStubAddress,false);
-
+        std::vector<uint8_t> cCorrelatedHits = createHitListFromStubs(cCorrelated, pLayerSwap);
         //merge two lists and unmask 
         cSeedHits.insert( cSeedHits.end(), cCorrelatedHits.begin(), cCorrelatedHits.end());
         return cSeedHits;
     }
-
+    std::vector<uint8_t> CbcInterface::stubInjectionPattern( ReadoutChip* pChip, uint8_t pStubAddress, int pStubBend ) 
+    {
+        bool cLayerSwap = ( this->ReadChipReg(pChip , "LayerSwap") == 1 );
+        return stubInjectionPattern(pStubAddress, pStubBend , cLayerSwap );
+    }
     bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddresses , std::vector<int> pStubBends , bool pUseNoise) 
     {
         setBoard ( pCbc->getBeBoardId() );
@@ -222,12 +205,23 @@ namespace Ph2_HwInterface
         }
         if( !pUseNoise ) 
         {
-            setInjectionSchema ( pCbc, &cChannelMask);
+            uint16_t cFirstHit=0;
+            std::bitset<NCHANNELS> cBitset = std::bitset<NCHANNELS>( cChannelMask.getBitset() );
+            LOG (DEBUG) << BOLDMAGENTA << "Bitset for this mask is " << cBitset << RESET;
+            for(cFirstHit=0; cFirstHit < NCHANNELS; cFirstHit++) 
+            {
+                if( cBitset[cFirstHit] != 0) 
+                    break;
+            }
+            uint8_t cGroupId= std::floor((cFirstHit%16)/2); 
+            LOG (INFO) << BOLDBLUE << "First unmasked channel in position " << +cFirstHit << " --- i.e. in TP group " << +cGroupId << RESET;
+            if(cGroupId > 7)
+                throw Exception( "bool CbcInterface::setInjectionSchema (ReadoutChip* pCbc, const ChannelGroupBase *group, bool pVerifLoop): CBC is not able to inject the channel pattern" );
+            // write register which selects group
+            this->WriteChipReg ( pCbc, "TestPulseGroup", cGroupId );
         }
         return this->maskChannelsGroup (pCbc, &cChannelMask);
-
     }
-
     std::vector<uint8_t> CbcInterface::readLUT( ReadoutChip* pCbc )
     {
         setBoard ( pCbc->getBeBoardId() );

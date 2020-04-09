@@ -16,7 +16,7 @@
         <Module FeId="0" FMCId="0" ModuleId="0" Status="1" LinkId="0">
             <Global>
                 <Settings threshold="550" latency="19"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
+                <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
                 <ChannelMask disable=""/>
@@ -96,7 +96,7 @@
 			<Register name="delay_after_fast_reset"> 10 </Register>
 			<Register name="delay_after_test_pulse"> 20 </Register>
 			<Register name="delay_before_next_pulse"> 400 </Register>
-			<Register name="en_fast_reset"> 1 </Register>
+			<Register name="en_fast_reset"> 0 </Register>
 			<Register name="en_test_pulse"> 1 </Register>
 			<Register name="en_l1a"> 1 </Register>
 		</Register>
@@ -134,7 +134,7 @@
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
                     <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 51 </Register>
+                    <Register name="common_stubdata_delay"> 49 </Register>
             </Register>
     	</Register>
 	<!-- DIO5 Block -->
@@ -177,7 +177,7 @@
 
 <Settings>
    <!--PedestalEqualization-->
-    <Setting name="Nevents">100</Setting>
+    <Setting name="Nevents">5</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
@@ -212,7 +212,7 @@
 
     <!--[>DataTest<]-->
     <Setting name="Threshold">575</Setting>
-    <Setting name="UseNoise">0</Setting>
+    <Setting name="UseNoise">1</Setting>
     <Setting name="Attempts">1</Setting>
     <Setting name="LatencyOffset">1</Setting>
     <Setting name="TriggerRate">1</Setting>
@@ -232,6 +232,8 @@
     <Setting name="AntennaGroup">0</Setting>
     <Setting name="ScanRange">5</Setting>
 
+    <!--[>Shorts Test<] -->
+    <Setting name="ShortsPulseAmplitude">100</Setting>
 
     <!-- Latency scan -->
     <Setting name="LatencyStart">3</Setting>

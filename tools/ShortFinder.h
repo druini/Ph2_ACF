@@ -14,29 +14,44 @@
 
 #include "Tool.h" 
 
+
+const float THRESHOLD_SHORT = 0.1;
+typedef std::vector<uint8_t> ChannelList;
+
+
+// add exit codes here 
+const uint8_t FAILED_INJECTION = 1;
+
 class ShortFinder : public Tool
 {
   public:
     ShortFinder();
     ~ShortFinder();
     void Initialise();
-    void FindShorts(uint16_t pThreshold, uint16_t pTPamplitude);
+    void Count(Ph2_HwDescription::BeBoard* pBoard, const ChannelGroup<NCHANNELS>* pGroup);
+    void FindShorts2S(Ph2_HwDescription::BeBoard* pBoard);
+    void FindShorts();
+    void Print();
+    void Reset();
+    void Start(int currentRun=0) override;
+    void Stop() override;
 
   private:
     // Settings
     bool fTestPulse;
     uint8_t fTestPulseAmplitude;
+    float   fThreshold; 
     uint32_t fEventsPerPoint;
 
     // Containers
     // Add detector container and shorts container
+    DetectorDataContainer fShorts;
+    DetectorDataContainer fInjections;
     DetectorDataContainer fShortsContainer;
+    DetectorDataContainer fHitsContainer;
 
-    // #ifdef __USE_ROOT__
-    //   DQMHistogramShortFinder fDQMHistogramShortFinder;
-    // #endif
-
-
+    DetectorDataContainer fRegMapContainer;
+    DetectorDataContainer fBoardRegContainer;
 };
 
 #endif

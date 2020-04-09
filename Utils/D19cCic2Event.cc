@@ -55,6 +55,10 @@ namespace Ph2_HwInterface {
     }
     void D19cCic2Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
+        // get the first CIC 
+        auto theFirstCIC = static_cast<OuterTrackerModule*>(pBoard->at(0)->at(0))->fCic;
+        bool cWithCIC2 = (theFirstCIC->getFrontEndType() == FrontEndType::CIC2);
+           
         fIsSparsified=pBoard->getSparsification();
         
         fEventHitList.clear();
@@ -109,7 +113,7 @@ namespace Ph2_HwInterface {
 
         
         auto cIterator = list.begin() + EVENT_HEADER_SIZE;
-        LOG (DEBUG) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
+        LOG (INFO) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
         do
         {
             // L1 
@@ -155,36 +159,61 @@ namespace Ph2_HwInterface {
                 //  LOG (INFO) << BOLDBLUE << std::bitset<32>(*(cIterator+cIndex)) << RESET;
 
                 size_t cHybridIndex=0;
-                for (auto cFe : *pBoard->at(0))
+                size_t cModuleIndex=0; 
+                for( auto cModule : *pBoard ) 
                 {
-                    if( cFe->getId()== cFeId )
-                        cHybridIndex = cFe->getIndex();
-                }
-                auto cReadoutChips = pBoard->at(cHybridIndex); 
-                const size_t cNblocks = RAW_L1_CBC*cReadoutChips->size()/L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits 
-                std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks , 0);
-                this->splitStream(list , cL1Words , cOffset+3 , cNblocks ); // split 32 bit words in  blocks of 11 bits 
-                
-                // now try and arrange them by CBC again ... 
-                fEventRawList[cFeId].first = cL1Information;
-                fEventRawList[cFeId].second.clear();
-                for(size_t cChipIndex=0; cChipIndex < cReadoutChips->size() ; cChipIndex++)
-                {
-                    std::bitset<RAW_L1_CBC> cBitset(0);
-                    size_t cPosition=0;
-                    for( size_t cBlockIndex =0; cBlockIndex < RAW_L1_CBC/L1_BLOCK_SIZE ; cBlockIndex ++) // RAW_L1_CBC/L1_BLOCK_SIZE blocks per chip
+                    for (auto cFe : *cModule )
                     {
-                        auto cIndex = cChipIndex + cReadoutChips->size()*cBlockIndex; 
-                        auto& cL1block = cL1Words[cIndex];
-                        LOG (DEBUG) << BOLDBLUE << "\t\t... L1 block " << +cIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
-                        for(size_t cNbit=0; cNbit < cL1block.size() ; cNbit++ )
+                        if( cFe->getId()== cFeId )
                         {
-                            cBitset[cBitset.size()-1-cPosition] = cL1block[cL1block.size()-1-cNbit];
-                            cPosition++;
+                            cModuleIndex = cModule->getIndex();
+                            cHybridIndex = cFe->getIndex();
                         }
                     }
-                    LOG (DEBUG) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
-                    fEventRawList[cFeId].second.push_back( cBitset );
+                }
+
+                fEventRawList[cFeId].first = cL1Information;
+                fEventRawList[cFeId].second.clear();
+                
+                auto cReadoutChips = pBoard->at(cModuleIndex)->at(cHybridIndex); 
+                if( cWithCIC2 )
+                {
+                    const size_t cNblocks = RAW_L1_CBC*cReadoutChips->size()/L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits 
+                    std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks , 0);
+                    this->splitStream(list , cL1Words , cOffset+3 , cNblocks ); // split 32 bit words in  blocks of 11 bits 
+                    
+                    // now try and arrange them by CBC again ... 
+                    for(size_t cChipIndex=0; cChipIndex < cReadoutChips->size() ; cChipIndex++)
+                    {
+                        std::bitset<RAW_L1_CBC> cBitset(0);
+                        size_t cPosition=0;
+                        for( size_t cBlockIndex =0; cBlockIndex < RAW_L1_CBC/L1_BLOCK_SIZE ; cBlockIndex ++) // RAW_L1_CBC/L1_BLOCK_SIZE blocks per chip
+                        {
+                            auto cIndex = cChipIndex + cReadoutChips->size()*cBlockIndex; 
+                            auto& cL1block = cL1Words[cIndex];
+                            LOG (DEBUG) << BOLDBLUE << "\t\t... L1 block " << +cIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
+                            for(size_t cNbit=0; cNbit < cL1block.size() ; cNbit++ )
+                            {
+                                cBitset[cBitset.size()-1-cPosition] = cL1block[cL1block.size()-1-cNbit];
+                                cPosition++;
+                            }
+                        }
+                        LOG (DEBUG) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
+                        fEventRawList[cFeId].second.push_back( cBitset );
+                    }
+                }
+                else
+                {
+                    const size_t cNblocks = cReadoutChips->size(); // 275 bits per chip ... 8chips... blocks of 11 bits 
+                    std::vector<std::bitset<RAW_L1_CBC>> cL1Words(cNblocks , 0);
+                    this->splitStream(list , cL1Words , cOffset+3 , cNblocks ); // split 32 bit words in  blocks of 11 bits 
+                    
+                    for(size_t cChipIndex=0; cChipIndex < cReadoutChips->size() ; cChipIndex++)
+                    {
+                        LOG (DEBUG) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cL1Words[cChipIndex]) << RESET;
+                        fEventRawList[cFeId].second.push_back( cL1Words[cChipIndex] );
+                    }
+
                 }
             }
             // then stubs 
