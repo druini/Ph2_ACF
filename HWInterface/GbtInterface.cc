@@ -270,7 +270,7 @@ namespace Ph2_HwInterface
     void GbtInterface::gbtxSelectEdgeTx(BeBoardFWInterface* pInterface, bool pRising)
     {
       uint32_t cReadBack = icRead( pInterface, 244 , 1);
-      bool pValue = (pRising) ? 7 : 0 ;
+      uint32_t pValue = (pRising) ? 7 : 0 ;
       uint32_t cRegValue = (cReadBack & 0xC7 ) | ( pValue << 3 ); 
       icWrite(pInterface, 244 , cRegValue ) ;
     }

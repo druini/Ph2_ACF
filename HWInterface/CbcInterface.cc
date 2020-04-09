@@ -735,7 +735,7 @@ namespace Ph2_HwInterface
         #endif
 
         if (cSuccess)
-            for (auto& cCbc : *pHybrid)
+            for (auto cCbc : *pHybrid)
                 for (auto& cReg : pVecReg)
                 {
                     cRegItem = static_cast<ReadoutChip*>(cCbc)->getRegItem ( cReg.first );

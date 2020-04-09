@@ -118,7 +118,7 @@ namespace Ph2_HwInterface {
             {
                 // just use board to figure out how many CBCs there are 
                 size_t cHybridIndex=0;
-                for (auto& cFe : *pBoard->at(0))
+                for (auto cFe : *pBoard->at(0))
                 {
                     if( cFe->getId()== cFeId )
                         cHybridIndex = cFe->getIndex();

@@ -104,7 +104,7 @@ void CicFEAlignment::Initialise ()
                 auto& cWordAlignmentThisHybrid = cWordAlignmentThisModule->at(cHybrid->getIndex());
 
                 //configure CBCs 
-                for (auto& cChip : *cHybrid)
+                for (auto cChip : *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
                     //CbcInterface* theCbcInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
@@ -550,7 +550,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                     fReadoutChipInterface-> maskChannelsGroup (theReadoutChip, cOriginalMask);
                 }
                 LOG (INFO) << BOLDBLUE << "Generating HIT patterns needed for phase alignment on FE" << +cHybrid->getId() << RESET;
-                for (auto& cChip : *cHybrid)
+                for (auto cChip : *cHybrid)
                 {
                     ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cChip);
                     // original mask
@@ -579,7 +579,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                     LOG (INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and swithcing to static phase " << RESET;
                     cPhaseTaps = fCicInterface->GetOptimalTaps( cCic);
                     cPhaseTapsFEs = this->SortOptimalTaps( cPhaseTaps ); 
-                    for (auto& cChip : *cHybrid)
+                    for (auto cChip : *cHybrid)
                     {
                         std::string cOutput;
                         for(uint8_t cInput = 0 ; cInput < 6 ; cInput+=1)

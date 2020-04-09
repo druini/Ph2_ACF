@@ -55,7 +55,7 @@ void ExtraChecks::Initialise ()
             for (auto cHybrid : *cOpticalGroup)
             {
                 // histograms per cbc 
-                for (auto& cChip : *cHybrid)
+                for (auto cChip : *cHybrid)
                 {
                     TString cName = Form ( "h_BendCheck_Fe%dCbc%d", cHybrid->getId() , cChip->getId() );
                     TObject* cObj = gROOT->FindObject ( cName );
@@ -241,7 +241,7 @@ void ExtraChecks::Initialise ()
             {
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
                 //configure CBCs 
-                for (auto& cChip : *cHybrid)
+                for (auto cChip : *cHybrid)
                 {
                     fThresholds.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(static_cast<ReadoutChip*>(cChip), "VCth");
                     fLogic     .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(static_cast<ReadoutChip*>(cChip), "Pipe&StubInpSel&Ptwidth");
@@ -431,7 +431,7 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
 
                         std::vector<int> cHitCounterBottom(0);
                         std::vector<int> cHitCounterTop(0);
-                        for (auto& cChip : *cFe) 
+                        for (auto cChip : *cFe) 
                         {
                             int cNhits=0;
                             LOG (DEBUG) << BOLDBLUE << "CBC" << +cChip->getId() << RESET;
@@ -658,7 +658,7 @@ void ExtraChecks::ExternalTriggers(uint16_t pNconsecutive, const std::string& pS
         {
             for (auto cFe : *cOpticalGroup)
             {
-                for (auto& cChip : *cFe) 
+                for (auto cChip : *cFe) 
                 {
                     for( auto cEvent : cEvents ) 
                     {
@@ -941,7 +941,7 @@ void ExtraChecks::DataCheckTP( std::vector<uint8_t> pChipIds,  uint8_t pTPamplit
             {
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (static_cast<OuterTrackerModule*>(cFe)->getLinkId());
                 //configure CBCs 
-                for (auto& cChip : *cFe)
+                for (auto cChip : *cFe)
                 {
                     // switch off HitOr
                     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "HitOr", 0);
@@ -1223,14 +1223,14 @@ void ExtraChecks::ReconstructTP(uint8_t pTPamplitude , uint8_t pGroup , uint8_t 
                 for (auto cFe : *cOpticalGroup)
                 {
                     LOG (INFO) << BOLDBLUE << "FE" << +cFe->getId() << RESET;
-                    for (auto& cChip : *cFe) 
+                    for (auto cChip : *cFe) 
                     {
                         for(uint8_t cChannel=0; cChannel < NCHANNELS; cChannel++)
                         {
                             std::vector<float> cTmp(cListOfThresholds.size(), 0);
                             std::vector<float> cValues(cListOfThresholds.size(),0);
                             size_t cIter=0;
-                            for(auto& cDetectorContainer : cContainerVector ) 
+                            for(auto cDetectorContainer : cContainerVector ) 
                             {
                                 cTmp[cIter] = cDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cFe->getIndex())->at(cChip->getIndex())->getChannelContainer<Occupancy>()->at(cChannel).fOccupancy; 
                                 cValues[cIter] = static_cast<float>(cListOfThresholds[cIter]);
@@ -1293,7 +1293,7 @@ void ExtraChecks::QuickStubCheck(std::vector<uint8_t> pChipIds, uint16_t pTrigge
             for ( auto cHybrid : *cOpticalGroup )
             {
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
-                for (auto& cChip : *cHybrid)
+                for (auto cChip : *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
                     if( std::find(pChipIds.begin(), pChipIds.end(), cChip->getId()) != pChipIds.end()  ) 
@@ -1399,7 +1399,7 @@ void ExtraChecks::QuickStubCheck(std::vector<uint8_t> pChipIds, uint16_t pTrigge
             for ( auto cHybrid : *cOpticalGroup )
             {
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
-                for (auto& cChip : *cHybrid)
+                for (auto cChip : *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
                     static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels( theChip, false);
@@ -1888,18 +1888,18 @@ void ExtraChecks::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         cOptical = cOptical || theBoard->ifOptical();
         for(auto cOpticalGroup : *cBoard)
-        for (auto& cFe : *cOpticalGroup)
+        for (auto cFe : *cOpticalGroup)
         {
             if( theBoard->ifOptical() )
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (static_cast<OuterTrackerModule*>(cFe)->getLinkId());
             //configure CBCs 
-            for (auto& cChip : *cFe)
+            for (auto cChip : *cFe)
             {
                 // switch off HitOr
-                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "HitOr", 0);
+                static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg ( cChip, "HitOr", 0);
                 //enable stub logic
-                static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode( static_cast<ReadoutChip*>(cChip), "Sampled", true, true); 
-                static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression( static_cast<ReadoutChip*>(cChip), false, false, 0);
+                static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode( cChip, "Sampled", true, true); 
+                static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression( cChip, false, false, 0);
             }
         }
         fBeBoardInterface->ChipReSync ( theBoard );

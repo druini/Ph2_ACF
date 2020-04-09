@@ -90,7 +90,7 @@ void StubQuickCheck::Initialise ()
                     if( cOpticalGroup->getId() == cOtherOpticalGroup->getId() )
                         continue;
 
-                    for (auto& cOtherFe : *cOtherOpticalGroup)
+                    for (auto cOtherFe : *cOtherOpticalGroup)
                     {
                         if( cFe->getId() == cOtherFe->getId() )
                             continue;
@@ -182,7 +182,7 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                     if( cOpticalGroup->getId() == cOtherOpticalGroup->getId() )
                         continue;
 
-                    for (auto& cOtherFe : *cOtherOpticalGroup)
+                    for (auto cOtherFe : *cOtherOpticalGroup)
                     {
                         if( cFe->getId() == cOtherFe->getId() )
                             continue;

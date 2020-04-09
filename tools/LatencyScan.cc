@@ -14,7 +14,7 @@ void LatencyScan::Initialize (uint32_t pStartLatency, uint32_t pLatencyRange)
         fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
     #endif
 
-    for ( auto& cBoard : *fDetectorContainer )
+    for ( auto cBoard : *fDetectorContainer )
     {
         uint32_t cBoardId = cBoard->getId();
 

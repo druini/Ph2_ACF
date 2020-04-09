@@ -315,7 +315,7 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContaine
                 {
                     TH2F *chipSCurve = fDetectorSCurveHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
         
-                    if(chip->getChannelContainer<ThresholdAndNoise>() == nullptr ) continue;
+                    if(chip->getChannelContainer<Occupancy>() == nullptr ) continue;
                     uint8_t channelNumber = 0;
                     for(auto channel : *chip->getChannelContainer<Occupancy>())
                     {

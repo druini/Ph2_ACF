@@ -525,7 +525,7 @@ namespace Ph2_HwInterface
     {
         // get link Ids 
         std::vector<uint8_t> cLinkIds;
-        for (auto& cOpticalReadout : *pBoard)
+        for (auto cOpticalReadout : *pBoard)
         {
           if ( std::find(cLinkIds.begin(), cLinkIds.end(), cOpticalReadout->getId() ) == cLinkIds.end() )
               cLinkIds.push_back(cOpticalReadout->getId() );
@@ -609,7 +609,7 @@ namespace Ph2_HwInterface
     void D19cFWInterface::configureLink(const BeBoard* pBoard )
     {
         std::vector<uint8_t> cLinkIds(0);
-        for (auto& cOpticalReadout : *pBoard)
+        for (auto cOpticalReadout : *pBoard)
         {
           if ( std::find(cLinkIds.begin(), cLinkIds.end(), cOpticalReadout->getId() ) == cLinkIds.end() )
               cLinkIds.push_back(cOpticalReadout->getId() );
@@ -664,7 +664,7 @@ namespace Ph2_HwInterface
         
         // unique link Ids
         std::vector<uint8_t> cLinkIds(0);
-        for (auto& cOpticalReadout : *pBoard)
+        for (auto cOpticalReadout : *pBoard)
         {
           if ( std::find(cLinkIds.begin(), cLinkIds.end(), cOpticalReadout->getId() ) == cLinkIds.end() )
               cLinkIds.push_back(cOpticalReadout->getId() );
