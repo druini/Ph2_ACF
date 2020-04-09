@@ -110,22 +110,7 @@ namespace Ph2_System
 
     std::string cBoardType = cBoardTypeAttribute.value();
 
-    bool cWithOptical = false;
-    for (pugi::xml_node cChild: pBeBordNode.children("GBT_Links"))
-      {
-        std::string cName = cChild.name();
-        os << BOLDBLUE <<  "|"  << "----" <<  cName << "\n" << RESET;
-        for (pugi::xml_node cGBT : cChild.children("GBT"))
-          {
-            for (pugi::xml_attribute cAttribute: cGBT.attributes())
-              {
-                if (std::string(cAttribute.name()) == "enable")
-                  cWithOptical = cWithOptical | (convertAnyInt(cAttribute.value()) == true);
-              }
-          }
-      }
-    cBeBoard->setOptical(cWithOptical);
-
+    //CDCE 
     bool cConfigureCDCE = false;
     uint32_t cClockRateCDCE = 120;
     for (pugi::xml_node cChild: pBeBordNode.children("CDCE"))
@@ -139,11 +124,6 @@ namespace Ph2_System
           }
       }
     cBeBoard->setCDCEconfiguration(cConfigureCDCE,cClockRateCDCE);
-
-    if (cWithOptical == true)
-      os << BOLDBLUE <<  "|"  << "----" << "Optical link: " << BOLDGREEN << "not being used\n" << RESET;
-    else
-      os << BOLDBLUE <<  "|"  << "----" << "Optical link: " << BOLDRED   << "not being used\n" << RESET;
 
     if (cBoardType == "D19C")      cBeBoard->setBoardType (BoardType::D19C);
     else if (cBoardType == "RD53") cBeBoard->setBoardType (BoardType::RD53);
@@ -186,38 +166,7 @@ namespace Ph2_System
       {
         pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
 
-        for (pugi::xml_node cChild: pBeBordNode.children("GBT_Links"))
-          {
-            for (pugi::xml_node cGBT : cChild.children("GBT"))
-              {
-                uint8_t cGBTId = 0;
-                for (pugi::xml_attribute cAttribute: cGBT.attributes())
-                  {
-                    if( std::string ( cAttribute.name() ) == "Id") // T.B.D store this somewhere...but where 
-                      {
-                        cGBTId = convertAnyInt (cAttribute.value());
-                        os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << " GBT :      " << BOLDYELLOW << +cGBTId << std::endl << RESET;
-                      }
-                    if( std::string ( cAttribute.name() ) == "phaseTap") // T.B.D store this somewhere...but where 
-                      {
-                        static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setGBTxPhase( convertAnyInt (cAttribute.value()) );
-                        os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " phase is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
-                      }
-                    if( std::string ( cAttribute.name() ) == "txPolarity") // T.B.D store this somewhere...but where 
-                      {
-                        auto cPolarity = convertAnyInt (cAttribute.value()); 
-                        static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setTxPolarity(cGBTId,cPolarity );
-                        os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " Tx Polarity is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
-                      }
-                    if( std::string ( cAttribute.name() ) == "rxPolarity") // T.B.D store this somewhere...but where 
-                      {
-                        auto cPolarity = convertAnyInt (cAttribute.value()); 
-                        static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setRxPolarity( cGBTId,cPolarity );
-                        os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " Rx Polairty is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
-                      }
-                  }
-              }
-          }
+        
       }
     else if (cBeBoard->getBoardType() == BoardType::RD53)
       pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
@@ -237,14 +186,59 @@ namespace Ph2_System
       }
 
     // Iterate the OpticalGroup node
+    bool cWithOptical = false;
     for ( pugi::xml_node pOpticalGroupNode = pBeBordNode.child ( "OpticalGroup" ); pOpticalGroupNode; pOpticalGroupNode = pOpticalGroupNode.next_sibling() )
-      {
-        if ( static_cast<std::string> ( pOpticalGroupNode.name() ) == "OpticalGroup" )
+    {
+          if ( static_cast<std::string> ( pOpticalGroupNode.name() ) == "OpticalGroup" )
           {
-                // for now try and guess based on xml nodes what the FE is 
+            // for now try and guess based on xml nodes what the FE is 
             this->parseOpticalGroupContainer (pOpticalGroupNode, cBeBoard, os );
+
+            for (pugi::xml_node cChild: pOpticalGroupNode.children("GBT"))
+            {
+              std::string cName = cChild.name();
+              os << BOLDBLUE <<  "|"  << "----" <<  cName << "\n" << RESET;
+              uint8_t cGBTId = 0;
+              for (pugi::xml_attribute cAttribute: cChild.attributes())
+              {
+                  if (std::string(cAttribute.name()) == "enable")
+                    cWithOptical = cWithOptical | (convertAnyInt(cAttribute.value()) == true);
+
+                  if( std::string ( cAttribute.name() ) == "Id") // T.B.D store this somewhere...but where 
+                  {
+                    cGBTId = convertAnyInt (cAttribute.value());
+                    os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << " GBT :      " << BOLDYELLOW << +cGBTId << std::endl << RESET;
+                  }
+                  if (cBeBoard->getBoardType() == BoardType::D19C)
+                  {
+                    if( std::string ( cAttribute.name() ) == "phaseTap") // T.B.D store this somewhere...but where 
+                    {
+                      static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setGBTxPhase( convertAnyInt (cAttribute.value()) );
+                      os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " phase is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
+                    }
+                    if( std::string ( cAttribute.name() ) == "txPolarity") // T.B.D store this somewhere...but where 
+                    {
+                      auto cPolarity = convertAnyInt (cAttribute.value()); 
+                      static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setTxPolarity(cGBTId,cPolarity );
+                      os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " Tx Polarity is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
+                    }
+                    if( std::string ( cAttribute.name() ) == "rxPolarity") // T.B.D store this somewhere...but where 
+                    {
+                      auto cPolarity = convertAnyInt (cAttribute.value()); 
+                      static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setRxPolarity( cGBTId,cPolarity );
+                      os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " Rx Polairty is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
+                    }
+                          
+                  }
+              }
+            }
           }
-      }
+    }
+    cBeBoard->setOptical(cWithOptical);
+    if (cWithOptical == true)
+      os << BOLDBLUE <<  "|"  << "----" << "Optical link: " << BOLDGREEN << " being used\n" << RESET;
+    else
+    os << BOLDBLUE <<  "|"  << "----" << "Optical link: " << BOLDRED   << "not being used\n" << RESET;
 
     pugi::xml_node cSLinkNode = pBeBordNode.child("SLink");
     this->parseSLink (cSLinkNode, cBeBoard, os);
@@ -265,7 +259,7 @@ namespace Ph2_System
                 // for now try and guess based on xml nodes what the FE is 
             this->parseModuleContainer (pModuleNode, theOpticalGroup, os, pBoard);
           }
-      }
+      }   
   }
 
 

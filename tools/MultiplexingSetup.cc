@@ -17,6 +17,14 @@ MultiplexingSetup::~MultiplexingSetup()
 
 void MultiplexingSetup::Initialise ( )
 {
+    // If I do this here.. DLL does not lock 
+    LOG (INFO) << BOLDBLUE << "Sending a global reset to the FC7 ..... " << RESET;
+    for (auto cBoard : *fDetectorContainer)
+    {
+        auto cBeBoard = static_cast<BeBoard*>(cBoard);
+        fBeBoardInterface->WriteBoardReg (cBeBoard,"fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
+        std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+    }
 }
 
 // Scan multiplexing set-up

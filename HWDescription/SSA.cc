@@ -80,7 +80,7 @@ namespace Ph2_HwDescription { // open namespace
                         {
                             for(uint8_t channel=0; channel<8; ++channel)
                             {
-                                if((fRegItem.fValue && (0x1<<channel)) == 0)
+                                if((fRegItem.fValue & (0x1<<channel)) == 0)
                                 {
                                     fChipOriginalMask->disableChannel((fRegItem.fAddress - 0x20)*8 + channel);
                                 }

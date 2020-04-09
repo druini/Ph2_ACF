@@ -130,7 +130,8 @@ namespace Ph2_HwInterface
 
         // cbc specific functions
         std::vector<uint8_t> createHitListFromStubs(uint8_t pSeed, bool pSeedLayer ); 
-        std::vector<uint8_t> stubInjectionPattern(Ph2_HwDescription::ReadoutChip* pCbc,  uint8_t pStubAddress , int pStubBend );  // address + bend in units of half strips
+        std::vector<uint8_t> stubInjectionPattern(uint8_t pStubAddress, int pStubBend , bool pLayerSwap );  // address + bend in units of half strips
+        std::vector<uint8_t> stubInjectionPattern( Ph2_HwDescription::ReadoutChip* pChip, uint8_t pStubAddress, int pStubBend ) ; 
         bool selectLogicMode( Ph2_HwDescription::ReadoutChip* pCbc, std::string pModeSelect, bool pForHits, bool pForStubs , bool pVerifLoop=true);
         bool enableHipSuppression( Ph2_HwDescription::ReadoutChip* pCbc, bool pForHits, bool pForStubs, uint8_t pClocks, bool pVerifLoop=true);
         bool injectStubs(Ph2_HwDescription::ReadoutChip* pCbc, std::vector<uint8_t> pStubAddresses , std::vector<int> pStubBends, bool pUseNoise=true); // address + bend in units of half strips 
