@@ -235,6 +235,7 @@ namespace Ph2_HwInterface {
         cRegValue = this->ReadChipReg( pChip , cRegName ); 
         cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? pLineId : ( (cRegValue & 0xF8) | (pLineId << 0 ) );
         cSuccess = cSuccess && this->WriteChipReg( pChip , cRegName , cValue);
+        fBoardFW->ChipReSync();
         return cSuccess;
     }
     bool CicInterface::AutoBx0Alignment(Chip* pChip , uint8_t pStatus)
