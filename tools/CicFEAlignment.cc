@@ -177,8 +177,8 @@ void CicFEAlignment::Start(int currentRun)
     LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET; 
 
     //automatic alignment 
-    //bool cBxAligned = this->SetBx0Delay(8);
-    bool cBxAligned = this->Bx0Alignment(0,4,1,100);
+    bool cBxAligned = this->SetBx0Delay(8);
+    //bool cBxAligned = this->Bx0Alignment(0,4,1,100);
     if( !cBxAligned ) 
     {
         LOG (INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET ; 

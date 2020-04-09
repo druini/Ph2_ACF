@@ -2365,15 +2365,15 @@ void D19cFWInterface::InitFMCPower()
         uint32_t cPause = 1*static_cast<uint32_t>(cTimeSingleTrigger_us);
         LOG (DEBUG) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << " trigger rate is " << +cTriggerRate << " trigger source is " << +cTriggerSource << RESET;
         LOG (DEBUG) << BOLDMAGENTA << "Waiting " << +cPause << " microseconds between attempts at checking readout req... waiting for a maximum of " <<  +cTimeoutValue << " iterations." << RESET;
-        uint32_t cNWords_previous = cNWords;
+        //uint32_t cNWords_previous = cNWords;
         do
         {
             std::this_thread::sleep_for (std::chrono::microseconds (cPause) );
             cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
             cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-            cNWords_previous = cNWords;
-            cFailures += ( (cNtriggers == 0 ) || ( (cNWords_previous==cNWords)&&cReadoutReq==0) );
+            //cNWords_previous = cNWords;
+            cFailures += ( (cNtriggers == 0 ));// || ( (cNWords_previous==cNWords) &&cReadoutReq==0) );
             cTimeoutCounter ++;
         }while (cReadoutReq == 0 && ( cTimeoutCounter < cTimeoutValue ) && (cNtriggers < pNEvents) && (cFailures < 5) );
         // fails if either one of these is true 
