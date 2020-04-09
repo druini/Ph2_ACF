@@ -1,137 +1,67 @@
-#include "../System/SystemController.h"
 #include "../tools/Tool.h"
-// #include "../tools/Calibration.h"
-// #include "../tools/PedeNoise.h"
 
-template<class... Cs> 
-class CombinedCalibration
-{
+
+#if __cplusplus < 201402
+namespace std {
+    template <size_t... Is>
+    struct index_sequence {};
+
+    template <size_t N, size_t... Is>
+    struct make_index_sequence_impl {
+        using type = typename make_index_sequence_impl<N-1, N-1, Is...>::type;
+    };
+    
+    template <size_t N, size_t... Is>
+    struct make_index_sequence_impl<N, 0, Is...> {
+        using type = index_sequence<0, Is...>;
+    };
+
+    template <size_t N>
+    using make_index_sequence = typename make_index_sequence_impl<N>::type;
+}
+#endif
+
+template <class... Tools>
+struct CombinedCalibration : public Tool {
 public:
-    Tool *toolPointer;
-};
+    static constexpr int size = sizeof...(Tools);
 
-template<typename T, typename... Rest >
-void privateStart(int currentRun, CombinedCalibration<T, Rest...>& calList);
+    CombinedCalibration() : current_tool(this) {}
 
-
-template<class Head, class... Tail> 
-class CombinedCalibration<Head, Tail...> : public Tool//: public CombinedCalibration<Tail...>
-{
-public:
-    CombinedCalibration() 
-    {
-        std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Constructor !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    void Start(int run) {
+        start_impl(run, std::make_index_sequence<size>());
     }
 
     void Configure(std::string cHWFile, bool enableStream = false) override
     {
-        std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Configuring !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-        toolPointer = this;
         Tool::Configure(cHWFile,enableStream);
         Tool::CreateResultDirectory("Results",false,false);
     }
 
-    void Start(int currentRun) override
-    {
-        std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Starting !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-        privateStart(currentRun, *this);
-        std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Starting Done !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-        // std::cout<<"Starting\n";
-        // calibrationHead.Inherit(this);
-        // calibrationHead.Start(currentRun);
-        // std::cout<<"TheRest\n";
-        // calibrationTail.Start(currentRun);
-    }
 
     void Stop() override
     {
-        std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Stopping !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-
-        toolPointer->dumpConfigFiles();
-        toolPointer->SaveResults();
-        toolPointer->Destroy();
+        Tool::dumpConfigFiles();
+        Tool::SaveResults();
+        Tool::Destroy();
     }
 
-    Head calibrationHead;
-    CombinedCalibration<Tail...> calibrationTail;
-    Tool *toolPointer;
 
+private:
+    template <size_t... Is>
+    void start_impl(int run, std::index_sequence<Is...>) {
+        __attribute__((unused)) auto _ = {(start_single(run,std::get<Is>(tools)), 0)...};
+    }
+
+    template <class T>
+    void start_single(int run, T& tool) {
+        tool.Inherit(current_tool);
+        tool.ConfigureCalibration();
+        tool.Start(run);
+        tool.resetPointers();
+        current_tool = &tool;
+    }
+
+    Tool* current_tool;
+    std::tuple<Tools...> tools;
 };
-
-void privateStart(int currentRun, CombinedCalibration<>& calList) 
-{
-    std::cout << __PRETTY_FUNCTION__ <<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Private Starting Empty !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-}
-
-template<typename T, typename... Rest >
-void privateStart(int currentRun, CombinedCalibration<T, Rest...>& calList)
-{
-    std::cout << __PRETTY_FUNCTION__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Private Starting !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-    std::cout << __PRETTY_FUNCTION__ << calList.toolPointer<<std::endl;
-    calList.calibrationHead.Inherit(calList.toolPointer);
-    calList.calibrationHead.ConfigureCalibration();
-    calList.calibrationHead.Start(currentRun);
-    /* calList.calibrationHead.writeObjects( ); */
-    calList.calibrationHead.resetPointers();
-    std::cout << __PRETTY_FUNCTION__ <<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! The Rest !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-    calList.calibrationTail.toolPointer = calList.toolPointer;
-    privateStart(currentRun,calList.calibrationTail);
-    std::cout << __PRETTY_FUNCTION__ <<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Done with the rest !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-}
-
-
-// typedef CombinedCalibration<Calibration,PedeNoise> CalibrationAndPedeNoise;
-
-// class CalibrationAndPedeNoise : public Tool
-// {
-// public:
-//     CalibrationAndPedeNoise()
-//     {
-
-//     }
-//     ~CalibrationAndPedeNoise()
-//     {
-        
-//     }
-
-//     void Start(int currentRun) override
-//     {
-
-//         CreateResultDirectory ( "Results/Run_" + std::to_string(currentRun) +"_CalibrationAndPedeNoise" );
-//         InitResultFile ( "CalibrationAndPedeNoiseResults" );
-
-//         theCalibration.Inherit(this);
-//         theCalibration.Initialise ( true, true );
-
-//         theCalibration.FindVplus();
-//         theCalibration.FindOffsets();
-//         theCalibration.writeObjects();
-
-
-//         thePedenoise.Inherit(this);
-//         thePedenoise.Initialise ( true, true );
-//         thePedenoise.measureNoise();
-//         thePedenoise.Validate();
-//         thePedenoise.writeObjects();
-
-//         dumpConfigFiles();
-//         SaveResults();
-//         CloseResultFile();
-//         Destroy();
-//     }
-
-//     void Stop() override {;}
-//     void Configure(std::string cHWFile) override
-//     {
-//         SystemController::Configure(cHWFile);
-//     }
-
-//     void Pause() override  {;}
-//     void Resume() override  {;}
-
-
-// private:
-//     Calibration theCalibration;
-//     PedeNoise   thePedenoise;
-
-// };
