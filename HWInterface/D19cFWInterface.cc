@@ -814,19 +814,19 @@ namespace Ph2_HwInterface
         } 
 
         // resetting hard
-        // if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
-        // {
-        //     for (Module* cModule : pBoard->fModuleVector)
-        //     {
-        //             if( pBoard->ifOptical() )
-        //                 this->selectLink(  cModule->getLinkId() );
-        //             this->ChipReset();
-        //     }
-        // }
-        // else
-        // {
-        //   this->ReadoutChipReset();
-        // }
+        if( fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2 ) 
+        {
+            for( auto cModule : *pBoard )
+            {
+                if( pBoard->ifOptical() )
+                    this->selectLink(  cModule->getId() );
+                this->ChipReset();
+            }
+        }
+        else
+        {
+          this->ReadoutChipReset();
+        }
 
         // modifying FC7 configuration based on CIC 
         cVecReg.clear();
@@ -2981,16 +2981,19 @@ void D19cFWInterface::InitFMCPower()
             this->WriteReg("fc7_daq_cnfg.stub_debug.enable",0x00);
         }
         // send a resync and reset readout 
-        this->ChipReSync();
-        //this->ResetReadout();
-        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+        this->ResetReadout();
+        for( size_t cIndex=0; cIndex < 10; cIndex++)
+        {
+            this->ChipReSync();
+            std::this_thread::sleep_for (std::chrono::microseconds (10) );
+        }
         // check state of bx0 alignment block 
         uint32_t cValue = this->ReadReg( "fc7_daq_stat.physical_interface_block.cic_decoder.bx0_alignment_state");
         if( cValue == 8 ) 
         {
             LOG (INFO) << BOLDBLUE << "Bx0 alignment in back-end " << BOLDGREEN << "SUCCEEDED!" << BOLDBLUE << "\t... Stub package delay set to : " <<+cStubPackageDelay << RESET;
             cSuccess = true;
-            this->ChipReSync();
+            //this->ChipReSync();
             //this->ResetReadout();
         }
         else

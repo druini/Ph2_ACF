@@ -177,6 +177,7 @@ void CicFEAlignment::Start(int currentRun)
     LOG (INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET; 
 
     //automatic alignment 
+    //bool cBxAligned = this->SetBx0Delay(8);
     bool cBxAligned = this->Bx0Alignment(0,4,1,100);
     if( !cBxAligned ) 
     {
@@ -287,6 +288,7 @@ bool CicFEAlignment::SetBx0Delay(uint8_t pDelay, uint8_t pStubPackageDelay)
             }
         }
         fBeBoardInterface->ChipReSync ( static_cast<BeBoard*>(cBoard) );
+        
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Bx0Alignment();
     }
     return true;
@@ -325,7 +327,7 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
         // make sure you're only sending one trigger at a time here
         auto cMult = fBeBoardInterface->ReadBoardReg (cBeBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
         fBeBoardInterface->WriteBoardReg (cBeBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(pDelay,200);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(pDelay,pDelay+30,100,1);
 
         // original threshold + logic values 
         auto& cThresholdsThisBoard = fThresholds.at(cBoard->getIndex());
@@ -387,7 +389,7 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine , uint16_t pDelay, 
                 // stop trigger 
                 fBeBoardInterface->WriteBoardReg (cBeBoard, "fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
                 
-                if( cBx0Status.first &&  cBx0Status.second == 9 )
+                if( cBx0Status.first )
                 {
                     LOG (INFO) << BOLDBLUE << "Automated BX0 alignment on CIC" << +cHybrid->getId() << " : " << BOLDGREEN << " SUCCEEDED ...." << BOLDBLUE << "\t.... Bx0 delay found to be " << +cBx0Status.second << " clocks." <<  RESET;
                     cSuccess  = fCicInterface->ManualBx0Alignment( cCic , cBx0Status.second - pDelay);

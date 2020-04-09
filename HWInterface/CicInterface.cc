@@ -239,12 +239,21 @@ namespace Ph2_HwInterface {
     }
     bool CicInterface::AutoBx0Alignment(Chip* pChip , uint8_t pStatus)
     {
-        std::string cRegName = (pChip->getFrontEndType() == FrontEndType::CIC ) ? "AUTO_BX0_ALIGNMENT_REQUEST" : "BX0_ALIGN_CONFIG";
+        // make sure auto WA request is 0 
+        std::string cRegName = (pChip->getFrontEndType() == FrontEndType::CIC ) ? "AUTO_WA_REQUEST" : "MISC_CTRL";
         uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
+        uint16_t cToggleOff = (pChip->getFrontEndType() == FrontEndType::CIC ) ? 0x00 : ( (cRegValue & 0x1D) | (0x0 << 0) );
+        bool cSuccess = this->WriteChipReg( pChip , cRegName , cToggleOff);
+        if( !cSuccess )
+            return cSuccess; 
+
+        cRegName = (pChip->getFrontEndType() == FrontEndType::CIC ) ? "AUTO_BX0_ALIGNMENT_REQUEST" : "BX0_ALIGN_CONFIG";
+        cRegValue = this->ReadChipReg( pChip , cRegName ); 
         uint16_t cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? 0x01 : ( (cRegValue & 0xF8) | (pStatus << 6 ) );
-        bool cSuccess = this->WriteChipReg( pChip , cRegName , cValue);
+        cSuccess = this->WriteChipReg( pChip , cRegName , cValue);
         if( !cSuccess )
             return cSuccess;
+
         return cSuccess;
     }
     std::pair<bool, uint8_t> CicInterface::CheckBx0Alignment(Chip* pChip )
@@ -884,7 +893,7 @@ namespace Ph2_HwInterface {
         }
         
         // select fast command edge 
-        bool cNegEdge=false;
+        bool cNegEdge=true;
         if( cNegEdge)
             LOG (INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
         else

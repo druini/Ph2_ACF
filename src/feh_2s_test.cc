@@ -256,7 +256,8 @@ int main ( int argc, char* argv[] )
         cDataChecker.Inherit (&cTool);
         cDataChecker.Initialise ( );
         cDataChecker.zeroContainers();
-        cDataChecker.ReadNeventsTest();
+        cDataChecker.StubCheck();
+        //cDataChecker.ReadNeventsTest();
         //cDataChecker.DataCheck(cFEsToCheck,0,0);
         //cDataChecker.ReadDataTest();
         //cDataChecker.HitCheck();
