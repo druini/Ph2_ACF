@@ -47,10 +47,6 @@ int main ( int argc, char** argv )
         exit ( 1 );
     }
 
-    bool cMuxDisconnect = ( cmd.foundOption ( "mux_disconnect" ) ) ? true : false;
-    bool cMuxScan = ( cmd.foundOption ( "mux_scan" ) ) ? true : false;
-    bool cMuxConfigure = ( cmd.foundOption ( "mux_configure" ) ) ? true : false;
-    bool cMuxAutoConfigure = ( cmd.foundOption ( "mux_auto_configure" ) ) ? true : false;
     
     // now query the parsing results
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/D19CHWDescription.xml";
@@ -62,6 +58,11 @@ int main ( int argc, char** argv )
     cTool.InitializeSettings ( cHWFile, outp );
     LOG (INFO) << outp.str();
     #ifdef __MULTIPLEXING__
+        bool cMuxDisconnect = ( cmd.foundOption ( "mux_disconnect" ) ) ? true : false;
+        bool cMuxScan = ( cmd.foundOption ( "mux_scan" ) ) ? true : false;
+        bool cMuxConfigure = ( cmd.foundOption ( "mux_configure" ) ) ? true : false;
+        bool cMuxAutoConfigure = ( cmd.foundOption ( "mux_auto_configure" ) ) ? true : false;
+    
         MultiplexingSetup cMuxControl;
         cMuxControl.Inherit (&cTool);
         cMuxControl.Initialise ();
