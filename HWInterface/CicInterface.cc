@@ -831,13 +831,20 @@ namespace Ph2_HwInterface {
     // with the BE or the other readout ASICs on the chip 
     bool CicInterface::StartUp( Chip* pChip, uint8_t pDriveStrength) 
     {
-        bool cSuccess = this->SoftReset(pChip);
         std::string cOut = ".... Starting CIC start-up ........ on hybrid " + std::to_string( pChip->getFeId() ); 
         if( pChip->getFrontEndType() == FrontEndType::CIC )
             cOut += " for CIC1.";
         else
             cOut += " for CIC2.";
         LOG (INFO) << BOLDBLUE <<  cOut << RESET;
+        
+        bool cSuccess = this->CheckSoftReset(pChip);
+        // if( !cSuccess ) 
+        // {
+        //     LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC... " << RESET;
+        //     exit(0);
+        // }
+        // bool cSuccess = this->SoftReset(pChip);
         
         bool cClkTermination = true; 
         bool cRxTermination =  false;
@@ -885,12 +892,12 @@ namespace Ph2_HwInterface {
         this->EnableFEs(pChip, {0,1,2,3,4,5,6,7} , true);
         
         // check if we need a soft RESET
-        cSuccess = this->CheckSoftReset(pChip);
-        if( !cSuccess ) 
-        {
-            LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC... " << RESET;
-            exit(0);
-        }
+        // cSuccess = this->CheckSoftReset(pChip);
+        // if( !cSuccess ) 
+        // {
+        //     LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC... " << RESET;
+        //     exit(0);
+        // }
         
         // select fast command edge 
         bool cNegEdge=true;
