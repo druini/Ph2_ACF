@@ -101,10 +101,17 @@ namespace Ph2_System
 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     const BeBoard *theFirstBoard = static_cast<const BeBoard*>(fDetectorContainer->at(0));
+
     if (theFirstBoard->getBoardType() != BoardType::RD53)
       {
-        if (theFirstBoard->getEventType() != EventType::SSA) fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
-        else                                                   fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+
+
+        OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>((theFirstBoard->at(0))->at(0));
+        auto cChipType = (static_cast<ReadoutChip*>(theOuterTrackerModule->at(0))->getFrontEndType()); 
+        if ( cChipType == FrontEndType::CBC3 ) 
+          fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
+        else if(cChipType == FrontEndType::SSA)                                                
+          fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
         fCicInterface = new CicInterface(fBeBoardFWMap);
         fMPAInterface = new MPAInterface(fBeBoardFWMap);
       }
@@ -396,6 +403,31 @@ namespace Ph2_System
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
   }
 
+
+
+  void SystemController::ReadASEvent (BeBoard* pBoard, uint32_t pNMsec)
+  {
+
+    std::vector<uint32_t> cData;
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(0);
+	std::this_thread::sleep_for (std::chrono::microseconds(pNMsec));
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);
+    
+    for(auto cOpticalGroup : *pBoard)
+        {
+        for(auto cHybrid : *cOpticalGroup)
+            {
+            for(auto cChip : *cHybrid)
+                {
+                static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip,pNMsec, cData);
+                }
+            }
+        }
+    this->DecodeData(pBoard, cData, 1, fBeBoardInterface->getBoardType(pBoard));
+  }
+
+
+
   double SystemController::findValueInSettings (const std::string name, double defaultValue) const
   {
     auto setting = fSettingsMap.find(name);
@@ -431,16 +463,14 @@ namespace Ph2_System
         uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
         LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
 
-        if (fEventType == EventType::SSA)
-          {
-            fNevents   = static_cast<uint32_t>(pNevents);
-            uint32_t fEventSize = static_cast<uint32_t>((pData.size()) / fNevents);
-            uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-            fEventList.push_back(new D19cSSAEvent(pBoard, nSSA, fNFe, pData));
-            return;
-          }
 
-        if (fEventType != EventType::ZS)
+        if (fEventType == EventType::SSAAS)
+        {
+          uint16_t nSSA = 2;
+          fEventList.push_back(new D19cSSAEventAS(pBoard, nSSA, fNFe, pData));
+
+        }
+        else if (fEventType != EventType::ZS)
           {
             size_t cEventIndex=0;
             auto cEventIterator = pData.begin();
@@ -472,6 +502,12 @@ namespace Ph2_System
                         fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
                         // check if the board is reading sparsified or unsparsified data 
                         fEventList.push_back ( new D19cCic2Event ( pBoard, fNCbc , fNFe, cEvent ) );
+                      }
+                    else if( pBoard->getFrontEndType() == FrontEndType::SSA )
+                      { 
+                        size_t nSSA = 2 ; 
+                        size_t cNFe = 1; 
+                        fEventList.push_back(new D19cSSAEvent(pBoard, nSSA, cNFe, cEvent));
                       }
                     cEventIndex++;
                   }

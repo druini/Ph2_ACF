@@ -2321,9 +2321,87 @@ void D19cFWInterface::InitFMCPower()
         if (fSaveToFile)
             fFileHandler->setData (pData);
 
-        //need to return the number of events read
+
         return cNEvents;
     }
+
+
+
+
+    void D19cFWInterface::ReadASEvent (BeBoard* pBoard, uint32_t pNMsec, std::vector<uint32_t>& pData )
+    {
+    pData.clear();
+    if( fFirmwareFrontEndType == FrontEndType::SSA ) 
+		    {
+
+             for(auto cOpticalGroup : *pBoard)
+                 {
+                 for(auto cHybrid : *cOpticalGroup)
+                     {
+                     for(auto cSSA : *cHybrid)
+                        {
+                        for (uint32_t i = 1; i<=120;i++ ) 
+				            {
+                            std::cout<<i<<"meww"<<std::endl;
+            
+				            ChipRegItem cRI1 = cSSA->getRegItem( "ReadCounter_LSB_S" + std::to_string(i));
+	                        std::vector<uint32_t> cVecReq;
+	                        EncodeReg ( cRI1, cSSA->getFeId(), cSSA->getChipId(), cVecReq, true, false );
+	                        ReadChipBlockReg (  cVecReq );
+	                        //DecodeReg ( cRI1, cSSA->getFeId(), cVecReq[0], true, false );
+	                        uint8_t cRP1 =cRI1.fValue & 0xFF;
+
+				            ChipRegItem cRI2 = cSSA->getRegItem( "ReadCounter_MSB_S" + std::to_string(i));
+	                        EncodeReg ( cRI2, cSSA->getFeId(), cSSA->getChipId(), cVecReq, true, false );
+	                        ReadChipBlockReg (  cVecReq );
+	                        //DecodeReg ( cRI2, cSSA->getFeId(), cVecReq[0], true, false );
+	                        uint8_t cRP2 =cRI2.fValue & 0xFF;
+
+				            uint16_t cRP = (cRP2*256) + cRP1; 
+		               	    LOG(INFO) << i<<","<<cRP<< RESET;
+				            pData.push_back(cRP);
+		             		}
+                        }
+			        }
+                }
+		    }
+            else if( fFirmwareFrontEndType == FrontEndType::MPA ) 
+		    {
+		    WriteReg("fc7_daq_cnfg.physical_interface_block.raw_mode_en", 0);
+		    uint32_t mpa_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.stat_slvs_debug.mpa_counters_ready");
+		    std::chrono::milliseconds cWait( 10 );
+	            //std::cout<<"MCR  "<<mpa_counters_ready<<std::endl;
+		    PS_Start_counters_read();
+		    uint32_t  timeout = 0;
+		    while ((mpa_counters_ready == 0) & (timeout < 50))
+		    {
+		        std::this_thread::sleep_for( cWait );
+		        mpa_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.stat_slvs_debug.mpa_counters_ready");
+		        //std::cout<<"MCR iwh"<<mpa_counters_ready<<std::endl;
+		        timeout += 1;
+		    }
+		    if (timeout >= 50)
+		    {
+               	    LOG(ERROR) << "Counter timeout";
+		        return ;
+		    }
+
+		    ReadReg("fc7_daq_ctrl.physical_interface_block.ctrl_slvs_debug_fifo2_data");
+		        for (int i=0; i<2040;i++)
+		        {
+		            pData.push_back(ReadReg("fc7_daq_ctrl.physical_interface_block.ctrl_slvs_debug_fifo2_data") - 1);
+		        }
+		    
+
+		    std::this_thread::sleep_for( cWait );
+		    mpa_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.stat_slvs_debug.mpa_counters_ready");
+
+		    }
+            if (fSaveToFile)
+            fFileHandler->setData(pData);
+
+    }
+
 
     void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )
     {

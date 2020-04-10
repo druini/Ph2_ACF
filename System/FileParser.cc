@@ -404,29 +404,27 @@ namespace Ph2_System
     //an SLinkDebugMode property is set for this board (SUMMARY)
     pBoard->addConditionDataSet (cSet);
   }
-
-    void FileParser::parseSSA (pugi::xml_node pModuleNode, Module* pModule, std::string cFilePrefix)
-    { // Get ID of SSA then add to the Module!
-        uint32_t cChipId = pModuleNode.attribute ( "Id" ).as_int();
-        std::string cFileName;
-            if ( !cFilePrefix.empty() )
-            {
-                if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
-                    cFilePrefix.append ("/");
-
-                cFileName = cFilePrefix + expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
-            }
-            else cFileName = expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
-          ReadoutChip* cSSA = pModule->addChipContainer(cChipId, new SSA ( pModule->getBeId(), pModule->getFMCId(), pModule->getFeId(), cChipId, 0, cFileName ));
-            cSSA->setNumberOfChannels(120);
-        this->parseSSASettings (pModuleNode, cSSA);
-    }
-
-    void FileParser::parseSSASettings (pugi::xml_node pModuleNode, ReadoutChip* pSSA)
+  void FileParser::parseSSA (pugi::xml_node pModuleNode, Module* pModule, std::string cFilePrefix)
+  { // Get ID of SSA then add to the Module!
+    uint32_t cChipId = pModuleNode.attribute ( "Id" ).as_int();
+    std::string cFileName;
+    if ( !cFilePrefix.empty() )
     {
-        // FrontEndType cType = pSSA->getFrontEndType();
-    }
+        if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
+            cFilePrefix.append ("/");
 
+        cFileName = cFilePrefix + expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
+    }
+    else cFileName = expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
+    ReadoutChip* cSSA = pModule->addChipContainer(cChipId, new SSA ( pModule->getBeId(), pModule->getFMCId(), pModule->getFeId(), cChipId, 0, cFileName ));
+    cSSA->setNumberOfChannels(120);
+    this->parseSSASettings (pModuleNode, cSSA);
+  }
+
+  void FileParser::parseSSASettings (pugi::xml_node pModuleNode, ReadoutChip* pSSA)
+  {
+    //FrontEndType cType = pSSA->getFrontEndType();
+  }
   void FileParser::parseModuleContainer (pugi::xml_node pModuleNode, OpticalGroup* pOpticalGroup, std::ostream& os, BeBoard* pBoard)
   {
     bool cStatus = pModuleNode.attribute("Status").as_bool();
@@ -552,6 +550,7 @@ namespace Ph2_System
                       }
                     else if (cName == "SSA")
                       {
+                        pBoard->setFrontEndType( FrontEndType::SSA);
                         this->parseSSA(cChild, cModule, cConfigFileDirectory);
                       }
                   }

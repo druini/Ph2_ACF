@@ -45,7 +45,7 @@ namespace Ph2_HwDescription { //open namespace
 		}
 		void loadfRegMap ( const std::string& filename ) override;
 		void saveRegMap ( const std::string& filename ) override;
-		uint32_t getNumberOfChannels() const override { return NCHANNELS; }
+		uint32_t getNumberOfChannels() const override { return NSSACHANNELS; }
 		bool isDACLocal(const std::string &dacName) override {
 		    if(dacName.find("THTRIMMING_S",0,12)!=std::string::npos ) return true;
 		    else return false;

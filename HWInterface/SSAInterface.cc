@@ -38,7 +38,7 @@ namespace Ph2_HwInterface {// start namespace
 				#endif
 	      		fBoardFW->EncodeReg (cRegItem.second, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, true);
 	      		bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
-	      		LOG (INFO) << BOLDBLUE << cRegItem.first << "  <   " << BOLDRED << cSuccess << RESET;
+	      		//LOG (INFO) << BOLDBLUE << cRegItem.first << "  <   " << BOLDRED << cSuccess << RESET;
 	      		if (not cSuccess) return false;
 	            cVec.clear();
 			}
@@ -117,6 +117,22 @@ namespace Ph2_HwInterface {// start namespace
 	bool SSAInterface::WriteChipAllLocalReg ( ReadoutChip* pSSA, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop )
 	{return true;}
 	// Definitely needed:
+
+    void SSAInterface::ReadASEvent (ReadoutChip* pSSA,uint32_t pNMsec,std::vector<uint32_t>& pData)
+    {
+    //std::cout<<pSSA->getNumberOfChannels()<<std::endl;
+    for (uint32_t i = 1; i<=pSSA->getNumberOfChannels();i++ )
+        {
+        uint8_t cRP1 = this->ReadChipReg(pSSA, "ReadCounter_LSB_S" + std::to_string(i));
+        uint8_t cRP2 = this->ReadChipReg(pSSA, "ReadCounter_MSB_S" + std::to_string(i));
+      
+        //LOG (INFO) << RED <<std::bitset<8>(cRP2)<< " " <<std::bitset<8>(cRP1) << RESET;
+        //LOG (INFO) << RED <<(cRP2*256) + cRP1<< RESET;
+		pData.push_back((cRP2*256) + cRP1); 
+        }
+    }
+
+
 	uint16_t SSAInterface::ReadChipReg ( Chip* pSSA, const std::string& pRegNode )
 	{
 	setBoard ( pSSA->getBeBoardId() );
