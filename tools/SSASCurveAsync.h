@@ -48,7 +48,7 @@ class SSASCurve : public Tool
   size_t NMsec        = this->findValueInSettings("NMsec");
   size_t Res        = this->findValueInSettings("Res");
   size_t Nlvl        = this->findValueInSettings("Nlvl");
-  uint32_t globalmax =0 ;
+  float globalmax =0 ;
 
   std::vector<uint32_t> localmax=decltype(localmax)(120, 0) ;
   std::vector<float> normvals=decltype(normvals)(120, 0.0) ;
@@ -58,7 +58,7 @@ class SSASCurve : public Tool
 
 
     #ifdef __USE_ROOT__
-      DQMHistogramSSAScurveAsync fDQMHistogramSSASCurveAsync;
+      DQMHistogramSSASCurveAsync fDQMHistogramSSASCurveAsync;
     #endif
 
 };

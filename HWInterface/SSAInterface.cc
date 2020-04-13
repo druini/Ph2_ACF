@@ -118,10 +118,12 @@ namespace Ph2_HwInterface {// start namespace
 	{return true;}
 	// Definitely needed:
 
-    void SSAInterface::ReadASEvent (ReadoutChip* pSSA,uint32_t pNMsec,std::vector<uint32_t>& pData)
+    void SSAInterface::ReadASEvent (ReadoutChip* pSSA,uint32_t pNMsec,std::vector<uint32_t>& pData,std::pair<uint32_t,uint32_t> pSRange)
     {
+    if (pSRange == std::pair<uint32_t,uint32_t>{0,0})
+        pSRange = std::pair<uint32_t,uint32_t>{1,pSSA->getNumberOfChannels()};
     //std::cout<<pSSA->getNumberOfChannels()<<std::endl;
-    for (uint32_t i = 1; i<=pSSA->getNumberOfChannels();i++ )
+    for (uint32_t i = pSRange.first; i<=pSRange.second;i++ )
         {
         uint8_t cRP1 = this->ReadChipReg(pSSA, "ReadCounter_LSB_S" + std::to_string(i));
         uint8_t cRP2 = this->ReadChipReg(pSSA, "ReadCounter_MSB_S" + std::to_string(i));

@@ -1,13 +1,13 @@
 /*!
-        \file                DQMHistogramSSAScurveAsync.h
+        \file                DQMHistogramSSASCurveAsync.h
         \brief               DQM class for Calibration example -> use it as a templare
         \author              Fabio Ravera
         \date                25/7/19
         Support :            mail to : fabio.ravera@cern.ch
 */
 
-#ifndef __DQMHISTOGRAMSSAScurveAsync_H__
-#define __DQMHISTOGRAMSSAScurveAsync_H__
+#ifndef __DQMHISTOGRAMSSASCurveAsync_H__
+#define __DQMHISTOGRAMSSASCurveAsync_H__
 #include "../DQMUtils/DQMHistogramBase.h"
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
@@ -15,22 +15,22 @@
 class TFile;
 
 /*!
- * \class DQMHistogramSSAScurveAsync
- * \brief Class for SSAScurveAsync monitoring histograms
+ * \class DQMHistogramSSASCurveAsync
+ * \brief Class for SSASCurveAsync monitoring histograms
  */
-class DQMHistogramSSAScurveAsync : public DQMHistogramBase
+class DQMHistogramSSASCurveAsync : public DQMHistogramBase
 {
 
   public:
     /*!
      * constructor
      */
-    DQMHistogramSSAScurveAsync ();
+    DQMHistogramSSASCurveAsync ();
 
     /*!
      * destructor
      */
-    ~DQMHistogramSSAScurveAsync();
+    ~DQMHistogramSSASCurveAsync();
 
     /*!
      * \brief Book histograms
@@ -57,10 +57,10 @@ class DQMHistogramSSAScurveAsync : public DQMHistogramBase
     void reset(void) override;
    
     /*!
-     * \brief fillSSAScurveAsyncPlots
+     * \brief fillSSASCurveAsyncPlots
      * \param theHitContainer : Container with the hits you want to plot 
      */
-    void fillSSAScurveAsyncPlots(DetectorDataContainer &theHitContainer,uint32_t thresh);
+    void fillSSASCurveAsyncPlots(DetectorDataContainer &theHitContainer,uint32_t thresh);
 
   private:
 

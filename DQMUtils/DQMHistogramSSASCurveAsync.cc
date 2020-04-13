@@ -13,18 +13,18 @@
 #include "TFile.h"
 
 //========================================================================================================================
-DQMHistogramSSAScurveAsync::DQMHistogramSSAScurveAsync ()
+DQMHistogramSSASCurveAsync::DQMHistogramSSASCurveAsync ()
 {
 }
 
 //========================================================================================================================
-DQMHistogramSSAScurveAsync::~DQMHistogramSSAScurveAsync ()
+DQMHistogramSSASCurveAsync::~DQMHistogramSSASCurveAsync ()
 {
 
 }
 
 //========================================================================================================================
-void DQMHistogramSSAScurveAsync::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramSSASCurveAsync::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
@@ -40,7 +40,7 @@ void DQMHistogramSSAScurveAsync::book(TFile *theOutputFile, const DetectorContai
 }
 
 //========================================================================================================================
-void DQMHistogramSSAScurveAsync::fillSSAScurveAsyncPlots(DetectorDataContainer &theHitContainer,uint32_t thresh)
+void DQMHistogramSSASCurveAsync::fillSSASCurveAsyncPlots(DetectorDataContainer &theHitContainer,uint32_t thresh)
 {
     for(auto board : theHitContainer) //for on boards - begin 
     {
@@ -60,12 +60,12 @@ void DQMHistogramSSAScurveAsync::fillSSAScurveAsyncPlots(DetectorDataContainer &
                 TH2F *chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 uint channelBin=1;
                 // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip by chip and not in one shot)
-                if(chip->getChannelContainer<uint32_t>() == nullptr ) continue;
+                if(chip->getChannelContainer<std::pair<std::array<uint32_t,2>,float>>() == nullptr ) continue;
                 // Get channel data and fill the histogram
-                for(auto channel : *chip->getChannelContainer<std::array<uint32_t,3>>()) //for on channel - begin 
+                for(auto channel : *chip->getChannelContainer<std::pair<std::array<uint32_t,2>,float>>()) //for on channel - begin 
                 {
                     //LOG (INFO) << BOLDRED << channelBin<<" "<<thresh<<" "<<channel << RESET;
-                    chipHitHistogram->SetBinContent(channelBin++,thresh,channel[0]);
+                    chipHitHistogram->SetBinContent(channelBin++,thresh,channel.first[0]);
                 } //for on channel - end 
             }
             } //for on chip - end 
@@ -74,7 +74,7 @@ void DQMHistogramSSAScurveAsync::fillSSAScurveAsyncPlots(DetectorDataContainer &
 }
 
 //========================================================================================================================
-void DQMHistogramSSAScurveAsync::process()
+void DQMHistogramSSASCurveAsync::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
@@ -108,28 +108,28 @@ void DQMHistogramSSAScurveAsync::process()
 }
 
 //========================================================================================================================
-void DQMHistogramSSAScurveAsync::reset(void)
+void DQMHistogramSSASCurveAsync::reset(void)
 {
     // Clear histograms if needed
 }
 
 //========================================================================================================================
-bool DQMHistogramSSAScurveAsync::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramSSASCurveAsync::fill(std::vector<char>& dataBuffer)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
-    //I'm expecting to receive a data stream from an uint32_t contained from calibration "SSAScurveAsync"
-    ChannelContainerStream<uint32_t>  theHitStreamer("SSAScurveAsync");
+    //I'm expecting to receive a data stream from an uint32_t contained from calibration "SSASCurveAsync"
+    ChannelContainerStream<std::pair<std::array<uint32_t,2>,float>>  theHitStreamer("SSASCurveAsync");
 
-    // Try to see if the char buffer matched what I'm expection (container of uint32_t from SSAScurveAsync procedure)
+    // Try to see if the char buffer matched what I'm expection (container of uint32_t from SSASCurveAsync procedure)
     if(theHitStreamer.attachBuffer(&dataBuffer))
     {
         //It matched! Decoding chip data
         theHitStreamer.decodeChipData(fDetectorData);
         //Filling the histograms
-        //fillSSAScurveAsyncPlots(fDetectorData);
+        //fillSSASCurveAsyncPlots(fDetectorData);
         //Cleaning the data container to be ready for the next TCP string
         fDetectorData.cleanDataStored();
         return true;
