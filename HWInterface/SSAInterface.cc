@@ -48,6 +48,22 @@ namespace Ph2_HwInterface {// start namespace
 			#endif
 	        return true;
 	}
+
+    bool SSAInterface::enableInjection (ReadoutChip* pChip, bool inject, bool pVerifLoop)
+    {
+        uint32_t enwrite=1;
+        if(inject) enwrite=21;
+        for (uint32_t i = 1; i<=pChip->getNumberOfChannels();i++ ) this->WriteChipReg(pChip, "ENFLAGS_S" + std::to_string(i), enwrite);
+        return this->WriteChipReg(pChip, "FE_Calibration" , (int)inject ,pVerifLoop );
+
+    }
+
+    bool SSAInterface::setInjectionAmplitude (ReadoutChip* pChip, uint8_t injectionAmplitude, bool  pVerifLoop)
+    {
+        return this->WriteChipReg(pChip, "Bias_CALDAC", injectionAmplitude, pVerifLoop);
+    }
+
+
 	//
 	bool SSAInterface::setInjectionSchema (ReadoutChip* pSSA, const ChannelGroupBase *group, bool pVerifLoop)
 	{return true;}

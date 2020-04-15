@@ -6,8 +6,8 @@
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
-#include "../tools/SSAPedestalEqualization.h"
-#include "../tools/SSAPedeNoise.h"
+#include "../tools/PedestalEqualization.h"
+#include "../tools/PedeNoise.h"
 #include "tools/BackEndAlignment.h"
 #include "../Utils/argvparser.h"
 #include "TROOT.h"
@@ -96,7 +96,7 @@ int main ( int argc, char* argv[] )
     outp.str ("");
     cTool.ConfigureHw ();
     cTool.CreateResultDirectory ( cDirectory );
-    cTool.InitResultFile ( "SSAPedestalEqualizationResults" );
+    cTool.InitResultFile ( "PedestalEqualizationResults" );
     //cTool.StartHttpServer();
     
     // align back-end .. if this moves to firmware then we can get rid of this step 
@@ -117,12 +117,11 @@ int main ( int argc, char* argv[] )
     t.start();
 
     // now create a SSAPedestalEqualization object
-    SSAPedestalEqualization cPedestalEqualization;
+    PedestalEqualization cPedestalEqualization;
     cPedestalEqualization.Inherit (&cTool);
     //second parameter disables stub logic on CBC3
     // cPedestalEqualization.Initialise ( false, true );
-    cPedestalEqualization.Initialise ( cAllChan, true );
-
+    cPedestalEqualization.Initialise ( cAllChan, false );
     if ( cVplus ) cPedestalEqualization.FindVplus();
 
     cPedestalEqualization.FindOffsets();
@@ -136,10 +135,10 @@ int main ( int argc, char* argv[] )
         t.start();
         //if this is true, I need to create an object of type PedeNoise from the members of PedestalEqualization
         //tool provides an Inherit(Tool* pTool) for this purpose
-        SSAPedeNoise cPedeNoise;
+        PedeNoise cPedeNoise;
         cPedeNoise.Inherit (&cTool);
         //second parameter disables stub logic on CBC3
-        cPedeNoise.Initialise (cAllChan, true); // canvases etc. for fast calibration
+        cPedeNoise.Initialise (cAllChan, false); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
         // cPedeNoise.measureNoise(200);
 

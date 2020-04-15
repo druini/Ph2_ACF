@@ -1,5 +1,6 @@
 #include "PedeNoise.h"
 #include "../HWDescription/Cbc.h"
+#include "../HWDescription/SSA.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
@@ -7,6 +8,7 @@
 #include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/CBCChannelGroupHandler.h"
+#include "../Utils/SSAChannelGroupHandler.h"
 #include <math.h>
 
 #ifdef __USE_ROOT__
@@ -33,7 +35,18 @@ void PedeNoise::cleanContainerMap()
 void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 {
     fDisableStubLogic = pDisableStubLogic;
-    fChannelGroupHandler = new CBCChannelGroupHandler();//This will be erased in tool.resetPointers()
+
+
+
+    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+
+    cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
+    cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+
+
+    if(cWithCBC)    fChannelGroupHandler = new CBCChannelGroupHandler();
+    if(cWithSSA)    fChannelGroupHandler = new SSAChannelGroupHandler();
+
     initializeRecycleBin();
 
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
@@ -70,13 +83,13 @@ void PedeNoise::disableStubLogic()
         {
             for ( auto cHybrid : *cOpticalGroup )
             {
-                for ( auto cCbc : *cHybrid )
+                for ( auto cROC : *cHybrid )
                 {
                     LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET ;
-                    fStubLogicValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth");
-                    fHIPCountValue .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode"           );
-                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "Pipe&StubInpSel&Ptwidth", 0x23);
-                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cCbc), "HIP&TestMode", 0x00);
+                    fStubLogicValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth");
+                    fHIPCountValue .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cROC), "HIP&TestMode"           );
+                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth", 0x23);
+                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cROC), "HIP&TestMode", 0x00);
                 }
             }
         }
@@ -93,15 +106,15 @@ void PedeNoise::reloadStubLogic()
         {
             for ( auto cHybrid : *cOpticalGroup )
             {
-                for ( auto cCbc : *cHybrid )
+                for ( auto cROC : *cHybrid )
                 {
                     RegisterVector cRegVec;
 
                     LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
-                    cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
-                    cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cCbc->getIndex())->getSummary<uint16_t>()});
+                    cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>()});
+                    cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>()});
 
-                    fReadoutChipInterface->WriteChipMultReg (static_cast<Cbc*>(cCbc), cRegVec);
+                    fReadoutChipInterface->WriteChipMultReg (cROC, cRegVec);
                 }
             }
         }
@@ -210,24 +223,25 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
             {
                 // std::cout << __PRETTY_FUNCTION__ << " The Module Occupancy = " << theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
 
-                for ( auto cCbc : *cFe )
+                for ( auto cROC : *cFe )
                 {
                     RegisterVector cRegVec;
 
                     for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
                     {
-                        float occupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cFe->getIndex())->at(cCbc->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
+                        float occupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cFe->getIndex())->at(cROC->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
                         if( occupancy > float ( pNoiseStripThreshold * 0.001 ) )
                         {
                             char cRegName[11];
-                            sprintf(cRegName, "Channel%03d", iChan + 1 );
+                            if(cWithCBC)sprintf(cRegName, "Channel%03d", iChan + 1 );
+                            if(cWithSSA)sprintf(cRegName, "THTRIMMING_S%d", iChan + 1 );
                             // cRegName = Form ( "Channel%03d", iChan + 1 );
                             cRegVec.push_back ({cRegName, 0xFF });
-                            LOG (INFO) << RED << "Found a noisy channel on CBC " << +cCbc->getId() << " Channel " << iChan  << " with an occupancy of " << occupancy << "; setting offset to " << +0xFF << RESET ;
+                            LOG (INFO) << RED << "Found a noisy channel on ROC " << +cROC->getId() << " Channel " << iChan  << " with an occupancy of " << occupancy << "; setting offset to " << +0xFF << RESET ;
                         }
                     }
 
-                    fReadoutChipInterface->WriteChipMultReg (static_cast<Cbc*>(cCbc), cRegVec);
+                    fReadoutChipInterface->WriteChipMultReg (cROC, cRegVec);
                 }
             }
         }
@@ -245,7 +259,9 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
     DetectorDataContainer     theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-    this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
+
+    if(cWithCBC)    this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
+    if(cWithSSA)    this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56);
 
     if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
     
@@ -259,9 +275,12 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
         {
             for ( auto cFe : *cOpticalGroup )
             {
-                for ( auto cCbc : *cFe )
+                for ( auto cROC : *cFe )
                 {
-                    uint16_t tmpVthr = (static_cast<ReadoutChip*>(cCbc)->getReg("VCth1") + (static_cast<ReadoutChip*>(cCbc)->getReg("VCth2")<<8));
+                    uint16_t tmpVthr=0;
+                    if(cWithCBC)    tmpVthr = (static_cast<ReadoutChip*>(cROC)->getReg("VCth1") + (static_cast<ReadoutChip*>(cROC)->getReg("VCth2")<<8));
+                    if(cWithSSA)    tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("Bias_THDAC");
+                                    
                     cMean+=tmpVthr;
                     ++nCbc;
                 }
@@ -299,7 +318,8 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         fSCurveOccupancyMap[cValue] = theOccupancyContainer;
 
         
-        this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
+        if(cWithCBC)    this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
+        if(cWithSSA)    this->setDacAndMeasureData("Bias_THDAC", cValue, fEventsPerPoint); 
 
 
         #ifdef __USE_ROOT__
@@ -467,7 +487,7 @@ void PedeNoise::setThresholdtoNSigma (BoardContainer* board, uint32_t pNSigma)
         {
             for ( auto chip : *hybrid )
             {
-                uint32_t cCbcId = chip->getId();
+                uint32_t cROCId = chip->getId();
                 
                 uint16_t cPedestal = round (fThresholdAndNoiseContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fThreshold);
                 uint16_t cNoise    = round (fThresholdAndNoiseContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<ThresholdAndNoise,ThresholdAndNoise>().fNoise);
@@ -475,8 +495,8 @@ void PedeNoise::setThresholdtoNSigma (BoardContainer* board, uint32_t pNSigma)
                 uint16_t cValue = cPedestal + cDiff;
 
 
-                if (pNSigma > 0) LOG (INFO) << "Changing Threshold on CBC " << +cCbcId << " by " << cDiff << " to " << cPedestal + cDiff << " VCth units to supress noise!" ;
-                else LOG (INFO) << "Changing Threshold on CBC " << +cCbcId << " back to the pedestal at " << +cPedestal ;
+                if (pNSigma > 0) LOG (INFO) << "Changing Threshold on ROC " << +cROCId << " by " << cDiff << " to " << cPedestal + cDiff << " VCth units to supress noise!" ;
+                else LOG (INFO) << "Changing Threshold on ROC " << +cROCId << " back to the pedestal at " << +cPedestal ;
 
                 ThresholdVisitor cThresholdVisitor (fReadoutChipInterface, cValue);
                 static_cast<ReadoutChip*>(chip)->accept (cThresholdVisitor);

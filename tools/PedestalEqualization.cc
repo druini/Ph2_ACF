@@ -2,6 +2,7 @@
 #include "../Utils/DataContainer.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../Utils/CBCChannelGroupHandler.h"
+#include "../Utils/SSAChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
 
@@ -26,7 +27,16 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
 {
     fDisableStubLogic = pDisableStubLogic;
 
-    fChannelGroupHandler = new CBCChannelGroupHandler();
+    DetectorDataContainer     theOccupancyContainer;
+    fDetectorDataContainer = &theOccupancyContainer;
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+
+    cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
+    cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+
+    if(cWithCBC)    fChannelGroupHandler = new CBCChannelGroupHandler();
+    if(cWithSSA)    fChannelGroupHandler = new SSAChannelGroupHandler();
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
     this->fAllChan = pAllChan;
     
@@ -84,29 +94,47 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
     LOG (INFO) << "Parsed settings:" ;
     LOG (INFO) << "	Nevents = " << fEventsPerPoint ;
     LOG (INFO) << "	TestPulseAmplitude = " << int ( fTestPulseAmplitude ) ;
-    LOG (INFO) << "  Target Vcth determined algorithmically for CBC3";
-    LOG (INFO) << "  Target Offset fixed to half range (0x80) for CBC3";
+    LOG (INFO) << "  Target Vcth determined algorithmically for ROC";
+    LOG (INFO) << "  Target Offset fixed to half range (0x80) for ROC";
     
 }
 
 
 void PedestalEqualization::FindVplus()
 {
-    LOG (INFO) << BOLDBLUE << "Identifying optimal Vplus for CBC..." << RESET;
-    setSameDac("VCth", fTargetVcth);
+   
+    DetectorDataContainer     theOccupancyContainer;
+    fDetectorDataContainer = &theOccupancyContainer;
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+ 
+
+    LOG (INFO) << BOLDBLUE << "Identifying optimal Vplus for ROC..." << RESET;
+
+    if(cWithCBC)    setSameDac("VCth", fTargetVcth);
+    if(cWithSSA)    setSameDac("Bias_THDAC", fTargetVcth);
+
     
     bool originalAllChannelFlag = this->fAllChan;
     this->SetTestAllChannels(true);
 
-    setSameLocalDac("ChannelOffset", fTargetOffset);
+    if(cWithCBC)    setSameLocalDac("ChannelOffset", fTargetOffset);
+    if(cWithSSA)    setSameLocalDac("THTRIMMING_S", fTargetOffset);
+ 
+
+    if(cWithCBC)    this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
+    if(cWithSSA)    this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56);
+
+
     
-    DetectorDataContainer     theOccupancyContainer;
-    fDetectorDataContainer = &theOccupancyContainer;
-    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-    this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
     dumpConfigFiles();
 
-    setSameLocalDac("ChannelOffset", 0xFF);
+
+
+    if(cWithCBC)    setSameLocalDac("ChannelOffset", 0xFF);
+    if(cWithSSA)    setSameLocalDac("THTRIMMING_S", 0xFF);
+
+
+    
 
     DetectorDataContainer theVcthContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer,theVcthContainer);
@@ -124,10 +152,14 @@ void PedestalEqualization::FindVplus()
                 for(auto chip: *module) // for on chip - begin 
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(module->getIndex())->at(chip->getIndex()));
-                    uint16_t tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2")<<8));
+                    uint16_t tmpVthr = 0;
+                    if(cWithCBC)    tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2")<<8));
+                    if(cWithSSA)    tmpVthr = theChip->getReg("Bias_THDAC");
+
+
                     chip->getSummary<uint16_t>()=tmpVthr;
 
-                    LOG (INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId()  << " Module " << +module->getId() << " CBC " << +chip->getId() << " = " << tmpVthr << RESET;
+                    LOG (INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId()  << " Module " << +module->getId() << " ROC " << +chip->getId() << " = " << tmpVthr << RESET;
                     cMeanValue+=tmpVthr;
                 } // for on chip - end 
             } // for on module - end
@@ -145,7 +177,14 @@ void PedestalEqualization::FindVplus()
     #endif
     
     fTargetVcth = uint16_t(cMeanValue / nCbc);
-    setSameDac("VCth", fTargetVcth);
+
+
+
+
+    if(cWithCBC)    setSameDac("VCth", fTargetVcth);
+    if(cWithSSA)    setSameDac("Bias_THDAC", fTargetVcth);
+
+
     LOG (INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
     this->SetTestAllChannels(originalAllChannelFlag);
 }
@@ -155,14 +194,22 @@ void PedestalEqualization::FindOffsets()
 {
     LOG (INFO) << BOLDBLUE << "Finding offsets..." << RESET;
     // just to be sure, configure the correct VCth and VPlus values
-    setSameDac("VCth", fTargetVcth);
+
+
+    if(cWithCBC)    setSameDac("VCth", fTargetVcth);
+    if(cWithSSA)    setSameDac("Bias_THDAC", fTargetVcth);
+
+
 
     DetectorDataContainer     theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-    this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56);
-    dumpConfigFiles();
 
+    if(cWithCBC)    this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56);
+    if(cWithSSA)    this->bitWiseScan("THTRIMMING_S", fEventsPerPoint, 0.56);
+
+    
+    dumpConfigFiles();
     DetectorDataContainer theOffsetsCointainer;
     ContainerFactory::copyAndInitChannel<uint8_t>(*fDetectorContainer,theOffsetsCointainer);
 
@@ -174,7 +221,7 @@ void PedestalEqualization::FindOffsets()
             {
                 for (auto chip : *module) // for on chip - begin
                 {
-                    if (fDisableStubLogic)
+                    if (fDisableStubLogic and cWithCBC)
                     {
                         ReadoutChip *theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(module->getIndex())->at(chip->getIndex()));
 
@@ -192,13 +239,14 @@ void PedestalEqualization::FindOffsets()
                     for (auto &channel : *chip->getChannelContainer<uint8_t>()) // for on channel - begin
                     {
                         char charRegName[20];
-                        sprintf(charRegName, "Channel%03d", channelNumber++);
+                        if(cWithCBC)sprintf(charRegName, "Channel%03d", channelNumber++ );
+                        if(cWithSSA)sprintf(charRegName, "THTRIMMING_S%d", channelNumber++ );
                         std::string cRegName = charRegName;
                         channel = static_cast<ReadoutChip *>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(module->getIndex())->at(chip->getIndex()))->getReg(cRegName);
                         cMeanOffset += channel;
                     } 
 
-                    LOG (INFO) << BOLDRED << "Mean offset on CBC" << +chip->getId() << " is : " << (cMeanOffset)/(double)NCHANNELS << " Vcth units." << RESET;
+                    LOG (INFO) << BOLDRED << "Mean offset on ROC" << +chip->getId() << " is : " << (cMeanOffset)/(double)NCHANNELS << " Vcth units." << RESET;
                 } // for on chip - end
             }     // for on module - end
         }         // for on opticalGroup - end

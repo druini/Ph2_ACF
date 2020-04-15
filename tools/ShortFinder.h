@@ -30,6 +30,7 @@ class ShortFinder : public Tool
     void Initialise();
     void Count(Ph2_HwDescription::BeBoard* pBoard, const ChannelGroup<NCHANNELS>* pGroup);
     void FindShorts2S(Ph2_HwDescription::BeBoard* pBoard);
+    void FindShortsPS(Ph2_HwDescription::BeBoard* pBoard);
     void FindShorts();
     void Print();
     void Reset();

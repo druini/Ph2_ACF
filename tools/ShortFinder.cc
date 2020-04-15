@@ -210,6 +210,75 @@ void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<NCHANNELS>* pGroup)
     
     
 }
+
+void ShortFinder::FindShortsPS(BeBoard* pBoard)
+{
+    // configure test pulse on chip 
+    setSameDacBeBoard(pBoard, "Bias_CALDAC", fTestPulseAmplitude);
+
+    uint16_t cDelay = fBeBoardInterface->ReadBoardReg( pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse") - 1;
+    setSameDacBeBoard(pBoard, "L1-Latency_LSB", cDelay);
+
+    fBeBoardInterface->ChipReSync ( pBoard ); // NEED THIS! ?? 
+    LOG (INFO) << BOLDBLUE << "L1A latency set to " << +cDelay << RESET; 
+    
+
+    // for (auto cBoard : this->fBoardVector)
+    uint8_t cTestGroup=0;
+    LOG (INFO) << BOLDBLUE << "Starting short finding loop for PS hybrid " << RESET;
+    for(auto cGroup : *fChannelGroupHandler)
+    {
+        setSameGlobalDac("TestPulseGroup",  cTestGroup);
+        // bitset for this group
+        auto cBitset = std::bitset<NCHANNELS>( static_cast<const ChannelGroup<NCHANNELS>*>(cGroup)->getBitset() );
+        LOG (INFO) << BOLDBLUE << "Injecting charge into CBCs using test capacitor " << +cTestGroup << RESET; 
+        LOG (DEBUG) << BOLDBLUE << "Test pulse channel mask is " << cBitset << RESET;
+        
+        auto& cThisShortsContainer = fShortsContainer.at(pBoard->getIndex());
+        auto& cThisHitsContainer = fHitsContainer.at(pBoard->getIndex());
+    
+        this->ReadNEvents ( pBoard , fEventsPerPoint );
+        const std::vector<Event*>& cEvents = this->GetEvents ( pBoard );
+        for( auto cEvent : cEvents ) 
+        {
+            auto cEventCount = cEvent->GetEventCount(); 
+            for(auto cModule : *pBoard)
+            {
+                auto& cShortsContainer = cThisShortsContainer->at(cModule->getIndex());
+                auto& cHitsContainer = cThisHitsContainer->at(cModule->getIndex());
+    
+                for (auto cHybrid : *cModule)
+                {
+                    auto& cHybridShorts = cShortsContainer->at(cHybrid->getIndex());
+                    auto& cHybridHits = cHitsContainer->at(cHybrid->getIndex());
+                    for (auto cChip : *cHybrid)
+                    {
+                        auto& cReadoutChipShorts = cHybridShorts->at(cChip->getIndex());
+                        auto& cReadoutChipHits = cHybridHits->at(cChip->getIndex());
+        
+                        auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId() ) ;
+                        LOG (DEBUG) << BOLDBLUE << "\t\tGroup " 
+                            << +cTestGroup << " FE" << +cHybrid->getId() 
+                            << " .. CBC" << +cChip->getId() 
+                            << ".. Event " << +cEventCount 
+                            << " - " << +cHits.size() 
+                            << " hits found/"
+                            << +cBitset.count() << " channels in test group" << RESET;
+                        for ( auto cHit : cHits )
+                        {
+                            if (cBitset[cHit] == 0) 
+                                cReadoutChipShorts->getChannelContainer<uint16_t>()->at(cHit)+=1;
+                            else
+                                cReadoutChipHits->getChannelContainer<uint16_t>()->at(cHit)+=1;
+                        }
+                    }
+                }
+            }
+        }
+        this->Count(pBoard, static_cast<const ChannelGroup<NCHANNELS>*>(cGroup) );
+        cTestGroup++;
+    }
+}
 void ShortFinder::FindShorts2S(BeBoard* pBoard)
 {
     // configure test pulse on chip 
@@ -295,8 +364,11 @@ void ShortFinder::FindShorts()
     {
         ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cBoard->at(0)->at(0)->at(0));
         bool cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
+        bool cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
         if( cWithCBC )
             this->FindShorts2S( static_cast<BeBoard*>(cBoard) );
+        if( cWithSSA )
+            this->FindShortsPS( static_cast<BeBoard*>(cBoard) );
         else
             LOG (INFO) << BOLDRED << "Short finding for this hybrid type not yet implemented." << RESET;        
     }
