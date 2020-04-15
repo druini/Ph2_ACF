@@ -57,9 +57,6 @@ class PedeNoise : public Tool
     void cleanContainerMap();
     void initializeRecycleBin() {fRecycleBin.setDetectorContainer(fDetectorContainer);}
 
-    bool cWithCBC = true;
-    bool cWithSSA = false;
-
     uint8_t  fPulseAmplitude     {    0};
     uint32_t fEventsPerPoint     {    0};
     DetectorDataContainer fThresholdAndNoiseContainer;
@@ -69,6 +66,8 @@ class PedeNoise : public Tool
     //to hold the original register values
     DetectorDataContainer fStubLogicValue;
     DetectorDataContainer fHIPCountValue;
+    bool cWithCBC = true;
+    bool cWithSSA = false;
 
     // Settings
     bool     fPlotSCurves        {false};

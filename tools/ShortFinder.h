@@ -53,6 +53,9 @@ class ShortFinder : public Tool
 
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
+
+    bool cWithCBC = true;
+    bool cWithSSA = false;
 };
 
 #endif

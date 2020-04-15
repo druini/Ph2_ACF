@@ -2,6 +2,7 @@
 #include "ContainerFactory.h"
 #include "Occupancy.h"
 #include "CBCChannelGroupHandler.h"
+#include "SSAChannelGroupHandler.h"
 #include "Visitor.h"
 #include "CommonVisitors.h"
 #include "DataContainer.h"
@@ -98,7 +99,17 @@ void ShortFinder::Print()
 }
 void ShortFinder::Initialise ()
 {
-    fChannelGroupHandler = new CBCChannelGroupHandler();
+
+    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+
+    cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
+    cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+
+
+    if(cWithCBC)    fChannelGroupHandler = new CBCChannelGroupHandler();
+    if(cWithSSA)    fChannelGroupHandler = new SSAChannelGroupHandler();
+
+    
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
     
     // now read the settings from the map
@@ -228,11 +239,11 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     LOG (INFO) << BOLDBLUE << "Starting short finding loop for PS hybrid " << RESET;
     for(auto cGroup : *fChannelGroupHandler)
     {
-        setSameGlobalDac("TestPulseGroup",  cTestGroup);
+        //setSameGlobalDac("TestPulseGroup",  cTestGroup);
         // bitset for this group
         auto cBitset = std::bitset<NCHANNELS>( static_cast<const ChannelGroup<NCHANNELS>*>(cGroup)->getBitset() );
-        LOG (INFO) << BOLDBLUE << "Injecting charge into CBCs using test capacitor " << +cTestGroup << RESET; 
-        LOG (DEBUG) << BOLDBLUE << "Test pulse channel mask is " << cBitset << RESET;
+        //LOG (INFO) << BOLDBLUE << "Injecting charge into CBCs using test capacitor " << +cTestGroup << RESET; 
+        //LOG (DEBUG) << BOLDBLUE << "Test pulse channel mask is " << cBitset << RESET;
         
         auto& cThisShortsContainer = fShortsContainer.at(pBoard->getIndex());
         auto& cThisHitsContainer = fHitsContainer.at(pBoard->getIndex());
@@ -259,7 +270,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                         auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId() ) ;
                         LOG (DEBUG) << BOLDBLUE << "\t\tGroup " 
                             << +cTestGroup << " FE" << +cHybrid->getId() 
-                            << " .. CBC" << +cChip->getId() 
+                            << " .. SSA" << +cChip->getId() 
                             << ".. Event " << +cEventCount 
                             << " - " << +cHits.size() 
                             << " hits found/"
@@ -362,9 +373,9 @@ void ShortFinder::FindShorts()
     
     for (auto cBoard : *fDetectorContainer)
     {
-        ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cBoard->at(0)->at(0)->at(0));
-        bool cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-        bool cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+        //ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cBoard->at(0)->at(0)->at(0));
+        //bool cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
+        //bool cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
         if( cWithCBC )
             this->FindShorts2S( static_cast<BeBoard*>(cBoard) );
         if( cWithSSA )
