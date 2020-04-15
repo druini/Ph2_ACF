@@ -33,6 +33,7 @@
 #include "../Utils/D19cCicEvent.h"
 #include "../Utils/D19cCic2Event.h"
 #include "../Utils/D19cSSAEvent.h"
+#include "../Utils/D19cSSAEventAS.h"
 #include "../HWDescription/OuterTrackerModule.h"
 
 #include <unordered_map>
@@ -223,6 +224,10 @@ namespace Ph2_System
      * \param pNEvents
      */
     void ReadNEvents(uint32_t pNEvents);
+
+
+    void ReadASEvent (Ph2_HwDescription::BeBoard *pBoard, uint32_t pNMsec);
+
 
     const Ph2_HwDescription::BeBoard* getBoard(int index) const
     {

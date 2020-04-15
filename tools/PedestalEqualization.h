@@ -13,7 +13,9 @@
 #define PedestalEqualization_h__
 
 #include "Tool.h" 
-
+#include "../Utils/Visitor.h"
+#include "../Utils/ContainerRecycleBin.h"
+#include "../Utils/CommonVisitors.h"
 #include <map>
 
 #ifdef __USE_ROOT__
@@ -54,6 +56,8 @@ class PedestalEqualization : public Tool
     //to hold the original register values
     DetectorDataContainer fStubLogicCointainer;
     DetectorDataContainer fHIPCountCointainer;
+    bool cWithCBC = true;
+    bool cWithSSA = false;
 
     #ifdef __USE_ROOT__
       DQMHistogramPedestalEqualization fDQMHistogramPedestalEqualization;

@@ -5,8 +5,8 @@
     <OpticalGroup Id="0" FMCId="0" >
         <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="0" side="0" configfile="SSA1.txt" />
-            <SSA Id="1" side="0" configfile="SSA2.txt" />
+            <SSA Id="0" side="0" configfile="SSAPreCalib.txt" />
+            <SSA Id="1" side="0" configfile="SSAPreCalib.txt" />
         </Module>
     </OpticalGroup>
 
@@ -47,7 +47,7 @@
                         <Register name="stubOR"> 1 </Register>
                         <Register name="initial_fast_reset_enable"> 0 </Register>
 			<Register name="trigger_timeout_enable"> 0 </Register>
-			<Register name="trigger_multiplicity"> 8 </Register>
+			<Register name="trigger_multiplicity"> 0 </Register>
                 </Register>
         </Register>
 	<!-- I2C manager -->
@@ -113,6 +113,8 @@
 <Settings>
 
     <!--[>Calibration<]-->
+    <Setting name="StartTHDAC">0</Setting>
+    <Setting name="StopTHDAC">30</Setting>
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>
     <Setting name="Nevents">50</Setting>
