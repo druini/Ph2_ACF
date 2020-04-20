@@ -34,8 +34,8 @@ bool ClockDelayHistograms::fill (std::vector<char>& dataBuffer)
 {
   const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-  ChipContainerStream<EmptyContainer,GenericDataArray<ClkDelaySize>> theOccStreamer       ("ClockDelayOcc"); // @TMP@
-  ChipContainerStream<EmptyContainer,uint16_t>                       theClockDelayStreamer("ClockDelayClkDelay"); // @TMP@
+  ChipContainerStream<EmptyContainer,GenericDataArray<ClkDelaySize>> theOccStreamer       ("ClockDelayOcc");
+  ChipContainerStream<EmptyContainer,uint16_t>                       theClockDelayStreamer("ClockDelayClkDelay");
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {

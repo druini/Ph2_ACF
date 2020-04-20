@@ -36,8 +36,8 @@ bool LatencyHistograms::fill (std::vector<char>& dataBuffer)
 {
   const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-  ChipContainerStream<EmptyContainer,GenericDataArray<LatencySize>> theOccStreamer    ("LatencyOcc"); // @TMP@
-  ChipContainerStream<EmptyContainer,uint16_t>                      theLatencyStreamer("LatencyLatency"); // @TMP@
+  ChipContainerStream<EmptyContainer,GenericDataArray<LatencySize>> theOccStreamer    ("LatencyOcc");
+  ChipContainerStream<EmptyContainer,uint16_t>                      theLatencyStreamer("LatencyLatency");
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {

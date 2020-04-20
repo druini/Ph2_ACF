@@ -52,7 +52,7 @@ class Physics : public Tool
   void run                    ();
   void draw                   ();
   void analyze                (bool doReadBinary = false);
-  void fillDataContainer      (BoardContainer* const& cBoard);
+  void fillDataContainer      (Ph2_HwDescription::BeBoard* cBoard);
   void monitor                ();
 
   void setGenericEvtConverter (evtConvType arg) { genericEvtConverter = std::move(arg); }

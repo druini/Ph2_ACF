@@ -131,22 +131,23 @@ namespace Ph2_HwInterface
     this->singleChip  = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
     uint32_t chips_en = 0;
     enabledModules    = 0;
-    for (const auto cHybrid : *pBoard->at(0)) //Fabio::FIXME
-      {
-        uint16_t module_id = cHybrid->getId(); // @TMP@
-        enabledModules |= 1 << module_id;
-        if (this->singleChip == true) chips_en = enabledModules;
-        else
-          {
-            uint16_t mod_chips_en = 0;
-            for (const auto cChip : *cHybrid)
-              {
-                uint16_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
-                mod_chips_en |= 1 << chip_lane;
-              }
-            chips_en |= mod_chips_en << (NLANE_MODULE * module_id);
-          }
-      }
+    for (const auto cOpticalGroup : *pBoard)
+      for (const auto cHybrid : *cOpticalGroup)
+        {
+          uint16_t module_id = cHybrid->getId();
+          enabledModules |= 1 << module_id;
+          if (this->singleChip == true) chips_en = enabledModules;
+          else
+            {
+              uint16_t mod_chips_en = 0;
+              for (const auto cChip : *cHybrid)
+                {
+                  uint16_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
+                  mod_chips_en |= 1 << chip_lane;
+                }
+              chips_en |= mod_chips_en << (NLANE_MODULE * module_id);
+            }
+        }
     cVecReg.push_back({"user.ctrl_regs.Hybrids_en", enabledModules});
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
 
@@ -795,26 +796,26 @@ namespace Ph2_HwInterface
     bool   vectorRequired = boardContainer->at(0)->at(0)->at(0)->isSummaryContainerType<Summary<GenericDataVector,OccupancyAndPh>>();
     size_t chipIndx;
 
-    for (const auto& opticalReadout : *boardContainer)
-    for (const auto& cModule : *opticalReadout)
-      for (const auto& cChip : *cModule)
-        if (RD53FWInterface::Event::isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
-          {
-            if (vectorRequired == true)
-              {
-                cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.push_back(chip_events[chipIndx].bc_id);
-                cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.push_back(chip_events[chipIndx].trigger_id);
-              }
+    for (const auto& cOpticalGroup : *boardContainer)
+      for (const auto& cModule : *cOpticalGroup)
+        for (const auto& cChip : *cModule)
+          if (RD53FWInterface::Event::isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
+            {
+              if (vectorRequired == true)
+                {
+                  cChip->getSummary<GenericDataVector,OccupancyAndPh>().data1.push_back(chip_events[chipIndx].bc_id);
+                  cChip->getSummary<GenericDataVector,OccupancyAndPh>().data2.push_back(chip_events[chipIndx].trigger_id);
+                }
 
-            for (const auto& hit : chip_events[chipIndx].hit_data)
-              {
-                cChip->getChannel<OccupancyAndPh>(hit.row+Ph2_HwDescription::RD53::nRows*(hit.col)).fOccupancy++;
-                cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPh      += float(hit.tot);
-                cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPhError += float(hit.tot*hit.tot);
-                if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col) == false)
-                  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).readoutError = true;
-              }
-          }
+              for (const auto& hit : chip_events[chipIndx].hit_data)
+                {
+                  cChip->getChannel<OccupancyAndPh>(hit.row+Ph2_HwDescription::RD53::nRows*(hit.col)).fOccupancy++;
+                  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPh      += float(hit.tot);
+                  cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).fPhError += float(hit.tot*hit.tot);
+                  if (cTestChannelGroup->isChannelEnabled(hit.row,hit.col) == false)
+                    cChip->getChannel<OccupancyAndPh>(hit.row,hit.col).readoutError = true;
+                }
+            }
   }
 
   bool RD53FWInterface::Event::isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const
@@ -836,7 +837,7 @@ namespace Ph2_HwInterface
     // #############################
     if (pBoard != nullptr)
       {
-        Module* module = static_cast<Module*>(pBoard->at(0)->at(module_id)); //Fabio::FIXME
+        Module* module = pBoard->at(0)->at(module_id);
         if (module != nullptr)
           {
             auto it = std::find_if(module->begin(), module->end(), [=] (ChipContainer* pChip)
