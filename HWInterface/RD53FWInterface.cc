@@ -184,10 +184,9 @@ namespace Ph2_HwInterface
       }
     else
       {
-        if (RD53FWInterface::CheckChipCommunication() == false)
+        while (RD53FWInterface::CheckChipCommunication() == false)
           {
-            LOG (ERROR) << BOLDRED << "Communication not established" << RESET;
-            exit(EXIT_FAILURE);
+            RD53FWInterface::InitModuleByModule(pBoard);
           }
       }
   }
@@ -396,6 +395,112 @@ namespace Ph2_HwInterface
 
     LOG (INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
     return true;
+  }
+
+  void RD53FWInterface::InitModuleByModule(const BeBoard* pBoard)
+  {
+    for (const auto& cModule : pBoard->fModuleVector)
+    {
+      //Get which lanes to check for this module
+      const uint16_t module_id = cModule->getFeId(); // @TMP@
+      uint16_t mod_chips_en = 0;
+      for (const auto cChip : *cModule)
+      {
+        uint16_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
+        mod_chips_en |= 1 << chip_lane;
+      }
+      uint16_t chips_en_to_check = mod_chips_en << (NLANE_MODULE * module_id);
+
+      //Check if link is already up
+      uint32_t channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
+
+      if((channel_up & chips_en_to_check) == chips_en_to_check)
+      {
+        LOG (INFO) << BOLDGREEN << "Module [" << BOLDYELLOW << module_id << BOLDGREEN << "] already locked" << RESET;
+        continue;
+      }
+
+      //Try different init sequences
+      bool lanes_up = false;
+      for(unsigned int seq = 0; seq < 5; seq++)
+      {
+        LOG (INFO)  << BOLDGREEN << "Trying sequence number: " << BOLDYELLOW << seq << RESET;
+        LOG (INFO)  << BOLDBLUE << "\t--> Number of required data lanes for module [" << module_id << "]: "
+                    << BOLDYELLOW << RD53Shared::countBitsOne(chips_en_to_check) 
+                    << BOLDBLUE << " i.e. " 
+                    << BOLDYELLOW << std::bitset<12>(chips_en_to_check) 
+            << RESET;
+
+        std::vector<uint16_t> initSequence = RD53FWInterface::GetInitSequence(seq);
+
+        for(int i = 0; i < 20; i++)
+        {
+          //Write sequence 
+          RD53FWInterface::WriteChipCommand(initSequence, module_id);
+          usleep(10000);
+
+          //Check if all lanes are up
+          lanes_up = false;
+          uint32_t channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
+
+          LOG (INFO)  << BOLDBLUE << "\t--> Number of active data lanes for try [" << i << "]: "
+                      << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) 
+                      << BOLDBLUE << " i.e. " 
+                      << BOLDYELLOW << std::bitset<12>(channel_up) 
+              << RESET;
+
+          if((channel_up & chips_en_to_check) == chips_en_to_check)
+          {
+            LOG (INFO) << BOLDGREEN << "Module [" << BOLDYELLOW << module_id << BOLDGREEN << "] locked with Sequence " 
+                      << BOLDYELLOW << seq << BOLDGREEN << " on try " << BOLDYELLOW << i << RESET;
+            lanes_up = true;
+            break;
+          }
+        }
+        if( lanes_up )
+          break;
+      }
+
+      if( !lanes_up )
+        LOG (WARNING) << BOLDRED << "Not all data lanes up for module: " << BOLDYELLOW << module_id << RESET;
+    }
+  }
+
+  std::vector<uint16_t> RD53FWInterface::GetInitSequence(const unsigned int type)
+  {
+    std::vector<uint16_t> initSequence;
+
+    switch(type)
+    {
+      case 0: //Okay for all (3 TBPX, 1 TEPX modules so far)
+        for(unsigned int i = 0; i < 500; i++)     initSequence.push_back(0x0000);  //0000 0000
+        for(unsigned int i = 0; i < 2000; i++)    initSequence.push_back(0xCCCC);  //1100 1100
+        break;
+        
+      case 1: //Seen to be good for some TBPX modules
+        for(unsigned int i = 0; i < 1000; i++)    initSequence.push_back(0xFFFF);  //1111 1111
+        for(unsigned int i = 0; i < 500; i++)     initSequence.push_back(0x3333);  //0011 0011
+        break;
+        
+      case 2: //Seen to be good for TEPX module
+        for(unsigned int i = 0; i < 500; i++)     initSequence.push_back(0x0000);  //0000 0000
+        for(unsigned int i = 0; i < 1000; i++)    initSequence.push_back(0x3333);  //0011 0011
+        break;
+        
+      case 3: //Seen to be good for TEPX module
+        for(unsigned int i = 0; i < 1000; i++)    initSequence.push_back(0x0F0F);  //0011 0011
+        break;
+
+      case 4: //Default for single chips (Doesn't work well with modules)
+        for(unsigned int i = 0; i < 1000; i++)     initSequence.push_back(0x0000);  //0000 0000
+      
+      default: //case 0 -> seems to be work with all
+        for(unsigned int i = 0; i < 500; i++)     initSequence.push_back(0x0000);  //0000 0000
+        for(unsigned int i = 0; i < 2000; i++)    initSequence.push_back(0xCCCC);  //1100 1100
+        break;
+    }
+
+    return initSequence;
   }
 
   void RD53FWInterface::Start()
