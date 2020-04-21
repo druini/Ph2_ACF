@@ -34,41 +34,44 @@ void TPCalibration::Init(int pStartAmp, int pEndAmp, int pStepsize)
   fStepsize = pStepsize;
   fEndAmp = pEndAmp;
   LOG(INFO) << "Initialise histograms" << RESET;
-  for(auto &cBoard : fBoardVector)
+  for(auto cBoard : *fDetectorContainer)
   {
-    int cBeId = cBoard->getBeId();
+    int cBeId = cBoard->getId();
     LOG(INFO) << "BeBoard" << cBeId << RESET;
-    for(auto &cFe : cBoard->fModuleVector)
+    for(auto cOpticalGroup : *cBoard)
     {
-      int cFeId = cFe->getFeId();
-      LOG(INFO) << "  FE" << cFeId << RESET;
-      for(auto &cCbc: cFe->fReadoutChipVector)
+      for(auto cFe : *cOpticalGroup)
       {
-        int cCbcId = cCbc->getChipId();
-        LOG(INFO) << "  - CBC" << cCbcId << RESET;
-
-        for(int cChannel = 0; cChannel < NCHANNELS; cChannel++)
+        int cFeId = cFe->getId();
+        LOG(INFO) << "  FE" << cFeId << RESET;
+        for(auto cCbc: *cFe)
         {
-          TGraph* cChanCorr = new TGraph((fEndAmp-fStartAmp)/fStepsize + 1);
-          cChanCorr->SetTitle(Form("Correlation Channel %d", cChannel) );
-          cChanCorr->SetName(Form("CorrChannel%d", cChannel) );
-          cChanCorr->GetXaxis()->SetTitle("pedestal (VCth)");
-          cChanCorr->GetYaxis()->SetTitle("test pulse amplitude (ADC)");
-          bookHistogram(cCbc, Form("CorrChan%d", cChannel), cChanCorr);
-        }
+          int cCbcId = cCbc->getId();
+          LOG(INFO) << "  - CBC" << cCbcId << RESET;
 
-        TH1F* cChannelGain = new TH1F(Form("GainFe%dCbc%d",cFeId, cCbcId),
-                                      Form("GainFe%dCbc%d",cFeId, cCbcId),
-                                      NCHANNELS, -0.5, NCHANNELS - 0.5);
-        cChannelGain->GetXaxis()->SetTitle("channel");
-        cChannelGain->GetYaxis()->SetTitle("gain (Amp)");
-        bookHistogram(cCbc, "ChannelGain", cChannelGain);
-        TH1F* cChannelElGain = new TH1F(Form("GainElectronsFe%dCbc%d",cFeId, cCbcId),
-                                        Form("GainElectronsFe%dCbc%d",cFeId, cCbcId),
+          for(int cChannel = 0; cChannel < NCHANNELS; cChannel++)
+          {
+            TGraph* cChanCorr = new TGraph((fEndAmp-fStartAmp)/fStepsize + 1);
+            cChanCorr->SetTitle(Form("Correlation Channel %d", cChannel) );
+            cChanCorr->SetName(Form("CorrChannel%d", cChannel) );
+            cChanCorr->GetXaxis()->SetTitle("pedestal (VCth)");
+            cChanCorr->GetYaxis()->SetTitle("test pulse amplitude (ADC)");
+            bookHistogram(cCbc, Form("CorrChan%d", cChannel), cChanCorr);
+          }
+
+          TH1F* cChannelGain = new TH1F(Form("GainFe%dCbc%d",cFeId, cCbcId),
+                                        Form("GainFe%dCbc%d",cFeId, cCbcId),
                                         NCHANNELS, -0.5, NCHANNELS - 0.5);
-        cChannelElGain->GetXaxis()->SetTitle("channel");
-        cChannelElGain->GetYaxis()->SetTitle("gain (electrons)");
-        bookHistogram(cCbc, "ChannelElectronsGain", cChannelElGain);
+          cChannelGain->GetXaxis()->SetTitle("channel");
+          cChannelGain->GetYaxis()->SetTitle("gain (Amp)");
+          bookHistogram(cCbc, "ChannelGain", cChannelGain);
+          TH1F* cChannelElGain = new TH1F(Form("GainElectronsFe%dCbc%d",cFeId, cCbcId),
+                                          Form("GainElectronsFe%dCbc%d",cFeId, cCbcId),
+                                          NCHANNELS, -0.5, NCHANNELS - 0.5);
+          cChannelElGain->GetXaxis()->SetTitle("channel");
+          cChannelElGain->GetYaxis()->SetTitle("gain (electrons)");
+          bookHistogram(cCbc, "ChannelElectronsGain", cChannelElGain);
+        }
       }
     }
   }
@@ -96,29 +99,32 @@ void TPCalibration::FillHistograms(int pTPAmp)
 {
   LOG(INFO) << "Fill the histogram with the measured pedestals" << RESET;
 
-  for(auto &cBoard : fBoardVector)
+  for(auto cBoard : *fDetectorContainer)
   {
-    int cBeId = cBoard->getBeId();
+    int cBeId = cBoard->getId();
     LOG(INFO) << "BeBoard" << cBeId << RESET;
-    for(auto &cFe : cBoard->fModuleVector)
+    for(auto cOpticalGroup : *cBoard)
     {
-      int cFeId = cFe->getFeId();
-      LOG(INFO) << "  FE" << cFeId << RESET;
-      for(auto &cCbc: cFe->fReadoutChipVector)
+      for(auto cFe : *cOpticalGroup)
       {
-        int cCbcId = cCbc->getChipId();
-        LOG(INFO) << "  - CBC" << cCbcId << RESET;
-        TH1F* cPedestalHist = dynamic_cast<TH1F*>(getHist(cCbc, "Cbc_Strippedestal"));
-        for(int cChannel = 0; cChannel < NCHANNELS; cChannel++)
+        int cFeId = cFe->getId();
+        LOG(INFO) << "  FE" << cFeId << RESET;
+        for(auto cCbc: *cFe)
         {
-          TGraph* cCorrGraph = dynamic_cast<TGraph*>(getHist(cCbc, Form("CorrChan%d", cChannel)));
-          int bin = cChannel + 1;
-          float cPed = cPedestalHist->GetBinContent(bin);
-          cCorrGraph->SetPoint(fTPCount, cPed , pTPAmp);
-          //Reset the histograms, so that it can be refilled for the next
-          //test pulse amplitude
-          cPedestalHist->SetBinContent(bin, 0);
-          cPedestalHist->SetBinError(bin, 0);
+          int cCbcId = cCbc->getId();
+          LOG(INFO) << "  - CBC" << cCbcId << RESET;
+          TH1F* cPedestalHist = dynamic_cast<TH1F*>(getHist(cCbc, "Cbc_Strippedestal"));
+          for(int cChannel = 0; cChannel < NCHANNELS; cChannel++)
+          {
+            TGraph* cCorrGraph = dynamic_cast<TGraph*>(getHist(cCbc, Form("CorrChan%d", cChannel)));
+            int bin = cChannel + 1;
+            float cPed = cPedestalHist->GetBinContent(bin);
+            cCorrGraph->SetPoint(fTPCount, cPed , pTPAmp);
+            //Reset the histograms, so that it can be refilled for the next
+            //test pulse amplitude
+            cPedestalHist->SetBinContent(bin, 0);
+            cPedestalHist->SetBinError(bin, 0);
+          }
         }
       }
     }
@@ -130,57 +136,60 @@ void TPCalibration::FillHistograms(int pTPAmp)
 void TPCalibration::FitCorrelations()
 {
   LOG(INFO) << BOLDBLUE << "Linear fit of the correlations" << RESET;
-  for(auto &cBoard : fBoardVector)
+  for(auto cBoard : *fDetectorContainer)
   {
-    int cBeId = cBoard->getBeId();
+    int cBeId = cBoard->getId();
     LOG(INFO) << "BeBoard" << cBeId << RESET;
-    for(auto &cFe : cBoard->fModuleVector)
+    for(auto cOpticalGroup : *cBoard)
     {
-      int cFeId = cFe->getFeId();
-      LOG(INFO) << "  FE" << cFeId << RESET;
-      std::vector<float> cGainVec;
-      for(auto &cCbc: cFe->fReadoutChipVector)
+      for(auto cFe : *cOpticalGroup)
       {
-        int cCbcId = cCbc->getChipId();
-        TH1F* cChannelGain = dynamic_cast<TH1F*>(getHist(cCbc, "ChannelGain"));
-        TH1F* cChannelElGain = dynamic_cast<TH1F*>(getHist(cCbc, "ChannelElectronsGain"));
-        for(int cChannel = 0; cChannel < NCHANNELS; cChannel++)
+        int cFeId = cFe->getId();
+        LOG(INFO) << "  FE" << cFeId << RESET;
+        std::vector<float> cGainVec;
+        for(auto cCbc: *cFe)
         {
-          TGraph* cCorrGraph = dynamic_cast<TGraph*>(getHist(cCbc, Form("CorrChan%d", cChannel)));
-          cCorrGraph->Fit("pol1", "Q");
-          float cGain = cCorrGraph->GetFunction("pol1")->GetParameter(1);
-          float cGainErr = cCorrGraph->GetFunction("pol1")->GetParError(1);
-          cChannelGain->SetBinContent(cChannel + 1, cGain);
-          cChannelGain->SetBinError(cChannel + 1, cGainErr);
-          cChannelElGain->SetBinContent(cChannel + 1, ConvertAmpToElectrons(cGain, false));
-          cChannelElGain->SetBinError(cChannel + 1, ConvertAmpToElectrons(cGainErr, false));
-          cGainVec.push_back(cGain);
+          int cCbcId = cCbc->getId();
+          TH1F* cChannelGain = dynamic_cast<TH1F*>(getHist(cCbc, "ChannelGain"));
+          TH1F* cChannelElGain = dynamic_cast<TH1F*>(getHist(cCbc, "ChannelElectronsGain"));
+          for(int cChannel = 0; cChannel < NCHANNELS; cChannel++)
+          {
+            TGraph* cCorrGraph = dynamic_cast<TGraph*>(getHist(cCbc, Form("CorrChan%d", cChannel)));
+            cCorrGraph->Fit("pol1", "Q");
+            float cGain = cCorrGraph->GetFunction("pol1")->GetParameter(1);
+            float cGainErr = cCorrGraph->GetFunction("pol1")->GetParError(1);
+            cChannelGain->SetBinContent(cChannel + 1, cGain);
+            cChannelGain->SetBinError(cChannel + 1, cGainErr);
+            cChannelElGain->SetBinContent(cChannel + 1, ConvertAmpToElectrons(cGain, false));
+            cChannelElGain->SetBinError(cChannel + 1, ConvertAmpToElectrons(cGainErr, false));
+            cGainVec.push_back(cGain);
+          }
+
+          //Make a histogram of the Gains in Amplitudes and Electrons
+          TString cHistName = Form("GainHistFe%dCbc%d", cFeId, cCbcId);
+          float cBinWidth = 0.005;
+          float cMin = cChannelGain->GetMinimum()*0.9;
+          float cMax = cChannelGain->GetMaximum()*1.1;
+          TH1F* cGainHist = new TH1F(cHistName, cHistName, (cMax-cMin)/cBinWidth, cMin, cMax);
+          cGainHist->GetXaxis()->SetTitle("gain (Amp/VCth)");
+
+          cHistName = Form("GainElectronsHistFe%dCbc%d", cFeId, cCbcId);
+          TH1F* cGainElHist = new TH1F(cHistName, cHistName,(cMax-cMin)/cBinWidth,
+                                    ConvertAmpToElectrons(cMin, false),
+                                    ConvertAmpToElectrons(cMax, false));
+          cGainElHist->GetXaxis()->SetTitle("gain (electrons/VCth)");
+
+          for(auto cGain : cGainVec)
+          {
+            cGainHist->Fill(cGain);
+            cGainElHist->Fill(ConvertAmpToElectrons(cGain, false));
+          }
+          LOG(INFO) << "  - CBC" << cCbcId << ": Gain = " << GREEN
+                    << cGainElHist->GetMean() << "+-" << cGainElHist->GetStdDev()
+                    << RESET;
+          bookHistogram(cCbc, "GainHist", cGainHist);
+          bookHistogram(cCbc, "GainElectronsHist", cGainElHist);
         }
-
-        //Make a histogram of the Gains in Amplitudes and Electrons
-        TString cHistName = Form("GainHistFe%dCbc%d", cFeId, cCbcId);
-        float cBinWidth = 0.005;
-        float cMin = cChannelGain->GetMinimum()*0.9;
-        float cMax = cChannelGain->GetMaximum()*1.1;
-        TH1F* cGainHist = new TH1F(cHistName, cHistName, (cMax-cMin)/cBinWidth, cMin, cMax);
-        cGainHist->GetXaxis()->SetTitle("gain (Amp/VCth)");
-
-        cHistName = Form("GainElectronsHistFe%dCbc%d", cFeId, cCbcId);
-        TH1F* cGainElHist = new TH1F(cHistName, cHistName,(cMax-cMin)/cBinWidth,
-                                  ConvertAmpToElectrons(cMin, false),
-                                  ConvertAmpToElectrons(cMax, false));
-        cGainElHist->GetXaxis()->SetTitle("gain (electrons/VCth)");
-
-        for(auto cGain : cGainVec)
-        {
-          cGainHist->Fill(cGain);
-          cGainElHist->Fill(ConvertAmpToElectrons(cGain, false));
-        }
-        LOG(INFO) << "  - CBC" << cCbcId << ": Gain = " << GREEN
-                  << cGainElHist->GetMean() << "+-" << cGainElHist->GetStdDev()
-                  << RESET;
-        bookHistogram(cCbc, "GainHist", cGainHist);
-        bookHistogram(cCbc, "GainElectronsHist", cGainElHist);
       }
     }
   }
@@ -190,38 +199,41 @@ void TPCalibration::SaveResults()
 {
   LOG(INFO) << BOLDGREEN << "Write results to file: " << fResultFile->GetName()
             << RESET;
-  for(auto &cBoard : fBoardVector)
+  for(auto cBoard : *fDetectorContainer)
   {
-    int cBeId = cBoard->getBeId();
+    int cBeId = cBoard->getId();
     TString cPath = Form("Be%d", cBeId);
     fResultFile->mkdir(cPath);
-    for(auto &cFe : cBoard->fModuleVector)
+    for(auto cOpticalGroup : *cBoard)
     {
-      int cFeId = cFe->getFeId();
-      cPath = Form("Be%d/Fe%d", cBeId, cFeId);
-      fResultFile->mkdir(cPath);
-      for(auto &cCbc: cFe->fReadoutChipVector)
+      for(auto cFe : *cOpticalGroup)
       {
-        int cCbcId = cCbc->getChipId();
-        cPath = Form("Be%d/Fe%d/Cbc%d", cBeId, cFeId, cCbcId);
+        int cFeId = cFe->getId();
+        cPath = Form("Be%d/Fe%d", cBeId, cFeId);
         fResultFile->mkdir(cPath);
-        fResultFile->cd(cPath);
-        TH1F* cChannelHist = dynamic_cast<TH1F*> (getHist(cCbc, "ChannelGain"));
-        cChannelHist->Write();
-        TH1F* cChannelElHist = dynamic_cast<TH1F*> (getHist(cCbc, "ChannelElectronsGain"));
-        cChannelElHist->Write();
-        TH1F* cGainHist = dynamic_cast<TH1F*>(getHist(cCbc, "GainHist"));
-        cGainHist->Write();
-        TH1F* cGainElHist = dynamic_cast<TH1F*>(getHist(cCbc, "GainElectronsHist"));
-        cGainElHist->Write();
-
-        cPath = Form("Be%d/Fe%d/Cbc%d/ChannelCorr", cBeId, cFeId, cCbcId);
-        fResultFile->mkdir(cPath);
-        fResultFile->cd(cPath);
-        for(int cChannel = 0; cChannel < NCHANNELS; cChannel++)
+        for(auto cCbc: *cFe)
         {
-          TGraph* cChanCorr = dynamic_cast<TGraph*> (getHist(cCbc, Form("CorrChan%d", cChannel)));
-          cChanCorr->Write();
+          int cCbcId = cCbc->getId();
+          cPath = Form("Be%d/Fe%d/Cbc%d", cBeId, cFeId, cCbcId);
+          fResultFile->mkdir(cPath);
+          fResultFile->cd(cPath);
+          TH1F* cChannelHist = dynamic_cast<TH1F*> (getHist(cCbc, "ChannelGain"));
+          cChannelHist->Write();
+          TH1F* cChannelElHist = dynamic_cast<TH1F*> (getHist(cCbc, "ChannelElectronsGain"));
+          cChannelElHist->Write();
+          TH1F* cGainHist = dynamic_cast<TH1F*>(getHist(cCbc, "GainHist"));
+          cGainHist->Write();
+          TH1F* cGainElHist = dynamic_cast<TH1F*>(getHist(cCbc, "GainElectronsHist"));
+          cGainElHist->Write();
+
+          cPath = Form("Be%d/Fe%d/Cbc%d/ChannelCorr", cBeId, cFeId, cCbcId);
+          fResultFile->mkdir(cPath);
+          fResultFile->cd(cPath);
+          for(int cChannel = 0; cChannel < NCHANNELS; cChannel++)
+          {
+            TGraph* cChanCorr = dynamic_cast<TGraph*> (getHist(cCbc, Form("CorrChan%d", cChannel)));
+            cChanCorr->Write();
+          }
         }
       }
     }

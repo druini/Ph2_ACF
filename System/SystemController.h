@@ -33,6 +33,7 @@
 #include "../Utils/D19cCicEvent.h"
 #include "../Utils/D19cCic2Event.h"
 #include "../Utils/D19cSSAEvent.h"
+#include "../Utils/D19cSSAEventAS.h"
 #include "../HWDescription/OuterTrackerModule.h"
 
 #include <unordered_map>
@@ -48,7 +49,6 @@
  */
 namespace Ph2_System
 {
-  using BeBoardVec  = std::vector<Ph2_HwDescription::BeBoard*>;                   /*!< Vector of Board pointers */
   using SettingsMap = std::unordered_map<std::string, double>; /*!< Maps the settings */
 
   /*!
@@ -62,12 +62,11 @@ namespace Ph2_System
     Ph2_HwInterface::ReadoutChipInterface* fReadoutChipInterface;
     Ph2_HwInterface::ChipInterface* fChipInterface; //!< Interface to the Chip
 
-    Ph2_HwInterface::CicInterface* fCicInterface;               //!< Interface to a CIC [only valid for OT]
+    Ph2_HwInterface::CicInterface* fCicInterface;   //!< Interface to a CIC [only valid for OT]
     Ph2_HwInterface::SSAInterface* fSSAInterface;   //!< Interface to the SSA
     Ph2_HwInterface::MPAInterface* fMPAInterface;   //!< Interface to the MPA
 
     DetectorContainer* fDetectorContainer; //Detector Container
-    BeBoardVec fBoardVector;               //!< Vector of Board pointers
     BeBoardFWMap fBeBoardFWMap;
     SettingsMap fSettingsMap;
     FileHandler* fFileHandler;
@@ -109,7 +108,7 @@ namespace Ph2_System
      * \brief issues a FileHandler for writing files to every BeBoardFWInterface if addFileHandler was called
      */
     void initializeFileHandler();
-    uint32_t computeEventSize32(Ph2_HwDescription::BeBoard *pBoard);
+    uint32_t computeEventSize32(const Ph2_HwDescription::BeBoard *pBoard);
 
     /*!
      * \brief read file in the a FileHandler object
@@ -125,8 +124,8 @@ namespace Ph2_System
     {
       pVisitor.visitSystemController(*this);
 
-      for (Ph2_HwDescription::BeBoard *cBoard : fBoardVector)
-        cBoard->accept(pVisitor);
+      for (auto *cBoard : *fDetectorContainer)
+        static_cast<Ph2_HwDescription::BeBoard*>(cBoard)->accept(pVisitor);
     }
 
     /*!
@@ -158,13 +157,14 @@ namespace Ph2_System
       void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, const Ts&... args)
       {
         if (sizeof...(Ts) > 0)
-          for (const auto cModule : *pBoard)
-            for (const auto cChip : *cModule)
-              {
-                LOG (INFO) << GREEN << "Monitor data for [board/module/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
-                fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, static_cast<Ph2_HwDescription::ReadoutChip*>(cChip), args...);
-                LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
-              }
+          for (const auto cOpticalGroup : *pBoard)
+            for (const auto cModule : *cOpticalGroup)
+              for (const auto cChip : *cModule)
+                {
+                  LOG (INFO) << GREEN << "Monitor data for [board/opticalGroup/module/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                  fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args...);
+                  LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
+                }
       }
 
     /*!
@@ -223,9 +223,13 @@ namespace Ph2_System
      */
     void ReadNEvents(uint32_t pNEvents);
 
+
+    void ReadASEvent (Ph2_HwDescription::BeBoard *pBoard, uint32_t pNMsec);
+
+
     const Ph2_HwDescription::BeBoard* getBoard(int index) const
     {
-      return (index < static_cast<int>(fBoardVector.size()) ? fBoardVector.at(index) : nullptr);
+      return (index < static_cast<int>(fDetectorContainer->size()) ? fDetectorContainer->at(index) : nullptr);
     }
 
     /*!

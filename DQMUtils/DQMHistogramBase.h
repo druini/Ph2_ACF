@@ -96,40 +96,41 @@ class DQMHistogramBase
                bool isNoise                  = false)
     {
       for (auto cBoard : HistDataContainer)
-        for (auto cModule : *cBoard)
-          for (auto cChip : *cModule)
-            {
-              TCanvas* canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
-              Hist*    hist   = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
+        for (auto cOpticalGroup : *cBoard)
+          for (auto cHybrid : *cOpticalGroup)
+            for (auto cChip : *cHybrid)
+              {
+                TCanvas* canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
+                Hist*    hist   = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
 
-              canvas->cd();
-              hist->Draw(opt);
-              canvas->Modified();
-              canvas->Update();
+                canvas->cd();
+                hist->Draw(opt);
+                canvas->Modified();
+                canvas->Update();
 
-              if (electronAxis == true)
-                {
-                  TPad* myPad = static_cast<TPad*>(canvas->GetPad(0));
-                  myPad->SetTopMargin(0.16);
+                if (electronAxis == true)
+                  {
+                    TPad* myPad = static_cast<TPad*>(canvas->GetPad(0));
+                    myPad->SetTopMargin(0.16);
 
-                  axes.emplace_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
-                                               RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(1),isNoise),
-                                               RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()),isNoise), 510, "-"));
-                  axes.back()->SetTitle(electronAxisTitle);
-                  axes.back()->SetTitleOffset(1.2);
-                  axes.back()->SetTitleSize(0.035);
-                  axes.back()->SetTitleFont(40);
-                  axes.back()->SetLabelOffset(0.001);
-                  axes.back()->SetLabelSize(0.035);
-                  axes.back()->SetLabelFont(42);
-                  axes.back()->SetLabelColor(kRed);
-                  axes.back()->SetLineColor(kRed);
-                  axes.back()->Draw();
+                    axes.emplace_back(new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax(), myPad->GetUymax(),
+                                                RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(1),isNoise),
+                                                RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()),isNoise), 510, "-"));
+                    axes.back()->SetTitle(electronAxisTitle);
+                    axes.back()->SetTitleOffset(1.2);
+                    axes.back()->SetTitleSize(0.035);
+                    axes.back()->SetTitleFont(40);
+                    axes.back()->SetLabelOffset(0.001);
+                    axes.back()->SetLabelSize(0.035);
+                    axes.back()->SetLabelFont(42);
+                    axes.back()->SetLabelColor(kRed);
+                    axes.back()->SetLineColor(kRed);
+                    axes.back()->Draw();
 
-                  canvas->Modified();
-                  canvas->Update();
-                }
-            }
+                    canvas->Modified();
+                    canvas->Update();
+                  }
+              }
     }
 
   double findValueInSettings (const Ph2_System::SettingsMap& settingsMap, const std::string name, double defaultValue = 0.) const

@@ -37,7 +37,7 @@ namespace Ph2_HwInterface
       }
   }
 
-  void BeBoardInterface::SetFileHandler (BeBoard* pBoard, FileHandler* pHandler)
+  void BeBoardInterface::SetFileHandler (const BeBoard* pBoard, FileHandler* pHandler)
   {
     setBoard(pBoard->getBeBoardId());
     fBoardFW->setFileHandler(pHandler);

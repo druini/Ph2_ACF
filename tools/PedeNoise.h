@@ -66,6 +66,8 @@ class PedeNoise : public Tool
     //to hold the original register values
     DetectorDataContainer fStubLogicValue;
     DetectorDataContainer fHIPCountValue;
+    bool cWithCBC = true;
+    bool cWithSSA = false;
 
     // Settings
     bool     fPlotSCurves        {false};

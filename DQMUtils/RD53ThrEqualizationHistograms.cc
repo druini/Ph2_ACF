@@ -59,18 +59,19 @@ bool ThrEqualizationHistograms::fill (std::vector<char>& dataBuffer)
 void ThrEqualizationHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer)
 {
   for (const auto cBoard : OccupancyContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          if (cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cHybrid : *cOpticalGroup)
+        for (const auto cChip : *cHybrid)
+          {
+            if (cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
 
-          auto* hThrEqualization = ThrEqualization.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+            auto* hThrEqualization = ThrEqualization.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          for (auto row = 0u; row < RD53::nRows; row++)
-            for (auto col = 0u; col < RD53::nCols; col++)
-              if (cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy != RD53Shared::ISDISABLED)
-                hThrEqualization->Fill(cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy);
-        }
+            for (auto row = 0u; row < RD53::nRows; row++)
+              for (auto col = 0u; col < RD53::nCols; col++)
+                if (cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy != RD53Shared::ISDISABLED)
+                  hThrEqualization->Fill(cChip->getChannel<OccupancyAndPh>(row,col).fOccupancy);
+          }
 }
 
 void ThrEqualizationHistograms::fillTDAC (const DetectorDataContainer& TDACContainer)
@@ -78,18 +79,19 @@ void ThrEqualizationHistograms::fillTDAC (const DetectorDataContainer& TDACConta
   size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
 
   for (const auto cBoard : TDACContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-        {
-          if (cChip->getChannelContainer<uint16_t>() == nullptr) continue;
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cHybrid : *cOpticalGroup)
+        for (const auto cChip : *cHybrid)
+          {
+            if (cChip->getChannelContainer<uint16_t>() == nullptr) continue;
 
-          auto* hTDAC = TDAC.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+            auto* hTDAC = TDAC.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-          for (auto row = 0u; row < RD53::nRows; row++)
-            for (auto col = 0u; col < RD53::nCols; col++)
-              if (cChip->getChannel<uint16_t>(row,col) != TDACsize)
-                hTDAC->Fill(cChip->getChannel<uint16_t>(row,col));
-        }
+            for (auto row = 0u; row < RD53::nRows; row++)
+              for (auto col = 0u; col < RD53::nCols; col++)
+                if (cChip->getChannel<uint16_t>(row,col) != TDACsize)
+                  hTDAC->Fill(cChip->getChannel<uint16_t>(row,col));
+          }
 }
 
 void ThrEqualizationHistograms::process ()

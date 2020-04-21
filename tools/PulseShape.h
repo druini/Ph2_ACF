@@ -36,7 +36,7 @@ using namespace Ph2_System;
  * \class PulseShape
  * \brief Class to reconstruct pulse shape
  */
-typedef std::map<Ph2_HwDescription::Chip*, std::vector<Channel*> > ChannelMap;
+typedef std::map<ChipContainer*, std::vector<Channel*> > ChannelMap;
 
 class PulseShape : public Tool
 {

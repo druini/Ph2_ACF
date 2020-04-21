@@ -131,6 +131,6 @@
 enum class BoardType      {D19C, RD53};
 enum class FrontEndType   {UNDEFINED = 0, MODULE, CBC3, MPA, SSA, RD53, CIC, CIC2};
 enum class SLinkDebugMode {SUMMARY = 0, FULL = 1, ERROR = 2};
-enum class EventType {ZS = 1, VR = 2, SSA = 3, MPA = 4};
+enum class EventType {ZS = 1, VR = 2, SSA = 3, MPA = 4, SSAAS = 5};
 
 #endif

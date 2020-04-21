@@ -63,14 +63,14 @@ class CMTester : public Tool
     void parseSettings();
     void analyze ( Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwInterface::Event* pEvent );
     bool randHit ( float pProbability );
-    bool isMasked ( Ph2_HwDescription::Chip* pCbc, int pChan );
+    bool isMasked ( Ph2_HwDescription::ReadoutChip* pCbc, int pChan );
     bool isMasked ( int pGlobalChannel );
 
     uint32_t fNevents, fDoSimulate, fSimOccupancy;
      std::vector<double> fTotalNoise;
     uint32_t fVcth;
 
-    std::map<Ph2_HwDescription::Chip*, std::set<int> > fNoiseStripMap;
+    std::map<ChipContainer*, std::set<int> > fNoiseStripMap;
 
 };
 

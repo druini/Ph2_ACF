@@ -14,6 +14,7 @@
 
 #include "Event.h"
 #include <iterator>
+#include <numeric>
 
 const size_t CLUSTER_WORD_SIZE = 3+8+3;
 const size_t L1_BLOCK_SIZE = 11;

@@ -172,9 +172,10 @@ For more information on the firmware, please check the doc directory of https://
 
         $> gcc --version
 
-2. On CC7 you also need to install boost v1.53 headers (default on this system) as they don't ship with uHAL any more:
+2. On CC7 you also need to install boost v1.53 headers (default on this system) and pugixml as they don't ship with uHAL any more:
 
         $> sudo yum install boost-devel
+        $> sudo yum install pugixml-devel
 
 2. Install uHAL. SW tested with uHAL version up to 2.7.1
 

@@ -42,22 +42,23 @@ bool SSAPhysicsHistograms::fill(std::vector<char> &dataBuffer)
 void SSAPhysicsHistograms::fillOccupancy(const DetectorDataContainer &DataContainer)
 {
   for (const auto cBoard : DataContainer)
-    for (const auto cModule : *cBoard)
-      for (const auto cChip : *cModule)
-      {
-        if (cChip->getChannelContainer<Occupancy>() == nullptr)
-          continue;
-        
-        auto *chipOccupancy = fOccupancy.at(cBoard->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-        uint channelBin=1;
-        
-        // Get channel data and fill the histogram
-        for(auto channel : *cChip->getChannelContainer<Occupancy>()) //for on channel - begin 
+    for (const auto cOpticalGroup : *cBoard)
+      for (const auto cHybrid : *cOpticalGroup)
+        for (const auto cChip : *cHybrid)
         {
-          chipOccupancy->Fill(channelBin++,channel.fOccupancy);
-        }
+          if (cChip->getChannelContainer<Occupancy>() == nullptr)
+            continue;
+          
+          auto *chipOccupancy = fOccupancy.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+          uint channelBin=1;
+          
+          // Get channel data and fill the histogram
+          for(auto channel : *cChip->getChannelContainer<Occupancy>()) //for on channel - begin 
+          {
+            chipOccupancy->Fill(channelBin++,channel.fOccupancy);
+          }
 
-      }
+        }
 }
 
 void SSAPhysicsHistograms::process()
@@ -67,26 +68,31 @@ void SSAPhysicsHistograms::process()
     for(auto board : fOccupancy) //for on boards - begin 
     {
         size_t boardIndex = board->getIndex();
-        for(auto module: *board) //for on module - begin 
+        for(auto opticalGroup: *board) //for on opticalGroup - begin 
         {
-            size_t moduleIndex = module->getIndex();
+          size_t opticalGroupIndex = opticalGroup->getIndex();
 
-            //Create a canvas do draw the plots
-            TCanvas *cOccupancy = new TCanvas(("Occupalcy_module_" + std::to_string(module->getId())).data(),("Hits module " + std::to_string(module->getId())).data(),   0, 0, 650, 650 );
-            cOccupancy->Divide(module->size());
+          for(auto hybrid: *opticalGroup) //for on hybrid - begin 
+          {
+              size_t hybridIndex = hybrid->getIndex();
 
-            for(auto chip: *module)  //for on chip - begin 
-            {
-                size_t chipIndex = chip->getIndex();
-                cOccupancy->cd(chipIndex+1);
-                // Retreive the corresponging chip histogram:
-                TH1F *chipHitHistogram = fOccupancy.at(boardIndex)->at(moduleIndex)->at(chipIndex)
-                    ->getSummary<HistContainer<TH1F>>().fTheHistogram;
+              //Create a canvas do draw the plots
+              TCanvas *cOccupancy = new TCanvas(("Occupancy_hybrid_" + std::to_string(hybrid->getId())).data(),("Hits hybrid " + std::to_string(hybrid->getId())).data(),   0, 0, 650, 650 );
+              cOccupancy->Divide(hybrid->size());
 
-                //Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you need)
-                chipHitHistogram->SetStats(false);
-                chipHitHistogram->DrawCopy();
-            } //for on chip - end 
-        } //for on module - end 
+              for(auto chip: *hybrid)  //for on chip - begin 
+              {
+                  size_t chipIndex = chip->getIndex();
+                  cOccupancy->cd(chipIndex+1);
+                  // Retreive the corresponging chip histogram:
+                  TH1F *chipHitHistogram = fOccupancy.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)
+                      ->getSummary<HistContainer<TH1F>>().fTheHistogram;
+
+                  //Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you need)
+                  chipHitHistogram->SetStats(false);
+                  chipHitHistogram->DrawCopy();
+              } //for on chip - end 
+          } //for on hybrid - end 
+        } //for on opticalGroup - end 
     } //for on boards - end 
 }

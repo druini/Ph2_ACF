@@ -71,12 +71,6 @@ int main ( int argc, char* argv[] )
 
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/TPCalibration";
 
-    //reasonable start and end values for the CBC3 (for amplitudes lower than 165,
-    //larger test pulse charges, the behavior is not linear anymore)
-    int cStartAmp = (cmd.foundOption( "start" ) ) ? convertAnyInt(cmd.optionValue ( "start" ).c_str() ) : 165;
-    int cEndAmp = (cmd.foundOption( "end" ) ) ? convertAnyInt(cmd.optionValue ( "end" ).c_str() ) : 255;
-    int cStepSize = (cmd.foundOption( "stepsize" ) ) ? convertAnyInt(cmd.optionValue ( "stepsize" ).c_str() ) : 10;
-
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
 
     TApplication cApp ( "Root Application", &argc, argv );
@@ -94,6 +88,12 @@ int main ( int argc, char* argv[] )
     t.start();
 
     #ifdef __USE_ROOT__
+        //reasonable start and end values for the CBC3 (for amplitudes lower than 165,
+        //larger test pulse charges, the behavior is not linear anymore)
+        int cStartAmp = (cmd.foundOption( "start" ) ) ? convertAnyInt(cmd.optionValue ( "start" ).c_str() ) : 165;
+        int cEndAmp = (cmd.foundOption( "end" ) ) ? convertAnyInt(cmd.optionValue ( "end" ).c_str() ) : 255;
+        int cStepSize = (cmd.foundOption( "stepsize" ) ) ? convertAnyInt(cmd.optionValue ( "stepsize" ).c_str() ) : 10;
+    
         TPCalibration cTBCalibrate;
         cTBCalibrate.InitializeHw ( cHWFile, outp);
         cTBCalibrate.InitializeSettings ( cHWFile, outp );

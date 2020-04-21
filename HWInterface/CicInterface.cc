@@ -206,11 +206,12 @@ namespace Ph2_HwInterface {
         if( !cSuccess )
             return cSuccess;
         cSuccess = cSuccess && this->WriteChipReg( pChip , "EXT_BX0_DELAY", pBx0delay);
-    	return cSuccess;
+        return cSuccess;
     }
     // run automated Bx0 alignment 
     bool CicInterface::ConfigureBx0Alignment(Chip* pChip , std::vector<uint8_t> pAlignmentPatterns, uint8_t pFEId , uint8_t pLineId)
     {
+        std::vector<uint8_t> cFeMapping{ 3,2,1,0,4,5,6,7 }; // FE --> FE CIC
         setBoard ( pChip->getBeBoardId() );
         LOG (DEBUG) << BOLDBLUE << "Running automated word alignment in CIC on FE" << +pChip->getFeId() <<  RESET;
         LOG (DEBUG) << BOLDBLUE << "Configuring word alignment patterns on CIC" <<  RESET;
@@ -225,7 +226,7 @@ namespace Ph2_HwInterface {
         
         cRegName = (pChip->getFrontEndType() == FrontEndType::CIC ) ? "BX0_ALIGNMENT_FE" : "BX0_ALIGN_CONFIG";
         cRegValue = this->ReadChipReg( pChip , cRegName ); 
-        cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? pFEId : ( (cRegValue & 0xC7) | (pFEId << 3 ) );
+        cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? pFEId : ( (cRegValue & 0xC7) | ( cFeMapping[pFEId] << 3 ) );
         cSuccess = cSuccess && this->WriteChipReg( pChip , cRegName, cValue);
         if( !cSuccess )
             return cSuccess;
@@ -234,13 +235,23 @@ namespace Ph2_HwInterface {
         cRegValue = this->ReadChipReg( pChip , cRegName ); 
         cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? pLineId : ( (cRegValue & 0xF8) | (pLineId << 0 ) );
         cSuccess = cSuccess && this->WriteChipReg( pChip , cRegName , cValue);
+        fBoardFW->ChipReSync();
+        return cSuccess;
+    }
+    bool CicInterface::AutoBx0Alignment(Chip* pChip , uint8_t pStatus)
+    {
+        // make sure auto WA request is 0 
+        std::string cRegName = (pChip->getFrontEndType() == FrontEndType::CIC ) ? "AUTO_WA_REQUEST" : "MISC_CTRL";
+        uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
+        uint16_t cToggleOff = (pChip->getFrontEndType() == FrontEndType::CIC ) ? 0x00 : ( (cRegValue & 0x1D) | (0x0 << 0) );
+        bool cSuccess = this->WriteChipReg( pChip , cRegName , cToggleOff);
         if( !cSuccess )
-            return cSuccess;
+            return cSuccess; 
 
         cRegName = (pChip->getFrontEndType() == FrontEndType::CIC ) ? "AUTO_BX0_ALIGNMENT_REQUEST" : "BX0_ALIGN_CONFIG";
         cRegValue = this->ReadChipReg( pChip , cRegName ); 
-        cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? 0x01 : ( (cRegValue & 0xF8) | (0x01 << 6 ) );
-        cSuccess = cSuccess && this->WriteChipReg( pChip , cRegName , cValue);
+        uint16_t cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? 0x01 : ( (cRegValue & 0xF8) | (pStatus << 6 ) );
+        cSuccess = this->WriteChipReg( pChip , cRegName , cValue);
         if( !cSuccess )
             return cSuccess;
 
@@ -251,14 +262,12 @@ namespace Ph2_HwInterface {
         uint8_t cDelay=0;
         setBoard ( pChip->getBeBoardId() );
 
-        std::string cRegName = (pChip->getFrontEndType() == FrontEndType::CIC ) ? "AUTO_BX0_ALIGNMENT_REQUEST" : "BX0_ALIGN_CONFIG";
-        uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
-        uint16_t cValue = (pChip->getFrontEndType() == FrontEndType::CIC ) ? 0x00 : ( (cRegValue & 0xF8) | (0x00 << 6 ) );
-        
-        bool cSuccess =  this->WriteChipReg( pChip , cRegName , cValue);
+        bool cSuccess =  this->AutoBx0Alignment(pChip , 0);
         if( !cSuccess )
             return std::make_pair(cSuccess,cDelay);
-        
+        // remember to send a resync 
+        fBoardFW->ChipReSync();
+
         // check status 
         ChipRegItem cRegItem;
         cRegItem.fPage = 0x00;
@@ -682,7 +691,6 @@ namespace Ph2_HwInterface {
         }
         
         size_t cInputLineCounter = 0 ;
-        size_t cLineCounter=0;
         //std::vector<std::bitset<6>> cFeStates(8,0);
         cPortCounter=0;
         for( size_t cFeCounter=0; cFeCounter < 8; cFeCounter++)
@@ -824,12 +832,24 @@ namespace Ph2_HwInterface {
     // with the BE or the other readout ASICs on the chip 
     bool CicInterface::StartUp( Chip* pChip, uint8_t pDriveStrength) 
     {
-
-        bool cSuccess = this->SoftReset(pChip);
-        LOG (INFO) << BOLDBLUE <<  ".... Starting CIC start-up ........ on hybrid " << +pChip->getFeId() << RESET;
-
+        std::string cOut = ".... Starting CIC start-up ........ on hybrid " + std::to_string( pChip->getFeId() ); 
+        if( pChip->getFrontEndType() == FrontEndType::CIC )
+            cOut += " for CIC1.";
+        else
+            cOut += " for CIC2.";
+        LOG (INFO) << BOLDBLUE <<  cOut << RESET;
+        
+        bool cSuccess = this->CheckSoftReset(pChip);
+        // if( !cSuccess ) 
+        // {
+        //     LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC... " << RESET;
+        //     exit(0);
+        // }
+        // bool cSuccess = this->SoftReset(pChip);
+        
         bool cClkTermination = true; 
-        bool cRxTermination =  false; //(pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;// true, false -- this needs to be false for the crate set-up .. how to fix this?!?!
+        bool cRxTermination =  false;
+        //(pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;// true, false -- this needs to be false for the crate set-up .. how to fix this?!?!
         std::string cRegName = "SLVS_PADS_CONFIG";
         uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
         auto cIterator = fTxDriveStrength.find(pDriveStrength); 
@@ -873,12 +893,12 @@ namespace Ph2_HwInterface {
         this->EnableFEs(pChip, {0,1,2,3,4,5,6,7} , true);
         
         // check if we need a soft RESET
-        cSuccess = this->CheckSoftReset(pChip);
-        if( !cSuccess ) 
-        {
-            LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC... " << RESET;
-            exit(0);
-        }
+        // cSuccess = this->CheckSoftReset(pChip);
+        // if( !cSuccess ) 
+        // {
+        //     LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC... " << RESET;
+        //     exit(0);
+        // }
         
         // select fast command edge 
         bool cNegEdge=true;

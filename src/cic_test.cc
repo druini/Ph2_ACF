@@ -114,21 +114,13 @@ int main ( int argc, char* argv[] )
     bool cAllChannels = ( cmd.foundOption ( "allChan" ) ) ? true : false;
     int cTriggerRate = ( cmd.foundOption ( "triggerRate" ) ) ? convertAnyInt ( cmd.optionValue ( "triggerRate" ).c_str() ) : 10;
     bool cDisableStubLogic = ( cmd.foundOption ( "disableStubs" ) ) ;
-    uint8_t cTPamplitude = ( cmd.foundOption ( "testPulse" ) ) ?  (0xFF-convertAnyInt ( cmd.optionValue ( "testPulse" ).c_str() )) : 0 ;
     bool cDAQ =  cmd.foundOption ( "daq" );
     bool cDoCicAlignment =  cmd.foundOption ( "cicAlignment" );
-    bool cExternal =  cmd.foundOption ( "externalTriggers" );
-    uint16_t cNconsecutiveTriggers = ( cmd.foundOption ( "externalTriggers" ) ) ? convertAnyInt ( cmd.optionValue ( "externalTriggers" ).c_str() ) : 0;
-    bool cLatency = cmd.foundOption ( "latency" );
-    uint16_t cStartLatency = ( cmd.foundOption ( "minimum" ) ) ? convertAnyInt ( cmd.optionValue ( "minimum" ).c_str() ) :  10;
-    uint16_t cLatencyRange = ( cmd.foundOption ( "range" ) )   ?  convertAnyInt ( cmd.optionValue ( "range" ).c_str() ) :  10;
     int cSigma = cmd.foundOption ( "evaluate" ) ?  convertAnyInt ( cmd.optionValue ( "evaluate" ).c_str() ) :  3;
     bool cCheckOccupancy = cmd.foundOption ( "occupancyCheck" );
     bool cScopeL1A = cmd.foundOption ( "scopeL1Alignment" );
     bool cScopeStubs = cmd.foundOption ( "scopeStubAlignment" );
     
-    int cVcth = ( cmd.foundOption ( "vcth" ) ) ? convertAnyInt ( cmd.optionValue ( "vcth" ).c_str() ) : 550;
-
     cDirectory += Form("Cic_%s",cSerial.c_str());
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
     TApplication cApp ( "Root Application", &argc, argv );
@@ -257,27 +249,30 @@ int main ( int argc, char* argv[] )
     if(cDataTest)
     {
         // data check with noise injection 
-        uint8_t cSeed=10;
-        uint8_t cBendCode=0;
-
+        
         t.start();
-        for( auto& cBoard : cExtra.fBoardVector )
+        for( auto cBoard : *cExtra.fDetectorContainer )
         {
-            for (auto& cFe : cBoard->fModuleVector)
+            BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
+            for(auto cOpticalGroup : *cBoard)
             {
-                // matching 
-                uint16_t cTh1 = (cFe->getFeId()%2==0) ? 900 : 1; 
-                uint16_t cTh2 = (cFe->getFeId()%2==0) ? 1 : 900; 
-                for (auto& cChip : cFe->fReadoutChipVector) 
+                for (auto cFe : *cOpticalGroup)
                 {
-                    if( cChip->getChipId()%2 == 0 )
-                        static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTh1);
-                    else
-                        static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( cChip, "VCth" , cTh2);
+                    // matching 
+                    uint16_t cTh1 = (cFe->getId()%2==0) ? 900 : 1; 
+                    uint16_t cTh2 = (cFe->getId()%2==0) ? 1 : 900; 
+                    for (auto cChip : *cFe) 
+                    {
+                        ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
+                        if( cChip->getId()%2 == 0 )
+                            static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( theChip, "VCth" , cTh1);
+                        else
+                            static_cast<CbcInterface*>(cExtra.fReadoutChipInterface)->WriteChipReg( theChip, "VCth" , cTh2);
+                    }
                 }
             }
-            cExtra.ReadNEvents ( cBoard , 1);
-            const std::vector<Event*>& cEvents = cExtra.GetEvents ( cBoard );
+            cExtra.ReadNEvents ( theBoard , 1);
+            const std::vector<Event*>& cEvents = cExtra.GetEvents ( theBoard );
             uint32_t cN=0;
             for ( auto& cEvent : cEvents )
             {

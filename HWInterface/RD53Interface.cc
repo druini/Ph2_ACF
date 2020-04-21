@@ -191,7 +191,7 @@ namespace Ph2_HwInterface
   {
     this->setBoard(pBoard->getId());
 
-    uint16_t address = pBoard->fModuleVector.at(0)->fReadoutChipVector.at(0)->getRegItem(pRegNode).fAddress;
+    uint16_t address = static_cast<RD53*>(pBoard->at(0)->at(0)->at(0))->getRegItem(pRegNode).fAddress;
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, address, data).getFrames(), -1);
   }
 

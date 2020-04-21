@@ -24,6 +24,9 @@
 #include "TObject.h"
 #include "TAxis.h"
 #include "TTree.h"
+#include "../HWDescription/ReadoutChip.h"
+#include "../Utils/Container.h"
+#include "../Utils/DataContainer.h"
 #include "TString.h"
 #include "../Utils/CommonVisitors.h"
 
@@ -85,8 +88,8 @@ class BiasSweep : public Tool
     ~BiasSweep();
     void Initialize();
     // *******
-    void SweepBias (std::string pBias, Ph2_HwDescription::Chip* pCbc);
-    void MeasureMinPower (Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::Chip* pCbc);
+    void SweepBias (std::string pBias, Ph2_HwDescription::ReadoutChip* pCbc);
+    void MeasureMinPower (Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::ReadoutChip* pCbc);
 
 
 

@@ -12,19 +12,27 @@
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Container.h"
-#include "../HWDescription/Chip.h"
+#include "../HWDescription/BeBoard.h"
+#include "../HWDescription/Module.h"
+#include "../HWDescription/OpticalGroup.h"
+#include "../HWDescription/ReadoutChip.h"
 
 void ContainerFactory::copyStructure(const DetectorContainer& original, DetectorDataContainer& copy)
 {
-	for(const BoardContainer *board : original)
+	for(const auto board : original)
 	{
 		BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
-		for(const ModuleContainer* module : *board)
+		for(const auto opticalGroup : *board)
 		{
-			ModuleDataContainer* copyModule = copyBoard->addModuleDataContainer(module->getId());
-			for(const ChipContainer* chip : *module)
+			OpticalGroupDataContainer* copyOpticalGroup = copyBoard->addOpticalGroupDataContainer(opticalGroup->getId());
+
+			for(const auto hybrid : *opticalGroup)
 			{
-				copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
+				ModuleDataContainer* copyModule = copyOpticalGroup->addModuleDataContainer(hybrid->getId());
+				for(const auto chip : *hybrid)
+				{
+					copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
+				}
 			}
 		}
 	}

@@ -122,7 +122,7 @@ int main ( int argc, char* argv[] )
     outp.str ("");
     cSystemController.ConfigureHw ();
 
-    BeBoard* pBoard = cSystemController.fBoardVector.at ( 0 );
+    BeBoard* pBoard = static_cast<BeBoard*>(cSystemController.fDetectorContainer->at ( 0 ));
 
     // make event counter start at 1 as does the L1A counter
     uint32_t cN = 1;

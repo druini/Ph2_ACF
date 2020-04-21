@@ -87,6 +87,7 @@ namespace Ph2_HwInterface {
         FileHandler* fFileHandler ;
         uint32_t fBroadcastCbcId;
         uint32_t fNReadoutChip;
+        uint32_t fNHybrids;
         uint32_t fNCic;
         uint32_t fFMCId;
 
@@ -242,11 +243,15 @@ namespace Ph2_HwInterface {
          * \return fNpackets: the number of packets read
          */
         uint32_t ReadData ( Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true ) override;
-        /*!
+ 
+        void ReadASEvent (Ph2_HwDescription::BeBoard* pBoard, uint32_t pNMsec, std::vector<uint32_t>& pData);
+
+       /*!
          * \brief Read data for pNEvents
          * \param pBoard : the pointer to the BeBoard
          * \param pNEvents :  the 1 indexed number of Events to read - this will set the packet size to this value -1
          */
+
         void ReadNEvents (Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true);
         // FMCs 
         void InitFMCPower();

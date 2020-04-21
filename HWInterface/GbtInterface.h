@@ -15,6 +15,11 @@
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
  */
+
+
+
+// add break codes here 
+
 namespace Ph2_HwInterface 
 {
     using SCAI2C = std::pair<uint32_t, uint32_t>;

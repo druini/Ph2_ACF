@@ -119,34 +119,38 @@ void BiasSweep::Initialize()
     //initialize empty bias sweep object
     fData = new BiasSweepData();
 
-    for (auto cBoard : fBoardVector)
+    for (auto cBoard : *fDetectorContainer)
     {
-        for (auto cFe : cBoard->fModuleVector)
+        for(auto cOpticalGroup : *cBoard)
         {
-            fType = cFe->getFrontEndType();
-
-            for (auto cCbc : cFe->fReadoutChipVector)
+            for (auto cHybrid : *cOpticalGroup)
             {
-                cName = Form ("BiasSweep_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getChipId() );
-                cObj = gROOT->FindObject (cName);
+                Module* theHybrid = static_cast<Module*>(cHybrid);
+                fType = theHybrid->getFrontEndType();
 
-                if (cObj) delete cObj;
+                for (auto cCbc : *cHybrid)
+                {
+                    cName = Form ("BiasSweep_Fe%d_Cbc%d", cHybrid->getId(), cCbc->getId() );
+                    cObj = gROOT->FindObject (cName);
 
-                TTree* cTmpTree = new TTree (cName, cName);
-                //cTmpTree->Branch (Form ("BiasSweepData_Fe%d_Cbc%d", cCbc->getFeId(), cCbc->getChipId() ), "BiasSweepData", &fData);
-                cTmpTree->Branch ("Bias", &fData->fBias);
-                cTmpTree->Branch ("Fe", &fData->fFeId, "Fe/s" );
-                cTmpTree->Branch ("Chip", &fData->fCbcId, "Chip/s" );
-                cTmpTree->Branch ("Time", &fData->fTimestamp, "Time/l" );
-                cTmpTree->Branch ("Unit", &fData->fUnit, "Unit/C" );
-                cTmpTree->Branch ("InitialBiasValue", &fData->fInitialXValue, "InitialDAC/s");
-                cTmpTree->Branch ("InitialDMMValue", &fData->fInitialYValue, "InitialDMM/F");
-                cTmpTree->Branch ("BiasValues", &fData->fXValues);
-                cTmpTree->Branch ("DMMValues", &fData->fYValues);
+                    if (cObj) delete cObj;
 
-                this->bookHistogram (cCbc, "DataTree", cTmpTree);
+                    TTree* cTmpTree = new TTree (cName, cName);
+                    //cTmpTree->Branch (Form ("BiasSweepData_Fe%d_Cbc%d", cHybrid->getId(), cCbc->getId() ), "BiasSweepData", &fData);
+                    cTmpTree->Branch ("Bias", &fData->fBias);
+                    cTmpTree->Branch ("Fe", &fData->fFeId, "Fe/s" );
+                    cTmpTree->Branch ("Chip", &fData->fCbcId, "Chip/s" );
+                    cTmpTree->Branch ("Time", &fData->fTimestamp, "Time/l" );
+                    cTmpTree->Branch ("Unit", &fData->fUnit, "Unit/C" );
+                    cTmpTree->Branch ("InitialBiasValue", &fData->fInitialXValue, "InitialDAC/s");
+                    cTmpTree->Branch ("InitialDMMValue", &fData->fInitialYValue, "InitialDMM/F");
+                    cTmpTree->Branch ("BiasValues", &fData->fXValues);
+                    cTmpTree->Branch ("DMMValues", &fData->fYValues);
 
-                LOG (INFO) << "TTree for BiasSweep data for Fe " << +cCbc->getFeId() << " Chip " << +cCbc->getChipId() << " created!";
+                    this->bookHistogram (cCbc, "DataTree", cTmpTree);
+
+                    LOG (INFO) << "TTree for BiasSweep data for Fe " << +cHybrid->getId() << " Chip " << +cCbc->getId() << " created!";
+                }
             }
         }
 
@@ -156,7 +160,7 @@ void BiasSweep::Initialize()
     this->InitializeAmuxMap();
 }
 
-void BiasSweep::MeasureMinPower (BeBoard* pBoard, Chip* pCbc)
+void BiasSweep::MeasureMinPower (BeBoard* pBoard, ReadoutChip* pCbc)
 {
     LOG (INFO) << std::endl;
     LOG (INFO) << BOLDBLUE << "*****************************************" << RESET;
@@ -256,7 +260,7 @@ void BiasSweep::MeasureMinPower (BeBoard* pBoard, Chip* pCbc)
     LOG (INFO) << "Finished measuring minimal power consumption, results saved!";
 }
 
-void BiasSweep::SweepBias (std::string pBias, Chip* pCbc)
+void BiasSweep::SweepBias (std::string pBias, ReadoutChip* pCbc)
 {
     auto cAmuxValue = fAmuxSettings.find (pBias);
 
@@ -708,12 +712,12 @@ void BiasSweep::DAQloop()
     //while (fDAQrunning.load() )
     //{
     //std::unique_lock<std::mutex> cLock (fHWMutex);
-    //this->ReadData (fBoardVector.at (0) );
+    //this->ReadData (static_cast<BeBoard*>(fDetectorContainer->at(0)));
     //cLock.unlock();
 
     //if (!fDAQrunning.load() )
     //{
-    //this->Stop (fBoardVector.at (0) );
+    //this->Stop (static_cast<BeBoard*>(fDetectorContainer->at(0)));
     //break;
     //}
     //else
@@ -724,14 +728,14 @@ void BiasSweep::DAQloop()
 void BiasSweep::StartDAQ()
 {
     //1st method
-    this->fBeBoardInterface->WriteBoardReg (fBoardVector.at (0), "cbc_system_cnfg.global.misc.trigger_master_external", 0x1);
-    this->Start (fBoardVector.at (0) );
+    this->fBeBoardInterface->WriteBoardReg (static_cast<BeBoard*>(fDetectorContainer->at(0)), "cbc_system_cnfg.global.misc.trigger_master_external", 0x1);
+    this->Start (static_cast<BeBoard*>(fDetectorContainer->at(0)));
 
     //2nd method
     //if (!fDAQrunning.load() )
     //{
     //std::unique_lock<std::mutex> cLock (fHWMutex);
-    //this->Start (fBoardVector.at (0) );
+    //this->Start (static_cast<BeBoard*>(fDetectorContainer->at(0)));
     //fDAQrunning = true;
     //cLock.unlock();
     //fThread = std::thread (&BiasSweep::DAQloop, this);
@@ -741,8 +745,8 @@ void BiasSweep::StartDAQ()
 void BiasSweep::StopDAQ()
 {
     //1st method
-    this->Stop (fBoardVector.at (0) );
-    this->fBeBoardInterface->WriteBoardReg (fBoardVector.at (0), "cbc_system_cnfg.global.misc.trigger_master_external", 0x0);
+    this->Stop (static_cast<BeBoard*>(fDetectorContainer->at(0)));
+    this->fBeBoardInterface->WriteBoardReg (static_cast<BeBoard*>(fDetectorContainer->at(0)), "cbc_system_cnfg.global.misc.trigger_master_external", 0x0);
 
     //2nd method
     //if (fDAQrunning.load() )

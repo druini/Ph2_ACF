@@ -10,24 +10,27 @@ SignalScan::~SignalScan()
 
 void SignalScan::Initialize ()
 {
-    for ( auto& cBoard : fBoardVector )
+    for ( auto cBoard : *fDetectorContainer )
     {
-        for ( auto& cFe : cBoard->fModuleVector )
+        for(auto cOpticalGroup : *cBoard)
         {
-            uint32_t cFeId = cFe->getFeId();
-            fNCbc = cFe->getNChip();
-            TCanvas* ctmpCanvas = new TCanvas ( Form ( "c_online_canvas_fe%d", cFeId ), Form ( "FE%d  Online Canvas", cFeId ) );
-            // ctmpCanvas->Divide( 2, 2 );
-            fCanvasMap[cFe] = ctmpCanvas;
+            for ( auto cFe : *cOpticalGroup )
+            {
+                uint32_t cFeId = cFe->getId();
+                fNCbc = cFe->size();
+                TCanvas* ctmpCanvas = new TCanvas ( Form ( "c_online_canvas_fe%d", cFeId ), Form ( "FE%d  Online Canvas", cFeId ) );
+                // ctmpCanvas->Divide( 2, 2 );
+                fCanvasMap[cFe] = ctmpCanvas;
 
-            // 1D Hist forlatency scan
-            TString cName =  Form ( "h_module_thresholdScan_Fe%d", cFeId );
-            TObject* cObj = gROOT->FindObject ( cName );
+                // 1D Hist forlatency scan
+                TString cName =  Form ( "h_module_thresholdScan_Fe%d", cFeId );
+                TObject* cObj = gROOT->FindObject ( cName );
 
-            if ( cObj ) delete cObj;
+                if ( cObj ) delete cObj;
 
-            TH2F* cSignalHist = new TH2F ( cName, Form ( "Signal threshold vs channel FE%d; Channel # ; Threshold; # of Hits", cFeId ), fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, 255, -.5,  255 - .5 );
-            bookHistogram ( cFe, "module_signal", cSignalHist );
+                TH2F* cSignalHist = new TH2F ( cName, Form ( "Signal threshold vs channel FE%d; Channel # ; Threshold; # of Hits", cFeId ), fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, 255, -.5,  255 - .5 );
+                bookHistogram ( cFe, "module_signal", cSignalHist );
+            }
         }
     }
 
@@ -46,174 +49,178 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop )
     
     int cNevents = fNevents;
     int cMaxClusterSize = 150; 
-    for ( BeBoard* pBoard : fBoardVector )
+    for (auto cBoard : *fDetectorContainer)
     {
-        fBeBoardInterface->Start(pBoard);
-        fBeBoardInterface->Pause(pBoard);
-        for (auto cFe : pBoard->fModuleVector)
+        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
+        fBeBoardInterface->Start(theBoard);
+        fBeBoardInterface->Pause(theBoard);
+        for(auto cOpticalGroup : *cBoard)
         {
-            for (auto cCbc : cFe->fReadoutChipVector)
+            for (auto cFe : *cOpticalGroup)
             {
-
-                uint32_t cCbcId = cCbc->getChipId();
-
-                TString cHistName = Form("Fe%dCbc%d_SignalScan" , +cFe->getFeId() , +cCbcId );
-                TH2D* cSignalScan = ( TH2D* ) ( gROOT->FindObject ( cHistName ) );
-                if ( !cSignalScan ) 
+                for (auto cCbc : *cFe)
                 {
-                    cSignalScan = new TH2D(cHistName.Data(), cHistName.Data() , NCHANNELS + 1 , 0 - 0.5 , NCHANNELS  + 1 - 0.5 , 1024/cVcthStep , -0.5*cVcthStep , 1024 - 0.5*cVcthStep );
-                    cSignalScan->GetXaxis()->SetTitle("Channel");
-                    cSignalScan->GetYaxis()->SetTitle("Vcth");
-                    bookHistogram( cCbc , cHistName.Data(), cSignalScan );
-                }
 
-                cHistName = Form("Fe%dCbc%d_ClusterWidth_SignalScan" , +cFe->getFeId() , +cCbcId );
-                TH2D* cClusterWidth = ( TH2D* ) ( gROOT->FindObject ( cHistName ) );
-                if ( !cClusterWidth ) 
-                {
-                    cClusterWidth = new TH2D(cHistName.Data(), cHistName.Data() ,  cMaxClusterSize , 0 - 0.5 , cMaxClusterSize - 0.5 , 1024/cVcthStep , -0.5*cVcthStep , 1024 - 0.5*cVcthStep );
-                    cClusterWidth->GetXaxis()->SetTitle("Cluster Width");
-                    cClusterWidth->GetYaxis()->SetTitle("Vcth");
-                    bookHistogram( cCbc , cHistName.Data(), cClusterWidth );
-                }
-                cHistName = Form("Fe%dCbc%d_Clusters_SignalScan" , +cFe->getFeId() , +cCbcId );
-                TH1D* cClusters = ( TH1D* ) ( gROOT->FindObject ( cHistName ) );
-                if ( !cClusters ) 
-                {
-                    cClusters = new TH1D(cHistName.Data(), cHistName.Data() ,  1024/cVcthStep , -0.5*cVcthStep , 1024 - 0.5*cVcthStep );
-                    cClusters->GetXaxis()->SetTitle("Vcth");
-                    bookHistogram( cCbc , cHistName.Data(), cClusters );
-                }
+                    uint32_t cCbcId = cCbc->getId();
 
-                cHistName = Form("Fe%dCbc%d_Time_SignalScan" , +cFe->getFeId() , +cCbcId );
-                TH1D* cTime = ( TH1D* ) ( gROOT->FindObject ( cHistName ) );
-                if ( !cTime ) 
-                {
-                    cTime = new TH1D(cHistName.Data(), cHistName.Data() ,  1024/cVcthStep , -0.5*cVcthStep , 1024 - 0.5*cVcthStep );
-                    cTime->GetXaxis()->SetTitle("Vcth");
-                    bookHistogram( cCbc , cHistName.Data(), cTime );
-                }
-
-            }
-
-            for( int cVcth = cVcthStart ; cVcth >= cVcthStop ; cVcth -= cVcthStep )
-            {   
-                ThresholdVisitor cVisitor (fReadoutChipInterface, cVcth);
-                cVisitor.setThreshold (cVcth);
-                this->accept ( cVisitor );
-
-                LOG (INFO) << BOLDBLUE <<  "Setting Vcth to " << cVcth << RESET ; 
-                int cTotalHitCounter=0;
-                int cTotalEventCounter=0;
-
-                bool cContinue = true;
-                fBeBoardInterface->Resume(pBoard);
-                LOG (INFO) << BOLDBLUE << "Trying to read data from FEs .... " << RESET ; 
-                Timer t; 
-                t.start();
-                do
-                {
-                    int cHitCounter = 0; 
-                    int cClusterCounter = 0 ; 
-                    
-                    //ReadNEvents ( pBoard, cNeventsPerLoop );
-                    //cTotalEventCounter+= cNeventsPerLoop;
-                    uint32_t cNeventsReadBack = ReadData( pBoard );
-                    if( cNeventsReadBack == 0 )
+                    TString cHistName = Form("Fe%dCbc%d_SignalScan" , +cFe->getId() , +cCbcId );
+                    TH2D* cSignalScan = ( TH2D* ) ( gROOT->FindObject ( cHistName ) );
+                    if ( !cSignalScan ) 
                     {
-                       LOG (INFO) << BOLDRED << "..... Read back " << +cNeventsReadBack << " events!! Why?!" << RESET ;
-                       continue;
+                        cSignalScan = new TH2D(cHistName.Data(), cHistName.Data() , NCHANNELS + 1 , 0 - 0.5 , NCHANNELS  + 1 - 0.5 , 1024/cVcthStep , -0.5*cVcthStep , 1024 - 0.5*cVcthStep );
+                        cSignalScan->GetXaxis()->SetTitle("Channel");
+                        cSignalScan->GetYaxis()->SetTitle("Vcth");
+                        bookHistogram( cCbc , cHistName.Data(), cSignalScan );
                     }
-                    
-                    const std::vector<Event*>& events = GetEvents ( pBoard );
-                    cTotalEventCounter+= events.size() ;
-                    for (auto& cEvent : events)
+
+                    cHistName = Form("Fe%dCbc%d_ClusterWidth_SignalScan" , +cFe->getId() , +cCbcId );
+                    TH2D* cClusterWidth = ( TH2D* ) ( gROOT->FindObject ( cHistName ) );
+                    if ( !cClusterWidth ) 
                     {
+                        cClusterWidth = new TH2D(cHistName.Data(), cHistName.Data() ,  cMaxClusterSize , 0 - 0.5 , cMaxClusterSize - 0.5 , 1024/cVcthStep , -0.5*cVcthStep , 1024 - 0.5*cVcthStep );
+                        cClusterWidth->GetXaxis()->SetTitle("Cluster Width");
+                        cClusterWidth->GetYaxis()->SetTitle("Vcth");
+                        bookHistogram( cCbc , cHistName.Data(), cClusterWidth );
+                    }
+                    cHistName = Form("Fe%dCbc%d_Clusters_SignalScan" , +cFe->getId() , +cCbcId );
+                    TH1D* cClusters = ( TH1D* ) ( gROOT->FindObject ( cHistName ) );
+                    if ( !cClusters ) 
+                    {
+                        cClusters = new TH1D(cHistName.Data(), cHistName.Data() ,  1024/cVcthStep , -0.5*cVcthStep , 1024 - 0.5*cVcthStep );
+                        cClusters->GetXaxis()->SetTitle("Vcth");
+                        bookHistogram( cCbc , cHistName.Data(), cClusters );
+                    }
+
+                    cHistName = Form("Fe%dCbc%d_Time_SignalScan" , +cFe->getId() , +cCbcId );
+                    TH1D* cTime = ( TH1D* ) ( gROOT->FindObject ( cHistName ) );
+                    if ( !cTime ) 
+                    {
+                        cTime = new TH1D(cHistName.Data(), cHistName.Data() ,  1024/cVcthStep , -0.5*cVcthStep , 1024 - 0.5*cVcthStep );
+                        cTime->GetXaxis()->SetTitle("Vcth");
+                        bookHistogram( cCbc , cHistName.Data(), cTime );
+                    }
+
+                }
+
+                for( int cVcth = cVcthStart ; cVcth >= cVcthStop ; cVcth -= cVcthStep )
+                {   
+                    ThresholdVisitor cVisitor (fReadoutChipInterface, cVcth);
+                    cVisitor.setThreshold (cVcth);
+                    this->accept ( cVisitor );
+
+                    LOG (INFO) << BOLDBLUE <<  "Setting Vcth to " << cVcth << RESET ; 
+                    int cTotalHitCounter=0;
+                    int cTotalEventCounter=0;
+
+                    bool cContinue = true;
+                    fBeBoardInterface->Resume(theBoard);
+                    LOG (INFO) << BOLDBLUE << "Trying to read data from FEs .... " << RESET ; 
+                    Timer t; 
+                    t.start();
+                    do
+                    {
+                        int cHitCounter = 0; 
+                        int cClusterCounter = 0 ; 
                         
-                        for ( auto cCbc : cFe->fReadoutChipVector )
+                        //ReadNEvents ( theBoard, cNeventsPerLoop );
+                        //cTotalEventCounter+= cNeventsPerLoop;
+                        uint32_t cNeventsReadBack = ReadData( theBoard );
+                        if( cNeventsReadBack == 0 )
                         {
-                            TString cHistName;
-                            cHistName = Form("Fe%dCbc%d_Clusters_SignalScan" , +cFe->getFeId() ,+cCbc->getChipId() );
-                            TH1D* cClustersHisto = ( TH1D* ) ( gROOT->FindObject ( cHistName ) );
-
-
-                            cHistName = Form("Fe%dCbc%d_ClusterWidth_SignalScan" , +cFe->getFeId() , +cCbc->getChipId() );
-                            TH2D* cClusterWidth = ( TH2D* ) ( gROOT->FindObject ( cHistName ) );
-                            // cHistName = Form("Fe%dCbc%d_ClusterOccupancy" , +cFe->getFeId() , +cCbc->getChipId() );
-                            // TH2F* cClustersHisto = ( TH2F* ) ( gROOT->FindObject ( cHistName ) );
-
-                            const std::vector<Cluster>& cClusters = cEvent->getClusters( cFe->getFeId(), cCbc->getChipId() );
-                            cClustersHisto->Fill( cVcth , cClusters.size() );
-                            for(auto& cCluster : cClusters)
+                        LOG (INFO) << BOLDRED << "..... Read back " << +cNeventsReadBack << " events!! Why?!" << RESET ;
+                        continue;
+                        }
+                        
+                        const std::vector<Event*>& events = GetEvents ( theBoard );
+                        cTotalEventCounter+= events.size() ;
+                        for (auto& cEvent : events)
+                        {
+                            
+                            for ( auto cCbc : *cFe)
                             {
-                                cClusterWidth->Fill(cCluster.fClusterWidth, cVcth );
-                                //cClustersHisto->Fill(cCluster.fFirstStrip, cCluster.fClusterWidth);
-                                if( cCluster.fClusterWidth  <= 2 )
+                                TString cHistName;
+                                cHistName = Form("Fe%dCbc%d_Clusters_SignalScan" , +cFe->getId() ,+cCbc->getId() );
+                                TH1D* cClustersHisto = ( TH1D* ) ( gROOT->FindObject ( cHistName ) );
+
+
+                                cHistName = Form("Fe%dCbc%d_ClusterWidth_SignalScan" , +cFe->getId() , +cCbc->getId() );
+                                TH2D* cClusterWidth = ( TH2D* ) ( gROOT->FindObject ( cHistName ) );
+                                // cHistName = Form("Fe%dCbc%d_ClusterOccupancy" , +cFe->getId() , +cCbc->getId() );
+                                // TH2F* cClustersHisto = ( TH2F* ) ( gROOT->FindObject ( cHistName ) );
+
+                                const std::vector<Cluster>& cClusters = cEvent->getClusters( cFe->getId(), cCbc->getId() );
+                                cClustersHisto->Fill( cVcth , cClusters.size() );
+                                for(auto& cCluster : cClusters)
                                 {
-                                    cClusterCounter++;
+                                    cClusterWidth->Fill(cCluster.fClusterWidth, cVcth );
+                                    //cClustersHisto->Fill(cCluster.fFirstStrip, cCluster.fClusterWidth);
+                                    if( cCluster.fClusterWidth  <= 2 )
+                                    {
+                                        cClusterCounter++;
+                                    }
+                                }
+                                
+                                cHistName = Form("Fe%dCbc%d_SignalScan" , +cFe->getId() , +cCbc->getId() );
+                                TH2D* cSignalScan = dynamic_cast<TH2D*> ( getHist ( cCbc, cHistName.Data() ) );
+
+                                for(int cChan = 0 ; cChan < NCHANNELS ; cChan++ )
+                                {
+
+                                    int cHits = cEvent->DataBit ( cFe->getId(), cCbc->getId(), cChan ); 
+                                    cSignalScan->Fill( cChan,cVcth,  cHits );
+                                    cHitCounter += cHits;
+                                    cTotalHitCounter += cHits;
                                 }
                             }
+                        }
+
+                        double cMaxNhits = cNeventsReadBack*NCHANNELS*2 ; 
+                        double cMeanOccupancy  = cHitCounter/(double)(cMaxNhits);
+                        LOG (INFO) << BOLDBLUE << "........Event# " << cTotalEventCounter << " finished - inst. hit occ = " << cMeanOccupancy*100 << " percent [ counting for " << t.getCurrentTime() << " s.]" << RESET ;
+                    
+                        cContinue = pTimedRun ? ( t.getCurrentTime() < fTimeToWait ) :  (cTotalEventCounter < cNevents );
+                        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+                    }while( cContinue ); 
+
+                    double cTimeElapsed = t.getCurrentTime();  
+                    for ( auto cCbc : *cFe)
+                    {
+                        TString cHistName = Form("Fe%dCbc%d_Time_SignalScan" , +cFe->getId() , +cCbc->getId() );
+                        TH1D* cTime = ( TH1D* ) ( gROOT->FindObject ( cHistName ) );
+                        cTime->Fill( cVcth , cTimeElapsed );
+                    }
+                    fBeBoardInterface->Pause(theBoard);
+                    t.stop();
+
+                    // calculate efficiency and assoc. error for each channel 
+                    for ( auto cCbc : *cFe )
+                    {
+                        TString cHistName = Form("Fe%dCbc%d_SignalScan" , +cFe->getId() , +cCbc->getId() );
+                        TH2D* cSignalScan = dynamic_cast<TH2D*> ( getHist ( cCbc, cHistName.Data() ) );
+                        int cBinY = cSignalScan->GetYaxis()->FindBin( cVcth );
+
+
+                        for( int cBin = 1 ; cBin < cSignalScan->GetNbinsX() ; cBin++ )
+                        {
+                            int cHits = cSignalScan->GetBinContent(cBin, cBinY);
+                            double k = (double)cHits;
+                            double n = (double)cTotalEventCounter;
                             
-                            cHistName = Form("Fe%dCbc%d_SignalScan" , +cFe->getFeId() , +cCbc->getChipId() );
-                            TH2D* cSignalScan = dynamic_cast<TH2D*> ( getHist ( cCbc, cHistName.Data() ) );
+                            double cEfficiency_Bayesian =  (k+1)/(n+2);
+                            double cSigmaEfficiency_Bayesian = std::sqrt( ((k+1)*(k+2))/( (n+2)*(n+3) ) - std::pow((k+1)/(n+2) , 2.0) );
 
-                            for(int cChan = 0 ; cChan < NCHANNELS ; cChan++ )
-                            {
-
-                                int cHits = cEvent->DataBit ( cFe->getFeId(), cCbc->getChipId(), cChan ); 
-                                cSignalScan->Fill( cChan,cVcth,  cHits );
-                                cHitCounter += cHits;
-                                cTotalHitCounter += cHits;
-                            }
+                            cSignalScan->SetBinContent(cBin ,cBinY, cEfficiency_Bayesian*100);
+                            cSignalScan->SetBinError(cBin, cBinY, cSigmaEfficiency_Bayesian*100);
                         }
                     }
 
-                    double cMaxNhits = cNeventsReadBack*NCHANNELS*2 ; 
-                    double cMeanOccupancy  = cHitCounter/(double)(cMaxNhits);
-                    LOG (INFO) << BOLDBLUE << "........Event# " << cTotalEventCounter << " finished - inst. hit occ = " << cMeanOccupancy*100 << " percent [ counting for " << t.getCurrentTime() << " s.]" << RESET ;
-                
-                    cContinue = pTimedRun ? ( t.getCurrentTime() < fTimeToWait ) :  (cTotalEventCounter < cNevents );
-                    std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-                }while( cContinue ); 
-
-                double cTimeElapsed = t.getCurrentTime();  
-                for ( auto cCbc : cFe->fReadoutChipVector )
-                {
-                    TString cHistName = Form("Fe%dCbc%d_Time_SignalScan" , +cFe->getFeId() , +cCbc->getChipId() );
-                    TH1D* cTime = ( TH1D* ) ( gROOT->FindObject ( cHistName ) );
-                    cTime->Fill( cVcth , cTimeElapsed );
+                    // stop if it takes more than 20 s to record the data point ... 
+                    if( cTimeElapsed > 20 )
+                        break; 
                 }
-                fBeBoardInterface->Pause(pBoard);
-                t.stop();
-
-                // calculate efficiency and assoc. error for each channel 
-                for ( auto cCbc : cFe->fReadoutChipVector )
-                {
-                    TString cHistName = Form("Fe%dCbc%d_SignalScan" , +cFe->getFeId() , +cCbc->getChipId() );
-                    TH2D* cSignalScan = dynamic_cast<TH2D*> ( getHist ( cCbc, cHistName.Data() ) );
-                    int cBinY = cSignalScan->GetYaxis()->FindBin( cVcth );
-
-
-                    for( int cBin = 1 ; cBin < cSignalScan->GetNbinsX() ; cBin++ )
-                    {
-                        int cHits = cSignalScan->GetBinContent(cBin, cBinY);
-                        double k = (double)cHits;
-                        double n = (double)cTotalEventCounter;
-                        
-                        double cEfficiency_Bayesian =  (k+1)/(n+2);
-                        double cSigmaEfficiency_Bayesian = std::sqrt( ((k+1)*(k+2))/( (n+2)*(n+3) ) - std::pow((k+1)/(n+2) , 2.0) );
-
-                        cSignalScan->SetBinContent(cBin ,cBinY, cEfficiency_Bayesian*100);
-                        cSignalScan->SetBinError(cBin, cBinY, cSigmaEfficiency_Bayesian*100);
-                    }
-                }
-
-                // stop if it takes more than 20 s to record the data point ... 
-                if( cTimeElapsed > 20 )
-                    break; 
             }
         }
-        fBeBoardInterface->Stop(pBoard);
+        fBeBoardInterface->Stop(theBoard);
     }
 
 }
