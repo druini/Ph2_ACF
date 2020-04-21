@@ -122,21 +122,21 @@ namespace Ph2_HwInterface
 
 
     // ################################
-    // # Enabling modules and chips   #
-    // # Module_type hard coded in FW #
-    // # 1 = single chip module       #
-    // # 2 = double chip module       #
-    // # 4 = quad chip module         #
+    // # Enabling hybrids and chips   #
+    // # Hybrid_type hard coded in FW #
+    // # 1 = single chip              #
+    // # 2 = double chip hybrid       #
+    // # 4 = quad chip hybrid         #
     // ################################
     this->singleChip  = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
     uint32_t chips_en = 0;
-    enabledModules    = 0;
+    enabledHybrids    = 0;
     for (const auto cOpticalGroup : *pBoard)
       for (const auto cHybrid : *cOpticalGroup)
         {
-          uint16_t module_id = cHybrid->getId();
-          enabledModules |= 1 << module_id;
-          if (this->singleChip == true) chips_en = enabledModules;
+          uint16_t hybrid_id = cHybrid->getId();
+          enabledHybrids |= 1 << hybrid_id;
+          if (this->singleChip == true) chips_en = enabledHybrids;
           else
             {
               uint16_t mod_chips_en = 0;
@@ -145,10 +145,10 @@ namespace Ph2_HwInterface
                   uint16_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
                   mod_chips_en |= 1 << chip_lane;
                 }
-              chips_en |= mod_chips_en << (NLANE_MODULE * module_id);
+              chips_en |= mod_chips_en << (NLANE_HYBRID * hybrid_id);
             }
         }
-    cVecReg.push_back({"user.ctrl_regs.Hybrids_en", enabledModules});
+    cVecReg.push_back({"user.ctrl_regs.Hybrids_en", enabledHybrids});
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
 
     if (cVecReg.size() != 0) WriteStackReg(cVecReg);
@@ -174,20 +174,14 @@ namespace Ph2_HwInterface
     // ##############################
     // # AURORA lock on data stream #
     // ##############################
-    if (this->singleChip == true)
+    while (RD53FWInterface::CheckChipCommunication() == false)
       {
-        while (RD53FWInterface::CheckChipCommunication() == false)
+        if (this->singleChip == true)
           {
             RD53FWInterface::WriteChipCommand(std::vector<uint16_t>(NFRAMES_SYNC, 0), -1);
             usleep(DEEPSLEEP);
           }
-      }
-    else
-      {
-        while (RD53FWInterface::CheckChipCommunication() == false)
-          {
-            RD53FWInterface::InitModuleByModule(pBoard);
-          }
+        else RD53FWInterface::InitHybridByHybrid(pBoard);
       }
   }
 
@@ -215,9 +209,9 @@ namespace Ph2_HwInterface
     LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
   }
 
-  void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, int moduleId)
+  void RD53FWInterface::WriteChipCommand (const std::vector<uint16_t>& data, int hybridId)
   // #############################################
-  // # moduleId < 0 --> broadcast to all modules #
+  // # hybridId < 0 --> broadcast to all hybrids #
   // #############################################
   {
     size_t n32bitWords = (data.size() / 2) + (data.size() % 2);
@@ -242,7 +236,7 @@ namespace Ph2_HwInterface
     stackRegisters.reserve(n32bitWords + 1);
 
     // Header
-    stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<6, 10, 4, 12>(HEADEAR_WRTCMD, (moduleId < 0 ? enabledModules : 1 << moduleId), 0, n32bitWords));
+    stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<6, 10, 4, 12>(HEADEAR_WRTCMD, (hybridId < 0 ? enabledHybrids : 1 << hybridId), 0, n32bitWords));
 
     // Commands
     for (auto i = 1u; i < data.size(); i += 2)
@@ -279,7 +273,7 @@ namespace Ph2_HwInterface
 
     uint32_t chipLane;
     if (this->singleChip == true) chipLane = pChip->getFeId(); // @TMP@
-    else                          chipLane = NLANE_MODULE * pChip->getFeId() + static_cast<RD53*>(pChip)->getChipLane(); // @TMP@
+    else                          chipLane = NLANE_HYBRID * pChip->getFeId() + static_cast<RD53*>(pChip)->getChipLane(); // @TMP@
 
 
     // #####################
@@ -357,13 +351,13 @@ namespace Ph2_HwInterface
 
 
     // ##########################
-    // # Check module registers #
+    // # Check hybrid registers #
     // ##########################
-    unsigned int modules = ReadReg("user.stat_regs.aurora_rx.Module_type");
-    LOG (INFO) << GREEN << "Module type: " << BOLDYELLOW << modules << RESET << GREEN " (1=single chip, 2=double chip, 4=quad chip)" << RESET;
+    unsigned int hybrid = ReadReg("user.stat_regs.aurora_rx.Module_type");
+    LOG (INFO) << GREEN << "Hybrid type: " << BOLDYELLOW << hybrid << RESET << GREEN " (1=single chip, 2=double chip, 4=quad chip)" << RESET;
 
-    modules = ReadReg("user.stat_regs.aurora_rx.Nb_of_modules");
-    LOG (INFO) << GREEN << "Number of modules which can be potentially readout: " << BOLDYELLOW << modules << RESET;
+    hybrid = ReadReg("user.stat_regs.aurora_rx.Nb_of_modules");
+    LOG (INFO) << GREEN << "Number of hybrids which can be potentially readout: " << BOLDYELLOW << hybrid << RESET;
   }
 
   bool RD53FWInterface::CheckChipCommunication()
@@ -397,108 +391,119 @@ namespace Ph2_HwInterface
     return true;
   }
 
-  void RD53FWInterface::InitModuleByModule(const BeBoard* pBoard)
+  void RD53FWInterface::InitHybridByHybrid (const BeBoard* pBoard)
   {
-    for (const auto& cModule : pBoard->fModuleVector)
-    {
-      //Get which lanes to check for this module
-      const uint16_t module_id = cModule->getFeId(); // @TMP@
-      uint16_t mod_chips_en = 0;
-      for (const auto cChip : *cModule)
+    const unsigned int MAXSEQUENCES =  5;
+
+    for (const auto cOpticalGroup : *pBoard)
+      for (const auto cHybrid : *cOpticalGroup)
       {
-        uint16_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
-        mod_chips_en |= 1 << chip_lane;
-      }
-      uint16_t chips_en_to_check = mod_chips_en << (NLANE_MODULE * module_id);
-
-      //Check if link is already up
-      uint32_t channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
-
-      if((channel_up & chips_en_to_check) == chips_en_to_check)
-      {
-        LOG (INFO) << BOLDGREEN << "Module [" << BOLDYELLOW << module_id << BOLDGREEN << "] already locked" << RESET;
-        continue;
-      }
-
-      //Try different init sequences
-      bool lanes_up = false;
-      for(unsigned int seq = 0; seq < 5; seq++)
-      {
-        LOG (INFO)  << BOLDGREEN << "Trying sequence number: " << BOLDYELLOW << seq << RESET;
-        LOG (INFO)  << BOLDBLUE << "\t--> Number of required data lanes for module [" << module_id << "]: "
-                    << BOLDYELLOW << RD53Shared::countBitsOne(chips_en_to_check) 
-                    << BOLDBLUE << " i.e. " 
-                    << BOLDYELLOW << std::bitset<12>(chips_en_to_check) 
-            << RESET;
-
-        std::vector<uint16_t> initSequence = RD53FWInterface::GetInitSequence(seq);
-
-        for(int i = 0; i < 20; i++)
-        {
-          //Write sequence 
-          RD53FWInterface::WriteChipCommand(initSequence, module_id);
-          usleep(10000);
-
-          //Check if all lanes are up
-          lanes_up = false;
-          uint32_t channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
-
-          LOG (INFO)  << BOLDBLUE << "\t--> Number of active data lanes for try [" << i << "]: "
-                      << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) 
-                      << BOLDBLUE << " i.e. " 
-                      << BOLDYELLOW << std::bitset<12>(channel_up) 
-              << RESET;
-
-          if((channel_up & chips_en_to_check) == chips_en_to_check)
+        // ########################
+        // # Retrieve lane number #
+        // ########################
+        const uint16_t hybrid_id = cHybrid->getId();
+        uint16_t mod_chips_en = 0;
+        for (const auto cChip : *cHybrid)
           {
-            LOG (INFO) << BOLDGREEN << "Module [" << BOLDYELLOW << module_id << BOLDGREEN << "] locked with Sequence " 
-                      << BOLDYELLOW << seq << BOLDGREEN << " on try " << BOLDYELLOW << i << RESET;
-            lanes_up = true;
-            break;
+            uint16_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
+            mod_chips_en |= 1 << chip_lane;
           }
-        }
-        if( lanes_up )
-          break;
-      }
+        uint16_t chips_en_to_check = mod_chips_en << (NLANE_HYBRID * hybrid_id);
 
-      if( !lanes_up )
-        LOG (WARNING) << BOLDRED << "Not all data lanes up for module: " << BOLDYELLOW << module_id << RESET;
-    }
+
+        // #############################
+        // # Check if all lanes are up #
+        // #############################
+        uint32_t channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
+
+        if ((channel_up & chips_en_to_check) == chips_en_to_check)
+          {
+            LOG (INFO) << BOLDGREEN << "Hybrid [" << BOLDYELLOW << hybrid_id << BOLDGREEN << "] already locked" << RESET;
+            continue;
+          }
+
+
+        // ################################
+        // # Try different init sequences #
+        // ################################
+        bool lanes_up;
+        for (unsigned int seq = 0; seq < MAXSEQUENCES; seq++)
+          {
+            LOG (INFO)  << BOLDGREEN << "Trying sequence number: " << BOLDYELLOW << seq << RESET;
+            LOG (INFO)  << BOLDBLUE << "\t--> Number of required data lanes for hybrid [" << BOLDYELLOW << hybrid_id << BOLDBLUE << "]: "
+                        << BOLDYELLOW << RD53Shared::countBitsOne(chips_en_to_check)
+                        << BOLDBLUE << " i.e. "
+                        << BOLDYELLOW << std::bitset<12>(chips_en_to_check)
+                        << RESET;
+
+            std::vector<uint16_t> initSequence = RD53FWInterface::GetInitSequence(seq);
+
+            for (unsigned int i = 0; i < MAXATTEMPTS; i++)
+              {
+                RD53FWInterface::WriteChipCommand(initSequence, hybrid_id);
+                usleep(DEEPSLEEP);
+
+
+                // #############################
+                // # Check if all lanes are up #
+                // #############################
+                lanes_up = false;
+                uint32_t channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
+
+                LOG (INFO)  << BOLDBLUE << "\t--> Number of active data lanes for try [" << BOLDYELLOW << i << BOLDBLUE << "]: "
+                            << BOLDYELLOW << RD53Shared::countBitsOne(channel_up)
+                            << BOLDBLUE << " i.e. "
+                            << BOLDYELLOW << std::bitset<12>(channel_up)
+                            << RESET;
+
+                if ((channel_up & chips_en_to_check) == chips_en_to_check)
+                  {
+                    LOG (INFO) << BOLDGREEN << "Hybrid [" << BOLDYELLOW << hybrid_id << BOLDGREEN << "] locked with Sequence "
+                               << BOLDYELLOW << seq << BOLDGREEN << " on try " << BOLDYELLOW << i << RESET;
+                    lanes_up = true;
+                    break;
+                  }
+              }
+
+            if (lanes_up == true) break;
+          }
+
+        if (lanes_up == false) LOG (ERROR) << BOLDRED << "Not all data lanes are up for hybrid: " << BOLDYELLOW << hybrid_id << RESET;
+      }
   }
 
-  std::vector<uint16_t> RD53FWInterface::GetInitSequence(const unsigned int type)
+  std::vector<uint16_t> RD53FWInterface::GetInitSequence (const unsigned int type)
   {
     std::vector<uint16_t> initSequence;
 
-    switch(type)
-    {
-      case 0: //Okay for all (3 TBPX, 1 TEPX modules so far)
-        for(unsigned int i = 0; i < 500; i++)     initSequence.push_back(0x0000);  //0000 0000
-        for(unsigned int i = 0; i < 2000; i++)    initSequence.push_back(0xCCCC);  //1100 1100
+    switch (type)
+      {
+      case 0: // Okay for all (3 TBPX, 1 TEPX hybridss so far)
+        for (unsigned int i = 0; i <  500; i++) initSequence.push_back(0x0000);  // 0000 0000
+        for (unsigned int i = 0; i < 2000; i++) initSequence.push_back(0xCCCC);  // 1100 1100
         break;
-        
-      case 1: //Seen to be good for some TBPX modules
-        for(unsigned int i = 0; i < 1000; i++)    initSequence.push_back(0xFFFF);  //1111 1111
-        for(unsigned int i = 0; i < 500; i++)     initSequence.push_back(0x3333);  //0011 0011
-        break;
-        
-      case 2: //Seen to be good for TEPX module
-        for(unsigned int i = 0; i < 500; i++)     initSequence.push_back(0x0000);  //0000 0000
-        for(unsigned int i = 0; i < 1000; i++)    initSequence.push_back(0x3333);  //0011 0011
-        break;
-        
-      case 3: //Seen to be good for TEPX module
-        for(unsigned int i = 0; i < 1000; i++)    initSequence.push_back(0x0F0F);  //0011 0011
+      case 1: // Seen to be good for some TBPX hybrids
+        for (unsigned int i = 0; i < 1000; i++) initSequence.push_back(0xFFFF);  // 1111 1111
+        for (unsigned int i = 0; i <  500; i++) initSequence.push_back(0x3333);  // 0011 0011
         break;
 
-      case 4: //Default for single chips (Doesn't work well with modules)
-        for(unsigned int i = 0; i < 1000; i++)     initSequence.push_back(0x0000);  //0000 0000
-      
-      default: //case 0 -> seems to be work with all
-        for(unsigned int i = 0; i < 500; i++)     initSequence.push_back(0x0000);  //0000 0000
-        for(unsigned int i = 0; i < 2000; i++)    initSequence.push_back(0xCCCC);  //1100 1100
+      case 2: // Seen to be good for TEPX hybrid
+        for (unsigned int i = 0;  i < 500; i++) initSequence.push_back(0x0000);  // 0000 0000
+        for (unsigned int i = 0; i < 1000; i++) initSequence.push_back(0x3333);  // 0011 0011
         break;
-    }
+
+      case 3: // Seen to be good for TEPX hybrid
+        for (unsigned int i = 0; i < 1000; i++) initSequence.push_back(0x0F0F);  // 0011 0011
+        break;
+
+      case 4: // Default for single chips (Doesn't work well with hybrids)
+        for (unsigned int i = 0; i < 1000; i++) initSequence.push_back(0x0000);  // 0000 0000
+
+      default: // Case 0 -> seems to be work with all
+        for (unsigned int i = 0;  i < 500; i++) initSequence.push_back(0x0000);  // 0000 0000
+        for (unsigned int i = 0; i < 2000; i++) initSequence.push_back(0xCCCC);  // 1100 1100
+        break;
+      }
 
     return initSequence;
   }
@@ -655,7 +660,7 @@ namespace Ph2_HwInterface
           {
             LOG (INFO) << CYAN << "------- Chip Header -------"                            << RESET;
             LOG (INFO) << CYAN << "error_code      = " << evt.chip_frames[j].error_code    << RESET;
-            LOG (INFO) << CYAN << "module_id       = " << evt.chip_frames[j].module_id     << RESET;
+            LOG (INFO) << CYAN << "hybrid_id       = " << evt.chip_frames[j].hybrid_id     << RESET;
             LOG (INFO) << CYAN << "chip_lane       = " << evt.chip_frames[j].chip_lane     << RESET;
             LOG (INFO) << CYAN << "l1a_data_size   = " << evt.chip_frames[j].l1a_data_size << RESET;
             LOG (INFO) << CYAN << "chip_type       = " << evt.chip_frames[j].chip_type     << RESET;
@@ -891,7 +896,7 @@ namespace Ph2_HwInterface
     for (auto& evt : decodedEvents)
       for (auto& chip_frame : evt.chip_frames)
         {
-          int chip_id = RD53FWInterface::Event::lane2chipId(pBoard, chip_frame.module_id, chip_frame.chip_lane);
+          int chip_id = RD53FWInterface::Event::lane2chipId(pBoard, chip_frame.hybrid_id, chip_frame.chip_lane);
           if (chip_id != -1) chip_frame.chip_id = chip_id;
         }
   }
@@ -902,9 +907,9 @@ namespace Ph2_HwInterface
     size_t chipIndx;
 
     for (const auto& cOpticalGroup : *boardContainer)
-      for (const auto& cModule : *cOpticalGroup)
-        for (const auto& cChip : *cModule)
-          if (RD53FWInterface::Event::isHittedChip(cModule->getId(), cChip->getId(), chipIndx) == true)
+      for (const auto& cHybrid : *cOpticalGroup)
+        for (const auto& cChip : *cHybrid)
+          if (RD53FWInterface::Event::isHittedChip(cHybrid->getId(), cChip->getId(), chipIndx) == true)
             {
               if (vectorRequired == true)
                 {
@@ -923,10 +928,10 @@ namespace Ph2_HwInterface
             }
   }
 
-  bool RD53FWInterface::Event::isHittedChip (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const
+  bool RD53FWInterface::Event::isHittedChip (uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const
   {
     for (auto i = 0u; i < chip_frames.size(); i++)
-      if ((module_id == chip_frames[i].module_id) && (chip_id == chip_frames[i].chip_id) && (chip_events[i].hit_data.size() != 0))
+      if ((hybrid_id == chip_frames[i].hybrid_id) && (chip_id == chip_frames[i].chip_id) && (chip_events[i].hit_data.size() != 0))
         {
           chipIndx = i;
           return true;
@@ -935,19 +940,19 @@ namespace Ph2_HwInterface
     return false;
   }
 
-  int RD53FWInterface::Event::lane2chipId (const BeBoard* pBoard, uint16_t module_id, uint16_t chip_lane)
+  int RD53FWInterface::Event::lane2chipId (const BeBoard* pBoard, uint16_t hybrid_id, uint16_t chip_lane)
   {
     // #############################
     // # Translate lane to chip ID #
     // #############################
     if (pBoard != nullptr)
       {
-        Module* module = pBoard->at(0)->at(module_id);
-        if (module != nullptr)
+        Module* hybrid = pBoard->at(0)->at(hybrid_id);
+        if (hybrid != nullptr)
           {
-            auto it = std::find_if(module->begin(), module->end(), [=] (ChipContainer* pChip)
+            auto it = std::find_if(hybrid->begin(), hybrid->end(), [=] (ChipContainer* pChip)
                                    { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
-            if (it != module->end()) return (*it)->getId();
+            if (it != hybrid->end()) return (*it)->getId();
           }
       }
     return -1; // Chip not found
@@ -1036,7 +1041,7 @@ namespace Ph2_HwInterface
 
   RD53FWInterface::ChipFrame::ChipFrame (const uint32_t data0, const uint32_t data1)
   {
-    std::tie(error_code, module_id, chip_lane, l1a_data_size) = bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
+    std::tie(error_code, hybrid_id, chip_lane, l1a_data_size) = bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
     std::tie(chip_type, frame_delay)                          = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
   }
   // ########################
