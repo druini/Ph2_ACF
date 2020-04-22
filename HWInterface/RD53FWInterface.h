@@ -28,7 +28,6 @@
 #define DEEPSLEEP  100000 // [microseconds]
 #define READOUTSLEEP   50 // [microseconds]
 #define MAXATTEMPTS    20 // Maximum number of attempts
-#define NFRAMES_SYNC 1000 // Number of frames needed to synchronize chip communication
 #define NWORDS_DDR3     4 // Number of IPbus words in a DDR3 word
 #define NLANE_HYBRID    4 // Number of lanes per hybrid
 #define HEADEAR_WRTCMD  0xFF // Header of chip write command sequence
