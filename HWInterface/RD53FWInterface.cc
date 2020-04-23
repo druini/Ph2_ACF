@@ -175,14 +175,7 @@ namespace Ph2_HwInterface
     // # AURORA lock on data stream #
     // ##############################
     while (RD53FWInterface::CheckChipCommunication() == false)
-      {
-        if (this->singleChip == true)
-          {
-            RD53FWInterface::WriteChipCommand(std::vector<uint16_t>(NFRAMES_SYNC, 0), -1);
-            usleep(DEEPSLEEP);
-          }
-        else RD53FWInterface::InitHybridByHybrid(pBoard);
-      }
+      RD53FWInterface::InitHybridByHybrid(pBoard);
   }
 
   void RD53FWInterface::ConfigureFromXML (const BeBoard* pBoard)
@@ -393,7 +386,7 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::InitHybridByHybrid (const BeBoard* pBoard)
   {
-    const unsigned int MAXSEQUENCES =  5;
+    const unsigned int MAXSEQUENCES = 5;
 
     for (const auto cOpticalGroup : *pBoard)
       for (const auto cHybrid : *cOpticalGroup)
@@ -418,7 +411,7 @@ namespace Ph2_HwInterface
 
         if ((channel_up & chips_en_to_check) == chips_en_to_check)
           {
-            LOG (INFO) << BOLDGREEN << "Hybrid [" << BOLDYELLOW << hybrid_id << BOLDGREEN << "] already locked" << RESET;
+            LOG (INFO) << GREEN << "Board/OpticalGroup/Hybrid [" << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << hybrid_id << RESET << GREEN << "] already locked" << RESET;
             continue;
           }
 
@@ -429,14 +422,14 @@ namespace Ph2_HwInterface
         bool lanes_up;
         for (unsigned int seq = 0; seq < MAXSEQUENCES; seq++)
           {
-            LOG (INFO)  << BOLDGREEN << "Trying sequence number: " << BOLDYELLOW << seq << RESET;
-            LOG (INFO)  << BOLDBLUE << "\t--> Number of required data lanes for hybrid [" << BOLDYELLOW << hybrid_id << BOLDBLUE << "]: "
+            LOG (INFO)  << GREEN << "Trying sequence number: " << BOLDYELLOW << seq << RESET;
+            LOG (INFO)  << BOLDBLUE << "\t--> Number of required data lanes for [board/opticalGroup/hybrid = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << hybrid_id << BOLDBLUE << "]: "
                         << BOLDYELLOW << RD53Shared::countBitsOne(chips_en_to_check)
                         << BOLDBLUE << " i.e. "
                         << BOLDYELLOW << std::bitset<12>(chips_en_to_check)
                         << RESET;
 
-            std::vector<uint16_t> initSequence = RD53FWInterface::GetInitSequence(seq);
+            std::vector<uint16_t> initSequence = RD53FWInterface::GetInitSequence(this->singleChip == true ? seq : 4);
 
             for (unsigned int i = 0; i < MAXATTEMPTS; i++)
               {
@@ -458,8 +451,8 @@ namespace Ph2_HwInterface
 
                 if ((channel_up & chips_en_to_check) == chips_en_to_check)
                   {
-                    LOG (INFO) << BOLDGREEN << "Hybrid [" << BOLDYELLOW << hybrid_id << BOLDGREEN << "] locked with Sequence "
-                               << BOLDYELLOW << seq << BOLDGREEN << " on try " << BOLDYELLOW << i << RESET;
+                    LOG (INFO) << GREEN << "Board/OpticalGroup/Hybrid [" << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << hybrid_id << RESET << GREEN << "] locked with sequence "
+                               << BOLDYELLOW << seq << RESET << GREEN << " on try " << BOLDYELLOW << i << RESET;
                     lanes_up = true;
                     break;
                   }
