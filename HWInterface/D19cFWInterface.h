@@ -8,7 +8,7 @@
         Support :                       mail to : georg.auzinger@SPAMNOT.cern.ch
                                                   mykyta.haranko@SPAMNOT.cern.ch
 
- */
+*/
 
 #ifndef _D19CFWINTERFACE_H__
 #define _D19CFWINTERFACE_H__

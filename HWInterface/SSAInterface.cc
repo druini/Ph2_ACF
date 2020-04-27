@@ -55,7 +55,6 @@ namespace Ph2_HwInterface {// start namespace
         if(inject) enwrite=21;
         for (uint32_t i = 1; i<=pChip->getNumberOfChannels();i++ ) this->WriteChipReg(pChip, "ENFLAGS_S" + std::to_string(i), enwrite);
         return this->WriteChipReg(pChip, "FE_Calibration" , (int)inject ,pVerifLoop );
-
     }
 
     bool SSAInterface::setInjectionAmplitude (ReadoutChip* pChip, uint8_t injectionAmplitude, bool  pVerifLoop)

@@ -17,6 +17,7 @@
 #include "../RootUtils/HistContainer.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Container.h"
+#include "../HWDescription/ReadoutChip.h"
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TCanvas.h"
@@ -38,6 +39,8 @@ DQMHistogramPedeNoise::~DQMHistogramPedeNoise ()
 //========================================================================================================================
 void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
+    uint32_t NCH = NCHANNELS;
+    if (static_cast<Ph2_HwDescription::ReadoutChip*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getFrontEndType() == FrontEndType::SSA) NCH = NSSACHANNELS;
 
     auto cSetting = pSettingsMap.find ( "PlotSCurves" );
     fPlotSCurves = ( cSetting != std::end ( pSettingsMap ) ) ? cSetting->second : 0;
@@ -51,10 +54,18 @@ void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &
     //SCurve
     if(fPlotSCurves)
     {
+
         uint16_t nYbins = 1024;
         float    minY   = -0.5;
         float    maxY   = 1023.5;
-        HistContainer<TH2F> theTH2FSCurve( "SCurve", "SCurve", 254, -0.5, 253.5, nYbins, minY, maxY );
+        if(cWithSSA) 
+        {
+            nYbins = 255;
+            minY   = -0.5;
+            maxY   = 254.5;  
+        }
+
+        HistContainer<TH2F> theTH2FSCurve( "SCurve", "SCurve", NCH, -0.5, NCH-0.5, nYbins, minY, maxY );
         RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorSCurveHistograms, theTH2FSCurve);
         if(fFitSCurves)
         {
@@ -74,19 +85,19 @@ void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorNoiseHistograms, theTH1FNoiseContainer);
     
     //Strip Noise
-    HistContainer<TH1F> theTH1FStripNoiseContainer("StripNoiseDistribution", "Strip Noise", NCHANNELS, -0.5, 253.5);
+    HistContainer<TH1F> theTH1FStripNoiseContainer("StripNoiseDistribution", "Strip Noise", NCH, -0.5, float(NCH)-0.5);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripNoiseHistograms, theTH1FStripNoiseContainer);
     
     //Strip Pedestal
-    HistContainer<TH1F> theTH1FStripPedestalContainer("StripPedestalDistribution", "Strip Pedestal", NCHANNELS, -0.5, 253.5);
+    HistContainer<TH1F> theTH1FStripPedestalContainer("StripPedestalDistribution", "Strip Pedestal", NCH, -0.5, float(NCH)-0.5);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripPedestalHistograms, theTH1FStripPedestalContainer);
     
     //Strip Noise Even
-    HistContainer<TH1F> theTH1FStripNoiseEvenContainer("StripNoiseEvenDistribution", "Strip Noise Even", NCHANNELS / 2, -0.5, 126.5 );
+    HistContainer<TH1F> theTH1FStripNoiseEvenContainer("StripNoiseEvenDistribution", "Strip Noise Even", NCH / 2, -0.5, 126.5 );
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripNoiseEvenHistograms, theTH1FStripNoiseEvenContainer);
     
     //Strip Noise Odd
-    HistContainer<TH1F> theTH1FStripNoiseOddContainer("StripNoiseOddDistribution", "Strip Noise Odd", NCHANNELS / 2, -0.5, 126.5 );
+    HistContainer<TH1F> theTH1FStripNoiseOddContainer("StripNoiseOddDistribution", "Strip Noise Odd", NCH / 2, -0.5, 126.5 );
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripNoiseOddHistograms, theTH1FStripNoiseOddContainer);
     
     //Module Noise
@@ -94,11 +105,11 @@ void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &
     RootContainerFactory::bookModuleHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorModuleNoiseHistograms, theTH1FModuleNoiseContainer);
     
     //Module Strip Noise
-    HistContainer<TH1F> theTH1FModuleStripNoiseContainer("ModuleStripNoiseDistribution", "ModuleStrip Noise", NCHANNELS*8, -0.5, NCHANNELS*8 - 0.5);
+    HistContainer<TH1F> theTH1FModuleStripNoiseContainer("ModuleStripNoiseDistribution", "ModuleStrip Noise", NCH*8, -0.5, float(NCH)*8 - 0.5);
     RootContainerFactory::bookModuleHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorModuleStripNoiseHistograms, theTH1FModuleStripNoiseContainer);
     
     //Validation
-    HistContainer<TH1F> theTH1FValidationContainer("Occupancy", "Occupancy", 254, -0.5, 253.5);
+    HistContainer<TH1F> theTH1FValidationContainer("Occupancy", "Occupancy", NCH, -0.5, float(NCH)-0.5);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorValidationHistograms, theTH1FValidationContainer);
     
 }

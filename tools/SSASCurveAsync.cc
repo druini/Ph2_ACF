@@ -50,7 +50,7 @@ void SSASCurve::run(void)
         //float prevrms=999.0;
 
         //float vfac=1.4;//
-        float vfac=1.2;
+        float vfac=1.0;
 
 
         //std::vector<float> prev;
@@ -65,6 +65,24 @@ void SSASCurve::run(void)
         //std::vector<float> goal;
         float mean=0.0;
         float Nstrip=0.0;
+
+       
+        /*for(auto cBoard : *fDetectorContainer)
+            {
+                for(auto cOpticalGroup : *cBoard)
+                {
+                    for(auto cHybrid : *cOpticalGroup)
+                    {
+                        for(auto cChip : *cHybrid)
+                        {
+                            this->fReadoutChipInterface->enableInjection(static_cast<ReadoutChip*>(cChip), 1);
+                            this->fReadoutChipInterface->setInjectionAmplitude(static_cast<ReadoutChip*>(cChip), 40);
+                        }
+                    }
+                }
+        }   */
+
+
         for (size_t thd = StartTHDAC; thd<=StopTHDAC; thd++)
         {
             Nstrip=0.0;
@@ -105,7 +123,7 @@ void SSASCurve::run(void)
 
 
                             //if ( channelNumber==1)
-                            //LOG (INFO) << BOLDRED <<curh<< RESET;
+                            //LOG (INFO) << BOLDRED <<thd<<": "<<curh<< RESET;
                             if ((channel.first[1]>Nlvl) && (curh<channel.first[1]/2) && (channel.first[0]>channel.first[1]/2))
                                 {
 

@@ -134,11 +134,13 @@ void PedeNoise::sweepSCurves ()
 
     if(fPulseAmplitude != 0){
         this->enableTestPulse( true );
-        setFWTestPulse();
 
+        setFWTestPulse();
         for ( auto cBoard : *fDetectorContainer )
         {
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
+            std::cout<<"Bias_CALDAC "<<fPulseAmplitude<<std::endl;
+            if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", fPulseAmplitude);
+            else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
         }
 
         // setSameGlobalDac("TestPulsePotNodeSel",  fPulseAmplitude);
@@ -160,7 +162,9 @@ void PedeNoise::sweepSCurves ()
     this->SetTestAllChannels(originalAllChannelFlag);
     if(fPulseAmplitude != 0){
         this->enableTestPulse( false );
-        setSameGlobalDac("TestPulsePotNodeSel",  0);
+        if(cWithSSA) setSameGlobalDac("Bias_CALDAC",  0); 
+        else setSameGlobalDac("TestPulsePotNodeSel",  0);
+        
         LOG (INFO) << BLUE <<  "Disabled test pulse. " << RESET ;
 
     }
@@ -226,17 +230,25 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
                 for ( auto cROC : *cFe )
                 {
                     RegisterVector cRegVec;
-
-                    for (uint32_t iChan = 0; iChan < NCHANNELS; iChan++)
+                    uint32_t NCH = NCHANNELS;
+                    if(cWithSSA) NCH = NSSACHANNELS;
+                    for (uint32_t iChan = 0; iChan < NCH; iChan++)
                     {
+                            LOG (INFO) << RED << "Ch " << iChan << RESET ;
                         float occupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cFe->getIndex())->at(cROC->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
                         if( occupancy > float ( pNoiseStripThreshold * 0.001 ) )
                         {
                             char cRegName[11];
-                            if(cWithCBC)sprintf(cRegName, "Channel%03d", iChan + 1 );
-                            if(cWithSSA)sprintf(cRegName, "THTRIMMING_S%d", iChan + 1 );
-                            // cRegName = Form ( "Channel%03d", iChan + 1 );
-                            cRegVec.push_back ({cRegName, 0xFF });
+                            if(cWithCBC)
+                            {
+                               sprintf(cRegName, "Channel%03d", iChan + 1 );
+                               cRegVec.push_back ({cRegName, 0xFF });
+                            }
+                            if(cWithSSA)
+                            {
+                                sprintf(cRegName, "THTRIMMING_S%d", iChan + 1 );
+                                cRegVec.push_back ({cRegName, 0x1F });
+                            }
                             LOG (INFO) << RED << "Found a noisy channel on ROC " << +cROC->getId() << " Channel " << iChan  << " with an occupancy of " << occupancy << "; setting offset to " << +0xFF << RESET ;
                         }
                     }
@@ -310,18 +322,20 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
     int      cSign           = 1;
     int      cIncrement      = 0;
     uint16_t cMaxValue       = (1 << 10) - 1;
+    if(cWithSSA)    cMaxValue       = (1 << 6) - 1;
 
     while (! (cAllZero && cAllOne) )
     {
+          LOG(INFO) << BOLDRED << "1" << RESET;
         DetectorDataContainer *theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
         fDetectorDataContainer = theOccupancyContainer;
         fSCurveOccupancyMap[cValue] = theOccupancyContainer;
 
-        
+           LOG(INFO) << BOLDRED << "2 " <<cValue<<" "<< fEventsPerPoint<< RESET;      
         if(cWithCBC)    this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
         if(cWithSSA)    this->setDacAndMeasureData("Bias_THDAC", cValue, fEventsPerPoint); 
 
-
+          LOG(INFO) << BOLDRED << "3" << RESET;
         #ifdef __USE_ROOT__
             if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue,*theOccupancyContainer);
         #else
@@ -380,7 +394,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         }
 
 
-        LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
+        LOG (INFO) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
         cValue = pStartValue + (cIncrement * cSign);
     }
 

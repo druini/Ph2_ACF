@@ -2407,7 +2407,7 @@ void D19cFWInterface::InitFMCPower()
     {
         // RESET the readout
         auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        pNEvents = pNEvents*(cMultiplicity+1);
+        //pNEvents = pNEvents*(cMultiplicity+1);
         
         auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source 
         auto cTriggerRate = (cTriggerSource == 5 || cTriggerSource == 6 ) ? 1 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz .. if external trigger assume 1 kHz as lowest possible rate
