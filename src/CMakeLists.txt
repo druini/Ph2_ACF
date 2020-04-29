@@ -1,8 +1,8 @@
 if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}========================================================================================================${Reset}") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}") 
+    MESSAGE(STATUS "    ${BoldYellow}========================================================================================================${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
     #includes
@@ -53,6 +53,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         link_directories(${PH2_ANTENNA_LIBRARY_DIRS})
         set(LIBS ${LIBS} ${PH2_ANTENNA_LIBRARIES} usb)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
+    endif()
+
+    #check for PowerSupply
+    if(${PH2_POWERSUPPLY_FOUND})
+      message("hallo" ... )
+      include_directories($(PH2_POWERSUPPLY_DIR))
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
     endif()
 
     #boost also needs to be linked
@@ -117,24 +124,24 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     message("--     ${BoldCyan}#### End ####${Reset}")
 
-    MESSAGE(STATUS " ") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}") 
-    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
+    MESSAGE(STATUS " ")
 
 else()
 
-    MESSAGE(STATUS " ") 
-    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}") 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
+    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS " ")
 
     link_directories(${UHAL_UHAL_LIB_PREFIX})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
-    MESSAGE(STATUS " ") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}") 
-    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
+    MESSAGE(STATUS " ")
 
 endif()
