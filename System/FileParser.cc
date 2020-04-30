@@ -99,7 +99,7 @@ namespace Ph2_System
   {
     uint32_t cBeId = pBeBordNode.attribute("Id").as_int();
     BeBoard* cBeBoard = pDetectorContainer->addBoardContainer(cBeId, new BeBoard(cBeId));//FIX Change it to Reference!!!!
-    
+
     pugi::xml_attribute cBoardTypeAttribute = pBeBordNode.attribute("boardType");
 
     if (cBoardTypeAttribute == nullptr)
@@ -110,7 +110,7 @@ namespace Ph2_System
 
     std::string cBoardType = cBoardTypeAttribute.value();
 
-    //CDCE 
+    //CDCE
     bool cConfigureCDCE = false;
     uint32_t cClockRateCDCE = 120;
     for (pugi::xml_node cChild: pBeBordNode.children("CDCE"))
@@ -165,8 +165,6 @@ namespace Ph2_System
     if (cBeBoard->getBoardType() == BoardType::D19C)
       {
         pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
-
-        
       }
     else if (cBeBoard->getBoardType() == BoardType::RD53)
       pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
@@ -188,65 +186,64 @@ namespace Ph2_System
     // Iterate the OpticalGroup node
     bool cWithOptical = false;
     for ( pugi::xml_node pOpticalGroupNode = pBeBordNode.child ( "OpticalGroup" ); pOpticalGroupNode; pOpticalGroupNode = pOpticalGroupNode.next_sibling() )
-    {
-          if ( static_cast<std::string> ( pOpticalGroupNode.name() ) == "OpticalGroup" )
+      {
+        if ( static_cast<std::string> ( pOpticalGroupNode.name() ) == "OpticalGroup" )
           {
-            // for now try and guess based on xml nodes what the FE is 
+            // for now try and guess based on xml nodes what the FE is
             this->parseOpticalGroupContainer (pOpticalGroupNode, cBeBoard, os );
 
             for (pugi::xml_node cChild: pOpticalGroupNode.children("GBT"))
-            {
-              std::string cName = cChild.name();
-              os << BOLDBLUE <<  "|"  << "----" <<  cName << "\n" << RESET;
-              uint8_t cGBTId = 0;
-              for (pugi::xml_attribute cAttribute: cChild.attributes())
               {
-                  if (std::string(cAttribute.name()) == "enable")
-                    cWithOptical = cWithOptical | (convertAnyInt(cAttribute.value()) == true);
+                std::string cName = cChild.name();
+                os << BOLDBLUE <<  "|"  << "----" <<  cName << "\n" << RESET;
+                uint8_t cGBTId = 0;
+                for (pugi::xml_attribute cAttribute: cChild.attributes())
+                  {
+                    if (std::string(cAttribute.name()) == "enable")
+                      cWithOptical = cWithOptical | (convertAnyInt(cAttribute.value()) == true);
 
-                  if( std::string ( cAttribute.name() ) == "Id") // T.B.D store this somewhere...but where 
-                  {
-                    cGBTId = convertAnyInt (cAttribute.value());
-                    os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << " GBT :      " << BOLDYELLOW << +cGBTId << std::endl << RESET;
-                  }
-                  if (cBeBoard->getBoardType() == BoardType::D19C)
-                  {
-                    if( std::string ( cAttribute.name() ) == "phaseTap") // T.B.D store this somewhere...but where 
-                    {
-                      static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setGBTxPhase( convertAnyInt (cAttribute.value()) );
-                      os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " phase is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
-                    }
-                    if( std::string ( cAttribute.name() ) == "txPolarity") // T.B.D store this somewhere...but where 
-                    {
-                      auto cPolarity = convertAnyInt (cAttribute.value()); 
-                      static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setTxPolarity(cGBTId,cPolarity );
-                      os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " Tx Polarity is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
-                    }
-                    if( std::string ( cAttribute.name() ) == "rxPolarity") // T.B.D store this somewhere...but where 
-                    {
-                      auto cPolarity = convertAnyInt (cAttribute.value()); 
-                      static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setRxPolarity( cGBTId,cPolarity );
-                      os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " Rx Polairty is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
-                    }
-                          
+                    if( std::string ( cAttribute.name() ) == "Id") // T.B.D store this somewhere...but where 
+                      {
+                        cGBTId = convertAnyInt (cAttribute.value());
+                        os << BOLDBLUE << "|" << "       " <<  "|"  << "----" << " GBT :      " << BOLDYELLOW << +cGBTId << std::endl << RESET;
+                      }
+                    if (cBeBoard->getBoardType() == BoardType::D19C)
+                      {
+                        if( std::string ( cAttribute.name() ) == "phaseTap") // T.B.D store this somewhere...but where 
+                          {
+                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setGBTxPhase( convertAnyInt (cAttribute.value()) );
+                            os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " phase is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
+                          }
+                        if( std::string ( cAttribute.name() ) == "txPolarity") // T.B.D store this somewhere...but where 
+                          {
+                            auto cPolarity = convertAnyInt (cAttribute.value()); 
+                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setTxPolarity(cGBTId,cPolarity );
+                            os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " Tx Polarity is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
+                          }
+                        if( std::string ( cAttribute.name() ) == "rxPolarity") // T.B.D store this somewhere...but where 
+                          {
+                            auto cPolarity = convertAnyInt (cAttribute.value()); 
+                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setRxPolarity( cGBTId,cPolarity );
+                            os << BOLDBLUE << "\t|" << "       " <<  "|"  << "----" << " Rx Polairty is :      " << BOLDYELLOW << cAttribute.value() << std::endl << RESET;
+                          }
+                      }
                   }
               }
-            }
           }
-    }
+      }
+
     cBeBoard->setOptical(cWithOptical);
     if (cWithOptical == true)
-      os << BOLDBLUE <<  "|"  << "----" << "Optical link: " << BOLDGREEN << " being used\n" << RESET;
+      os << BOLDBLUE << "|" << "       " << "|" << "----" << "Optical link: " << BOLDGREEN << "being used\n" << RESET;
     else
-    os << BOLDBLUE <<  "|"  << "----" << "Optical link: " << BOLDRED   << "not being used\n" << RESET;
+      os << BOLDBLUE << "|" << "       " << "|" << "----" << "Optical link: " << BOLDRED << "not being used\n" << RESET;
 
     pugi::xml_node cSLinkNode = pBeBordNode.child("SLink");
-    this->parseSLink (cSLinkNode, cBeBoard, os);
+    this->parseSLink(cSLinkNode, cBeBoard, os);
   }
 
   void FileParser::parseOpticalGroupContainer  (pugi::xml_node pOpticalGroupNode, BeBoard* pBoard, std::ostream& os )
   {
-
     uint32_t cOpticalGroupId = pOpticalGroupNode.attribute ( "Id"    ).as_int();
     uint32_t cFMCId          = pOpticalGroupNode.attribute ( "FMCId" ).as_int();
     uint32_t cBoardId        = pBoard->getBeBoardId();
@@ -256,12 +253,10 @@ namespace Ph2_System
       {
         if ( static_cast<std::string> ( pModuleNode.name() ) == "Module" )
           {
-                // for now try and guess based on xml nodes what the FE is 
             this->parseModuleContainer (pModuleNode, theOpticalGroup, os, pBoard);
           }
-      }   
+      }
   }
-
 
   void FileParser::parseRegister (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os)
   {
@@ -289,7 +284,6 @@ namespace Ph2_System
             pBoard->setReg(pAttributeString, pValue);
           }
       }
-
   }
 
   void FileParser::parseSLink (pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ostream& os )
@@ -395,26 +389,25 @@ namespace Ph2_System
                 cSet->addCondData (cRegName, cUID, cFeId, cCbcId, cPage, cAddress, cValue);
                 os << BLUE <<  "|" << " " << "|" << "       " << "|"  << "----"   <<  cNode.name() << ": Type " << RED << cTypeString << " " << cRegName << BLUE << ", UID " << RED << +cUID << BLUE << ", FeId " << RED << +cFeId << BLUE << ", CbcId " << RED << +cCbcId << std::hex << BLUE << ", Page " << RED << +cPage << BLUE << ", Address " << RED << +cAddress << BLUE << ", Value " << std::dec << MAGENTA << cValue << RESET << std::endl;
               }
-
           }
-
       }
     //LOG (ERROR) << "No Slink node found for Board " << +pBoard->getBeId() << " - continuing with default debug mode!";
     //add ConditionDataSet to pBoard in any case, even if there is no SLink node in the xml, that way at least
     //an SLinkDebugMode property is set for this board (SUMMARY)
     pBoard->addConditionDataSet (cSet);
   }
+
   void FileParser::parseSSA (pugi::xml_node pModuleNode, Module* pModule, std::string cFilePrefix)
   { // Get ID of SSA then add to the Module!
     uint32_t cChipId = pModuleNode.attribute ( "Id" ).as_int();
     std::string cFileName;
     if ( !cFilePrefix.empty() )
-    {
+      {
         if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
-            cFilePrefix.append ("/");
+          cFilePrefix.append ("/");
 
         cFileName = cFilePrefix + expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
-    }
+      }
     else cFileName = expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
     ReadoutChip* cSSA = pModule->addChipContainer(cChipId, new SSA ( pModule->getBeId(), pModule->getFMCId(), pModule->getFeId(), cChipId, 0, cFileName ));
     cSSA->setNumberOfChannels(120);
@@ -425,6 +418,7 @@ namespace Ph2_System
   {
     //FrontEndType cType = pSSA->getFrontEndType();
   }
+
   void FileParser::parseModuleContainer (pugi::xml_node pModuleNode, OpticalGroup* pOpticalGroup, std::ostream& os, BeBoard* pBoard)
   {
     bool cStatus = pModuleNode.attribute("Status").as_bool();
@@ -442,7 +436,7 @@ namespace Ph2_System
         Module* cModule;
         if (pBoard->getBoardType() == BoardType::RD53)
           {
-                cModule = pOpticalGroup->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new Module ( pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
+            cModule = pOpticalGroup->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new Module ( pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
           }
         else
           {
@@ -486,11 +480,11 @@ namespace Ph2_System
                       }
                     else if (cName == "CIC" || cName == "CIC2")
                       {
-                            bool cCIC1 = (cName == "CIC");
-                            FrontEndType cType = cCIC1 ? FrontEndType::CIC : FrontEndType::CIC2 ;
-                            
-                            pBoard->setFrontEndType( cCIC1 ? FrontEndType::CIC : FrontEndType::CIC2 );
-                            if ( !cConfigFileDirectory.empty() )
+                        bool cCIC1 = (cName == "CIC");
+                        FrontEndType cType = cCIC1 ? FrontEndType::CIC : FrontEndType::CIC2 ;
+
+                        pBoard->setFrontEndType( cCIC1 ? FrontEndType::CIC : FrontEndType::CIC2 );
+                        if ( !cConfigFileDirectory.empty() )
                           {
                             if (cConfigFileDirectory.at (cConfigFileDirectory.length() - 1) != '/')
                               cConfigFileDirectory.append ("/");
@@ -561,7 +555,6 @@ namespace Ph2_System
 
   void FileParser::parseCbcContainer (pugi::xml_node pCbcNode, Module* cModule, std::string cFilePrefix, std::ostream& os )
   {
-
     os << BOLDCYAN << "|" << "  " << "|" << "   " << "|" << "----" << pCbcNode.name() << "  "
        << pCbcNode.first_attribute().name() << " :" << pCbcNode.attribute ( "Id" ).value()
        << ", File: " << expandEnvironmentVariables (pCbcNode.attribute ( "configfile" ).value() ) << RESET << std:: endl;
@@ -607,7 +600,7 @@ namespace Ph2_System
 
         int cCounter = 0;
 
-          for (auto cCbc : *pModule)
+        for (auto cCbc : *pModule)
           {
             if (cCounter == 0)
               this->parseCbcSettings (cGlobalCbcSettingsNode, static_cast<ReadoutChip*>(cCbc), os);
@@ -707,7 +700,6 @@ namespace Ph2_System
         os << GREEN << "|\t|\t|\t|----TestPulse: " << "enabled: " << RED << +cEnable << GREEN << ", polarity: " << RED << +cPolarity << GREEN << ", amplitude: " << RED << +cAmplitude << GREEN << " (0x" << std::hex << +cAmplitude << std::dec << ")" << RESET << std::endl;
         os << GREEN << "|\t|\t|\t|               channelgroup: " << RED << +cChanGroup << GREEN << ", delay: " << RED << +cDelay << GREEN << ", groundohters: " << RED << +cGroundOthers << RESET << std::endl;
       }
-
 
     //CLUSTERS & STUBS
     pugi::xml_node cStubNode = pCbcNode.child ("ClusterStub");

@@ -27,10 +27,9 @@
 // #############
 #define DEEPSLEEP  100000 // [microseconds]
 #define READOUTSLEEP   50 // [microseconds]
-#define MAXATTEMPTS     4 // Maximum number of attempts
-#define NFRAMES_SYNC 1000 // Number of frames needed to synchronize chip communication
+#define MAXATTEMPTS    20 // Maximum number of attempts
 #define NWORDS_DDR3     4 // Number of IPbus words in a DDR3 word
-#define NLANE_MODULE    4 // Number of lanes per module
+#define NLANE_HYBRID    4 // Number of lanes per hybrid
 #define HEADEAR_WRTCMD  0xFF // Header of chip write command sequence
 #define NBIT_FWVER        16 // Number of bits for the firmware version
 #define IPBUS_FASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
@@ -109,7 +108,10 @@ namespace Ph2_HwInterface
     void     ChipReSync  ()                                                                                                        override;
 
     bool CheckChipCommunication ();
-    void WriteChipCommand       (const std::vector<uint16_t>& data, int moduleId);
+    void InitHybridByHybrid     (const Ph2_HwDescription::BeBoard* pBoard);
+    std::vector<uint16_t> GetInitSequence (const unsigned int type);
+
+    void WriteChipCommand       (const std::vector<uint16_t>& data, int hybridId);
     std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Ph2_HwDescription::Chip* pChip);
 
     struct ChipFrame
@@ -117,7 +119,7 @@ namespace Ph2_HwInterface
       ChipFrame (const uint32_t data0, const uint32_t data1);
 
       uint16_t error_code;
-      uint16_t module_id;
+      uint16_t hybrid_id;
       uint16_t chip_id;
       uint16_t chip_lane;
       uint16_t l1a_data_size;
@@ -145,8 +147,8 @@ namespace Ph2_HwInterface
       uint16_t evtStatus;
 
     protected:
-      bool isHittedChip      (uint8_t module_id, uint8_t chip_id, size_t& chipIndx) const;
-      static int lane2chipId (const Ph2_HwDescription::BeBoard* pBoard, uint16_t module_id, uint16_t chip_lane);
+      bool isHittedChip      (uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const;
+      static int lane2chipId (const Ph2_HwDescription::BeBoard* pBoard, uint16_t hybrid_id, uint16_t chip_lane);
     };
 
     static uint16_t DecodeEvents    (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
@@ -287,7 +289,7 @@ namespace Ph2_HwInterface
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
-    uint16_t           enabledModules;
+    uint16_t           enabledHybrids;
     bool               singleChip;
   };
 }

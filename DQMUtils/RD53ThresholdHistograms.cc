@@ -25,7 +25,7 @@ void ThresholdHistograms::book (TFile* theOutputFile, const DetectorContainer& t
 
 bool ThresholdHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChipContainerStream<EmptyContainer,uint16_t> theThrStreamer("Threshold"); //@TMP@
+  ChipContainerStream<EmptyContainer,uint16_t> theThrStreamer("Threshold");
 
   if(theThrStreamer.attachBuffer(&dataBuffer))
     {

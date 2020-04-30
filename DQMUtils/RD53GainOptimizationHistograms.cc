@@ -25,7 +25,7 @@ void GainOptimizationHistograms::book (TFile* theOutputFile, const DetectorConta
 
 bool GainOptimizationHistograms::fill (std::vector<char>& dataBuffer)
 {
-  ChipContainerStream<EmptyContainer,uint16_t> theKrumStreamer("GainOptimization"); // @TMP@
+  ChipContainerStream<EmptyContainer,uint16_t> theKrumStreamer("GainOptimization");
 
   if(theKrumStreamer.attachBuffer(&dataBuffer))
     {

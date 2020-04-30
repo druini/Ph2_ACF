@@ -1365,20 +1365,20 @@ void Tool::setSameGlobalDac(const std::string &dacName, const uint16_t dacValue)
 //Set same global DAC for all chips in the BeBoard
 void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue)
 {
-	if (fDoBoardBroadcast == false)
-	{
-        for(auto cOpticalGroup : *pBoard)
-		{
-			for (auto cHybrid : *cOpticalGroup)
-			{
-				if (fDoModuleBroadcast == false)
-				for (auto cChip : *cHybrid)
-					fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
-				else fReadoutChipInterface->WriteModuleBroadcastChipReg(static_cast<Module*>(cHybrid), dacName, dacValue);
-			}
-		}
-	}
-	else fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
+  if (fDoBoardBroadcast == false)
+    {
+      for(auto cOpticalGroup : *pBoard)
+        {
+          for (auto cHybrid : *cOpticalGroup)
+            {
+              if (fDoModuleBroadcast == false)
+                for (auto cChip : *cHybrid)
+                  fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
+              else fReadoutChipInterface->WriteModuleBroadcastChipReg(static_cast<Module*>(cHybrid), dacName, dacValue);
+            }
+        }
+    }
+  else fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
 }
 
 // set same local dac for all BeBoard
