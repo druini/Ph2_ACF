@@ -1,12 +1,10 @@
 /*!
-
         \file                                            ReadoutChipInterface.h
         \brief                                           User Interface to the Chip, base class for, CBC, MPA, SSA, RD53
         \author                                          Fabio RAVERA
         \version                                         1.0
         \date                        25/02/19
         Support :                    mail to : fabio.ravera@cern.ch
-
  */
 
 #ifndef __READOUTCHIPINTERFACE_H__
@@ -25,7 +23,7 @@ class ChannelContainer;
  */
 namespace Ph2_HwInterface
 {
-    using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>;    /*!< Map of Board connected */
+    using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board connected */
 
     /*!
      * \class ReadoutChipInterface
@@ -139,10 +137,11 @@ namespace Ph2_HwInterface
           return 0;
         }
 
-        /* virtual void ReadChipMonitor (Ph2_HwDescription::Chip* pChip, const char* observableName) */
-        /* { */
-        /*   LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; */
-        /* } */
+        virtual float ReadChipMonitor (Ph2_HwDescription::Chip* pChip, const char* observableName)
+        {
+          LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+          return 0;
+        }
     };
 }
 

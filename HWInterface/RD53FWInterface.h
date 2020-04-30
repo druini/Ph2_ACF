@@ -148,7 +148,7 @@ namespace Ph2_HwInterface
 
     protected:
       bool isHittedChip      (uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const;
-      static int lane2chipId (const Ph2_HwDescription::BeBoard* pBoard, uint16_t hybrid_id, uint16_t chip_lane);
+      static int lane2chipId (const Ph2_HwDescription::BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane);
     };
 
     static uint16_t DecodeEvents    (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);

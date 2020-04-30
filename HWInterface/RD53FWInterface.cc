@@ -889,7 +889,7 @@ namespace Ph2_HwInterface
     for (auto& evt : decodedEvents)
       for (auto& chip_frame : evt.chip_frames)
         {
-          int chip_id = RD53FWInterface::Event::lane2chipId(pBoard, chip_frame.hybrid_id, chip_frame.chip_lane);
+          int chip_id = RD53FWInterface::Event::lane2chipId(pBoard, 0, chip_frame.hybrid_id, chip_frame.chip_lane);
           if (chip_id != -1) chip_frame.chip_id = chip_id;
         }
   }
@@ -933,14 +933,14 @@ namespace Ph2_HwInterface
     return false;
   }
 
-  int RD53FWInterface::Event::lane2chipId (const BeBoard* pBoard, uint16_t hybrid_id, uint16_t chip_lane)
+  int RD53FWInterface::Event::lane2chipId (const BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane)
   {
     // #############################
     // # Translate lane to chip ID #
     // #############################
     if (pBoard != nullptr)
       {
-        Module* hybrid = pBoard->at(0)->at(hybrid_id);
+        Module* hybrid = pBoard->at(optGroup_id)->at(hybrid_id);
         if (hybrid != nullptr)
           {
             auto it = std::find_if(hybrid->begin(), hybrid->end(), [=] (ChipContainer* pChip)

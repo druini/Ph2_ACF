@@ -12,7 +12,6 @@ namespace Ph2_System
 {
   void FileParser::parseHW (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
   {
-    //FIXME-FR
     if (pIsFile && pFilename.find(".xml") != std::string::npos)
       {
         parseHWxml(pFilename, pBeBoardFWMap, pDetectorContainer, os, pIsFile);
@@ -23,19 +22,18 @@ namespace Ph2_System
       }
     else
       {
-        LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xml";
+        LOG (ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xml" << RESET;
       }
   }
 
   void FileParser::parseSettings (const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os, bool pIsFile)
   {
-    //FIXME-FR
     if (pIsFile && pFilename.find(".xml") != std::string::npos)
       parseSettingsxml(pFilename, pSettingsMap, os, pIsFile);
     else if (!pIsFile)
       parseSettingsxml(pFilename, pSettingsMap, os, pIsFile);
     else
-      LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xm";
+      LOG (ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xm" << RESET;
   }
 
   void FileParser::parseHWxml (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
@@ -110,7 +108,6 @@ namespace Ph2_System
 
     std::string cBoardType = cBoardTypeAttribute.value();
 
-    //CDCE
     bool cConfigureCDCE = false;
     uint32_t cClockRateCDCE = 120;
     for (pugi::xml_node cChild: pBeBordNode.children("CDCE"))
@@ -125,11 +122,11 @@ namespace Ph2_System
       }
     cBeBoard->setCDCEconfiguration(cConfigureCDCE,cClockRateCDCE);
 
-    if (cBoardType == "D19C")      cBeBoard->setBoardType (BoardType::D19C);
-    else if (cBoardType == "RD53") cBeBoard->setBoardType (BoardType::RD53);
+    if      (cBoardType == "D19C") cBeBoard->setBoardType(BoardType::D19C);
+    else if (cBoardType == "RD53") cBeBoard->setBoardType(BoardType::RD53);
     else
       {
-        LOG (ERROR) << "Error: Unknown Board Type: " << cBoardType << " - aborting!";
+        LOG (ERROR) << BOLDRED << "Error: Unknown Board Type: " << cBoardType << " - aborting!" << RESET;
         std::string errorstring = "Unknown Board Type " + cBoardType;
         throw Exception (errorstring.c_str());
         exit(EXIT_FAILURE);
@@ -140,7 +137,6 @@ namespace Ph2_System
 
     if (cEventTypeAttribute == nullptr)
       {
-        //the HWDescription object does not have and EventType node, so assume EventType::VR
         cBeBoard->setEventType (EventType::VR);
         cEventTypeString = "VR";
       }
@@ -164,10 +160,10 @@ namespace Ph2_System
 
     if (cBeBoard->getBoardType() == BoardType::D19C)
       {
-        pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+        pBeBoardFWMap[cBeBoard->getBeBoardId()] = new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
       }
     else if (cBeBoard->getBoardType() == BoardType::RD53)
-      pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+      pBeBoardFWMap[cBeBoard->getBeBoardId()] = new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
 
     os << BOLDCYAN << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl
        << BOLDCYAN << "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl
@@ -381,7 +377,7 @@ namespace Ph2_System
                                   cValue = cRegItem.fValue;
                                 }
                               else
-                                LOG (ERROR) << RED << "SLINK ERROR: no Chip with Id " << +cCbcId << " on Fe " << +cFeId << " - check your SLink Settings!";
+                                LOG (ERROR) << BOLDRED << "SLINK ERROR: no Chip with Id " << +cCbcId << " on Fe " << +cFeId << " - check your SLink Settings!" << RESET;
                             }
                         }
                   }
@@ -391,9 +387,7 @@ namespace Ph2_System
               }
           }
       }
-    //LOG (ERROR) << "No Slink node found for Board " << +pBoard->getBeId() << " - continuing with default debug mode!";
-    //add ConditionDataSet to pBoard in any case, even if there is no SLink node in the xml, that way at least
-    //an SLinkDebugMode property is set for this board (SUMMARY)
+
     pBoard->addConditionDataSet (cSet);
   }
 
@@ -772,8 +766,6 @@ namespace Ph2_System
         std::stringstream cStr (cList);
         os << GREEN << "|\t|\t|\t|----List of disabled Channels: ";
 
-        //std::vector<uint8_t> cDisableVec;
-
         int cIndex = 0;
 
         while (std::getline (cStr, ctoken, ',') )
@@ -783,7 +775,7 @@ namespace Ph2_System
             uint8_t cChannel = convertAnyInt (ctoken.c_str() );
             //cDisableVec.push_back (cChannel);
 
-            if (cChannel == 0 || cChannel > 254) LOG (ERROR) << "Error: channels for mask have to be between 1 and 254!";
+            if (cChannel == 0 || cChannel > 254) LOG (ERROR) << BOLDRED << "Error: channels for mask have to be between 1 and 254!" << RESET;
             else
               {
                 //get the reigister string name from the map in Definition.h
