@@ -18,6 +18,7 @@ namespace Ph2_System
     : fBeBoardInterface    (nullptr)
     , fReadoutChipInterface(nullptr)
     , fChipInterface       (nullptr)
+    , flpGBTInterface      (nullptr)
     , fDetectorContainer   (nullptr)
     , fSettingsMap         ()
     , fFileHandler         (nullptr)
@@ -34,6 +35,7 @@ namespace Ph2_System
     fBeBoardInterface     = pController->fBeBoardInterface;
     fReadoutChipInterface = pController->fReadoutChipInterface;
     fChipInterface        = pController->fChipInterface;
+    flpGBTInterface       = pController->flpGBTInterface;
     fBeBoardFWMap         = pController->fBeBoardFWMap;
     fSettingsMap          = pController->fSettingsMap;
     fFileHandler          = pController->fFileHandler;
@@ -49,14 +51,17 @@ namespace Ph2_System
     fBeBoardInterface = nullptr;
     delete fReadoutChipInterface;
     fReadoutChipInterface = nullptr;
-    delete fCicInterface;
-    fCicInterface = nullptr;
     delete fChipInterface;
     fChipInterface = nullptr;
-    delete fMPAInterface;
-    fMPAInterface = nullptr;
+    delete flpGBTInterface;
+    flpGBTInterface = nullptr;
     delete fDetectorContainer;
     fDetectorContainer = nullptr;
+
+    delete fCicInterface;
+    fCicInterface = nullptr;
+    delete fMPAInterface;
+    fMPAInterface = nullptr;
 
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
@@ -101,6 +106,8 @@ namespace Ph2_System
 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     const BeBoard* theFirstBoard = fDetectorContainer->at(0);
+
+    flpGBTInterface = new lpGBTInterface(fBeBoardFWMap);
 
     if (theFirstBoard->getBoardType() != BoardType::RD53)
       {
@@ -224,8 +231,9 @@ namespace Ph2_System
             // ###################
             // # Configure chips #
             // ###################
-            for(auto cOpticalGroup : *cBoard)
+            for (auto cOpticalGroup : *cBoard)
               {
+                if (cOpticalGroup->flpGBT != nullptr) flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                 for (auto cHybrid : *cOpticalGroup)
                   {
                     LOG (INFO) << GREEN << "Initializing communication to Module: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;

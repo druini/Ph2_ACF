@@ -10,26 +10,21 @@
 #ifndef LPGBT_H
 #define LPGBT_H
 
+#include "Chip.h"
 #include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
 
 
 namespace Ph2_HwDescription
 {
-  class lpGBT
+  class lpGBT : public Chip
   {
   public:
-    lpGBT (uint8_t pBeId, uint8_t pOptGroup);
+    lpGBT (uint8_t pBeId, uint8_t FMCId, uint8_t pOptGroupId, const std::string& fileName);
 
-    uint8_t getBeBoardId () { return fBeId;     }
-    uint8_t getOptBroupId() { return fOptGroup; }
-
-    void setBeBoardId (uint8_t pBeId)     { fBeId     = pBeId;     }
-    void setOptGroupId(uint8_t pOptGroup) { fOptGroup = pOptGroup; }
-
-  private:
-    uint8_t fBeId;
-    uint8_t fOptGroup;
+    void loadfRegMap        (const std::string& filename) override {}
+    void saveRegMap         (const std::string& filename) override {}
+    uint8_t getNumberOfBits (const std::string& dacName)  override { return 0; }
   };
 }
 

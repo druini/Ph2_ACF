@@ -14,10 +14,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-  lpGBTInterface::lpGBTInterface(const BeBoardFWMap& pBoardMap)
-    : fBoardMap           (pBoardMap)
-    , fBoardFW            (nullptr)
-    , prevBoardIdentifier (65535)
+  lpGBTInterface::lpGBTInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap)
   {}
 
   lpGBTInterface::~lpGBTInterface() {}
@@ -28,7 +25,7 @@ namespace Ph2_HwInterface
   /*-------------------------------------------------------------------------*/
   void lpGBTInterface::ecReset(lpGBT* plpGBT)
   {
-    lpGBTInterface::setBoard(plpGBT->getBeBoardId());
+    this->setBoard(plpGBT->getBeBoardId());
 
     fBoardFW->WriteStackReg({
         {"fc7_daq_ctrl.optical_block.sca.start", 0x00},
@@ -39,7 +36,7 @@ namespace Ph2_HwInterface
 
   uint32_t lpGBTInterface::ecWrite(lpGBT* plpGBT, uint16_t pI2Cmaster, uint32_t pCommand, uint32_t pData)
   {
-    lpGBTInterface::setBoard(plpGBT->getBeBoardId());
+    this->setBoard(plpGBT->getBeBoardId());
 
     fBoardFW->WriteStackReg({
         {"fc7_daq_ctrl.optical_block.sca.start",   0x00},
@@ -59,7 +56,7 @@ namespace Ph2_HwInterface
 
   uint32_t lpGBTInterface::ecWrite(lpGBT* plpGBT, uint16_t pI2Cmaster, const std::vector<std::pair<uint32_t,uint32_t>>& pCommands)
   {
-    lpGBTInterface::setBoard(plpGBT->getBeBoardId());
+    this->setBoard(plpGBT->getBeBoardId());
 
     for (const auto& pCommand : pCommands)
       {
@@ -84,7 +81,7 @@ namespace Ph2_HwInterface
 
   uint32_t lpGBTInterface::ecRead(lpGBT* plpGBT, uint16_t pI2Cmaster, uint32_t pCommand , uint32_t pData)
   {
-    lpGBTInterface::setBoard(plpGBT->getBeBoardId());
+    this->setBoard(plpGBT->getBeBoardId());
 
     fBoardFW->WriteStackReg({
         {"fc7_daq_ctrl.optical_block.sca.start",   0x00},
@@ -109,7 +106,7 @@ namespace Ph2_HwInterface
   /*-------------------------------------------------------------------------*/
   void lpGBTInterface::icReset(lpGBT* plpGBT)
   {
-    lpGBTInterface::setBoard(plpGBT->getBeBoardId());
+    this->setBoard(plpGBT->getBeBoardId());
 
     fBoardFW->WriteStackReg({
         {"fc7_daq_ctrl.optical_block.ic",   0x00},
@@ -120,7 +117,7 @@ namespace Ph2_HwInterface
 
   void lpGBTInterface::icWrite(lpGBT* plpGBT, uint32_t pAddress, uint32_t pData)
   {
-    lpGBTInterface::setBoard(plpGBT->getBeBoardId());
+    this->setBoard(plpGBT->getBeBoardId());
 
     // Config
     fBoardFW->WriteStackReg({
@@ -142,7 +139,7 @@ namespace Ph2_HwInterface
 
   uint32_t lpGBTInterface::icRead(lpGBT* plpGBT, uint32_t pAddress, uint32_t pNwords)
   {
-    lpGBTInterface::setBoard(plpGBT->getBeBoardId());
+    this->setBoard(plpGBT->getBeBoardId());
 
     // Config
     fBoardFW->WriteStackReg({
@@ -1255,7 +1252,7 @@ namespace Ph2_HwInterface
 
   void lpGBTInterface::i2cWrite(lpGBT* plpGBT, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies)
   {
-    lpGBTInterface::setBoard(plpGBT->getBeBoardId());
+    this->setBoard(plpGBT->getBeBoardId());
 
     ParameterVect cParameters = {{"Frequency", 2}, {"SCLDriveMode", 0}};
     std::map<uint8_t, std::vector<uint32_t>> cI2CMasterWordsMap = {};
@@ -1334,23 +1331,6 @@ namespace Ph2_HwInterface
 
         for (auto cI2CReadIter = cI2CRead.begin(); cI2CReadIter != cI2CRead.end(); cI2CReadIter++)
           fBoardFW->WriteReg("fc7_daq_cnfg.optical_block.mux", cI2CReadIter->first);
-      }
-  }
-
-
-  void lpGBTInterface::setBoard(uint16_t pBoardIdentifier)
-  {
-    if (prevBoardIdentifier != pBoardIdentifier)
-      {
-        BeBoardFWMap::iterator i = fBoardMap.find(pBoardIdentifier);
-
-        if (i == fBoardMap.end())
-          LOG (ERROR) << BOLDRED << "The Board: " << +(pBoardIdentifier >> 8) << " doesn't exist" << RESET;
-        else
-          {
-            fBoardFW = i->second;
-            prevBoardIdentifier = pBoardIdentifier;
-          }
       }
   }
 }

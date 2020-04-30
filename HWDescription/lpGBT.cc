@@ -11,8 +11,8 @@
 
 namespace Ph2_HwDescription
 {
-  lpGBT::lpGBT (uint8_t pBeId, uint8_t pOptGroup)
-    : fBeId     (pBeId)
-    , fOptGroup (pOptGroup)
-  {}
+  lpGBT::lpGBT (uint8_t pBeId, uint8_t FMCId, uint8_t pOptGroupId, const std::string& fileName) :  Chip(pBeId, FMCId, 0, pOptGroupId)
+  {
+    LOG (INFO) << GREEN << "lpGBT loading configuration from file: " << BOLDYELLOW << fileName << RESET;
+  }
 }

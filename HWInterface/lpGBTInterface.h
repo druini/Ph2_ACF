@@ -11,20 +11,29 @@
 #ifndef lpGBTInterface_H
 #define lpGBTInterface_H
 
+#include "ChipInterface.h"
 #include "../HWDescription/lpGBT.h"
-#include "BeBoardFWInterface.h"
 
 
 namespace Ph2_HwInterface
 {
-  using BeBoardFWMap  = std::map<uint16_t, BeBoardFWInterface*>;
   using ParameterVect = std::vector<std::pair<std::string, uint8_t>>;
 
-  class lpGBTInterface
+  class lpGBTInterface : public ChipInterface
   {
   public:
     lpGBTInterface  (const BeBoardFWMap& pBoardMap);
     ~lpGBTInterface ();
+
+
+    bool ConfigureChip   (Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override
+    {
+      LOG (INFO) << GREEN << "Configuring: " << BOLDYELLOW << "lpGBT" << RESET;
+      return false;
+    }
+    bool WriteChipReg    (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override { return false; }
+    uint16_t ReadChipReg (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode ) override                                         { return 0;     }
+
 
     // lpGBT Calibration Data Configuration
     void lpgbtConfigureCalibData (Ph2_HwDescription::lpGBT* plpGBT, const std::string& pRegister, const ParameterVect& pParameters);
@@ -33,7 +42,7 @@ namespace Ph2_HwInterface
     void lpgbtConfigureClkGenBlock (Ph2_HwDescription::lpGBT* plpGBT, const std::string& pRegister, const ParameterVect& pParameters);
 
     // lpGBT CHIP Config configuration
-    void lpgbtConfigureChipConfig (Ph2_HwDescription::lpGBT* plpGBT, const ParameterVect& pParameters) ;
+    void lpgbtConfigureChipConfig (Ph2_HwDescription::lpGBT* plpGBT, const ParameterVect& pParameters);
 
     // lpGBT Line Driver configuration
     void lpgbtConfigureLineDriver (Ph2_HwDescription::lpGBT* plpGBT, const std::string& pRegister, const ParameterVect& pParameters);
@@ -93,12 +102,6 @@ namespace Ph2_HwInterface
 
 
   protected:
-    void setBoard (uint16_t pBoardIdentifier);
-
-    BeBoardFWMap fBoardMap;
-    BeBoardFWInterface* fBoardFW;
-    uint16_t prevBoardIdentifier;
-
     const uint8_t flpGBTAddress = 0x01;
   };
 }

@@ -5,7 +5,6 @@
   \version                 1.0
   \date                    01/07/2016
   Support :                mail to : georg.auzinger@SPAMNOT.cern.sh
-
 */
 
 #ifndef FILEPARSER_H
@@ -78,14 +77,14 @@ namespace Ph2_System
      * \param pFilename : HW Description file
      *\param os : ostream to dump output
      */
-    void parseSettingsxml ( const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile );
+    void parseSettingsxml (const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile);
 
-    void parseBeBoard                (pugi::xml_node pBeBordNode,   BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os );
-    void parseRegister               (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os );
-    void parseSLink                  (pugi::xml_node pSLinkNode       , Ph2_HwDescription::BeBoard*      pBoard       , std::ostream& os );
-    void parseOpticalGroupContainer  (pugi::xml_node pOpticalGroupNode, Ph2_HwDescription::BeBoard*      pBoard       , std::ostream& os );
+    void parseBeBoard                (pugi::xml_node pBeBordNode,   BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os);
+    void parseRegister               (pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
+    void parseSLink                  (pugi::xml_node pSLinkNode       , Ph2_HwDescription::BeBoard*      pBoard       , std::ostream& os);
+    void parseOpticalGroupContainer  (pugi::xml_node pOpticalGroupNode, Ph2_HwDescription::BeBoard*      pBoard       , std::ostream& os);
     void parseModuleContainer        (pugi::xml_node pModuleNode      , Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::ostream& os,  Ph2_HwDescription::BeBoard* pBoard);
-    void parseCbcContainer           (pugi::xml_node pModuleNode      , Ph2_HwDescription::Module*       cModule      , std::string cFilePrefix, std::ostream& os );
+    void parseCbcContainer           (pugi::xml_node pModuleNode      , Ph2_HwDescription::Module*       cModule      , std::string cFilePrefix, std::ostream& os);
     void parseCbcSettings            (pugi::xml_node pCbcNode         , Ph2_HwDescription::ReadoutChip*  pCbc         , std::ostream& os);
     void parseGlobalCbcSettings      (pugi::xml_node pModuleNode      , Ph2_HwDescription::Module*       pModule      , std::ostream& os);
 
