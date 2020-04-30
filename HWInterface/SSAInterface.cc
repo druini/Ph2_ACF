@@ -27,25 +27,25 @@ namespace Ph2_HwInterface {// start namespace
     		uint8_t cWriteAttempts = 0 ;
 		//first, identify the correct BeBoardFWInterface
         	setBoard ( pSSA->getBeBoardId() );
-			std::vector<uint32_t> cVec;
-			ChipRegMap cSSARegMap = pSSA->getRegMap();
-			int NumReg = 0;
-			for ( auto& cRegItem : cSSARegMap )
-	        	{
-	        	NumReg++;
-				#ifdef COUNT_FLAG
-	                		fRegisterCount++;
-				#endif
-	      		fBoardFW->EncodeReg (cRegItem.second, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, true);
-	      		bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
-	      		//LOG (INFO) << BOLDBLUE << cRegItem.first << "  <   " << BOLDRED << cSuccess << RESET;
-	      		if (not cSuccess) return false;
-	            cVec.clear();
-			}
-			LOG (INFO) << BOLDGREEN << "Wrote: " << NumReg << RESET;
+		std::vector<uint32_t> cVec;
+		ChipRegMap cSSARegMap = pSSA->getRegMap();
+		int NumReg = 0;
+		for ( auto& cRegItem : cSSARegMap )
+	        {
+		        NumReg++;
 			#ifdef COUNT_FLAG
-	        	fTransactionCount++;
+				fRegisterCount++;
 			#endif
+		     	fBoardFW->EncodeReg (cRegItem.second, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, true);
+		      	bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
+		      	//LOG (INFO) << BOLDBLUE << cRegItem.first << "  <   " << BOLDRED << cSuccess << RESET;
+		      	if (not cSuccess) return false;
+		        cVec.clear();
+		}
+		LOG (INFO) << BOLDGREEN << "Wrote: " << NumReg << RESET;
+		#ifdef COUNT_FLAG
+	        fTransactionCount++;
+		#endif
 	        return true;
 	}
 
@@ -53,9 +53,9 @@ namespace Ph2_HwInterface {// start namespace
 
     bool SSAInterface::enableInjection (ReadoutChip* pChip, bool inject, bool pVerifLoop)
     {
-		setBoard ( pChip->getBeBoardId() );
-		//techically if sync
-		//uint32_t enwrite=1;
+	setBoard ( pChip->getBeBoardId() );
+	//techically if sync
+	//uint32_t enwrite=1;
         //if(inject) enwrite=17;
 
         uint32_t enwrite=5;
@@ -157,7 +157,7 @@ namespace Ph2_HwInterface {// start namespace
 
         //LOG (INFO) << RED <<std::bitset<8>(cRP2)<< " " <<std::bitset<8>(cRP1) << RESET;
         //LOG (INFO) << RED <<(cRP2*256) + cRP1<< RESET;
-		pData.push_back((cRP2*256) + cRP1);
+	pData.push_back((cRP2*256) + cRP1);
         }
     }
 
