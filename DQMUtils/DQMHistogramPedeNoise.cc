@@ -162,7 +162,7 @@ void DQMHistogramPedeNoise::process()
     {
         for(auto opticalGroup : *board)
         {
-        
+       
             for(auto hybrid : *opticalGroup)
             {
                 TCanvas *cValidation = new TCanvas(("Validation_hybrid_" + std::to_string(hybrid->getId())).data(),("Validation hybrid " + std::to_string(hybrid->getId())).data(),   0, 0, 650, fPlotSCurves ? 900 : 650 );
@@ -330,8 +330,10 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContaine
                     uint8_t channelNumber = 0;
                     for(auto channel : *chip->getChannelContainer<Occupancy>())
                     {
+
                         float tmpOccupancy      = channel.fOccupancy     ;
                         float tmpOccupancyError = channel.fOccupancyError;
+                        std::cout<<channelNumber<<":"<<channel.fOccupancy <<std::endl;
                         chipSCurve->SetBinContent(channelNumber+1, vcthr+1, tmpOccupancy     );
                         chipSCurve->SetBinError  (channelNumber+1, vcthr+1, tmpOccupancyError);
 

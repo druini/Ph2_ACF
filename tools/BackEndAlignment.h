@@ -13,6 +13,7 @@
 #ifndef BackEndAlignment_h__
 #define BackEndAlignment_h__
 
+
 #include "Tool.h"
 
 #include <map>
@@ -21,6 +22,9 @@ namespace Ph2_HwInterface
 {
    class BackendAlignmentInterface;
 }
+
+// add breakcodes here
+const uint8_t FAILED_BACKEND_ALIGNMENT = 5;
 
 class BackEndAlignment : public Tool
 {
@@ -36,7 +40,8 @@ class BackEndAlignment : public Tool
 
     
     bool CICAlignment(Ph2_HwDescription::BeBoard* pBoard);
-    bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard );
+    bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard);
+    bool SSAAlignment(Ph2_HwDescription::BeBoard* pBoard);
     void Start(int currentRun) override;
     void Stop() override;
     void Pause() override;

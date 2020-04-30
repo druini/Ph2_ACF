@@ -71,6 +71,8 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
                 {
                     for(auto chip: *hybrid)
                     {
+
+
                         ReadoutChip *theChip = static_cast<ReadoutChip*>(chip);
                         //if it is a CBC3, disable the stub logic for this procedure
                         if( theChip->getFrontEndType() == FrontEndType::CBC3) 

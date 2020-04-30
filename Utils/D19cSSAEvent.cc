@@ -37,11 +37,18 @@ void D19cSSAEvent::fillDataContainer(BoardDataContainer *boardContainer, const C
 void D19cSSAEvent::SetEvent(const BeBoard *pBoard, uint32_t pNSSA, const std::vector<uint32_t> &list)
 {
 	// start reading here for first SSA
+	std::vector<uint32_t> head;
+	head.push_back(list.at(0));
+	head.push_back(list.at(1));
+	head.push_back(list.at(2));
+	head.push_back(list.at(3));
+	fEventHeader=head;
 	for (uint32_t chip = 0; chip < pNSSA; chip++)
 	{
 		uint32_t cFeId = (list.at(4 + (chip * 12)) & 0xFF0000) >> 16;
-		uint32_t cSSAId = (list.at(4 + (chip * 12)) & 0xF000) >> 12;
 		std::vector<uint32_t> lvec;
+
+
 		// L1 hits
 		lvec.push_back(list.at(8 + (chip * 12)));
 		lvec.push_back(list.at(9 + (chip * 12)));
@@ -51,6 +58,16 @@ void D19cSSAEvent::SetEvent(const BeBoard *pBoard, uint32_t pNSSA, const std::ve
 		// stubs
 		lvec.push_back(list.at(13 + (chip * 12)));
 		lvec.push_back(list.at(14 + (chip * 12)));
+		lvec.push_back(list.at(6 + (chip * 12)));
+
+		uint32_t cSSAId = (list.at(4 + (chip * 12)) & 0xF000) >> 12;
+
+
+		//LOG(INFO) << BOLDBLUE << "START" << RESET;
+
+		//for (auto L : list)
+		//	LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
+
 		// save it
 		fEventDataVector[encodeVectorIndex(cFeId, cSSAId, pNSSA)] = lvec;
 	}
@@ -95,7 +112,7 @@ std::string D19cSSAEvent::DataBitString(uint8_t pFeId, uint8_t pSSAId) const
 std::vector<bool> D19cSSAEvent::DataBitVector(uint8_t pFeId, uint8_t pSSAId) const
 {
 	std::vector<bool> blist;
-	for (uint32_t i = 0; i < NCHANNELS; ++i)
+	for (uint32_t i = 0; i < NSSACHANNELS; ++i)
 	{
 		blist.push_back(privateDataBit(pFeId, pSSAId, i));
 	}
@@ -152,6 +169,21 @@ uint32_t D19cSSAEvent::GetNHits(uint8_t pFeId, uint8_t pSSAId) const
 		LOG(ERROR) << "Out of Range error: " << outOfRange.what();
 		return 0;
 	}
+}
+uint32_t D19cSSAEvent::GetL1Number() const
+{
+	return fEventHeader.at(2) & 0x00FFFFFF;
+}
+uint32_t D19cSSAEvent::GetTrigID() const
+{
+	return (fEventHeader.at(1) & 0xFFFF0000) >> 16;
+}
+uint32_t D19cSSAEvent::GetSSAL1Counter(uint8_t pFeId, uint8_t pSSAId) const
+{
+
+	const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pSSAId, fNCbc));
+	return (hitVector.at(6) & 0x000F0000) >> 16 ;
+
 }
 std::vector<uint32_t> D19cSSAEvent::GetHits(uint8_t pFeId, uint8_t pSSAId) const
 {

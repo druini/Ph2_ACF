@@ -49,10 +49,18 @@ namespace Ph2_HwInterface {// start namespace
 	        return true;
 	}
 
+
+
     bool SSAInterface::enableInjection (ReadoutChip* pChip, bool inject, bool pVerifLoop)
     {
-        uint32_t enwrite=1;
+		setBoard ( pChip->getBeBoardId() );
+		//techically if sync
+		//uint32_t enwrite=1;
+        //if(inject) enwrite=17;
+
+        uint32_t enwrite=5;
         if(inject) enwrite=21;
+
         for (uint32_t i = 1; i<=pChip->getNumberOfChannels();i++ ) this->WriteChipReg(pChip, "ENFLAGS_S" + std::to_string(i), enwrite);
         return this->WriteChipReg(pChip, "FE_Calibration" , (int)inject ,pVerifLoop );
     }
@@ -76,6 +84,10 @@ namespace Ph2_HwInterface {// start namespace
 	bool SSAInterface::ConfigureChipOriginalMask (ReadoutChip* pSSA, bool pVerifLoop, uint32_t pBlockSize )
 	{return true;}
 	//
+
+
+
+
 	bool SSAInterface::MaskAllChannels ( ReadoutChip* pSSA, bool mask, bool pVerifLoop )
 	{return true;}
 	// I actually want this one!
@@ -95,12 +107,12 @@ namespace Ph2_HwInterface {// start namespace
 			fRegisterCount++;
 			fTransactionCount++;
 		#endif
-		return cSuccess;		
+		return cSuccess;
 	}
 	// I actually want this one too!
 	bool SSAInterface::WriteChipMultReg ( Chip* pSSA, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop )
  	{
-		
+
 		setBoard ( pSSA->getBeBoardId() );
 		std::vector<uint32_t> cVec;
 		ChipRegItem cRegItem;
@@ -133,7 +145,7 @@ namespace Ph2_HwInterface {// start namespace
 	{return true;}
 	// Definitely needed:
 
-    void SSAInterface::ReadASEvent (ReadoutChip* pSSA,uint32_t pNMsec,std::vector<uint32_t>& pData,std::pair<uint32_t,uint32_t> pSRange)
+    void SSAInterface::ReadASEvent (ReadoutChip* pSSA,std::vector<uint32_t>& pData,std::pair<uint32_t,uint32_t> pSRange)
     {
     if (pSRange == std::pair<uint32_t,uint32_t>{0,0})
         pSRange = std::pair<uint32_t,uint32_t>{1,pSSA->getNumberOfChannels()};
@@ -142,10 +154,10 @@ namespace Ph2_HwInterface {// start namespace
         {
         uint8_t cRP1 = this->ReadChipReg(pSSA, "ReadCounter_LSB_S" + std::to_string(i));
         uint8_t cRP2 = this->ReadChipReg(pSSA, "ReadCounter_MSB_S" + std::to_string(i));
-      
+
         //LOG (INFO) << RED <<std::bitset<8>(cRP2)<< " " <<std::bitset<8>(cRP1) << RESET;
         //LOG (INFO) << RED <<(cRP2*256) + cRP1<< RESET;
-		pData.push_back((cRP2*256) + cRP1); 
+		pData.push_back((cRP2*256) + cRP1);
         }
     }
 

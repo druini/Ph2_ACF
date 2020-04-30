@@ -116,6 +116,7 @@
         </node>
 
         <node id="physical_interface_block"     address="0x3000">
+		<node id="ps_counters_raw_en"               address="0x000" mask="0x00000001" description="enabling outputing raw counters data instead of already parsed"/>
 	    <node id="i2c"				address="0x001">
                 <node id="frequency"			    mask="0x0000000f"/>
                 <node id="master_en"                        mask="0x00000100"/>
@@ -367,6 +368,14 @@
             <node id="bitslip_done_cbc1"        address="0x002" mask="0x00000040"/>
             <node id="state_tuning_cbc0"        address="0x002" mask="0x00F00000"/>
             <node id="state_tuning_cbc1"        address="0x002" mask="0x0F000000"/>
+			<node id="slvs_debug"               address="0x00F">
+                <node id="ps_counters_ready"        mask="0x00000004"/>
+                <node id="ps_counters_fsm_state"    mask="0x000000f0"/>
+				<node id="fifo1_data"                address="0x001" permission="r" mode="non-incremental"/>
+	            <node id="fifo2_data"                address="0x002" permission="r" mode="non-incremental"/>
+
+            </node>
+
         </node>
 
         <node id="be_proc"                      address="0x4000">

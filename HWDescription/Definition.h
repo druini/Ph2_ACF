@@ -26,6 +26,8 @@
 //------------------------------------------------------------------------------
 #define NCHANNELS                   254
 #define NSSACHANNELS                   120
+#define NMPACHANNELS                   2040
+
 //Events
 
 //CBC2
@@ -77,7 +79,7 @@
 #define EVENT_HEADER_TDC_SIZE_32_CBC3    3 // total of 6 32 bit words for HEADER + TDC
 #define EVENT_HEADER_SIZE_32_CBC3        3  // 5 words for the header
 
-//D19C event header size (CIC) 
+//D19C event header size (CIC)
 //in uint32_t words
 #define D19C_EVENT_HEADER1_SIZE_32_CIC 4
 

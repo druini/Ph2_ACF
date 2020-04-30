@@ -46,6 +46,7 @@ class SSASCurve : public Tool
   size_t StartTHDAC        = this->findValueInSettings("StartTHDAC");
   size_t StopTHDAC        = this->findValueInSettings("StopTHDAC");
   size_t NMsec        = this->findValueInSettings("NMsec");
+  size_t NMpulse        = this->findValueInSettings("NMpulse");
   size_t Res        = this->findValueInSettings("Res");
   size_t Nlvl        = this->findValueInSettings("Nlvl");
   float globalmax =0 ;
