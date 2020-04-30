@@ -363,7 +363,7 @@ namespace Ph2_HwInterface {
         void ChipTrigger();
         void Trigger(uint8_t pDuration=1);
         // Readout chip specific stuff
-		void Send_pulses();
+	void Send_pulses();
 
         void ReadoutChipReset();
         // CIC BE stuff

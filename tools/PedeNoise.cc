@@ -143,57 +143,6 @@ void PedeNoise::sweepSCurves ()
             else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
         }
 
-        for (auto cBoard : *fDetectorContainer)
-        {
-            for(auto cOpticalGroup : *cBoard)
-            {
-                for ( auto hybrid : *cOpticalGroup )
-                {
-                    for(auto chip: *hybrid)
-                    {
-		                    ReadoutChip* theSSA = static_cast<ReadoutChip*>(chip);
-
-			                fReadoutChipInterface->WriteChipReg(theSSA, "Bias_CALDAC", 100);
-			                fReadoutChipInterface->WriteChipReg(theSSA, "ReadoutMode", 0x0); // sync mode = 0
-			                fReadoutChipInterface->WriteChipReg(theSSA, "Bias_THDAC", 50);
-			                fReadoutChipInterface->WriteChipReg(theSSA, "FE_Calibration", 1);
-			                for (int i = 1; i<=120;i++ ) // loop over all strips
-			                {
-			                    fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 0);
-			                    fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S" + std::to_string(i), 17); // 17 = 10001 (enable strobe)
-			                }
-			                fReadoutChipInterface->WriteChipReg(theSSA, "L1-Latency_MSB", 0x0);
-
-		            }
-	                for (int lat = 0; lat<=255; lat++)
-	                {
-                        for(auto chip: *hybrid)
-                        {
-		                    ReadoutChip* theSSA = static_cast<ReadoutChip*>(chip);
-			                fReadoutChipInterface->WriteChipReg(theSSA, "L1-Latency_LSB", lat);
-		                }
-		                ReadNEvents(cBoard,500);
-		                int thiscount = 0;
-		                const std::vector<Event*> &eventVector = GetEvents(cBoard);
-		                for ( auto &event : eventVector ) //for on events - begin
-	                    {
-                            for(auto chip: *hybrid)
-                            {
-								LOG(INFO) << BOLDRED << "L1C "<<hybrid->getId()<<","<<chip->getId()<<" : " << static_cast<D19cSSAEvent*> (event)->GetSSAL1Counter(hybrid->getId(), chip->getId());
-
-	                            for (int i = 1; i<=120;i++ ) // loop over all strips
-					            {
-						            thiscount = thiscount + event->DataBit ( hybrid->getId(), chip->getId(), i);
-
-	                            } // for on module - end
-                            }
-	                    } // for on events - end*/
-	                    std::cout<<"lat "<<lat<<" thiscount "<<thiscount<<std::endl;
-
-                    }
-                }
-            }
-        }
         // setSameGlobalDac("TestPulsePotNodeSel",  fPulseAmplitude);
         LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
         cStartValue = this->findPedestal ();
@@ -212,11 +161,11 @@ void PedeNoise::sweepSCurves ()
 
     this->SetTestAllChannels(originalAllChannelFlag);
     if(fPulseAmplitude != 0){
-        this->enableTestPulse( false );
-        if(cWithSSA) setSameGlobalDac("Bias_CALDAC",  0);
-        else setSameGlobalDac("TestPulsePotNodeSel",  0);
+    this->enableTestPulse( false );
+    if(cWithSSA) setSameGlobalDac("Bias_CALDAC",  0);
+    else setSameGlobalDac("TestPulsePotNodeSel",  0);
 
-        LOG (INFO) << BLUE <<  "Disabled test pulse. " << RESET ;
+    LOG (INFO) << BLUE <<  "Disabled test pulse. " << RESET ;
 
     }
 
@@ -377,16 +326,13 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
 
     while (! (cAllZero && cAllOne) )
     {
-          LOG(INFO) << BOLDRED << "1" << RESET;
         DetectorDataContainer *theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
         fDetectorDataContainer = theOccupancyContainer;
         fSCurveOccupancyMap[cValue] = theOccupancyContainer;
 
-           LOG(INFO) << BOLDRED << "2 " <<cValue<<" "<< fEventsPerPoint<< RESET;
         if(cWithCBC)    this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
         if(cWithSSA)    this->setDacAndMeasureData("Bias_THDAC", cValue, fEventsPerPoint);
 
-          LOG(INFO) << BOLDRED << "3" << RESET;
         #ifdef __USE_ROOT__
             if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue,*theOccupancyContainer);
         #else
@@ -445,7 +391,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         }
 
 
-        LOG (INFO) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
+        LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
         cValue = pStartValue + (cIncrement * cSign);
     }
 

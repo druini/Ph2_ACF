@@ -51,24 +51,24 @@ namespace Ph2_HwInterface {// start namespace
 
 
 
-    bool SSAInterface::enableInjection (ReadoutChip* pChip, bool inject, bool pVerifLoop)
-    {
-	setBoard ( pChip->getBeBoardId() );
-	//techically if sync
-	//uint32_t enwrite=1;
-        //if(inject) enwrite=17;
+	bool SSAInterface::enableInjection (ReadoutChip* pChip, bool inject, bool pVerifLoop)
+	{
+		setBoard ( pChip->getBeBoardId() );
+		//if sync
+		//uint32_t enwrite=1;
+        	//if(inject) enwrite=17;
 
-        uint32_t enwrite=5;
-        if(inject) enwrite=21;
+        	uint32_t enwrite=5;
+        	if(inject) enwrite=21;
 
-        for (uint32_t i = 1; i<=pChip->getNumberOfChannels();i++ ) this->WriteChipReg(pChip, "ENFLAGS_S" + std::to_string(i), enwrite);
-        return this->WriteChipReg(pChip, "FE_Calibration" , (int)inject ,pVerifLoop );
-    }
+        	for (uint32_t i = 1; i<=pChip->getNumberOfChannels();i++ ) this->WriteChipReg(pChip, "ENFLAGS_S" + std::to_string(i), enwrite);
+        	return this->WriteChipReg(pChip, "FE_Calibration" , (int)inject ,pVerifLoop );
+	}
 
-    bool SSAInterface::setInjectionAmplitude (ReadoutChip* pChip, uint8_t injectionAmplitude, bool  pVerifLoop)
-    {
-        return this->WriteChipReg(pChip, "Bias_CALDAC", injectionAmplitude, pVerifLoop);
-    }
+    	bool SSAInterface::setInjectionAmplitude (ReadoutChip* pChip, uint8_t injectionAmplitude, bool  pVerifLoop)
+    	{
+        	return this->WriteChipReg(pChip, "Bias_CALDAC", injectionAmplitude, pVerifLoop);
+    	}
 
 
 	//
@@ -109,10 +109,9 @@ namespace Ph2_HwInterface {// start namespace
 		#endif
 		return cSuccess;
 	}
-	// I actually want this one too!
+
 	bool SSAInterface::WriteChipMultReg ( Chip* pSSA, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop )
  	{
-
 		setBoard ( pSSA->getBeBoardId() );
 		std::vector<uint32_t> cVec;
 		ChipRegItem cRegItem;
@@ -145,42 +144,39 @@ namespace Ph2_HwInterface {// start namespace
 	{return true;}
 	// Definitely needed:
 
-    void SSAInterface::ReadASEvent (ReadoutChip* pSSA,std::vector<uint32_t>& pData,std::pair<uint32_t,uint32_t> pSRange)
-    {
-    if (pSRange == std::pair<uint32_t,uint32_t>{0,0})
-        pSRange = std::pair<uint32_t,uint32_t>{1,pSSA->getNumberOfChannels()};
-    //std::cout<<pSSA->getNumberOfChannels()<<std::endl;
-    for (uint32_t i = pSRange.first; i<=pSRange.second;i++ )
-        {
-        uint8_t cRP1 = this->ReadChipReg(pSSA, "ReadCounter_LSB_S" + std::to_string(i));
-        uint8_t cRP2 = this->ReadChipReg(pSSA, "ReadCounter_MSB_S" + std::to_string(i));
+	void SSAInterface::ReadASEvent (ReadoutChip* pSSA,std::vector<uint32_t>& pData,std::pair<uint32_t,uint32_t> pSRange)
+	{
+		if (pSRange == std::pair<uint32_t,uint32_t>{0,0})
+        	pSRange = std::pair<uint32_t,uint32_t>{1,pSSA->getNumberOfChannels()};
+    		for (uint32_t i = pSRange.first; i<=pSRange.second;i++ )
+        	{
+        		uint8_t cRP1 = this->ReadChipReg(pSSA, "ReadCounter_LSB_S" + std::to_string(i));
+        		uint8_t cRP2 = this->ReadChipReg(pSSA, "ReadCounter_MSB_S" + std::to_string(i));
 
-        //LOG (INFO) << RED <<std::bitset<8>(cRP2)<< " " <<std::bitset<8>(cRP1) << RESET;
-        //LOG (INFO) << RED <<(cRP2*256) + cRP1<< RESET;
-	pData.push_back((cRP2*256) + cRP1);
-        }
-    }
+			pData.push_back((cRP2*256) + cRP1);
+        	}
+    	}
 
 
 	uint16_t SSAInterface::ReadChipReg ( Chip* pSSA, const std::string& pRegNode )
 	{
-	setBoard ( pSSA->getBeBoardId() );
+		setBoard ( pSSA->getBeBoardId() );
 
-	ChipRegItem cRegItem = pSSA->getRegItem ( pRegNode );
+		ChipRegItem cRegItem = pSSA->getRegItem ( pRegNode );
 
-	std::vector<uint32_t> cVecReq;
+		std::vector<uint32_t> cVecReq;
 
-	fBoardFW->EncodeReg ( cRegItem, pSSA->getFeId(), pSSA->getChipId(), cVecReq, true, false );
-	fBoardFW->ReadChipBlockReg (  cVecReq );
+		fBoardFW->EncodeReg ( cRegItem, pSSA->getFeId(), pSSA->getChipId(), cVecReq, true, false );
+		fBoardFW->ReadChipBlockReg (  cVecReq );
 
-	//bools to find the values of failed and read
-	bool cFailed = false;
-	bool cRead;
-	uint8_t cSSAId;
-	fBoardFW->DecodeReg ( cRegItem, cSSAId, cVecReq[0], cRead, cFailed );
+		//bools to find the values of failed and read
+		bool cFailed = false;
+		bool cRead;
+		uint8_t cSSAId;
+		fBoardFW->DecodeReg ( cRegItem, cSSAId, cVecReq[0], cRead, cFailed );
 
-	if (!cFailed) pSSA->setReg ( pRegNode, cRegItem.fValue );
+		if (!cFailed) pSSA->setReg ( pRegNode, cRegItem.fValue );
 
-	return cRegItem.fValue & 0xFF;
+		return cRegItem.fValue & 0xFF;
 	}
 }// end namespace

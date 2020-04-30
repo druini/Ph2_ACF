@@ -2418,9 +2418,7 @@ void D19cFWInterface::InitFMCPower()
         uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
         uint32_t cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
         uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-		LOG(INFO) << BOLDRED << "cNtriggers "<<cNtriggers << std::endl;
-		LOG(INFO) << BOLDRED << "cNWords "<<cNWords << std::endl;
-		LOG(INFO) << BOLDRED << "cReadoutReq "<<cReadoutReq << std::endl;
+
         uint32_t cTimeoutCounter = 0 ;
         uint32_t cTimeoutValue = 2.0*pNEvents; // maximum number of times I allow the word counter not to increment ..
         uint32_t cFailures = 0 ;
@@ -2434,9 +2432,6 @@ void D19cFWInterface::InitFMCPower()
             cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
             cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-			LOG(INFO) << BOLDRED << "cNtriggers "<<cNtriggers << std::endl;
-			LOG(INFO) << BOLDRED << "cNWords "<<cNWords << std::endl;
-			LOG(INFO) << BOLDRED << "cReadoutReq "<<cReadoutReq << std::endl;
 
 
             //cNWords_previous = cNWords;
@@ -2465,10 +2460,6 @@ void D19cFWInterface::InitFMCPower()
         {
             // check the amount of words
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-			LOG(INFO) << BOLDRED << "DONE! cNtriggers "<<cNtriggers << std::endl;
-			LOG(INFO) << BOLDRED << "DONE! cNWords "<<cNWords << std::endl;
-			LOG(INFO) << BOLDRED << "DONE! cReadoutReq "<<cReadoutReq << std::endl;
-			LOG(INFO) << BOLDRED << "DONE! events "<<cNWords/32 << std::endl;
 
             // read all the words
             if (fIsDDR3Readout)
@@ -3676,14 +3667,13 @@ void D19cFWInterface::InitFMCPower()
         uint32_t ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
         std::chrono::milliseconds cWait( 10 );
         std::vector<uint16_t> count(2040, 0);
-    //std::cout<<"MCR  "<<ps_counters_ready<<std::endl;
+    	//std::cout<<"MCR  "<<ps_counters_ready<<std::endl;
         PS_Start_counters_read();
         uint32_t  timeout = 0;
         while ((ps_counters_ready == 0) & (timeout < 50))
         {
             std::this_thread::sleep_for( cWait );
             ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-        //std::cout<<"MCR iwh"<<ps_counters_ready<<std::endl;
             timeout += 1;
         }
         if (timeout >= 50)
@@ -3722,9 +3712,7 @@ void D19cFWInterface::InitFMCPower()
             ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.fifo2_data");
             for (int i=0; i<2040;i++)
             {
-            //std::chrono::milliseconds cWait( 100 );
                 count[i] = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.fifo2_data") - 1;
-            //std::cout<<i<<"     "<<count[i]<<std::endl;
             }
         }
 
@@ -3758,36 +3746,35 @@ void D19cFWInterface::InitFMCPower()
     }
 
 	//some overlap for now...
-	void D19cFWInterface::Send_pulses()
-	{
-        //ConfigureTriggerFSM( n_pulse, 1000, 6, 0, 0);
+    void D19cFWInterface::Send_pulses()
+    {
+	//ConfigureTriggerFSM( n_pulse, 1000, 6, 0, 0);
 
-        PS_Open_shutter();
-		usleep(1);
+	PS_Open_shutter();
+	usleep(1);
 
         WriteReg ("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-		uint32_t nsleeps=0;
-		uint32_t maxsleeps=1000;
+	uint32_t nsleeps=0;
+	uint32_t maxsleeps=1000;
         while (ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") and (nsleeps<maxsleeps))
 		{
-			nsleeps+=1;
+		nsleeps+=1;
         	usleep(10);
-        }
+        	}
 		if(nsleeps == maxsleeps)
-			{
+		{
 			LOG(INFO) << "Cal pulses timeout";
 			PS_Clear_counters();
 			this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
-	        std::this_thread::sleep_for (std::chrono::microseconds (10) );
-	        this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
-	        std::this_thread::sleep_for (std::chrono::microseconds (10) );
+	        	std::this_thread::sleep_for (std::chrono::microseconds (10) );
+	        	this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+	        	std::this_thread::sleep_for (std::chrono::microseconds (10) );
 			usleep(10);
 			Send_pulses();
-			}
-		//std::cout<<nsleeps<<std::endl;
-		usleep(1);
-		PS_Close_shutter();
-	}
+		}
+	usleep(1);
+	PS_Close_shutter();
+    }
 
 
     void D19cFWInterface::PS_Clear_counters(uint32_t duration )

@@ -1028,15 +1028,11 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 				{
 					if(localDAC)
 					{
-    LOG (INFO) << BOLDBLUE << "startem" << RESET;
 						for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
 						{
-    LOG (INFO) << BOLDBLUE << "iChannel "<< iChannel << RESET;
-    LOG (INFO) << BOLDBLUE << currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy <<" , "<< targetOccupancy << RESET;
 
 							if( currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy <= targetOccupancy )
 							{
-                LOG (INFO) << BOLDBLUE << "Something!" << RESET;
 
 								previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)
 										= currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel);
