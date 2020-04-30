@@ -39,13 +39,6 @@
             list(REMOVE_ITEM HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/UsbUtilities.h)
     endif(ZMQ_FOUND)
 
-    #check for PowerSupply
-    if(${PH2_POWERSUPPLY_FOUND})
-      message("hallo" ... )
-      include_directories($(PH2_POWERSUPPLY_DIR))
-      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
-    endif()
-
 
     ####################################
     ## EXECUTABLES

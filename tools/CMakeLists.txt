@@ -55,13 +55,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
     endif()
 
-    #check for PowerSupply
-    if(${PH2_POWERSUPPLY_FOUND})
-      message("hallo" ... )
-      include_directories($(PH2_POWERSUPPLY_DIR))
-      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
-    endif()
-
     #last but not least, find root and link against it
     if(NoDataShipping)
         if(${ROOT_FOUND})

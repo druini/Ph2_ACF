@@ -57,9 +57,15 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     #check for PowerSupply
     if(${PH2_POWERSUPPLY_FOUND})
-      message("hallo" ... )
-      include_directories($(PH2_POWERSUPPLY_DIR))
+      message("Hola src CMAKlist" )
+      include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
+	message (" ${PH2_POWERSUPPLY_INCLUDE_DIRS}")
+      link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
+
+      set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES} m boost_system boost_filesystem boost_program_options pthread)
+
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
+
     endif()
 
     #boost also needs to be linked
