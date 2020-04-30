@@ -49,7 +49,6 @@
  */
 namespace Ph2_System
 {
-  // using BeBoardVec  = std::vector<Ph2_HwDescription::BeBoard*>;                   /*!< Vector of Board pointers */
   using SettingsMap = std::unordered_map<std::string, double>; /*!< Maps the settings */
 
   /*!
@@ -63,12 +62,11 @@ namespace Ph2_System
     Ph2_HwInterface::ReadoutChipInterface* fReadoutChipInterface;
     Ph2_HwInterface::ChipInterface* fChipInterface; //!< Interface to the Chip
 
-    Ph2_HwInterface::CicInterface* fCicInterface;               //!< Interface to a CIC [only valid for OT]
+    Ph2_HwInterface::CicInterface* fCicInterface;   //!< Interface to a CIC [only valid for OT]
     Ph2_HwInterface::SSAInterface* fSSAInterface;   //!< Interface to the SSA
     Ph2_HwInterface::MPAInterface* fMPAInterface;   //!< Interface to the MPA
 
     DetectorContainer* fDetectorContainer; //Detector Container
-    // BeBoardVec fBoardVector;               //!< Vector of Board pointers
     BeBoardFWMap fBeBoardFWMap;
     SettingsMap fSettingsMap;
     FileHandler* fFileHandler;
@@ -164,7 +162,7 @@ namespace Ph2_System
               for (const auto cChip : *cModule)
                 {
                   LOG (INFO) << GREEN << "Monitor data for [board/opticalGroup/module/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
-                  fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, static_cast<Ph2_HwDescription::ReadoutChip*>(cChip), args...);
+                  fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args...);
                   LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
                 }
       }
@@ -231,7 +229,7 @@ namespace Ph2_System
 
     const Ph2_HwDescription::BeBoard* getBoard(int index) const
     {
-      return (index < static_cast<int>(fDetectorContainer->size()) ? static_cast<Ph2_HwDescription::BeBoard*>(fDetectorContainer->at(index)) : nullptr);
+      return (index < static_cast<int>(fDetectorContainer->size()) ? fDetectorContainer->at(index) : nullptr);
     }
 
     /*!

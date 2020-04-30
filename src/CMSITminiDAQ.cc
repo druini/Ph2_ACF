@@ -298,7 +298,7 @@ int main (int argc, char** argv)
           mySysCntr.InitializeSettings(configFile, outp);
           if (reset == true)
             {
-              static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[static_cast<BeBoard*>(mySysCntr.fDetectorContainer->at(0))->getBeBoardId()])->ResetSequence();
+              static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getBeBoardId()])->ResetSequence();
               exit(EXIT_SUCCESS);
             }
           if (binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53FWInterface::decodedEvents);

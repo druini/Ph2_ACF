@@ -70,8 +70,8 @@ void Latency::sendData ()
 {
   const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-  auto theStream        = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<LatencySize>>("Occ"); // @TMP@
-  auto theLatencyStream = prepareChipContainerStreamer<EmptyContainer,uint16_t>                     ("Latency"); // @TMP@
+  auto theStream        = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<LatencySize>>("Occ");
+  auto theLatencyStream = prepareChipContainerStreamer<EmptyContainer,uint16_t>                     ("Latency");
 
   if (fStreamerEnabled == true)
     {
@@ -159,34 +159,34 @@ void Latency::analyze ()
     for (const auto cOpticalGroup : *cBoard)
       for (const auto cModule : *cOpticalGroup)
         for (const auto cChip : *cModule)
-        {
-          auto best   = 0.;
-          auto regVal = 0;
+          {
+            auto best   = 0.;
+            auto regVal = 0;
 
-          for (auto i = 0u; i < dacList.size(); i++)
-            {
-              auto current = theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i];
-              if (current > best)
-                {
-                  regVal = dacList[i];
-                  best   = current;
-                }
-            }
+            for (auto i = 0u; i < dacList.size(); i++)
+              {
+                auto current = theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i];
+                if (current > best)
+                  {
+                    regVal = dacList[i];
+                    best   = current;
+                  }
+              }
 
-          if (nTRIGxEvent > 1)
-            LOG (INFO) << GREEN << "Best latency for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is within ["
-                       << BOLDYELLOW << regVal - nTRIGxEvent + 1 << "," << regVal << GREEN << "] (n.bx)" << RESET;
-          else
-            LOG (INFO) << GREEN << "Best latency for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
-                       << BOLDYELLOW << regVal << RESET << GREEN << " (n.bx)" << RESET;
+            if (nTRIGxEvent > 1)
+              LOG (INFO) << GREEN << "Best latency for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is within ["
+                         << BOLDYELLOW << regVal - nTRIGxEvent + 1 << "," << regVal << GREEN << "] (n.bx)" << RESET;
+            else
+              LOG (INFO) << GREEN << "Best latency for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
+                         << BOLDYELLOW << regVal << RESET << GREEN << " (n.bx)" << RESET;
 
 
-          // ######################################################
-          // # Fill latency container and download new DAC values #
-          // ######################################################
-          theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
-          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", regVal, true);
-        }
+            // ######################################################
+            // # Fill latency container and download new DAC values #
+            // ######################################################
+            theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
+            this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", regVal, true);
+          }
 }
 
 void Latency::fillHisto ()
@@ -208,7 +208,7 @@ void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& 
       // ###########################
       LOG (INFO) << BOLDMAGENTA << ">>> Register value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
       for (const auto cBoard : *fDetectorContainer)
-        this->fReadoutChipInterface->WriteBoardBroadcastChipReg(static_cast<BeBoard*>(cBoard), regName, dacList[i]);
+        this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, dacList[i]);
 
 
       // ################
@@ -226,10 +226,10 @@ void Latency::scanDac (const std::string& regName, const std::vector<uint16_t>& 
         for (const auto cOpticalGroup : *cBoard)
           for (const auto cModule : *cOpticalGroup)
             for (const auto cChip : *cModule)
-            {
-              float occ = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy;
-              theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i] = occ;
-            }
+              {
+                float occ = cChip->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy;
+                theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i] = occ;
+              }
     }
 }
 
@@ -241,16 +241,16 @@ void Latency::chipErrorReport ()
     for (const auto cOpticalGroup : *cBoard)
       for (const auto cModule : *cOpticalGroup)
         for (const auto cChip : *cModule)
-        {
-          LOG (INFO) << GREEN << "Readout chip error report for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
-          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")          << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "SKIPPED_TRIGGER_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BCID_CNT")            << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")            << std::setfill(' ') << std::setw(8) << "" << RESET;
-        }
+          {
+            LOG (INFO) << GREEN << "Readout chip error report for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+            LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
+            LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
+            LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
+            LOG (INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")          << std::setfill(' ') << std::setw(8) << "" << RESET;
+            LOG (INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "SKIPPED_TRIGGER_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+            LOG (INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BCID_CNT")            << std::setfill(' ') << std::setw(8) << "" << RESET;
+            LOG (INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")            << std::setfill(' ') << std::setw(8) << "" << RESET;
+          }
 }
 
 void Latency::saveChipRegisters (int currentRun)
@@ -261,12 +261,12 @@ void Latency::saveChipRegisters (int currentRun)
     for (const auto cOpticalGroup : *cBoard)
       for (const auto cModule : *cOpticalGroup)
         for (const auto cChip : *cModule)
-        {
-          static_cast<RD53*>(cChip)->copyMaskFromDefault();
-          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-          system(command.c_str());
-          LOG (INFO) << BOLDBLUE << "\t--> Latency saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-        }
+          {
+            static_cast<RD53*>(cChip)->copyMaskFromDefault();
+            if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+            static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+            std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+            system(command.c_str());
+            LOG (INFO) << BOLDBLUE << "\t--> Latency saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+          }
 }

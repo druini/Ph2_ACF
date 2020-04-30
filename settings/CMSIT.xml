@@ -8,7 +8,7 @@
     -->
 
     <!-- Frontend chip configuration -->
-    <OpticalGroup Id="0" FMCId="0" >
+    <OpticalGroup Id="0" FMCId="0">
       <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
         <RD53_Files path="./" />
 
