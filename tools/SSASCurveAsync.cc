@@ -49,7 +49,7 @@ void SSASCurve::run(void)
         //float prevrms=999.0;
 
         //float vfac=1.4;//
-        float vfac=0.8;
+        float vfac=0.7;
 
 
 	this->enableTestPulse( true );
@@ -57,11 +57,11 @@ void SSASCurve::run(void)
 
 
 	float wroffset=0.0;
-	float Nunt=0.0;
+	float Nuntoff=0.0;
 
 	while(rms>0.7)
 	{
-
+	float Nunt=0.0;
         	LOG (INFO) << BOLDBLUE <<"Running Scurve..."<< RESET;
 
         	//std::vector<float> cur;
@@ -220,12 +220,15 @@ void SSASCurve::run(void)
         	LOG (INFO) << BOLDBLUE <<"Done"<< RESET;
         	rms/=float(Nstrip);
         	rms = std::sqrt(rms);
-		wroffset=15.0-writeave/float(Nstrip)+Nunt;
+            if(std::abs(Nunt)>0.0)Nuntoff+=Nunt/std::abs(Nunt);
+            else Nuntoff+=0;
+		wroffset=15.0-writeave/float(Nstrip)+(Nuntoff);
         	LOG (INFO) << BOLDRED <<"RMS: "<<rms<< RESET;
         	LOG (INFO) << BOLDRED <<"MEAN: "<<mean<< RESET;
         	LOG (INFO) << BOLDRED <<"WRITEMEAN: "<<writeave/float(Nstrip)<< RESET;
         	LOG (INFO) << BOLDRED <<"MAX: "<<globalmax<< RESET;
         	LOG (INFO) << BOLDRED <<"NSTRIP: "<<Nstrip<< RESET;
+        	LOG (INFO) << BOLDRED <<"OFF: "<<Nuntoff<< RESET;
         	//break;
         	}
     	}

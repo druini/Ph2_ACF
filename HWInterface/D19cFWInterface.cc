@@ -2384,12 +2384,11 @@ void D19cFWInterface::InitFMCPower()
 
     }
 
-
     void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )
     {
         // RESET the readout
         auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        //pNEvents = pNEvents*(cMultiplicity+1);
+        pNEvents = pNEvents*(cMultiplicity+1);
 
         auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
         auto cTriggerRate = (cTriggerSource == 5 || cTriggerSource == 6 ) ? 1 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz .. if external trigger assume 1 kHz as lowest possible rate
@@ -2432,8 +2431,6 @@ void D19cFWInterface::InitFMCPower()
             cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
             cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-
-
             //cNWords_previous = cNWords;
             cFailures += ( (cNtriggers == 0 ));// || ( (cNWords_previous==cNWords) &&cReadoutReq==0) );
             cTimeoutCounter ++;
