@@ -31,6 +31,7 @@ void SSASCurve::Initialise(void)
 	NMpulse        = this->findValueInSettings("NMpulse");
 	Res        = this->findValueInSettings("Res");
 	Nlvl        = this->findValueInSettings("Nlvl");
+	Vfac        = this->findValueInSettings("Vfac");
 	#ifdef __USE_ROOT__
 		fDQMHistogramSSASCurveAsync.book(fResultFile, *fDetectorContainer, fSettingsMap);
 	#endif
@@ -49,7 +50,7 @@ void SSASCurve::run(void)
         //float prevrms=999.0;
 
         //float vfac=1.4;//
-        float vfac=0.7;
+        float vfac=Vfac;
 
 
 	this->enableTestPulse( true );
@@ -61,7 +62,7 @@ void SSASCurve::run(void)
 
 	while(rms>0.7)
 	{
-	float Nunt=0.0;
+		float Nunt=0.0;
         	LOG (INFO) << BOLDBLUE <<"Running Scurve..."<< RESET;
 
         	//std::vector<float> cur;
@@ -138,91 +139,92 @@ void SSASCurve::run(void)
 							curh=hits[channelNumber];
 							//if ( channelNumber==1)
 		                            		if ((channel.first[1]>Nlvl) && (curh<channel.first[1]/2) && (channel.first[0]>channel.first[1]/2))
-		                                {
+		                                	{
 
-                                		channel.second=(float(thd)*float(curh) + float(thd-1)*float(channel.first[0]))/(float(curh) +float(channel.first[0]));
-                                		globalmax=std::max(globalmax,channel.second);
+		                                		channel.second=(float(thd)*float(curh) + float(thd-1)*float(channel.first[0]))/(float(curh) +float(channel.first[0]));
+		                                		globalmax=std::max(globalmax,channel.second);
 
-                                		//if ( channelNumber==1)
-                                  		//  LOG (INFO) << BOLDRED << "halfmax "<<curh<<","<<channel.first[0]<<","<<channel.first[1]<< RESET;
-                                  		//  LOG (INFO) << BOLDRED << normvals[channelNumber]<<" "<<thd<< RESET;
-                                	}
-                            		channel.first[1] =std::max(channel.first[1],curh);
-                            		channel.first[0] = curh;
-                            		channelNumber++;
-                        	}
-                    	}
-                }
-	}
-        #ifdef __USE_ROOT__
-                fDQMHistogramSSASCurveAsync.fillSSASCurveAsyncPlots(theHitContainer,thd);
-        #endif
-        //
+		                                		//if ( channelNumber==1)
+		                                  		//  LOG (INFO) << BOLDRED << "halfmax "<<curh<<","<<channel.first[0]<<","<<channel.first[1]<< RESET;
+		                                  		//  LOG (INFO) << BOLDRED << normvals[channelNumber]<<" "<<thd<< RESET;
+                                			}
+	                            		channel.first[1] =std::max(channel.first[1],curh);
+	                            		channel.first[0] = curh;
+	                            		channelNumber++;
+                        			}
+                    			}
+                		}
+			}
+		        #ifdef __USE_ROOT__
+		                fDQMHistogramSSASCurveAsync.fillSSASCurveAsyncPlots(theHitContainer,thd);
+		        #endif
+		        //
 
-        }
-        rms=0.0;
+		}
+
+	        rms=0.0;
 
 
-	for(auto opticalGroup: *cBoard)
-	{
-		for(auto hybrid: *opticalGroup) // for on hybrid - begin
+		for(auto opticalGroup: *cBoard)
 		{
-			for(auto cSSA: *hybrid) // for on chip - begin
+			for(auto hybrid: *opticalGroup) // for on hybrid - begin
 			{
-				for(auto &channel : *cSSA->getChannelContainer<std::pair<std::array<uint32_t,2>,float>>())
+				for(auto cSSA: *hybrid) // for on chip - begin
 				{
-				mean+=channel.second;
-				Nmeans+=1.0;
+					for(auto &channel : *cSSA->getChannelContainer<std::pair<std::array<uint32_t,2>,float>>())
+					{
+					mean+=channel.second;
+					Nmeans+=1.0;
+					}
 				}
 			}
 		}
-	}
 
-        mean/=Nmeans;
-
+	        mean/=Nmeans;
 
 
-        float writeave=0.0;
-        for(auto opticalGroup: *cBoard)
-        {
-                for(auto hybrid: *opticalGroup) // for on hybrid - begin
-                {
-                    	for(auto cSSA: *hybrid) // for on chip - begin
-                    	{
 
-                        	uint32_t  istrip=1;
-                        	for(auto &channel : *cSSA->getChannelContainer<std::pair<std::array<uint32_t,2>,float>>()) // for on channel - begin
-                        	{
-                            		ReadoutChip *theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard ->getIndex())->at(opticalGroup ->getIndex())->at(hybrid->getIndex())->at(cSSA->getIndex()));
-                            		rms+=(channel.second-mean)*(channel.second-mean);
-					int32_t cr=fReadoutChipInterface->ReadChipReg(theChip, "THTRIMMING_S" + std::to_string(istrip));
-					float floatTh=cr;
-					if(channel.second>1.0)
-                            			floatTh=float(cr)-vfac*(float(channel.second)-mean)+wroffset;
+	        float writeave=0.0;
+	        for(auto opticalGroup: *cBoard)
+	        {
+	                for(auto hybrid: *opticalGroup) // for on hybrid - begin
+	                {
+	                    	for(auto cSSA: *hybrid) // for on chip - begin
+	                    	{
+
+	                        	uint32_t  istrip=1;
+	                        	for(auto &channel : *cSSA->getChannelContainer<std::pair<std::array<uint32_t,2>,float>>()) // for on channel - begin
+	                        	{
+	                            		ReadoutChip *theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard ->getIndex())->at(opticalGroup ->getIndex())->at(hybrid->getIndex())->at(cSSA->getIndex()));
+	                            		rms+=(channel.second-mean)*(channel.second-mean);
+						int32_t cr=fReadoutChipInterface->ReadChipReg(theChip, "THTRIMMING_S" + std::to_string(istrip));
+						float floatTh=cr;
+						if(channel.second>1.0)
+	                            			floatTh=float(cr)-vfac*(float(channel.second)-mean)+wroffset;
 
 
-                            		uint32_t THtowrite=uint32_t(std::roundf(floatTh));
+	                            		uint32_t THtowrite=uint32_t(std::roundf(floatTh));
 
-					THtowrite=std::min(THtowrite,uint32_t(31));
-                            		THtowrite=std::max(THtowrite,uint32_t(0));
-                            		writeave+=THtowrite;
-					if (THtowrite==0 || THtowrite==31) LOG (INFO) << BOLDRED <<"Warning, thdac at limit "<<istrip<<","<<THtowrite<< RESET;
-                            		if (THtowrite==0) Nunt+=1.0;
-                            		if (THtowrite==31) Nunt-=1.0;
+						THtowrite=std::min(THtowrite,uint32_t(31));
+	                            		THtowrite=std::max(THtowrite,uint32_t(0));
+	                            		writeave+=THtowrite;
+						if (THtowrite==0 || THtowrite==31) LOG (INFO) << BOLDRED <<"Warning, thdac at limit "<<istrip<<","<<THtowrite<< RESET;
+	                            		if (THtowrite==0) Nunt+=1.0;
+	                            		if (THtowrite==31) Nunt-=1.0;
 
-                            		fReadoutChipInterface->WriteChipReg(theChip, "THTRIMMING_S" + std::to_string(istrip), THtowrite);
-                            		istrip+=1;
-                        		}
-                    		}
-                	}
-            	}
+	                            		fReadoutChipInterface->WriteChipReg(theChip, "THTRIMMING_S" + std::to_string(istrip), THtowrite);
+	                            		istrip+=1;
+	                        		}
+	                    		}
+	                	}
+	            	}
         	//prev = cur;
         	//prevgoal=goal;
         	LOG (INFO) << BOLDBLUE <<"Done"<< RESET;
         	rms/=float(Nstrip);
         	rms = std::sqrt(rms);
-            if(std::abs(Nunt)>0.0)Nuntoff+=Nunt/std::abs(Nunt);
-            else Nuntoff+=0;
+            	if(std::abs(Nunt)>0.0)Nuntoff+=Nunt/std::abs(Nunt);
+            	else Nuntoff+=0;
 		wroffset=15.0-writeave/float(Nstrip)+(Nuntoff);
         	LOG (INFO) << BOLDRED <<"RMS: "<<rms<< RESET;
         	LOG (INFO) << BOLDRED <<"MEAN: "<<mean<< RESET;

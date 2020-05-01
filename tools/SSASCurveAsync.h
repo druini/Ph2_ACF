@@ -49,6 +49,8 @@ class SSASCurve : public Tool
   size_t NMpulse        = this->findValueInSettings("NMpulse");
   size_t Res        = this->findValueInSettings("Res");
   size_t Nlvl        = this->findValueInSettings("Nlvl");
+  float Vfac        = this->findValueInSettings("Vfac");
+
   float globalmax =0 ;
 
   std::vector<uint32_t> localmax=decltype(localmax)(120, 0) ;
