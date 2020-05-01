@@ -402,10 +402,10 @@ namespace Ph2_System
   }
 
 
-  void SystemController::ReadASEvent (BeBoard* pBoard, uint32_t pNMsec,uint32_t pNpulse)
+  void SystemController::ReadASEvent (BeBoard* pBoard, uint32_t pNMsec,bool pulses)
   {
     std::vector<uint32_t> cData;
-	if (pNpulse!=0) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Send_pulses();
+	if (pulses) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Send_pulses();
 	else
 	{
 		static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(0);

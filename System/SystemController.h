@@ -224,7 +224,7 @@ namespace Ph2_System
     void ReadNEvents(uint32_t pNEvents);
 
 
-    void ReadASEvent (Ph2_HwDescription::BeBoard *pBoard, uint32_t pNMsec, uint32_t pNpulse=1);
+    void ReadASEvent (Ph2_HwDescription::BeBoard *pBoard, uint32_t pNMsec,bool pulses=false);
 
 
     const Ph2_HwDescription::BeBoard* getBoard(int index) const

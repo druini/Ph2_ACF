@@ -117,8 +117,9 @@ void SSASCurve::run(void)
 		        {
 		        	setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", 50);
 		        }
-
-			ReadASEvent( theBeBoard, NMsec,NMpulse );
+			bool runpulse=false;
+			if (NMpulse>0) runpulse=true;
+			ReadASEvent( theBeBoard, NMsec,runpulse );
 			const std::vector<Event*> &eventVector = GetEvents ( theBeBoard );
 		        for(auto opticalGroup: *cBoard)
 		        {
