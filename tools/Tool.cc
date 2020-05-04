@@ -43,7 +43,7 @@ fChannelGroupHandler        (nullptr)
 #endif
 }
 
-#ifdef __USE_ROOT__    
+#ifdef __USE_ROOT__
 #ifdef __HTTP__
 Tool::Tool (THttpServer* pHttpServer)
 : SystemController            ()
@@ -80,11 +80,11 @@ Tool::Tool (const Tool& pTool)
 	fFileHandler                 = pTool.fFileHandler;
 
 	fDirectoryName               = pTool.fDirectoryName;             /*< the Directoryname for the Root file with results */
-	#ifdef __USE_ROOT__    
+	#ifdef __USE_ROOT__
 		fResultFile                  = pTool.fResultFile;                /*< the Name for the Root file with results */
 	#endif
 	fType                        = pTool.fType;
-	#ifdef __USE_ROOT__    
+	#ifdef __USE_ROOT__
 		fCanvasMap                   = pTool.fCanvasMap;
 		fChipHistMap                 = pTool.fChipHistMap;
 		fModuleHistMap               = pTool.fModuleHistMap;
@@ -122,11 +122,11 @@ void Tool::Inherit (Tool* pTool)
 	fSettingsMap                 = pTool->fSettingsMap;
 	fFileHandler                 = pTool->fFileHandler;
 	fDirectoryName               = pTool->fDirectoryName;
-	#ifdef __USE_ROOT__    
+	#ifdef __USE_ROOT__
 		fResultFile                  = pTool->fResultFile;
 	#endif
 	fType                        = pTool->fType;
-	#ifdef __USE_ROOT__    
+	#ifdef __USE_ROOT__
 		fCanvasMap                   = pTool->fCanvasMap;
 		fChipHistMap                 = pTool->fChipHistMap;
 		fModuleHistMap               = pTool->fModuleHistMap;
@@ -190,7 +190,7 @@ void Tool::Destroy()
 void Tool::SoftDestroy()
 {
 
-	#ifdef __USE_ROOT__    
+	#ifdef __USE_ROOT__
 		if (fResultFile != nullptr)
 		{
 			if (fResultFile->IsOpen() ) fResultFile->Close();
@@ -240,7 +240,7 @@ void Tool::SoftDestroy()
 
 }
 
-#ifdef __USE_ROOT__    
+#ifdef __USE_ROOT__
 
 	void Tool::bookHistogram ( ChipContainer* pChip, std::string pName, TObject* pObject )
 	{
@@ -404,7 +404,7 @@ void Tool::WriteRootFile()
 
 void Tool::SaveResults()
 {
-	#ifdef __USE_ROOT__    
+	#ifdef __USE_ROOT__
 		for ( const auto& cBeBoard : fBeBoardHistMap )
 		{
 			fResultFile->cd();
@@ -617,7 +617,7 @@ void Tool::dumpConfigFiles()
 						chip->saveRegMap ( cFilename.data() );
 					}
 					auto& cCic = static_cast<OuterTrackerModule*>(module)->fCic;
-					if( cCic != NULL ) 
+					if( cCic != NULL )
 					{
 						std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(module->getId()) + ".txt";
 						LOG (INFO) << BOLDBLUE << "Dumping CIC configuration to " << cFilename << RESET;
@@ -678,7 +678,7 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
 
 void Tool::enableTestPulse(bool enableTP)
 {
-	fTestPulse = enableTP;          
+	fTestPulse = enableTP;
 
 	for (auto cBoard : *fDetectorContainer)
 	{
@@ -765,7 +765,7 @@ void Tool::AmmendReport (std::string pString )
 }
 
 
-std::pair<float,float> Tool::getStats( std::vector<float> pData ) 
+std::pair<float,float> Tool::getStats( std::vector<float> pData )
 {
     float cMean = std::accumulate( pData.begin(), pData.end(), 0.)/pData.size();
     std::vector<float> cTmp( pData.size(), 0 );
@@ -777,9 +777,9 @@ std::pair< std::vector<float>,std::vector<float>> Tool::getDerivative(std::vecto
 	{
 	std::vector<float> cWeights(pData.size());
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
-    // replace negative entries with 0s 
+    // replace negative entries with 0s
     if(pIgnoreNegative)
-    	std::replace_if(cWeights.begin(), cWeights.end(), [](float i){return std::signbit(i);}, 0); 
+    	std::replace_if(cWeights.begin(), cWeights.end(), [](float i){return std::signbit(i);}, 0);
     cWeights.erase (cWeights.begin(),cWeights.begin()+1);
     pValues.erase (pValues.begin(),pValues.begin()+1);
     return std::make_pair(cWeights, pValues);
@@ -790,13 +790,13 @@ std::pair<float,float> Tool::evalNoise(std::vector<float> pData, std::vector<flo
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
     cWeights.erase (cWeights.begin(),cWeights.begin()+1);
     if(pIgnoreNegative)
-    	std::replace_if(cWeights.begin(), cWeights.end(), [](float i){return std::signbit(i);}, 0); 
+    	std::replace_if(cWeights.begin(), cWeights.end(), [](float i){return std::signbit(i);}, 0);
     float cN = static_cast<float>(cWeights.size() - std::count( cWeights.begin() , cWeights.end() , 0.));
     float cSumOfWeights = std::accumulate( cWeights.begin(), cWeights.end(), 0.);
     //weighted sum of scan values to get pedestal
     pData.erase (pData.begin(),pData.begin()+1);
     std::fill(pData.begin(), pData.end(), 0.);
-    std::transform(cWeights.begin(), cWeights.end(), pValues.begin(), pData.begin() , std::multiplies<float>()); 
+    std::transform(cWeights.begin(), cWeights.end(), pValues.begin(), pData.begin() , std::multiplies<float>());
     float cMean = std::accumulate(pData.begin(), pData.end() , 0.);
     cMean /= cSumOfWeights;
     //weighted sample variance of scan values to get noise
@@ -974,7 +974,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 
 	occupanyDirectlyProportionalToDAC = currentStepOccupancyContainer->at(boardIndex)->getSummary<Occupancy,Occupancy>().fOccupancy
 			> previousStepOccupancyContainer->at(boardIndex)->getSummary<Occupancy,Occupancy>().fOccupancy;
-			
+
 	if(!occupanyDirectlyProportionalToDAC)
 	{
 		DetectorDataContainer *tmpPointer = previousDacList;
@@ -1030,8 +1030,10 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 					{
 						for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
 						{
+
 							if( currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy <= targetOccupancy )
 							{
+
 								previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)
 										= currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel);
 								previousStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy
@@ -1199,7 +1201,7 @@ public:
 			burstNumbers = 1;
 			lastBurstNumberOfEvents = fNumberOfEvents;
 		}
-		else 
+		else
 		{
 			burstNumbers            = fNumberOfEvents/fNumberOfEventsPerBurst;
 			lastBurstNumberOfEvents = fNumberOfEventsPerBurst;
@@ -1340,7 +1342,7 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacNam
 
 // set local dac per BeBoard
 void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer)
-{   
+{
 	for ( auto cOpticalGroup : *(fDetectorContainer->at(boardIndex)) )
 	{
 		for ( auto cHybrid : *cOpticalGroup )

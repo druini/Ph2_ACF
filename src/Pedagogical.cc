@@ -1,6 +1,7 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include "../tools/BackEndAlignment.h"
 #include "../Utils/Utilities.h"
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/ReadoutChip.h"
@@ -38,8 +39,8 @@ int main( int argc, char* argv[] )
 
 	LOG (INFO) << BOLDRED << "=============" << RESET;
 	el::Configurations conf ("settings/logger.conf");
-	el::Loggers::reconfigureAllLoggers (conf);	
-	std::string cHWFile = "settings/D19C_2xSSA_Calib.xml";
+	el::Loggers::reconfigureAllLoggers (conf);
+	std::string cHWFile = "settings/D19C_2xSSA_PreCalibSYNC.xml";
 	std::stringstream outp;
 	Tool cTool;
 	cTool.InitializeHw ( cHWFile, outp);
@@ -47,7 +48,14 @@ int main( int argc, char* argv[] )
 	//D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
 	//IB->PSInterfaceBoard_PowerOff_SSA();
 	cTool.ConfigureHw();
-	
+
+	BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit (&cTool);
+    cBackEndAligner.Initialise();
+    cBackEndAligner.Align();
+    cBackEndAligner.resetPointers();
+
+
 	BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
 	ModuleContainer* ChipVec = pBoard->at(0)->at(0);
 	TH2I *strip_v_thdac_31 = new TH2I("strip_v_thdac_31", "All TRIMDACs = 31;strip # ; THDAC (lsb)", 360, -60, 300, 25, 0, 25);
@@ -76,27 +84,34 @@ int main( int argc, char* argv[] )
 			std::cout<<"Setting threshold to " << thd << std::endl;
 			cTool.fReadoutChipInterface->WriteChipReg(theSSA, "Bias_THDAC", thd);
 		}
-	cTool.ReadNEvents(pBoard, 1);
+	cTool.ReadNEvents(pBoard, 500);
 	const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
-	for ( auto &event : eventVector ) //for on events - begin 
+	for ( auto &event : eventVector ) //for on events - begin
     	{
-		for(auto module: *pBoard) // for on module - begin 
+		LOG(INFO) << BOLDRED << "L1N: " << static_cast<D19cSSAEvent*> (event)->GetL1Number();
+		//LOG(INFO) << BOLDRED << "L1T: " << static_cast<D19cSSAEvent*> (event)->GetTrigID();
+		for(auto module: *pBoard) // for on module - begin
 		{
-		    for(auto chip: *module) // for on chip - begin 
+			unsigned int chipn = 0;
+
+		    for(auto chip: *module) // for on chip - begin
 		    {
 		        unsigned int channelNumber = 0;
 		        for (int i = 0; i<=120;i++ ) // loop over all strips
-			{
-				if (event->DataBit ( module->getId(), chip->getId(), channelNumber)) LOG (INFO) << RED << i << ", " << int(chip->getId()) <<  RESET;
-				strip_v_thdac_31->Fill(channelNumber+(120*int(chip->getId())), thd, event->DataBit ( module->getId(), chip->getId(), channelNumber));
+				{
+					//if (event->DataBit ( module->getId(), chip->getId(), channelNumber)) LOG (INFO) << RED << i << ", " << int(chip->getId()) <<  RESET;
+					strip_v_thdac_31->Fill(channelNumber+(120*int(chip->getId())), thd, event->DataBit ( module->getId(), chip->getId(), channelNumber));
 		        	channelNumber++;
-		        } // for on channel - end 
-		        for (auto S: event->GetHits(module->getId(), chip->getId()))
-			{
-				LOG(INFO) << BOLDRED << "stub: " << float(S)/2. << RESET;
-			}
-		    } // for on chip - end 
-		} // for on module - end 
+		        } // for on channel - end
+
+				LOG(INFO) << BOLDRED << "L1C "<<module->getId()<<","<<chip->getId()<<","<<chipn<<" : " << static_cast<D19cSSAEvent*> (event)->GetSSAL1Counter(module->getId(), chip->getId());
+		        //for (auto S: event->GetHits(module->getId(), chip->getId()))
+				//{
+				//	LOG(INFO) << BOLDRED << "stub: " << float(S)/2. << RESET;
+				//}
+			chipn+=1;
+		    } // for on chip - end
+		} // for on module - end
 	    } // for on events - end
 	}
 	TLine * L1 = new TLine(120,0,120,25);
@@ -110,7 +125,7 @@ int main( int argc, char* argv[] )
 	strip_v_thdac_31->Draw("colz");
 	L1->Draw();
 	L2->Draw();
-	C_svd->Print("STRIP_DAC_MAP.png");		
+	C_svd->Print("STRIP_DAC_MAP.png");
 
 	//IB->PSInterfaceBoard_PowerOff_SSA();
 }

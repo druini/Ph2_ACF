@@ -47,7 +47,7 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
     fEventsPerPoint              = findValueInSettings("Nevents"                           ,   10);
     fTargetOffset = 0x7F;
     fTargetVcth   =  0x0;
-
+    if(cWithSSA)    fTargetOffset = 0xF;
     this->SetSkipMaskedChannels( fSkipMaskedChannels );
 
 
@@ -71,6 +71,8 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
                 {
                     for(auto chip: *hybrid)
                     {
+
+
                         ReadoutChip *theChip = static_cast<ReadoutChip*>(chip);
                         //if it is a CBC3, disable the stub logic for this procedure
                         if( theChip->getFrontEndType() == FrontEndType::CBC3) 
@@ -243,6 +245,7 @@ void PedestalEqualization::FindOffsets()
                         if(cWithSSA)sprintf(charRegName, "THTRIMMING_S%d", channelNumber++ );
                         std::string cRegName = charRegName;
                         channel = static_cast<ReadoutChip *>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(module->getIndex())->at(chip->getIndex()))->getReg(cRegName);
+                        //LOG (INFO) << BOLDRED <<"ch "<< int(channel)<<std::endl;
                         cMeanOffset += channel;
                     } 
 

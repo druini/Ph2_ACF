@@ -116,12 +116,17 @@ int main ( int argc, char* argv[] )
     //{
     t.start();
 
+    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cTool.fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+    bool fDisableStubLogic=true;
+    if (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA) fDisableStubLogic=false;
+
+
     // now create a PedestalEqualization object
     PedestalEqualization cPedestalEqualization;
     cPedestalEqualization.Inherit (&cTool);
     //second parameter disables stub logic on CBC3
     // cPedestalEqualization.Initialise ( false, true );
-    cPedestalEqualization.Initialise ( cAllChan, true );
+    cPedestalEqualization.Initialise ( cAllChan, fDisableStubLogic );
 
     if ( cVplus ) cPedestalEqualization.FindVplus();
 
@@ -139,7 +144,7 @@ int main ( int argc, char* argv[] )
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit (&cTool);
         //second parameter disables stub logic on CBC3
-        cPedeNoise.Initialise (cAllChan, true); // canvases etc. for fast calibration
+        cPedeNoise.Initialise (cAllChan, fDisableStubLogic); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
         // cPedeNoise.measureNoise(200);
 

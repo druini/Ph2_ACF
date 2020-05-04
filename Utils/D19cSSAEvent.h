@@ -7,6 +7,8 @@
 namespace Ph2_HwInterface { // Begin namespace
 
 	using EventDataVector = std::vector<std::vector<uint32_t>>;
+	using EventHeader = std::vector<uint32_t>;
+
 	class D19cSSAEvent : public Event
 	{
 		public:
@@ -30,6 +32,10 @@ namespace Ph2_HwInterface { // Begin namespace
 		bool StubBit ( uint8_t pFeId, uint8_t pSSAId ) const override;
 		std::vector<Stub> StubVector (uint8_t pFeId, uint8_t pSSAId ) const override;
 		uint32_t GetNHits (uint8_t pFeId, uint8_t pSSAId) const override;
+		uint32_t GetL1Number() const;
+		uint32_t GetTrigID() const;
+
+		uint32_t GetSSAL1Counter(uint8_t pFeId, uint8_t pSSAId) const;
 		std::vector<uint32_t> GetHits (uint8_t pFeId, uint8_t pSSAId) const override;
 		std::vector<Cluster> getClusters ( uint8_t pFeId, uint8_t pSSAId) const override;
 		void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup) override;
@@ -37,7 +43,7 @@ namespace Ph2_HwInterface { // Begin namespace
 		bool DataBit ( uint8_t pFeId, uint8_t pSSAId, uint32_t i ) const override {return privateDataBit(pFeId, pSSAId, i);};
 		inline bool privateDataBit ( uint8_t pFeId, uint8_t pSSAId, uint8_t i ) const
 		{
-		    try 
+		    try
 		    {
 		        return  ( fEventDataVector.at(encodeVectorIndex(pFeId,pSSAId,fNSSA)).at( calculateChannelWordPosition(i) ) >> ( calculateChannelBitPosition(i)) ) & 0x1;
 		    }
@@ -49,6 +55,7 @@ namespace Ph2_HwInterface { // Begin namespace
 		}
 		private:
 		EventDataVector fEventDataVector;
+		EventHeader fEventHeader;
         	static constexpr size_t encodeVectorIndex(const uint8_t pFeId, const uint8_t pSSAId, const uint8_t numberOfSSAs)
 		{
 			return pSSAId + pFeId * numberOfSSAs;
@@ -65,7 +72,7 @@ namespace Ph2_HwInterface { // Begin namespace
 		{
 			return vectorIndex / numberOfSSAs;
 		}
-        	static constexpr uint8_t  getFeIdFromVectorIndex    (const size_t vectorIndex, const uint8_t numberOfSSAs) 
+        	static constexpr uint8_t  getFeIdFromVectorIndex    (const size_t vectorIndex, const uint8_t numberOfSSAs)
 		{
 			return vectorIndex % numberOfSSAs;
 		}
