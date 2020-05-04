@@ -90,7 +90,7 @@ namespace Ph2_System
     /*!
      * \brief Method to construct a system controller object from another one while re-using the same members
      */
-    void Inherit(SystemController* pController);
+    void Inherit(const SystemController* pController);
 
     /*!
      * \brief Destroy the SystemController object: clear the HWDescription Objects, FWInterface etc.
@@ -224,7 +224,8 @@ namespace Ph2_System
      */
     void ReadNEvents(uint32_t pNEvents);
 
-    void ReadASEvent(Ph2_HwDescription::BeBoard *pBoard, uint32_t pNMsec);
+
+    void ReadASEvent (Ph2_HwDescription::BeBoard *pBoard, uint32_t pNMsec,bool pulses=false);
 
 
     const Ph2_HwDescription::BeBoard* getBoard(int index) const

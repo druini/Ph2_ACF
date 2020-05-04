@@ -35,7 +35,7 @@ int main( int argc, char* argv[] )
 {
 	el::Configurations conf ("settings/logger.conf");
 	el::Loggers::reconfigureAllLoggers (conf);	
-	std::string cHWFile = "settings/D19C_2xSSA_onechip.xml";
+	std::string cHWFile = "settings/D19C_2xSSA_PreCalibSYNC.xml";
 	std::stringstream outp;
 	Tool cTool;
 	cTool.InitializeHw ( cHWFile, outp);

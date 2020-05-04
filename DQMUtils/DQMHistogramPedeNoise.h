@@ -91,6 +91,10 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     DetectorDataContainer fDetectorModuleStripNoiseHistograms;
     DetectorDataContainer fDetectorData;
 
+    bool cWithCBC = true;
+    bool cWithSSA = false;
+
+
     bool fPlotSCurves {false};
     bool fFitSCurves  {false};
 };

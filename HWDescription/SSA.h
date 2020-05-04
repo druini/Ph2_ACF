@@ -26,7 +26,7 @@
 #include <set>
 #include "../Utils/easylogging++.h"
 
-namespace Ph2_HwDescription { //open namespace 
+namespace Ph2_HwDescription { //open namespace
 
     using SSARegPair = std::pair <std::string, ChipRegItem>;
     using CommentMap = std::map <int, std::string>;

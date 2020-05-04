@@ -30,7 +30,7 @@ namespace Ph2_System
 
   SystemController::~SystemController() {}
 
-  void SystemController::Inherit (SystemController* pController)
+  void SystemController::Inherit (const SystemController* pController)
   {
     fBeBoardInterface     = pController->fBeBoardInterface;
     fReadoutChipInterface = pController->fReadoutChipInterface;
@@ -41,6 +41,8 @@ namespace Ph2_System
     fFileHandler          = pController->fFileHandler;
     fStreamerEnabled      = pController->fStreamerEnabled;
     fNetworkStreamer      = pController->fNetworkStreamer;
+    fDetectorContainer    = pController->fDetectorContainer;
+    fCicInterface         = pController->fCicInterface;
   }
 
   void SystemController::Destroy()
@@ -114,6 +116,7 @@ namespace Ph2_System
         OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>((theFirstBoard->at(0))->at(0));
         auto cChipType = (static_cast<ReadoutChip*>(theOuterTrackerModule->at(0))->getFrontEndType());
         if (cChipType == FrontEndType::CBC3)
+
           fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
         else if(cChipType == FrontEndType::SSA)
           fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
@@ -147,7 +150,8 @@ namespace Ph2_System
             // CIC start-up
             for(auto cOpticalGroup : *cBoard)
               {
-                uint8_t cLinkId = cOpticalGroup->getId(); 
+                if (cOpticalGroup->flpGBT != nullptr) flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
+                uint8_t cLinkId = cOpticalGroup->getId();
                 LOG (INFO) << BOLDMAGENTA << "CIC start-up seqeunce for hybrids on link " << +cLinkId << RESET;
                 for (auto cHybrid : *cOpticalGroup)
                   {
@@ -157,7 +161,7 @@ namespace Ph2_System
                         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink (cLinkId);
                         auto& cCic = theOuterTrackerModule->fCic;
 
-                        // read CIC sparsification setting 
+                        // read CIC sparsification setting
                         bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard,"fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
                         cBoard->setSparsification( cSparsified );
 
@@ -174,8 +178,8 @@ namespace Ph2_System
                             exit(0);
                           }
                         LOG (INFO) << BOLDMAGENTA << "CIC configured for "
-                                   << ((cModeSelect==0)? "2S" : "PS") 
-                                   << " readout." 
+                                   << ((cModeSelect==0)? "2S" : "PS")
+                                   << " readout."
                                    << RESET;
                         // CIC start-up sequence
                         uint8_t cDriveStrength = 5;
@@ -192,7 +196,7 @@ namespace Ph2_System
                     for (auto cReadoutChip : *cHybrid)
                       {
                         ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
-                        if ( !bIgnoreI2c ) 
+                        if ( !bIgnoreI2c )
                           {
                             LOG (INFO) << BOLDBLUE << "Configuring readout chip [CBC" << +cReadoutChip->getId() << " ]" << RESET;
                             fReadoutChipInterface->ConfigureChip ( theReadoutChip );
@@ -231,7 +235,7 @@ namespace Ph2_System
             // ###################
             // # Configure chips #
             // ###################
-            for (auto cOpticalGroup : *cBoard)
+            for(auto cOpticalGroup : *cBoard)
               {
                 if (cOpticalGroup->flpGBT != nullptr) flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                 for (auto cHybrid : *cOpticalGroup)
@@ -248,7 +252,6 @@ namespace Ph2_System
           }
       }
   }
-
 
   void SystemController::initializeFileHandler()
   {
@@ -406,23 +409,40 @@ namespace Ph2_System
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
   }
 
-  void SystemController::ReadASEvent (BeBoard* pBoard, uint32_t pNMsec)
+
+  void SystemController::ReadASEvent (BeBoard* pBoard, uint32_t pNMsec,bool pulses)
   {
     std::vector<uint32_t> cData;
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(0);
-    std::this_thread::sleep_for (std::chrono::microseconds(pNMsec));
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);
-
-    for (auto cOpticalGroup : *pBoard)
+	if (pulses) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Send_pulses();
+	else
       {
-        for (auto cHybrid : *cOpticalGroup)
+		static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(0);
+		std::this_thread::sleep_for (std::chrono::microseconds(pNMsec));
+		static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);
+      }
+    /* static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(0);
+       std::this_thread::sleep_for (std::chrono::microseconds(pNMsec));
+       for (uint32_t i=0; i<pNpulse;i++)
+       {
+       static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ChipTestPulse();
+       std::this_thread::sleep_for (std::chrono::microseconds(pNMsec));
+       }
+       static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ChipTestPulse();
+
+       static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);*/
+	//static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadASEvent(pBoard,pNMsec, cData);
+
+    for(auto cOpticalGroup : *pBoard)
+      {
+        for(auto cHybrid : *cOpticalGroup)
           {
-            for (auto cChip : *cHybrid)
+            for(auto cChip : *cHybrid)
               {
-                static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip,pNMsec, cData);
+                static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
               }
           }
       }
+
     this->DecodeData(pBoard, cData, 1, fBeBoardInterface->getBoardType(pBoard));
   }
 
@@ -496,13 +516,13 @@ namespace Ph2_System
                       {
                         fNCbc = 8;
                         fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
-                        // check if the board is reading sparsified or unsparsified data 
+                        // check if the board is reading sparsified or unsparsified data
                         fEventList.push_back ( new D19cCic2Event ( pBoard, fNCbc , fNFe, cEvent ) );
                       }
                     else if( pBoard->getFrontEndType() == FrontEndType::SSA )
-                      { 
-                        size_t nSSA = 2 ; 
-                        size_t cNFe = 1; 
+                      {
+                        size_t nSSA = 2 ;
+                        size_t cNFe = 1;
                         fEventList.push_back(new D19cSSAEvent(pBoard, nSSA, cNFe, cEvent));
                       }
                     cEventIndex++;

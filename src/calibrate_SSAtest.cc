@@ -53,6 +53,7 @@ int main ( int argc, char* argv[] )
     cScurve.Initialise();
     cScurve.run();
     cScurve.writeObjects();
+    cScurve.dumpConfigFiles();
     cTool.WriteRootFile();
     cTool.CloseResultFile();
     cTool.Destroy();
