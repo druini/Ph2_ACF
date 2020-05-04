@@ -70,58 +70,19 @@ Tool::Tool (THttpServer* pHttpServer)
 
 Tool::Tool (const Tool& pTool)
 {
-	fDetectorContainer           = pTool.fDetectorContainer;
-	fBeBoardInterface            = pTool.fBeBoardInterface;
-	fChipInterface               = pTool.fChipInterface;
-    fCicInterface                = pTool.fCicInterface;
-    fReadoutChipInterface        = pTool.fReadoutChipInterface;
-	fBeBoardFWMap                = pTool.fBeBoardFWMap;
-	fSettingsMap                 = pTool.fSettingsMap;
-	fFileHandler                 = pTool.fFileHandler;
-
-	fDirectoryName               = pTool.fDirectoryName;             /*< the Directoryname for the Root file with results */
-	#ifdef __USE_ROOT__
-		fResultFile                  = pTool.fResultFile;                /*< the Name for the Root file with results */
-	#endif
-	fType                        = pTool.fType;
-	#ifdef __USE_ROOT__
-		fCanvasMap                   = pTool.fCanvasMap;
-		fChipHistMap                 = pTool.fChipHistMap;
-		fModuleHistMap               = pTool.fModuleHistMap;
-		fBeBoardHistMap              = pTool.fBeBoardHistMap;
-	#endif
-	fTestGroupChannelMap         = pTool.fTestGroupChannelMap;
-	fNetworkStreamer             = pTool.fNetworkStreamer;
-	fStreamerEnabled             = pTool.fStreamerEnabled;
-	fSkipMaskedChannels          = pTool.fSkipMaskedChannels;
-	fAllChan                     = pTool.fAllChan;
-	fMaskChannelsFromOtherGroups = pTool.fMaskChannelsFromOtherGroups;
-	fTestPulse                   = pTool.fTestPulse;
-	fDoModuleBroadcast           = pTool.fDoModuleBroadcast;
-	fDoBoardBroadcast            = pTool.fDoBoardBroadcast;
-	//fChannelGroupHandler         = pTool.fChannelGroupHandler;
-
-	#ifdef __HTTP__
-		fHttpServer          = pTool.fHttpServer;
-	#endif
+	this->Inherit (&pTool);
 }
 
 Tool::~Tool()
 {
 }
 
-void Tool::Inherit (Tool* pTool)
+void Tool::Inherit (const Tool* pTool)
 {
 	//WE SHOULD ONLY KEEP IN HERE ONLY THINGS THAT ARE NOT CALIBRATION SPECIFIC
-	fDetectorContainer           = pTool->fDetectorContainer;//IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
-	fBeBoardInterface            = pTool->fBeBoardInterface;
-	fChipInterface               = pTool->fChipInterface;
-	fCicInterface                = pTool->fCicInterface;
-	fReadoutChipInterface        = pTool->fReadoutChipInterface;
-	fBeBoardFWMap                = pTool->fBeBoardFWMap;
-	fSettingsMap                 = pTool->fSettingsMap;
-	fFileHandler                 = pTool->fFileHandler;
-	fDirectoryName               = pTool->fDirectoryName;
+	
+	SystemController::Inherit(pTool);
+
 	#ifdef __USE_ROOT__
 		fResultFile                  = pTool->fResultFile;
 	#endif
@@ -133,33 +94,21 @@ void Tool::Inherit (Tool* pTool)
 		fBeBoardHistMap              = pTool->fBeBoardHistMap;
 	#endif
 	fTestGroupChannelMap         = pTool->fTestGroupChannelMap;
-	fNetworkStreamer             = pTool->fNetworkStreamer;
-	fStreamerEnabled             = pTool->fStreamerEnabled;
 	fSkipMaskedChannels          = pTool->fSkipMaskedChannels;
 	fAllChan                     = pTool->fAllChan;
 	fMaskChannelsFromOtherGroups = pTool->fMaskChannelsFromOtherGroups;
 	fTestPulse                   = pTool->fTestPulse;
 	fDoModuleBroadcast           = pTool->fDoModuleBroadcast;
 	fDoBoardBroadcast            = pTool->fDoBoardBroadcast;
-	//fChannelGroupHandler         = pTool->fChannelGroupHandler;
 
 	#ifdef __HTTP__
 		fHttpServer          = pTool->fHttpServer;
 	#endif
 }
 
-void Tool::Inherit (SystemController* pSystemController)
+void Tool::Inherit (const SystemController* pSystemController)
 {
-	fDetectorContainer    = pSystemController->fDetectorContainer; //IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
-	fBeBoardInterface     = pSystemController->fBeBoardInterface;
-	fReadoutChipInterface = pSystemController->fReadoutChipInterface;
-	fChipInterface        = pSystemController->fChipInterface;
-	fCicInterface         = pSystemController->fCicInterface;
-	fBeBoardFWMap         = pSystemController->fBeBoardFWMap;
-	fSettingsMap          = pSystemController->fSettingsMap;
-	fFileHandler          = pSystemController->fFileHandler;
-	fNetworkStreamer      = pSystemController->fNetworkStreamer;
-	fStreamerEnabled      = pSystemController->fStreamerEnabled;
+	SystemController::Inherit(pSystemController);
 }
 
 void Tool::resetPointers()

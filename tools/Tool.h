@@ -75,8 +75,8 @@ class Tool : public Ph2_System::SystemController
     Tool (const Tool& pTool);
     ~Tool();
 
-    void Inherit      (Tool* pTool);
-    void Inherit      (Ph2_System::SystemController* pSystemController);
+    void Inherit      (const Tool* pTool);
+    void Inherit      (const Ph2_System::SystemController* pSystemController);
     void resetPointers();
     void Destroy      ();
     void SoftDestroy  ();

@@ -1,12 +1,10 @@
 /*!
-
         \file                BeBoard.h
         \brief               BeBoard Description class, configs of the BeBoard
         \author              Lorenzo BIDEGAIN
         \date                14/07/14
         \version             1.0
         Support :            mail to : lorenzo.bidegain@gmail.com
-
  */
 
 #ifndef _BeBoard_h__
@@ -82,11 +80,6 @@ namespace Ph2_HwDescription {
             for ( auto cOpticalGroup : *this )
                 static_cast<OpticalGroup*>(cOpticalGroup)->accept ( pVisitor );
         }
-        // void accept( HwDescriptionVisitor& pVisitor ) const {
-        //  pVisitor.visit( *this );
-        //  for ( auto& cFe : fModuleVector )
-        //      cFe.accept( pVisitor );
-        // }
 
         /*!
         * \brief Get the number of modules connected to the BeBoard
@@ -105,6 +98,7 @@ namespace Ph2_HwDescription {
         * \return The value of the register
         */
         uint32_t getReg ( const std::string& pReg ) const;
+
         /*!
         * \brief Set any register of the Map, if the register is not on the map, it adds it.
         * \param pReg
@@ -112,31 +106,6 @@ namespace Ph2_HwDescription {
         */
         void setReg ( const std::string& pReg, uint32_t psetValue );
 
-        /*!
-         * \brief Adding a module to the vector
-         * \param pModule
-         */
-        // void addModule ( Module& pModule )
-        // {
-        //     fModuleVector.push_back ( &pModule );
-        // }
-        // void addModule ( Module* pModule )
-        // {
-        //     fModuleVector.push_back ( pModule );
-        // }
-
-        // /*!
-        //  * \brief Remove a Module from the vector
-        //  * \param pModuleId
-        //  * \return a bool which indicate if the removing was successful
-        //  */
-        // bool removeModule ( uint8_t pModuleId );
-        // /*!
-        //  * \brief Get a module from the vector
-        //  * \param pModuleId
-        //  * \return a pointer of module, so we can manipulate directly the module contained in the vector
-        //  */
-        // Module* getModule ( uint8_t pModuleId ) const;
         // /*!
         // * \brief Get the Map of the registers
         // * \return The map of register
@@ -154,6 +123,7 @@ namespace Ph2_HwDescription {
         {
             return fBeId;
         }
+
         /*!
         * \brief Get the BeBoardIdentifier
         * \return The BeBoardIdentifier
@@ -162,6 +132,7 @@ namespace Ph2_HwDescription {
         {
             return fBeId << 8;
         }
+
         /*!
         * \brief Set the Be Id of the BeBoard
         * \param pBeId
@@ -169,39 +140,28 @@ namespace Ph2_HwDescription {
         void setBeId ( uint8_t pBeId )
         {
             fBeId = pBeId;
-        };
+        }
+
         void setOptical ( bool pOptical )
         {
             fOptical = pOptical;
-        };
+        }
+
         void setCDCEconfiguration ( bool pConfigure, uint32_t pClockRate=120 )
         {
             fConfigureCDCE = pConfigure;
             fClockRateCDCE = pClockRate;
-        };
+        }
+
         bool ifOptical () const
         {
             return fOptical;
         }
+
         std::pair<bool,uint32_t> configCDCE () const
         {
             return std::make_pair(fConfigureCDCE,fClockRateCDCE);
         }
-        /*!
-        * \brief Set the Number of CBCs that are used to compute the data blob size of the BeBoard (according to FW version)
-        * \param pNCbcDataSize
-        */
-        //void setNCbcDataSize ( uint16_t pNCbcDataSize )
-        //{
-        //fNCbcDataSize = pNCbcDataSize;
-        //};
-        /*!
-        * \brief Get the Number of CBCs that are used to compute the data blob size of the BeBoard (according to FW version)
-        */
-        //uint16_t getNCbcDataSize() const
-        //{
-        //return fNCbcDataSize;
-        //};
 
         void setBoardType (const BoardType pBoardType)
         {
@@ -217,6 +177,7 @@ namespace Ph2_HwDescription {
         {
             fEventType = pEventType;
         }
+
         EventType getEventType() const
         {
             return fEventType;
@@ -226,50 +187,51 @@ namespace Ph2_HwDescription {
         {
             fFrontEndType = pFrontEndType;
         }
+
         FrontEndType getFrontEndType() const
         {
             return fFrontEndType;
         }
+
         void addConditionDataSet (ConditionDataSet* pSet)
         {
             if (pSet != nullptr)
                 fCondDataSet = pSet;
         }
+
         ConditionDataSet* getConditionDataSet() const
         {
             return fCondDataSet;
         }
+
         void updateCondData (uint32_t& pTDCVal);
 
         void setSparsification(bool cSparsified)
         {
             fSparsifed=cSparsified;
         }
-        bool getSparsification() const 
+
+        bool getSparsification() const
         {
             return fSparsifed;
         }
-        // Vector of FEModules, each module is supposed to know which FMC slot it is connected to...
-        // std::vector< Module* > fModuleVector;
 
         int dummyValue_ = 1989;
+
       protected:
-        //Connection Members
         uint8_t fBeId;
-        //uint16_t fNCbcDataSize;
         BoardType fBoardType;
         EventType fEventType;
         FrontEndType fFrontEndType;
 
-        BeBoardRegMap fRegMap;             /*!< Map of BeBoard Register Names vs. Register Values */
+        BeBoardRegMap fRegMap;  /*!< Map of BeBoard Register Names vs. Register Values */
         ConditionDataSet* fCondDataSet;
-        // 
         bool fOptical;
         bool fConfigureCDCE;
         bool fSparsifed;
         uint32_t fClockRateCDCE;
-      private:
 
+      private:
         /*!
         * \brief Load RegMap from a file
         * \param filename

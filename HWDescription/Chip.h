@@ -42,9 +42,7 @@ namespace Ph2_HwDescription
    */
   class Chip : public FrontEndDescription
   {
-
   public:
-
     // C'tors which take Board ID, Frontend ID/Module ID, FMC ID, Chip ID
     Chip (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue=255);
 
@@ -124,11 +122,10 @@ namespace Ph2_HwDescription
 
     virtual uint8_t getNumberOfBits(const std::string &dacName) = 0;
 
+
   protected:
     uint8_t  fChipId;
     uint16_t fMaxRegValue;
-
-    // Map of Register Name vs. RegisterItem that contains: Page, Address, Default Value, Value
     ChipRegMap fRegMap;
     CommentMap fCommentMap;
   };
