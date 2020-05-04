@@ -5,6 +5,7 @@
 
 #ifdef __POWERSUPPLY__
   #include "PowerSupply.h"
+  #include "HMP4040.h"
 #endif
 
 using namespace Ph2_HwDescription;
@@ -49,9 +50,7 @@ int main ( int argc, char** argv )
     bool cConfigure = ( cmd.foundOption ( "configure" ) ) ? true : false;
 
 
-    #ifdef __POWERSUPPLY__
-      LOG (INFO) << "PowerSupply!";
-    #endif
+
 
     std::stringstream outp;
     SystemController cSystemController;
@@ -70,10 +69,47 @@ int main ( int argc, char** argv )
     cSystemController.Destroy();
   //  #define __POWERSUPPLY__
 
-    #ifdef __POWERSUPPLY__
-      LOG (INFO) << "PowerSupply!";
-    #endif
+  #ifdef __POWERSUPPLY__
+    std::string docPath = "/home/readout/Ph2_ACF/settings/D19CDescription_Cic2.xml";
+    LOG (INFO) << "Init PS with " << docPath;
+    pugi::xml_document docSettings;
 
+    PowerSupply::PS_settings ps_settings	= PowerSupply::readSettings ( docPath, docSettings  );
+    PowerSupply::PS_map	   ps_map	= PowerSupply::Initialize   ( ps_settings	    );
+
+    if (ps_map.size() == 0) {
+      std::cout << "No configurable power supply has been found" << std::endl;
+    }
+    else {
+      std::cout << "Number of power supplies: " << ps_map.size() << std::endl;
+      std::cout << "ps_map content:" << std::endl;
+      for (auto it = ps_map.begin(); it != ps_map.end(); ++it ) {
+        std::cout << it->first << std::endl;
+      }
+    }
+    if ( ps_map["my_HMP"]->isOpen())
+    {
+      ps_map["my_HMP"]->reset();
+      ps_map["my_HMP"]->selectChannel("1");
+      ps_map["my_HMP"]->setAmpsLimit(0.005);
+      ps_map["my_HMP"]->setVoltsLimit(5.5);
+
+      ps_map["my_HMP"]->enableChannelOutput();
+      ps_map["my_HMP"]->turnOn();
+      for (double v = 0; v<=10; v = v+1.0){
+        ps_map["my_HMP"]->setVolts(v);
+        sleep(1);
+        LOG (INFO) << "Volt tripped?: " << ps_map["my_HMP"]->isVoltTripped();
+        LOG (INFO) << "Current tripped?: " << ps_map["my_HMP"]->isCurrentTripped();
+        LOG (INFO) << "Set V: " << ps_map["my_HMP"]->getVolts() <<"\tMeas V: " << ps_map["my_HMP"]->measureVolts() << "\tSet I: " << ps_map["my_HMP"]->getAmps()<< "\tMeas I: " << ps_map["my_HMP"]->measureAmps();
+      }
+      ps_map["my_HMP"]->turnOff();
+      sleep(1);
+      LOG (INFO) << "voltslimit"<<      ps_map["my_HMP"]->getVoltsLimit();
+      LOG (INFO) << "Spannung: " << ps_map["my_HMP"]->getVolts() << "\tSetStrom: " << ps_map["my_HMP"]->getAmps()<< "\tStrom: " << ps_map["my_HMP"]->measureAmps();
+    }
+
+  #endif
 
     return 0;
 }
