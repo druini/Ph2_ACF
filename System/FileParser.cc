@@ -235,24 +235,43 @@ namespace Ph2_System
 
   void FileParser::parseOpticalGroupContainer (pugi::xml_node pOpticalGroupNode, BeBoard* pBoard, std::ostream& os)
   {
+    std::string cFilePath    = "";
     uint32_t cOpticalGroupId = pOpticalGroupNode.attribute("Id"   ).as_int();
     uint32_t cFMCId          = pOpticalGroupNode.attribute("FMCId").as_int();
     uint32_t cBoardId        = pBoard->getBeBoardId();
     OpticalGroup* theOpticalGroup = pBoard->addOpticalGroupContainer(cBoardId, new OpticalGroup(cBoardId, cFMCId, cOpticalGroupId));
 
-    for (pugi::xml_node child : pOpticalGroupNode.children())
+    for (pugi::xml_node theChild : pOpticalGroupNode.children())
       {
-        if (static_cast<std::string>(child.name()) == "Module")
+        if (static_cast<std::string>(theChild.name()) == "Module")
+          this->parseModuleContainer(theChild, theOpticalGroup, os, pBoard);
+        else if (static_cast<std::string>(theChild.name()) == "lpGBT_Files")
           {
-            this->parseModuleContainer(child, theOpticalGroup, os, pBoard);
+            cFilePath = expandEnvironmentVariables(theChild.attribute("path").value());
+            if ((cFilePath.empty() == false) && (cFilePath.at(cFilePath.length() - 1) != '/')) cFilePath.append("/");
           }
-        else if (static_cast<std::string>(child.name()) == "lpGBT")
+        else if (static_cast<std::string>(theChild.name()) == "lpGBT")
           {
-            std::string fileName = expandEnvironmentVariables(child.attribute("configfile").value());
-            os << BOLDBLUE   << "|\t|----" << child.name() << " --> Id: "
-               << BOLDYELLOW << child.attribute("Id").value() << BOLDBLUE << ", File: "
+            std::string fileName = cFilePath + expandEnvironmentVariables(theChild.attribute("configfile").value());
+            os << BOLDBLUE   << "|\t|----" << theChild.name() << " --> Id: "
+               << BOLDYELLOW << theChild.attribute("Id").value() << BOLDBLUE << ", File: "
                << BOLDYELLOW << fileName << RESET << std::endl;
-            theOpticalGroup->addlpGBT(new lpGBT(cBoardId, cFMCId, cOpticalGroupId, fileName));
+            lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, fileName);
+            theOpticalGroup->addlpGBT(thelpGBT);
+
+            pugi::xml_node clpGBTSettings = theChild.child("Settings");
+            if (clpGBTSettings != nullptr)
+              {
+                os << BOLDCYAN << "|\t|\t|----lpGBT settingse" << RESET << std::endl;
+
+                for (const pugi::xml_attribute& attr : clpGBTSettings.attributes())
+                  {
+                    std::string regname = attr.name();
+                    uint16_t regvalue   = convertAnyInt(attr.value());
+                    thelpGBT->setReg(regname, regvalue, true);
+                    os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
+                  }
+              }
           }
       }
   }
@@ -853,7 +872,7 @@ namespace Ph2_System
 
     std::string cFileName;
 
-    if (!cFilePrefix.empty())
+    if (cFilePrefix.empty() == false)
       {
         if (cFilePrefix.at(cFilePrefix.length() - 1) != '/') cFilePrefix.append("/");
         cFileName = cFilePrefix + expandEnvironmentVariables(theChipNode.attribute("configfile").value());

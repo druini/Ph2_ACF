@@ -145,7 +145,7 @@ namespace Ph2_HwInterface
     if (cStatus != 18)
       {
         LOG (ERROR) << BOLDRED << "lpGBT status is not ready: " << +cStatus << RESET;
-        exit(EXIT_FAILURE);
+        exit (EXIT_FAILURE);
       }
 
 
@@ -387,8 +387,8 @@ namespace Ph2_HwInterface
 
   void lpGBTInterface::scaConfigure(lpGBT* plpGBT)
   {
-    lpGBTInterface::icWrite(plpGBT, 231, 0x00dd);
-    lpGBTInterface::icWrite(plpGBT, 232, 0x000d);
+    lpGBTInterface::icWrite(plpGBT, 231, 0x00DD);
+    lpGBTInterface::icWrite(plpGBT, 232, 0x000D);
     lpGBTInterface::icWrite(plpGBT, 233, 0x0070);
 
     for (uint16_t cRegister = 237; cRegister < 246; cRegister += 4)
@@ -427,7 +427,7 @@ namespace Ph2_HwInterface
     if (cErrorCode != 0)
       {
         LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << RESET;
-        exit(EXIT_FAILURE);
+        exit (EXIT_FAILURE);
       }
 
     uint32_t cValue = lpGBTInterface::ecRead(plpGBT, cMaster, 0x21);
@@ -451,7 +451,7 @@ namespace Ph2_HwInterface
   {
     if (pRegister == "EPRXLOCKFILTER")
       {
-        uint32_t cValueEPRXLOCKFILTER = lpGBTInterface::icRead(plpGBT, 0x01f, 1);
+        uint32_t cValueEPRXLOCKFILTER = lpGBTInterface::icRead(plpGBT, 0x01F, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "LockThreshold")
@@ -460,7 +460,7 @@ namespace Ph2_HwInterface
               cValueEPRXLOCKFILTER = (cValueEPRXLOCKFILTER & ~0x0F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x01f, cValueEPRXLOCKFILTER);
+        lpGBTInterface::icWrite(plpGBT, 0x01F, cValueEPRXLOCKFILTER);
       }
     else if (pRegister == "CLKGConfig0")
       {
@@ -613,7 +613,7 @@ namespace Ph2_HwInterface
       }
     else if (pRegister == "CLKGCntOverride")
       {
-        uint32_t cValueCLKGCntOverride = lpGBTInterface::icRead(plpGBT, 0x02a, 1);
+        uint32_t cValueCLKGCntOverride = lpGBTInterface::icRead(plpGBT, 0x02A, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "OverrVc" )
@@ -634,22 +634,22 @@ namespace Ph2_HwInterface
               cValueCLKGCntOverride = (cValueCLKGCntOverride & ~0x01) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x02a, cValueCLKGCntOverride);
+        lpGBTInterface::icWrite(plpGBT, 0x02A, cValueCLKGCntOverride);
       }
     else if (pRegister == "CLKGOverrideCapBank")
       {
-        uint32_t cValueCLKGOverrideCapBank = lpGBTInterface::icRead(plpGBT, 0x02b, 1);
+        uint32_t cValueCLKGOverrideCapBank = lpGBTInterface::icRead(plpGBT, 0x02B, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "CapBankSelect")
               cValueCLKGOverrideCapBank = (cValueCLKGOverrideCapBank & ~0xFF) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x02b, cValueCLKGOverrideCapBank);
+        lpGBTInterface::icWrite(plpGBT, 0x02B, cValueCLKGOverrideCapBank);
       }
     else if (pRegister == "CLKGWaitTime")
       {
-        uint32_t cValueCLKGWaitTime = lpGBTInterface::icRead(plpGBT, 0x02c, 1);
+        uint32_t cValueCLKGWaitTime = lpGBTInterface::icRead(plpGBT, 0x02C, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "WaitCDRTime" )
@@ -658,11 +658,11 @@ namespace Ph2_HwInterface
               cValueCLKGWaitTime = (cValueCLKGWaitTime & ~0x0F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x02c, cValueCLKGWaitTime);
+        lpGBTInterface::icWrite(plpGBT, 0x02C, cValueCLKGWaitTime);
       }
     else if (pRegister == "CLKGLFConfig0")
       {
-        uint32_t cValueCLKGLFConfig0 = lpGBTInterface::icRead(plpGBT, 0x02d, 1);
+        uint32_t cValueCLKGLFConfig0 = lpGBTInterface::icRead(plpGBT, 0x02D, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "LockFilterEnable" )
@@ -673,11 +673,11 @@ namespace Ph2_HwInterface
               cValueCLKGLFConfig0 = (cValueCLKGLFConfig0 & ~0x07) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x02d, cValueCLKGLFConfig0);
+        lpGBTInterface::icWrite(plpGBT, 0x02D, cValueCLKGLFConfig0);
       }
     else if (pRegister == "CLKGLFConfig1")
       {
-        uint32_t cValueCLKGLFConfig1 = lpGBTInterface::icRead(plpGBT, 0x02e, 1);
+        uint32_t cValueCLKGLFConfig1 = lpGBTInterface::icRead(plpGBT, 0x02E, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "ReLockThrCounter" )
@@ -686,18 +686,18 @@ namespace Ph2_HwInterface
               cValueCLKGLFConfig1 = (cValueCLKGLFConfig1 & ~0x0F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x02e, cValueCLKGLFConfig1);
+        lpGBTInterface::icWrite(plpGBT, 0x02E, cValueCLKGLFConfig1);
       }
     else if (pRegister == "FAMaxHeaderFoundCount" )
       {
-        uint32_t cValueFAMaxHeaderFC = lpGBTInterface::icRead(plpGBT, 0x02f, 1);
+        uint32_t cValueFAMaxHeaderFC = lpGBTInterface::icRead(plpGBT, 0x02F, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "FoundCount")
               cValueFAMaxHeaderFC = (cValueFAMaxHeaderFC & ~0xFF) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x02f, cValueFAMaxHeaderFC);
+        lpGBTInterface::icWrite(plpGBT, 0x02F, cValueFAMaxHeaderFC);
       }
     else if (pRegister == "FAMaxHeaderFoundCountAfterNF")
       {
@@ -785,7 +785,7 @@ namespace Ph2_HwInterface
         else if (cParameter.first == "DataInInvert")
           cValueChipConfig = (cValueChipConfig & ~0x40) | (cParameter.second << 6);
         else if (cParameter.first == "ChipAddressBar")
-          cValueChipConfig = (cValueChipConfig & ~0x7) | (cParameter.second << 0);
+          cValueChipConfig = (cValueChipConfig & ~0x07) | (cParameter.second << 0);
         else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
       }
     lpGBTInterface::icWrite(plpGBT, 0x036, cValueChipConfig);
@@ -812,7 +812,7 @@ namespace Ph2_HwInterface
       }
     else if (pRegister == "LDConfigL")
       {
-        uint32_t cValueLDConfigL = lpGBTInterface::icRead(plpGBT, 0x03a, 1);
+        uint32_t cValueLDConfigL = lpGBTInterface::icRead(plpGBT, 0x03A, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "LDEmphasisShort")
@@ -821,35 +821,35 @@ namespace Ph2_HwInterface
               cValueLDConfigL = (cValueLDConfigL & ~0x7F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x03a, cValueLDConfigL);
+        lpGBTInterface::icWrite(plpGBT, 0x03A, cValueLDConfigL);
       }
     else if (pRegister == "REFCLK")
       {
-        uint32_t cValueREFCLK = lpGBTInterface::icRead(plpGBT, 0x03b, 1);
+        uint32_t cValueREFCLK = lpGBTInterface::icRead(plpGBT, 0x03B, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "SetCM")
               cValueREFCLK = (cValueREFCLK & ~0x10) | (cParameter.second << 4);
             else if (cParameter.first == "ForceEnable")
-              cValueREFCLK = (cValueREFCLK & ~0x4) | (cParameter.second << 2);
+              cValueREFCLK = (cValueREFCLK & ~0x04) | (cParameter.second << 2);
             else if (cParameter.first == "AcBias")
-              cValueREFCLK = (cValueREFCLK & ~0x2) | (cParameter.second << 1);
+              cValueREFCLK = (cValueREFCLK & ~0x02) | (cParameter.second << 1);
             else if (cParameter.first == "Term")
-              cValueREFCLK = (cValueREFCLK & ~0x1) | (cParameter.second << 0);
+              cValueREFCLK = (cValueREFCLK & ~0x01) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x03b, cValueREFCLK);
+        lpGBTInterface::icWrite(plpGBT, 0x03B, cValueREFCLK);
       }
     else if (pRegister == "SCCONFIG")
       {
-        uint32_t cValueSCCONFIG = lpGBTInterface::icRead(plpGBT, 0x03c, 1);
+        uint32_t cValueSCCONFIG = lpGBTInterface::icRead(plpGBT, 0x03C, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "ParityCheckDisable")
               cValueSCCONFIG = (cValueSCCONFIG & ~0x1) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x03c, cValueSCCONFIG);
+        lpGBTInterface::icWrite(plpGBT, 0x03C, cValueSCCONFIG);
       }
     else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << pRegister << RESET;
   }
@@ -860,7 +860,7 @@ namespace Ph2_HwInterface
   /*-------------------------------------------------------------------------*/
   void lpGBTInterface::lpgbtConfigurePowerGood(lpGBT* plpGBT, const ParameterVect& pParameters)
   {
-    uint32_t cValuePGConfig = lpGBTInterface::icRead(plpGBT, 0x03e, 1);
+    uint32_t cValuePGConfig = lpGBTInterface::icRead(plpGBT, 0x03E, 1);
     for (const auto& cParameter : pParameters)
       {
         if (cParameter.first == "PGEnable")
@@ -871,7 +871,7 @@ namespace Ph2_HwInterface
           cValuePGConfig = (cValuePGConfig & ~0x0F) | (cParameter.second << 0);
         else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
       }
-    lpGBTInterface::icWrite(plpGBT, 0x03e, cValuePGConfig);
+    lpGBTInterface::icWrite(plpGBT, 0x03E, cValuePGConfig);
   }
 
 
@@ -886,7 +886,7 @@ namespace Ph2_HwInterface
       {
         for (const auto& cClock : pClocks)
           {
-            uint32_t cValueClkChnCntrH = lpGBTInterface::icRead(plpGBT, 0x06c+(cClock * 2), 1);
+            uint32_t cValueClkChnCntrH = lpGBTInterface::icRead(plpGBT, 0x06C + (2*cClock), 1);
             for (const auto& cParameter : pParameters)
               {
                 if (cParameter.first == "Frequency")
@@ -897,8 +897,8 @@ namespace Ph2_HwInterface
                   cValueClkChnCntrH = (cValueClkChnCntrH & ~0x40) | (cParameter.second << 6);
                 else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
               }
-            lpGBTInterface::icWrite(plpGBT, 0x06c+(cClock * 2), cValueClkChnCntrH);
-            uint32_t cReadBack = lpGBTInterface::icRead(plpGBT, 0x06c+(cClock * 2), 1);
+            lpGBTInterface::icWrite(plpGBT, 0x06C + (2*cClock), cValueClkChnCntrH);
+            uint32_t cReadBack = lpGBTInterface::icRead(plpGBT, 0x06C + (cClock * 2), 1);
             LOG (DEBUG) << BOLDBLUE << "EPCLK " << +cClock << " ChnCntrH set to : " << std::bitset<8>(cReadBack) << RESET;
           }
       }
@@ -906,7 +906,7 @@ namespace Ph2_HwInterface
       {
         for (const auto& cClock : pClocks)
           {
-            uint32_t cValueClkChnCntrL = lpGBTInterface::icRead(plpGBT, 0x06d+(cClock * 2), 1);
+            uint32_t cValueClkChnCntrL = lpGBTInterface::icRead(plpGBT, 0x06D + (2*cClock), 1);
             for (const auto& cParameter : pParameters)
               {
                 if (cParameter.first == "PreEmphasisWidth")
@@ -917,8 +917,8 @@ namespace Ph2_HwInterface
                   cValueClkChnCntrL = (cValueClkChnCntrL & ~0xE0) | (cParameter.second << 5);
                 else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
               }
-            lpGBTInterface::icWrite(plpGBT, 0x06d+(cClock * 2), cValueClkChnCntrL);
-            uint32_t cReadBack = lpGBTInterface::icRead(plpGBT, 0x06d+(cClock * 2), 1);
+            lpGBTInterface::icWrite(plpGBT, 0x06D + (2*cClock), cValueClkChnCntrL);
+            uint32_t cReadBack = lpGBTInterface::icRead(plpGBT, 0x06D + (2*cClock), 1);
             LOG (DEBUG) << BOLDBLUE << "EPCLK " << +cClock << " ChnCntrL set to : " << std::bitset<8>(cReadBack) << RESET;
           }
       }
@@ -929,7 +929,7 @@ namespace Ph2_HwInterface
   {
     if (pRegister == "EPTXDataRate")
       {
-        uint32_t cValueDataRate = lpGBTInterface::icRead(plpGBT, 0x0a7, 1);
+        uint32_t cValueDataRate = lpGBTInterface::icRead(plpGBT, 0x0A7, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "DataRate")
@@ -939,8 +939,8 @@ namespace Ph2_HwInterface
                     LOG (DEBUG) << BOLDBLUE << "Setting all output ePort Tx data rates for group " << +cGroup << " to 0x" << std::hex << +cParameter.second << std::dec << RESET;
                     cValueDataRate = (cValueDataRate & ~(0x03 << 2*cGroup)) | (cParameter.second << 2*cGroup);
                   }
-                lpGBTInterface::icWrite(plpGBT, 0x0a7, cValueDataRate);
-                uint32_t cReadBack = lpGBTInterface::icRead(plpGBT, 0x0a7, 1);
+                lpGBTInterface::icWrite(plpGBT, 0x0A7, cValueDataRate);
+                uint32_t cReadBack = lpGBTInterface::icRead(plpGBT, 0x0A7, 1);
                 LOG (DEBUG) << BOLDBLUE << "ePort Tx Data Rate register set to : " << std::bitset<8>(cReadBack) << RESET;
               }
           }
@@ -956,7 +956,7 @@ namespace Ph2_HwInterface
                 LOG(DEBUG) << BOLDBLUE << "... Enabling ePort Tx channel " << +cChannel << RESET;
                 cValueEnableTx += (1 << (cChannel + 4*(cGroup % 2)));
               }
-            lpGBTInterface::icWrite(plpGBT, 0x0a9+(cGroup/2), cValueEnableTx);
+            lpGBTInterface::icWrite(plpGBT, 0x0A9 + (cGroup/2), cValueEnableTx);
           }
       }
     else if (pRegister == "EPTXChnCntr")
@@ -965,7 +965,7 @@ namespace Ph2_HwInterface
           {
             for (const auto& cGroup : pGroups)
               {
-                uint32_t cValueChnCntr = lpGBTInterface::icRead(plpGBT, 0x0ac+(4*cChannel)+cGroup, 1);
+                uint32_t cValueChnCntr = lpGBTInterface::icRead(plpGBT, 0x0AC + (4*cChannel) + cGroup, 1);
                 for (const auto& cParameter : pParameters)
                   {
                     if (cParameter.first == "PreEmphasisStrength")
@@ -976,7 +976,7 @@ namespace Ph2_HwInterface
                       cValueChnCntr = (cValueChnCntr & ~0x07) | (cParameter.second << 0);
                     else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
                   }
-                lpGBTInterface::icWrite(plpGBT,0x0ac+(4*cChannel)+cGroup, cValueChnCntr);
+                lpGBTInterface::icWrite(plpGBT,0x0AC + (4*cChannel) + cGroup, cValueChnCntr);
               }
           }
       }
@@ -986,7 +986,7 @@ namespace Ph2_HwInterface
           {
             for (const auto& cChannel : pChannels)
               {
-                uint32_t cValue_ChnCntr = lpGBTInterface::icRead(plpGBT, 0x0bc+(2*cGroup)+(cChannel/2), 1);
+                uint32_t cValue_ChnCntr = lpGBTInterface::icRead(plpGBT, 0x0BC + (2*cGroup) + (cChannel/2), 1);
                 for (const auto& cParameter : pParameters)
                   {
                     if (cParameter.first == "Invert")
@@ -995,7 +995,7 @@ namespace Ph2_HwInterface
                       cValue_ChnCntr = (cValue_ChnCntr & ~(0x1 << (0+4*(cChannel%2)))) | (cParameter.second << (0+4*(cChannel%2)));
                     else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
                   }
-                lpGBTInterface::icWrite(plpGBT, 0x0bc+(2*cGroup)+(cChannel/2), cValue_ChnCntr);
+                lpGBTInterface::icWrite(plpGBT, 0x0BC + (2*cGroup) + (cChannel/2), cValue_ChnCntr);
               }
           }
       }
@@ -1009,7 +1009,7 @@ namespace Ph2_HwInterface
         for (const auto& cGroup : pGroups)
           {
             LOG (DEBUG) << BOLDBLUE << "Configuring: ePort Rx channels for group " << +cGroup << RESET;
-            uint32_t cValueEPRxControl = lpGBTInterface::icRead(plpGBT, 0x0c4+cGroup, 1);
+            uint32_t cValueEPRxControl = lpGBTInterface::icRead(plpGBT, 0x0C4 + cGroup, 1);
             uint32_t cValueEnableRx = 0;
             for (const auto& cChannel : pChannels)
               {
@@ -1025,7 +1025,7 @@ namespace Ph2_HwInterface
                   cValueEPRxControl = (cValueEPRxControl & ~0x03) | (cParameter.second << 0);
                 else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
               }
-            lpGBTInterface::icWrite(plpGBT, 0x0c4+cGroup, cValueEPRxControl);
+            lpGBTInterface::icWrite(plpGBT, 0x0C4 + cGroup, cValueEPRxControl);
           }
       }
     else if (pRegister == "EPRXChnCntr")
@@ -1034,7 +1034,7 @@ namespace Ph2_HwInterface
           {
             for (const auto& cChannel : pChannels)
               {
-                uint32_t cValueChnCntr = lpGBTInterface::icRead(plpGBT, 0x0cc+(4*cGroup)+cChannel, 1);
+                uint32_t cValueChnCntr = lpGBTInterface::icRead(plpGBT, 0x0CC + (4*cGroup) + cChannel, 1);
                 for (const auto& cParameter : pParameters)
                   {
                     if (cParameter.first == "PhaseSelect")
@@ -1049,7 +1049,7 @@ namespace Ph2_HwInterface
                       cValueChnCntr = (cValueChnCntr & ~0x01) | (cParameter.second << 0);
                     else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
                   }
-                lpGBTInterface::icWrite(plpGBT, 0x0cc+(4*cGroup)+cChannel, cValueChnCntr);
+                lpGBTInterface::icWrite(plpGBT, 0x0CC + (4*cGroup) + cChannel, cValueChnCntr);
               }
           }
       }
@@ -1061,10 +1061,10 @@ namespace Ph2_HwInterface
               {
                 for (const auto& cGroup : pGroups)
                   {
-                    uint32_t cValueEqControl = lpGBTInterface::icRead(plpGBT, 0x0e9+(cGroup/2), 1);
+                    uint32_t cValueEqControl = lpGBTInterface::icRead(plpGBT, 0x0E9 + (cGroup/2), 1);
                     for (const auto& cChannel : pChannels)
                       cValueEqControl = (cValueEqControl & ~(0x1 << (4*(cGroup%2)+cChannel))) | (cParameter.second << (4*(cGroup%2)+cChannel));
-                    lpGBTInterface::icWrite(plpGBT, 0x0e9+(cGroup/2), cValueEqControl);
+                    lpGBTInterface::icWrite(plpGBT, 0x0E9 + (cGroup/2), cValueEqControl);
                   }
               }
           }
@@ -1078,7 +1078,7 @@ namespace Ph2_HwInterface
   /*-------------------------------------------------------------------------*/
   void lpGBTInterface::lpgbtConfigurePowerUpSM(lpGBT* plpGBT, const ParameterVect& pParameters)
   {
-    uint32_t cValuePOWERUP2 = lpGBTInterface::icRead(plpGBT, 0x0ef, 1);
+    uint32_t cValuePOWERUP2 = lpGBTInterface::icRead(plpGBT, 0x0EF, 1);
     for (const auto& cParameter : pParameters)
       {
         if (cParameter.first == "dllConfigDone")
@@ -1089,7 +1089,7 @@ namespace Ph2_HwInterface
           cValuePOWERUP2 = (cValuePOWERUP2 & ~0x1) | (cParameter.second << 0);
         else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
       }
-    lpGBTInterface::icWrite(plpGBT, 0x0ef, cValuePOWERUP2);
+    lpGBTInterface::icWrite(plpGBT, 0x0EF, cValuePOWERUP2);
   }
 
 
@@ -1128,7 +1128,7 @@ namespace Ph2_HwInterface
       }
     else if (pRegister == "ULDataSource2")
       {
-        uint32_t cValueULDataSource2 = lpGBTInterface::icRead(plpGBT, 0x11a, 1);
+        uint32_t cValueULDataSource2 = lpGBTInterface::icRead(plpGBT, 0x11A, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "G3DataSource")
@@ -1137,11 +1137,11 @@ namespace Ph2_HwInterface
               cValueULDataSource2 = (cValueULDataSource2 & ~0x38) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x11a, cValueULDataSource2);
+        lpGBTInterface::icWrite(plpGBT, 0x11A, cValueULDataSource2);
       }
     else if (pRegister == "ULDataSource3")
       {
-        uint32_t cValueULDataSource3 = lpGBTInterface::icRead(plpGBT, 0x11b, 1);
+        uint32_t cValueULDataSource3 = lpGBTInterface::icRead(plpGBT, 0x11B, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "G5DataSource")
@@ -1150,11 +1150,11 @@ namespace Ph2_HwInterface
               cValueULDataSource3 = (cValueULDataSource3 & ~0x38) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x11b, cValueULDataSource3);
+        lpGBTInterface::icWrite(plpGBT, 0x11B, cValueULDataSource3);
       }
     else if (pRegister == "ULDataSource4")
       {
-        uint32_t cValueULDataSource4 = lpGBTInterface::icRead(plpGBT, 0x11c, 1);
+        uint32_t cValueULDataSource4 = lpGBTInterface::icRead(plpGBT, 0x11C, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "ECDataSource")
@@ -1165,11 +1165,11 @@ namespace Ph2_HwInterface
               cValueULDataSource4 = (cValueULDataSource4 & ~0x07) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x11c, cValueULDataSource4);
+        lpGBTInterface::icWrite(plpGBT, 0x11C, cValueULDataSource4);
       }
     else if (pRegister == "ULDataSource5")
       {
-        uint32_t cValueULDataSource5 = lpGBTInterface::icRead(plpGBT, 0x11d, 1);
+        uint32_t cValueULDataSource5 = lpGBTInterface::icRead(plpGBT, 0x11D, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "G3DataSource")
@@ -1182,29 +1182,29 @@ namespace Ph2_HwInterface
               cValueULDataSource5 = (cValueULDataSource5 & ~0x03) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x11d, cValueULDataSource5);
+        lpGBTInterface::icWrite(plpGBT, 0x11D, cValueULDataSource5);
       }
     else if (pRegister == "DPDataPattern3")
       {
-        uint32_t cValueDPDP3 = lpGBTInterface::icRead(plpGBT, 0x11e, 1);
+        uint32_t cValueDPDP3 = lpGBTInterface::icRead(plpGBT, 0x11E, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "DPDataPattern3")
               cValueDPDP3 = (cValueDPDP3 & ~0xFF) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x11e, cValueDPDP3);
+        lpGBTInterface::icWrite(plpGBT, 0x11E, cValueDPDP3);
       }
     else if (pRegister == "DPDataPattern2")
       {
-        uint32_t cValueDPDP2 = lpGBTInterface::icRead(plpGBT, 0x11f, 1);
+        uint32_t cValueDPDP2 = lpGBTInterface::icRead(plpGBT, 0x11F, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "DPDataPattern2")
               cValueDPDP2 = (cValueDPDP2 & ~0xFF) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x11f, cValueDPDP2);
+        lpGBTInterface::icWrite(plpGBT, 0x11F, cValueDPDP2);
       }
     else if (pRegister == "DPDataPattern1")
       {
@@ -1278,25 +1278,25 @@ namespace Ph2_HwInterface
       }
     else if (pRegister == "BERTDataPattern1")
       {
-        uint32_t cValueBERTDP1 = lpGBTInterface::icRead(plpGBT, 0x12a, 1);
+        uint32_t cValueBERTDP1 = lpGBTInterface::icRead(plpGBT, 0x12A, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "BERTDataPattern1")
               cValueBERTDP1 = (cValueBERTDP1 & ~0xFF) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x12a, cValueBERTDP1);
+        lpGBTInterface::icWrite(plpGBT, 0x12A, cValueBERTDP1);
       }
     else if (pRegister == "BERTDataPattern0")
       {
-        uint32_t cValueBERTDP0 = lpGBTInterface::icRead(plpGBT, 0x12b, 1);
+        uint32_t cValueBERTDP0 = lpGBTInterface::icRead(plpGBT, 0x12B, 1);
         for (const auto& cParameter : pParameters)
           {
             if (cParameter.first == "BERTDataPattern0")
               cValueBERTDP0 = (cValueBERTDP0 & ~0xFF) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
-        lpGBTInterface::icWrite(plpGBT, 0x12b, cValueBERTDP0);
+        lpGBTInterface::icWrite(plpGBT, 0x12B, cValueBERTDP0);
       }
     else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << pRegister << RESET;
   }
@@ -1344,15 +1344,15 @@ namespace Ph2_HwInterface
     else if (pRegister == "EPRX1DllStatus")
       cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x159, 1) & 0xFF;
     else if (pRegister == "EPRX2DllStatus")
-      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x15a, 1) & 0xFF;
+      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x15A, 1) & 0xFF;
     else if (pRegister == "EPRX3DllStatus")
-      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x15b, 1) & 0xFF;
+      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x15B, 1) & 0xFF;
     else if (pRegister == "EPRX4DllStatus")
-      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x15c, 1) & 0xFF;
+      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x15C, 1) & 0xFF;
     else if (pRegister == "EPRX5DllStatus")
-      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x15d, 1) & 0xFF;
+      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x15D, 1) & 0xFF;
     else if (pRegister == "EPRX0DllStatus")
-      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x15e, 1) & 0xFF;
+      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x15E, 1) & 0xFF;
     else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << pRegister << RESET;
     return cRegisterValue;
   }
@@ -1365,17 +1365,17 @@ namespace Ph2_HwInterface
   {
     uint8_t cRegisterValue = 0;
     if (pRegister == "BERTStatus")
-      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1bf, 1) & 0xFF;
+      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1BF, 1) & 0xFF;
     else if (pRegister == "BERTResult4")
-      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1c0, 1) & 0xFF;
+      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1C0, 1) & 0xFF;
     else if (pRegister == "BERTResult3")
-      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1c1, 1) & 0xFF;
+      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1C1, 1) & 0xFF;
     else if (pRegister == "BERTResult2")
-      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1c2, 1) & 0xFF;
+      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1C2, 1) & 0xFF;
     else if (pRegister == "BERTResult1")
-      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1c3, 1) & 0xFF;
+      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1C3, 1) & 0xFF;
     else if (pRegister == "BERTResult0")
-      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1c4, 1) & 0xFF;
+      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1C4, 1) & 0xFF;
     else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << pRegister << RESET;
     return cRegisterValue;
   }
@@ -1388,7 +1388,7 @@ namespace Ph2_HwInterface
   {
     uint8_t cRegisterValue = 0;
     if (pRegister == "PUSMStatus")
-      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1c7, 1) & 0xFF;
+      cRegisterValue = lpGBTInterface::icRead(plpGBT, 0x1C7, 1) & 0xFF;
     return cRegisterValue;
   }
 
