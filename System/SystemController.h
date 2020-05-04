@@ -13,6 +13,7 @@
 #include "FileParser.h"
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/ChipInterface.h"
+#include "../HWInterface/lpGBTInterface.h"
 #include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/SSAInterface.h"
@@ -60,13 +61,14 @@ namespace Ph2_System
   public:
     Ph2_HwInterface::BeBoardInterface* fBeBoardInterface; //!< Interface to the BeBoard
     Ph2_HwInterface::ReadoutChipInterface* fReadoutChipInterface;
-    Ph2_HwInterface::ChipInterface* fChipInterface; //!< Interface to the Chip
+    Ph2_HwInterface::ChipInterface* fChipInterface;       //!< Interface to the Chip
+    Ph2_HwInterface::lpGBTInterface* flpGBTInterface;     //!< Interface to the lpGBT
 
-    Ph2_HwInterface::CicInterface* fCicInterface;   //!< Interface to a CIC [only valid for OT]
-    Ph2_HwInterface::SSAInterface* fSSAInterface;   //!< Interface to the SSA
-    Ph2_HwInterface::MPAInterface* fMPAInterface;   //!< Interface to the MPA
+    Ph2_HwInterface::CicInterface* fCicInterface; //!< Interface to a CIC [only valid for OT]
+    Ph2_HwInterface::SSAInterface* fSSAInterface; //!< Interface to the SSA
+    Ph2_HwInterface::MPAInterface* fMPAInterface; //!< Interface to the MPA
 
-    DetectorContainer* fDetectorContainer; //Detector Container
+    DetectorContainer* fDetectorContainer;
     BeBoardFWMap fBeBoardFWMap;
     SettingsMap fSettingsMap;
     FileHandler* fFileHandler;
@@ -88,7 +90,6 @@ namespace Ph2_System
     /*!
      * \brief Method to construct a system controller object from another one while re-using the same members
      */
-    //here all my members are set to the objects contained already in pController, I can then safely delete pController (because the destructor does not delete any of the objects)
     void Inherit(SystemController* pController);
 
     /*!
@@ -223,8 +224,7 @@ namespace Ph2_System
      */
     void ReadNEvents(uint32_t pNEvents);
 
-
-    void ReadASEvent (Ph2_HwDescription::BeBoard *pBoard, uint32_t pNMsec);
+    void ReadASEvent(Ph2_HwDescription::BeBoard *pBoard, uint32_t pNMsec);
 
 
     const Ph2_HwDescription::BeBoard* getBoard(int index) const
