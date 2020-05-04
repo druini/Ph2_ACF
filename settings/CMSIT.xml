@@ -9,13 +9,14 @@
 
     <!-- Frontend chip configuration -->
     <OpticalGroup Id="0" FMCId="0">
+      <!--
       <lpGBT_Files path="./" />
       <lpGBT Id="0" configfile="CMSIT_lpGBT.txt">
         <Settings
             EPRXDllConfig = "81"
             />
       </lpGBT>
-
+      -->
       <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
         <RD53_Files path="./" />
 
