@@ -26,13 +26,9 @@ namespace Ph2_HwInterface
     ~lpGBTInterface ();
 
 
-    bool ConfigureChip   (Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override
-    {
-      LOG (INFO) << GREEN << "Configuring: " << BOLDYELLOW << "lpGBT" << RESET;
-      return false;
-    }
+    bool ConfigureChip   (Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                    override;
     bool WriteChipReg    (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override { return false; }
-    uint16_t ReadChipReg (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode ) override                                         { return 0;     }
+    uint16_t ReadChipReg (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode )                                         override { return 0;     }
 
 
     // lpGBT Calibration Data Configuration

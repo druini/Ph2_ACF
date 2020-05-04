@@ -19,6 +19,199 @@ namespace Ph2_HwInterface
 
   lpGBTInterface::~lpGBTInterface() {}
 
+  bool lpGBTInterface::ConfigureChip (Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+  {
+    std::string cRegister;
+    ParameterVect cParameters;
+    lpGBT* plpGBT = static_cast<lpGBT*>(pChip);
+
+    // Configure Calibration Data registers
+    cRegister.assign("EPRXLOCKFILTER");
+    cParameters = {{"LockThreshold", 5}, {"ReLockThreshold", 5}};
+    lpGBTInterface::lpgbtConfigureCalibData(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("CLKGConfig0");
+    cParameters = {{"CalibEndOfCount", 12}, {"BiasGenConfig", 8}};
+    lpGBTInterface::lpgbtConfigureCalibData(plpGBT, cRegister, cParameters);
+    //
+    cRegister.assign("CLKGConfig1");
+    cParameters = {{"CtrlOverrEnable", 0}, {"DisFrameAlignLockCtrl", 0}, {"CDRRes", 1}, {"VcoRailMode", 0}, {"VcoDAC", 4}};
+    lpGBTInterface::lpgbtConfigureCalibData(plpGBT, cRegister, cParameters);
+
+    // Configure Clock Generator Block registers
+    cRegister.assign("CLKGPllRes");
+    cParameters = {{"ResWhenLocked", 4}, {"Res", 4}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("CLKGPLLIntCur");
+    cParameters = {{"CurWhenLocked", 5}, {"Cur", 5}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("CLKGPLLPropCur");
+    cParameters = {{"CurWhenLocked", 5}, {"Cur", 5}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("CLKGCDRPropCur");
+    cParameters = {{"CurWhenLocked", 5}, {"Cur", 5}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("CLKGCDRIntCur");
+    cParameters = {{"CurWhenLocked", 5}, {"Cur", 5}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("CLKGCDRFFPropCur");
+    cParameters = {{"CurWhenLocked", 5}, {"Cur", 5}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("CLKGFLLIntCur");
+    cParameters = {{"CurWhenLocked", 0}, {"Cur", 15}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("CLKGFFCAP");
+    cParameters = {{"ConnectCDR", 0}, {"OverrEnable", 0}, {"FFCapWhenLocked", 0}, {"FFCap", 0}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("CLKGCntOverride");
+    cParameters = {{"OverrVc", 0}, {"RefClkSel", 0}, {"EnablePLL", 0}, {"EnableFD", 0}, {"EnableCDR", 0}, {"DisDataCntrRef", 0}, {"DisDESvbiasGen", 0}, {"ConnectPLL", 0}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("CLKGOverrideCapBank");
+    cParameters = {{"CapBankSelect", 0}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("CLKGWaitTime");
+    cParameters = {{"WaitCDRTime", 8}, {"WaitPLLTime", 8}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("CLKGLFConfig0");
+    cParameters = {{"LockFilterEnable", 1}, {"CapBankSelect", 0}, {"LockThrCounter", 9}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("CLKGLFConfig1");
+    cParameters = {{"ReLockThrCounter", 9}, {"UnLockThrCounter", 9}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    // Configure Debug register
+    cRegister.assign("DataPath");
+    cParameters = {{"BypassDeInterlevear", 0}, {"BypassFECDecoder", 0}, {"BypassDeScrambler", 0}, {"FECErrCntEna", 0}, {"BypassInterleaver", 0}, {"BypassScrambler", 0}, {"BypassFECCoder", 0}};
+    lpGBTInterface::lpgbtConfigureDebug(plpGBT, cRegister, cParameters);
+
+    // Configure ChipConfig register
+    cParameters = {{"DataOutInvert", 0}, {"DataInInvert", 1}, {"ChipAddressBar", 0}};
+    lpGBTInterface::lpgbtConfigureChipConfig(plpGBT, cParameters);
+
+    // Configure Clock Generator Block registers
+    cRegister.assign("EPRXDllConfig");
+    cParameters = {{"Current", 1}, {"ConfirmCount", 1}, {"FSMClkAlwaysOn", 0}, {"CoarseLockDetection", 1}, {"EnableReInit", 0}, {"DataGatingEnable", 0}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("PSDllConfig") ;
+    cParameters = {{"UnLockThreshold", 5}, {"ConfirmCount", 1}, {"CurrentSel", 1}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    // Configure Line Driver register
+    cRegister.assign("LDConfigH") ;
+    cParameters = {{"EmphasisEnable", 0}, {"ModulationCurrent", 32}};
+    lpGBTInterface::lpgbtConfigureLineDriver(plpGBT, cRegister, cParameters);
+
+    // Configure Power Good register
+    cParameters = {{"PGEnable", 1}, {"PGLevel", 5}, {"PGDelay", 12}};
+    lpGBTInterface::lpgbtConfigurePowerGood(plpGBT, cParameters);
+
+    // Configure Clock Generator Block registers
+    cRegister.assign("FAMaxHeaderFoundCount");
+    cParameters = {{"FoundCount", 10}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("FAMaxHeaderFoundCountAfterNF");
+    cParameters = {{"FoundCountAfterNF", 10}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("FAMaxHeaderNotFoundCount");
+    cParameters = {{"NotFoundCount", 10}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    cRegister.assign("FAFAMaxSkipCycleCountAfterNF");
+    cParameters = {{"SkipCycleCountAfterNF", 10}};
+    lpGBTInterface::lpgbtConfigureClkGenBlock(plpGBT, cRegister, cParameters);
+
+    // Configure PowerUp State Machine register
+    cParameters = {{"dllConfigDone", 1}, {"pllConfigDone", 2}};
+    lpGBTInterface::lpgbtConfigurePowerUpSM(plpGBT, cParameters);
+
+
+    cRegister.assign("PUSMStatus");
+    uint8_t cStatus = lpGBTInterface::lpgbtGetPowerUpSM(plpGBT, cRegister);
+    if (cStatus != 18)
+      {
+        LOG (ERROR) << BOLDRED << "lpGBT status is not ready: " << +cStatus << RESET;
+        exit(EXIT_FAILURE);
+      }
+
+
+    /*-------------------------------------------------------------------------*/
+    /* Configuration of lpGBT down-links                                       */
+    /*-------------------------------------------------------------------------*/
+    std::vector<uint8_t> fDLGroups   = {0};
+    std::vector<uint8_t> fDLChannels = {0};
+    uint8_t pCurrent = 0;
+    uint8_t pPreEmphasis = 0;
+    bool pInvert = false;
+
+    cRegister.assign("EPTXDataRate");
+    cParameters = {{"DataRate", 2}};
+    lpGBTInterface::lpgbtConfigureTx(plpGBT, fDLGroups, fDLChannels, cRegister, cParameters);
+
+    cRegister.assign("EPTXEnable");
+    lpGBTInterface::lpgbtConfigureTx(plpGBT, fDLGroups, fDLChannels, cRegister, cParameters);
+
+    cRegister.assign("EPTXChnCntr");
+    cParameters = {{"PreEmphasisMode", 3}, {"DriveStrength", pCurrent}};
+    if (pPreEmphasis > 0)
+      cParameters.push_back(std::make_pair("PreEmphasisStrength", pPreEmphasis));
+    lpGBTInterface::lpgbtConfigureTx(plpGBT, fDLGroups, fDLChannels, cRegister ,cParameters);
+
+    cRegister.assign("EPTX_ChnCntr");
+    if (pInvert == true)
+      {
+        cParameters.push_back(std::make_pair("PreEmphasisStrength", 1));
+      }
+    else
+      {
+        cParameters.push_back(std::make_pair("PreEmphasisStrength", 0));
+        cParameters.push_back(std::make_pair("PreEmphasisWidth", 0));
+      }
+    lpGBTInterface::lpgbtConfigureTx(plpGBT, fDLGroups, fDLChannels, cRegister, cParameters);
+
+
+    /*-------------------------------------------------------------------------*/
+    /* Configuration of lpGBT up-links                                         */
+    /*-------------------------------------------------------------------------*/
+    std::vector<uint8_t> fULGroups   = {0};
+    std::vector<uint8_t> fULChannels = {0};
+    uint8_t pPhaseMode = 0;
+    uint8_t pEqual = 0;
+    uint8_t pPhase = 0;
+    bool pEnableTerm = false;
+    bool pEnableBias = false;
+    pInvert = false;
+
+    cRegister.assign("EPRXControl");
+    cParameters = {{"DataRate", 3}, {"TrackMode", pPhaseMode}};
+    lpGBTInterface::lpgbtConfigureRx(plpGBT, fULGroups, fULChannels, cRegister, cParameters);
+
+    cRegister.assign("EPRXChnCntr");
+    cParameters = {{"PhaseSelect", pPhase}, {"Invert", uint8_t(pInvert)}, {"AcBias", uint8_t(pEnableBias)}, {"Term", uint8_t(pEnableTerm)}, {"Eq", pEqual}};
+    lpGBTInterface::lpgbtConfigureRx(plpGBT, fULGroups, fULChannels, cRegister, cParameters);
+
+    cRegister.assign("EPRXEqControl");
+    cParameters = {{"Eq", pEqual}};
+    lpGBTInterface::lpgbtConfigureRx(plpGBT, fULGroups, fULChannels, cRegister, cParameters);
+
+
+    return cStatus;
+  }
+
 
   /*-------------------------------------------------------------------------*/
   /* External Control (EC) ePort read/write/reset methods                    */
@@ -780,7 +973,7 @@ namespace Ph2_HwInterface
                     else if (cParameter.first == "PreEmphasisMode")
                       cValueChnCntr = (cValueChnCntr & ~0x18) | (cParameter.second << 3);
                     else if (cParameter.first == "DriveStrength")
-                      cValueChnCntr = (cValueChnCntr & ~0x7) | (cParameter.second << 0);
+                      cValueChnCntr = (cValueChnCntr & ~0x07) | (cParameter.second << 0);
                     else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
                   }
                 lpGBTInterface::icWrite(plpGBT,0x0ac+(4*cChannel)+cGroup, cValueChnCntr);
@@ -847,13 +1040,13 @@ namespace Ph2_HwInterface
                     if (cParameter.first == "PhaseSelect")
                       cValueChnCntr = (cValueChnCntr & ~0xF0) | (cParameter.second << 4);
                     else if (cParameter.first == "Invert")
-                      cValueChnCntr = (cValueChnCntr & ~0x8) | (cParameter.second << 3);
+                      cValueChnCntr = (cValueChnCntr & ~0x08) | (cParameter.second << 3);
                     else if (cParameter.first == "AcBias")
-                      cValueChnCntr = (cValueChnCntr & ~0x4) | (cParameter.second << 2);
+                      cValueChnCntr = (cValueChnCntr & ~0x04) | (cParameter.second << 2);
                     else if (cParameter.first == "Term")
-                      cValueChnCntr = (cValueChnCntr & ~0x2) | (cParameter.second << 1);
+                      cValueChnCntr = (cValueChnCntr & ~0x02) | (cParameter.second << 1);
                     else if (cParameter.first == "Eq")
-                      cValueChnCntr = (cValueChnCntr & ~0x1) | (cParameter.second << 0);
+                      cValueChnCntr = (cValueChnCntr & ~0x01) | (cParameter.second << 0);
                     else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
                   }
                 lpGBTInterface::icWrite(plpGBT, 0x0cc+(4*cGroup)+cChannel, cValueChnCntr);
@@ -913,7 +1106,7 @@ namespace Ph2_HwInterface
             if (cParameter.first == "ECDataSource")
               cValueULDataSource0 = (cValueULDataSource0 & ~0xE0) | (cParameter.second << 5);
             else if (cParameter.first == "SerTestPattern")
-              cValueULDataSource0 = (cValueULDataSource0 & ~0xF) | (cParameter.second << 0);
+              cValueULDataSource0 = (cValueULDataSource0 & ~0x0F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
         lpGBTInterface::icWrite(plpGBT, 0x118, cValueULDataSource0);
@@ -928,7 +1121,7 @@ namespace Ph2_HwInterface
             else if (cParameter.first == "G1DataSource")
               cValueULDataSource1 = (cValueULDataSource1 & ~0x38) | (cParameter.second << 3);
             else if (cParameter.first == "G0DataSource")
-              cValueULDataSource1 = (cValueULDataSource1 & ~0x7) | (cParameter.second << 0);
+              cValueULDataSource1 = (cValueULDataSource1 & ~0x07) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
         lpGBTInterface::icWrite(plpGBT, 0x119, cValueULDataSource1);
@@ -969,7 +1162,7 @@ namespace Ph2_HwInterface
             else if (cParameter.first == "ICDataSource")
               cValueULDataSource4 = (cValueULDataSource4 & ~0x38) | (cParameter.second << 3);
             else if (cParameter.first == "G6DataSource")
-              cValueULDataSource4 = (cValueULDataSource4 & ~0x7) | (cParameter.second << 0);
+              cValueULDataSource4 = (cValueULDataSource4 & ~0x07) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
         lpGBTInterface::icWrite(plpGBT, 0x11c, cValueULDataSource4);
@@ -984,9 +1177,9 @@ namespace Ph2_HwInterface
             else if (cParameter.first == "G2DataSource")
               cValueULDataSource5 = (cValueULDataSource5 & ~0x30) | (cParameter.second << 4);
             else if (cParameter.first == "G1DataSource")
-              cValueULDataSource5 = (cValueULDataSource5 & ~0xC) | (cParameter.second << 2);
+              cValueULDataSource5 = (cValueULDataSource5 & ~0x0C) | (cParameter.second << 2);
             else if (cParameter.first == "G0DataSource")
-              cValueULDataSource5 = (cValueULDataSource5 & ~0x3) | (cParameter.second << 0);
+              cValueULDataSource5 = (cValueULDataSource5 & ~0x03) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
         lpGBTInterface::icWrite(plpGBT, 0x11d, cValueULDataSource5);
@@ -1054,9 +1247,9 @@ namespace Ph2_HwInterface
             if (cParameter.first == "MeasTime")
               cValueBERTConfig = (cValueBERTConfig & ~0xF0) | (cParameter.second << 4);
             else if (cParameter.first == "SKIPDisable")
-              cValueBERTConfig = (cValueBERTConfig & ~0x2) | (cParameter.second << 1);
+              cValueBERTConfig = (cValueBERTConfig & ~0x02) | (cParameter.second << 1);
             else if (cParameter.first == "Start")
-              cValueBERTConfig = (cValueBERTConfig & ~0x1) | (cParameter.second << 0);
+              cValueBERTConfig = (cValueBERTConfig & ~0x01) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
         lpGBTInterface::icWrite(plpGBT, 0x127, cValueBERTConfig);
@@ -1128,11 +1321,11 @@ namespace Ph2_HwInterface
             else if (cParameter.first == "FECErrCntEna")
               cValueDataPath = (cValueDataPath & ~0x10) | (cParameter.second << 4);
             else if (cParameter.first == "BypassInterleaver")
-              cValueDataPath = (cValueDataPath & ~0x4) | (cParameter.second << 2);
+              cValueDataPath = (cValueDataPath & ~0x04) | (cParameter.second << 2);
             else if (cParameter.first == "BypassScrambler")
-              cValueDataPath = (cValueDataPath & ~0x2) | (cParameter.second << 1);
+              cValueDataPath = (cValueDataPath & ~0x02) | (cParameter.second << 1);
             else if (cParameter.first == "BypassFECCoder")
-              cValueDataPath = (cValueDataPath & ~0x1) | (cParameter.second << 0);
+              cValueDataPath = (cValueDataPath & ~0x01) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
         lpGBTInterface::icWrite(plpGBT, 0x132, cValueDataPath);
@@ -1229,14 +1422,14 @@ namespace Ph2_HwInterface
 
   uint32_t lpGBTInterface::readI2C(lpGBT* plpGBT, uint16_t pMaster, uint8_t pSlave, uint8_t pNBytes)
   {
-    lpGBTInterface::configI2C(plpGBT, pMaster, { {"Frequency", 2}, {"NBytes", pNBytes}, {"SCLDriveMode", 0} });
+    lpGBTInterface::configI2C(plpGBT, pMaster, {{"Frequency", 2}, {"NBytes", pNBytes}, {"SCLDriveMode", 0}});
     uint32_t pData = lpGBTInterface::ecRead(plpGBT, pMaster, (pNBytes == 1) ? 0x3 : 0xD, (pSlave << 3*8));
     return ((pData & 0x00FFFF00) >> 8);
   }
 
   uint8_t lpGBTInterface::writeI2C(lpGBT* plpGBT, uint16_t pMaster, uint8_t pSlave , uint32_t pData, uint8_t pNBytes)
   {
-    lpGBTInterface::configI2C(plpGBT , pMaster, { {"Frequency", 2}, {"NBytes", pNBytes}, {"SCLDriveMode", 0} });
+    lpGBTInterface::configI2C(plpGBT , pMaster, {{"Frequency", 2}, {"NBytes", pNBytes}, {"SCLDriveMode", 0}});
     if (pNBytes == 1)
       {
         uint32_t cData = (pSlave << 3*8) | (pData << 2*8);
@@ -1261,7 +1454,7 @@ namespace Ph2_HwInterface
       {
         uint32_t cWord = *cVecSendIter;
         uint8_t cFeId = (cWord & (0xF << 23)) >> 23;
-        cI2CMasterWordsMap[2*(cFeId % 2)].push_back(cWord); //FeId 0 : Master 0 ___ FeId 1 : Master 2
+        cI2CMasterWordsMap[2*(cFeId % 2)].push_back(cWord); //FeId 0 : Master 0 -- FeId 1 : Master 2
       }
 
     for (auto cI2CMasterWordsMapIter = cI2CMasterWordsMap.begin(); cI2CMasterWordsMapIter != cI2CMasterWordsMap.end(); cI2CMasterWordsMapIter++)

@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef LPGBT_H
-#define LPGBT_H
+#ifndef lpGBT_H
+#define lpGBT_H
 
 #include "Chip.h"
 #include "../Utils/easylogging++.h"
