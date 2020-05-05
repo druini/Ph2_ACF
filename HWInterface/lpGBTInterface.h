@@ -28,7 +28,7 @@ namespace Ph2_HwInterface
 
     bool ConfigureChip   (Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                    override;
     bool WriteChipReg    (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override { return false; }
-    uint16_t ReadChipReg (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode )                                         override { return 0;     }
+    uint16_t ReadChipReg (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode)                                          override { return 0;     }
 
 
     // lpGBT Calibration Data Configuration
@@ -75,9 +75,6 @@ namespace Ph2_HwInterface
     bool    scaSetGPIO       (Ph2_HwDescription::lpGBT* plpGBT, uint8_t cChannel , uint8_t cLevel);
     void    scaConfigureGPIO (Ph2_HwDescription::lpGBT* plpGBT);
 
-    // Multi-register I2C Write
-    void i2cWrite (Ph2_HwDescription::lpGBT* plpGBT, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies);
-
 
   private:
     // lpGBT External Registers (EC) (read/write/reset)
@@ -95,6 +92,8 @@ namespace Ph2_HwInterface
     uint8_t  configI2C (Ph2_HwDescription::lpGBT* plpGBT, uint16_t pMaster, const ParameterVect& pParameters);
     uint32_t readI2C   (Ph2_HwDescription::lpGBT* plpGBT, uint16_t pMaster, uint8_t pSlave , uint8_t pNBytes);
     uint8_t  writeI2C  (Ph2_HwDescription::lpGBT* plpGBT, uint16_t pMaster, uint8_t pSlave , uint32_t pData, uint8_t pNBytes);
+    // Multi-register I2C Write
+    void     writei2c  (Ph2_HwDescription::lpGBT* plpGBT, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies);
 
 
   protected:
