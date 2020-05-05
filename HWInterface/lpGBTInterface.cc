@@ -508,9 +508,9 @@ namespace Ph2_HwInterface
         uint32_t cValueCLKGPllRes = lpGBTInterface::icRead(plpGBT, 0x022, 1);
         for (const auto& cParameter : pParameters)
           {
-            if (cParameter.first == "ResWhenLocked" )
+            if (cParameter.first == "ResWhenLocked")
               cValueCLKGPllRes = (cValueCLKGPllRes & ~0xF0) | (cParameter.second << 4);
-            else if (cParameter.first == "Res" )
+            else if (cParameter.first == "Res")
               cValueCLKGPllRes = (cValueCLKGPllRes & ~0x0F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
@@ -521,9 +521,9 @@ namespace Ph2_HwInterface
         uint32_t cValueCLKGPLLIntCur = lpGBTInterface::icRead(plpGBT, 0x023, 1);
         for (const auto& cParameter : pParameters)
           {
-            if (cParameter.first == "CurWhenLocked" )
+            if (cParameter.first == "CurWhenLocked")
               cValueCLKGPLLIntCur = (cValueCLKGPLLIntCur & ~0xF0) | (cParameter.second << 4);
-            else if (cParameter.first == "Cur" )
+            else if (cParameter.first == "Cur")
               cValueCLKGPLLIntCur = (cValueCLKGPLLIntCur & ~0x0F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
@@ -534,9 +534,9 @@ namespace Ph2_HwInterface
         uint32_t cValueCLKGPLLPropCur = lpGBTInterface::icRead(plpGBT, 0x024, 1);
         for (const auto& cParameter : pParameters)
           {
-            if (cParameter.first == "CurWhenLocked" )
+            if (cParameter.first == "CurWhenLocked")
               cValueCLKGPLLPropCur = (cValueCLKGPLLPropCur & ~0xF0) | (cParameter.second << 4);
-            else if (cParameter.first == "Cur" )
+            else if (cParameter.first == "Cur")
               cValueCLKGPLLPropCur = (cValueCLKGPLLPropCur & ~0x0F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
@@ -547,9 +547,9 @@ namespace Ph2_HwInterface
         uint32_t cValueCLKGCDRPropCur = lpGBTInterface::icRead(plpGBT, 0x025, 1);
         for (const auto& cParameter : pParameters)
           {
-            if (cParameter.first == "CurWhenLocked" )
+            if (cParameter.first == "CurWhenLocked")
               cValueCLKGCDRPropCur = (cValueCLKGCDRPropCur & ~0xF0) | (cParameter.second << 4);
-            else if (cParameter.first == "Cur" )
+            else if (cParameter.first == "Cur")
               cValueCLKGCDRPropCur = (cValueCLKGCDRPropCur & ~0x0F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
@@ -560,9 +560,9 @@ namespace Ph2_HwInterface
         uint32_t cValueCLKGCDRIntCur = lpGBTInterface::icRead(plpGBT, 0x026, 1);
         for (const auto& cParameter : pParameters)
           {
-            if (cParameter.first == "CurWhenLocked" )
+            if (cParameter.first == "CurWhenLocked")
               cValueCLKGCDRIntCur = (cValueCLKGCDRIntCur & ~0xF0) | (cParameter.second << 4);
-            else if (cParameter.first == "Cur" )
+            else if (cParameter.first == "Cur")
               cValueCLKGCDRIntCur = (cValueCLKGCDRIntCur & ~0x0F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
@@ -573,9 +573,9 @@ namespace Ph2_HwInterface
         uint32_t cValueCLKGCDRFFPropCur = lpGBTInterface::icRead(plpGBT, 0x027, 1);
         for (const auto& cParameter : pParameters)
           {
-            if (cParameter.first == "CurWhenLocked" )
+            if (cParameter.first == "CurWhenLocked")
               cValueCLKGCDRFFPropCur = (cValueCLKGCDRFFPropCur & ~0xF0) | (cParameter.second << 4);
-            else if (cParameter.first == "Cur" )
+            else if (cParameter.first == "Cur")
               cValueCLKGCDRFFPropCur = (cValueCLKGCDRFFPropCur & ~0x0F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
@@ -586,9 +586,9 @@ namespace Ph2_HwInterface
         uint32_t cValueCLKGFLLIntCur = lpGBTInterface::icRead(plpGBT, 0x028, 1);
         for (const auto& cParameter : pParameters)
           {
-            if (cParameter.first == "CurWhenLocked" )
+            if (cParameter.first == "CurWhenLocked")
               cValueCLKGFLLIntCur = (cValueCLKGFLLIntCur & ~0xF0) | (cParameter.second << 4);
-            else if (cParameter.first == "Cur" )
+            else if (cParameter.first == "Cur")
               cValueCLKGFLLIntCur = (cValueCLKGFLLIntCur & ~0x0F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
@@ -599,13 +599,13 @@ namespace Ph2_HwInterface
         uint32_t cValueCLKGFFCAP = lpGBTInterface::icRead(plpGBT, 0x029, 1);
         for (const auto& cParameter : pParameters)
           {
-            if (cParameter.first == "ConnectCDR" )
+            if (cParameter.first == "ConnectCDR")
               cValueCLKGFFCAP = (cValueCLKGFFCAP & ~0x80) | (cParameter.second << 7);
-            else if (cParameter.first == "OverrEnable" )
+            else if (cParameter.first == "OverrEnable")
               cValueCLKGFFCAP = (cValueCLKGFFCAP & ~0x40) | (cParameter.second << 6);
-            else if (cParameter.first == "FFCapWhenLocked" )
+            else if (cParameter.first == "FFCapWhenLocked")
               cValueCLKGFFCAP = (cValueCLKGFFCAP & ~0x38) | (cParameter.second << 3);
-            else if (cParameter.first == "FFCap" )
+            else if (cParameter.first == "FFCap")
               cValueCLKGFFCAP = (cValueCLKGFFCAP & ~0x07) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
@@ -616,21 +616,21 @@ namespace Ph2_HwInterface
         uint32_t cValueCLKGCntOverride = lpGBTInterface::icRead(plpGBT, 0x02A, 1);
         for (const auto& cParameter : pParameters)
           {
-            if (cParameter.first == "OverrVc" )
+            if (cParameter.first == "OverrVc")
               cValueCLKGCntOverride = (cValueCLKGCntOverride & ~0x80) | (cParameter.second << 7);
-            else if (cParameter.first == "RefClkSel" )
+            else if (cParameter.first == "RefClkSel")
               cValueCLKGCntOverride = (cValueCLKGCntOverride & ~0x40) | (cParameter.second << 6);
-            else if (cParameter.first == "EnablePLL" )
+            else if (cParameter.first == "EnablePLL")
               cValueCLKGCntOverride = (cValueCLKGCntOverride & ~0x20) | (cParameter.second << 5);
-            else if (cParameter.first == "EnableFD" )
+            else if (cParameter.first == "EnableFD")
               cValueCLKGCntOverride = (cValueCLKGCntOverride & ~0x10) | (cParameter.second << 4);
-            else if (cParameter.first == "EnableCDR" )
+            else if (cParameter.first == "EnableCDR")
               cValueCLKGCntOverride = (cValueCLKGCntOverride & ~0x08) | (cParameter.second << 3);
-            else if (cParameter.first == "DisDataCntrRef" )
+            else if (cParameter.first == "DisDataCntrRef")
               cValueCLKGCntOverride = (cValueCLKGCntOverride & ~0x04) | (cParameter.second << 2);
-            else if (cParameter.first == "DisDESvbiasGen" )
+            else if (cParameter.first == "DisDESvbiasGen")
               cValueCLKGCntOverride = (cValueCLKGCntOverride & ~0x02) | (cParameter.second << 1);
-            else if (cParameter.first == "ConnectPLL" )
+            else if (cParameter.first == "ConnectPLL")
               cValueCLKGCntOverride = (cValueCLKGCntOverride & ~0x01) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
@@ -652,9 +652,9 @@ namespace Ph2_HwInterface
         uint32_t cValueCLKGWaitTime = lpGBTInterface::icRead(plpGBT, 0x02C, 1);
         for (const auto& cParameter : pParameters)
           {
-            if (cParameter.first == "WaitCDRTime" )
+            if (cParameter.first == "WaitCDRTime")
               cValueCLKGWaitTime = (cValueCLKGWaitTime & ~0xF0) | (cParameter.second << 4);
-            else if (cParameter.first == "WaitPLLTime" )
+            else if (cParameter.first == "WaitPLLTime")
               cValueCLKGWaitTime = (cValueCLKGWaitTime & ~0x0F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
@@ -665,11 +665,11 @@ namespace Ph2_HwInterface
         uint32_t cValueCLKGLFConfig0 = lpGBTInterface::icRead(plpGBT, 0x02D, 1);
         for (const auto& cParameter : pParameters)
           {
-            if (cParameter.first == "LockFilterEnable" )
+            if (cParameter.first == "LockFilterEnable")
               cValueCLKGLFConfig0 = (cValueCLKGLFConfig0 & ~0x80) | (cParameter.second << 7);
-            else if (cParameter.first == "CapBankSelect" )
+            else if (cParameter.first == "CapBankSelect")
               cValueCLKGLFConfig0 = (cValueCLKGLFConfig0 & ~0x10) | (cParameter.second << 4);
-            else if (cParameter.first == "LockThrCounter" )
+            else if (cParameter.first == "LockThrCounter")
               cValueCLKGLFConfig0 = (cValueCLKGLFConfig0 & ~0x07) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
@@ -680,15 +680,15 @@ namespace Ph2_HwInterface
         uint32_t cValueCLKGLFConfig1 = lpGBTInterface::icRead(plpGBT, 0x02E, 1);
         for (const auto& cParameter : pParameters)
           {
-            if (cParameter.first == "ReLockThrCounter" )
+            if (cParameter.first == "ReLockThrCounter")
               cValueCLKGLFConfig1 = (cValueCLKGLFConfig1 & ~0xF0) | (cParameter.second << 4);
-            else if (cParameter.first == "UnLockThrCounter" )
+            else if (cParameter.first == "UnLockThrCounter")
               cValueCLKGLFConfig1 = (cValueCLKGLFConfig1 & ~0x0F) | (cParameter.second << 0);
             else LOG (ERROR) << BOLDRED << "Wrong parameter name: " << cParameter.first << RESET;
           }
         lpGBTInterface::icWrite(plpGBT, 0x02E, cValueCLKGLFConfig1);
       }
-    else if (pRegister == "FAMaxHeaderFoundCount" )
+    else if (pRegister == "FAMaxHeaderFoundCount")
       {
         uint32_t cValueFAMaxHeaderFC = lpGBTInterface::icRead(plpGBT, 0x02F, 1);
         for (const auto& cParameter : pParameters)
@@ -1443,7 +1443,7 @@ namespace Ph2_HwInterface
       }
   }
 
-  void lpGBTInterface::i2cWrite(lpGBT* plpGBT, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies)
+  void lpGBTInterface::writei2c(lpGBT* plpGBT, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies)
   {
     this->setBoard(plpGBT->getBeBoardId());
 
