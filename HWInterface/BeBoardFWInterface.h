@@ -298,6 +298,14 @@ namespace Ph2_HwInterface
     }
 
 
+    // ############################
+    // # Read/Write Optical Group #
+    // ############################
+    virtual void     ResetOpticalLink      (Ph2_HwDescription::Chip* pChip)                                                             = 0;
+    virtual bool     WriteOptoLinkRegister (Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) = 0;
+    virtual uint32_t ReadOptoLinkRegister  (Ph2_HwDescription::Chip* pChip, uint32_t pAddress)                                          = 0;
+
+
   protected:
     uint32_t fBlockSize {0};
     uint32_t  fNPackets {0};

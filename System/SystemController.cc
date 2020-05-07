@@ -109,10 +109,10 @@ namespace Ph2_System
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     const BeBoard* theFirstBoard = fDetectorContainer->at(0);
 
-    flpGBTInterface = new lpGBTInterface(fBeBoardFWMap);
-
     if (theFirstBoard->getBoardType() != BoardType::RD53)
       {
+        // flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap);
+
         OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>((theFirstBoard->at(0))->at(0));
         auto cChipType = (static_cast<ReadoutChip*>(theOuterTrackerModule->at(0))->getFrontEndType());
         if (cChipType == FrontEndType::CBC3)
@@ -124,7 +124,10 @@ namespace Ph2_System
         fMPAInterface = new MPAInterface(fBeBoardFWMap);
       }
     else
-      fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
+      {
+        flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
+        fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
+      }
 
     if (fWriteHandlerEnabled == true) this->initializeFileHandler();
   }

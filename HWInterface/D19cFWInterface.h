@@ -707,8 +707,12 @@ namespace Ph2_HwInterface {
         uint32_t ConfigureMultiplexingSetup(int BackplaneNum, int CardNum) ;
 
 
-
-
+        // ############################
+        // # Read/Write Optical Group #
+        // ############################
+        void     ResetOpticalLink      (Ph2_HwDescription::Chip* pChip)                                                             override {}
+        bool     WriteOptoLinkRegister (Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override { return false; }
+        uint32_t ReadOptoLinkRegister  (Ph2_HwDescription::Chip* pChip, uint32_t pAddress)                                          override { return 0;     }
     };
 }
 

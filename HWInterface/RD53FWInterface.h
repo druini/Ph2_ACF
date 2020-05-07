@@ -231,6 +231,14 @@ namespace Ph2_HwInterface
     FastCommandsConfig* getLocalCfgFastCmd() { return &localCfgFastCmd; }
 
 
+    // ############################
+    // # Read/Write Optical Group #
+    // ############################
+    void     ResetOpticalLink      (Ph2_HwDescription::Chip* pChip)                                                             override;
+    bool     WriteOptoLinkRegister (Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
+    uint32_t ReadOptoLinkRegister  (Ph2_HwDescription::Chip* pChip, uint32_t pAddress)                                          override;
+
+
     // ###########################################
     // # Member functions to handle the firmware #
     // ###########################################

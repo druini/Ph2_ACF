@@ -260,7 +260,7 @@ namespace Ph2_HwInterface
     if (retry == true) LOG (ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ")" << RESET;
   }
 
-  std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters (Chip* pChip)
+  std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters(Chip* pChip)
   {
     std::vector<std::pair<uint16_t,uint16_t>> regReadback;
 
@@ -1226,6 +1226,82 @@ namespace Ph2_HwInterface
         {"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   1},
         {"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   0}
       });
+  }
+
+
+  // ############################
+  // # Read/Write Optical Group #
+  // ############################
+  void RD53FWInterface::ResetOpticalLink(Chip* pChip)
+  {
+    WriteStackReg({
+        {"user.ctrl_regs.Optical_link.ic_tx_reset", 0x01},
+        {"user.ctrl_regs.Optical_link.ic_rx_reset", 0x01}
+      });
+
+    usleep(DEEPSLEEP);
+
+    WriteStackReg({
+        {"user.ctrl_regs.Optical_link.ic_tx_reset", 0x00},
+        {"user.ctrl_regs.Optical_link.ic_rx_reset", 0x00}
+      });
+  }
+
+  bool RD53FWInterface::WriteOptoLinkRegister(Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop)
+  {
+    const uint8_t lpGBTAddress = 0x70;
+
+    // Config
+    WriteStackReg({
+        {"user.ctrl_regs.Optical_link_cnfg1.ic_tx_fifo_din",  pData},
+        {"user.ctrl_regs.Optical_link_cnfg1.ic_chip_addr_tx", lpGBTAddress},
+        {"user.ctrl_regs.Optical_link_cnfg2.ic_reg_addr_tx",  pAddress}
+      });
+
+    // Perform operation
+    WriteStackReg({
+        {"user.ctrl_regs.Optical_link.ic_tx_fifo_wr_en", 0x01},
+        {"user.ctrl_regs.Optical_link.ic_tx_fifo_wr_en", 0x00},
+        {"user.ctrl_regs.Optical_link.ic_send_wr_cmd",   0x01},
+        {"user.ctrl_regs.Optical_link.ic_send_wr_cmd",   0x00}
+      });
+
+    RD53FWInterface::ResetOpticalLink(pChip);
+
+    if (pVerifLoop == true)
+      {
+        uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(pChip, pAddress);
+        if (cReadBack != pData)
+          {
+            LOG (ERROR) << BOLDRED << "[RD53FWInterface::WriteOpticalLinkRegiser] Register readback failure for " << BOLDYELLOW << std::hex << pAddress << std::dec << RESET;
+            return false;
+          }
+      }
+
+    return true;
+  }
+
+  uint32_t RD53FWInterface::ReadOptoLinkRegister(Chip* pChip, uint32_t pAddress)
+  {
+    const uint8_t lpGBTAddress = 0x70;
+
+    // Config
+    WriteStackReg({
+        {"user.ctrl_regs.Optical_link_cnfg1.ic_chip_addr_tx",            lpGBTAddress},
+        {"user.ctrl_regs.Optical_link_cnfg2.ic_reg_addr_tx",             pAddress},
+        {"user.ctrl_regs.Optical_link_cnfg2.ic_nb_of_words_to_read_tx",  0x01}
+      });
+
+    // Perform operation
+    WriteStackReg({
+        {"user.ctrl_regs.Optical_link_cnfg2.ic_nb_of_words_to_read_tx", 0x01},
+        {"user.ctrl_regs.Optical_link.ic_send_rd_cmd",                  0x01},
+        {"user.ctrl_regs.Optical_link.ic_send_rd_cmd",                  0x00}
+      });
+
+    uint32_t cRead = ReadReg("fc7_daq_stat.optical_block.ic.data");
+    RD53FWInterface::ResetOpticalLink(pChip);
+    return cRead;
   }
 
 

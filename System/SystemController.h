@@ -14,6 +14,7 @@
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/ChipInterface.h"
 #include "../HWInterface/lpGBTInterface.h"
+#include "../HWInterface/RD53lpGBTInterface.h"
 #include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/SSAInterface.h"
