@@ -404,7 +404,26 @@ namespace Ph2_System
 
   void SystemController::ReadASEvent (BeBoard* pBoard, uint32_t pNMsec,bool pulses)
   {
-    std::vector<uint32_t> cData;
+
+  		/*self.I2C.peri_write('ReadoutMode',0b01)
+  		# write to the I2C
+  		self.I2C.peri_write("AsyncRead_StartDel_MSB", ((ssa_first_counter_delay >> 8) & 0x01))
+  		self.I2C.peri_write("AsyncRead_StartDel_LSB", (ssa_first_counter_delay & 0xff))
+  		# check the value
+  		if (self.I2C.peri_read("AsyncRead_StartDel_LSB") != ssa_first_counter_delay & 0xff):
+  			print "Error! I2C did not work properly"
+  			#error(1)
+  		# ssa set delay of the counters
+  		fwdel = ssa_first_counter_delay + 24 + correction
+  		if(fwdel >= 255):
+  			print '->  \tThe counters delay value selected is not supposrted by the firmware [> 255]'
+  		self.fc7.write("cnfg_phy_slvs_ssa_first_counter_del", fwdel & 0xff)*/
+
+
+
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
+	static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
+    	std::vector<uint32_t> cData;
 	if (pulses) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Send_pulses();
 	else
 	{
@@ -422,7 +441,8 @@ namespace Ph2_System
 	static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ChipTestPulse();
 
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);*/
-	//static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadASEvent(pBoard,pNMsec, cData);
+
+    //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadASEvent(pBoard, cData);
 
     for(auto cOpticalGroup : *pBoard)
         {

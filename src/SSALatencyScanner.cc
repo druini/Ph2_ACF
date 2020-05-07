@@ -31,10 +31,10 @@ using namespace CommandLineProcessing;
 using namespace std;
 INITIALIZE_EASYLOGGINGPP
 
-int main( int argc, char* argv[] )
+int main( int argc, char* argv[] )//
 {
 	el::Configurations conf ("settings/logger.conf");
-	el::Loggers::reconfigureAllLoggers (conf);	
+	el::Loggers::reconfigureAllLoggers (conf);
 	std::string cHWFile = "settings/D19C_2xSSA_PreCalibSYNC.xml";
 	std::stringstream outp;
 	Tool cTool;
@@ -77,11 +77,11 @@ int main( int argc, char* argv[] )
 		cTool.ReadNEvents(pBoard, 50);
 		int thiscount = 0;
 		const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
-		for ( auto &event : eventVector ) //for on events - begin 
+		for ( auto &event : eventVector ) //for on events - begin
 	    {
-	        for(auto module: *pBoard) // for on module - begin 
+	        for(auto module: *pBoard) // for on module - begin
 	        {
-	            for(auto chip: *module) // for on chip - begin 
+	            for(auto chip: *module) // for on chip - begin
 	            {
 	                unsigned int channelNumber = 0;
 	                for (int i = 1; i<=120;i++ ) // loop over all strips
@@ -89,9 +89,9 @@ int main( int argc, char* argv[] )
 						thiscount = thiscount + event->DataBit ( module->getId(), chip->getId(), channelNumber);
 						h1->Fill(lat, event->DataBit ( module->getId(), chip->getId(), channelNumber));
 	                	channelNumber++;
-	                } // for on channel - end 
-	            } // for on chip - end 
-	        } // for on module - end 
+	                } // for on channel - end
+	            } // for on chip - end
+	        } // for on module - end
 	    } // for on events - end*/
 	    if (thiscount > count_max) BestLat = lat;
 	}
@@ -120,20 +120,20 @@ int main( int argc, char* argv[] )
 		}
 		cTool.ReadNEvents(pBoard, 100);
 		const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
-		for ( auto &event : eventVector ) //for on events - begin 
+		for ( auto &event : eventVector ) //for on events - begin
 	    {
-	        for(auto module: *pBoard) // for on module - begin 
+	        for(auto module: *pBoard) // for on module - begin
 	        {
-	            for(auto chip: *module) // for on chip - begin 
+	            for(auto chip: *module) // for on chip - begin
 	            {
 	                unsigned int channelNumber = 0;
 	                for (int i = 1; i<=120;i++ ) // loop over all strips
 					{
 						h2->Fill(thd, event->DataBit ( module->getId(), chip->getId(), channelNumber));
 	                	channelNumber++;
-	                } // for on channel - end 
-	            } // for on chip - end 
-	        } // for on module - end 
+	                } // for on channel - end
+	            } // for on chip - end
+	        } // for on module - end
 	    } // for on events - end*/
 	}
 	TCanvas * c2 = new TCanvas("c2", "c2", 600, 600);

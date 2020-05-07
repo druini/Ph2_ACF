@@ -31,7 +31,9 @@ void SSASCurve::Initialise(void)
 	NMpulse        = this->findValueInSettings("NMpulse");
 	Res        = this->findValueInSettings("Res");
 	Nlvl        = this->findValueInSettings("Nlvl");
+	Mrms        = this->findValueInSettings("Mrms");
 	Vfac        = this->findValueInSettings("Vfac");
+	TestPulsePotentiometer        = this->findValueInSettings("TestPulsePotentiometer");
 	#ifdef __USE_ROOT__
 		fDQMHistogramSSASCurveAsync.book(fResultFile, *fDetectorContainer, fSettingsMap);
 	#endif
@@ -60,7 +62,7 @@ void SSASCurve::run(void)
 	float wroffset=0.0;
 	float Nuntoff=0.0;
 
-	while(rms>0.7)
+	while(rms>Mrms)
 	{
 		float Nunt=0.0;
         	LOG (INFO) << BOLDBLUE <<"Running Scurve..."<< RESET;
@@ -88,8 +90,12 @@ void SSASCurve::run(void)
 	                    }
 	                }
 	        }   */
-
-
+		bool runpulse=false;
+		if (NMpulse>0) runpulse=true;
+		for ( auto cBoard : *fDetectorContainer )
+		{
+			if (runpulse)setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", TestPulsePotentiometer);
+		}
         	for (size_t thd = StartTHDAC; thd<=StopTHDAC; thd++)
         	{
             		Nstrip=0.0;
@@ -114,12 +120,8 @@ void SSASCurve::run(void)
 			static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
 
 		        //setFWTestPulse();
-		        for ( auto cBoard : *fDetectorContainer )
-		        {
-		        	setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", 50);
-		        }
-			bool runpulse=false;
-			if (NMpulse>0) runpulse=true;
+
+
 			ReadASEvent( theBeBoard, NMsec,runpulse );
 			const std::vector<Event*> &eventVector = GetEvents ( theBeBoard );
 		        for(auto opticalGroup: *cBoard)
@@ -137,6 +139,10 @@ void SSASCurve::run(void)
 						{
 							Nstrip+=1.0;
 							curh=hits[channelNumber];
+							//LOG (INFO) << BOLDRED << "curh "<<curh<< RESET;
+							//LOG (INFO) << BOLDRED <<std::bitset<32>(curh)<< RESET;
+
+
 							//if ( channelNumber==1)
 		                            		if ((channel.first[1]>Nlvl) && (curh<channel.first[1]/2) && (channel.first[0]>channel.first[1]/2))
 		                                	{
@@ -148,9 +154,13 @@ void SSASCurve::run(void)
 		                                  		//  LOG (INFO) << BOLDRED << "halfmax "<<curh<<","<<channel.first[0]<<","<<channel.first[1]<< RESET;
 		                                  		//  LOG (INFO) << BOLDRED << normvals[channelNumber]<<" "<<thd<< RESET;
                                 			}
-	                            		channel.first[1] =std::max(channel.first[1],curh);
-	                            		channel.first[0] = curh;
-	                            		channelNumber++;
+
+
+							if (runpulse) channel.first[1]=NMpulse;
+							else channel.first[1] =std::max(channel.first[1],curh);
+		                                  	//LOG (INFO) << BOLDRED << channel.first[1]<< RESET;
+		                            		channel.first[0] = curh;
+		                            		channelNumber++;
                         			}
                     			}
                 		}

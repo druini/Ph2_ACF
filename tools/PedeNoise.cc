@@ -139,7 +139,7 @@ void PedeNoise::sweepSCurves ()
         for ( auto cBoard : *fDetectorContainer )
         {
             std::cout<<"Bias_CALDAC "<<fPulseAmplitude<<std::endl;
-            if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", 120);
+            if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", fPulseAmplitude);
             else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
         }
 

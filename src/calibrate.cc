@@ -98,8 +98,8 @@ int main ( int argc, char* argv[] )
     cTool.CreateResultDirectory ( cDirectory );
     cTool.InitResultFile ( "PedestalEqualizationResults" );
     cTool.StartHttpServer();
-    
-    // align back-end .. if this moves to firmware then we can get rid of this step 
+
+    // align back-end .. if this moves to firmware then we can get rid of this step
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit (&cTool);
     cBackEndAligner.Initialise();
@@ -110,7 +110,7 @@ int main ( int argc, char* argv[] )
         LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
         exit(0);
     }
-    
+
     //cTool.ConfigureHw ();
     //if ( !cOld )
     //{
@@ -150,8 +150,8 @@ int main ( int argc, char* argv[] )
 
         //cPedeNoise.sweepSCurves (225);
         //cPedeNoise.sweepSCurves (205);
-        
-        cPedeNoise.Validate();
+
+        //cPedeNoise.Validate();
         cPedeNoise.writeObjects( );
         cPedeNoise.dumpConfigFiles();
         cPedeNoise.resetPointers();
@@ -167,4 +167,3 @@ int main ( int argc, char* argv[] )
     if ( !batchMode ) cApp.Run();
     return 0;
 }
-

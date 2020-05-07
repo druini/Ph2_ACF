@@ -26,6 +26,8 @@
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TApplication.h"
+#include "../tools/BackEndAlignment.h"
+
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -37,26 +39,31 @@ INITIALIZE_EASYLOGGINGPP
 int main ( int argc, char* argv[] )
 {
 	el::Configurations conf ("settings/logger.conf");
-	el::Loggers::reconfigureAllLoggers (conf);	
+	el::Loggers::reconfigureAllLoggers (conf);
 	std::string cHWFile = "settings/D19C_2xSSA_PreCalib.xml";
 	std::stringstream outp;
 	Tool cTool;
 	cTool.InitializeHw ( cHWFile, outp);
 	cTool.InitializeSettings ( cHWFile, outp );
 	cTool.ConfigureHw();
-    std::string cDirectory = "Results/";
-    cDirectory += "SSASCurveAsync";
-    cTool.CreateResultDirectory ( cDirectory );
-    cTool.InitResultFile ( "SSASCurveAsync" );
-    SSASCurve cScurve;	
-    cScurve.Inherit (&cTool);
-    cScurve.Initialise();
-    cScurve.run();
-    cScurve.writeObjects();
-    cScurve.dumpConfigFiles();
-    cTool.WriteRootFile();
-    cTool.CloseResultFile();
-    cTool.Destroy();
-    return 0;
-}
+	BackEndAlignment cBackEndAligner;
+	cBackEndAligner.Inherit (&cTool);
+	cBackEndAligner.Initialise();
+	cBackEndAligner.Align();
+	cBackEndAligner.resetPointers();
+	std::string cDirectory = "Results/";
 
+	cDirectory += "SSASCurveAsync";
+	cTool.CreateResultDirectory ( cDirectory );
+	cTool.InitResultFile ( "SSASCurveAsync" );
+	SSASCurve cScurve;
+	cScurve.Inherit (&cTool);
+	cScurve.Initialise();
+	cScurve.run();
+	cScurve.writeObjects();
+	cScurve.dumpConfigFiles();
+	cTool.WriteRootFile();
+	cTool.CloseResultFile();
+	cTool.Destroy();
+	return 0;
+}

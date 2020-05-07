@@ -2180,6 +2180,9 @@ void D19cFWInterface::InitFMCPower()
             uint8_t pDelay = pTuner.fDelay;
             uint8_t cMode=2;
             uint8_t cBitslip = pTuner.fBitslip;
+	    if( fFirmwareFrontEndType == FrontEndType::SSA )
+                cBitslip = cBitslip + 1;
+
             pTuner.SetLineMode( this, pFeId , pChipId , 0 , cMode , pDelay, cBitslip, cEnableL1, 0 );
         }
         return cSuccess;
@@ -2333,54 +2336,93 @@ void D19cFWInterface::InitFMCPower()
 
 
 
-    void D19cFWInterface::ReadASEvent (BeBoard* pBoard, uint32_t pNMsec, std::vector<uint32_t>& pData )
+    void D19cFWInterface::ReadASEvent (BeBoard* pBoard, std::vector<uint32_t>& pData )
     {
-    pData.clear();
-    if( (fFirmwareFrontEndType == FrontEndType::SSA) or (fFirmwareFrontEndType == FrontEndType::MPA) )
-		    {
-			uint32_t chans;
-			if (fFirmwareFrontEndType == FrontEndType::SSA) chans = NSSACHANNELS;
-			if (fFirmwareFrontEndType == FrontEndType::MPA) chans = NMPACHANNELS;
+	uint32_t ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+	std::cout<<"ps_counters_ready "<<ps_counters_ready<<std::endl;
 
-		    WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 0);
-		    uint32_t ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-		    std::chrono::milliseconds cWait( 10 );
-	            //std::cout<<"MCR  "<<ps_counters_ready<<std::endl;
-		    PS_Start_counters_read();
-		    uint32_t  timeout = 0;
-		    while ((ps_counters_ready == 0) & (timeout < 50))
-		    {
-		        std::this_thread::sleep_for( cWait );
-		        ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-		        //std::cout<<"MCR iwh"<<ps_counters_ready<<std::endl;
-		        timeout += 1;
-		    }
-		    if (timeout >= 50)
-		    {
-               	    LOG(ERROR) << "Counter timeout";
-		        return ;
-		    }
-			for(auto cOpticalGroup : *pBoard)
-		        {
-		        for(auto cHybrid : *cOpticalGroup)
-		            {
-		            for(uint32_t chipn=0; chipn<cHybrid->size();chipn++)
-		                {
-					        for (uint32_t i=0; i<chans;i++)
-					        {
-					            pData.push_back(ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.fifo2_data") - 1);
-					        }
-						}
-					}
-				}
+ 	uint32_t raw_mode_en=0;
+ 	WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", raw_mode_en);
+
+	//ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+	//std::cout<<"ps_counters_ready "<<ps_counters_ready<<std::endl;
 
 
-		    std::this_thread::sleep_for( cWait );
-		    ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+ 	std::chrono::milliseconds cWait( 10 );
 
-		    }
-            if (fSaveToFile)
-            fFileHandler->setData(pData);
+	uint32_t  chans = 0;
+	if (fFirmwareFrontEndType == FrontEndType::SSA) chans = NSSACHANNELS;
+	if (fFirmwareFrontEndType == FrontEndType::MPA) chans = NMPACHANNELS;
+
+ 	std::vector<uint32_t> count(chans, 0);
+
+
+	std::vector< std::pair<std::string, uint32_t> > cVecReg;
+	cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_reset", 1});
+	cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_orbit_reset", 1});
+	this->WriteStackReg ( cVecReg );
+
+
+	PS_Start_counters_read();
+	//ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+
+
+
+	//std::cout<<"ps_counters_ready "<<ps_counters_ready<<std::endl;
+
+ 	uint32_t  timeout = 0;
+
+ 	while ((ps_counters_ready == 0) & (timeout < 50))
+	            {
+	                std::this_thread::sleep_for( cWait );
+	                ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+			std::cout<<"ps_counters_ready "<<timeout<<","<<ps_counters_ready<<std::endl;
+
+	                timeout += 1;
+	            }
+ 	if (timeout >= 50)
+	            {
+	                std::cout<<"fail"<<std::endl;
+	                return ;
+	            }
+
+ 	if (raw_mode_en == 1)
+	            {
+	                uint32_t cycle = 0;
+	                for (int i=0; i<20000;i++)
+	                {
+	                    uint32_t fifo1_word = ReadReg("fc7_daq_ctrl.physical_interface_block.fifo1_data");
+	                    uint32_t fifo2_word = ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data");
+
+	                    uint32_t line1 = (fifo1_word&0x0000FF)>>0; //to_number(fifo1_word,8,0)
+	                    uint32_t line2 = (fifo1_word&0x00FF00)>>8; // to_number(fifo1_word,16,8)
+	                    uint32_t line3 = (fifo1_word&0xFF0000)>>16; //  to_number(fifo1_word,24,16)
+
+	                    uint32_t line4 = (fifo2_word&0x0000FF)>>0; //to_number(fifo2_word,8,0)
+	                    uint32_t line5 = (fifo2_word&0x00FF00)>>8; // to_number(fifo2_word,16,8)
+
+	                    if (((line1 & 0x80) == 128) && ((line4 & 0x80) == 128))
+	                    {
+	                        uint32_t temp = ((line2 & 0x20) << 9) | ((line3 & 0x20) << 8) | ((line4 & 0x20) << 7) | ((line5 & 0x20) << 6) | ((line1 & 0x10) << 6) | ((line2 & 0x10) << 5) | ((line3 & 0x10) << 4) | ((line4 & 0x10) << 3) | ((line5 & 0x80) >> 1) | ((line1 & 0x40) >> 1) | ((line2 & 0x40) >> 2) | ((line3 & 0x40) >> 3) | ((line4 & 0x40) >> 4) | ((line5 & 0x40) >> 5) | ((line1 & 0x20) >> 5);
+				//LOG (INFO) << BOLDBLUE <<"temp "<<temp - 1 << RESET;
+	                        if (temp != 0)
+	                        {
+	                            count[cycle] = temp - 1;
+
+	                            cycle += 1;
+	                        }
+	                    }
+	                }
+	            }
+ 	else    {
+			pData = ReadBlockRegValue("fc7_daq_ctrl.physical_interface_block.fifo2_data",chans);
+			//for(auto pp : pData) LOG (INFO) << BOLDBLUE <<"pp - "<<pp << RESET;
+	        }
+
+
+ 	std::this_thread::sleep_for( cWait );
+ 	ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+        if (fSaveToFile)fFileHandler->setData(pData);
 
     }
 
@@ -2389,10 +2431,13 @@ void D19cFWInterface::InitFMCPower()
         // RESET the readout
         auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
         pNEvents = pNEvents*(cMultiplicity+1);
+        //LOG (INFO) << BOLDRED << "pNEvents = " << pNEvents << RESET;
 
         auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
         auto cTriggerRate = (cTriggerSource == 5 || cTriggerSource == 6 ) ? 1 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz .. if external trigger assume 1 kHz as lowest possible rate
         uint32_t  cTimeSingleTrigger_us = std::ceil(1.5e3/(cTriggerRate));
+        //LOG (INFO) << BOLDRED << "cTriggerSource = " << cTriggerSource << RESET;
+        //LOG (INFO) << BOLDRED << "cTriggerRate = " << cTriggerRate << RESET;
 
         // configure trigger
         // reset trigger
@@ -2422,8 +2467,9 @@ void D19cFWInterface::InitFMCPower()
         uint32_t cTimeoutValue = 2.0*pNEvents; // maximum number of times I allow the word counter not to increment ..
         uint32_t cFailures = 0 ;
         uint32_t cPause = 1*static_cast<uint32_t>(cTimeSingleTrigger_us);
-        LOG (DEBUG) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << " trigger rate is " << +cTriggerRate << " trigger source is " << +cTriggerSource << RESET;
-        LOG (DEBUG) << BOLDMAGENTA << "Waiting " << +cPause << " microseconds between attempts at checking readout req... waiting for a maximum of " <<  +cTimeoutValue << " iterations." << RESET;
+        //LOG (INFO) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << " trigger rate is " << +cTriggerRate << " trigger source is " << +cTriggerSource << RESET;
+        //LOG (INFO) << BOLDMAGENTA << "Waiting " << +cPause << " microseconds between attempts at checking readout req... waiting for a maximum of " <<  +cTimeoutValue << " iterations." << RESET;
+        //LOG (INFO) << MAGENTA << cReadoutReq << " " << cNtriggers << " " << cNWords << RESET;
         //uint32_t cNWords_previous = cNWords;
         do
         {
@@ -2434,6 +2480,7 @@ void D19cFWInterface::InitFMCPower()
             //cNWords_previous = cNWords;
             cFailures += ( (cNtriggers == 0 ));// || ( (cNWords_previous==cNWords) &&cReadoutReq==0) );
             cTimeoutCounter ++;
+            //LOG (INFO) << MAGENTA << cReadoutReq << " " << cNtriggers << " " << cNWords << RESET;
         }while (cReadoutReq == 0 && ( cTimeoutCounter < cTimeoutValue ) && (cNtriggers < pNEvents) && (cFailures < 5) );
         // fails if either one of these is true
         // but to me it looks like sometimes the readoutrequest is not '1' although
@@ -2455,6 +2502,7 @@ void D19cFWInterface::InitFMCPower()
 
         if (!pFailed)
         {
+            //LOG (INFO) << BLUE << cReadoutReq << " " << cNtriggers << " " << cNWords << RESET;
             // check the amount of words
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
 
@@ -2468,7 +2516,6 @@ void D19cFWInterface::InitFMCPower()
             }
             else
                 pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
-
 
             LOG (DEBUG) << BOLDBLUE << "Read back " << +cNWords << " words from DDR3 memory in FC7. Have stored " << +pData.size() << " words in the readout." << RESET;
             uint32_t cHeader = (0xFFFF0000 & pData.at(0)) >> 16 ;
@@ -3685,7 +3732,7 @@ void D19cFWInterface::InitFMCPower()
             for (int i=0; i<20000;i++)
             {
                 uint32_t fifo1_word = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo1_data");
-                uint32_t fifo2_word = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.fifo2_data");
+                uint32_t fifo2_word = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo2_data");
 
                 uint32_t line1 = (fifo1_word&0x0000FF)>>0; //to_number(fifo1_word,8,0)
                 uint32_t line2 = (fifo1_word&0x00FF00)>>8; // to_number(fifo1_word,16,8)
@@ -3706,10 +3753,10 @@ void D19cFWInterface::InitFMCPower()
             }
         }
         else    {
-            ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.fifo2_data");
+            ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo2_data");
             for (int i=0; i<2040;i++)
             {
-                count[i] = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.fifo2_data") - 1;
+                count[i] = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo2_data") - 1;
             }
         }
 
@@ -3745,9 +3792,7 @@ void D19cFWInterface::InitFMCPower()
 	//some overlap for now...
     void D19cFWInterface::Send_pulses()
     {
-	//ConfigureTriggerFSM( n_pulse, 1000, 6, 0, 0);
-
-	PS_Open_shutter();
+	//PS_Open_shutter();
 	usleep(1);
 
         WriteReg ("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
@@ -3770,7 +3815,11 @@ void D19cFWInterface::InitFMCPower()
 			Send_pulses();
 		}
 	usleep(1);
-	PS_Close_shutter();
+	WriteReg ("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
+
+
+	//PS_Close_shutter();
+
     }
 
 
