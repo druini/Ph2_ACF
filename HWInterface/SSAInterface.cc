@@ -56,11 +56,11 @@ namespace Ph2_HwInterface {// start namespace
 		setBoard ( pChip->getBeBoardId() );
 		//if sync
 
-		//uint32_t enwrite=1;
-        	//if(inject) enwrite=17;
+		uint32_t enwrite=1;
+        	if(inject) enwrite=17;
 
-        	uint32_t enwrite=5;
-        	if(inject) enwrite=21;
+        	//uint32_t enwrite=5;
+        	//if(inject) enwrite=21;
 
 		std::cout<<"enwrite "<<enwrite<<std::endl;
 
@@ -134,7 +134,10 @@ namespace Ph2_HwInterface {// start namespace
 	            cRegItem = pSSA->getRegItem ( cReg.first );
 	            cRegItem.fValue = cReg.second;
 	            fBoardFW->EncodeReg ( cRegItem, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, true );
-		    std::cout<<"write "<<int(pSSA->getFeId())<<" "<<int(pSSA->getChipId())<< " : "<<cReg.first<<","<< cReg.second<<std::endl;
+
+		    //HACK! take out
+		    this->WriteChipReg(pSSA, cReg.first , cReg.second ,pVerifLoop );
+
 	            #ifdef COUNT_FLAG
 	                fRegisterCount++;
 	            #endif
@@ -142,11 +145,11 @@ namespace Ph2_HwInterface {// start namespace
 
 	        // write the registers, the answer will be in the same cVec
 	        // the number of times the write operation has been attempted is given by cWriteAttempts
-	        uint8_t cWriteAttempts = 0 ;
-		LOG (INFO) << BOLDBLUE << "WriteChipBlockReg" << RESET;
+	        //uint8_t cWriteAttempts = 0 ;
 
-	        bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
-		LOG (INFO) << BOLDBLUE << "Done" << RESET;
+		//HACK! put back in
+	        //bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
+		bool cSuccess = true;
 
 	        #ifdef COUNT_FLAG
 	            fTransactionCount++;
@@ -172,7 +175,6 @@ namespace Ph2_HwInterface {// start namespace
             assert(localRegValues.size()==pSSA->getNumberOfChannels());
             std::string dacTemplate;
             bool isMask = false;
-	    LOG (INFO) << BOLDBLUE << "TEST1" << RESET;
 
             if(dacName == "THTRIMMING_S") dacTemplate = "THTRIMMING_S%d";
             else if(dacName == "Mask") isMask = true;
@@ -202,7 +204,6 @@ namespace Ph2_HwInterface {// start namespace
                     // #ifdef COUNT_FLAG
                     //     fRegisterCount++;
                     // #endif
-		    std::cout<<dacName1<<" "<<localRegValues.getChannel<uint16_t>(iChannel)<<std::endl;
                     cRegVec.emplace_back(dacName1,localRegValues.getChannel<uint16_t>(iChannel));
                 }
             }
@@ -219,7 +220,6 @@ namespace Ph2_HwInterface {// start namespace
                 //     fTransactionCount++;
                 // #endif
                 // return cSuccess;
-		LOG (INFO) << BOLDBLUE << "MULT" << RESET;
 		//fReadoutChipInterface->WriteChipReg(theChip, "THTRIMMING_S" + std::to_string(istrip), THtowrite);
 
 

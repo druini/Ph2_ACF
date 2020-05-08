@@ -34,6 +34,8 @@ void PedeNoise::cleanContainerMap()
 
 void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 {
+	LOG (INFO) << BLUE <<  "NOISE " << RESET ;
+
     fDisableStubLogic = pDisableStubLogic;
 
 
@@ -123,6 +125,8 @@ void PedeNoise::reloadStubLogic()
 
 void PedeNoise::sweepSCurves ()
 {
+	LOG (INFO) << BLUE <<  "SWEEP " << RESET ;
+
     uint16_t cStartValue = 0;
     bool originalAllChannelFlag = this->fAllChan;
 
@@ -391,7 +395,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         }
 
 
-        LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
+        LOG (INFO) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
         cValue = pStartValue + (cIncrement * cSign);
     }
 

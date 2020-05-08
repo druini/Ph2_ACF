@@ -57,17 +57,6 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
     else fTestPulse = 1;
     //LOG (INFO) << BLUE <<  "fTestPulse " <<fTestPulse<< RESET ;
 
-    if(fTestPulse){
-            this->enableTestPulse( true );
-            setFWTestPulse();
-            for ( auto cBoard : *fDetectorContainer )
-            {
-                if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", fTestPulseAmplitude);
-                else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
-            }
-            LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
-        }
-        else this->enableTestPulse( false );
 
 
     #ifdef __USE_ROOT__
@@ -121,6 +110,9 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
 void PedestalEqualization::FindVplus()
 {
 
+
+
+
     DetectorDataContainer     theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -138,6 +130,17 @@ void PedestalEqualization::FindVplus()
     if(cWithCBC)    setSameLocalDac("ChannelOffset", fTargetOffset);
     if(cWithSSA)    setSameLocalDac("THTRIMMING_S", fTargetOffset);
 
+    if(fTestPulse){
+    	                this->enableTestPulse( true );
+    	                setFWTestPulse();
+    	                for ( auto cBoard : *fDetectorContainer )
+    	                {
+    	                    if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", fTestPulseAmplitude);
+    	                    else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
+    	                }
+    	                LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
+    }
+    else this->enableTestPulse( false );
 
     if(cWithCBC)    this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
     if(cWithSSA)    this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56);
@@ -215,7 +218,20 @@ void PedestalEqualization::FindOffsets()
 
     uint32_t NCH=NCHANNELS;
     if(cWithSSA) NCH=NSSACHANNELS;
-    LOG (INFO) << BOLDBLUE << "SSDB"<< RESET;
+
+
+
+    if(fTestPulse){
+                    this->enableTestPulse( true );
+                    setFWTestPulse();
+                    for ( auto cBoard : *fDetectorContainer )
+                    {
+                        if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", fTestPulseAmplitude);
+                        else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
+                    }
+                    LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
+    }
+    else this->enableTestPulse( false );
 
     if(cWithCBC)    setSameDac("VCth", fTargetVcth);
     if(cWithSSA)    setSameDac("Bias_THDAC", fTargetVcth);
@@ -223,7 +239,6 @@ void PedestalEqualization::FindOffsets()
     DetectorDataContainer     theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-    LOG (INFO) << BOLDBLUE << "BWSTH"<< RESET;
 
     if(cWithCBC)    this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56);
     if(cWithSSA)    this->bitWiseScan("THTRIMMING_S", fEventsPerPoint, 0.56);
@@ -263,7 +278,6 @@ void PedestalEqualization::FindOffsets()
                         if(cWithSSA)sprintf(charRegName, "THTRIMMING_S%d", channelNumber++ );
                         std::string cRegName = charRegName;
                         channel = static_cast<ReadoutChip *>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(module->getIndex())->at(chip->getIndex()))->getReg(cRegName);
-                        LOG (INFO) << BOLDRED <<"choff "<< channelNumber<<","<<int(channel)<<std::endl;
                         cMeanOffset += channel;
                     }
 

@@ -123,9 +123,9 @@
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedeNoisePulseAmplitude">0x35</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">0x50</Setting>
-    <Setting name="TriggerRate">100</Setting>
+    <Setting name="PedeNoisePulseAmplitude">0x80</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">0x100</Setting>
+    <Setting name="TriggerRate">1000</Setting>
 
     <!--Signal Scan Fit-->
 	  <Setting name="InitialVcth">0x78</Setting>
