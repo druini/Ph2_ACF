@@ -247,7 +247,7 @@
         ID          =   "my_HMP"
         model       =   "HMP4040"
         connection  =   "Ethernet"
-        IPaddress   =   "192.168.13.231"
+        IPaddress   =   "192.168.13.233"
         TCP         =   "5025"
     />
 </devices>
