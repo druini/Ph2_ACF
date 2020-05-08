@@ -238,7 +238,7 @@ void PedeNoise::Validate ( uint32_t pNoiseStripThreshold, uint32_t pMultiple )
                     if(cWithSSA) NCH = NSSACHANNELS;
                     for (uint32_t iChan = 0; iChan < NCH; iChan++)
                     {
-                            LOG (INFO) << RED << "Ch " << iChan << RESET ;
+                        // LOG (INFO) << RED << "Ch " << iChan << RESET ;
                         float occupancy = theOccupancyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cFe->getIndex())->at(cROC->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
                         if( occupancy > float ( pNoiseStripThreshold * 0.001 ) )
                         {

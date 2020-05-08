@@ -34,8 +34,8 @@ namespace Ph2_HwDescription
     fMaxRegValue      = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     configFileName    = fileName;
-    loadfRegMap(configFileName);
-    setFrontEndType(FrontEndType::RD53);
+    RD53::loadfRegMap(configFileName);
+    this->setFrontEndType(FrontEndType::RD53);
     myChipLane = pRD53Lane;
   }
 
@@ -57,7 +57,7 @@ namespace Ph2_HwDescription
 
         while (getline (file, line))
           {
-            if (line.find_first_not_of (" \t") == std::string::npos || line.at (0) == '#' || line.at (0) == '*' || line.empty()) myCommentMap[cLineCounter] = line;
+            if (line.find_first_not_of (" \t") == std::string::npos || line.at (0) == '#' || line.at (0) == '*' || line.empty()) fCommentMap[cLineCounter] = line;
             else if ((line.find("PIXELCONFIGURATION") != std::string::npos) || (foundPixelConfig == true))
               {
                 foundPixelConfig = true;
@@ -181,7 +181,7 @@ namespace Ph2_HwDescription
                 myString << line;
                 myString >> fName >> fAddress_str >> fDefValue_str >> fValue_str >> fBitSize_str;
 
-                fRegItem.fAddress = strtoul (fAddress_str.c_str(),  0, 16);
+                fRegItem.fAddress = strtoul(fAddress_str.c_str(),  0, 16);
 
                 int baseType;
                 if      (fDefValue_str.compare(0,2,"0x") == 0) baseType = 16;
@@ -193,7 +193,7 @@ namespace Ph2_HwDescription
                     throw Exception ("[RD53::loadfRegMap] Error, unknown base");
                   }
                 fDefValue_str.erase(0,2);
-                fRegItem.fDefValue = strtoul (fDefValue_str.c_str(), 0, baseType);
+                fRegItem.fDefValue = strtoul(fDefValue_str.c_str(), 0, baseType);
 
                 if      (fValue_str.compare(0,2,"0x") == 0) baseType = 16;
                 else if (fValue_str.compare(0,2,"0d") == 0) baseType = 10;
@@ -205,10 +205,10 @@ namespace Ph2_HwDescription
                   }
 
                 fValue_str.erase(0,2);
-                fRegItem.fValue = strtoul (fValue_str.c_str(), 0, baseType);
+                fRegItem.fValue = strtoul(fValue_str.c_str(), 0, baseType);
 
                 fRegItem.fPage    = 0;
-                fRegItem.fBitSize = strtoul (fBitSize_str.c_str(), 0, 10);
+                fRegItem.fBitSize = strtoul(fBitSize_str.c_str(), 0, 10);
                 fRegMap[fName]    = fRegItem;
               }
 
@@ -241,9 +241,9 @@ namespace Ph2_HwDescription
         int cLineCounter = 0;
         for (const auto& v : fSetRegItem)
           {
-            while (myCommentMap.find (cLineCounter) != std::end (myCommentMap))
+            while (fCommentMap.find(cLineCounter) != std::end (fCommentMap))
               {
-                auto cComment = myCommentMap.find (cLineCounter);
+                auto cComment = fCommentMap.find(cLineCounter);
 
                 file << cComment->second << std::endl;
                 cLineCounter++;

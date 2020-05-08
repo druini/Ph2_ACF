@@ -12,7 +12,6 @@ namespace Ph2_System
 {
   void FileParser::parseHW (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
   {
-    //FIXME-FR
     if (pIsFile && pFilename.find(".xml") != std::string::npos)
       {
         parseHWxml(pFilename, pBeBoardFWMap, pDetectorContainer, os, pIsFile);
@@ -23,19 +22,18 @@ namespace Ph2_System
       }
     else
       {
-        LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xml";
+        LOG (ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xml" << RESET;
       }
   }
 
   void FileParser::parseSettings (const std::string& pFilename, SettingsMap& pSettingsMap,  std::ostream& os, bool pIsFile)
   {
-    //FIXME-FR
     if (pIsFile && pFilename.find(".xml") != std::string::npos)
       parseSettingsxml(pFilename, pSettingsMap, os, pIsFile);
     else if (!pIsFile)
       parseSettingsxml(pFilename, pSettingsMap, os, pIsFile);
     else
-      LOG (ERROR) << "Could not parse settings file " << pFilename << " - it is not .xm";
+      LOG (ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xm" << RESET;
   }
 
   void FileParser::parseHWxml (const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
@@ -110,7 +108,6 @@ namespace Ph2_System
 
     std::string cBoardType = cBoardTypeAttribute.value();
 
-    //CDCE
     bool cConfigureCDCE = false;
     uint32_t cClockRateCDCE = 120;
     for (pugi::xml_node cChild: pBeBordNode.children("CDCE"))
@@ -125,11 +122,11 @@ namespace Ph2_System
       }
     cBeBoard->setCDCEconfiguration(cConfigureCDCE,cClockRateCDCE);
 
-    if (cBoardType == "D19C")      cBeBoard->setBoardType (BoardType::D19C);
-    else if (cBoardType == "RD53") cBeBoard->setBoardType (BoardType::RD53);
+    if      (cBoardType == "D19C") cBeBoard->setBoardType(BoardType::D19C);
+    else if (cBoardType == "RD53") cBeBoard->setBoardType(BoardType::RD53);
     else
       {
-        LOG (ERROR) << "Error: Unknown Board Type: " << cBoardType << " - aborting!";
+        LOG (ERROR) << BOLDRED << "Error: Unknown Board Type: " << cBoardType << " - aborting!" << RESET;
         std::string errorstring = "Unknown Board Type " + cBoardType;
         throw Exception (errorstring.c_str());
         exit(EXIT_FAILURE);
@@ -140,7 +137,6 @@ namespace Ph2_System
 
     if (cEventTypeAttribute == nullptr)
       {
-        //the HWDescription object does not have and EventType node, so assume EventType::VR
         cBeBoard->setEventType (EventType::VR);
         cEventTypeString = "VR";
       }
@@ -164,10 +160,10 @@ namespace Ph2_System
 
     if (cBeBoard->getBoardType() == BoardType::D19C)
       {
-        pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
+        pBeBoardFWMap[cBeBoard->getBeBoardId()] = new D19cFWInterface ( cId.c_str(), cUri.c_str(), cAddressTable.c_str() );
       }
     else if (cBeBoard->getBoardType() == BoardType::RD53)
-      pBeBoardFWMap[cBeBoard->getBeBoardId()] =  new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+      pBeBoardFWMap[cBeBoard->getBeBoardId()] = new RD53FWInterface (cId.c_str(), cUri.c_str(), cAddressTable.c_str());
 
     os << BOLDCYAN << "|" << "       " <<  "|"  << "----" << "Board Id:      " << BOLDYELLOW << cId << std::endl
        << BOLDCYAN << "|" << "       " <<  "|"  << "----" << "URI:           " << BOLDYELLOW << cUri << std::endl
@@ -185,12 +181,11 @@ namespace Ph2_System
 
     // Iterate the OpticalGroup node
     bool cWithOptical = false;
-    for ( pugi::xml_node pOpticalGroupNode = pBeBordNode.child ( "OpticalGroup" ); pOpticalGroupNode; pOpticalGroupNode = pOpticalGroupNode.next_sibling() )
+    for (pugi::xml_node pOpticalGroupNode = pBeBordNode.child("OpticalGroup"); pOpticalGroupNode; pOpticalGroupNode = pOpticalGroupNode.next_sibling())
       {
-        if ( static_cast<std::string> ( pOpticalGroupNode.name() ) == "OpticalGroup" )
+        if (static_cast<std::string>(pOpticalGroupNode.name()) == "OpticalGroup")
           {
-            // for now try and guess based on xml nodes what the FE is
-            this->parseOpticalGroupContainer (pOpticalGroupNode, cBeBoard, os );
+            this->parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os);
 
             for (pugi::xml_node cChild: pOpticalGroupNode.children("GBT"))
               {
@@ -233,27 +228,50 @@ namespace Ph2_System
       }
 
     cBeBoard->setOptical(cWithOptical);
-    if (cWithOptical == true)
-      os << BOLDBLUE << "|" << "       " << "|" << "----" << "Optical link: " << BOLDGREEN << "being used\n" << RESET;
-    else
-      os << BOLDBLUE << "|" << "       " << "|" << "----" << "Optical link: " << BOLDRED << "not being used\n" << RESET;
 
     pugi::xml_node cSLinkNode = pBeBordNode.child("SLink");
     this->parseSLink(cSLinkNode, cBeBoard, os);
   }
 
-  void FileParser::parseOpticalGroupContainer  (pugi::xml_node pOpticalGroupNode, BeBoard* pBoard, std::ostream& os )
+  void FileParser::parseOpticalGroupContainer (pugi::xml_node pOpticalGroupNode, BeBoard* pBoard, std::ostream& os)
   {
-    uint32_t cOpticalGroupId = pOpticalGroupNode.attribute ( "Id"    ).as_int();
-    uint32_t cFMCId          = pOpticalGroupNode.attribute ( "FMCId" ).as_int();
+    std::string cFilePath    = "";
+    uint32_t cOpticalGroupId = pOpticalGroupNode.attribute("Id"   ).as_int();
+    uint32_t cFMCId          = pOpticalGroupNode.attribute("FMCId").as_int();
     uint32_t cBoardId        = pBoard->getBeBoardId();
-    OpticalGroup* theOpticalGroup = pBoard->addOpticalGroupContainer(cBoardId, new OpticalGroup (cBoardId, cFMCId, cOpticalGroupId));
+    OpticalGroup* theOpticalGroup = pBoard->addOpticalGroupContainer(cBoardId, new OpticalGroup(cBoardId, cFMCId, cOpticalGroupId));
 
-    for ( pugi::xml_node pModuleNode = pOpticalGroupNode.child ( "Module" ); pModuleNode; pModuleNode = pModuleNode.next_sibling() )
+    for (pugi::xml_node theChild : pOpticalGroupNode.children())
       {
-        if ( static_cast<std::string> ( pModuleNode.name() ) == "Module" )
+        if (static_cast<std::string>(theChild.name()) == "Module")
+          this->parseModuleContainer(theChild, theOpticalGroup, os, pBoard);
+        else if (static_cast<std::string>(theChild.name()) == "lpGBT_Files")
           {
-            this->parseModuleContainer (pModuleNode, theOpticalGroup, os, pBoard);
+            cFilePath = expandEnvironmentVariables(theChild.attribute("path").value());
+            if ((cFilePath.empty() == false) && (cFilePath.at(cFilePath.length() - 1) != '/')) cFilePath.append("/");
+          }
+        else if (static_cast<std::string>(theChild.name()) == "lpGBT")
+          {
+            std::string fileName = cFilePath + expandEnvironmentVariables(theChild.attribute("configfile").value());
+            os << BOLDBLUE   << "|\t|----" << theChild.name() << " --> Id: "
+               << BOLDYELLOW << theChild.attribute("Id").value() << BOLDBLUE << ", File: "
+               << BOLDYELLOW << fileName << RESET << std::endl;
+            lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, fileName);
+            theOpticalGroup->addlpGBT(thelpGBT);
+
+            pugi::xml_node clpGBTSettings = theChild.child("Settings");
+            if (clpGBTSettings != nullptr)
+              {
+                os << BOLDCYAN << "|\t|\t|----lpGBT settingse" << RESET << std::endl;
+
+                for (const pugi::xml_attribute& attr : clpGBTSettings.attributes())
+                  {
+                    std::string regname = attr.name();
+                    uint16_t regvalue   = convertAnyInt(attr.value());
+                    thelpGBT->setReg(regname, regvalue, true);
+                    os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
+                  }
+              }
           }
       }
   }
@@ -381,7 +399,7 @@ namespace Ph2_System
                                   cValue = cRegItem.fValue;
                                 }
                               else
-                                LOG (ERROR) << RED << "SLINK ERROR: no Chip with Id " << +cCbcId << " on Fe " << +cFeId << " - check your SLink Settings!";
+                                LOG (ERROR) << BOLDRED << "SLINK ERROR: no Chip with Id " << +cCbcId << " on Fe " << +cFeId << " - check your SLink Settings!" << RESET;
                             }
                         }
                   }
@@ -391,9 +409,7 @@ namespace Ph2_System
               }
           }
       }
-    //LOG (ERROR) << "No Slink node found for Board " << +pBoard->getBeId() << " - continuing with default debug mode!";
-    //add ConditionDataSet to pBoard in any case, even if there is no SLink node in the xml, that way at least
-    //an SLinkDebugMode property is set for this board (SUMMARY)
+
     pBoard->addConditionDataSet (cSet);
   }
 
@@ -446,7 +462,7 @@ namespace Ph2_System
         // pOpticalGroup->addModule ( cModule );
 
         std::string cConfigFileDirectory;
-        for (pugi::xml_node cChild: pModuleNode.children())
+        for (pugi::xml_node cChild : pModuleNode.children())
           {
             std::string cName = cChild.name();
             std::string cNextName = cChild.next_sibling().name();
@@ -459,7 +475,7 @@ namespace Ph2_System
                 else
                   {
                     int cChipId = cChild.attribute("Id").as_int();
-                    std::string cFileName = expandEnvironmentVariables(static_cast<std::string> (cChild.attribute("configfile").value()));
+                    std::string cFileName = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute("configfile").value()));
                     LOG (DEBUG) << BOLDBLUE << "Configuration file ...." << cName << " --- " << cConfigFileDirectory << RESET;
                     LOG (DEBUG) << BOLDGREEN << cName << " Id = " << +cChipId << " --- " << cFileName << RESET;
                     if (cName == "RD53")
@@ -772,8 +788,6 @@ namespace Ph2_System
         std::stringstream cStr (cList);
         os << GREEN << "|\t|\t|\t|----List of disabled Channels: ";
 
-        //std::vector<uint8_t> cDisableVec;
-
         int cIndex = 0;
 
         while (std::getline (cStr, ctoken, ',') )
@@ -783,7 +797,7 @@ namespace Ph2_System
             uint8_t cChannel = convertAnyInt (ctoken.c_str() );
             //cDisableVec.push_back (cChannel);
 
-            if (cChannel == 0 || cChannel > 254) LOG (ERROR) << "Error: channels for mask have to be between 1 and 254!";
+            if (cChannel == 0 || cChannel > 254) LOG (ERROR) << BOLDRED << "Error: channels for mask have to be between 1 and 254!" << RESET;
             else
               {
                 //get the reigister string name from the map in Definition.h
@@ -858,10 +872,10 @@ namespace Ph2_System
 
     std::string cFileName;
 
-    if (!cFilePrefix.empty())
+    if (cFilePrefix.empty() == false)
       {
-        if (cFilePrefix.at (cFilePrefix.length() - 1) != '/') cFilePrefix.append("/");
-        cFileName = cFilePrefix + expandEnvironmentVariables (theChipNode.attribute("configfile").value());
+        if (cFilePrefix.at(cFilePrefix.length() - 1) != '/') cFilePrefix.append("/");
+        cFileName = cFilePrefix + expandEnvironmentVariables(theChipNode.attribute("configfile").value());
       }
     else cFileName = expandEnvironmentVariables(theChipNode.attribute("configfile").value());
 
@@ -871,7 +885,6 @@ namespace Ph2_System
     theChip->setNumberOfChannels(RD53::nRows,RD53::nCols);
 
     this->parseRD53Settings(theChipNode, theChip, os);
-
   }
 
   void FileParser::parseGlobalRD53Settings (pugi::xml_node pModuleNode, Module* pModule, std::ostream& os)

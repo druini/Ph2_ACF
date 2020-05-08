@@ -18,6 +18,7 @@ namespace Ph2_System
     : fBeBoardInterface    (nullptr)
     , fReadoutChipInterface(nullptr)
     , fChipInterface       (nullptr)
+    , flpGBTInterface      (nullptr)
     , fDetectorContainer   (nullptr)
     , fSettingsMap         ()
     , fFileHandler         (nullptr)
@@ -29,16 +30,19 @@ namespace Ph2_System
 
   SystemController::~SystemController() {}
 
-  void SystemController::Inherit (SystemController* pController)
+  void SystemController::Inherit (const SystemController* pController)
   {
     fBeBoardInterface     = pController->fBeBoardInterface;
     fReadoutChipInterface = pController->fReadoutChipInterface;
     fChipInterface        = pController->fChipInterface;
+    flpGBTInterface       = pController->flpGBTInterface;
     fBeBoardFWMap         = pController->fBeBoardFWMap;
     fSettingsMap          = pController->fSettingsMap;
     fFileHandler          = pController->fFileHandler;
     fStreamerEnabled      = pController->fStreamerEnabled;
     fNetworkStreamer      = pController->fNetworkStreamer;
+    fDetectorContainer    = pController->fDetectorContainer;
+    fCicInterface         = pController->fCicInterface;
   }
 
   void SystemController::Destroy()
@@ -49,14 +53,17 @@ namespace Ph2_System
     fBeBoardInterface = nullptr;
     delete fReadoutChipInterface;
     fReadoutChipInterface = nullptr;
-    delete fCicInterface;
-    fCicInterface = nullptr;
     delete fChipInterface;
     fChipInterface = nullptr;
-    delete fMPAInterface;
-    fMPAInterface = nullptr;
+    delete flpGBTInterface;
+    flpGBTInterface = nullptr;
     delete fDetectorContainer;
     fDetectorContainer = nullptr;
+
+    delete fCicInterface;
+    fCicInterface = nullptr;
+    delete fMPAInterface;
+    fMPAInterface = nullptr;
 
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
@@ -102,6 +109,8 @@ namespace Ph2_System
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     const BeBoard* theFirstBoard = fDetectorContainer->at(0);
 
+    flpGBTInterface = new lpGBTInterface(fBeBoardFWMap);
+
     if (theFirstBoard->getBoardType() != BoardType::RD53)
       {
         OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>((theFirstBoard->at(0))->at(0));
@@ -142,6 +151,7 @@ namespace Ph2_System
               // CIC start-up
               for(auto cOpticalGroup : *cBoard)
                 {
+                  if (cOpticalGroup->flpGBT != nullptr) flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                   uint8_t cLinkId = cOpticalGroup->getId();
                   LOG (INFO) << BOLDMAGENTA << "CIC start-up seqeunce for hybrids on link " << +cLinkId << RESET;
                   for (auto cHybrid : *cOpticalGroup)
@@ -228,6 +238,7 @@ namespace Ph2_System
               // ###################
               for(auto cOpticalGroup : *cBoard)
                 {
+                  if (cOpticalGroup->flpGBT != nullptr) flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                   for (auto cHybrid : *cOpticalGroup)
                     {
                       LOG (INFO) << GREEN << "Initializing communication to Module: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;

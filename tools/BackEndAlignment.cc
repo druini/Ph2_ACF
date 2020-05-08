@@ -371,9 +371,11 @@ void BackEndAlignment::Start(int currentRun)
     {
         LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
         //gui::message("Backend alignment failed"); //How
-        SaveResults();
-        WriteRootFile();
-        CloseResultFile();
+        #ifdef __USE_ROOT__
+            SaveResults();
+            WriteRootFile();
+            CloseResultFile();
+        #endif
         Destroy();
         exit(FAILED_BACKEND_ALIGNMENT);
     }
