@@ -333,7 +333,6 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContaine
 
                         float tmpOccupancy      = channel.fOccupancy     ;
                         float tmpOccupancyError = channel.fOccupancyError;
-			if (channelNumber==3) std::cout<<"ch "<<channelNumber+1<<" v "<<vcthr+1<<" occ "<<tmpOccupancy <<std::endl;
                         chipSCurve->SetBinContent(channelNumber+1, vcthr+1, tmpOccupancy     );
                         chipSCurve->SetBinError  (channelNumber+1, vcthr+1, tmpOccupancyError);
 

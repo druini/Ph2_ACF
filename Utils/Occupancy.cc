@@ -16,7 +16,6 @@ void Occupancy::makeSummaryAverage(const std::vector<Occupancy>* theOccupancyVec
         fOccupancy+=(theOccupancyVector->at(iContainer).fOccupancy*float(theNumberOfEnabledChannelsList[iContainer]));
         totalNumberOfEnableChannels+=theNumberOfEnabledChannelsList[iContainer];
     }
-    std::cout<<"totalNumberOfEnableChannels "<<totalNumberOfEnableChannels<<" fOccupancy "<<fOccupancy<<std::endl;
 
     fOccupancy/=float(totalNumberOfEnableChannels);
     fOccupancyError =sqrt(float(fOccupancy*(1.-fOccupancy)/numberOfEvents));

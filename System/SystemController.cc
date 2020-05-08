@@ -503,10 +503,15 @@ namespace Ph2_System
         uint32_t fNFe = pBoard->getNFe();
         uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
         LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
+	fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
+
 
         if (fEventType == EventType::SSAAS)
           {
-            uint16_t nSSA = 2;
+
+            uint16_t nSSA = pData.size()/120;
+	    //LOG (INFO) << BOLDBLUE << " fNSSAAS = "  << nSSA << RESET;
+
             fEventList.push_back(new D19cSSAEventAS(pBoard, nSSA, fNFe, pData));
           }
         else if (fEventType != EventType::ZS)
@@ -544,7 +549,10 @@ namespace Ph2_System
                       }
                     else if( pBoard->getFrontEndType() == FrontEndType::SSA )
                       {
-                        size_t nSSA = 2 ;
+		//	std::cout<<pData.size()<<std::endl;
+			size_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+	                //LOG (INFO) << BOLDBLUE << " fNSSA sync = "  << nSSA << RESET;
+                        //size_t nSSA = 2 ;
                         size_t cNFe = 1;
                         fEventList.push_back(new D19cSSAEvent(pBoard, nSSA, cNFe, cEvent));
                       }

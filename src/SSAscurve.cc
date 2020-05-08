@@ -6,7 +6,8 @@
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
-#include "../tools/SSALatencyScan.h"
+#include "../tools/PedestalEqualization.h"
+#include "../tools/PedeNoise.h"
 #include "tools/BackEndAlignment.h"
 #include "../Utils/argvparser.h"
 #include "TROOT.h"
@@ -37,9 +38,14 @@ int main ( int argc, char* argv[] )
     // options
     cmd.setHelpOption ( "h", "help", "Print this help page" );
 
+    cmd.defineOption ( "output", "Output Directory . Default value: Results", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
+    cmd.defineOptionAlternative ( "output", "o" );
+
     cmd.defineOption ( "file", "Hw Description File", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
     cmd.defineOptionAlternative ( "file", "f" );
 
+    cmd.defineOption ( "batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute );
+    cmd.defineOptionAlternative ( "batch", "b" );
 
 
     int result = cmd.parse ( argc, argv );
@@ -52,8 +58,14 @@ int main ( int argc, char* argv[] )
 
     // now query the parsing results
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/D19C_2xSSA_PreCalibSYNC.xml";
+    std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
+    cDirectory += "Scurve";
+    bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
 
     TApplication cApp ( "Root Application", &argc, argv );
+
+    if ( batchMode ) gROOT->SetBatch ( true );
+    else TQObject::Connect ( "TCanvas", "Closed()", "TApplication", &cApp, "Terminate()" );
 
     Timer t;
 
@@ -66,10 +78,10 @@ int main ( int argc, char* argv[] )
     LOG (INFO) << outp.str();
     outp.str ("");
     cTool.ConfigureHw ();
-    cTool.InitResultFile ( "SSALatencyScanResults" );
-    //cTool.StartHttpServer();
+    cTool.CreateResultDirectory ( cDirectory );
+    cTool.InitResultFile ( "Scurve" );
+    cTool.StartHttpServer();
 
-    // align back-end .. if this moves to firmware then we can get rid of this step
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit (&cTool);
     cBackEndAligner.Initialise();
@@ -81,23 +93,23 @@ int main ( int argc, char* argv[] )
         exit(0);
     }
 
-    //cTool.ConfigureHw ();
-    //if ( !cOld )
-    //{
     t.start();
 
-    // now create a SSAPedestalEqualization object
-    SSALatencyScan cSSALatencyScan;
-    cSSALatencyScan.Inherit (&cTool);
-    //second parameter disables stub logic on CBC3
-    // cPedestalEqualization.Initialise ( false, true );
-    cSSALatencyScan.Initialise ();
+    PedeNoise cPedeNoise;
+    cPedeNoise.Inherit (&cTool);
+    cPedeNoise.Initialise (false, false);
+    cPedeNoise.measureNoise();
+    cPedeNoise.writeObjects( );
+    cPedeNoise.dumpConfigFiles();
+    cPedeNoise.resetPointers();
+    t.stop();
 
-    cSSALatencyScan.run();
-    //cTool.SaveResults();
-    //cTool.WriteRootFile();
-    //cTool.CloseResultFile();
+
+    cTool.SaveResults();
+    cTool.WriteRootFile();
+    cTool.CloseResultFile();
     cTool.Destroy();
 
+    if ( !batchMode ) cApp.Run();
     return 0;
 }

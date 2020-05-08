@@ -2455,6 +2455,7 @@ void D19cFWInterface::InitFMCPower()
         // reset readout
         this->ResetReadout();
         std::this_thread::sleep_for (std::chrono::microseconds (10) );
+
         // start triggering machine which will collect N events
         this->Start();
 

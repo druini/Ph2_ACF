@@ -80,7 +80,7 @@ Tool::~Tool()
 void Tool::Inherit (const Tool* pTool)
 {
 	//WE SHOULD ONLY KEEP IN HERE ONLY THINGS THAT ARE NOT CALIBRATION SPECIFIC
-	
+
 	SystemController::Inherit(pTool);
 
 	#ifdef __USE_ROOT__
@@ -936,7 +936,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 	for(int iBit = numberOfBits-1; iBit>=bshift; --iBit)
 	{
 		LOG (DEBUG) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
-		LOG (INFO) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
+		//LOG (INFO) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
 
 		for ( auto cOpticalGroup : *(fDetectorContainer->at(boardIndex)))
 		{
@@ -983,7 +983,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 					{
 						for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
 						{
-							LOG (INFO) << BOLDBLUE << "localocc "<< currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<< RESET;
+							//LOG (INFO) << BOLDBLUE << "localocc "<< currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<< RESET;
 
 							if( currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy <= targetOccupancy )
 							{
@@ -998,7 +998,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 					}
 					else
 					{
-						LOG (INFO) << BOLDBLUE << "globalocc "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy<< RESET;
+						//LOG (INFO) << BOLDBLUE << "globalocc "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy<< RESET;
 
 						if( currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy <= targetOccupancy )
 						{

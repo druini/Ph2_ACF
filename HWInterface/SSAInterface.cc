@@ -56,13 +56,13 @@ namespace Ph2_HwInterface {// start namespace
 		setBoard ( pChip->getBeBoardId() );
 		//if sync
 
-		uint32_t enwrite=1;
-        	if(inject) enwrite=17;
+		//uint32_t enwrite=1;
+        	//if(inject) enwrite=17;
 
-        	//uint32_t enwrite=5;
-        	//if(inject) enwrite=21;
+        	uint32_t enwrite=5;
+        	if(inject) enwrite=21;
 
-		std::cout<<"enwrite "<<enwrite<<std::endl;
+		//std::cout<<"enwrite "<<enwrite<<std::endl;
 
         	for (uint32_t i = 1; i<=pChip->getNumberOfChannels();i++ ) this->WriteChipReg(pChip, "ENFLAGS_S" + std::to_string(i), enwrite);
         	return this->WriteChipReg(pChip, "FE_Calibration" , (int)inject ,pVerifLoop );

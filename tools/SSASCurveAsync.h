@@ -49,8 +49,8 @@ class SSASCurve : public Tool
   size_t NMpulse        = this->findValueInSettings("NMpulse");
   size_t Res        = this->findValueInSettings("Res");
   size_t Nlvl        = this->findValueInSettings("Nlvl");
-  size_t Mrms        = this->findValueInSettings("Mrms");
-  size_t Vfac        = this->findValueInSettings("Vfac");
+  float Mrms        = this->findValueInSettings("Mrms");
+  float Vfac        = this->findValueInSettings("Vfac");
   float TestPulsePotentiometer        = this->findValueInSettings("TestPulsePotentiometer");
 
   float globalmax =0 ;
