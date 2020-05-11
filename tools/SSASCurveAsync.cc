@@ -8,6 +8,7 @@
 */
 
 #include "SSASCurveAsync.h"
+#include "../Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -33,6 +34,8 @@ void SSASCurve::Initialise(void)
 	Nlvl        = this->findValueInSettings("Nlvl");
 	Mrms        = this->findValueInSettings("Mrms");
 	Vfac        = this->findValueInSettings("Vfac");
+	SyncDebug        = this->findValueInSettings("SyncDebug");
+
 	TestPulsePotentiometer        = this->findValueInSettings("TestPulsePotentiometer");
 	#ifdef __USE_ROOT__
 		fDQMHistogramSSASCurveAsync.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -47,7 +50,9 @@ void SSASCurve::run(void)
 	for (auto cBoard : theHitContainer)
 	{
 	BeBoard* theBeBoard = static_cast<BeBoard*>( fDetectorContainer->at(cBoard->getIndex()) );
-        theBeBoard->setEventType(EventType::SSAAS);
+	if (SyncDebug) LOG (INFO) << BOLDBLUE <<"SYNC DEBUG!"<<RESET;
+	else theBeBoard->setEventType(EventType::SSAAS);
+
         float rms=999.0;
         //float prevrms=999.0;
 
@@ -112,6 +117,14 @@ void SSASCurve::run(void)
 		                        {
 						ReadoutChip *theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard ->getIndex())->at(cOpticalGroup ->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 		                            	this->fReadoutChipInterface->WriteChipReg(theChip, "Bias_THDAC", thd);
+						unsigned int channelNumber = 0;
+
+						//for(uint32_t ich=0;ich<120;ich++)
+						//{
+						//	if(ich!=100 ) this->fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_S" + std::to_string(ich+1), 5);
+						//}
+						channelNumber++;
+
 		                        }
 		                    }
 			}
@@ -122,24 +135,38 @@ void SSASCurve::run(void)
 		        //setFWTestPulse();
 
 
-			ReadASEvent( theBeBoard, NMsec,runpulse );
+
+			if (SyncDebug) ReadNEvents( theBeBoard, NMpulse );
+			else ReadASEvent( theBeBoard, NMsec,runpulse );
 			const std::vector<Event*> &eventVector = GetEvents ( theBeBoard );
+			//LOG (INFO) << BOLDRED << "Nev "<<eventVector.size()<<" "<<runpulse<< RESET;
+
 		        for(auto opticalGroup: *cBoard)
 		        {
 				for(auto hybrid: *opticalGroup) // for on hybrid - begin
 				{
 					for(auto cSSA: *hybrid) // for on chip - begin
 					{
-
 						std::vector<uint32_t> hits= eventVector.at(0)->GetHits(hybrid->getId(), cSSA->getId());
+
 
 						unsigned int channelNumber = 0;
 						unsigned int curh = 0;
 						for(auto &channel : *cSSA->getChannelContainer<std::pair<std::array<uint32_t,2>,float>>())
 						{
 							Nstrip+=1.0;
-							curh=hits[channelNumber];
-							//LOG (INFO) << BOLDRED << "curh "<<curh<< RESET;
+							if (SyncDebug)
+							{
+								curh=0;
+								for(auto cev: eventVector)
+								{
+									curh+=cev->DataBit ( hybrid->getId(), cSSA->getId(), channelNumber);
+								}
+							}
+
+							else curh=hits[channelNumber];
+
+							//LOG (INFO) << BOLDRED << "channelNumber "<<channelNumber<<" curh "<<curh<< RESET;
 							//LOG (INFO) << BOLDRED <<std::bitset<32>(curh)<< RESET;
 
 
@@ -151,7 +178,7 @@ void SSASCurve::run(void)
 		                                		globalmax=std::max(globalmax,channel.second);
 
 		                                		//if ( channelNumber==1)
-		                                  		//  LOG (INFO) << BOLDRED << "halfmax "<<curh<<","<<channel.first[0]<<","<<channel.first[1]<< RESET;
+		                                  		//LOG (INFO) << BOLDRED << "halfmax "<<curh<<","<<channel.first[0]<<","<<channel.first[1]<< RESET;
 		                                  		//  LOG (INFO) << BOLDRED << normvals[channelNumber]<<" "<<thd<< RESET;
                                 			}
 

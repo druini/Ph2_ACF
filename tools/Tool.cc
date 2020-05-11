@@ -874,7 +874,7 @@ void Tool::bitWiseScan(const std::string &dacName, uint32_t numberOfEvents, cons
 // bit wise scan per BeBoard
 void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy, int32_t numberOfEventsPerBurst)
 {
-	int bshift = 0;
+	//int minDAC = 0x0;
 	DetectorDataContainer *outputDataContainer = fDetectorDataContainer;
 
 	ReadoutChip *cChip = fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0); //assumption: one BeBoard has only one type of chip;
@@ -894,8 +894,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 	DetectorDataContainer *previousDacList = new DetectorDataContainer();
 	DetectorDataContainer *currentDacList = new DetectorDataContainer();
 
-	uint16_t allZeroRegister = 0<<bshift;
-	uint16_t allOneRegister = (0xFF>>(16-numberOfBits));
+	uint16_t allZeroRegister = 0;
+	uint16_t allOneRegister = (0xFFFF>>(16-numberOfBits));
 	if(localDAC)
 	{
 		ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, *previousDacList, allZeroRegister);
@@ -932,9 +932,12 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 		previousDacList = currentDacList;
 		currentDacList = tmpPointer;
 	}
+	//LOG (INFO) << BOLDBLUE << "START " << RESET;
 
-	for(int iBit = numberOfBits-1; iBit>=bshift; --iBit)
+	for(int iBit = numberOfBits-1; iBit>=0; --iBit)
 	{
+
+
 		LOG (DEBUG) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
 		//LOG (INFO) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
 
@@ -957,10 +960,16 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 					}
 					else
 					{
+
+
 						if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
 								= previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() + (1<<iBit);
 						else currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
 								= previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1<<iBit));
+						//LOG (INFO) << BOLDBLUE << minDAC<<" "<<previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+						//LOG (INFO) << BOLDBLUE << std::max(minDAC,previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1<<iBit))) << RESET;
+
+
 					}
 				}
 			}

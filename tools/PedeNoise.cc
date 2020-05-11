@@ -327,8 +327,9 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
     uint16_t cMaxValue       = (1 << 10) - 1;
     if(cWithSSA)
 	{
-	cMaxValue       = (1 << 9) - 1;
-	cMinBreakCount = 20;
+	cMaxValue       = (1 << 8) - 1;
+	cMinBreakCount = 10;
+	cLimit = 0.02;
 	}
 
 
@@ -398,6 +399,8 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
             cSign = -1 * cSign;
         }
 
+	if(cWithSSA) cSign = 1.0;
+	//LOG (INFO) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
 
         LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
         cValue = pStartValue + (cIncrement * cSign);

@@ -98,9 +98,6 @@ void SSALatencyScan::run(void)
 				{
 					for(auto cSSA: *hybrid) // for on chip - begin
 					{
-
-						std::vector<uint32_t> hits= eventVector.at(0)->GetHits(hybrid->getId(), cSSA->getId());
-
 						unsigned int channelNumber = 0;
 						for (int i = 1; i<=120;i++ )
 						{

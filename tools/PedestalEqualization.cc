@@ -112,6 +112,17 @@ void PedestalEqualization::FindVplus()
 
 
 
+	    if(fTestPulse){
+	                        this->enableTestPulse( true );
+	                        setFWTestPulse();
+	                        for ( auto cBoard : *fDetectorContainer )
+	                        {
+	                            if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", fTestPulseAmplitude);
+	                            else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
+	                        }
+	                        LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
+	    }
+	        else this->enableTestPulse( false );
 
     DetectorDataContainer     theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
@@ -129,18 +140,6 @@ void PedestalEqualization::FindVplus()
 
     if(cWithCBC)    setSameLocalDac("ChannelOffset", fTargetOffset);
     if(cWithSSA)    setSameLocalDac("THTRIMMING_S", fTargetOffset);
-
-    if(fTestPulse){
-    	                this->enableTestPulse( true );
-    	                setFWTestPulse();
-    	                for ( auto cBoard : *fDetectorContainer )
-    	                {
-    	                    if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", fTestPulseAmplitude);
-    	                    else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
-    	                }
-    	                LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
-    }
-    else this->enableTestPulse( false );
 
     if(cWithCBC)    this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
     if(cWithSSA)    this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56);
@@ -221,17 +220,6 @@ void PedestalEqualization::FindOffsets()
 
 
 
-    if(fTestPulse){
-                    this->enableTestPulse( true );
-                    setFWTestPulse();
-                    for ( auto cBoard : *fDetectorContainer )
-                    {
-                        if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", fTestPulseAmplitude);
-                        else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
-                    }
-                    LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
-    }
-    else this->enableTestPulse( false );
 
     if(cWithCBC)    setSameDac("VCth", fTargetVcth);
     if(cWithSSA)    setSameDac("Bias_THDAC", fTargetVcth);
