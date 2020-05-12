@@ -413,7 +413,7 @@ namespace Ph2_System
   }
 
 
-  void SystemController::ReadASEvent (BeBoard* pBoard, uint32_t pNMsec,bool pulses)
+  void SystemController::ReadASEvent (BeBoard* pBoard, uint32_t pNMsec,bool pulses, bool fast)
   {
 
   		/*self.I2C.peri_write('ReadoutMode',0b01)
@@ -453,19 +453,20 @@ namespace Ph2_System
 
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);*/
 
-    //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadASEvent(pBoard, cData);
-
-    for(auto cOpticalGroup : *pBoard)
-        {
-        for(auto cHybrid : *cOpticalGroup)
-            {
-            for(auto cChip : *cHybrid)
-                {
-                static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
-                }
-            }
-        }
-
+    if(fast) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadASEvent(pBoard, cData);
+    else
+    {
+	for(auto cOpticalGroup : *pBoard)
+	{
+		for(auto cHybrid : *cOpticalGroup)
+		{
+			for(auto cChip : *cHybrid)
+	                {
+	                	static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+	                }
+		}
+	}
+    }
     this->DecodeData(pBoard, cData, 1, fBeBoardInterface->getBoardType(pBoard));
   }
 

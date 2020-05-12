@@ -1185,10 +1185,10 @@ public:
 			if(burstNumbers==1) currentNumberOfEvents = lastBurstNumberOfEvents;
 			EventType fEventType = fDetectorContainer->at(fBoardIndex)->getEventType();
 
-            if (fEventType == EventType::SSAAS)
-                fTool->ReadASEvent(fDetectorContainer->at(fBoardIndex), fNumberOfMSec );
-            else
-			    fTool->ReadNEvents (fDetectorContainer->at(fBoardIndex), currentNumberOfEvents );
+			if (fEventType == EventType::SSAAS)
+				fTool->ReadASEvent(fDetectorContainer->at(fBoardIndex), fNumberOfMSec );
+			else
+				fTool->ReadNEvents (fDetectorContainer->at(fBoardIndex), currentNumberOfEvents );
 			// Loop over Events from this Acquisition
 			const std::vector<Event*>& events = fTool->GetEvents (fDetectorContainer->at(fBoardIndex));
 			for ( auto& event : events )

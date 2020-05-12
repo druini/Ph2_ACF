@@ -12,15 +12,16 @@
 #ifndef ShortFinder_h__
 #define ShortFinder_h__
 
-#include "Tool.h" 
+#include "Tool.h"
 
 
 const float THRESHOLD_SHORT = 0.1;
 typedef std::vector<uint8_t> ChannelList;
 
 
-// add exit codes here 
+// add exit codes here
 const uint8_t FAILED_INJECTION = 1;
+
 
 class ShortFinder : public Tool
 {
@@ -28,7 +29,12 @@ class ShortFinder : public Tool
     ShortFinder();
     ~ShortFinder();
     void Initialise();
+
+
+
     void Count(Ph2_HwDescription::BeBoard* pBoard, const ChannelGroup<NCHANNELS>* pGroup);
+    void Count(Ph2_HwDescription::BeBoard* pBoard, const ChannelGroup<NSSACHANNELS>* pGroup);
+
     void FindShorts2S(Ph2_HwDescription::BeBoard* pBoard);
     void FindShortsPS(Ph2_HwDescription::BeBoard* pBoard);
     void FindShorts();
@@ -41,7 +47,7 @@ class ShortFinder : public Tool
     // Settings
     bool fTestPulse;
     uint8_t fTestPulseAmplitude;
-    float   fThreshold; 
+    float   fThreshold;
     uint32_t fEventsPerPoint;
 
     // Containers
@@ -54,8 +60,11 @@ class ShortFinder : public Tool
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
 
+
     bool cWithCBC = true;
     bool cWithSSA = false;
+    uint32_t nchannels = 0;
+
 };
 
 #endif

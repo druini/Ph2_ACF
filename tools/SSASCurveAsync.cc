@@ -165,6 +165,7 @@ void SSASCurve::run(void)
 							}
 
 							else curh=hits[channelNumber];
+							LOG (INFO) << BOLDRED << "thd "<<thd<<" , "<<" channel "<<" , "<<curh<< RESET;
 
 							//LOG (INFO) << BOLDRED << "channelNumber "<<channelNumber<<" curh "<<curh<< RESET;
 							//LOG (INFO) << BOLDRED <<std::bitset<32>(curh)<< RESET;

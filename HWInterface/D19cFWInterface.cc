@@ -2429,9 +2429,10 @@ void D19cFWInterface::InitFMCPower()
     void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )
     {
         // RESET the readout
+
         auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        pNEvents = pNEvents*(cMultiplicity+1);
-        //LOG (INFO) << BOLDRED << "pNEvents = " << pNEvents << RESET;
+	uint32_t pNEventsm = pNEvents*(cMultiplicity+1);
+        //LOG (INFO) << BOLDRED << "pNEventsm = " << pNEventsm << RESET;
 
         auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
         auto cTriggerRate = (cTriggerSource == 5 || cTriggerSource == 6 ) ? 1 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz .. if external trigger assume 1 kHz as lowest possible rate
@@ -2445,9 +2446,9 @@ void D19cFWInterface::InitFMCPower()
         std::this_thread::sleep_for (std::chrono::microseconds (10) );
         // data hadnshake has to be enabled in this mode
         std::vector< std::pair<std::string, uint32_t> > cVecReg;
-        cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.packet_nbr", pNEvents-1} );
+        cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.packet_nbr", pNEventsm-1} );
         cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1} );
-        cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents} );
+        cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEventsm} );
         this->WriteStackReg ( cVecReg );
         cVecReg.clear();
         // load new trigger configuration
@@ -2464,7 +2465,7 @@ void D19cFWInterface::InitFMCPower()
         uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
 
         uint32_t cTimeoutCounter = 0 ;
-        uint32_t cTimeoutValue = 2.0*pNEvents; // maximum number of times I allow the word counter not to increment ..
+        uint32_t cTimeoutValue = 2.0*pNEventsm; // maximum number of times I allow the word counter not to increment ..
         uint32_t cFailures = 0 ;
         uint32_t cPause = 1*static_cast<uint32_t>(cTimeSingleTrigger_us);
         //LOG (INFO) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << " trigger rate is " << +cTriggerRate << " trigger source is " << +cTriggerSource << RESET;
@@ -2481,22 +2482,22 @@ void D19cFWInterface::InitFMCPower()
             cFailures += ( (cNtriggers == 0 ));// || ( (cNWords_previous==cNWords) &&cReadoutReq==0) );
             cTimeoutCounter ++;
             //LOG (INFO) << MAGENTA << cReadoutReq << " " << cNtriggers << " " << cNWords << RESET;
-        }while (cReadoutReq == 0 && ( cTimeoutCounter < cTimeoutValue ) && (cNtriggers < pNEvents) && (cFailures < 5) );
+        }while (cReadoutReq == 0 && ( cTimeoutCounter < cTimeoutValue ) && (cNtriggers < pNEventsm) && (cFailures < 5) );
         // fails if either one of these is true
         // but to me it looks like sometimes the readoutrequest is not '1' although
         // all triggers have been received
-        pFailed = ( (cReadoutReq == 0 && cNtriggers < pNEvents ) || ( cNWords == 0 ) );
+        pFailed = ( (cReadoutReq == 0 && cNtriggers < pNEventsm ) || ( cNWords == 0 ) );
 
-        if( (cReadoutReq == 0 && cNtriggers < pNEvents ) && cNWords != 0 )
+        if( (cReadoutReq == 0 && cNtriggers < pNEventsm ) && cNWords != 0 )
         {
           LOG(INFO) << BOLDRED << "\t...Readout request not cleared... Trigger in counter is "
-            << cNtriggers << " asked for " << pNEvents << " events and have "
+            << cNtriggers << " asked for " << pNEventsm << " events and have "
             << cNWords << " words in the readout... Re-trying point" << RESET;
         }
         else if( cNWords == 0 )
         {
           LOG (INFO) << BOLDRED << "\t...No data in the readout ... Trigger in counter is "
-            << cNtriggers << " asked for " << pNEvents << " events and have "
+            << cNtriggers << " asked for " << pNEventsm << " events and have "
             << cNWords << " words in the readout... Re-trying point" << RESET;
         }
 
