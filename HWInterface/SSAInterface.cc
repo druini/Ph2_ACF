@@ -38,10 +38,42 @@ namespace Ph2_HwInterface {// start namespace
 			#endif
 		     	fBoardFW->EncodeReg (cRegItem.second, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, true);
 		      	bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
-		      	//LOG (INFO) << BOLDBLUE << cRegItem.first << "  <   " << BOLDRED << cSuccess << RESET;
+		      	if( cSuccess ) 
+			{ 
+				auto cReadBack = ReadChipReg( pSSA, cRegItem.first );
+				if( cReadBack != cRegItem.second.fValue ) 
+				{
+					LOG (INFO) << BOLDRED << "Read back value from " 
+						<< cRegItem.first << BOLDBLUE 
+						<< " at I2C address " << std::hex 
+						<< pSSA->getRegItem(cRegItem.first).fAddress << std::dec 
+						<< " not equal to write value of "
+						<< std::hex << +cRegItem.second.fValue << std::dec << RESET;
+					return false;
+				}
+			}
+			//LOG (INFO) << BOLDBLUE << cRegItem.first << "  <   " << BOLDRED << cSuccess << RESET;
 		      	if (not cSuccess) return false;
 		        cVec.clear();
 		}
+		// doesn't seem to work for SSA
+		/*bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
+		if( cSuccess ) 
+		{ 
+			for ( auto& cRegItem : cSSARegMap )
+			{
+				auto cReadBack = ReadChipReg( pSSA, cRegItem.first );
+				if( cReadBack != cRegItem.second.fValue ) 
+					LOG (INFO) << BOLDRED << "Read back value from " 
+						<< cRegItem.first << BOLDBLUE 
+						<< " at I2C address " << std::hex 
+						<< pSSA->getRegItem(cRegItem.first).fAddress << std::dec 
+						<< " not equal to write value of "
+						<< std::hex << +cRegItem.second.fValue << std::dec << RESET;
+			}
+		}
+		else return false;
+		*/
 		LOG (INFO) << BOLDGREEN << "Wrote: " << NumReg << RESET;
 		#ifdef COUNT_FLAG
 	        fTransactionCount++;

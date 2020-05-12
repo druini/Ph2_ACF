@@ -137,6 +137,7 @@ void SSASCurve::run(void)
 							{
 								Nstrip+=1.0;
 								curh=hits[channelNumber];
+								LOG (INFO) << BOLDRED << "thd "<<thd<<" , "<<" channel "<<" , "<<curh<< RESET;
 								//if ( channelNumber==1)
 								if ((channel.first[1]>Nlvl) && (curh<channel.first[1]/2) && (channel.first[0]>channel.first[1]/2))
 								{

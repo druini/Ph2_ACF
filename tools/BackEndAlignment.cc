@@ -316,8 +316,8 @@ bool BackEndAlignment::Align()
         // read back register map before you've done anything
         auto cBoardRegisterMap = theBoard->getBeBoardRegMap();
 
-        OuterTrackerModule* theFirstHibrid = static_cast<OuterTrackerModule*>(cBoard->at(0)->at(0));
-        bool cWithCIC = theFirstHibrid->fCic != NULL;
+        OuterTrackerModule* cFirstHybrid = static_cast<OuterTrackerModule*>(cBoard->at(0)->at(0));
+        bool cWithCIC = cFirstHybrid->fCic != NULL;
         if( cWithCIC )
             cAligned = this->CICAlignment(theBoard);
         else

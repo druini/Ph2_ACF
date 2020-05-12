@@ -185,10 +185,6 @@ namespace Ph2_System
                           // CIC start-up sequence
                           uint8_t cDriveStrength = 5;
                           cSuccess = fCicInterface->StartUp(cCic , cDriveStrength);
-                          for (auto cChip : *cHybrid)
-                            {
-                              fReadoutChipInterface->WriteChipReg ( static_cast<ReadoutChip*>(cChip), "EnableSLVS", 1);
-                            }
                           fBeBoardInterface->ChipReSync ( cBoard );
                           LOG (INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerModule->getId()%2) << " connected to link " << +theOuterTrackerModule->getLinkId() <<  RESET ;
                           LOG (INFO) << BOLDGREEN << "####################################################################################" << RESET;
@@ -199,7 +195,7 @@ namespace Ph2_System
                           ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
                           if ( !bIgnoreI2c )
                             {
-                              LOG (INFO) << BOLDBLUE << "Configuring readout chip [CBC" << +cReadoutChip->getId() << " ]" << RESET;
+                              LOG (INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
                               fReadoutChipInterface->ConfigureChip ( theReadoutChip );
                             }
                         }
