@@ -38,18 +38,22 @@ namespace Ph2_HwInterface {// start namespace
 			#endif
 		     	fBoardFW->EncodeReg (cRegItem.second, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, true);
 		      	bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
-		      	if( cSuccess ) 
-			{ 
+		      	if( cSuccess )
+			{
 				auto cReadBack = ReadChipReg( pSSA, cRegItem.first );
-				if( cReadBack != cRegItem.second.fValue ) 
+				if( cReadBack != cRegItem.second.fValue )
 				{
-					LOG (INFO) << BOLDRED << "Read back value from " 
-						<< cRegItem.first << BOLDBLUE 
-						<< " at I2C address " << std::hex 
-						<< pSSA->getRegItem(cRegItem.first).fAddress << std::dec 
-						<< " not equal to write value of "
-						<< std::hex << +cRegItem.second.fValue << std::dec << RESET;
-					return false;
+					std::size_t found=(cRegItem.first).find("ReadCounter");
+				        if (found==std::string::npos)
+						{
+						LOG (INFO) << BOLDRED << "Read back value from "
+							<< cRegItem.first << BOLDBLUE
+							<< " at I2C address " << std::hex
+							<< pSSA->getRegItem(cRegItem.first).fAddress << std::dec
+							<< " not equal to write value of "
+							<< std::hex << +cRegItem.second.fValue << std::dec << RESET;
+						//return false;
+						}
 				}
 			}
 			//LOG (INFO) << BOLDBLUE << cRegItem.first << "  <   " << BOLDRED << cSuccess << RESET;
@@ -58,16 +62,16 @@ namespace Ph2_HwInterface {// start namespace
 		}
 		// doesn't seem to work for SSA
 		/*bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
-		if( cSuccess ) 
-		{ 
+		if( cSuccess )
+		{
 			for ( auto& cRegItem : cSSARegMap )
 			{
 				auto cReadBack = ReadChipReg( pSSA, cRegItem.first );
-				if( cReadBack != cRegItem.second.fValue ) 
-					LOG (INFO) << BOLDRED << "Read back value from " 
-						<< cRegItem.first << BOLDBLUE 
-						<< " at I2C address " << std::hex 
-						<< pSSA->getRegItem(cRegItem.first).fAddress << std::dec 
+				if( cReadBack != cRegItem.second.fValue )
+					LOG (INFO) << BOLDRED << "Read back value from "
+						<< cRegItem.first << BOLDBLUE
+						<< " at I2C address " << std::hex
+						<< pSSA->getRegItem(cRegItem.first).fAddress << std::dec
 						<< " not equal to write value of "
 						<< std::hex << +cRegItem.second.fValue << std::dec << RESET;
 			}
