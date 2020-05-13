@@ -733,7 +733,7 @@ namespace Ph2_HwInterface
         LOG (INFO) << BOLDBLUE << "FMC1  " << +fmc1_card_type << " FMC2 " << +fmc2_card_type << RESET;
         LOG (INFO) << BOLDBLUE << "FMC1 Card: " << RESET << getFMCCardName (fmc1_card_type);
         LOG (INFO) << BOLDBLUE << "FMC2 Card: " << RESET << getFMCCardName (fmc2_card_type);
-        if( getFMCCardName (fmc1_card_type) != "2S_FMC1" )
+        if( getFMCCardName (fmc1_card_type) != "2S_FMC1" &&  getFMCCardName (fmc1_card_type) != "PS_FMC1" )
         {
             if( getFMCCardName (fmc1_card_type) != "FMC_FE_FOR_PS_ROH_FMC1" )
             {
@@ -1249,10 +1249,13 @@ void D19cFWInterface::InitFMCPower()
         LOG (INFO) << BOLDBLUE << "Creating I2C slave map based on stand-alone code for 2S FEH + CIC!!" << RESET;
         // hard coding based on what is implented in the stand-alone pyhton
         // test procedures
-        // CBCs
+        // SSAs
         for( int id=0; id < 8; id+=1 )
+           i2c_slave_map.push_back({ static_cast<uint8_t>(0x20 + id), 2, 1, 1, 1, 0});
+        // CBCs
+        /*for( int id=0; id < 8; id+=1 )
            i2c_slave_map.push_back({ static_cast<uint8_t>(64 + id + 1), 1, 1, 1, 1, 1});
-        // CICs
+        */// CICs
         i2c_slave_map.push_back({96, 2, 1, 1, 1, 1});
     }
     else if (fFirmwareFrontEndType == FrontEndType::MPA) {

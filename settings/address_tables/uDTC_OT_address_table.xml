@@ -119,6 +119,11 @@
             <node id="slvs_debug" address = "0x000">
                 <node id="chip_select"                     mask="0x000F0000"/>
             </node>
+
+            <!-- line debug -->
+            <node id="debug_blk_input"  address = "0x03B" mask="0xFFFFFFFF"/>
+            <node id="debug_blk_output" address = "0x03C" mask="0xFFFFFFFF"/>
+            <node id="debug_blk_signal" address = "0x03D" mask="0xFFFFFFFF"/>
        </node>
 
         <node id="readout_block"                address="0x5000">
@@ -293,6 +298,13 @@
                 <node id="stop_fe_for_ps_roh_data_player"                 mask="0x00000002"/>
             </node>
 
+            <!-- debug -->
+            <node id="debug_blk"              address="0x018">
+                <node id="start_input"                mask="0x00001000"/>
+                <node id="stop_input"                 mask="0x00002000"/>
+                <node id="start_output"               mask="0x00004000"/>
+                <node id="stop_output"                mask="0x00008000"/>
+            </node>
         </node>
 
         <node id="readout_block"                address="0x5000">
@@ -454,6 +466,40 @@
             </node>
             <node id="stub_debug"                address="0x042" description="stub scoping " mode="incremental" size="80"/>
             <node id="l1a_debug"                address="0x010" description="l1a scoping " mode="incremental" size="50"/>
+
+            <!-- debug counters -->
+            <node id="debug_blk_counter00"                address="0x0BD" mask="0xFFFFFFFF" description="counter on debug block input line 00"/>
+            <node id="debug_blk_counter01"                address="0x0BE" mask="0xFFFFFFFF" description="counter on debug block input line 01"/>
+            <node id="debug_blk_counter02"                address="0x0BF" mask="0xFFFFFFFF" description="counter on debug block input line 02"/>
+            <node id="debug_blk_counter03"                address="0x0C0" mask="0xFFFFFFFF" description="counter on debug block input line 03"/>
+            <node id="debug_blk_counter04"                address="0x0C1" mask="0xFFFFFFFF" description="counter on debug block input line 04"/>
+            <node id="debug_blk_counter05"                address="0x0C2" mask="0xFFFFFFFF" description="counter on debug block input line 05"/>
+            <node id="debug_blk_counter06"                address="0x0C3" mask="0xFFFFFFFF" description="counter on debug block input line 06"/>
+            <node id="debug_blk_counter07"                address="0x0C4" mask="0xFFFFFFFF" description="counter on debug block input line 07"/>
+            <node id="debug_blk_counter08"                address="0x0C5" mask="0xFFFFFFFF" description="counter on debug block input line 08"/>
+            <node id="debug_blk_counter09"                address="0x0C6" mask="0xFFFFFFFF" description="counter on debug block input line 09"/>
+            <node id="debug_blk_counter10"                address="0x0C7" mask="0xFFFFFFFF" description="counter on debug block input line 10"/>
+            <node id="debug_blk_counter11"                address="0x0C8" mask="0xFFFFFFFF" description="counter on debug block input line 11"/>
+            <node id="debug_blk_counter12"                address="0x0C9" mask="0xFFFFFFFF" description="counter on debug block input line 12"/>
+            <node id="debug_blk_counter13"                address="0x0CA" mask="0xFFFFFFFF" description="counter on debug block input line 13"/>
+            <node id="debug_blk_counter14"                address="0x0CB" mask="0xFFFFFFFF" description="counter on debug block input line 14"/>
+            <node id="debug_blk_counter15"                address="0x0CC" mask="0xFFFFFFFF" description="counter on debug block input line 15"/>
+            <node id="debug_blk_counter16"                address="0x0CD" mask="0xFFFFFFFF" description="counter on debug block input line 16"/>
+            <node id="debug_blk_counter17"                address="0x0CE" mask="0xFFFFFFFF" description="counter on debug block input line 17"/>
+            <node id="debug_blk_counter18"                address="0x0CF" mask="0xFFFFFFFF" description="counter on debug block input line 18"/>
+            <node id="debug_blk_counter19"                address="0x0D0" mask="0xFFFFFFFF" description="counter on debug block input line 19"/>
+            <node id="debug_blk_counter20"                address="0x0D1" mask="0xFFFFFFFF" description="counter on debug block input line 20"/>
+            <node id="debug_blk_counter21"                address="0x0D2" mask="0xFFFFFFFF" description="counter on debug block input line 21"/>
+            <node id="debug_blk_counter22"                address="0x0D3" mask="0xFFFFFFFF" description="counter on debug block input line 22"/>
+            <node id="debug_blk_counter23"                address="0x0D4" mask="0xFFFFFFFF" description="counter on debug block input line 23"/>
+            <node id="debug_blk_counter24"                address="0x0D5" mask="0xFFFFFFFF" description="counter on debug block input line 24"/>
+            <node id="debug_blk_counter25"                address="0x0D6" mask="0xFFFFFFFF" description="counter on debug block input line 25"/>
+            <node id="debug_blk_counter26"                address="0x0D7" mask="0xFFFFFFFF" description="counter on debug block input line 26"/>
+            <node id="debug_blk_counter27"                address="0x0D8" mask="0xFFFFFFFF" description="counter on debug block input line 27"/>
+            <node id="debug_blk_counter28"                address="0x0D9" mask="0xFFFFFFFF" description="counter on debug block input line 28"/>
+            <node id="debug_blk_counter29"                address="0x0DA" mask="0xFFFFFFFF" description="counter on debug block input line 29"/>
+            <node id="debug_blk_counter30"                address="0x0DB" mask="0xFFFFFFFF" description="counter on debug block input line 30"/>
+            <node id="debug_blk_counter31"                address="0x0DC" mask="0xFFFFFFFF" description="counter on debug block input line 31"/>
         </node>
 
         <node id="be_proc"                      address="0x4000">
