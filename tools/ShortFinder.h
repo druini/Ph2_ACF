@@ -16,6 +16,7 @@
 
 
 const float THRESHOLD_SHORT = 0.1;
+
 typedef std::vector<uint8_t> ChannelList;
 
 
@@ -60,10 +61,11 @@ class ShortFinder : public Tool
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
 
+    float THRESHOLD_IN= 0.0;
 
     bool cWithCBC = true;
     bool cWithSSA = false;
-    uint32_t nchannels = 0;
+    //uint32_t nchannels = 0;
 
 };
 

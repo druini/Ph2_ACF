@@ -107,12 +107,17 @@ void ShortFinder::Initialise ()
 
 
     if(ShortFinder::cWithCBC)    fChannelGroupHandler = new CBCChannelGroupHandler();
-    if(ShortFinder::cWithSSA)    fChannelGroupHandler = new SSAChannelGroupHandler();
+    if(ShortFinder::cWithSSA)
+		{
+		fChannelGroupHandler = new SSAChannelGroupHandler();
+		THRESHOLD_IN=0.01;
+		}
+
+
+
 
 
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
-    if(cWithSSA){nchannels = NSSACHANNELS;}
-    if(cWithCBC){nchannels = NCHANNELS;}
 
     // now read the settings from the map
     auto cSetting = fSettingsMap.find ( "Nevents" );
@@ -263,7 +268,8 @@ void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<NSSACHANNELS>* pGrou
 
                 for( size_t cIndex=0; cIndex < cBitset.size(); cIndex++ )
                 {
-		    LOG (INFO) << BOLDRED <<"SF "<< cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex)<<" "<<fEventsPerPoint<< RESET;
+		    //LOG (INFO) << BOLDRED <<"SF "<< cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex)<<" "<<fEventsPerPoint<< RESET;
+		   // LOG (INFO) << BOLDRED <<" "<< float(abs(cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex) - fEventsPerPoint))/float(fEventsPerPoint)<< RESET;
 
                     //LOG (INFO) << BOLDRED <<"SF "<< cBitset[cIndex]<<" "<< cReadoutChipShorts->getChannelContainer<uint16_t>()->at(cIndex) <<" "<< THRESHOLD_SHORT<<" "<<fEventsPerPoint<< RESET;
                     if (cBitset[cIndex] == 0 && cReadoutChipShorts->getChannelContainer<uint16_t>()->at(cIndex) > THRESHOLD_SHORT*fEventsPerPoint )
@@ -271,7 +277,7 @@ void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<NSSACHANNELS>* pGrou
                         cShortsReadoutChip.push_back(cIndex);
                         LOG (INFO) << BOLDRED << "Possible short in channel " << +cIndex << RESET;
                     }
-                    if( cBitset[cIndex] == 1 && cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex) == fEventsPerPoint )
+                    if( cBitset[cIndex] == 1 && float(abs(cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex) - fEventsPerPoint))/float(fEventsPerPoint)<THRESHOLD_IN )
                     {
                         cInjectionsReadoutChip.push_back(cIndex);
                     }
@@ -299,6 +305,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     // configure test pulse on chip
 
     setSameDacBeBoard(pBoard, "Bias_CALDAC", fTestPulseAmplitude);
+    setSameDacBeBoard(pBoard, "Bias_THDAC", 80);
 
     //uint16_t cDelay = fBeBoardInterface->ReadBoardReg( pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse") - 1;
     //setSameDacBeBoard(pBoard, "L1-Latency_LSB", cDelay);
@@ -315,14 +322,12 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
         //setSameGlobalDac("TestPulseGroup",  cTestGroup);
         // bitset for this group
         auto cBitset = std::bitset<NSSACHANNELS>( static_cast<const ChannelGroup<NSSACHANNELS>*>(cGroup)->getBitset() );
-	const std::vector<Event*>& cEvents = this->GetEvents ( pBoard );
 	for(auto cModule : *pBoard)
         {
                 for (auto cHybrid : *cModule)
                 {
                     for (auto cChip : *cHybrid)
                     {
-			this->fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "Bias_THDAC", 40);
 			this->fReadoutChipInterface->setInjectionSchema(static_cast<ReadoutChip*>(cChip), cGroup);
                     }
                 }
@@ -332,7 +337,10 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
 
         auto& cThisShortsContainer = fShortsContainer.at(pBoard->getIndex());
         auto& cThisHitsContainer = fHitsContainer.at(pBoard->getIndex());
+
+	static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
         this->ReadASEvent( pBoard, 0,fEventsPerPoint );
+	const std::vector<Event*>& cEvents = this->GetEvents ( pBoard );
 
 
         for(auto cModule : *pBoard)
@@ -373,8 +381,8 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
 			unsigned int channelNumber = 0;
                         for ( auto cHit : cHits )
                         {
-			    LOG (INFO) << BOLDBLUE << "cHit "<< cHit << RESET;
-    			    LOG (INFO) << BOLDBLUE << "cBitset[channelNumber] "<<cBitset[channelNumber] << RESET;
+			    //LOG (INFO) << BOLDBLUE << "cHit "<< cHit << RESET;
+    			    //LOG (INFO) << BOLDBLUE << "cBitset[channelNumber] "<<cBitset[channelNumber] << RESET;
                             if (cBitset[channelNumber] == 0)
                                 cReadoutChipShorts->getChannelContainer<uint16_t>()->at(channelNumber)=cHit;
                             else
