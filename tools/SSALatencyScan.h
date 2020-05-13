@@ -13,7 +13,6 @@
 #define SSALATENCYSCAN_H__
 
 #include "Tool.h"
-#ifdef __USE_ROOT__
 
 #include "../Utils/Visitor.h"
 #include "../Utils/Utilities.h"
@@ -21,12 +20,14 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerRecycleBin.h"
 
+#ifdef __USE_ROOT__
 #include "TString.h"
 #include "TCanvas.h"
 #include "TH1F.h"
 #include "TF1.h"
 #include "TH2F.h"
 #include "TGaxis.h"
+#endif
 
 using namespace Ph2_System;
 
@@ -45,5 +46,4 @@ class SSALatencyScan : public Tool
     void run(void);
 };
 
-#endif
 #endif
