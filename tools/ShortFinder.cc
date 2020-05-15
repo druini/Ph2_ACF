@@ -339,7 +339,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
         auto& cThisHitsContainer = fHitsContainer.at(pBoard->getIndex());
 
 	static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-        this->ReadASEvent( pBoard, 0,fEventsPerPoint );
+        this->ReadASEvent( pBoard, 0,fEventsPerPoint, false , false);
 	const std::vector<Event*>& cEvents = this->GetEvents ( pBoard );
 
 

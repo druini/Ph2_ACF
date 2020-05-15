@@ -211,7 +211,7 @@ std::vector<uint32_t> D19cSSAEvent::GetHits(uint8_t pFeId, uint8_t pSSAId) const
 	CA.at(7) = (lvec.at(5) & 0xFF000000) >> 24;
 	for (auto ca : CA)
 	{
-		LOG(INFO) << BOLDBLUE <<ca<< RESET;
+		//LOG(INFO) << BOLDBLUE <<ca<< RESET;
 
 		if (ca != 0)
 		{

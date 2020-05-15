@@ -87,6 +87,7 @@ void Tool::Inherit (const Tool* pTool)
 		fResultFile                  = pTool->fResultFile;
 	#endif
 	fType                        = pTool->fType;
+	fDirectoryName                   = pTool->fDirectoryName;
 	#ifdef __USE_ROOT__
 		fCanvasMap                   = pTool->fCanvasMap;
 		fChipHistMap                 = pTool->fChipHistMap;

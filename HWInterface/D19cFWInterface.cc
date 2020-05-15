@@ -2341,12 +2341,11 @@ void D19cFWInterface::InitFMCPower()
 
     void D19cFWInterface::ReadASEvent (BeBoard* pBoard, std::vector<uint32_t>& pData )
     {
-	uint32_t ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-	std::cout<<"ps_counters_ready "<<ps_counters_ready<<std::endl;
+
 
  	uint32_t raw_mode_en=0;
  	WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", raw_mode_en);
-
+	uint32_t ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
 	//ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
 	//std::cout<<"ps_counters_ready "<<ps_counters_ready<<std::endl;
 
@@ -2354,15 +2353,22 @@ void D19cFWInterface::InitFMCPower()
  	std::chrono::milliseconds cWait( 10 );
 
 	uint32_t  chans = 0;
-	if (fFirmwareFrontEndType == FrontEndType::SSA) chans = NSSACHANNELS;
-	if (fFirmwareFrontEndType == FrontEndType::MPA) chans = NMPACHANNELS;
+
+	for(auto cOpticalGroup : *pBoard)
+	{
+		for(auto cHybrid : *cOpticalGroup)
+		{
+			if (fFirmwareFrontEndType == FrontEndType::SSA) chans += NSSACHANNELS*cHybrid->size();
+			if (fFirmwareFrontEndType == FrontEndType::MPA) chans += NMPACHANNELS*cHybrid->size();
+		}
+	}
 
  	std::vector<uint32_t> count(chans, 0);
 
 
 	std::vector< std::pair<std::string, uint32_t> > cVecReg;
-	cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_reset", 1});
-	cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_orbit_reset", 1});
+	//cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_reset", 1});
+	//cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_orbit_reset", 1});
 	this->WriteStackReg ( cVecReg );
 
 
@@ -2377,9 +2383,9 @@ void D19cFWInterface::InitFMCPower()
 
  	while ((ps_counters_ready == 0) & (timeout < 50))
 	            {
+
 	                std::this_thread::sleep_for( cWait );
 	                ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-			std::cout<<"ps_counters_ready "<<timeout<<","<<ps_counters_ready<<std::endl;
 
 	                timeout += 1;
 	            }
@@ -2418,13 +2424,21 @@ void D19cFWInterface::InitFMCPower()
 	                }
 	            }
  	else    {
-			pData = ReadBlockRegValue("fc7_daq_ctrl.physical_interface_block.fifo2_data",chans);
-			//for(auto pp : pData) LOG (INFO) << BOLDBLUE <<"pp - "<<pp << RESET;
+		//for (uint i=0; i<chans;i++)
+		//	{
+		//	pData.push_back(ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data"));
+		//	std::chrono::milliseconds cWait( 10 );
+
+		//	}
+		pData = ReadBlockRegValue("fc7_daq_ctrl.physical_interface_block.fifo2_data",chans);
+		//pData = ReadBlockRegValue ("fc7_daq_ctrl.calibration_2s_block.counter_fifo", chans);
+
 	        }
 
 
  	std::this_thread::sleep_for( cWait );
  	ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+
         if (fSaveToFile)fFileHandler->setData(pData);
 
     }
@@ -3794,12 +3808,14 @@ void D19cFWInterface::InitFMCPower()
     }
 
 	//some overlap for now...
-    void D19cFWInterface::Send_pulses()
+    void D19cFWInterface::Send_pulses(uint32_t pNtriggers)
     {
-	//PS_Open_shutter();
-	usleep(1);
+	this->WriteReg ("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNtriggers);
+	this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
 
-        WriteReg ("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+	usleep(10);
+
+        this->WriteReg ("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
 	uint32_t nsleeps=0;
 	uint32_t maxsleeps=1000;
         while (ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") and (nsleeps<maxsleeps))
@@ -3812,18 +3828,12 @@ void D19cFWInterface::InitFMCPower()
 			LOG(INFO) << "Cal pulses timeout";
 			PS_Clear_counters();
 			this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
-	        	std::this_thread::sleep_for (std::chrono::microseconds (10) );
+	        	usleep(10);
 	        	this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
-	        	std::this_thread::sleep_for (std::chrono::microseconds (10) );
-			usleep(10);
-			Send_pulses();
+	        	usleep(10);
+			Send_pulses(pNtriggers);
 		}
-	usleep(1);
 	WriteReg ("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-
-
-	//PS_Close_shutter();
-
     }
 
 

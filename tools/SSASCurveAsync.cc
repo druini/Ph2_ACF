@@ -64,7 +64,10 @@ void SSASCurve::run(void)
 
 
 	this->enableTestPulse( true );
-	static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM( NMpulse, 10000, 6, 0, 0);
+	setFWTestPulse();
+
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM( NMpulse, 10000, 6, 0, 0);
+	static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(50,200,1000,0,1,1);
 
 
 	float wroffset=0.0;
@@ -100,7 +103,7 @@ void SSASCurve::run(void)
 	        }   */
 		bool runpulse=false;
 		if (NMpulse>0) runpulse=true;
-		if (runpulse)setSameDacBeBoard(theBeBoard, "Bias_CALDAC", TestPulsePotentiometer);
+		if (runpulse) setSameDacBeBoard(theBeBoard, "Bias_CALDAC", TestPulsePotentiometer);
         	for (size_t thd = StartTHDAC; thd<=StopTHDAC; thd++)
         	{
             		Nstrip=0.0;
@@ -117,6 +120,8 @@ void SSASCurve::run(void)
 		                        {
 						ReadoutChip *theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard ->getIndex())->at(cOpticalGroup ->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 		                            	this->fReadoutChipInterface->WriteChipReg(theChip, "Bias_THDAC", thd);
+		                            	//this->fReadoutChipInterface->WriteChipReg(theChip,"AsyncRead_StartDel_LSB", (11+1), false );
+
 						unsigned int channelNumber = 0;
 
 						//for(uint32_t ich=0;ich<120;ich++)
@@ -132,12 +137,12 @@ void SSASCurve::run(void)
 
 			static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
 
-		        //setFWTestPulse();
 
 
 
 			if (SyncDebug) ReadNEvents( theBeBoard, NMpulse );
-			else ReadASEvent( theBeBoard, NMsec,runpulse );
+			else ReadASEvent( theBeBoard, NMsec,NMpulse,false,false );
+
 			const std::vector<Event*> &eventVector = GetEvents ( theBeBoard );
 			//LOG (INFO) << BOLDRED << "Nev "<<eventVector.size()<<" "<<runpulse<< RESET;
 
@@ -147,7 +152,9 @@ void SSASCurve::run(void)
 				{
 					for(auto cSSA: *hybrid) // for on chip - begin
 					{
-						std::vector<uint32_t> hits= eventVector.at(0)->GetHits(hybrid->getId(), cSSA->getId());
+						std::vector<uint32_t> hits;
+
+						if (!SyncDebug) hits= eventVector.at(0)->GetHits(hybrid->getId(), cSSA->getId());
 
 
 						unsigned int channelNumber = 0;
@@ -161,15 +168,12 @@ void SSASCurve::run(void)
 								for(auto cev: eventVector)
 								{
 									curh+=cev->DataBit ( hybrid->getId(), cSSA->getId(), channelNumber);
+									//LOG (INFO) << BOLDRED << curh<< RESET;
 								}
 							}
 							else curh=hits[channelNumber];
-							LOG (INFO) << BOLDRED << "thd "<<thd<<" , "<<" channel "<<" , "<<curh<< RESET;
+							//LOG (INFO) << BOLDRED << "thd "<<thd<<" , "<<" channel "<<channelNumber<<" , "<<curh<< RESET;
 
-							Nstrip+=1.0;
-							curh=hits[channelNumber];
-							LOG (INFO) << BOLDRED << "thd "<<thd<<" , "<<" channel "<<" , "<<curh<< RESET;
-							//if ( channelNumber==1)
 
 		                            		if ((channel.first[1]>Nlvl) && (curh<channel.first[1]/2) && (channel.first[0]>channel.first[1]/2))
 		                                	{
@@ -255,7 +259,7 @@ void SSASCurve::run(void)
 						THtowrite=std::min(THtowrite,uint32_t(31));
 	                            		THtowrite=std::max(THtowrite,uint32_t(0));
 	                            		writeave+=THtowrite;
-						if (THtowrite==0 || THtowrite==31) LOG (INFO) << BOLDRED <<"Warning, thdac at limit "<<istrip<<","<<THtowrite<< RESET;
+						if (THtowrite==0 || THtowrite==31) LOG (INFO) << BOLDRED <<"Warning, thdac at limit. Chip "<<theChip->getId()<<",Strip "<<istrip<<",TH "<<THtowrite<< RESET;
 	                            		if (THtowrite==0) Nunt+=1.0;
 	                            		if (THtowrite==31) Nunt-=1.0;
 
