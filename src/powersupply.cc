@@ -30,11 +30,27 @@ int main ( int argc, char** argv )
     // options
     cmd.setHelpOption ( "h", "help", "Print this help page" );
 
-    cmd.defineOption ( "file", "Hw Description File . Default value: settings/HWDescription_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
+    cmd.defineOption ( "name", "Name of the power supply as described in the HW file", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
+    cmd.defineOptionAlternative ( "name", "n" );
+
+    cmd.defineOption ( "voltage", "Voltage to be set", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
+    cmd.defineOptionAlternative ( "voltage", "v" );
+
+    cmd.defineOption ( "i_max", "Maximum current setting", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
+    cmd.defineOptionAlternative ( "i_max", "i_max" );
+
+    cmd.defineOption ( "v_max", "Maximum voltage setting", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
+    cmd.defineOptionAlternative ( "v_max", "v_max" );
+
+    cmd.defineOption ( "off", "Turn off power supply" );
+    cmd.defineOptionAlternative ( "off", "o" );
+
+    //cmd.defineOption ( "GUI", "Named pipe for GUI communication", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
+    //cmd.defineOptionAlternative ( "GUI", "g" );
+
+    cmd.defineOption ( "file", "Hw Description File . Default value: settings/D19CDescription_Cic2.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
     cmd.defineOptionAlternative ( "file", "f" );
 
-    cmd.defineOption ( "configure", "Configure HW", ArgvParser::NoOptionAttribute );
-    cmd.defineOptionAlternative ( "configure", "c" );
 
     int result = cmd.parse ( argc, argv );
 
@@ -45,25 +61,12 @@ int main ( int argc, char** argv )
     }
 
     // now query the parsing results
-    std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/HWDescription_2CBC.xml";
-    bool cConfigure = ( cmd.foundOption ( "configure" ) ) ? true : false;
-
-    std::stringstream outp;
-    SystemController cSystemController;
-    cSystemController.InitializeHw ( cHWFile, outp );
-    cSystemController.InitializeSettings ( cHWFile, outp );
-
-    LOG (INFO) << outp.str();
-    outp.str ("");
-
-    if ( cConfigure )
-    {
-        cSystemController.ConfigureHw ();
-    }
-
-    LOG (INFO) << "*** End of the System test ***" ;
-    cSystemController.Destroy();
-  //  #define __POWERSUPPLY__
+    std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/D19CDescription_Cic2.xml";
+    std::string cPowerSupply = ( cmd.foundOption ( "name" ) ) ? cmd.optionValue ( "name" ) : "";
+    double cVoltsLimit = ( cmd.foundOption ( "v_max") ) ? std::stod ( cmd.optionValue ( "v_max" ).c_str() ) :  10.5;
+    double cAmpsLimit = ( cmd.foundOption ( "i_max") ) ? std::stod ( cmd.optionValue ( "i_max" ).c_str() ) :  1.3;
+    double cVolts = ( cmd.foundOption ( "v") ) ? std::stod ( cmd.optionValue ( "v" ).c_str() ) :  0;
+    bool cTurnOff = cmd.foundOption ( "o" );
 
   #ifdef __POWERSUPPLY__
     std::string docPath = cHWFile;
@@ -86,29 +89,43 @@ int main ( int argc, char** argv )
         std::cout << it->first << std::endl;
       }
     }
-    if ( ps_map["my_HMP"]->isOpen())
+
+    if ( ps_map[cPowerSupply]->isOpen())
     {
-      ps_map["my_HMP"]->reset();
-      ps_map["my_HMP"]->selectChannel("4");
-      ps_map["my_HMP"]->setAmpsLimit(0.005);
-      ps_map["my_HMP"]->setVoltsLimit(10.5);
-      ps_map["my_HMP"]->enableChannelOutput();
-      ps_map["my_HMP"]->turnOn();
-      for (double v = 0; v<=10; v = v+1.0)
+      if ( cTurnOff )
       {
-        ps_map["my_HMP"]->setVolts(v);
-        sleep(1);
-        LOG (INFO) << "V(set): " << ps_map["my_HMP"]->getVolts() <<"\tV(meas): "<< ps_map["my_HMP"]->measureVolts()
-                   << "\tI_max(set): " << ps_map["my_HMP"]->getAmps() << "\tI(meas): " << ps_map["my_HMP"]->measureAmps()
-                   << "\tV tripped?: " << ps_map["my_HMP"]->isVoltTripped() << "\tI tripped?: " << ps_map["my_HMP"]->isCurrentTripped();
+        LOG (INFO) <<"Turn off " << cPowerSupply  ;
+        ps_map[cPowerSupply]->turnOff();
       }
-      ps_map["my_HMP"]->turnOff();
+      else
+      {
+        if ( cmd.foundOption ( "v_max" ) )
+        {
+          ps_map[cPowerSupply]->setVoltsLimit(cVoltsLimit);
+        }
+        if ( cmd.foundOption ( "i_max" ) )
+        {
+          ps_map[cPowerSupply]->setAmpsLimit(cAmpsLimit);
+        }
+        if ( cmd.foundOption ( "v" ) )
+        {
+          ps_map[cPowerSupply]->setVolts(cVolts);
+          ps_map[cPowerSupply]->turnOn();
+        }
+      }
       sleep(1);
-      LOG (INFO) << "voltslimit"<<      ps_map["my_HMP"]->getVoltsLimit();
-      LOG (INFO) << "V(set): " << ps_map["my_HMP"]->getVolts() <<"\tV(meas): "<< ps_map["my_HMP"]->measureVolts()
-                 << "\tI_max(set): " << ps_map["my_HMP"]->getAmps() << "\tI(meas): " << ps_map["my_HMP"]->measureAmps()
-                 << "\tV tripped?: " << ps_map["my_HMP"]->isVoltTripped() << "\tI tripped?: " << ps_map["my_HMP"]->isCurrentTripped();
+      LOG (INFO) << BOLDWHITE << cPowerSupply <<" status:" RESET ;
+      LOG (INFO) << "\tV(set):\t\t"   << BOLDWHITE << ps_map[cPowerSupply]->getVolts()     << RESET;
+      LOG (INFO) << "\tV(meas):\t"    << BOLDWHITE << ps_map[cPowerSupply]->measureVolts() << RESET;
+      LOG (INFO) << "\tI_max(set):\t" << BOLDWHITE << ps_map[cPowerSupply]->getAmps()      << RESET;
+      LOG (INFO) << "\tI(meas):\t"    << BOLDWHITE << ps_map[cPowerSupply]->measureAmps()  << RESET;
     }
+    else
+    {
+      LOG (INFO) << cPowerSupply <<" not found!" ;
+    }
+
+
 
   #endif
 
