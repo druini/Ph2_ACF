@@ -59,6 +59,8 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute );
     cmd.defineOptionAlternative ( "batch", "b" );
 
+    cmd.defineOption("capture", "Capture communication with board (extension .raw).", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("replay", "Replay previously captured communication (extension .raw).", ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse ( argc, argv );
 
@@ -78,6 +80,8 @@ int main ( int argc, char* argv[] )
     bool cAllChan = ( cmd.foundOption ( "allChan" ) ) ? true : false;
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
     bool cNoiseScan = ( cmd.foundOption ("noise") ) ? true : false;
+    if      (cmd.foundOption("capture") == true) RegManager::enableCapture(cmd.optionValue("capture").insert(0,"./"));
+    else if (cmd.foundOption("replay") == true)  RegManager::enableReplay(cmd.optionValue("replay"));
 
     TApplication cApp ( "Root Application", &argc, argv );
 
