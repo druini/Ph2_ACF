@@ -44,8 +44,8 @@ bool PhysicsHistograms::fill (std::vector<char>& dataBuffer)
   const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   ChannelContainerStream<OccupancyAndPh>                          theOccStreamer  ("PhysicsOcc");
-  ChipContainerStream<EmptyContainer,GenericDataArray<BCIDsize>>  theBCIDStreamer ("PhysicsBCID"); // @TMP@
-  ChipContainerStream<EmptyContainer,GenericDataArray<TrgIDsize>> theTrgIDStreamer("PhysicsTrgID"); // @TMP@
+  ChipContainerStream<EmptyContainer,GenericDataArray<BCIDsize>>  theBCIDStreamer ("PhysicsBCID");
+  ChipContainerStream<EmptyContainer,GenericDataArray<TrgIDsize>> theTrgIDStreamer("PhysicsTrgID");
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {

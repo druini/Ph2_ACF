@@ -1,25 +1,22 @@
 /*!
-
         \file                           OpticalGroup.h
         \brief                          OpticalGroup Description class
         \author                         Fabio Ravera
         \version                        1.0
         \date                           02/04/20
         Support :                       mail to : fabio.ravera@cern.ch
-
  */
 
-#ifndef OpticalGroup_h__
-#define OpticalGroup_h__
+#ifndef OpticalGroup_H
+#define OpticalGroup_H
 
 #include "FrontEndDescription.h"
-// #include "RD53.h"
+#include "lpGBT.h"
 #include "Module.h"
 #include "../Utils/Visitor.h"
-#include <vector>
 #include "../Utils/Container.h"
 
-// FE Hybrid HW Description Class
+#include <vector>
 
 
 /*!
@@ -47,6 +44,7 @@ namespace Ph2_HwDescription {
         // D'tor
         ~OpticalGroup()
         {
+          delete flpGBT;
         };
 
         /*!
@@ -70,6 +68,13 @@ namespace Ph2_HwDescription {
         {
             fOpticalGroupId = pOpticalGroupId;
         };
+
+        void addlpGBT(lpGBT* plpGBT)
+        {
+          flpGBT = plpGBT;
+        }
+
+        lpGBT* flpGBT = nullptr;
 
       protected:
         uint8_t fOpticalGroupId;

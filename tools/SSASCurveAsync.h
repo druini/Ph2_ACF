@@ -46,8 +46,15 @@ class SSASCurve : public Tool
   size_t StartTHDAC        = this->findValueInSettings("StartTHDAC");
   size_t StopTHDAC        = this->findValueInSettings("StopTHDAC");
   size_t NMsec        = this->findValueInSettings("NMsec");
+  size_t NMpulse        = this->findValueInSettings("NMpulse");
   size_t Res        = this->findValueInSettings("Res");
   size_t Nlvl        = this->findValueInSettings("Nlvl");
+  bool SyncDebug        = this->findValueInSettings("SyncDebug");
+
+  float Mrms        = this->findValueInSettings("Mrms");
+  float Vfac        = this->findValueInSettings("Vfac");
+  float TestPulsePotentiometer        = this->findValueInSettings("TestPulsePotentiometer");
+
   float globalmax =0 ;
 
   std::vector<uint32_t> localmax=decltype(localmax)(120, 0) ;

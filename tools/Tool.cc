@@ -43,7 +43,7 @@ fChannelGroupHandler        (nullptr)
 #endif
 }
 
-#ifdef __USE_ROOT__    
+#ifdef __USE_ROOT__
 #ifdef __HTTP__
 Tool::Tool (THttpServer* pHttpServer)
 : SystemController            ()
@@ -70,96 +70,45 @@ Tool::Tool (THttpServer* pHttpServer)
 
 Tool::Tool (const Tool& pTool)
 {
-	fDetectorContainer           = pTool.fDetectorContainer;
-	fBeBoardInterface            = pTool.fBeBoardInterface;
-	fChipInterface               = pTool.fChipInterface;
-    fCicInterface                = pTool.fCicInterface;
-    fReadoutChipInterface        = pTool.fReadoutChipInterface;
-	fBeBoardFWMap                = pTool.fBeBoardFWMap;
-	fSettingsMap                 = pTool.fSettingsMap;
-	fFileHandler                 = pTool.fFileHandler;
-
-	fDirectoryName               = pTool.fDirectoryName;             /*< the Directoryname for the Root file with results */
-	#ifdef __USE_ROOT__    
-		fResultFile                  = pTool.fResultFile;                /*< the Name for the Root file with results */
-	#endif
-	fType                        = pTool.fType;
-	#ifdef __USE_ROOT__    
-		fCanvasMap                   = pTool.fCanvasMap;
-		fChipHistMap                 = pTool.fChipHistMap;
-		fModuleHistMap               = pTool.fModuleHistMap;
-		fBeBoardHistMap              = pTool.fBeBoardHistMap;
-	#endif
-	fTestGroupChannelMap         = pTool.fTestGroupChannelMap;
-	fNetworkStreamer             = pTool.fNetworkStreamer;
-	fStreamerEnabled             = pTool.fStreamerEnabled;
-	fSkipMaskedChannels          = pTool.fSkipMaskedChannels;
-	fAllChan                     = pTool.fAllChan;
-	fMaskChannelsFromOtherGroups = pTool.fMaskChannelsFromOtherGroups;
-	fTestPulse                   = pTool.fTestPulse;
-	fDoModuleBroadcast           = pTool.fDoModuleBroadcast;
-	fDoBoardBroadcast            = pTool.fDoBoardBroadcast;
-	//fChannelGroupHandler         = pTool.fChannelGroupHandler;
-
-	#ifdef __HTTP__
-		fHttpServer          = pTool.fHttpServer;
-	#endif
+	this->Inherit (&pTool);
 }
 
 Tool::~Tool()
 {
 }
 
-void Tool::Inherit (Tool* pTool)
+void Tool::Inherit (const Tool* pTool)
 {
 	//WE SHOULD ONLY KEEP IN HERE ONLY THINGS THAT ARE NOT CALIBRATION SPECIFIC
-	fDetectorContainer           = pTool->fDetectorContainer;//IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
-	fBeBoardInterface            = pTool->fBeBoardInterface;
-	fChipInterface               = pTool->fChipInterface;
-	fCicInterface                = pTool->fCicInterface;
-	fReadoutChipInterface        = pTool->fReadoutChipInterface;
-	fBeBoardFWMap                = pTool->fBeBoardFWMap;
-	fSettingsMap                 = pTool->fSettingsMap;
-	fFileHandler                 = pTool->fFileHandler;
-	fDirectoryName               = pTool->fDirectoryName;
-	#ifdef __USE_ROOT__    
+
+	SystemController::Inherit(pTool);
+
+	#ifdef __USE_ROOT__
 		fResultFile                  = pTool->fResultFile;
 	#endif
 	fType                        = pTool->fType;
-	#ifdef __USE_ROOT__    
+	#ifdef __USE_ROOT__
 		fCanvasMap                   = pTool->fCanvasMap;
 		fChipHistMap                 = pTool->fChipHistMap;
 		fModuleHistMap               = pTool->fModuleHistMap;
 		fBeBoardHistMap              = pTool->fBeBoardHistMap;
 	#endif
 	fTestGroupChannelMap         = pTool->fTestGroupChannelMap;
-	fNetworkStreamer             = pTool->fNetworkStreamer;
-	fStreamerEnabled             = pTool->fStreamerEnabled;
 	fSkipMaskedChannels          = pTool->fSkipMaskedChannels;
 	fAllChan                     = pTool->fAllChan;
 	fMaskChannelsFromOtherGroups = pTool->fMaskChannelsFromOtherGroups;
 	fTestPulse                   = pTool->fTestPulse;
 	fDoModuleBroadcast           = pTool->fDoModuleBroadcast;
 	fDoBoardBroadcast            = pTool->fDoBoardBroadcast;
-	//fChannelGroupHandler         = pTool->fChannelGroupHandler;
 
 	#ifdef __HTTP__
 		fHttpServer          = pTool->fHttpServer;
 	#endif
 }
 
-void Tool::Inherit (SystemController* pSystemController)
+void Tool::Inherit (const SystemController* pSystemController)
 {
-	fDetectorContainer    = pSystemController->fDetectorContainer; //IS THIS RIGHT?????? HERE WE ARE COPYING THE OBJECTS!!!!!
-	fBeBoardInterface     = pSystemController->fBeBoardInterface;
-	fReadoutChipInterface = pSystemController->fReadoutChipInterface;
-	fChipInterface        = pSystemController->fChipInterface;
-	fCicInterface         = pSystemController->fCicInterface;
-	fBeBoardFWMap         = pSystemController->fBeBoardFWMap;
-	fSettingsMap          = pSystemController->fSettingsMap;
-	fFileHandler          = pSystemController->fFileHandler;
-	fNetworkStreamer      = pSystemController->fNetworkStreamer;
-	fStreamerEnabled      = pSystemController->fStreamerEnabled;
+	SystemController::Inherit(pSystemController);
 }
 
 void Tool::resetPointers()
@@ -190,7 +139,7 @@ void Tool::Destroy()
 void Tool::SoftDestroy()
 {
 
-	#ifdef __USE_ROOT__    
+	#ifdef __USE_ROOT__
 		if (fResultFile != nullptr)
 		{
 			if (fResultFile->IsOpen() ) fResultFile->Close();
@@ -240,7 +189,7 @@ void Tool::SoftDestroy()
 
 }
 
-#ifdef __USE_ROOT__    
+#ifdef __USE_ROOT__
 
 	void Tool::bookHistogram ( ChipContainer* pChip, std::string pName, TObject* pObject )
 	{
@@ -404,7 +353,7 @@ void Tool::WriteRootFile()
 
 void Tool::SaveResults()
 {
-	#ifdef __USE_ROOT__    
+	#ifdef __USE_ROOT__
 		for ( const auto& cBeBoard : fBeBoardHistMap )
 		{
 			fResultFile->cd();
@@ -617,7 +566,7 @@ void Tool::dumpConfigFiles()
 						chip->saveRegMap ( cFilename.data() );
 					}
 					auto& cCic = static_cast<OuterTrackerModule*>(module)->fCic;
-					if( cCic != NULL ) 
+					if( cCic != NULL )
 					{
 						std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(module->getId()) + ".txt";
 						LOG (INFO) << BOLDBLUE << "Dumping CIC configuration to " << cFilename << RESET;
@@ -678,7 +627,7 @@ void Tool::setSystemTestPulse ( uint8_t pTPAmplitude, uint8_t pTestGroup, bool p
 
 void Tool::enableTestPulse(bool enableTP)
 {
-	fTestPulse = enableTP;          
+	fTestPulse = enableTP;
 
 	for (auto cBoard : *fDetectorContainer)
 	{
@@ -765,7 +714,7 @@ void Tool::AmmendReport (std::string pString )
 }
 
 
-std::pair<float,float> Tool::getStats( std::vector<float> pData ) 
+std::pair<float,float> Tool::getStats( std::vector<float> pData )
 {
     float cMean = std::accumulate( pData.begin(), pData.end(), 0.)/pData.size();
     std::vector<float> cTmp( pData.size(), 0 );
@@ -777,9 +726,9 @@ std::pair< std::vector<float>,std::vector<float>> Tool::getDerivative(std::vecto
 	{
 	std::vector<float> cWeights(pData.size());
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
-    // replace negative entries with 0s 
+    // replace negative entries with 0s
     if(pIgnoreNegative)
-    	std::replace_if(cWeights.begin(), cWeights.end(), [](float i){return std::signbit(i);}, 0); 
+    	std::replace_if(cWeights.begin(), cWeights.end(), [](float i){return std::signbit(i);}, 0);
     cWeights.erase (cWeights.begin(),cWeights.begin()+1);
     pValues.erase (pValues.begin(),pValues.begin()+1);
     return std::make_pair(cWeights, pValues);
@@ -790,13 +739,13 @@ std::pair<float,float> Tool::evalNoise(std::vector<float> pData, std::vector<flo
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
     cWeights.erase (cWeights.begin(),cWeights.begin()+1);
     if(pIgnoreNegative)
-    	std::replace_if(cWeights.begin(), cWeights.end(), [](float i){return std::signbit(i);}, 0); 
+    	std::replace_if(cWeights.begin(), cWeights.end(), [](float i){return std::signbit(i);}, 0);
     float cN = static_cast<float>(cWeights.size() - std::count( cWeights.begin() , cWeights.end() , 0.));
     float cSumOfWeights = std::accumulate( cWeights.begin(), cWeights.end(), 0.);
     //weighted sum of scan values to get pedestal
     pData.erase (pData.begin(),pData.begin()+1);
     std::fill(pData.begin(), pData.end(), 0.);
-    std::transform(cWeights.begin(), cWeights.end(), pValues.begin(), pData.begin() , std::multiplies<float>()); 
+    std::transform(cWeights.begin(), cWeights.end(), pValues.begin(), pData.begin() , std::multiplies<float>());
     float cMean = std::accumulate(pData.begin(), pData.end() , 0.);
     cMean /= cSumOfWeights;
     //weighted sample variance of scan values to get noise
@@ -925,14 +874,16 @@ void Tool::bitWiseScan(const std::string &dacName, uint32_t numberOfEvents, cons
 // bit wise scan per BeBoard
 void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy, int32_t numberOfEventsPerBurst)
 {
-
+	//int minDAC = 0x0;
 	DetectorDataContainer *outputDataContainer = fDetectorDataContainer;
 
 	ReadoutChip *cChip = fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0); //assumption: one BeBoard has only one type of chip;
 
 	bool localDAC = cChip->isDACLocal(dacName);
+	//if(localDAC)	LOG (INFO) << BOLDBLUE << "ISLOCALDAC!!!!!!" <<  RESET;
+
 	uint8_t numberOfBits = cChip->getNumberOfBits(dacName);
-    LOG (INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
+	LOG (INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
 	bool occupanyDirectlyProportionalToDAC;
 
 	DetectorDataContainer *previousStepOccupancyContainer = new DetectorDataContainer();
@@ -944,7 +895,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 	DetectorDataContainer *currentDacList = new DetectorDataContainer();
 
 	uint16_t allZeroRegister = 0;
-	uint16_t allOneRegister = 0xFFFF>>(16-numberOfBits);
+	uint16_t allOneRegister = (0xFFFF>>(16-numberOfBits));
 	if(localDAC)
 	{
 		ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, *previousDacList, allZeroRegister);
@@ -974,17 +925,22 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 
 	occupanyDirectlyProportionalToDAC = currentStepOccupancyContainer->at(boardIndex)->getSummary<Occupancy,Occupancy>().fOccupancy
 			> previousStepOccupancyContainer->at(boardIndex)->getSummary<Occupancy,Occupancy>().fOccupancy;
-			
+
 	if(!occupanyDirectlyProportionalToDAC)
 	{
 		DetectorDataContainer *tmpPointer = previousDacList;
 		previousDacList = currentDacList;
 		currentDacList = tmpPointer;
 	}
+	//LOG (INFO) << BOLDBLUE << "START " << RESET;
 
 	for(int iBit = numberOfBits-1; iBit>=0; --iBit)
 	{
+
+
 		LOG (DEBUG) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
+		//LOG (INFO) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
+
 		for ( auto cOpticalGroup : *(fDetectorContainer->at(boardIndex)))
 		{
             for ( auto cHybrid : *cOpticalGroup )
@@ -1004,10 +960,16 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 					}
 					else
 					{
+
+
 						if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
 								= previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() + (1<<iBit);
 						else currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
 								= previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1<<iBit));
+						//LOG (INFO) << BOLDBLUE << minDAC<<" "<<previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+						//LOG (INFO) << BOLDBLUE << std::max(minDAC,previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1<<iBit))) << RESET;
+
+
 					}
 				}
 			}
@@ -1030,23 +992,30 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 					{
 						for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
 						{
+							//LOG (INFO) << BOLDBLUE << "localocc "<< currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<< RESET;
+
 							if( currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy <= targetOccupancy )
 							{
+
 								previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)
 										= currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel);
 								previousStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy
 										= currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
+
 							}
 						}
 					}
 					else
 					{
+						//LOG (INFO) << BOLDBLUE << "globalocc "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy<< RESET;
+
 						if( currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy <= targetOccupancy )
 						{
 							previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
 									= currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
 							previousStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy
 									= currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy;
+
 						}
 					}
 				}
@@ -1199,7 +1168,7 @@ public:
 			burstNumbers = 1;
 			lastBurstNumberOfEvents = fNumberOfEvents;
 		}
-		else 
+		else
 		{
 			burstNumbers            = fNumberOfEvents/fNumberOfEventsPerBurst;
 			lastBurstNumberOfEvents = fNumberOfEventsPerBurst;
@@ -1340,7 +1309,7 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string &dacNam
 
 // set local dac per BeBoard
 void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string &dacName, DetectorDataContainer &globalDACContainer)
-{   
+{
 	for ( auto cOpticalGroup : *(fDetectorContainer->at(boardIndex)) )
 	{
 		for ( auto cHybrid : *cOpticalGroup )
@@ -1365,20 +1334,20 @@ void Tool::setSameGlobalDac(const std::string &dacName, const uint16_t dacValue)
 //Set same global DAC for all chips in the BeBoard
 void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t dacValue)
 {
-	if (fDoBoardBroadcast == false)
-	{
-        for(auto cOpticalGroup : *pBoard)
-		{
-			for (auto cHybrid : *cOpticalGroup)
-			{
-				if (fDoModuleBroadcast == false)
-				for (auto cChip : *cHybrid)
-					fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
-				else fReadoutChipInterface->WriteModuleBroadcastChipReg(static_cast<Module*>(cHybrid), dacName, dacValue);
-			}
-		}
-	}
-	else fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
+  if (fDoBoardBroadcast == false)
+    {
+      for(auto cOpticalGroup : *pBoard)
+        {
+          for (auto cHybrid : *cOpticalGroup)
+            {
+              if (fDoModuleBroadcast == false)
+                for (auto cChip : *cHybrid)
+                  fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
+              else fReadoutChipInterface->WriteModuleBroadcastChipReg(static_cast<Module*>(cHybrid), dacName, dacValue);
+            }
+        }
+    }
+  else fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
 }
 
 // set same local dac for all BeBoard

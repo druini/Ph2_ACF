@@ -1,12 +1,10 @@
 /*!
-
         \file                                            ChipInterface.h
         \brief                                           User Interface to the Chip, base class for, CBC, MPA, SSA, RD53
         \author                                          Fabio RAVERA
         \version                                         1.0
         \date                        25/02/19
         Support :                    mail to : fabio.ravera@cern.ch
-
  */
 
 #ifndef __CHIPINTERFACE_H__

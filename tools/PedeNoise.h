@@ -75,10 +75,10 @@ class PedeNoise : public Tool
     bool     fDisableStubLogic   { true};
 
     void producePedeNoisePlots();
-    
+
     // for validation
     void setThresholdtoNSigma (BoardContainer* board, uint32_t pNSigma);
-    
+
     //helpers for SCurve measurement
 
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;

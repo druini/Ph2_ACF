@@ -314,6 +314,29 @@ struct ThresholdVisitor : public HwDescriptionVisitor
             else
                 LOG (ERROR) << "Unknown option " << fOption;
         }
+        else if (pCbc.getFrontEndType() == FrontEndType::SSA)
+        {
+
+            if (fOption == 'w')
+            {
+                if (fThreshold > 255) LOG (ERROR) << "Error, Threshold for SSA can only be 10 bit max (255)!"; //h
+                else
+                {
+                    std::vector<std::pair<std::string, uint16_t>> cRegVec;
+                    uint16_t cVCth1 = fThreshold & 0x00FF;
+                    cRegVec.emplace_back ("Bias_THDAC", cVCth1);
+                    fInterface->WriteChipMultReg (&pCbc, cRegVec);
+                }
+            }
+            else if (fOption == 'r')
+            {
+                fInterface->ReadChipReg (&pCbc, "Bias_THDAC");
+                uint16_t cVCth1 = pCbc.getReg ("Bias_THDAC");
+                fThreshold = cVCth1 & 0xFF;
+            }
+            else
+                LOG (ERROR) << "Unknown option " << fOption;
+        }
         else
             LOG (ERROR) << "Not a valid chip type!";
     }

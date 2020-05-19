@@ -52,8 +52,8 @@ bool PixelAliveHistograms::fill (std::vector<char>& dataBuffer)
   const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   ChannelContainerStream<OccupancyAndPh>                          theOccStreamer  ("PixelAliveOcc");
-  ChipContainerStream<EmptyContainer,GenericDataArray<BCIDsize>>  theBCIDStreamer ("PixelAliveBCID"); // @TMP@
-  ChipContainerStream<EmptyContainer,GenericDataArray<TrgIDsize>> theTrgIDStreamer("PixelAliveTrgID"); // @TMP@
+  ChipContainerStream<EmptyContainer,GenericDataArray<BCIDsize>>  theBCIDStreamer ("PixelAliveBCID");
+  ChipContainerStream<EmptyContainer,GenericDataArray<TrgIDsize>> theTrgIDStreamer("PixelAliveTrgID");
 
   if (theOccStreamer.attachBuffer(&dataBuffer))
     {
@@ -140,7 +140,7 @@ void PixelAliveHistograms::fillTrgID (const DetectorDataContainer& DataContainer
 
             for (auto i = 0u; i < TrgIDsize; i++) TriggerIDHist->SetBinContent(i+1, cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
           }
-  }
+}
 
 void PixelAliveHistograms::process ()
 {

@@ -57,10 +57,10 @@ void PixelAlive::ConfigureCalibration ()
     for (const auto cOpticalGroup : *cBoard)
       for (const auto cModule : *cOpticalGroup)
         for (const auto cChip : *cModule)
-        {
-          auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT");
-          this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", inj | (val & maxDelay), true);
-        }
+          {
+            auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT");
+            this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", inj | (val & maxDelay), true);
+          }
 
 
   // #######################
@@ -97,8 +97,8 @@ void PixelAlive::sendData ()
   const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
   auto theOccStream   = prepareChannelContainerStreamer<OccupancyAndPh>                         ("Occ");
-  auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<BCIDsize>> ("BCID"); // @TMP@
-  auto theTrgIDStream = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<TrgIDsize>>("TrgID"); // @TMP@
+  auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<BCIDsize>> ("BCID");
+  auto theTrgIDStream = prepareChipContainerStreamer<EmptyContainer,GenericDataArray<TrgIDsize>>("TrgID");
 
   if (fStreamerEnabled == true)
     {
@@ -201,51 +201,51 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze ()
     for (const auto cOpticalGroup : *cBoard)
       for (const auto cModule : *cOpticalGroup)
         for (const auto cChip : *cModule)
-        {
-          size_t nMaskedPixelsPerCalib = 0;
+          {
+            size_t nMaskedPixelsPerCalib = 0;
 
-          LOG (INFO) << GREEN << "Average occupancy for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW
-                     << theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy << RESET;
+            LOG (INFO) << GREEN << "Average occupancy for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW
+                       << theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().fOccupancy << RESET;
 
-          static_cast<RD53*>(cChip)->copyMaskFromDefault();
+            static_cast<RD53*>(cChip)->copyMaskFromDefault();
 
-          for (auto row = 0u; row < RD53::nRows; row++)
-            for (auto col = 0u; col < RD53::nCols; col++)
-              if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
-                {
-                  float occupancy = theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
-                  static_cast<RD53*>(cChip)->enablePixel(row, col, injType == INJtype::None ? occupancy < thrOccupancy : occupancy != 0);
-                  if (((injType == INJtype::None) && (occupancy >= thrOccupancy)) || ((injType != INJtype::None) && (occupancy == 0))) nMaskedPixelsPerCalib++;
-                }
+            for (auto row = 0u; row < RD53::nRows; row++)
+              for (auto col = 0u; col < RD53::nCols; col++)
+                if (static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row,col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row,col))
+                  {
+                    float occupancy = theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row,col).fOccupancy;
+                    static_cast<RD53*>(cChip)->enablePixel(row, col, injType == INJtype::None ? occupancy < thrOccupancy : occupancy != 0);
+                    if (((injType == INJtype::None) && (occupancy >= thrOccupancy)) || ((injType != INJtype::None) && (occupancy == 0))) nMaskedPixelsPerCalib++;
+                  }
 
-          LOG (INFO) << BOLDBLUE << "\t--> Number of potentially masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
-          LOG (INFO) << BOLDBLUE << "\t--> Total number of potentially masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+            LOG (INFO) << BOLDBLUE << "\t--> Number of potentially masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
+            LOG (INFO) << BOLDBLUE << "\t--> Total number of potentially masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
 
 
-          // ######################################
-          // # Copy register values for streaming #
-          // ######################################
-          for (auto i = 0u; i < BCIDsize; i++)  theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i]   = 0;
-          for (auto i = 0u; i < TrgIDsize; i++) theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
+            // ######################################
+            // # Copy register values for streaming #
+            // ######################################
+            for (auto i = 0u; i < BCIDsize; i++)  theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i]   = 0;
+            for (auto i = 0u; i < TrgIDsize; i++) theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
 
-          for (auto i = 1u; i < theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1.size(); i++)
-            {
-              int deltaBCID = theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] -
-                theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
-              deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
-              if (deltaBCID >= int(BCIDsize)) LOG (ERROR) << BOLDBLUE <<"[PixelAlive::analyze] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
-              else theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
-            }
+            for (auto i = 1u; i < theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1.size(); i++)
+              {
+                int deltaBCID = theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i] -
+                  theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data1[i-1];
+                deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
+                if (deltaBCID >= int(BCIDsize)) LOG (ERROR) << BOLDBLUE <<"[PixelAlive::analyze] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
+                else theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[deltaBCID]++;
+              }
 
-          for (auto i = 1u; i < theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2.size(); i++)
-            {
-              int deltaTrgID = theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -
-                theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
-              deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
-              if (deltaTrgID >= int(TrgIDsize)) LOG (ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
-              else theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
-            }
-        }
+            for (auto i = 1u; i < theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2.size(); i++)
+              {
+                int deltaTrgID = theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i] -
+                  theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataVector,OccupancyAndPh>().data2[i-1];
+                deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
+                if (deltaTrgID >= int(TrgIDsize)) LOG (ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
+                else theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[deltaTrgID]++;
+              }
+          }
 
   return theOccContainer;
 }
@@ -267,16 +267,16 @@ void PixelAlive::chipErrorReport ()
     for (const auto cOpticalGroup : *cBoard)
       for (const auto cModule : *cOpticalGroup)
         for (const auto cChip : *cModule)
-        {
-          LOG (INFO) << GREEN << "Readout chip error report for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
-          LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")          << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "SKIPPED_TRIGGER_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BCID_CNT")            << std::setfill(' ') << std::setw(8) << "" << RESET;
-          LOG (INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")            << std::setfill(' ') << std::setw(8) << "" << RESET;
-        }
+          {
+            LOG (INFO) << GREEN << "Readout chip error report for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+            LOG (INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "LOCKLOSS_CNT")        << std::setfill(' ') << std::setw(8) << "" << RESET;
+            LOG (INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
+            LOG (INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT")     << std::setfill(' ') << std::setw(8) << "" << RESET;
+            LOG (INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "CMDERR_CNT")          << std::setfill(' ') << std::setw(8) << "" << RESET;
+            LOG (INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "SKIPPED_TRIGGER_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+            LOG (INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "BCID_CNT")            << std::setfill(' ') << std::setw(8) << "" << RESET;
+            LOG (INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg (static_cast<RD53*>(cChip), "TRIG_CNT")            << std::setfill(' ') << std::setw(8) << "" << RESET;
+          }
 }
 
 void PixelAlive::saveChipRegisters (int currentRun)
@@ -287,11 +287,11 @@ void PixelAlive::saveChipRegisters (int currentRun)
     for (const auto cOpticalGroup : *cBoard)
       for (const auto cModule : *cOpticalGroup)
         for (const auto cChip : *cModule)
-        {
-          if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-          static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-          std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
-          system(command.c_str());
-          LOG (INFO) << BOLDBLUE << "\t--> PixelAlive saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-        }
+          {
+            if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+            static_cast<RD53*>(cChip)->saveRegMap(fileReg);
+            std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+            system(command.c_str());
+            LOG (INFO) << BOLDBLUE << "\t--> PixelAlive saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+          }
 }

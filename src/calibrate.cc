@@ -59,6 +59,8 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute );
     cmd.defineOptionAlternative ( "batch", "b" );
 
+    cmd.defineOption("capture", "Capture communication with board (extension .raw).", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("replay", "Replay previously captured communication (extension .raw).", ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse ( argc, argv );
 
@@ -78,6 +80,8 @@ int main ( int argc, char* argv[] )
     bool cAllChan = ( cmd.foundOption ( "allChan" ) ) ? true : false;
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
     bool cNoiseScan = ( cmd.foundOption ("noise") ) ? true : false;
+    if      (cmd.foundOption("capture") == true) RegManager::enableCapture(cmd.optionValue("capture").insert(0,"./"));
+    else if (cmd.foundOption("replay") == true)  RegManager::enableReplay(cmd.optionValue("replay"));
 
     TApplication cApp ( "Root Application", &argc, argv );
 
@@ -98,8 +102,8 @@ int main ( int argc, char* argv[] )
     cTool.CreateResultDirectory ( cDirectory );
     cTool.InitResultFile ( "PedestalEqualizationResults" );
     cTool.StartHttpServer();
-    
-    // align back-end .. if this moves to firmware then we can get rid of this step 
+
+    // align back-end .. if this moves to firmware then we can get rid of this step
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit (&cTool);
     cBackEndAligner.Initialise();
@@ -110,18 +114,23 @@ int main ( int argc, char* argv[] )
         LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
         exit(0);
     }
-    
+
     //cTool.ConfigureHw ();
     //if ( !cOld )
     //{
     t.start();
+
+    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cTool.fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+    bool fDisableStubLogic=true;
+    if (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA) fDisableStubLogic=false;
+
 
     // now create a PedestalEqualization object
     PedestalEqualization cPedestalEqualization;
     cPedestalEqualization.Inherit (&cTool);
     //second parameter disables stub logic on CBC3
     // cPedestalEqualization.Initialise ( false, true );
-    cPedestalEqualization.Initialise ( cAllChan, true );
+    cPedestalEqualization.Initialise ( cAllChan, fDisableStubLogic );
 
     if ( cVplus ) cPedestalEqualization.FindVplus();
 
@@ -139,13 +148,13 @@ int main ( int argc, char* argv[] )
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit (&cTool);
         //second parameter disables stub logic on CBC3
-        cPedeNoise.Initialise (cAllChan, true); // canvases etc. for fast calibration
+        cPedeNoise.Initialise (cAllChan, fDisableStubLogic); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
         // cPedeNoise.measureNoise(200);
 
         //cPedeNoise.sweepSCurves (225);
         //cPedeNoise.sweepSCurves (205);
-        
+
         cPedeNoise.Validate();
         cPedeNoise.writeObjects( );
         cPedeNoise.dumpConfigFiles();
@@ -162,4 +171,3 @@ int main ( int argc, char* argv[] )
     if ( !batchMode ) cApp.Run();
     return 0;
 }
-

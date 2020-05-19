@@ -226,7 +226,6 @@ namespace Ph2_HwDescription
     std::vector<perColumnPixelData> fPixelsMask;
     std::vector<perColumnPixelData> fPixelsMaskDefault;
     std::string configFileName;
-    CommentMap myCommentMap;
     uint8_t myChipLane;
   };
 }

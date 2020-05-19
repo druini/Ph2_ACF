@@ -123,11 +123,12 @@ int main ( int argc, char* argv[] )
     // cPedestalEqualization.Initialise ( false, true );
     cPedestalEqualization.Initialise ( cAllChan, false );
     if ( cVplus ) cPedestalEqualization.FindVplus();
-
+    std::cout<<"PE"<<std::endl;
     cPedestalEqualization.FindOffsets();
     cPedestalEqualization.writeObjects();
     cPedestalEqualization.dumpConfigFiles();
     cPedestalEqualization.resetPointers();
+    std::cout<<"DPE"<<std::endl;
     t.stop();
     t.show ( "Time to Calibrate the system: " );
     if (cNoiseScan)
@@ -136,16 +137,20 @@ int main ( int argc, char* argv[] )
         //if this is true, I need to create an object of type PedeNoise from the members of PedestalEqualization
         //tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
+        std::cout<<"Inh"<<std::endl;
         cPedeNoise.Inherit (&cTool);
         //second parameter disables stub logic on CBC3
+        std::cout<<"In"<<std::endl;
         cPedeNoise.Initialise (cAllChan, false); // canvases etc. for fast calibration
+        std::cout<<"Mn"<<std::endl;
         cPedeNoise.measureNoise();
         // cPedeNoise.measureNoise(200);
 
         //cPedeNoise.sweepSCurves (225);
         //cPedeNoise.sweepSCurves (205);
-        
-        cPedeNoise.Validate();
+        std::cout<<"Val"<<std::endl;
+        cPedeNoise.Validate(500);
+        std::cout<<"dVal"<<std::endl;
         cPedeNoise.writeObjects( );
         cPedeNoise.dumpConfigFiles();
         cPedeNoise.resetPointers();
