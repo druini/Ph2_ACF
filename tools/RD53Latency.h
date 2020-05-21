@@ -17,12 +17,6 @@
 #endif
 
 
-// #############
-// # CONSTANTS #
-// #############
-#define RESULTDIR "Results" // Directory containing the results
-
-
 // ######################
 // # Latency test suite #
 // ######################

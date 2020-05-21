@@ -19,7 +19,7 @@ std::string RD53Shared::fromInt2Str (int val)
 std::string RD53Shared::composeFileName (const std::string& configFileName, const std::string& fName2Add)
 {
   std::string output = configFileName;
-  output.insert(output.find(NAMESEARCHinPATH),fName2Add);
+  output.insert(output.find(RD53Shared::NAMESEARCHinPATH),fName2Add);
   return output;
 }
 

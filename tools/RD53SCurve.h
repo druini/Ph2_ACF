@@ -24,12 +24,6 @@
 #endif
 
 
-// #############
-// # CONSTANTS #
-// #############
-#define RESULTDIR "Results" // Directory containing the results
-
-
 // #####################
 // # SCurve test suite #
 // #####################

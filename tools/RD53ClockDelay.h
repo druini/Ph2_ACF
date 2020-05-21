@@ -17,12 +17,6 @@
 #endif
 
 
-// #############
-// # CONSTANTS #
-// #############
-#define RESULTDIR "Results" // Directory containing the results
-
-
 // ##########################
 // # Clock delay test suite #
 // ##########################

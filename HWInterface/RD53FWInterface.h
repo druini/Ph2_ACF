@@ -74,11 +74,12 @@ namespace RD53FWEvtEncoder
   const uint16_t GOOD       = 0x0000; // Event status Good
   const uint16_t EVSIZE     = 0x0001; // Event status Invalid event size
   const uint16_t EMPTY      = 0x0002; // Event status Empty event
-  const uint16_t INCOMPLETE = 0x0004; // Event status Incomplete event header
-  const uint16_t L1A        = 0x0008; // Event status L1A counter mismatch
-  const uint16_t FWERR      = 0x0010; // Event status Firmware error
-  const uint16_t FRSIZE     = 0x0020; // Event status Invalid frame size
-  const uint16_t MISSCHIP   = 0x0040; // Event status Chip data are missing
+  const uint16_t NOHEADER   = 0x0004; // Event status No event headear found in data
+  const uint16_t INCOMPLETE = 0x0008; // Event status Incomplete event header
+  const uint16_t L1A        = 0x0010; // Event status L1A counter mismatch
+  const uint16_t FWERR      = 0x0020; // Event status Firmware error
+  const uint16_t FRSIZE     = 0x0040; // Event status Invalid frame size
+  const uint16_t MISSCHIP   = 0x0080; // Event status Chip data are missing
 }
 
 
@@ -151,9 +152,11 @@ namespace Ph2_HwInterface
       static int lane2chipId (const Ph2_HwDescription::BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane);
     };
 
-    static uint16_t DecodeEvents    (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
-    static bool     EvtErrorHandler (uint16_t status);
-    static void     PrintEvents     (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
+    static uint16_t DecodeEventsMultiThreads (std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
+    static void     DecodeEventsWrapper      (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, std::atomic<uint16_t>& evtStatus);
+    static uint16_t DecodeEvents             (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
+    static bool     EvtErrorHandler          (uint16_t status);
+    static void     PrintEvents              (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
 
     enum class TriggerSource : uint32_t
     {
@@ -234,7 +237,8 @@ namespace Ph2_HwInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    void     ResetOpticalLink      (Ph2_HwDescription::Chip* pChip)                                                             override;
+    void     StatusOptoLink        (Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty)                   override;
+    void     ResetOptoLink         (Ph2_HwDescription::Chip* pChip)                                                             override;
     bool     WriteOptoLinkRegister (Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
     uint32_t ReadOptoLinkRegister  (Ph2_HwDescription::Chip* pChip, uint32_t pAddress)                                          override;
 

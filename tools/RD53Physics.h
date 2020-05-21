@@ -18,18 +18,10 @@
 #include "../Utils/RD53Shared.h"
 #include "../HWInterface/RD53FWInterface.h"
 
-#include <thread>
-
 #ifdef __USE_ROOT__
 #include "TApplication.h"
 #include "../DQMUtils/RD53PhysicsHistograms.h"
 #endif
-
-
-// #############
-// # CONSTANTS #
-// #############
-#define RESULTDIR "Results" // Directory containing the results
 
 
 // #######################

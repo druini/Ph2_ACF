@@ -23,12 +23,6 @@
 #endif
 
 
-// #############
-// # CONSTANTS #
-// #############
-#define RESULTDIR "Results" // Directory containing the results
-
-
 // #########################
 // # PixelAlive test suite #
 // #########################
