@@ -94,15 +94,15 @@ bool BackEndAlignment::SSAAlignment(BeBoard* pBoard )
     	{
 	        for (auto cChip : *cHybrid) // for each chip (makes sense)
 	        {
-	        	ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
+	            ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
 	            // configure SLVS drive strength and readout mode
 	            std::vector<std::string> cRegNames{ "SLVS_pad_current" , "ReadoutMode" };
 	            std::vector<uint8_t> cOriginalValues;
-                std::vector<uint8_t> cRegValues{0x7 , 2};
+	            std::vector<uint8_t> cRegValues{0x7 , 2};
 	            for( size_t cIndex = 0 ;cIndex < 2 ; cIndex ++ )
 	            {
 	                //auto cRegItem = static_cast<ChipRegItem>(cReadoutChip->getRegItem ( cRegNames[cIndex] ));
-                    cOriginalValues.push_back( fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegNames[cIndex]) );
+	                cOriginalValues.push_back( fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegNames[cIndex]) );
 	                fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cRegValues[cIndex]);
 	            } // all that did was set our pad current to max and our readout mode to transmit known patterns
 
@@ -116,6 +116,20 @@ bool BackEndAlignment::SSAAlignment(BeBoard* pBoard )
 	                fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cAlignmentPattern);
 	                cTuned = cTuned && static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cHybrid->getId(), cChip->getId() , cLineId , cAlignmentPattern , 8);
 	            }
+
+		    //self.I2C.strip_write("ENFLAGS", 0, 0b01001)
+		    //self.I2C.strip_write("DigCalibPattern_L", 0, 0)
+		    //self.I2C.strip_write("DigCalibPattern_H", 0, 0)
+		    //self.I2C.peri_write( "CalPulse_duration", 15)
+		    //self.I2C.strip_write("ENFLAGS",   7, 0b01001)
+		    //self.I2C.strip_write("ENFLAGS", 120, 0b01001)
+		    //self.I2C.strip_write("DigCalibPattern_L",   7, 0xff)
+		    //self.I2C.strip_write("DigCalibPattern_L", 120, 0xff)
+	            //fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig",7)
+		    //fc7.write("ctrl_phy_phase_tune_again", 1)
+
+
+
 
                 //back to original modes
                 for( size_t cIndex = 0 ;cIndex < 2 ; cIndex ++ )

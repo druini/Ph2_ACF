@@ -50,10 +50,10 @@ int main( int argc, char* argv[] )
 	cTool.ConfigureHw();
 
 	BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit (&cTool);
-    cBackEndAligner.Initialise();
-    cBackEndAligner.Align();
-    cBackEndAligner.resetPointers();
+	cBackEndAligner.Inherit (&cTool);
+	cBackEndAligner.Initialise();
+	cBackEndAligner.Align();
+	cBackEndAligner.resetPointers();
 
 
 	BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
@@ -62,21 +62,18 @@ int main( int argc, char* argv[] )
 	strip_v_thdac_31->SetStats(0);
 	for(auto cSSA: *ChipVec)
 	{
+		LOG(INFO) << BOLDRED << "ROC" << RESET;
+
 		ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
 		cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ReadoutMode", 0x0); // sync mode = 0
+		cTool.fReadoutChipInterface->WriteChipReg(theSSA, "EdgeSel_T1", 0x1); // edge select (Mykyta thinks this has an effect)
 		for (int i = 1; i<=120;i++ ) // loop over all strips
 		{
 			cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 31); // MAXIMIZE THE TRIM
 			cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S" + std::to_string(i), 1); // ENABLE THE STRIP
 		}
 	}
-	// for(auto cSSA: *ChipVec){ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA); cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S100", 0x1);}
-	// for(auto cSSA: *ChipVec){ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA); cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S101", 0x1);}
-	// for(auto cSSA: *ChipVec){ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA); cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S102", 0x1);}
-	// for(auto cSSA: *ChipVec){ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA); cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S103", 0x1);}
-	// for(auto cSSA: *ChipVec){ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA); cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S104", 0x1);}
-	// for(auto cSSA: *ChipVec){ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA); cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S105", 0x1);}
-	for (int thd = 10; thd<=20; thd++)
+    for (int thd = 20; thd<=20; thd++)
 	{
 		for(auto cSSA: *ChipVec)
 		{
@@ -88,11 +85,12 @@ int main( int argc, char* argv[] )
 	const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
 	for ( auto &event : eventVector ) //for on events - begin
     	{
-		LOG(INFO) << BOLDRED << "L1N: " << static_cast<D19cSSAEvent*> (event)->GetL1Number();
-		//LOG(INFO) << BOLDRED << "L1T: " << static_cast<D19cSSAEvent*> (event)->GetTrigID();
-		for(auto module: *pBoard) // for on module - begin
+		LOG(INFO) << BOLDRED << "L1N: " << static_cast<D19cSSAEvent*> (event)->GetL1Number() << RESET;
+		LOG(INFO) << BOLDRED << "L1T: " << static_cast<D19cSSAEvent*> (event)->GetTrigID() << RESET;
+		for(auto opt: *pBoard) // for on module - begin
 		{
-			unsigned int chipn = 0;
+		for(auto module: *opt) // for on module - begin
+		{
 
 		    for(auto chip: *module) // for on chip - begin
 		    {
@@ -101,15 +99,15 @@ int main( int argc, char* argv[] )
 				{
 					//if (event->DataBit ( module->getId(), chip->getId(), channelNumber)) LOG (INFO) << RED << i << ", " << int(chip->getId()) <<  RESET;
 					strip_v_thdac_31->Fill(channelNumber+(120*int(chip->getId())), thd, event->DataBit ( module->getId(), chip->getId(), channelNumber));
-		        	channelNumber++;
-		        } // for on channel - end
+		        		channelNumber++;
+		        	} // for on channel - end
 
-				LOG(INFO) << BOLDRED << "L1C "<<module->getId()<<","<<chip->getId()<<","<<chipn<<" : " << static_cast<D19cSSAEvent*> (event)->GetSSAL1Counter(module->getId(), chip->getId());
+				LOG(INFO) << BOLDRED << "L1C "<<module->getId()<<","<<chip->getId()<< " : " << static_cast<D19cSSAEvent*> (event)->GetSSAL1Counter(module->getId(), chip->getId()) << RESET;
 		        //for (auto S: event->GetHits(module->getId(), chip->getId()))
 				//{
 				//	LOG(INFO) << BOLDRED << "stub: " << float(S)/2. << RESET;
 				//}
-			chipn+=1;
+			}
 		    } // for on chip - end
 		} // for on module - end
 	    } // for on events - end

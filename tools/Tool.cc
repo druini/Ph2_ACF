@@ -80,7 +80,7 @@ Tool::~Tool()
 void Tool::Inherit (const Tool* pTool)
 {
 	//WE SHOULD ONLY KEEP IN HERE ONLY THINGS THAT ARE NOT CALIBRATION SPECIFIC
-	
+
 	SystemController::Inherit(pTool);
 
 	#ifdef __USE_ROOT__
@@ -874,14 +874,16 @@ void Tool::bitWiseScan(const std::string &dacName, uint32_t numberOfEvents, cons
 // bit wise scan per BeBoard
 void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, uint32_t numberOfEvents, const float &targetOccupancy, int32_t numberOfEventsPerBurst)
 {
-
+	//int minDAC = 0x0;
 	DetectorDataContainer *outputDataContainer = fDetectorDataContainer;
 
 	ReadoutChip *cChip = fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0); //assumption: one BeBoard has only one type of chip;
 
 	bool localDAC = cChip->isDACLocal(dacName);
+	//if(localDAC)	LOG (INFO) << BOLDBLUE << "ISLOCALDAC!!!!!!" <<  RESET;
+
 	uint8_t numberOfBits = cChip->getNumberOfBits(dacName);
-    LOG (INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
+	LOG (INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
 	bool occupanyDirectlyProportionalToDAC;
 
 	DetectorDataContainer *previousStepOccupancyContainer = new DetectorDataContainer();
@@ -893,7 +895,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 	DetectorDataContainer *currentDacList = new DetectorDataContainer();
 
 	uint16_t allZeroRegister = 0;
-	uint16_t allOneRegister = 0xFFFF>>(16-numberOfBits);
+	uint16_t allOneRegister = (0xFFFF>>(16-numberOfBits));
 	if(localDAC)
 	{
 		ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, *previousDacList, allZeroRegister);
@@ -930,10 +932,15 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 		previousDacList = currentDacList;
 		currentDacList = tmpPointer;
 	}
+	//LOG (INFO) << BOLDBLUE << "START " << RESET;
 
 	for(int iBit = numberOfBits-1; iBit>=0; --iBit)
 	{
+
+
 		LOG (DEBUG) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
+		//LOG (INFO) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
+
 		for ( auto cOpticalGroup : *(fDetectorContainer->at(boardIndex)))
 		{
             for ( auto cHybrid : *cOpticalGroup )
@@ -953,10 +960,16 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 					}
 					else
 					{
+
+
 						if(occupanyDirectlyProportionalToDAC) currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
 								= previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() + (1<<iBit);
 						else currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
 								= previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1<<iBit));
+						//LOG (INFO) << BOLDBLUE << minDAC<<" "<<previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+						//LOG (INFO) << BOLDBLUE << std::max(minDAC,previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1<<iBit))) << RESET;
+
+
 					}
 				}
 			}
@@ -979,6 +992,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 					{
 						for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
 						{
+							//LOG (INFO) << BOLDBLUE << "localocc "<< currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<< RESET;
 
 							if( currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy <= targetOccupancy )
 							{
@@ -987,17 +1001,21 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 										= currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel);
 								previousStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy
 										= currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
+
 							}
 						}
 					}
 					else
 					{
+						//LOG (INFO) << BOLDBLUE << "globalocc "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy<< RESET;
+
 						if( currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy <= targetOccupancy )
 						{
 							previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
 									= currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
 							previousStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy
 									= currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy;
+
 						}
 					}
 				}

@@ -45,7 +45,7 @@ namespace Ph2_HwInterface { // Begin namespace
 		{
 		    try
 		    {
-		        return  ( fEventDataVector.at(encodeVectorIndex(pFeId,pSSAId,fNSSA)).at( calculateChannelWordPosition(i) ) >> ( calculateChannelBitPosition(i)) ) & 0x1;
+		        return  ( fEventDataVector.at(encodeVectorIndex(pFeId,pSSAId,fNSSA)).at( calculateChannelWordPosition(119-i) ) >> ( calculateChannelBitPosition(119-i)) ) & 0x1;
 		    }
 		    catch (const std::out_of_range& outOfRange) {
 		        LOG (ERROR) << "Word " << +i << " for FE " << +pFeId << " SSA " << +pSSAId << " is not found:" ;

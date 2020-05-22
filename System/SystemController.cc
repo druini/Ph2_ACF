@@ -109,10 +109,10 @@ namespace Ph2_System
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     const BeBoard* theFirstBoard = fDetectorContainer->at(0);
 
+    flpGBTInterface = new lpGBTInterface(fBeBoardFWMap);
+
     if (theFirstBoard->getBoardType() != BoardType::RD53)
       {
-        // flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap);
-
         OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>((theFirstBoard->at(0))->at(0));
         auto cChipType = (static_cast<ReadoutChip*>(theOuterTrackerModule->at(0))->getFrontEndType());
         if (cChipType == FrontEndType::CBC3)
@@ -124,10 +124,7 @@ namespace Ph2_System
         fMPAInterface = new MPAInterface(fBeBoardFWMap);
       }
     else
-      {
-        flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
-        fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
-      }
+      fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
 
     if (fWriteHandlerEnabled == true) this->initializeFileHandler();
   }
@@ -412,16 +409,32 @@ namespace Ph2_System
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
   }
 
-
   void SystemController::ReadASEvent (BeBoard* pBoard, uint32_t pNMsec,bool pulses)
   {
+    /*self.I2C.peri_write('ReadoutMode',0b01)
+      # write to the I2C
+      self.I2C.peri_write("AsyncRead_StartDel_MSB", ((ssa_first_counter_delay >> 8) & 0x01))
+      self.I2C.peri_write("AsyncRead_StartDel_LSB", (ssa_first_counter_delay & 0xff))
+      # check the value
+      if (self.I2C.peri_read("AsyncRead_StartDel_LSB") != ssa_first_counter_delay & 0xff):
+      print "Error! I2C did not work properly"
+      #error(1)
+      # ssa set delay of the counters
+      fwdel = ssa_first_counter_delay + 24 + correction
+      if(fwdel >= 255):
+      print '->  \tThe counters delay value selected is not supposrted by the firmware [> 255]'
+      self.fc7.write("cnfg_phy_slvs_ssa_first_counter_del", fwdel & 0xff)*/
+
+
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
     std::vector<uint32_t> cData;
-	if (pulses) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Send_pulses();
-	else
+    if (pulses) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Send_pulses();
+    else
       {
-		static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(0);
-		std::this_thread::sleep_for (std::chrono::microseconds(pNMsec));
-		static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(0);
+        std::this_thread::sleep_for (std::chrono::microseconds(pNMsec));
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);
       }
     /* static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(0);
        std::this_thread::sleep_for (std::chrono::microseconds(pNMsec));
@@ -431,9 +444,9 @@ namespace Ph2_System
        std::this_thread::sleep_for (std::chrono::microseconds(pNMsec));
        }
        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ChipTestPulse();
-
        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);*/
-	//static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadASEvent(pBoard,pNMsec, cData);
+    // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadASEvent(pBoard, cData);
+
 
     for(auto cOpticalGroup : *pBoard)
       {
@@ -481,12 +494,13 @@ namespace Ph2_System
 
         EventType fEventType = pBoard->getEventType();
         uint32_t fNFe = pBoard->getNFe();
-        uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
-        LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
+        fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
 
         if (fEventType == EventType::SSAAS)
           {
-            uint16_t nSSA = 2;
+            uint16_t nSSA = pData.size()/120;
+            // LOG (INFO) << BOLDBLUE << " fNSSAAS = "  << nSSA << RESET;
+
             fEventList.push_back(new D19cSSAEventAS(pBoard, nSSA, fNFe, pData));
           }
         else if (fEventType != EventType::ZS)
@@ -524,7 +538,10 @@ namespace Ph2_System
                       }
                     else if( pBoard->getFrontEndType() == FrontEndType::SSA )
                       {
-                        size_t nSSA = 2 ;
+                        // std::cout<<pData.size()<<std::endl;
+                        size_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+                        //LOG (INFO) << BOLDBLUE << " fNSSA sync = "  << nSSA << RESET;
+                        //size_t nSSA = 2 ;
                         size_t cNFe = 1;
                         fEventList.push_back(new D19cSSAEvent(pBoard, nSSA, cNFe, cEvent));
                       }

@@ -34,6 +34,7 @@ void PedeNoise::cleanContainerMap()
 
 void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
 {
+
     fDisableStubLogic = pDisableStubLogic;
 
 
@@ -55,7 +56,6 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels"         ,  0);
     fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups",  1);
     fPlotSCurves                 = findValueInSettings("PlotSCurves"                ,  0);
-    fFitSCurves                  = findValueInSettings("FitSCurves"                 ,  0);
     fFitSCurves                  = findValueInSettings("FitSCurves"                 ,  0);
     fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude"    ,  0);
     fEventsPerPoint              = findValueInSettings("Nevents"                    , 10);
@@ -123,6 +123,7 @@ void PedeNoise::reloadStubLogic()
 
 void PedeNoise::sweepSCurves ()
 {
+
     uint16_t cStartValue = 0;
     bool originalAllChannelFlag = this->fAllChan;
 
@@ -139,7 +140,7 @@ void PedeNoise::sweepSCurves ()
         for ( auto cBoard : *fDetectorContainer )
         {
             std::cout<<"Bias_CALDAC "<<fPulseAmplitude<<std::endl;
-            if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", 120);
+            if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", fPulseAmplitude);
             else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
         }
 
@@ -154,6 +155,7 @@ void PedeNoise::sweepSCurves ()
     }
 
     if (fDisableStubLogic) disableStubLogic();
+    //LOG (INFO) << BLUE <<  "SV " <<cStartValue<< RESET ;
 
     measureSCurves (cStartValue );
 
@@ -313,6 +315,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
     float cLimit = 0;
     int cMinBreakCount = 10;
+    if(cWithSSA) pStartValue = 20;
 
     bool     cAllZero        = false;
     bool     cAllOne         = false;
@@ -322,7 +325,13 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
     int      cSign           = 1;
     int      cIncrement      = 0;
     uint16_t cMaxValue       = (1 << 10) - 1;
-    if(cWithSSA)    cMaxValue       = (1 << 6) - 1;
+    if(cWithSSA)
+	{
+	cMaxValue       = (1 << 8) - 1;
+	cMinBreakCount = 10;
+	cLimit = 0.02;
+	}
+
 
     while (! (cAllZero && cAllOne) )
     {
@@ -352,7 +361,6 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         float globalOccupancy = theOccupancyContainer->getSummary<Occupancy,Occupancy>().fOccupancy;
 
         if (globalOccupancy <= (0 + cLimit) ) ++cAllZeroCounter;
-
         if (globalOccupancy >= (1-cLimit)) ++cAllOneCounter;
 
         //it will either find one or the other extreme first and thus these will be mutually exclusive
@@ -377,19 +385,22 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
         if (cSign == 1 && (pStartValue + (cIncrement * cSign) > cMaxValue) )
         {
             cAllOne = true;
-
             cIncrement = 1;
             cSign = -1 * cSign;
         }
 
         if (cSign == -1 && (pStartValue + (cIncrement * cSign) < 0) )
         {
+	    //LOG (INFO) <<pStartValue<<" "<<cIncrement<<" "<<cSign<< RESET;
+
             cAllZero = true;
 
             cIncrement = 1;
             cSign = -1 * cSign;
         }
 
+	if(cWithSSA) cSign = 1.0;
+	//LOG (INFO) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
 
         LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
         cValue = pStartValue + (cIncrement * cSign);

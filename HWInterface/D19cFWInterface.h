@@ -244,7 +244,7 @@ namespace Ph2_HwInterface {
          */
         uint32_t ReadData ( Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true ) override;
 
-        void ReadASEvent (Ph2_HwDescription::BeBoard* pBoard, uint32_t pNMsec, std::vector<uint32_t>& pData);
+        void ReadASEvent (Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
 
        /*!
          * \brief Read data for pNEvents

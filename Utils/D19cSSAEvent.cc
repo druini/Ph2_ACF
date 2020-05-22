@@ -36,6 +36,9 @@ void D19cSSAEvent::fillDataContainer(BoardDataContainer *boardContainer, const C
 }
 void D19cSSAEvent::SetEvent(const BeBoard *pBoard, uint32_t pNSSA, const std::vector<uint32_t> &list)
 {
+	//LOG(INFO) << BOLDBLUE << "NEW"<< RESET;
+	//for (auto L : list) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
+
 	// start reading here for first SSA
 	std::vector<uint32_t> head;
 	head.push_back(list.at(0));
