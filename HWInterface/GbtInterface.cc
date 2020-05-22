@@ -385,7 +385,7 @@ namespace Ph2_HwInterface
         for( uint16_t cRegister = 8 ; cRegister < 16; cRegister++)
         {
             uint32_t cReadBack = icRead(pInterface,  cRegister , 1);
-            icWrite( pInterface, cRegister , (cCoarsePhase << 5) | (cReadBack & 0xE0) );
+            icWrite( pInterface, cRegister , (cCoarsePhase) | (cReadBack & 0xE0) );
         }
         // fine phase 
         for( uint16_t cRegister = 4 ; cRegister < 8; cRegister++)
