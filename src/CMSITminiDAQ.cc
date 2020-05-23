@@ -39,9 +39,8 @@
 // ##################
 // # Default values #
 // ##################
-#define RUNNUMBER     0
-#define SETBATCH      0         // Set batch mode when running supervisor
-#define RESULTDIR     "Results" // Directory containing the results
+#define RUNNUMBER 0
+#define SETBATCH  0 // Set batch mode when running supervisor
 #define FILERUNNUMBER "./RunNumber.txt"
 
 
@@ -152,7 +151,7 @@ int main (int argc, char** argv)
   fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
   if (fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
   fileRunNumberIn.close();
-  system(std::string("mkdir " + std::string(RESULTDIR)).c_str());
+  system(std::string("mkdir " + std::string(RD53Shared::RESULTDIR)).c_str());
 
 
   // ####################
@@ -164,7 +163,7 @@ int main (int argc, char** argv)
   bool program           = cmd.foundOption("prog")   == true ? true : false;
   bool supervisor        = cmd.foundOption("sup")    == true ? true : false;
   bool reset             = cmd.foundOption("reset")  == true ? true : false;
-  if      (cmd.foundOption("capture") == true) RegManager::enableCapture(cmd.optionValue("capture").insert(0,std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
+  if      (cmd.foundOption("capture") == true) RegManager::enableCapture(cmd.optionValue("capture").insert(0,std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
   else if (cmd.foundOption("replay") == true)  RegManager::enableReplay(cmd.optionValue("replay"));
   std::string eudaqRunCtr = cmd.foundOption("eudaqRunCtr") == true ? cmd.optionValue("eudaqRunCtr") : "tcp://localhost:44000";
 
@@ -551,7 +550,7 @@ int main (int argc, char** argv)
       // ###########################
       // # Copy configuration file #
       // ###########################
-      std::string fName2Add (std::string(RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_");
+      std::string fName2Add (std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_");
       std::string output    (RD53Shared::composeFileName(configFile,fName2Add));
       std::string command   ("cp " + configFile + " " + output);
       system(command.c_str());

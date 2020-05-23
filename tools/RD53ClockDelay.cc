@@ -350,7 +350,7 @@ void ClockDelay::saveChipRegisters (int currentRun)
             static_cast<RD53*>(cChip)->copyMaskFromDefault();
             if (doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
             static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-            std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RESULTDIR);
+            std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
             system(command.c_str());
             LOG (INFO) << BOLDBLUE << "\t--> ClockDelay saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
           }
