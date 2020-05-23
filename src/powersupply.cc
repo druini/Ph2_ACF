@@ -16,6 +16,7 @@ INITIALIZE_EASYLOGGINGPP
 
 int main ( int argc, char** argv )
 {
+  #ifdef __POWERSUPPLY__
     //configure the logger
     el::Configurations conf ("settings/logger.conf");
     el::Loggers::reconfigureAllLoggers (conf);
@@ -68,7 +69,6 @@ int main ( int argc, char** argv )
     double cVolts = ( cmd.foundOption ( "v") ) ? std::stod ( cmd.optionValue ( "v" ).c_str() ) :  0;
     bool cTurnOff = cmd.foundOption ( "o" );
 
-  #ifdef __POWERSUPPLY__
     std::string docPath = cHWFile;
     LOG (INFO) << "Init PS with " << docPath;
     pugi::xml_document docSettings;
