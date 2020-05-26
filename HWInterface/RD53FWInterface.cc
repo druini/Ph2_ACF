@@ -260,7 +260,7 @@ namespace Ph2_HwInterface
     if (retry == true) LOG (ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ")" << RESET;
   }
 
-  std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters (Chip* pChip)
+  std::vector<std::pair<uint16_t,uint16_t>> RD53FWInterface::ReadChipRegisters(Chip* pChip)
   {
     std::vector<std::pair<uint16_t,uint16_t>> regReadback;
 
@@ -692,6 +692,12 @@ namespace Ph2_HwInterface
         isGood = false;
       }
 
+    if (status & RD53FWEvtEncoder::NOHEADER)
+      {
+        LOG (ERROR) << BOLDRED << "No event headear found in data " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+      }
+
     if (status & RD53FWEvtEncoder::INCOMPLETE)
       {
         LOG (ERROR) << BOLDRED << "Incomplete event header " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
@@ -812,7 +818,7 @@ namespace Ph2_HwInterface
         // # Error checking #
         // ##################
         decodedEvents.clear();
-        uint16_t status = RD53FWInterface::DecodeEvents(pData, decodedEvents);
+        uint16_t status = RD53FWInterface::DecodeEventsMultiThreads(pData, decodedEvents);
         // RD53FWInterface::PrintEvents(decodedEvents, pData); // @TMP@
         if (RD53FWInterface::EvtErrorHandler(status) == false)
           {
@@ -839,7 +845,83 @@ namespace Ph2_HwInterface
     // #################
     // # Show progress #
     // #################
-    RD53RunProgress::update(pData.size(),true);
+    RD53RunProgress::update(pData.size(), true);
+  }
+
+  uint16_t RD53FWInterface::DecodeEventsMultiThreads (std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
+  {
+    // ######################
+    // # Consistency checks #
+    // ######################
+    if (data.size() == 0) return RD53FWEvtEncoder::EMPTY;
+
+
+    std::atomic<uint16_t> evtStatus;
+    evtStatus.store(RD53FWEvtEncoder::GOOD);
+
+    std::vector<std::vector<RD53FWInterface::Event>> vecEvents      (RD53Shared::NTHREADS);
+    std::vector<std::vector<uint32_t>>               vecData        (RD53Shared::NTHREADS);
+    std::vector<std::thread>                         vecThrDecoders (RD53Shared::NTHREADS);
+
+    std::vector<size_t> event_start;
+    for (auto i = 0u; i < data.size(); i++)
+      if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) event_start.push_back(i);
+    if (event_start.size() == 0) return RD53FWEvtEncoder::NOHEADER;
+    const unsigned int nEvents = ceil(static_cast<double>(event_start.size()) / RD53Shared::NTHREADS);
+
+
+    // #################################
+    // # Unpack event and data vectors #
+    // #################################
+    unsigned int i = 0;
+    for (; i < RD53Shared::NTHREADS-1; i++)
+      {
+        if (nEvents * i >= event_start.size() - 1) break;
+        auto start = event_start[nEvents * i];
+        auto end   = event_start[nEvents * (i+1) < event_start.size() - 1 ? nEvents * (i+1) : event_start.size() - 1];
+        auto first = std::next(data.begin(), start);
+        auto last  = std::next(data.begin(), end);
+        vecData[i].resize(last - first);
+        std::move(first, last, vecData[i].begin());
+
+        vecThrDecoders[i] = std::thread(&RD53FWInterface::DecodeEventsWrapper, std::ref(vecData[i]), std::ref(vecEvents[i]), std::ref(evtStatus));
+      }
+
+    auto start = event_start[nEvents * i < event_start.size() - 1 ? nEvents * i : event_start.size() - 1];
+    auto end   = data.size();
+    auto first = std::next(data.begin(), start);
+    auto last  = std::next(data.begin(), end);
+    vecData[i].resize(last - first);
+    std::move(first, last, vecData[i].begin());
+
+    evtStatus |= RD53FWInterface::DecodeEvents(vecData[i], vecEvents[i]);
+
+    data.erase(data.begin(), data.end());
+
+
+    // ################
+    // # Join threads #
+    // ################
+    for (auto& thr : vecThrDecoders)
+      if (thr.joinable() == true) thr.join();
+
+
+    // ###############################
+    // # Pack event and data vectors #
+    // ###############################
+    for (auto i = 0u; i < RD53Shared::NTHREADS; i++)
+      {
+        std::move(vecEvents[i].begin(), vecEvents[i].end(), std::back_inserter(events));
+        std::move(vecData[i]  .begin(), vecData[i]  .end(), std::back_inserter(data));
+      }
+
+
+    return evtStatus;
+  }
+
+  void RD53FWInterface::DecodeEventsWrapper (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, std::atomic<uint16_t>& evtStatus)
+  {
+    evtStatus |= RD53FWInterface::DecodeEvents(data, events);
   }
 
   uint16_t RD53FWInterface::DecodeEvents (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
@@ -858,6 +940,7 @@ namespace Ph2_HwInterface
 
     for (auto i = 0u; i < data.size(); i++)
       if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) event_start.push_back(i);
+    if (event_start.size() == 0) return RD53FWEvtEncoder::NOHEADER;
 
     events.reserve(events.size() + event_start.size());
 
@@ -944,7 +1027,9 @@ namespace Ph2_HwInterface
         if (hybrid != nullptr)
           {
             auto it = std::find_if(hybrid->begin(), hybrid->end(), [=] (ChipContainer* pChip)
-                                   { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
+                                   {
+                                     return static_cast<RD53*>(pChip)->getChipLane() == chip_lane;
+                                   });
             if (it != hybrid->end()) return (*it)->getId();
           }
       }
@@ -1226,6 +1311,101 @@ namespace Ph2_HwInterface
         {"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   1},
         {"user.ctrl_regs.ext_tlu_reg2.dio5_load_config",   0}
       });
+  }
+
+
+  // ############################
+  // # Read/Write Optical Group #
+  // ############################
+  void RD53FWInterface::StatusOptoLink(Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty)
+  {
+    isReady     = ReadReg("user.stat_regs.lpgbt_1.ic_tx_ready");
+    isFIFOempty = ReadReg("user.stat_regs.lpgbt_1.ic_rx_empty");
+  }
+
+  void RD53FWInterface::ResetOptoLink(Chip* pChip)
+  {
+    WriteStackReg({
+        {"user.ctrl_regs.Optical_link.ic_tx_reset", 0x01},
+        {"user.ctrl_regs.Optical_link.ic_rx_reset", 0x01}
+      });
+
+    usleep(DEEPSLEEP);
+
+    WriteStackReg({
+        {"user.ctrl_regs.Optical_link.ic_tx_reset", 0x00},
+        {"user.ctrl_regs.Optical_link.ic_rx_reset", 0x00}
+      });
+  }
+
+  bool RD53FWInterface::WriteOptoLinkRegister(Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop)
+  {
+    const uint8_t lpGBTAddress = 0x70;
+
+    // Config
+    WriteStackReg({
+        {"user.ctrl_regs.Optical_link_cnfg1.ic_tx_fifo_din",  pData},
+        {"user.ctrl_regs.Optical_link_cnfg1.ic_chip_addr_tx", lpGBTAddress},
+        {"user.ctrl_regs.Optical_link_cnfg2.ic_reg_addr_tx",  pAddress}
+      });
+
+    // Perform operation
+    WriteStackReg({
+        {"user.ctrl_regs.Optical_link.ic_tx_fifo_wr_en", 0x01},
+        {"user.ctrl_regs.Optical_link.ic_tx_fifo_wr_en", 0x00},
+        {"user.ctrl_regs.Optical_link.ic_send_wr_cmd",   0x01},
+        {"user.ctrl_regs.Optical_link.ic_send_wr_cmd",   0x00}
+      });
+
+    if (pVerifLoop == true)
+      {
+        uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(pChip, pAddress);
+        if (cReadBack != pData)
+          {
+            LOG (ERROR) << BOLDRED << "[RD53FWInterface::WriteOpticalLinkRegiser] Register readback failure for " << BOLDYELLOW << std::hex << pAddress << std::dec << RESET;
+            return false;
+          }
+      }
+
+    return true;
+  }
+
+  uint32_t RD53FWInterface::ReadOptoLinkRegister(Chip* pChip, uint32_t pAddress)
+  {
+    const uint8_t lpGBTAddress = 0x70;
+
+    // Config
+    WriteStackReg({
+        {"user.ctrl_regs.Optical_link_cnfg1.ic_chip_addr_tx",            lpGBTAddress},
+        {"user.ctrl_regs.Optical_link_cnfg2.ic_reg_addr_tx",             pAddress},
+        {"user.ctrl_regs.Optical_link_cnfg2.ic_nb_of_words_to_read_tx",  0x01}
+      });
+
+    // Perform operation
+    WriteStackReg({
+        {"user.ctrl_regs.Optical_link_cnfg2.ic_nb_of_words_to_read_tx", 0x01},
+        {"user.ctrl_regs.Optical_link.ic_send_rd_cmd",                  0x01},
+        {"user.ctrl_regs.Optical_link.ic_send_rd_cmd",                  0x00}
+      });
+
+    // Actual readback one word at a time
+    uint32_t chipAddrRx  = ReadReg("user.stat_regs.lpgbt_1.ic_chip_addr_rx"); // Should be the same as lpGBTAddress
+    uint32_t regAddrRx   = ReadReg("user.stat_regs.lpgbt_2.ic_reg_addr_rx");
+    uint32_t nWords2Read = ReadReg("user.stat_regs.lpgbt_2.ic_nb_of_words_rx");
+    WriteStackReg({
+        {"user.ctrl_regs.Optical_link.ic_rx_fifo_rd_en", 0x01},
+        {"user.ctrl_regs.Optical_link.ic_rx_fifo_rd_en", 0x00}});
+    uint32_t cRead         = ReadReg("user.stat_regs.lpgbt_1.ic_rx_fifo_dout");
+    uint32_t isRxFIFOempty = ReadReg("user.stat_regs.lpgbt_1.ic_rx_empty");
+
+    LOG (INFO) << GREEN << std::hex
+               << "Chip address rx      = 0x" << BOLDYELLOW << chipAddrRx << RESET << GREEN
+               << "Reg address rx       = 0x" << BOLDYELLOW << regAddrRx << RESET << GREEN
+               << "Nb of words received = 0x" << BOLDYELLOW << nWords2Read << RESET << GREEN
+               << "FIFO readback data   = 0x" << BOLDYELLOW << cRead << RESET << GREEN
+               << "FIFO empty flag      = 0x" << BOLDYELLOW << isRxFIFOempty << std::dec << RESET;
+
+    return cRead;
   }
 
 

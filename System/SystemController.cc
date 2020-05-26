@@ -109,8 +109,6 @@ namespace Ph2_System
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     const BeBoard* theFirstBoard = fDetectorContainer->at(0);
 
-    flpGBTInterface = new lpGBTInterface(fBeBoardFWMap);
-
     if (theFirstBoard->getBoardType() != BoardType::RD53)
       {
         OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>((theFirstBoard->at(0))->at(0));
@@ -124,7 +122,10 @@ namespace Ph2_System
         fMPAInterface = new MPAInterface(fBeBoardFWMap);
       }
     else
-      fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
+      {
+        flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
+        fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
+      }
 
     if (fWriteHandlerEnabled == true) this->initializeFileHandler();
   }
@@ -133,7 +134,6 @@ namespace Ph2_System
   {
     this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile);
   }
-
 
     void SystemController::ConfigureHw (bool bIgnoreI2c)
     {
@@ -249,7 +249,6 @@ namespace Ph2_System
             }
         }
     }
-
 
 
   void SystemController::initializeFileHandler()
@@ -449,6 +448,7 @@ namespace Ph2_System
 		}
 	}
     }
+
     this->DecodeData(pBoard, cData, 1, fBeBoardInterface->getBoardType(pBoard));
   }
 
@@ -484,6 +484,7 @@ namespace Ph2_System
 
         EventType fEventType = pBoard->getEventType();
         uint32_t fNFe = pBoard->getNFe();
+
         uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
         LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
 	fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
@@ -549,7 +550,9 @@ namespace Ph2_System
                       }
                     else if( pBoard->getFrontEndType() == FrontEndType::SSA )
                       {
+
                         fEventList.push_back(new D19cSSAEvent(pBoard, maxind+1, fNFe, cEvent));
+
                       }
                     cEventIndex++;
                   }

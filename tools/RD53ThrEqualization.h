@@ -20,8 +20,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define TARGETEFF 0.50      // Target efficiency for optimization algorithm
-#define RESULTDIR "Results" // Directory containing the results
+#define TARGETEFF 0.50 // Target efficiency for optimization algorithm
 
 
 // #####################################
