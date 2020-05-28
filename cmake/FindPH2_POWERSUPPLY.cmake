@@ -1,4 +1,4 @@
-file(GLOB_RECURSE PH2_POWERSUPPLY_SOURCE_DIR ${PROJECT_SOURCE_DIR}/../power-supply/include/PowerSupply.h)
+file(GLOB_RECURSE PH2_POWERSUPPLY_SOURCE_DIR ${PROJECT_SOURCE_DIR}/../power_supply/include/PowerSupply.h)
 if(PH2_POWERSUPPLY_SOURCE_DIR)
       set(PH2_POWERSUPPLY_FOUND TRUE)
       #strip to the blank path
