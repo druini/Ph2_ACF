@@ -38,10 +38,46 @@ namespace Ph2_HwInterface {// start namespace
 			#endif
 		     	fBoardFW->EncodeReg (cRegItem.second, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, true);
 		      	bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
-		      	//LOG (INFO) << BOLDBLUE << cRegItem.first << "  <   " << BOLDRED << cSuccess << RESET;
+		      	if( cSuccess )
+			{
+				auto cReadBack = ReadChipReg( pSSA, cRegItem.first );
+				if( cReadBack != cRegItem.second.fValue )
+				{
+					std::size_t found=(cRegItem.first).find("ReadCounter");
+				        if (found==std::string::npos)
+						{
+						LOG (INFO) << BOLDRED << "Read back value from "
+							<< cRegItem.first << BOLDBLUE
+							<< " at I2C address " << std::hex
+							<< pSSA->getRegItem(cRegItem.first).fAddress << std::dec
+							<< " not equal to write value of "
+							<< std::hex << +cRegItem.second.fValue << std::dec << RESET;
+						//return false;
+						}
+				}
+			}
+			//LOG (INFO) << BOLDBLUE << cRegItem.first << "  <   " << BOLDRED << cSuccess << RESET;
 		      	if (not cSuccess) return false;
 		        cVec.clear();
 		}
+		// doesn't seem to work for SSA
+		/*bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
+		if( cSuccess )
+		{
+			for ( auto& cRegItem : cSSARegMap )
+			{
+				auto cReadBack = ReadChipReg( pSSA, cRegItem.first );
+				if( cReadBack != cRegItem.second.fValue )
+					LOG (INFO) << BOLDRED << "Read back value from "
+						<< cRegItem.first << BOLDBLUE
+						<< " at I2C address " << std::hex
+						<< pSSA->getRegItem(cRegItem.first).fAddress << std::dec
+						<< " not equal to write value of "
+						<< std::hex << +cRegItem.second.fValue << std::dec << RESET;
+			}
+		}
+		else return false;
+		*/
 		LOG (INFO) << BOLDGREEN << "Wrote: " << NumReg << RESET;
 		#ifdef COUNT_FLAG
 	        fTransactionCount++;
@@ -76,7 +112,21 @@ namespace Ph2_HwInterface {// start namespace
 
 	//
 	bool SSAInterface::setInjectionSchema (ReadoutChip* pSSA, const ChannelGroupBase *group, bool pVerifLoop)
-	{return true;}
+	{
+
+	        std::bitset<NSSACHANNELS> cBitset = std::bitset<NSSACHANNELS>( static_cast<const ChannelGroup<NSSACHANNELS>*>(group)->getBitset() );
+        	for (uint32_t i = 1; i<=pSSA->getNumberOfChannels();i++ )
+	        {
+
+			uint32_t enwrite=21;
+		        if( cBitset[i-1] == 0) enwrite=5;
+			//std::cout<<cBitset[i]<<" ENFLAGS_S" + std::to_string(i)<<" "<< enwrite<<std::endl;
+			this->WriteChipReg(pSSA, "ENFLAGS_S" + std::to_string(i), enwrite);
+	        }
+		std::chrono::milliseconds cWait( 100 );
+		return true;
+
+	}
 	//
 	bool SSAInterface::maskChannelsGroup (ReadoutChip* pSSA, const ChannelGroupBase *group, bool pVerifLoop)
 	{return true;}

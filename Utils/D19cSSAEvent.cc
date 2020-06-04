@@ -73,6 +73,9 @@ void D19cSSAEvent::SetEvent(const BeBoard *pBoard, uint32_t pNSSA, const std::ve
 
 		// save it
 		fEventDataVector[encodeVectorIndex(cFeId, cSSAId, pNSSA)] = lvec;
+		//LOG(INFO) << BOLDBLUE <<"SETTING "<<encodeVectorIndex(cFeId, cSSAId, pNSSA)<< " " << cFeId<< " " <<cSSAId<< " " <<pNSSA<< RESET;
+
+
 	}
 }
 std::string D19cSSAEvent::HexString() const { return ""; }
@@ -192,7 +195,12 @@ std::vector<uint32_t> D19cSSAEvent::GetHits(uint8_t pFeId, uint8_t pSSAId) const
 {
 	std::vector<uint32_t> CA(8);
 	std::vector<uint32_t> stubs;
+
+	//LOG(INFO) << BOLDBLUE <<"ACCESSING "<<encodeVectorIndex(pFeId, pSSAId, fNSSA)<< " " << uint32_t(pFeId)<< " " <<uint32_t(pSSAId)<< " " <<uint32_t(fNSSA)<< RESET;
+
 	std::vector<uint32_t> lvec = fEventDataVector[encodeVectorIndex(pFeId, pSSAId, fNSSA)];
+	//LOG(INFO) << BOLDBLUE <<"lvec.size() "<<lvec.size()<< RESET;
+
 	CA.at(0) = (lvec.at(4) & 0xFF);
 	CA.at(1) = (lvec.at(4) & 0xFF00) >> 8;
 	CA.at(2) = (lvec.at(4) & 0xFF0000) >> 16;
@@ -203,6 +211,8 @@ std::vector<uint32_t> D19cSSAEvent::GetHits(uint8_t pFeId, uint8_t pSSAId) const
 	CA.at(7) = (lvec.at(5) & 0xFF000000) >> 24;
 	for (auto ca : CA)
 	{
+		//LOG(INFO) << BOLDBLUE <<ca<< RESET;
+
 		if (ca != 0)
 		{
 			stubs.push_back(ca);
