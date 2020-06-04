@@ -231,8 +231,8 @@ namespace Ph2_HwInterface
         }
         // Write gain correction factor (if needed)
         // TODO: we have to move it out from here in order not to have it hardcoded
-        int cCorrection = 3528;
-        cErrorMux = ecWrite(pInterface, cMaster, 0x10, cCorrection);
+        // int cCorrection = 3528;
+        // cErrorMux = ecWrite(pInterface, cMaster, 0x10, cCorrection);
         // Choose channel to perform next measurement
         cErrorMux = ecWrite(pInterface,  cMaster, 0x50 , cADCslave );
         if( cErrorMux != 0 ) 
