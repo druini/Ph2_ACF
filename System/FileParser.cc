@@ -253,9 +253,7 @@ namespace Ph2_System
         else if (static_cast<std::string>(theChild.name()) == "lpGBT")
           {
             std::string fileName = cFilePath + expandEnvironmentVariables(theChild.attribute("configfile").value());
-            os << BOLDBLUE   << "|\t|----" << theChild.name() << " --> Id: "
-               << BOLDYELLOW << theChild.attribute("Id").value() << BOLDBLUE << ", File: "
-               << BOLDYELLOW << fileName << RESET << std::endl;
+            os << BOLDBLUE   << "|\t|----" << theChild.name() << " -->cFile: " << BOLDYELLOW << fileName << RESET << std::endl;
             lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, fileName);
             theOpticalGroup->addlpGBT(thelpGBT);
 

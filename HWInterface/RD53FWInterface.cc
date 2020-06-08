@@ -818,7 +818,8 @@ namespace Ph2_HwInterface
         // # Error checking #
         // ##################
         decodedEvents.clear();
-        uint16_t status = RD53FWInterface::DecodeEventsMultiThreads(pData, decodedEvents);
+        uint16_t status = RD53FWInterface::DecodeEventsMultiThreads(pData, decodedEvents); // Decode events with multiple threads
+        // uint16_t status = RD53FWInterface::DecodeEvents(pData, decodedEvents);             // Decode events with a single thread
         // RD53FWInterface::PrintEvents(decodedEvents, pData); // @TMP@
         if (RD53FWInterface::EvtErrorHandler(status) == false)
           {
@@ -847,7 +848,60 @@ namespace Ph2_HwInterface
     // #################
     RD53RunProgress::update(pData.size(), true);
   }
+  /*
+  // ########################################
+  // # Use of OpenMP (compil flag -fopenmp) #
+  // ########################################
+  uint16_t RD53FWInterface::DecodeEventsMultiThreads (std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
+  {
+    // ######################
+    // # Consistency checks #
+    // ######################
+    if (data.size() == 0) return RD53FWEvtEncoder::EMPTY;
 
+
+    uint16_t evtStatus = RD53FWEvtEncoder::GOOD;
+
+    std::vector<size_t> event_start;
+    for (auto i = 0u; i < data.size(); i++)
+      if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) event_start.push_back(i);
+    if (event_start.size() == 0) return RD53FWEvtEncoder::NOHEADER;
+
+
+    // ############################################
+    // # Use dynamic schedule to balance the load #
+    // ############################################
+    const int analyzeAtOnce = 10;
+    #pragma omp parallel
+    {
+    std::vector<RD53FWInterface::Event> vecEvents;
+
+    #pragma omp for schedule(dynamic, 1) nowait
+    for (auto i = 0u; i < event_start.size(); i+=analyzeAtOnce)
+      {
+        const auto start = event_start[i];
+        const auto end   = (i >= event_start.size() - analyzeAtOnce ? data.size() : event_start[i+analyzeAtOnce]);
+        const auto first = std::next(data.begin(), start);
+        const auto last  = std::next(data.begin(), end);
+
+        uint16_t status = RD53FWInterface::DecodeEvents(std::vector<uint32_t>(first, last), vecEvents);
+
+        #pragma omp atomic
+        evtStatus |= status;
+      }
+
+
+    // #####################
+    // # Pack event vector #
+    // #####################
+    #pragma omp critical
+    std::move(vecEvents.begin(), vecEvents.end(), std::back_inserter(events));
+    }
+
+
+    return evtStatus;
+  }
+  */
   uint16_t RD53FWInterface::DecodeEventsMultiThreads (std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
   {
     // ######################
@@ -860,7 +914,6 @@ namespace Ph2_HwInterface
     evtStatus.store(RD53FWEvtEncoder::GOOD);
 
     std::vector<std::vector<RD53FWInterface::Event>> vecEvents      (RD53Shared::NTHREADS);
-    std::vector<std::vector<uint32_t>>               vecData        (RD53Shared::NTHREADS);
     std::vector<std::thread>                         vecThrDecoders (RD53Shared::NTHREADS);
 
     std::vector<size_t> event_start;
@@ -877,26 +930,20 @@ namespace Ph2_HwInterface
     for (; i < RD53Shared::NTHREADS-1; i++)
       {
         if (nEvents * i >= event_start.size() - 1) break;
-        auto start = event_start[nEvents * i];
-        auto end   = event_start[nEvents * (i+1) < event_start.size() - 1 ? nEvents * (i+1) : event_start.size() - 1];
-        auto first = std::next(data.begin(), start);
-        auto last  = std::next(data.begin(), end);
-        vecData[i].resize(last - first);
-        std::move(first, last, vecData[i].begin());
+        const auto start = event_start[nEvents * i];
+        const auto end   = event_start[nEvents * (i+1) < event_start.size() - 1 ? nEvents * (i+1) : event_start.size() - 1];
+        const auto first = std::next(data.begin(), start);
+        const auto last  = std::next(data.begin(), end);
 
-        vecThrDecoders[i] = std::thread(&RD53FWInterface::DecodeEventsWrapper, std::ref(vecData[i]), std::ref(vecEvents[i]), std::ref(evtStatus));
+        vecThrDecoders[i] = std::thread(&RD53FWInterface::DecodeEventsWrapper, std::vector<uint32_t>(first, last), std::ref(vecEvents[i]), std::ref(evtStatus));
       }
 
-    auto start = event_start[nEvents * i < event_start.size() - 1 ? nEvents * i : event_start.size() - 1];
-    auto end   = data.size();
-    auto first = std::next(data.begin(), start);
-    auto last  = std::next(data.begin(), end);
-    vecData[i].resize(last - first);
-    std::move(first, last, vecData[i].begin());
+    const auto start = event_start[nEvents * i < event_start.size() - 1 ? nEvents * i : event_start.size() - 1];
+    const auto end   = data.size();
+    const auto first = std::next(data.begin(), start);
+    const auto last  = std::next(data.begin(), end);
 
-    evtStatus |= RD53FWInterface::DecodeEvents(vecData[i], vecEvents[i]);
-
-    data.erase(data.begin(), data.end());
+    evtStatus |= RD53FWInterface::DecodeEvents(std::vector<uint32_t>(first, last), vecEvents[i]);
 
 
     // ################
@@ -906,14 +953,10 @@ namespace Ph2_HwInterface
       if (thr.joinable() == true) thr.join();
 
 
-    // ###############################
-    // # Pack event and data vectors #
-    // ###############################
-    for (auto i = 0u; i < RD53Shared::NTHREADS; i++)
-      {
-        std::move(vecEvents[i].begin(), vecEvents[i].end(), std::back_inserter(events));
-        std::move(vecData[i]  .begin(), vecData[i]  .end(), std::back_inserter(data));
-      }
+    // #####################
+    // # Pack event vector #
+    // #####################
+    for (const auto& v : vecEvents) std::move(v.begin(), v.end(), std::back_inserter(events));
 
 
     return evtStatus;
@@ -937,17 +980,14 @@ namespace Ph2_HwInterface
     if (data.size() == 0) return RD53FWEvtEncoder::EMPTY;
 
 
-
     for (auto i = 0u; i < data.size(); i++)
       if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) event_start.push_back(i);
     if (event_start.size() == 0) return RD53FWEvtEncoder::NOHEADER;
 
-    events.reserve(events.size() + event_start.size());
-
     for (auto i = 0u; i < event_start.size(); i++)
       {
-        const size_t start = event_start[i];
-        const size_t end   = (i == event_start.size() - 1 ? data.size() : event_start[i + 1]);
+        const auto start = event_start[i];
+        const auto end   = (i == event_start.size() - 1 ? data.size() : event_start[i+1]);
 
         events.emplace_back(&data[start], end - start);
         if (events.back().evtStatus != RD53FWEvtEncoder::GOOD) evtStatus |= events.back().evtStatus;
@@ -1362,7 +1402,7 @@ namespace Ph2_HwInterface
         uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(pChip, pAddress);
         if (cReadBack != pData)
           {
-            LOG (ERROR) << BOLDRED << "[RD53FWInterface::WriteOpticalLinkRegiser] Register readback failure for " << BOLDYELLOW << std::hex << pAddress << std::dec << RESET;
+            LOG (ERROR) << BOLDRED << "[RD53FWInterface::WriteOpticalLinkRegiser] Register readback failure for register 0x" << BOLDYELLOW << std::hex << pAddress << std::dec << RESET;
             return false;
           }
       }
@@ -1399,11 +1439,11 @@ namespace Ph2_HwInterface
     uint32_t isRxFIFOempty = ReadReg("user.stat_regs.lpgbt_1.ic_rx_empty");
 
     LOG (INFO) << GREEN << std::hex
-               << "Chip address rx      = 0x" << BOLDYELLOW << chipAddrRx << RESET << GREEN
-               << "Reg address rx       = 0x" << BOLDYELLOW << regAddrRx << RESET << GREEN
-               << "Nb of words received = 0x" << BOLDYELLOW << nWords2Read << RESET << GREEN
-               << "FIFO readback data   = 0x" << BOLDYELLOW << cRead << RESET << GREEN
-               << "FIFO empty flag      = 0x" << BOLDYELLOW << isRxFIFOempty << std::dec << RESET;
+               << "Chip address rx = 0x" << BOLDYELLOW << chipAddrRx << RESET << GREEN
+               << ". Reg address rx = 0x" << BOLDYELLOW << regAddrRx << RESET << GREEN
+               << ". Nb of words received = 0x" << BOLDYELLOW << nWords2Read << RESET << GREEN
+               << ". FIFO readback data = 0x" << BOLDYELLOW << cRead << RESET << GREEN
+               << ". FIFO empty flag = 0x" << BOLDYELLOW << isRxFIFOempty << std::dec << RESET;
 
     return cRead;
   }
