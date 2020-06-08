@@ -733,7 +733,7 @@ namespace Ph2_HwInterface
         LOG (INFO) << BOLDBLUE << "FMC1  " << +fmc1_card_type << " FMC2 " << +fmc2_card_type << RESET;
         LOG (INFO) << BOLDBLUE << "FMC1 Card: " << RESET << getFMCCardName (fmc1_card_type);
         LOG (INFO) << BOLDBLUE << "FMC2 Card: " << RESET << getFMCCardName (fmc2_card_type);
-        if( getFMCCardName (fmc1_card_type) != "2S_FMC1" )
+        if( getFMCCardName (fmc1_card_type) != "2S_FMC1" &&  getFMCCardName (fmc1_card_type) != "PS_FMC1" )
         {
             if( getFMCCardName (fmc1_card_type) != "FMC_FE_FOR_PS_ROH_FMC1" )
             {
@@ -796,7 +796,81 @@ namespace Ph2_HwInterface
         fCBC3Emulator = (ReadReg ("fc7_daq_stat.general.info.implementation") == 2);
         fIsDDR3Readout = (ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type") == 1);
         fI2CVersion = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
-        if(fI2CVersion >= 1) this->SetI2CAddressTable();
+        
+        if(fI2CVersion >= 1) 
+        {
+          fSlaveMap.clear();
+          // assuming only one type of CIC per board ...
+          for( auto cModule : *pBoard )
+          {
+              for (auto cFe : *cModule )
+              {
+                auto cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
+                auto& cCic = cOuterTrackerModule->fCic;
+                uint8_t cBaseAddress;
+                uint8_t cNBytes;
+                std::cout<<cCic<<std::endl;
+                if( cCic != NULL )
+                {
+                  for ( auto cChip : *cFe)
+                  {
+                    //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
+                    cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x41; 
+                    cNBytes = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 2 : 1; 
+                    fSlaveMap.push_back({ static_cast<uint8_t>(cBaseAddress + cChip->getId()), cNBytes , 1, 1, 1, 1, cChip->getId()});
+                  }// chips 
+                  cBaseAddress = 0x60;
+                  cNBytes=2;
+                  fSlaveMap.push_back({ cBaseAddress, cNBytes , 1, 1, 1, 1, 8});
+                }
+                else
+                {
+                std::cout<<__LINE__<<std::endl;
+                std::cout<<cFe->size()<<std::endl;
+                  for ( auto cChip : *cFe)
+                  {
+                    //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
+                    // if( cChip->getFrontEndType() == FrontEndType::CBC3 ) 
+                    //   continue; 
+                    // TO - DO .. check MPA address 
+                    cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x40; 
+                    cBaseAddress += cChip->getId();
+                    cNBytes = 2;
+                    LOG (INFO) << BOLDBLUE << "Adding slave with I2C address 0x" 
+                      << std::hex <<  +cBaseAddress << std::dec 
+                      << RESET;
+                    fSlaveMap.push_back({ cBaseAddress, cNBytes , 1, 1, 1, 1, cChip->getId()});
+                  }// chips 
+                  for(auto& list : fSlaveMap) std::cout << list [6] << std::endl;
+                }
+              }//hybrids
+          }//modules
+          // and then loop over map and write 
+            if (fFirmwareFrontEndType != FrontEndType::CBC3)
+            {
+                for (unsigned int ism = 0; ism < fSlaveMap.size(); ism++) 
+                {
+                    // setting the params
+                    uint32_t shifted_i2c_address =  fSlaveMap[ism][0] << 25;
+                    uint32_t shifted_register_address_nbytes = fSlaveMap[ism][1]<<10;
+                    uint32_t shifted_data_wr_nbytes = fSlaveMap[ism][2]<<5;
+                    uint32_t shifted_data_rd_nbytes = fSlaveMap[ism][3]<<0;
+                    uint32_t shifted_stop_for_rd_en = fSlaveMap[ism][4]<<24;
+                    uint32_t shifted_nack_en = fSlaveMap[ism][5]<<23;
+
+                    // writing the item to the firmware
+                    uint32_t final_item = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
+                    std::string curreg = "fc7_daq_cnfg.command_processor_block.i2c_address_table.slave_" + std::to_string(ism) + "_config";
+                    LOG (INFO) << BOLDBLUE << "Writing "
+                    << std::bitset<32>(final_item)
+                    << " to register "
+                    << curreg 
+                    << RESET;
+                    this->WriteReg(curreg, final_item);
+                }
+            }
+        //   this->SetI2CAddressTable();
+        }
 
         fOptical = pBoard->ifOptical();
         // if optical readout .. then configure links
@@ -1249,10 +1323,13 @@ void D19cFWInterface::InitFMCPower()
         LOG (INFO) << BOLDBLUE << "Creating I2C slave map based on stand-alone code for 2S FEH + CIC!!" << RESET;
         // hard coding based on what is implented in the stand-alone pyhton
         // test procedures
-        // CBCs
+        // SSAs
         for( int id=0; id < 8; id+=1 )
+           i2c_slave_map.push_back({ static_cast<uint8_t>(0x20 + id), 2, 1, 1, 1, 0});
+        // CBCs
+        /*for( int id=0; id < 8; id+=1 )
            i2c_slave_map.push_back({ static_cast<uint8_t>(64 + id + 1), 1, 1, 1, 1, 1});
-        // CICs
+        */// CICs
         i2c_slave_map.push_back({96, 2, 1, 1, 1, 1});
     }
     else if (fFirmwareFrontEndType == FrontEndType::MPA) {
@@ -2338,12 +2415,11 @@ void D19cFWInterface::InitFMCPower()
 
     void D19cFWInterface::ReadASEvent (BeBoard* pBoard, std::vector<uint32_t>& pData )
     {
-	uint32_t ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-	std::cout<<"ps_counters_ready "<<ps_counters_ready<<std::endl;
+
 
  	uint32_t raw_mode_en=0;
  	WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", raw_mode_en);
-
+	uint32_t ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
 	//ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
 	//std::cout<<"ps_counters_ready "<<ps_counters_ready<<std::endl;
 
@@ -2351,15 +2427,22 @@ void D19cFWInterface::InitFMCPower()
  	std::chrono::milliseconds cWait( 10 );
 
 	uint32_t  chans = 0;
-	if (fFirmwareFrontEndType == FrontEndType::SSA) chans = NSSACHANNELS;
-	if (fFirmwareFrontEndType == FrontEndType::MPA) chans = NMPACHANNELS;
+
+	for(auto cOpticalGroup : *pBoard)
+	{
+		for(auto cHybrid : *cOpticalGroup)
+		{
+			if (fFirmwareFrontEndType == FrontEndType::SSA) chans += NSSACHANNELS*cHybrid->size();
+			if (fFirmwareFrontEndType == FrontEndType::MPA) chans += NMPACHANNELS*cHybrid->size();
+		}
+	}
 
  	std::vector<uint32_t> count(chans, 0);
 
 
 	std::vector< std::pair<std::string, uint32_t> > cVecReg;
-	cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_reset", 1});
-	cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_orbit_reset", 1});
+	//cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_reset", 1});
+	//cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_orbit_reset", 1});
 	this->WriteStackReg ( cVecReg );
 
 
@@ -2374,9 +2457,9 @@ void D19cFWInterface::InitFMCPower()
 
  	while ((ps_counters_ready == 0) & (timeout < 50))
 	            {
+
 	                std::this_thread::sleep_for( cWait );
 	                ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-			std::cout<<"ps_counters_ready "<<timeout<<","<<ps_counters_ready<<std::endl;
 
 	                timeout += 1;
 	            }
@@ -2415,13 +2498,21 @@ void D19cFWInterface::InitFMCPower()
 	                }
 	            }
  	else    {
-			pData = ReadBlockRegValue("fc7_daq_ctrl.physical_interface_block.fifo2_data",chans);
-			//for(auto pp : pData) LOG (INFO) << BOLDBLUE <<"pp - "<<pp << RESET;
+		//for (uint i=0; i<chans;i++)
+		//	{
+		//	pData.push_back(ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data"));
+		//	std::chrono::milliseconds cWait( 10 );
+
+		//	}
+		pData = ReadBlockRegValue("fc7_daq_ctrl.physical_interface_block.fifo2_data",chans);
+		//pData = ReadBlockRegValue ("fc7_daq_ctrl.calibration_2s_block.counter_fifo", chans);
+
 	        }
 
 
  	std::this_thread::sleep_for( cWait );
  	ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+
         if (fSaveToFile)fFileHandler->setData(pData);
 
     }
@@ -2429,9 +2520,10 @@ void D19cFWInterface::InitFMCPower()
     void D19cFWInterface::ReadNEvents (BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait )
     {
         // RESET the readout
+
         auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        pNEvents = pNEvents*(cMultiplicity+1);
-        //LOG (INFO) << BOLDRED << "pNEvents = " << pNEvents << RESET;
+        uint32_t pNEventsTimesMulteplicity = pNEvents*(cMultiplicity+1);
+        //LOG (INFO) << BOLDRED << "pNEventsTimesMulteplicity = " << pNEventsTimesMulteplicity << RESET;
 
         auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
         auto cTriggerRate = (cTriggerSource == 5 || cTriggerSource == 6 ) ? 1 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); // in kHz .. if external trigger assume 1 kHz as lowest possible rate
@@ -2445,9 +2537,9 @@ void D19cFWInterface::InitFMCPower()
         std::this_thread::sleep_for (std::chrono::microseconds (10) );
         // data hadnshake has to be enabled in this mode
         std::vector< std::pair<std::string, uint32_t> > cVecReg;
-        cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.packet_nbr", pNEvents-1} );
+        cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.packet_nbr", pNEventsTimesMulteplicity-1} );
         cVecReg.push_back ( {"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1} );
-        cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents} );
+        cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEventsTimesMulteplicity} );
         this->WriteStackReg ( cVecReg );
         cVecReg.clear();
         // load new trigger configuration
@@ -2464,7 +2556,7 @@ void D19cFWInterface::InitFMCPower()
         uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
 
         uint32_t cTimeoutCounter = 0 ;
-        uint32_t cTimeoutValue = 2.0*pNEvents; // maximum number of times I allow the word counter not to increment ..
+        uint32_t cTimeoutValue = 2.0*pNEventsTimesMulteplicity; // maximum number of times I allow the word counter not to increment ..
         uint32_t cFailures = 0 ;
         uint32_t cPause = 1*static_cast<uint32_t>(cTimeSingleTrigger_us);
         //LOG (INFO) << BOLDMAGENTA << "Trigger multiplicity is " << +cMultiplicity << " trigger rate is " << +cTriggerRate << " trigger source is " << +cTriggerSource << RESET;
@@ -2481,22 +2573,22 @@ void D19cFWInterface::InitFMCPower()
             cFailures += ( (cNtriggers == 0 ));// || ( (cNWords_previous==cNWords) &&cReadoutReq==0) );
             cTimeoutCounter ++;
             //LOG (INFO) << MAGENTA << cReadoutReq << " " << cNtriggers << " " << cNWords << RESET;
-        }while (cReadoutReq == 0 && ( cTimeoutCounter < cTimeoutValue ) && (cNtriggers < pNEvents) && (cFailures < 5) );
+        }while (cReadoutReq == 0 && ( cTimeoutCounter < cTimeoutValue ) && (cNtriggers < pNEventsTimesMulteplicity) && (cFailures < 5) );
         // fails if either one of these is true
         // but to me it looks like sometimes the readoutrequest is not '1' although
         // all triggers have been received
-        pFailed = ( (cReadoutReq == 0 && cNtriggers < pNEvents ) || ( cNWords == 0 ) );
+        pFailed = ( (cReadoutReq == 0 && cNtriggers < pNEventsTimesMulteplicity ) || ( cNWords == 0 ) );
 
-        if( (cReadoutReq == 0 && cNtriggers < pNEvents ) && cNWords != 0 )
+        if( (cReadoutReq == 0 && cNtriggers < pNEventsTimesMulteplicity ) && cNWords != 0 )
         {
           LOG(INFO) << BOLDRED << "\t...Readout request not cleared... Trigger in counter is "
-            << cNtriggers << " asked for " << pNEvents << " events and have "
+            << cNtriggers << " asked for " << pNEventsTimesMulteplicity << " events and have "
             << cNWords << " words in the readout... Re-trying point" << RESET;
         }
         else if( cNWords == 0 )
         {
           LOG (INFO) << BOLDRED << "\t...No data in the readout ... Trigger in counter is "
-            << cNtriggers << " asked for " << pNEvents << " events and have "
+            << cNtriggers << " asked for " << pNEventsTimesMulteplicity << " events and have "
             << cNWords << " words in the readout... Re-trying point" << RESET;
         }
 
@@ -2642,34 +2734,57 @@ void D19cFWInterface::InitFMCPower()
        bool pReadBack,
        bool pWrite )
     {
-        //use fBroadcastCBCId for broadcast commands
-        bool pUseMask = false;
-        if( fOptical )
+        uint8_t pIndex=0;
+        bool cFound=false; 
+        for (unsigned int ism = 0; ism < fSlaveMap.size(); ism++) 
         {
-            uint8_t pLinkId = 0 ; // placeholder .. eventually should have the link here
-            // new command consists of one word if its read command, and of two words if its write. first word is always the same
-            uint32_t cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0);
-            pVecReq.push_back( cWord);
-            // only for write commands
-            if (pWrite)
+            if( fSlaveMap[ism][6] == pCbcId )
             {
-                cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pRegItem.fValue << 0);
-                pVecReq.push_back( cWord );
+              pIndex = ism ; 
+              cFound = true;
             }
         }
-        else if (fI2CVersion >= 1)
+        if( cFound )
         {
-            // new command consists of one word if its read command, and of two words if its write. first word is always the same
-            pVecReq.push_back( (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0) );
-            // only for write commands
-            if (pWrite)
-                pVecReq.push_back( (0 << 28) | (pWrite << 27) | (pRegItem.fValue << 0) );
+          LOG (DEBUG) << BOLDBLUE << "I2C version " << +fI2CVersion << RESET;
+          LOG (DEBUG) << BOLDGREEN << "Encoding register from chip " << +pCbcId 
+            << " which is index " << +pIndex << " in I2C map " << RESET;
+          pCbcId = pIndex;
+          //use fBroadcastCBCId for broadcast commands
+          bool pUseMask = false;
+          if( fOptical )
+          {
+              uint8_t pLinkId = 0 ; // placeholder .. eventually should have the link here
+              // new command consists of one word if its read command, and of two words if its write. first word is always the same
+              uint32_t cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0);
+              pVecReq.push_back( cWord);
+              // only for write commands
+              if (pWrite)
+              {
+                  cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pRegItem.fValue << 0);
+                  pVecReq.push_back( cWord );
+              }
+          }
+          else if (fI2CVersion >= 1)
+          {
+              // new command consists of one word if its read command, and of two words if its write. first word is always the same
+              pVecReq.push_back( (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0) );
+              // only for write commands
+              if (pWrite)
+                  pVecReq.push_back( (0 << 28) | (pWrite << 27) | (pRegItem.fValue << 0) );
+          }
+          else
+          {
+              pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
+          }
         }
         else
         {
-            pVecReq.push_back ( ( 0 << 28 ) | ( pFeId << 24 ) | ( pCbcId << 20 ) | ( pReadBack << 19 ) | (  pUseMask << 18 )  | ( (pRegItem.fPage ) << 17 ) | ( ( !pWrite ) << 16 ) | ( pRegItem.fAddress << 8 ) | pRegItem.fValue );
+          LOG (INFO) << BOLDRED << "Could not find address in I2C map.. " << RESET;
         }
     }
+
+
 
 
 
@@ -3790,12 +3905,14 @@ void D19cFWInterface::InitFMCPower()
     }
 
 	//some overlap for now...
-    void D19cFWInterface::Send_pulses()
+    void D19cFWInterface::Send_pulses(uint32_t pNtriggers)
     {
-	//PS_Open_shutter();
-	usleep(1);
+	this->WriteReg ("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNtriggers);
+	this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
 
-        WriteReg ("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+	usleep(10);
+
+        this->WriteReg ("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
 	uint32_t nsleeps=0;
 	uint32_t maxsleeps=1000;
         while (ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") and (nsleeps<maxsleeps))
@@ -3808,18 +3925,12 @@ void D19cFWInterface::InitFMCPower()
 			LOG(INFO) << "Cal pulses timeout";
 			PS_Clear_counters();
 			this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
-	        	std::this_thread::sleep_for (std::chrono::microseconds (10) );
+	        	usleep(10);
 	        	this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
-	        	std::this_thread::sleep_for (std::chrono::microseconds (10) );
-			usleep(10);
-			Send_pulses();
+	        	usleep(10);
+			Send_pulses(pNtriggers);
 		}
-	usleep(1);
 	WriteReg ("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-
-
-	//PS_Close_shutter();
-
     }
 
 

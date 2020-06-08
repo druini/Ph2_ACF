@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="SSA">
-      <connection id="board" uri="chtcp-2.0://localhost:10203?target=198.162.4.11:50001" address_table="file://settings/address_tables/d19c_MT_address_table.xml" />
+        <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+        <!-- <connection id="board" uri="chtcp-2.0://localhost:10203?target=198.162.4.11:50001" address_table="file://settings/address_tables/d19c_MT_address_table.xml" /> -->
     <OpticalGroup Id="0" FMCId="0" >
         <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
+            <Global>
+                <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
+            </Global>
+
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="0" side="0" configfile="SSAPreCalibSYNC.txt" />
-            <SSA Id="1" side="0" configfile="SSAPreCalibSYNC.txt" />
+            <SSA Id="0" side="0" configfile="SSAPreCalib.txt" />
+            <!-- <SSA Id="1" side="0" configfile="SSAPreCalib.txt" />
+            <SSA Id="2" side="0" configfile="SSAPreCalib.txt" />-->
+            <!-- <SSA Id="3" side="0" configfile="SSAPreCalib.txt" />-->
+            <!-- <SSA Id="4" side="0" configfile="SSAPreCalib.txt" />
+            <SSA Id="5" side="0" configfile="SSAPreCalib.txt" />
+            <SSA Id="6" side="0" configfile="SSAPreCalib.txt" />
+            <SSA Id="7" side="0" configfile="SSAPreCalib.txt" />-->
+
+            <CIC_Files path="./settings/CicFiles/" />
+            <CIC Id="8" configfile="CIC_default.txt" />
         </Module>
     </OpticalGroup>
 
@@ -23,9 +37,9 @@
         </Register>
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
-            <Register name="triggers_to_accept"> 100 </Register>
-            <Register name="trigger_source"> 3 </Register>
-            <Register name="user_trigger_frequency"> 1000 </Register>
+		<Register name="triggers_to_accept"> 0 </Register>
+		<Register name="trigger_source"> 3 </Register>
+		<Register name="user_trigger_frequency"> 1 </Register>
 		<Register name="stubs_mask"> 1 </Register>
                 <!--this is the delay for the stub trigger-->
 		<Register name="stub_trigger_delay_value"> 0 </Register>
@@ -33,8 +47,8 @@
 		<Register name="test_pulse">
 			<Register name="delay_after_fast_reset"> 50 </Register>
 			<Register name="delay_after_test_pulse"> 200 </Register>
-			<Register name="delay_before_next_pulse"> 1000 </Register>
-			<Register name="en_fast_reset"> 0 </Register>
+			<Register name="delay_before_next_pulse"> 400 </Register>
+			<Register name="en_fast_reset"> 1 </Register>
 			<Register name="en_test_pulse"> 1 </Register>
 			<Register name="en_l1a"> 1 </Register>
 			<Register name="en_shutter"> 0 </Register>
@@ -47,7 +61,7 @@
                         <Register name="stubOR"> 1 </Register>
                         <Register name="initial_fast_reset_enable"> 0 </Register>
 			<Register name="trigger_timeout_enable"> 0 </Register>
-			<Register name="trigger_multiplicity"> 0 </Register>
+			<Register name="trigger_multiplicity"> 10 </Register>
                 </Register>
         </Register>
 	<!-- I2C manager -->
@@ -58,6 +72,10 @@
 		<Register name="i2c">
                 	<Register name="frequency"> 4 </Register>
 		</Register>
+        <Register name="cic">
+                <Register name = "clock_enable"> 1 </Register>
+                <Register name = "stub_package_delay"> 2 </Register>
+        </Register>
 	</Register>
 	<!-- Readout Block -->
     	<Register name="readout_block">
@@ -112,31 +130,22 @@
 
 <Settings>
 
-
-	<!--[>Calibration<]-->
-	<Setting name="StartTHDAC">0x40</Setting>
-        <Setting name="StopTHDAC">0x90</Setting>
-        <Setting name="NMsec">0</Setting>
-        <Setting name="NMpulse">3000</Setting>
-        <Setting name="Nlvl">50</Setting>
-        <Setting name="Vfac">0.7</Setting>
-    <Setting name="Mrms">0.6</Setting>
-    <Setting name="TestPulsePotentiometer">0x60</Setting>
-        <Setting name="SyncDebug">1</Setting>
-
-
-
-
     <!--[>Calibration<]-->
-    <Setting name="Nevents">100</Setting>
+    <Setting name="StartTHDAC">0x40</Setting>
+    <Setting name="StopTHDAC">0x90</Setting>
+    <Setting name="NMsec">0</Setting>
+    <Setting name="NMpulse">200</Setting>
+    <Setting name="Nlvl">50</Setting>
+    <Setting name="Vfac">0.7</Setting>
+
+
+
+    <Setting name="TargetVcth">0x78</Setting>
+    <Setting name="TargetOffset">0x50</Setting>
+    <Setting name="Nevents">50</Setting>
+    <Setting name="TestPulsePotentiometer">0x00</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
-    <Setting name="MaskChannelsFromOtherGroups">0</Setting>
-    <Setting name="FitSCurves">0</Setting>
-    <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedeNoisePulseAmplitude">0x50</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">0x50</Setting>
-    <Setting name="TriggerRate">1000</Setting>
 
     <!--Signal Scan Fit-->
 	  <Setting name="InitialVcth">0x78</Setting>
