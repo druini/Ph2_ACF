@@ -225,19 +225,24 @@ namespace Ph2_HwInterface
         uint32_t cErrorMux, cErrorGo;
         if( pValueToRead == "EXT_TEMP") // turn on current source for external temperature sensor 
         {
-            cErrorMux = ecWrite(pInterface,  cMaster, 0x60 , cADCslave );
+            cErrorMux = ecWrite(pInterface,  cMaster, 0x60 , (1<<25) );
             if( cErrorMux != 0 ) 
                 LOG (INFO) << BOLDYELLOW << "Error setting SCA AdcMuxSelect" << RESET;
         }
-        
+        // Write gain correction factor (if needed)
+        // TODO: we have to move it out from here in order not to have it hardcoded
+        // int cCorrection = 3528;
+        // cErrorMux = ecWrite(pInterface, cMaster, 0x10, cCorrection);
+        // Choose channel to perform next measurement
         cErrorMux = ecWrite(pInterface,  cMaster, 0x50 , cADCslave );
         if( cErrorMux != 0 ) 
           LOG (INFO) << BOLDYELLOW << "Error setting SCA AdcMuxSelect" << RESET;
+        // Measure in chosen channel 
         cErrorGo  = ecWrite(pInterface,  cMaster, 0x02 , 0x00000001 );
         if( cErrorGo != 0 ) 
           LOG (INFO) << BOLDYELLOW << "Error asking SCA AdcGo for starting conversion" << RESET;
-        
-        uint32_t cAdcValue = ecRead(pInterface,  cMaster, ((pConvertRawReading) ? 0x21 : 0x31) );
+        //Read back measurement result (converted or unconverted)
+        uint32_t cAdcValue = ecRead(pInterface,  cMaster, ((pConvertRawReading) ? 0x21 : 0x31), 0x0 );
         LOG (DEBUG) << BLUE << "SCA ADC chn: "<< cADCslave << " reads"<< cAdcValue <<" for pConvertRawReading="<< pConvertRawReading << RESET;
 
         if( pValueToRead == "EXT_TEMP") // turn off current source for external temperature sensor 
@@ -264,7 +269,13 @@ namespace Ph2_HwInterface
         * \param pR2 : resistor 2 int
         */ 
         auto cResistances = fScaAdcVoltageDeviderMap[pValueToRead]; 
-        return float(pReading)/(std::pow(2,12)-1)*(cResistances.first+cResistances.second)/float(cResistances.second);
+        float cConverted = float(pReading)/(std::pow(2,12)-1)*(cResistances.first+cResistances.second)/float(cResistances.second);
+        if( pValueToRead == "EXT_TEMP" )
+        {
+            // convert to temperature value for thermistor NCP15XM331J03RC
+            cConverted = convAdcToTemp(cConverted, "NCP15XM331J03RC");
+        }
+        return cConverted;
     }
     // GBTx configuration 
     void GbtInterface::gbtxSelectEdgeTx(BeBoardFWInterface* pInterface, bool pRising)
@@ -385,7 +396,7 @@ namespace Ph2_HwInterface
         for( uint16_t cRegister = 8 ; cRegister < 16; cRegister++)
         {
             uint32_t cReadBack = icRead(pInterface,  cRegister , 1);
-            icWrite( pInterface, cRegister , (cCoarsePhase << 5) | (cReadBack & 0xE0) );
+            icWrite( pInterface, cRegister , (cCoarsePhase) | (cReadBack & 0xE0) );
         }
         // fine phase 
         for( uint16_t cRegister = 4 ; cRegister < 8; cRegister++)
@@ -838,6 +849,14 @@ namespace Ph2_HwInterface
             return (cicRead(pInterface, pFeId, pRegisterAddress) == pRegisterValue);
         else 
             return (cWrite==0);
+    }
+
+    float GbtInterface::convAdcToTemp(float pAdcValue, std::string pThermistor) 
+    {
+        std::tuple<int,int,int> cThermistor = fNTCThermistorMap[pThermistor];
+        // calculate resistance (current source is 100uA)
+        float cResistance = pAdcValue/0.0001;
+        return 1/(1./std::get<0>(cThermistor) + log(float(cResistance)/std::get<1>(cThermistor))/(1.0*std::get<2>(cThermistor)))-273;
     }
 
 }

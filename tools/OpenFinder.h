@@ -12,7 +12,7 @@
 #ifndef OpenFinder_h__
 #define OpenFinder_h__
 
-#include "Tool.h" 
+#include "Tool.h"
 
 class OpenFinder : public Tool
 {
@@ -48,6 +48,8 @@ class OpenFinder : public Tool
     Parameters fParameters;
     antennaChannelsMap returnAntennaMap();
 
+    bool cWithCBC = true;
+    bool cWithSSA = false;
     // Containers
     // Add detector container and shorts container
     DetectorDataContainer fShortsContainer;

@@ -109,6 +109,9 @@ namespace Ph2_HwInterface
         uint32_t readI2C( Ph2_HwInterface::BeBoardFWInterface* pInterface, uint16_t pMaster, uint8_t pSlave , uint8_t pNBytes);
         uint8_t writeI2C( Ph2_HwInterface::BeBoardFWInterface* pInterface, uint16_t pMaster, uint8_t pSlave , uint32_t pData, uint8_t pNBytes);
 
+        // Thermistor readout conversion
+        float convAdcToTemp(float pAdcValue, std::string pThermistor);
+
         
         
     protected : 
@@ -122,7 +125,7 @@ namespace Ph2_HwInterface
                                     {"EXT_TEMP"  , std::make_pair(     0,  10000)},
                                     {"INT_TEMP"  , std::make_pair(     0,      1)}
                                 };
-
+        std::map <std::string,std::tuple<int, int, int>> fNTCThermistorMap = { {"NCP15XM331J03RC", std::make_tuple( 298, 330, 3500)}}; // tuple contains <refTemp, resistance at refTemp, BConstant>
     };
 }
 

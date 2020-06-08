@@ -19,9 +19,9 @@ set(BoldWhite   "${Esc}[1;37m")
 if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
+    MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
     cmake_minimum_required(VERSION 2.8)
@@ -126,6 +126,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
+    find_package(PH2_POWERSUPPLY) #========================================================
+    if(PH2_POWERSUPPLY_FOUND)
+        message(STATUS "    Building the PowerSupply components")
+    endif(PH2_POWERSUPPLY_FOUND)
+
+
     # ZeroMQ optional
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
@@ -187,17 +193,17 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #set(ENV{LD_LIBRARY_PATH} "${PROJECT_SOURCE_DIR}/lib:$ENV(LD_LIBRARY_PATH)")
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package done.") 
-    MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}") 
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package done.")
+    MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 
 else() # ------------------------------- Compilation in the otsdaq environment ---------------------------------------------
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package for OTSDAQ") 
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
+    MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package for OTSDAQ")
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
@@ -214,9 +220,9 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(miniDAQ)
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package done.") 
-    MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}") 
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package done.")
+    MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 
 endif()

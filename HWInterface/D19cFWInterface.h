@@ -83,6 +83,7 @@ namespace Ph2_HwInterface {
     {
 
       private:
+        std::vector< std::vector<uint32_t> > fSlaveMap;
         D19cFpgaConfig* fpgaConfig;
         FileHandler* fFileHandler ;
         uint32_t fBroadcastCbcId;
@@ -363,7 +364,7 @@ namespace Ph2_HwInterface {
         void ChipTrigger();
         void Trigger(uint8_t pDuration=1);
         // Readout chip specific stuff
-	void Send_pulses();
+        void Send_pulses(uint32_t pNtriggers);
 
         void ReadoutChipReset();
         // CIC BE stuff

@@ -22,7 +22,16 @@ OpenFinder::~OpenFinder()
 
 void OpenFinder::Initialise(Parameters pParameters)
 {
-  fChannelGroupHandler = new CBCChannelGroupHandler();
+
+  ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+
+  cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
+  cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+
+
+  if(ShortFinder::cWithCBC)    fChannelGroupHandler = new CBCChannelGroupHandler();
+  if(ShortFinder::cWithSSA)    fChannelGroupHandler = new SSAChannelGroupHandler();
+
   fChannelGroupHandler->setChannelGroupParameters(16, 2);
 
   // Read some settings from the map
@@ -42,6 +51,13 @@ void OpenFinder::Initialise(Parameters pParameters)
 // Antenna map generator by Sarah (used to be in Tools.cc)
 OpenFinder::antennaChannelsMap OpenFinder::returnAntennaMap()
 {
+  int cROC=8;
+  int cCHAN=254;
+
+
+  if(cWithSSA) cROC=8;
+  if(cWithSSA) cCHAN=120;
+
   antennaChannelsMap cAntennaMap;
   for (int cAntennaSwitch = 1; cAntennaSwitch < 5; cAntennaSwitch++)
   {
@@ -57,12 +73,12 @@ OpenFinder::antennaChannelsMap OpenFinder::returnAntennaMap()
       cOffsets[1] = 0 + (cAntennaSwitch > 2);
     }
     cbcChannelsMap cTmpMap;
-    for (int cCbc = 0; cCbc < 8; cCbc++)
+    for (int cCbc = 0; cCbc < cROC; cCbc++)
     {
       int cOffset = cOffsets[(cCbc % 2)];
       channelVector cTmpList;
       cTmpList.clear();
-      for (int cChannel = cOffset; cChannel < 254; cChannel += 4)
+      for (int cChannel = cOffset; cChannel < cCHAN; cChannel += 4)
       {
         cTmpList.push_back(cChannel);
       }
@@ -79,7 +95,7 @@ void OpenFinder::FindOpens(bool pExternalTrigger)
   DetectorDataContainer     cMeasurement ;
   fDetectorDataContainer = &cMeasurement;
   ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-    
+
 
   // Preparing the antenna map, the list of opens and the hit counter
   antennaChannelsMap cAntennaMap = returnAntennaMap();
@@ -92,9 +108,9 @@ void OpenFinder::FindOpens(bool pExternalTrigger)
 
   // Set the antenna delay and compute the corresponding latency start and stop
   // and force the trigger source to be the antenna trigger (5)
-  
+
   // Trigger source for the antenna
-  cAntenna.SelectTriggerSource( pExternalTrigger ? fParameters.fExternalTriggerSource : fParameters.fAntennaTriggerSource ); 
+  cAntenna.SelectTriggerSource( pExternalTrigger ? fParameters.fExternalTriggerSource : fParameters.fAntennaTriggerSource );
   // Configure the SPI and configure the chip
   cAntenna.ConfigureADC(cADCChipSlave);
   // Configure SPI (again?) and the clock
@@ -140,7 +156,11 @@ void OpenFinder::FindOpens(bool pExternalTrigger)
     }
 
     // Scan the Latency parameter with scanDac and measure the occupancy
-    scanDac("TriggerLatency", cListOfLatencies, fEventsPerPoint, cContainerVector);
+
+    if(ShortFinder::cWithCBC)    scanDac("TriggerLatency", cListOfLatencies, fEventsPerPoint, cContainerVector);
+    if(ShortFinder::cWithSSA)    scanDac("L1-Latency_LSB", cListOfLatencies, fEventsPerPoint, cContainerVector);
+
+
 
     // Get the correct cbc->channelList map, based on the antenna position
     auto cSearchAntennaMap = cAntennaMap.find( cAntennaPosition ) ;
@@ -164,18 +184,22 @@ void OpenFinder::FindOpens(bool pExternalTrigger)
         bestLatencyIndex = iLatency;
       }
     }
-    // set trigger latency to value for which you found the maximum occupancy and measure occupancy 
+    // set trigger latency to value for which you found the maximum occupancy and measure occupancy
     LOG(INFO) << BOLDBLUE << "\t... Highest occupancy of " << maxOccupancy << " found at latency " << bestLatency << " (step " << bestLatencyIndex << ")" << RESET;
-    this->setSameDac("TriggerLatency", bestLatency);
+
+
+    if(ShortFinder::cWithCBC)    this->setSameDac("TriggerLatency", bestLatency);
+    if(ShortFinder::cWithSSA)    this->setSameDac("L1-Latency_LSB", bestLatency);
+
     this->measureData(fEventsPerPoint);
-    for(auto cBoard : cMeasurement) //for on boards - begin 
+    for(auto cBoard : cMeasurement) //for on boards - begin
     {
         auto& cOccupancy = cMeasurement.at(cBoard->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy;
         LOG (INFO) << BOLDBLUE << "Measured occupancy for a latency of " << bestLatency << " is " << cOccupancy << RESET;
-        for(auto cOpticalGroup: *cBoard) // for on opticalGroup - begin 
-          for(auto cFe: *cOpticalGroup) // for on module - begin 
+        for(auto cOpticalGroup: *cBoard) // for on opticalGroup - begin
+          for(auto cFe: *cOpticalGroup) // for on module - begin
           {
-              for(auto cChip: *cFe) // for on chip - begin 
+              for(auto cChip: *cFe) // for on chip - begin
               {
                   //ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(cFe->getIndex())->at(cChip->getIndex()));
                   std::vector<uint8_t> cOpens(0);
@@ -184,17 +208,17 @@ void OpenFinder::FindOpens(bool pExternalTrigger)
                   {
                     auto cOccupancy = cChip->getChannel<Occupancy>(cConnectedChannel).fOccupancy;
                     LOG (DEBUG) << BOLDBLUE << "\t.. channel " << +cConnectedChannel << " occupancy is " << cOccupancy << RESET;
-                    if( cOccupancy < fParameters.fThreshold ) 
+                    if( cOccupancy < fParameters.fThreshold )
                       cOpens.push_back( cConnectedChannel );
                   }
                   LOG (INFO) << BOLDBLUE << "Found " << +cOpens.size() << " opens on readout chip with id " << +cChip->getId() << RESET;
-              } // for on chip - end 
-          } // for on module - end 
-        } // for on opticalGroup - end 
-    } // for on board - end 
+              } // for on chip - end
+          } // for on module - end
+        } // for on opticalGroup - end
+    } // for on board - end
   }
   cAntenna.TurnOnAnalogSwitchChannel (9);
-  
+
 }
 
 #endif

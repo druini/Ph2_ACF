@@ -22,8 +22,8 @@ fi
 ########
 # ROOT #
 ########
-source $ROOTSYS/bin/thisroot.sh
-#source /usr/local/root/bin/thisroot.sh
+#source $ROOTSYS/bin/thisroot.sh
+source /usr/local/root/bin/thisroot.sh
 #source /opt/local/root/bin/thisroot.sh
 
 #######
@@ -43,6 +43,7 @@ export AMC13DIR=$CACTUSINCLUDE/amc13
 export ANTENNADIR=$BASE_DIR/../CMSPh2_AntennaDriver
 export USBINSTDIR=$BASE_DIR/../Ph2_USBInstDriver
 export EUDAQDIR=$BASE_DIR/../eudaq
+export POWERSUPPLYDIR=$BASE_DIR/../power-supply
 
 ###########
 # ANTENNA #
@@ -76,6 +77,7 @@ export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
 export EuDaqFlag='-D__EUDAQ__'
+export PowerSupplyFlag='-D__POWERSUPPLY__'
 
 ################
 # Compilations #

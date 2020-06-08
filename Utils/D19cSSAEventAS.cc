@@ -25,19 +25,18 @@ void D19cSSAEventAS::fillDataContainer(BoardDataContainer *boardContainer, const
             {
                 for(auto chip: *hybrid)
                 {
+                	std::vector<uint32_t> hVec=GetHits(hybrid->getId(), chip->getId());
+                	unsigned int i = 0;
 
-                std::vector<uint32_t> hVec=GetHits(hybrid->getId(), chip->getId());
-			    unsigned int i = 0;
 
-
-			    for (ChannelContainer<Occupancy>::iterator channel =  chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
-			    {
-				    if (cTestChannelGroup->isChannelEnabled(i))
-				    {
-					    channel->fOccupancy += hVec[i];
-				    }
+                	for (ChannelContainer<Occupancy>::iterator channel =  chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
+                	{
+                		if (cTestChannelGroup->isChannelEnabled(i))
+                	{
+                	channel->fOccupancy += hVec[i];
                 }
-			}
+                }
+		}
 		}
 	}
 }
@@ -55,9 +54,11 @@ void D19cSSAEventAS::SetEvent(const BeBoard *pBoard, uint32_t pNSSA, const std::
             uint32_t nc=0;
             for(auto cChip : *cHybrid)
             {
-		         fEventDataVector[encodeVectorIndex (cHybrid->getId(), cChip->getId(), pNSSA) ] = std::vector<uint32_t>(list.begin() + nc*120, list.begin()+ (nc+1)*120);
-                 nc+=1;
-	        }
+            	fEventDataVector[encodeVectorIndex (cHybrid->getId(), cChip->getId(), pNSSA) ] = std::vector<uint32_t>(list.begin() + nc*120, list.begin()+ (nc+1)*120);
+		//std::cout<<fEventDataVector[encodeVectorIndex (cHybrid->getId(), cChip->getId(), pNSSA) ][5]<<std::endl;
+
+            	nc+=1;
+            }
         }
     }
 }
@@ -70,8 +71,8 @@ uint32_t D19cSSAEventAS::GetNHits(uint8_t pFeId, uint8_t pSSAId) const
 std::vector<uint32_t> D19cSSAEventAS::GetHits(uint8_t pFeId, uint8_t pSSAId) const
 {
     const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pSSAId,fNSSA));
-    //LOG (INFO) << BOLDBLUE << hitVector[0] << RESET; 
-    return hitVector; 
+    //LOG (INFO) << BOLDBLUE << hitVector[0] << RESET;
+    return hitVector;
 }
 
 } // namespace Ph2_HwInterface
