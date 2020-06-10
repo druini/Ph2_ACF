@@ -247,7 +247,7 @@ namespace Ph2_System
                   }
               }
 
-	    LOG (INFO) << GREEN << "I'm going to use " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads to decode the data at run time" << RESET;
+	    LOG (INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads (including hyper-threading) to decode the data at run time" << RESET;
           }
       }
   }
