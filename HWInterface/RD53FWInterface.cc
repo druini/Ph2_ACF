@@ -422,7 +422,7 @@ namespace Ph2_HwInterface
         bool lanes_up;
         for (unsigned int seq = 0; seq < MAXSEQUENCES; seq++)
           {
-            LOG (INFO)  << GREEN << "Trying sequence number: " << BOLDYELLOW << seq << RESET;
+            LOG (INFO)  << GREEN << "Trying initialization sequence number: " << BOLDYELLOW << seq << RESET;
             LOG (INFO)  << BOLDBLUE << "\t--> Number of required data lanes for [board/opticalGroup/hybrid = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << hybrid_id << BOLDBLUE << "]: "
                         << BOLDYELLOW << RD53Shared::countBitsOne(chips_en_to_check)
                         << BOLDBLUE << " i.e. "
@@ -443,7 +443,7 @@ namespace Ph2_HwInterface
                 lanes_up = false;
                 uint32_t channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
 
-                LOG (INFO)  << BOLDBLUE << "\t--> Number of active data lanes for try [" << BOLDYELLOW << i << BOLDBLUE << "]: "
+                LOG (INFO)  << BOLDBLUE << "\t--> Number of active data lanes for tentative n. " << BOLDYELLOW << i << BOLDBLUE << ": "
                             << BOLDYELLOW << RD53Shared::countBitsOne(channel_up)
                             << BOLDBLUE << " i.e. "
                             << BOLDYELLOW << std::bitset<12>(channel_up)
@@ -452,7 +452,7 @@ namespace Ph2_HwInterface
                 if ((channel_up & chips_en_to_check) == chips_en_to_check)
                   {
                     LOG (INFO) << GREEN << "Board/OpticalGroup/Hybrid [" << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << hybrid_id << RESET << GREEN << "] locked with sequence "
-                               << BOLDYELLOW << seq << RESET << GREEN << " on try " << BOLDYELLOW << i << RESET;
+                               << BOLDYELLOW << seq << RESET << GREEN << " on tentative n. " << BOLDYELLOW << i << RESET;
                     lanes_up = true;
                     break;
                   }

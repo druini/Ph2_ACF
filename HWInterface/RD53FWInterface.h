@@ -114,7 +114,7 @@ namespace Ph2_HwInterface
     void InitHybridByHybrid     (const Ph2_HwDescription::BeBoard* pBoard);
     std::vector<uint16_t> GetInitSequence (const unsigned int type);
 
-    void WriteChipCommand       (const std::vector<uint16_t>& data, int hybridId);
+    void WriteChipCommand (const std::vector<uint16_t>& data, int hybridId);
     std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Ph2_HwDescription::Chip* pChip);
 
     struct ChipFrame
