@@ -21,6 +21,8 @@
 #include "../Utils/GenericDataVector.h"
 #include <uhal/uhal.hpp>
 
+#include <omp.h>
+
 
 // #############
 // # CONSTANTS #
