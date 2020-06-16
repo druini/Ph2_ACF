@@ -894,11 +894,12 @@ namespace Ph2_HwInterface
 	}
 
 
-      // #####################
-      // # Pack event vector #
-      // #####################
+      // ###############################
+      // # Pack event and data vectors #
+      // ###############################
       #pragma omp critical
       std::move(vecEvents.begin(), vecEvents.end(), std::back_inserter(events));
+      std::move(vecData.  begin(), vecData.  end(), std::back_inserter(data));
     }
 
 
@@ -964,9 +965,9 @@ namespace Ph2_HwInterface
       if (thr.joinable() == true) thr.join();
 
 
-    // #####################
-    // # Pack event vector #
-    // #####################
+    // ###############################
+    // # Pack event and data vectors #
+    // ###############################
     for (auto i = 0u; i < RD53Shared::NTHREADS; i++)
       {
     	std::move(vecEvents[i].begin(), vecEvents[i].end(), std::back_inserter(events));
