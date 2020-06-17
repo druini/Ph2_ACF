@@ -192,7 +192,7 @@ namespace Ph2_HwInterface
       uint32_t second_cal_data = 0;
 
       uint32_t delay_after_ecr        = 0;
-      uint32_t delay_after_autozero   = 0;
+      uint32_t delay_after_autozero   = 0; // @TMP@
       uint32_t delay_after_first_cal  = 0;
       uint32_t delay_after_second_cal = 0;
       uint16_t delay_loop             = 0;
@@ -201,7 +201,7 @@ namespace Ph2_HwInterface
     struct FastCommandsConfig
     {
       TriggerSource trigger_source   = TriggerSource::FastCMDFSM;
-      AutozeroSource autozero_source = AutozeroSource::Disabled;
+      AutozeroSource autozero_source = AutozeroSource::Disabled; // @TMP@
 
       bool initial_ecr_en  = false;
       bool backpressure_en = false;
