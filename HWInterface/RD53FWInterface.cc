@@ -875,7 +875,6 @@ namespace Ph2_HwInterface
     #pragma omp parallel
     {
       std::vector<RD53FWInterface::Event> vecEvents;
-      std::vector<uint32_t>               vecData;
 
       #pragma omp for schedule(dynamic, 1) nowait
       for (auto i = 0u; i < event_start.size(); i+=analyzeAtOnce)
@@ -885,9 +884,7 @@ namespace Ph2_HwInterface
 	  const auto first = std::next(data.begin(), start);
 	  const auto last  = std::next(data.begin(), end);
 
-	  vecData.resize(last - first);
-	  std::move(first, last, vecData.begin());
-	  uint16_t status = RD53FWInterface::DecodeEvents(vecData, vecEvents);
+	  uint16_t status = RD53FWInterface::DecodeEvents(std::vector<uint32_t>(first, last), vecEvents);
 
           #pragma omp atomic
 	  evtStatus |= status;
@@ -899,7 +896,6 @@ namespace Ph2_HwInterface
       // ###############################
       #pragma omp critical
       std::move(vecEvents.begin(), vecEvents.end(), std::back_inserter(events));
-      std::move(vecData.  begin(), vecData.  end(), std::back_inserter(data));
     }
 
 
