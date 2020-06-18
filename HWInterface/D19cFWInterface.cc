@@ -2900,7 +2900,7 @@ void D19cFWInterface::InitFMCPower()
             if( cWriteReq == 1 )
             {
                //still being tested - WIP
-               cFailed = !cGBTx.i2cWrite(this, pVecSend, pReplies);
+               cFailed = !cGBTx.i2cWrite(this, pVecSend, pReplies, pReadback);
             }
             else
             {

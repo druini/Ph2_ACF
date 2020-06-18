@@ -96,9 +96,9 @@ namespace Ph2_HwInterface
         uint8_t cbcGetPageRegister(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId ) ;
         uint8_t cbcSetPage(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage ) ;
         uint32_t cbcRead(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage , uint8_t pRegisterAddress ) ;
-        bool cbcWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage , uint8_t pRegisterAddress , uint8_t pRegisterValue , bool pReadBack=false, bool pSetPage=false) ;
+        bool cbcWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage , uint8_t pRegisterAddress , uint8_t pRegisterValue , bool pReadBack=true, bool pSetPage=false) ;
         uint32_t cicRead(Ph2_HwInterface::BeBoardFWInterface* pInterface , uint8_t pFeId, uint8_t pRegisterAddress) ;
-        bool cicWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue , bool pReadBack=false);
+        bool cicWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue , bool pReadBack=true);
         
         // multi-register write 
         //bool cbcWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, const std::vector<uint32_t>& pVecSend);
