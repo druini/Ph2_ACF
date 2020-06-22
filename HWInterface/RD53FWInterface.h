@@ -155,8 +155,8 @@ namespace Ph2_HwInterface
     };
 
     static uint16_t DecodeEventsMultiThreads (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
-    static void     DecodeEventsWrapper      (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, std::atomic<uint16_t>& evtStatus);
-    static uint16_t DecodeEvents             (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
+    static void     DecodeEventsWrapper      (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStart, std::atomic<uint16_t>& evtStatus);
+    static uint16_t DecodeEvents             (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStart);
     static bool     EvtErrorHandler          (uint16_t status);
     static void     PrintEvents              (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
 
