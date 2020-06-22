@@ -13,8 +13,8 @@
 ```
 
 Suggested software and firmware versions:
-- Software git branch / tag : `master` / `IT-v3.7`
-- Firmware tag: `3.2`
+- Software git branch / tag : `master` / `IT-v3.8`
+- Firmware tag: `3.3`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 FC7 setup:
