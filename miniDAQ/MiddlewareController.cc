@@ -20,7 +20,7 @@
 #include "../tools/RD53InjectionDelay.h"
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53Physics.h"
-#include "../tools/SSAPhysics.h"
+//#include "../tools/SSAPhysics.h"
 #include "../tools/BackEndAlignment.h"
 
 
@@ -84,7 +84,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
       else if (getVariableValue("Calibration",buffer) == "calibrationandpedenoise") theSystemController_ = new CombinedCalibration<BackEndAlignment,PedestalEqualization,PedeNoise>;
       else if (getVariableValue("Calibration",buffer) == "calibrationexample")      theSystemController_ = new CombinedCalibration<BackEndAlignment,CalibrationExample>;
       else if (getVariableValue("Calibration",buffer) == "cbcPulseShape")           theSystemController_ = new CombinedCalibration<BackEndAlignment,CBCPulseShape>;
-      else if (getVariableValue("Calibration",buffer) == "ssaphysics")              theSystemController_ = new SSAPhysics;
+//      else if (getVariableValue("Calibration",buffer) == "ssaphysics")              theSystemController_ = new SSAPhysics;
 
       else if (getVariableValue("Calibration",buffer) == "pixelalive")              theSystemController_ = new CombinedCalibration<PixelAlive>;
       else if (getVariableValue("Calibration",buffer) == "noise")                   theSystemController_ = new CombinedCalibration<PixelAlive>;
