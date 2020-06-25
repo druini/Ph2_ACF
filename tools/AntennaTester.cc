@@ -267,7 +267,7 @@ void AntennaTester::Measure(uint8_t pDigiPotentiometer)
         cAntenna.TurnOnAnalogSwitchChannel ( channel_position );
         if (channel_position == 9) break;
 
-        for ( BeBoard* pBoard : this->fBoardVector )
+        for(auto pBoard : *fDetectorContainer)
         {
             uint32_t cN = 1;
             uint32_t cNthAcq = 0;

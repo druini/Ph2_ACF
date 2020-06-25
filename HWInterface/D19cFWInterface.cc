@@ -3263,6 +3263,27 @@ void D19cFWInterface::InitFMCPower()
         this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
         std::this_thread::sleep_for (std::chrono::microseconds (10) );
     }
+    void D19cFWInterface::ConfigureAntennaFSM( uint16_t pNtriggers, uint16_t pTriggerRate, uint16_t pL1Delay ) 
+    {
+        std::vector< std::pair<std::string, uint32_t> > cVecReg;
+        cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNtriggers});
+        cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", pTriggerRate});
+        cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 7});
+        cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.antenna_trigger_delay_value", pL1Delay});
+        this->WriteStackReg( cVecReg ); 
+        
+        // reset trigger 
+        this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
+        std::this_thread::sleep_for (std::chrono::microseconds (10) );
+        // configure 
+        this->WriteStackReg ( cVecReg );
+        cVecReg.clear();
+        std::this_thread::sleep_for (std::chrono::microseconds (10) );
+        // load new trigger configuration 
+        this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+        std::this_thread::sleep_for (std::chrono::microseconds (10) );
+    }
+
     // periodic triggers
     void D19cFWInterface::ConfigureTriggerFSM( uint16_t pNtriggers, uint16_t pTriggerRate, uint8_t pSource, uint8_t pStubsMask, uint8_t pStubLatency)
     {

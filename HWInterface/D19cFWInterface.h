@@ -377,7 +377,9 @@ namespace Ph2_HwInterface {
         void ConfigureConsecutiveTriggerFSM( uint16_t pNtriggers=32, uint16_t pDelayBetweenTriggers=1, uint16_t pDelayToNext=1 ) ;
         // back-end tuning for CIC data
         void ConfigureFastCommandBlock(const Ph2_HwDescription::BeBoard* pBoard);
-
+        // consecutive triggers FSM
+        void ConfigureAntennaFSM( uint16_t pNtriggers=1, uint16_t pTriggerRate=1, uint16_t pL1Delay=100 ) ;
+        
         void L1ADebug();
         void StubDebug(bool pWithTestPulse=true, uint8_t pNlines=5);
         bool L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);

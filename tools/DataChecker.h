@@ -15,6 +15,11 @@
 
 #include "Tool.h"
 
+#ifndef ChannelList
+  typedef std::vector<uint8_t> ChannelList;
+#endif
+
+
 #include <map>
 #ifdef __USE_ROOT__
     #include "TCanvas.h"
@@ -27,6 +32,8 @@
     #include "TText.h"
 #endif
 
+
+const uint8_t FAILED_DATA_TEST = 4;
 
 class DataChecker : public Tool
 {
@@ -44,8 +51,12 @@ class DataChecker : public Tool
     void matchEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t>pChipIds , std::pair<uint8_t,int> pExpectedStub);
     void ReadDataTest();
     void ReadNeventsTest();
+    void ReadSlinkTest(std::string pDAQFileName="");
     void StubCheck();
-    
+    void MaskForStubs(Ph2_HwDescription::BeBoard* pBoard, uint16_t pSeed, bool pSeedLayer);
+
+    void HitCheck2S(Ph2_HwDescription::BeBoard* pBoard);
+    void HitCheck();
     void zeroContainers();
     void print(std::vector<uint8_t> pChipIds); 
     void Start(int currentRun) override;
@@ -71,6 +82,9 @@ class DataChecker : public Tool
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fHitCheckContainer, fStubCheckContainer;
     DetectorDataContainer  fThresholds, fLogic, fHIPs;
+    DetectorDataContainer fInjections;
+    DetectorDataContainer fDataMismatches;
+
     int fPhaseTap=8;
     int fAttempt=0;
     int fMissedEvent=0;
