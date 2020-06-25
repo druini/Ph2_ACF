@@ -381,7 +381,7 @@ namespace Ph2_HwInterface
           if (inject == true) pRD53->injectPixel(row, col, group->isChannelEnabled(row,col));
         }
 
-    RD53Interface::WriteRD53Mask(pRD53, true, false, pVerifLoop);
+    RD53Interface::WriteRD53Mask(pRD53, true, false, false); // @TMP@ : pVerifLoop
 
     return true;
   }

@@ -76,15 +76,6 @@ namespace Ph2_HwInterface
     RD53FWInterface::ResetReadoutBlk();
 
 
-    // ##############################
-    // # Initialize clock generator #
-    // ##############################
-    LOG (INFO) << GREEN << "Initializing clock generator (CDCE62005)..." << RESET;
-    RD53FWInterface::InitializeClockGenerator();
-    RD53FWInterface::ReadClockGenerator();
-    LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
-
-
     // ###############################################
     // # FW register initialization from config file #
     // ###############################################
@@ -121,6 +112,23 @@ namespace Ph2_HwInterface
         }
 
 
+    // ##################
+    // # Configure DIO5 #
+    // ##################
+    RD53FWInterface::ConfigureDIO5(&cfgDIO5);
+    LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
+    usleep(DEEPSLEEP);
+
+
+    // ##############################
+    // # Initialize clock generator #
+    // ##############################
+    LOG (INFO) << GREEN << "Initializing clock generator (CDCE62005)..." << RESET;
+    RD53FWInterface::InitializeClockGenerator();
+    RD53FWInterface::ReadClockGenerator();
+    LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
+
     // ################################
     // # Enabling hybrids and chips   #
     // # Hybrid_type hard coded in FW #
@@ -150,16 +158,7 @@ namespace Ph2_HwInterface
         }
     cVecReg.push_back({"user.ctrl_regs.Hybrids_en", enabledHybrids});
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
-
     if (cVecReg.size() != 0) WriteStackReg(cVecReg);
-
-
-    // ##################
-    // # Configure DIO5 #
-    // ##################
-    RD53FWInterface::ConfigureDIO5(&cfgDIO5);
-    LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
-    usleep(DEEPSLEEP);
 
 
     // ###########################
@@ -818,8 +817,8 @@ namespace Ph2_HwInterface
         // # Error checking #
         // ##################
         decodedEvents.clear();
-        // uint16_t status = RD53FWInterface::DecodeEventsMultiThreads(pData, decodedEvents); // Decode events with multiple threads
-        uint16_t status = RD53FWInterface::DecodeEvents(pData, decodedEvents, {});         // Decode events with a single thread
+        uint16_t status = RD53FWInterface::DecodeEventsMultiThreads(pData, decodedEvents); // Decode events with multiple threads
+        // uint16_t status = RD53FWInterface::DecodeEvents(pData, decodedEvents, {});         // Decode events with a single thread
         // RD53FWInterface::PrintEvents(decodedEvents, pData); // @TMP@
         if (RD53FWInterface::EvtErrorHandler(status) == false)
           {
