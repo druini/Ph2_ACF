@@ -1054,14 +1054,15 @@ namespace Ph2_HwInterface
 
   bool RD53FWInterface::Event::isHittedChip (uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const
   {
-    for (auto i = 0u; i < chip_frames.size(); i++)
-      if ((hybrid_id == chip_frames[i].hybrid_id) && (chip_id == chip_frames[i].chip_id) && (chip_events[i].hit_data.size() != 0))
-        {
-          chipIndx = i;
-          return true;
-        }
+    auto it = chip_frames.begin();
+    it = std::find_if(it, chip_frames.end(), [&] (const ChipFrame& frame)
+      {
+        return ((frame.hybrid_id == hybrid_id) && (frame.chip_id == chip_id) && (chip_events[it - chip_frames.begin()].hit_data.size() != 0));
+      });
 
-    return false;
+    if (it == chip_frames.end()) return false;
+    chipIndx = it - chip_frames.begin();
+    return true;
   }
 
   int RD53FWInterface::Event::lane2chipId (const BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane)
