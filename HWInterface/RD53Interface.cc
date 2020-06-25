@@ -294,11 +294,14 @@ namespace Ph2_HwInterface
 
         for (auto col = 0u; col < RD53::nCols; col+=2)
           {
-            if (mask[col].Enable.none()) continue;
+            auto row = 0u;
+            for (; row < RD53::nRows; row++)
+              if (mask[col].Enable[row] != 0) break;
+            if (row == RD53::nRows) continue;
 
             RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
 
-            for (auto row = 0u; row < RD53::nRows; row++)
+            for (row = 0u; row < RD53::nRows; row++)
               {
                 if ((mask[col].Enable[row] == 1) || (mask[col+1].Enable[row] == 1))
                   {
