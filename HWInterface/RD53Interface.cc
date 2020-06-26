@@ -294,8 +294,7 @@ namespace Ph2_HwInterface
 
         for (auto col = 0u; col < RD53::nCols; col+=2)
           {
-            auto it = std::find(mask[col].Enable.begin(), mask[col].Enable.end(), 1);
-            if (it == mask[col].Enable.end()) continue;
+            if (std::find(mask[col].Enable.begin(), mask[col].Enable.end(), 1) == mask[col].Enable.end()) continue;
 
             RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
 
