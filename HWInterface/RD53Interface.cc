@@ -294,14 +294,12 @@ namespace Ph2_HwInterface
 
         for (auto col = 0u; col < RD53::nCols; col+=2)
           {
-            auto row = 0u;
-            for (; row < RD53::nRows; row++)
-              if (mask[col].Enable[row] != 0) break;
-            if (row == RD53::nRows) continue;
+            auto it = std::find(mask[col].Enable.begin(), mask[col].Enable.end(), 1);
+            if (it == mask[col].Enable.end()) continue;
 
             RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
 
-            for (row = 0u; row < RD53::nRows; row++)
+            for (auto row = 0u; row < RD53::nRows; row++)
               {
                 if ((mask[col].Enable[row] == 1) || (mask[col+1].Enable[row] == 1))
                   {
@@ -384,7 +382,7 @@ namespace Ph2_HwInterface
           if (inject == true) pRD53->injectPixel(row, col, group->isChannelEnabled(row,col));
         }
 
-    RD53Interface::WriteRD53Mask(pRD53, true, false, false); // @TMP@ : pVerifLoop
+    RD53Interface::WriteRD53Mask(pRD53, true, false, pVerifLoop);
 
     return true;
   }
