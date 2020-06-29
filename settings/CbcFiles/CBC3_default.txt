@@ -25,11 +25,10 @@ CoincWind&Offset12                             	0x00	0x14	0x00	0x00
 BandgapFuse                                  	0x00	0x15	0x94	0x40
 ChipIDFuse1                                  	0x00	0x16	0x00	0x00
 ChipIDFuse2                                  	0x00	0x17	0x00	0x00
-ChipIDFuse3                                 	0x00	0x18	0x00	0x08
+ChipIDFuse3                                 	0x00	0x18	0x00	0x00
 LayerSwap&CluWidth                              0x00    0x1B    0x00    0x04
 40MhzClk&Or254                                  0x00    0x1C    0x00    0x84
-SerialIface&Error                               0x00    0x1D    0x00    0x40
-
+* SerialIface&Error                               0x00    0x1D    0x00    0x40
 *--------------------------------------------------------------------------------
 * Channel Masks
 *--------------------------------------------------------------------------------

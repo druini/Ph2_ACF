@@ -106,34 +106,26 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package for OTSDAQ") 
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
     MESSAGE(STATUS " ") 
+   
+    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+  
+    #library dirs
+    link_directories(${UHAL_UHAL_LIB_PREFIX})
 
-
-
-    # link_directories($ENV{XDAQ_LIB})
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/uhal/log/include)
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/uhal/grammars/include)
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/uhal/uhal/include)
-    # include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_4_2/cactuscore/extern/pugixml/RPMBUILD/SOURCES/include/)
-    
     cet_make_exec(RunController
         SOURCE
         RunController.cc MiddlewareController.cc
         LIBRARIES
-            #ConfigurationInterface
-            #DAQHardware
-            #FECore
-            #FEInterfaces
-            #ConfigurationDataFormats
-            # WorkLoopManager
-            #SupervisorDescriptorInfo
-            #CgiDataUtilities
-            #SOAPUtilities
-            #FiniteStateMachine	      
+    #${Boost_FILESYSTEM_LIBRARY}
+	#${Boost_SYSTEM_LIBRARY}
+	#${Boost_THREAD_LIBRARY}
+	${Boost_REGEX_LIBRARY}
+    ${Boost_IOSTREAMS_LIBRARY}
+
             ${ROOT_BASIC_LIB_LIST}
               cactus_uhal_uhal
               cactus_uhal_log
               cactus_uhal_grammars 
-            #   $ENV{MRB_SOURCE}/otsdaq_cmsoutertracker/uhal/uhal_2_4_2/cactuscore/extern/pugixml/pugixml-1.2/libcactus_extern_pugixml.so
               Ph2_Interface_${Ph2_ACF_Master}
               Ph2_System_${Ph2_ACF_Master}
               Ph2_Utils_${Ph2_ACF_Master}

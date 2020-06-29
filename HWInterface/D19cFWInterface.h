@@ -83,7 +83,7 @@ namespace Ph2_HwInterface {
     {
 
       private:
-        std::vector< std::vector<uint32_t> > fSlaveMap;
+        std::map<uint8_t,std::vector<uint32_t>> fI2CSlaveMap ;
         D19cFpgaConfig* fpgaConfig;
         FileHandler* fFileHandler ;
         uint32_t fBroadcastCbcId;
