@@ -46,12 +46,13 @@ class DataChecker : public Tool
     void TestPulse(std::vector<uint8_t> pChipIds);
     void DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed=125, int pBend=10);
     void L1Eye(std::vector<uint8_t> pChipIds);
+    void ClusterCheck(std::vector<uint8_t> pChannels);
 
     void noiseCheck(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t>pChipIds , std::pair<uint8_t,int> pExpectedStub);
     void matchEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t>pChipIds , std::pair<uint8_t,int> pExpectedStub);
     void ReadDataTest();
     void ReadNeventsTest();
-    void ReadSlinkTest(std::string pDAQFileName="");
+    void WriteSlinkTest(std::string pDAQFileName="");
     void StubCheck();
     void MaskForStubs(Ph2_HwDescription::BeBoard* pBoard, uint16_t pSeed, bool pSeedLayer);
 
@@ -78,6 +79,9 @@ class DataChecker : public Tool
   protected:
     
   private:
+    // masks 
+    ChannelGroup<254,1> fCBCMask;
+                    
     // Containers
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fHitCheckContainer, fStubCheckContainer;

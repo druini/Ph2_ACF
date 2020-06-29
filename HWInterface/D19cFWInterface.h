@@ -227,6 +227,9 @@ namespace Ph2_HwInterface {
          */
         void ResetReadout();
 
+        // print trigger config 
+        void TriggerConfiguration();
+
         /*!
          * \brief DDR3 Self-test
          */

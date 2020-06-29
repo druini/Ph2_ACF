@@ -756,6 +756,13 @@ namespace Ph2_HwInterface {
         LOG (INFO) << BOLDBLUE << "CIC output pattern configured by setting " << cRegName << " to " << std::bitset<8>(cRegValue) << RESET;
         return true;
     }
+    bool CicInterface::SetSparsification(Chip* pChip, uint8_t pEnable ) 
+    {
+        std::string cRegName = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? "CBC_SPARSIFICATION_SEL" : "FE_CONFIG";
+        uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
+        uint16_t cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pEnable : (cRegValue & 0x2F ) | ( pEnable << 4) ;
+        return this->WriteChipReg( pChip, cRegName, cValue) ;
+    }
     bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFEs , bool pEnable)
     {
         setBoard ( pChip->getBeBoardId() ); 

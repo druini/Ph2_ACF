@@ -478,76 +478,81 @@ namespace Ph2_System
         for (auto &pevt : fEventList) delete pevt;
         fEventList.clear();
         fCurrentEvent = 0;
+        if( pNevents == 0 )
+        {
+          LOG (INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET;
+        }
+        else
+        {
+          EventType fEventType = pBoard->getEventType();
+          uint32_t fNFe = pBoard->getNFe();
+          uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
+          LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
+          fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
+          uint32_t maxind=0;
 
-        EventType fEventType = pBoard->getEventType();
-        uint32_t fNFe = pBoard->getNFe();
+          if( pBoard->getFrontEndType() == FrontEndType::SSA )
+            {
 
-        uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
-        LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
-        fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
-        uint32_t maxind=0;
+              uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+              if (fEventType == EventType::SSAAS) nSSA = pData.size()/120;
 
-        if( pBoard->getFrontEndType() == FrontEndType::SSA )
-          {
+              for(auto opticalGroup: *pBoard)
+                {
+                  for(auto hybrid: *opticalGroup)
+                    {
+                      for(auto chip: *hybrid)
+                        {
+                          //LOG (INFO) << BOLDBLUE <<chip->getId()+hybrid->getId()*nSSA <<RESET;
+                          maxind=std::max(maxind,uint32_t(chip->getId()+hybrid->getId()*nSSA));
+                        }
+                    }
+                }
+              //LOG (INFO) << BOLDBLUE << "maxind " << maxind << RESET;
+            }
 
-            uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-            if (fEventType == EventType::SSAAS) nSSA = pData.size()/120;
+          if (fEventType == EventType::SSAAS)
+            {
+              fEventList.push_back(new D19cSSAEventAS(pBoard, maxind+1, fNFe, pData));
+            }
+          else if (fEventType != EventType::ZS)
+            {
+              size_t cEventIndex=0;
+              auto cEventIterator = pData.begin();
+              do
+                {
+                  uint32_t cEventSize = (0x0000FFFF & (*cEventIterator))*4 ; // event size is given in 128 bit words
+                  auto cEnd = ( (cEventIterator+cEventSize) > pData.end() ) ? pData.end() : (cEventIterator + cEventSize) ;
+                  // retrieve chunck of data vector belonging to this event
+                  if( cEnd - cEventIterator == cEventSize )
+                    {
+                      std::vector<uint32_t> cEvent(cEventIterator, cEnd);
+                      //some useful debug information
+                      LOG (DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of " << +cEventSize <<  " 32 bit words..." << RESET;
+                      if( pBoard->getFrontEndType() == FrontEndType::CBC3 )
+                        {
+                          fEventSize = static_cast<uint32_t>(cEventSize);
+                          fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
+                          fEventList.push_back ( new D19cCbc3Event ( pBoard, fNCbc, fNFe , cEvent ) );
+                        }
+                      else if( pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2  )
+                        {
+                          fNCbc = 8;
+                          fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
+                          fEventList.push_back ( new D19cCic2Event ( pBoard, fNCbc , fNFe, cEvent ) );
+                        }
+                      else if( pBoard->getFrontEndType() == FrontEndType::SSA )
+                        {
 
-            for(auto opticalGroup: *pBoard)
-              {
-                for(auto hybrid: *opticalGroup)
-                  {
-                    for(auto chip: *hybrid)
-                      {
-                        //LOG (INFO) << BOLDBLUE <<chip->getId()+hybrid->getId()*nSSA <<RESET;
-                        maxind=std::max(maxind,uint32_t(chip->getId()+hybrid->getId()*nSSA));
-                      }
-                  }
-              }
-            //LOG (INFO) << BOLDBLUE << "maxind " << maxind << RESET;
-          }
+                          fEventList.push_back(new D19cSSAEvent(pBoard, maxind+1, fNFe, cEvent));
 
-        if (fEventType == EventType::SSAAS)
-          {
-            fEventList.push_back(new D19cSSAEventAS(pBoard, maxind+1, fNFe, pData));
-          }
-        else if (fEventType != EventType::ZS)
-          {
-            size_t cEventIndex=0;
-            auto cEventIterator = pData.begin();
-            do
-              {
-                uint32_t cEventSize = (0x0000FFFF & (*cEventIterator))*4 ; // event size is given in 128 bit words
-                auto cEnd = ( (cEventIterator+cEventSize) > pData.end() ) ? pData.end() : (cEventIterator + cEventSize) ;
-                // retrieve chunck of data vector belonging to this event
-                if( cEnd - cEventIterator == cEventSize )
-                  {
-                    std::vector<uint32_t> cEvent(cEventIterator, cEnd);
-                    //some useful debug information
-                    LOG (DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of " << +cEventSize <<  " 32 bit words..." << RESET;
-                    if( pBoard->getFrontEndType() == FrontEndType::CBC3 )
-                      {
-                        fEventSize = static_cast<uint32_t>(cEventSize);
-                        fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
-                        fEventList.push_back ( new D19cCbc3Event ( pBoard, fNCbc, fNFe , cEvent ) );
-                      }
-                    else if( pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2  )
-                      {
-                        fNCbc = 8;
-                        fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
-                        fEventList.push_back ( new D19cCic2Event ( pBoard, fNCbc , fNFe, cEvent ) );
-                      }
-                    else if( pBoard->getFrontEndType() == FrontEndType::SSA )
-                      {
-
-                        fEventList.push_back(new D19cSSAEvent(pBoard, maxind+1, fNFe, cEvent));
-
-                      }
-                    cEventIndex++;
-                  }
-                cEventIterator += cEventSize;
-              }while( cEventIterator < pData.end());
-          }
+                        }
+                      cEventIndex++;
+                    }
+                  cEventIterator += cEventSize;
+                }while( cEventIterator < pData.end());
+            }
+        }// end zero check 
       }
   }
 }
