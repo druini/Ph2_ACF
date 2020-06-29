@@ -869,9 +869,9 @@ namespace Ph2_HwInterface
     eventStart.push_back(data.size());
 
 
-    // ############################################
-    // # Use dynamic schedule to balance the load #
-    // ############################################
+    // ######################
+    // # Unpack data vector #
+    // ######################
     #pragma omp parallel
       {
         std::vector<RD53FWInterface::Event> vecEvents;
@@ -889,9 +889,9 @@ namespace Ph2_HwInterface
             evtStatus |= status;
 
 
-            // ###############################
-            // # Pack event and data vectors #
-            // ###############################
+            // #####################
+            // # Pack event vector #
+            // #####################
             #pragma omp critical
             std::move(vecEvents.begin(), vecEvents.end(), std::back_inserter(events));
           }
@@ -924,9 +924,9 @@ namespace Ph2_HwInterface
     eventStart.push_back(data.size());
 
 
-    // #################################
-    // # Unpack event and data vectors #
-    // #################################
+    // ######################
+    // # Unpack data vector #
+    // ######################
     auto i = 0u;
     for (; i < RD53Shared::NTHREADS - 1; i++)
       {
@@ -952,9 +952,9 @@ namespace Ph2_HwInterface
       if (thr.joinable() == true) thr.join();
 
 
-    // ###############################
-    // # Pack event and data vectors #
-    // ###############################
+    // #####################
+    // # Pack event vector #
+    // #####################
     for (auto i = 0u; i < RD53Shared::NTHREADS; i++)
       std::move(vecEvents[i].begin(), vecEvents[i].end(), std::back_inserter(events));
 
