@@ -51,6 +51,7 @@ namespace Ph2_HwInterface
         uint8_t scaEnable(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint16_t cI2Cmaster=0x00);
         void scaConfigure( Ph2_HwInterface::BeBoardFWInterface* pInterface) ;
         bool scaSetGPIO( Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t cChannel , uint8_t cLevel );
+        uint8_t scaStatus(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pMaster); 
         // configure gpio [sca]
         void scaConfigureGPIO(Ph2_HwInterface::BeBoardFWInterface* pInterface);
         uint16_t readAdcChn ( Ph2_HwInterface::BeBoardFWInterface* pInterface, std::string pValueToRead , bool pConvertRawReading=false) ;
@@ -83,16 +84,25 @@ namespace Ph2_HwInterface
         void gbtxSelectTerminationRx(Ph2_HwInterface::BeBoardFWInterface* pInterface, bool pEnable=true);
         void gbtxSetDriveStrength(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pStrength=0xA);
 
+        struct RegConfig
+        {
+            uint8_t fFeId=0;
+            uint8_t fChipId=0;
+            uint8_t fPage=0;
+            uint8_t fRegisterAddress=0;
+            uint8_t fRegisterValue=0;
+        };
+        // read and write functions for CIC and CBC
         uint8_t cbcGetPageRegister(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId ) ;
         uint8_t cbcSetPage(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage ) ;
         uint32_t cbcRead(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage , uint8_t pRegisterAddress ) ;
-        bool cbcWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage , uint8_t pRegisterAddress , uint8_t pRegisterValue , bool pReadBack=false) ;
+        bool cbcWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage , uint8_t pRegisterAddress , uint8_t pRegisterValue , bool pReadBack=true, bool pSetPage=false) ;
         uint32_t cicRead(Ph2_HwInterface::BeBoardFWInterface* pInterface , uint8_t pFeId, uint8_t pRegisterAddress) ;
-        bool cicWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue , bool pReadBack=false);
+        bool cicWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue , bool pReadBack=true);
         
         // multi-register write 
         //bool cbcWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, const std::vector<uint32_t>& pVecSend);
-        bool i2cWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies);
+        bool i2cWrite(Ph2_HwInterface::BeBoardFWInterface* pInterface, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadBack = true);
         
     private : 
         // GBTX ec 

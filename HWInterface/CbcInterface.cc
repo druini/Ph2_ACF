@@ -51,7 +51,7 @@ namespace Ph2_HwInterface
         for ( auto& cRegItem : cCbcRegMap )
         {
             //this is to protect from readback errors during Configure as the BandgapFuse and ChipIDFuse registers should be e-fused in the CBC3
-            if (cRegItem.first != "BandgapFuse" || cRegItem.first != "ChipIDFuse")
+            if (cRegItem.first != "BandgapFuse" || cRegItem.first.find("ChipIDFuse") == std::string::npos)
             {
                 //if( cRegItem.second.fPage == 0 )
                 //LOG (DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first <<  " : register address 0x" << std::hex << +cRegItem.second.fAddress << std::dec << " on page " << +cRegItem.second.fPage <<  RESET;

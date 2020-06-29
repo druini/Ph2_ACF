@@ -89,6 +89,8 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     DetectorDataContainer fDetectorStripNoiseOddHistograms;
     DetectorDataContainer fDetectorModuleNoiseHistograms;
     DetectorDataContainer fDetectorModuleStripNoiseHistograms;
+    DetectorDataContainer fDetectorModuleStripNoiseEvenHistograms;
+    DetectorDataContainer fDetectorModuleStripNoiseOddHistograms;
     DetectorDataContainer fDetectorData;
 
     bool cWithCBC = true;

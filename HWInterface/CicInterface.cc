@@ -848,7 +848,7 @@ namespace Ph2_HwInterface {
         // bool cSuccess = this->SoftReset(pChip);
         
         bool cClkTermination = true; 
-        bool cRxTermination =  false;
+        bool cRxTermination =  true;
         //(pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;// true, false -- this needs to be false for the crate set-up .. how to fix this?!?!
         std::string cRegName = "SLVS_PADS_CONFIG";
         uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
@@ -857,6 +857,7 @@ namespace Ph2_HwInterface {
         {
             auto cValue = ( cRxTermination << 4 ) | ( cClkTermination << 3) | cIterator->second ; 
             cSuccess = this->WriteChipReg( pChip, "SLVS_PADS_CONFIG", cValue );
+            LOG (INFO) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec <<  RESET;
             if( !cSuccess ) 
             {
                 LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " configure drive strength on CIC output pads." << RESET;

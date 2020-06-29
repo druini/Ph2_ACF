@@ -208,8 +208,53 @@ else() # ------------------------------- Compilation in the otsdaq environment -
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
 
+    set(CompileForShep "$ENV{CompileForShep}")
+    set(CompileForHerd "$ENV{CompileForHerd}")
+    if ((NOT CompileForShep) AND (NOT CompileForHerd))
+        set(NoDataShipping true)
+    else()
+        set(NoDataShipping false)
+    endif()
+
+    if(${CACTUS_AMC13_FOUND})
+        message(STATUS "    Enabling AMC13 component")
+    endif(${CACTUS_AMC13_FOUND})
+
+    find_package(PH2_ANTENNA) #========================================================
+    if(PH2_ANTENNA_FOUND)
+        message(STATUS "    Building the Antenna components")
+    endif(PH2_ANTENNA_FOUND)
+
+    # ZeroMQ optional
+    find_package(ZMQ)         #========================================================
+    if(ZMQ_FOUND)
+        find_package(PH2_USBINSTLIB)
+        if(PH2_USBINSTLIB_FOUND)
+        endif(PH2_USBINSTLIB_FOUND)
+    endif(ZMQ_FOUND)
+
+
+   # EUDAQ
+    if ($ENV{CompileWithEUDAQ})
+        set(USE_EUDAQ ON)
+        include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
+        set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
+        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
+    else($ENV{CompileWithEUDAQ})
+        message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
+    endif($ENV{CompileWithEUDAQ})
+
+    message("--     ${BoldCyan}#### Done ####${Reset}")
+
+    #all the subdirs
+    if(${CACTUS_AMC13_FOUND})
+        add_subdirectory(AMC13)
+    endif()
+
+
+
     add_subdirectory(tools)
-#    add_subdirectory(RootWeb)
+##    add_subdirectory(RootWeb)
     add_subdirectory(DQMUtils)
     add_subdirectory(Utils)
     add_subdirectory(RootUtils)
@@ -217,7 +262,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(HWDescription)
     add_subdirectory(HWInterface)
     add_subdirectory(System)
-    add_subdirectory(miniDAQ)
+#    add_subdirectory(miniDAQ)
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")
