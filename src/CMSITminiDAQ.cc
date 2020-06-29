@@ -78,7 +78,7 @@ void readBinaryData (std::string binaryFile, SystemController& mySysCntr, std::v
   LOG (INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
   mySysCntr.readFile(data, 0);
 
-  RD53FWInterface::DecodeEvents(data, decodedEvents);
+  RD53FWInterface::DecodeEventsMultiThreads(data, decodedEvents);
   LOG (INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
 
   for (auto i = 0u; i < decodedEvents.size(); i++)
