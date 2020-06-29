@@ -47,8 +47,10 @@ namespace D19cFWEvtEncoder
   const uint16_t GOOD             = 0x0000; // Event status Good
   const uint16_t EMPTY            = 0x0002; // Event status Empty event
   const uint16_t BADHEADER        = 0x0004; // Bad header
+  const uint8_t  GOODL1HEADER     = 0x0A; 
+  const uint8_t  GOODStubHEADER     = 0x05; 
   const uint16_t BADL1HEADER      = 0x0006; // Bad L1 header
-  const uint16_t BADSTUBHEADER    = 0x0008; // Bad L1 header
+  const uint16_t BADSTUBHEADER    = 0x0008; // Bad Stub header
   /*const uint16_t INCOMPLETE = 0x0004; // Event status Incomplete event header
   const uint16_t L1A        = 0x0008; // Event status L1A counter mismatch
   const uint16_t FWERR      = 0x0010; // Event status Firmware error
@@ -64,6 +66,19 @@ namespace D19cFWEvtEncoder
   const uint16_t HITS_2S = 274;
   const uint16_t HITS_SSA = 120;
   const uint16_t HITS_CBC = 254;
+
+  using RawFeData = std::vector<uint32_t>;
+  using RawBoardData = std::vector<RawFeData>;
+    
+  // ################
+  // # Event status #
+  // ################
+  struct D19cFWEvt
+  {
+    std::vector<uint32_t> fEventStatus; 
+    RawBoardData fBoardHitData;
+    RawBoardData fBoardStubData;
+  };
 }
 
 
@@ -83,6 +98,7 @@ namespace Ph2_HwInterface {
     {
 
       private:
+        D19cFWEvtEncoder::D19cFWEvt fD19cFWEvts; 
         std::map<uint8_t,std::vector<uint32_t>> fI2CSlaveMap ;
         D19cFpgaConfig* fpgaConfig;
         FileHandler* fFileHandler ;
@@ -241,6 +257,7 @@ namespace Ph2_HwInterface {
         bool PhaseTuning(Ph2_HwDescription::BeBoard *pBoard , uint8_t pFeId, uint8_t pChipId, uint8_t pLineId, uint16_t pPattern, uint16_t pPatternPeriod);
         void PhaseTuning(const Ph2_HwDescription::BeBoard *pBoard);
 
+        uint32_t DecodeData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
         /*!
          * \brief Read data from DAQ
          * \param pBreakTrigger : if true, enable the break trigger

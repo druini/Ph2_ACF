@@ -2312,7 +2312,141 @@ void D19cFWInterface::InitFMCPower()
         }
         return cSuccess;
     }
+    uint32_t D19cFWInterface::DecodeData( BeBoard* pBoard, std::vector<uint32_t>& pData) 
+    {
+      // clear container 
+      fD19cFWEvts.fEventStatus.clear();
+      fD19cFWEvts.fBoardStubData.clear();
+      fD19cFWEvts.fBoardHitData.clear();
+      
+      // there is one vector of these per front-end object  
+      // prepare the vector here 
+      for( auto cModule : *pBoard )
+      {
+        for (auto cFe : *cModule )
+        {
+          auto cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
+          auto& cCic = cOuterTrackerModule->fCic;
+          size_t cNReadoutChips = ( cCic == NULL ) ? cFe->size() : 1; 
+          for( size_t cIndex=0; cIndex < cNReadoutChips; cIndex++ )
+          {
+            D19cFWEvtEncoder::RawFeData cFeData; cFeData.clear(); 
+            fD19cFWEvts.fBoardHitData.push_back(cFeData);
+            fD19cFWEvts.fBoardStubData.push_back(cFeData);
+          }   
+        }// hybrid loop
+      }//module loop
+      
+      uint32_t cNEvents=0;
+      auto cEventIterator = pData.begin();
+      do
+      {
+        uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16 ;
+        uint32_t cEventSize = (0x0000FFFF & (*cEventIterator))*4 ; // event size is given in 128 bit words
+        uint32_t cDummyCount = (0xFF &  (*(cEventIterator+1)))*4;
+        LOG (DEBUG) << BOLDBLUE << "Event " << +cNEvents 
+          << "... event header is " << std::bitset<16>(cHeader) 
+          << " ... " << +cEventSize << " 32 bit words ... "
+          << +cDummyCount << " dummy 32 bit words .. " 
+          << RESET;
+        auto cEnd = ( (cEventIterator+cEventSize) > pData.end() ) ? pData.end() : (cEventIterator + cEventSize) ;
+        // retrieve chunck of data vector belonging to this event
+        if( cHeader == D19cFWEvtEncoder::EVT_HEADER)
+        {
+          uint32_t cStatus=0x00000000; 
+          // event - collection of 32 bit words 
+          // without the header 
+          // and without the dummy words 
+          std::vector<uint32_t> cEvent(cEventIterator+D19cFWEvtEncoder::IWORD_L1_HEADER, cEnd-cDummyCount);
+          auto cIterator= cEvent.begin();
+          // increment by event header 
+          size_t cRocIndex=0;
+          for( auto cModule : *pBoard )
+          {
+            for (auto cFe : *cModule )
+            {
+              auto cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
+              auto& cCic = cOuterTrackerModule->fCic;
+              size_t cNReadoutChips = ( cCic == NULL ) ? cFe->size() : 1; 
+              for( size_t cIndex=0; cIndex < cNReadoutChips; cIndex++ )
+              {
+                // make sure things make sense 
+                if( cIterator >= cEvent.end() )
+                  continue;
 
+                // L1 info
+                uint8_t cStatusWord = 0x00;
+                uint32_t cHitInfoHeader = *cIterator;
+                uint32_t cGoodHitInfo = (cHitInfoHeader & (0xF << 28 ))  >> 28;
+                uint32_t cHitInfoSize = (cHitInfoHeader & 0xFFF)*4;
+                cStatusWord = static_cast<uint8_t>( cGoodHitInfo == D19cFWEvtEncoder::GOODL1HEADER ); 
+                LOG (DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex 
+                  << "...hit info header " << std::bitset<4>(cGoodHitInfo)
+                  << "... " << +cHitInfoSize << " words in hit packet..." 
+                  << "... status word " << std::bitset<2>(cStatusWord) << RESET;
+                auto cStart = cIterator;  
+                auto cStop = cStart + cHitInfoSize;
+                if( cStatusWord == 0x01 )
+                {
+                  LOG (DEBUG) << BOLDGREEN << "\t... ReadoutChip#" << +cIndex 
+                    << " adding hit data.. " << RESET;
+                  std::vector<uint32_t> cHitWords(cStart, cStop);
+                  fD19cFWEvts.fBoardHitData[cRocIndex].insert( fD19cFWEvts.fBoardHitData[cRocIndex].begin(), cHitWords.begin(), cHitWords.end());
+                }
+                
+                // stub info  
+                uint32_t cStubInfoHeader = *cStop; 
+                uint32_t cGoodStubInfo = (cStubInfoHeader & (0xF << 28 ))  >> 28;
+                uint32_t cStubInfoSize = (cStubInfoHeader & 0xFFF)*4;
+                cStatusWord = cStatusWord | ( static_cast<uint8_t>( cGoodStubInfo == D19cFWEvtEncoder::GOODStubHEADER ) << 1) ; 
+                LOG (DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex 
+                  << "...stub info header " << std::bitset<4>(cGoodStubInfo) 
+                  << "... " << +cStubInfoSize << " words in stub packet." 
+                  << "... status word " << std::bitset<2>(cStatusWord) << RESET;
+                cStart = cStop; 
+                cStop = cStart + cStubInfoSize;
+                if( cStatusWord == 0x03 )
+                {
+                  LOG (DEBUG) << BOLDGREEN << "\t... ReadoutChip#" << +cIndex 
+                    << " adding stub data.. " << RESET;
+                  std::vector<uint32_t> cStubWords(cStart,cStop);
+                  fD19cFWEvts.fBoardStubData[cRocIndex].insert( fD19cFWEvts.fBoardStubData[cRocIndex].begin(), cStubWords.begin(), cStubWords.end());
+                }
+                cIterator +=  cHitInfoSize + cStubInfoSize;
+                cStatus = cStatus | ( cStatusWord << (cRocIndex*2) );
+                // increment ROC index 
+                cRocIndex++;
+              }
+            }//hybrid loop 
+          }// module loop 
+          fD19cFWEvts.fEventStatus.push_back(cStatus);
+          cNEvents++; 
+        }
+        cEventIterator += cEventSize;
+      }while( cEventIterator < pData.end());
+
+      // debug print out 
+      LOG (INFO) << BOLDBLUE << "Decoded " << +fD19cFWEvts.fEventStatus.size() << " events from FC7.." << RESET;
+      size_t cRocIndex=0;
+      for( auto cModule : *pBoard )
+      {
+        for (auto cFe : *cModule )
+        {
+          auto cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
+          auto& cCic = cOuterTrackerModule->fCic;
+          size_t cNReadoutChips = ( cCic == NULL ) ? cFe->size() : 1; 
+          for( size_t cIndex=0; cIndex < cNReadoutChips; cIndex++ )
+          {
+            auto cFeHitData = fD19cFWEvts.fBoardHitData[cRocIndex];
+            auto cFeStubData = fD19cFWEvts.fBoardStubData[cRocIndex];
+            LOG (DEBUG) << BOLDBLUE << "Have " << +cFeHitData.size() << " 32 bit words for hit data ROC#" << +cIndex << RESET;
+            LOG (DEBUG) << BOLDBLUE << "Have " << +cFeStubData.size() << " 32 bit words for stub data ROC#" << +cIndex << RESET;
+            cRocIndex++;
+          }   
+        }// hybrid loop
+      }//module loop
+      return fD19cFWEvts.fEventStatus.size();
+    }
     uint32_t D19cFWInterface::ReadData ( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
     {
         uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
@@ -2405,22 +2539,9 @@ void D19cFWInterface::InitFMCPower()
               
               pData = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNWords, fDDR3Offset);
               // figure out how many events I've got 
-              cNEvents=0;
-              auto cEventIterator = pData.begin();
-              do
-              {
-                uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16 ;
-                uint32_t cEventSize = (0x0000FFFF & (*cEventIterator))*4 ; // event size is given in 128 bit words
-                auto cEnd = ( (cEventIterator+cEventSize) > pData.end() ) ? pData.end() : (cEventIterator + cEventSize) ;
-                // retrieve chunck of data vector belonging to this event
-                if( cEnd - cEventIterator == cEventSize && cHeader == 0xFFFF)
-                {
-                  cNEvents++;
-                }
-                cEventIterator += cEventSize;
-              }while( cEventIterator < pData.end());
-              LOG (INFO) << BOLDBLUE << "ReadData has read back ... " << +cNEvents << " ... events from DDR3.."<<RESET;
-
+              cNEvents=this->DecodeData( pBoard, pData );
+              LOG (INFO) << BOLDBLUE << "D19cFWInterface has decoded ... " << +cNEvents << " ... events from DDR3.."
+                << " data size is " << +pData.size() << " 32 bit words." << RESET;
               // readout_req high when buffer is almost full 
               uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
               if( cReadoutReq == 1 )
@@ -2806,15 +2927,13 @@ void D19cFWInterface::InitFMCPower()
             else
                 pData = ReadBlockRegValue ("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
 
-            LOG (DEBUG) << BOLDBLUE << "Read back " << +cNWords << " words from DDR3 memory in FC7. Have stored " << +pData.size() << " words in the readout." << RESET;
-            uint32_t cHeader = (0xFFFF0000 & pData.at(0)) >> 16 ;
-            uint32_t cDummyCount = 0x00FFFFFF &  pData.at(1);
-            cDummyCount *= 4;
-            uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
-            LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNHybrids << " FEs connected to uDTC."
-              << "Generic event header is " << std::bitset<16>(cHeader)
-              << " event block size is " << +cBlockSize*4 << " 32 bit words." << RESET;
-
+            auto cDecodedEvents=this->DecodeData( pBoard, pData );
+            if( cDecodedEvents != pNEvents )
+            {
+              LOG (INFO) << BOLDRED << "Read back " << +cNWords << " words from memory in FC7. Have stored " << +pData.size() << " words in the readout." << RESET;
+              throw std::runtime_error(std::string("Error Decoding Events [ReadNevents failed to return correct number of decoded events]..."));
+            }
+            LOG (INFO) << BOLDBLUE << "Decoded " << +cDecodedEvents << " when I've asked for " << pNEvents << RESET;
             // if (pBoard->getEventType() == EventType::VR)
             // {
             //     // for now only do this if no CIC is connected

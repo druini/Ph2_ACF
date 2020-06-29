@@ -467,10 +467,11 @@ void DataChecker::ReadDataTest()
         LOG (INFO) << BOLDBLUE << "Starting triggers..." << RESET;
         fBeBoardInterface->Start(theBoard);
         LOG (INFO) << BOLDRED << "Shutter opened ... press any key to close .." << RESET;
-        do
-        {
-            std::this_thread::sleep_for (std::chrono::milliseconds (10) );
-        }while( std::cin.get()!='\n');
+        std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+        // do
+        // {
+        //     std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+        // }while( std::cin.get()!='\n');
         LOG (INFO) << BOLDRED << "Reading data .. " << RESET;
         this->ReadData( theBoard , true);
         const std::vector<Event*>& cEvents = this->GetEvents ( theBoard );
@@ -479,10 +480,10 @@ void DataChecker::ReadDataTest()
         uint32_t cN=0;
         for ( auto& cEvent : cEvents )
         {
-            LOG (INFO) << ">>> Event #" << cN ;
+            LOG (DEBUG) << ">>> Event #" << cN ;
             outp.str ("");
             outp << *cEvent;
-            LOG (INFO) << outp.str();
+            LOG (DEBUG) << outp.str();
             cN++;
         }
         LOG (INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
