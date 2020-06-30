@@ -46,11 +46,8 @@ uint16_t MPAInterface::ReadChipReg ( Chip* pMPA, const std::string& pRegNode )
 
 bool MPAInterface::WriteChipReg ( Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop )
 	{
-		//std::cout<<"Zoop 1"<<std::endl;
 		setBoard ( pMPA->getBeBoardId() );
-		//std::cout<<"Zoop 2"<<std::endl;
 		ChipRegItem cRegItem = pMPA->getRegItem ( pRegNode );
-		//std::cout<<"Zoop 3"<<std::endl;
 		cRegItem.fValue = pValue & 0xFF;
 		std::vector<uint32_t> cVec;
 		//std::cout<<pMPA->getFeId()<<" , "<<pMPA->getChipId()<<std::endl;
