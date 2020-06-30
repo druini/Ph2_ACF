@@ -54,9 +54,9 @@ namespace Ph2_HwInterface
         pInterface->WriteReg("fc7_daq_ctrl.optical_block.sca.start",0x1); 
         // check for error 
         uint32_t cErrorCode = pInterface->ReadReg("fc7_daq_stat.optical_block.sca.error");
+        return cErrorCode;
         // reset 
         //ecReset(pInterface);
-        return cErrorCode;
     }
     uint32_t GbtInterface::ecWrite(BeBoardFWInterface* pInterface, uint16_t pI2Cmaster, const std::vector<std::pair<uint32_t,uint32_t>>& pCommands ) 
     {
@@ -193,6 +193,13 @@ namespace Ph2_HwInterface
             return (cErrorCode == 0 );
         }
         return false;
+    }
+    uint8_t GbtInterface::scaStatus(BeBoardFWInterface* pInterface, uint8_t pMaster)
+    {
+        uint32_t cValue = ecRead( pInterface, pMaster, 0x11);
+        uint8_t cStatus = ( (cValue & 0xFF000000) >> 3*8 );
+        LOG (DEBUG) << BOLDBLUE << "SCA status : " << std::bitset<8>(cStatus) << RESET;
+        return cStatus;
     }
     // configure gpio [sca]
     void GbtInterface::scaConfigureGPIO(BeBoardFWInterface* pInterface)
@@ -619,15 +626,25 @@ namespace Ph2_HwInterface
         if( pNBytes == 1 )
         {
             uint32_t cData = (pSlave << 3*8) | (pData << 2*8);
-            return ecWrite( pInterface, pMaster, 0x82 , cData) ;
+            uint8_t cErrorCode = ecWrite( pInterface, pMaster, 0x82 , cData) ;
+            if( cErrorCode!= 0 )
+                throw std::runtime_error(std::string("Error writing I2C [fpga error]..."));
+            else
+            {
+                return cErrorCode;
+            }
         }
         else
         {
             //upload data bytes to send in the DATA register
             uint32_t cErrorCode = ecWrite( pInterface, pMaster , 0x40 , pData  );
-            if( cErrorCode != 0 ) 
+            if( cErrorCode!= 0 )
+                throw std::runtime_error(std::string("Error writing I2C [fpga error]..."));
+            else
+            {
+                cErrorCode =  ecWrite(pInterface, pMaster , 0xDA , (pSlave << 3*8) );
                 return cErrorCode;
-            return ecWrite(pInterface, pMaster , 0xDA , (pSlave << 3*8) );
+            }
         }
     }
 
@@ -651,7 +668,8 @@ namespace Ph2_HwInterface
         uint8_t cNewRegValue = ( (~pPage & 0x01) << 7) | ( cPageRegister & 0x7F);
         LOG (DEBUG) << BOLDGREEN << "\t... setting page register to 0x" << std::hex << std::bitset<8>(+cNewRegValue) << std::dec << RESET;
         //uint32_t cValue  = (0x00 << 8*3) | (cNewRegValue << 8*2)  ;
-        return writeI2C(pInterface, fSCAMaster + pFeId, 0x40 | (1+pChipId) , (0x00 << 8*3) | ( cNewRegValue << 8*2) , 2); 
+        uint8_t cErrorCode = writeI2C(pInterface, fSCAMaster + pFeId, 0x40 | (1+pChipId) , (0x00 << 8*3) | ( cNewRegValue << 8*2) , 2); 
+        return cErrorCode;
     }
     uint32_t GbtInterface::cbcRead(BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage , uint8_t pRegisterAddress ) 
     {
@@ -665,24 +683,65 @@ namespace Ph2_HwInterface
         if( cErrorCode != 0 ) 
             return cErrorCode; 
         uint32_t cValue =  readI2C( pInterface, fSCAMaster + pFeId, 0x40 | (1+ pChipId), 1); 
+        uint8_t cStatus = this->scaStatus(pInterface, fSCAMaster + pFeId);
+        bool cSuccess = ( ( (cStatus&0x4) >> 2 ) == 1 );
+        if( !cSuccess )
+        {
+            LOG (INFO) << BOLDRED << "Error in read-back of I2C from CBC.." << RESET;
+            throw std::runtime_error(std::string("I2C error with CBC on front-end hybrid.. "));
+        }
         LOG (DEBUG) << BOLDBLUE << "Read back 0x" << std::hex << cValue << std::dec << " when reading register 0x" << std::hex << +pRegisterAddress << std::dec << " from page " << +pPage << " on CBC" << +pChipId << RESET;
         return cValue;  
     }
-    bool GbtInterface::cbcWrite(BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage , uint8_t pRegisterAddress , uint8_t pRegisterValue , bool pReadBack) 
+    bool GbtInterface::cbcWrite(BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage , uint8_t pRegisterAddress , uint8_t pRegisterValue , bool pReadBack, bool pSetPage) 
     {
-        uint8_t cErrorCode = cbcSetPage(pInterface, pFeId, pChipId, pPage) ; 
-        if( cErrorCode != 0 )
-        { 
-            LOG (INFO) << BOLDYELLOW << "Error setting CBC page register." << RESET;
-            return cErrorCode; 
+        uint8_t cErrorCode = 0;
+        if( pSetPage )
+        {
+            cErrorCode = cbcSetPage(pInterface, pFeId, pChipId, pPage) ; 
         }
         cErrorCode = writeI2C(pInterface, fSCAMaster + pFeId ,  0x40 | (1 + pChipId),  (pRegisterAddress << 8*3) | (pRegisterValue << 8*2) , 2 );
-        if( pReadBack )
-            return (cbcRead(pInterface, pFeId, pChipId, pPage , pRegisterAddress) == pRegisterValue);
+        if( pReadBack && cErrorCode == 0 )
+        {
+            uint8_t cStatus = this->scaStatus(pInterface, fSCAMaster + pFeId);
+            // serial interface & error register is special 
+            // figure out how to avoid this if statement here 
+            uint32_t cReadBack = ( pRegisterAddress == 0x1D) ? cbcRead(pInterface, pFeId, pChipId, pPage , pRegisterAddress) : pRegisterValue ; 
+            LOG (DEBUG) << BOLDBLUE << "Read back " << +cReadBack << " when asking to write " << +pRegisterValue; 
+            bool cSuccess = ( ( (cStatus&0x4) >> 2 ) == 1 );
+            if( !cSuccess )
+            {
+                LOG (INFO) << BOLDRED << "SCA status " << std::bitset<8>(cStatus)
+                    << " for hybrid "
+                    << +pFeId
+                    << " readout chip "
+                    << +pChipId
+                    << " register 0x"
+                    << std::hex << +pRegisterAddress << std::dec
+                    << " [CBC]."
+                    << RESET;
+                throw std::runtime_error(std::string("SCA status reporting error..."));
+            }
+            if( cReadBack != pRegisterValue )
+            {
+                LOG (INFO) << BOLDRED << "I2C readback failed.. " 
+                    << " for hybrid "
+                    << +pFeId
+                    << " readout chip "
+                    << +pChipId
+                    << " register 0x"
+                    << std::hex << +pRegisterAddress << std::dec
+                    << " [CBC]."
+                    << RESET;
+                throw std::runtime_error(std::string("I2C readback mismatch..."));
+            }
+            cSuccess = cSuccess && (cReadBack == pRegisterValue );
+            return cSuccess;
+        }
         else 
             return (cErrorCode == 0 );
     }
-    bool GbtInterface::i2cWrite(BeBoardFWInterface* pInterface, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies)
+    bool GbtInterface::i2cWrite(BeBoardFWInterface* pInterface, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadBack)
     {
         // number of bytes to write at a time 
         uint8_t cNBytes = 2; 
@@ -772,15 +831,12 @@ namespace Ph2_HwInterface
                     {
                         auto& cChipId = cChipIterator->first;
                         auto& cRegisters = cChipIterator->second;
-                        uint32_t cErrorCode=0;
                         uint8_t cSlave = 0; 
                         if( cChipId < 8 ) // CBC 
                         {
                             cSlave = 0x40 | (cChipId + 1 );
                             cNBytes=2;
-                            cErrorCode = this->cbcSetPage(pInterface,(cMaster-fSCAMaster), cChipId, cPage+1);
-                            if( cErrorCode != 0 )
-                                exit(cErrorCode);
+                            this->cbcSetPage(pInterface,(cMaster-fSCAMaster), cChipId, cPage+1);
                         }
                         else
                         {
@@ -798,7 +854,6 @@ namespace Ph2_HwInterface
                             << " registers to write [ " 
                             << +cNBytes << " bytes per register]" << RESET;
                         
-                        configI2C( pInterface , cMaster, cNBytes);
                         cIterator = cRegisters.begin();
                         while( cIterator < cRegisters.end() ) 
                         {
@@ -806,14 +861,10 @@ namespace Ph2_HwInterface
                             //upload data bytes to send in the DATA register
                             uint8_t cAddress = ( cWord & (0xFF << 8) ) >> 8;
                             uint8_t cValue = ( cWord & (0xFF << 0) ) >> 0;
-                            //uint16_t cDataField = (cAddress << 8) | cValue ; 
-                            uint32_t pData = (cChipId < 8 ) ? ((cAddress << 8*3) | (cValue << 8*2)) : ( (cAddress << 16) | ( cValue << 8) );
-                            cErrorCode = ecWrite( pInterface, cMaster , 0x40 , pData  );
-                            if( cErrorCode != 0 )
-                                exit(cErrorCode);
-                            cErrorCode = ecWrite(pInterface, cMaster , 0xDA , (cSlave << 3*8) );
-                            if( cErrorCode != 0 )
-                                exit(cErrorCode);
+                            if( cChipId < 8 ) 
+                                this->cbcWrite(pInterface, (cMaster-fSCAMaster), cChipId , cPage+1, cAddress , cValue, pReadBack  );
+                            else
+                                this->cicWrite(pInterface, (cMaster-fSCAMaster), cAddress , cValue, pReadBack );
                             cIterator++;
                         }
                         cChipIterator++;
@@ -835,20 +886,60 @@ namespace Ph2_HwInterface
         }
         return true;
     }
+    
     uint32_t GbtInterface::cicRead(BeBoardFWInterface* pInterface , uint8_t pFeId, uint8_t pRegisterAddress) 
     {
         writeI2C(pInterface, fSCAMaster + pFeId, 0x60, (pRegisterAddress << 16) , 2 );
         uint32_t cValue =  readI2C( pInterface, fSCAMaster + pFeId , 0x60, 1);
+        uint8_t cStatus = this->scaStatus(pInterface, fSCAMaster + pFeId);
+        bool cSuccess = ( ( (cStatus&0x4) >> 2 ) == 1 );
+        if( !cSuccess )
+        {    
+            LOG (INFO) << BOLDRED << "Error in read-back of I2C from CIC.." << RESET;
+            throw std::runtime_error(std::string("I2C error with CIC on front-end hybrid.. "));
+        }
         LOG (DEBUG) << BOLDBLUE << "Read back 0x" << std::hex << cValue << std::dec << " when reading register 0x" << std::hex << +pRegisterAddress << std::dec << " on CIC on FE" << +pFeId << RESET;
         return cValue;
     }
     bool GbtInterface::cicWrite(BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue , bool pReadBack)
     {
         uint8_t cWrite = writeI2C(pInterface, fSCAMaster +pFeId, 0x60, (pRegisterAddress << 16) | ( pRegisterValue << 8) , 3 );
-        if( pReadBack ) 
-            return (cicRead(pInterface, pFeId, pRegisterAddress) == pRegisterValue);
+        if( pReadBack && cWrite == 0 )
+        {
+            uint8_t cStatus = this->scaStatus(pInterface, fSCAMaster + pFeId);
+            // serial interface & error register is special 
+            // figure out how to avoid this if statement here 
+            uint32_t cReadBack = this->cicRead(pInterface, pFeId, pRegisterAddress);
+            //uint32_t cReadBack = ( pRegisterAddress == 0x1D) ? cbcRead(pInterface, pFeId, pChipId, pPage , pRegisterAddress) : pRegisterValue ; 
+            LOG (DEBUG) << BOLDBLUE << "Read back " << +cReadBack << " after trying to write... " << +pRegisterValue; 
+            bool cSuccess = ( ( (cStatus&0x4) >> 2 ) == 1 );
+            if( !cSuccess )
+            {
+                LOG (INFO) << BOLDRED << "SCA status " << std::bitset<8>(cStatus)
+                    << " for hybrid "
+                    << +pFeId
+                    << " register 0x"
+                    << std::hex << +pRegisterAddress << std::dec
+                    << " [CIC]."
+                    << RESET;
+                throw std::runtime_error(std::string("SCA status reporting error..."));
+            }
+            if( cReadBack != pRegisterValue )
+            {
+                LOG (INFO) << BOLDRED << "I2C readback failed.. " 
+                    << " for hybrid "
+                    << +pFeId
+                    << " register 0x"
+                    << std::hex << +pRegisterAddress << std::dec
+                    << " [CIC]."
+                    << RESET;
+                throw std::runtime_error(std::string("I2C readback mismatch..."));
+            }
+            cSuccess = cSuccess && (cReadBack == pRegisterValue );
+            return cSuccess;
+        }
         else 
-            return (cWrite==0);
+            return (cWrite == 0 );
     }
 
     float GbtInterface::convAdcToTemp(float pAdcValue, std::string pThermistor) 

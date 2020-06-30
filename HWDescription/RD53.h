@@ -112,9 +112,9 @@ namespace Ph2_HwDescription
 {
   struct perColumnPixelData
   {
-    std::bitset<NROWS>         Enable;
-    std::bitset<NROWS>         HitBus;
-    std::bitset<NROWS>         InjEn;
+    std::array<uint8_t, NROWS> Enable;
+    std::array<uint8_t, NROWS> HitBus;
+    std::array<uint8_t, NROWS> InjEn;
     std::array<uint8_t, NROWS> TDAC;
   };
 

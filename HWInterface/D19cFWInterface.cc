@@ -781,10 +781,16 @@ namespace Ph2_HwInterface
         // load dio5 configuration
         if (cEnableDIO5)
         {
+            this->PowerOnDIO5();
+            LOG (INFO) << BOLDBLUE << "Loading DIO5 configuration.." << RESET;
             this->WriteReg ("fc7_daq_ctrl.dio5_block.control.load_config", 0x1);
+            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+            auto cStatus = this->ReadReg("fc7_daq_stat.dio5_block.status.not_ready");
+            auto cError = this->ReadReg("fc7_daq_stat.dio5_block.status.error");
+            LOG (INFO) << BOLDBLUE << "DIO5 status [not ready] : " << +cStatus << RESET;
+            LOG (INFO) << BOLDBLUE << "DIO5 status [error] : " << +cError << RESET;
         }
-        std::this_thread::sleep_for (std::chrono::milliseconds (500) );
-
+        
 
         // read info about current firmware
         uint32_t cFrontEndTypeCode = ReadReg ("fc7_daq_stat.general.info.chip_type");
@@ -881,7 +887,7 @@ namespace Ph2_HwInterface
                   // writing the item to the firmware
                   uint32_t final_item = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
                   std::string curreg = "fc7_daq_cnfg.command_processor_block.i2c_address_table.slave_" + std::to_string(std::distance(fI2CSlaveMap.begin(),cIterator)) + "_config";
-                  LOG (INFO) << BOLDMAGENTA << "Writing "
+                  LOG (DEBUG) << BOLDMAGENTA << "Writing "
                   << std::bitset<32>(final_item)
                   << " to register "
                   << curreg 
@@ -998,7 +1004,7 @@ namespace Ph2_HwInterface
               for ( auto cChip : *cFe)
               {
                   auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
-                  LOG (INFO) << BOLDBLUE << "Trying to perform an I2C write to " << +cReadoutChip->getChipId() << " on FE" << +cFe->getId() << RESET;
+                  LOG (DEBUG) << BOLDBLUE << "Trying to perform an I2C write to " << +cReadoutChip->getChipId() << " on FE" << +cFe->getId() << RESET;
                   cVec.clear();
 
                   cReplies.clear();
@@ -1212,115 +1218,115 @@ void D19cFWInterface::InitFMCPower()
             uint32_t fmc1_card_type = ReadReg ("fc7_daq_stat.general.info.fmc1_card_type");
             uint32_t fmc2_card_type = ReadReg ("fc7_daq_stat.general.info.fmc2_card_type");
 
-        //define constants
+            //define constants
             uint8_t i2c_slv   = 0x2f;
             uint8_t wr = 1;
-        //uint8_t rd = 0;
+            //uint8_t rd = 0;
             uint8_t sel_fmc_l8  = 0;
             uint8_t sel_fmc_l12 = 1;
-        //uint8_t p3v3 = 0xff - 0x09;
+            //uint8_t p3v3 = 0xff - 0x09;
             uint8_t p2v5 = 0xff - 0x2b;
-        //uint8_t p1v8 = 0xff - 0x67;
+            //uint8_t p1v8 = 0xff - 0x67;
 
             if (fmc1_card_type == 0x1)
             {
                 LOG (INFO) << "Found DIO5 at L12. Configuring";
 
-            // disable power
-                WriteReg ("sysreg.fmc_pwr.l12_pwr_en", 0x0);
+                // disable power
+                this->WriteReg ("sysreg.fmc_pwr.l12_pwr_en", 0x0);
+               
+                // enable i2c
+                this->WriteReg ("sysreg.i2c_settings.i2c_bus_select", 0x0);
+                this->WriteReg ("sysreg.i2c_settings.i2c_prescaler", 1000);
+                this->WriteReg ("sysreg.i2c_settings.i2c_enable", 0x1);
+                //uint32_t i2c_settings_reg_command = (0x1 << 15) | (0x0 << 10) | 1000;
+                //WriteReg("sysreg.i2c_settings", i2c_settings_reg_command);
 
-            // enable i2c
+                // set value
+                uint8_t reg_addr = (sel_fmc_l12 << 7) + 0x08;
+                uint8_t wrdata = p2v5;
+                uint32_t sys_i2c_command = ( (1 << 24) | (wr << 23) | (i2c_slv << 16) | (reg_addr << 8) | (wrdata) );
+
+                this->WriteReg ("sysreg.i2c_command", sys_i2c_command | 0x80000000);
+                this->WriteReg ("sysreg.i2c_command", sys_i2c_command);
+
+                int status   = 0; // 0 - busy, 1 -done, 2 - error
+                int attempts = 0;
+                int max_attempts = 1000;
+                usleep (1000);
+
+                while (status == 0 && attempts < max_attempts)
+                {
+                    uint32_t i2c_status = ReadReg ("sysreg.i2c_reply.status");
+                    attempts = attempts + 1;
+
+                    //
+                    if ( (int) i2c_status == 1)
+                        status = 1;
+                    else if ( (int) i2c_status == 0)
+                        status = 0;
+                    else
+                        status = 2;
+                }
+
+                // disable i2c
+                this->WriteReg ("sysreg.i2c_settings.i2c_enable", 0x0);
+
+                usleep (1000);
+                this->WriteReg ("sysreg.fmc_pwr.l12_pwr_en", 0x1);
+            }
+
+            if (fmc2_card_type == 0x1)
+            {
+                LOG (INFO) << "Found DIO5 at L8. Configuring";
+
+                // disable power
+                WriteReg ("sysreg.fmc_pwr.l8_pwr_en", 0x0);
+
+                // enable i2c
                 WriteReg ("sysreg.i2c_settings.i2c_bus_select", 0x0);
                 WriteReg ("sysreg.i2c_settings.i2c_prescaler", 1000);
                 WriteReg ("sysreg.i2c_settings.i2c_enable", 0x1);
-            //uint32_t i2c_settings_reg_command = (0x1 << 15) | (0x0 << 10) | 1000;
-            //WriteReg("sysreg.i2c_settings", i2c_settings_reg_command);
+                //uint32_t i2c_settings_reg_command = (0x1 << 15) | (0x0 << 10) | 1000;
+                //WriteReg("sysreg.i2c_settings", i2c_settings_reg_command);
 
-            // set value
-                uint8_t reg_addr = (sel_fmc_l12 << 7) + 0x08;
+                // set value
+                uint8_t reg_addr = (sel_fmc_l8 << 7) + 0x08;
                 uint8_t wrdata = p2v5;
                 uint32_t sys_i2c_command = ( (1 << 24) | (wr << 23) | (i2c_slv << 16) | (reg_addr << 8) | (wrdata) );
 
                 WriteReg ("sysreg.i2c_command", sys_i2c_command | 0x80000000);
                 WriteReg ("sysreg.i2c_command", sys_i2c_command);
 
-            int status   = 0; // 0 - busy, 1 -done, 2 - error
-            int attempts = 0;
-            int max_attempts = 1000;
-            usleep (1000);
+                int status   = 0; // 0 - busy, 1 -done, 2 - error
+                int attempts = 0;
+                int max_attempts = 1000;
+                usleep (1000);
 
-            while (status == 0 && attempts < max_attempts)
-            {
-                uint32_t i2c_status = ReadReg ("sysreg.i2c_reply.status");
-                attempts = attempts + 1;
+                while (status == 0 && attempts < max_attempts)
+                {
+                    uint32_t i2c_status = ReadReg ("sysreg.i2c_reply.status");
+                    attempts = attempts + 1;
 
-                //
-                if ( (int) i2c_status == 1)
-                    status = 1;
-                else if ( (int) i2c_status == 0)
-                    status = 0;
-                else
-                    status = 2;
+                    //
+                    if ( (int) i2c_status == 1)
+                        status = 1;
+                    else if ( (int) i2c_status == 0)
+                        status = 0;
+                    else
+                        status = 2;
+                }
+
+                // disable i2c
+                WriteReg ("sysreg.i2c_settings.i2c_enable", 0x0);
+
+                usleep (1000);
+                WriteReg ("sysreg.fmc_pwr.l8_pwr_en", 0x1);
             }
 
-            // disable i2c
-            WriteReg ("sysreg.i2c_settings.i2c_enable", 0x0);
-
-            usleep (1000);
-            WriteReg ("sysreg.fmc_pwr.l12_pwr_en", 0x1);
+            if (fmc1_card_type != 0x1 && fmc2_card_type != 0x1)
+              LOG (ERROR) << "No DIO5 found, you should disable it in the config file..";
         }
-
-        if (fmc2_card_type == 0x1)
-        {
-            LOG (INFO) << "Found DIO5 at L8. Configuring";
-
-            // disable power
-            WriteReg ("sysreg.fmc_pwr.l8_pwr_en", 0x0);
-
-            // enable i2c
-            WriteReg ("sysreg.i2c_settings.i2c_bus_select", 0x0);
-            WriteReg ("sysreg.i2c_settings.i2c_prescaler", 1000);
-            WriteReg ("sysreg.i2c_settings.i2c_enable", 0x1);
-            //uint32_t i2c_settings_reg_command = (0x1 << 15) | (0x0 << 10) | 1000;
-            //WriteReg("sysreg.i2c_settings", i2c_settings_reg_command);
-
-            // set value
-            uint8_t reg_addr = (sel_fmc_l8 << 7) + 0x08;
-            uint8_t wrdata = p2v5;
-            uint32_t sys_i2c_command = ( (1 << 24) | (wr << 23) | (i2c_slv << 16) | (reg_addr << 8) | (wrdata) );
-
-            WriteReg ("sysreg.i2c_command", sys_i2c_command | 0x80000000);
-            WriteReg ("sysreg.i2c_command", sys_i2c_command);
-
-            int status   = 0; // 0 - busy, 1 -done, 2 - error
-            int attempts = 0;
-            int max_attempts = 1000;
-            usleep (1000);
-
-            while (status == 0 && attempts < max_attempts)
-            {
-                uint32_t i2c_status = ReadReg ("sysreg.i2c_reply.status");
-                attempts = attempts + 1;
-
-                //
-                if ( (int) i2c_status == 1)
-                    status = 1;
-                else if ( (int) i2c_status == 0)
-                    status = 0;
-                else
-                    status = 2;
-            }
-
-            // disable i2c
-            WriteReg ("sysreg.i2c_settings.i2c_enable", 0x0);
-
-            usleep (1000);
-            WriteReg ("sysreg.fmc_pwr.l8_pwr_en", 0x1);
-        }
-
-        if (fmc1_card_type != 0x1 && fmc2_card_type != 0x1)
-            LOG (ERROR) << "No DIO5 found, you should disable it in the config file..";
-    }
 
     // set i2c address table depending on the hybrid
     void D19cFWInterface::SetI2CAddressTable()
@@ -2894,7 +2900,7 @@ void D19cFWInterface::InitFMCPower()
             if( cWriteReq == 1 )
             {
                //still being tested - WIP
-               cFailed = !cGBTx.i2cWrite(this, pVecSend, pReplies);
+               cFailed = !cGBTx.i2cWrite(this, pVecSend, pReplies, pReadback);
             }
             else
             {
