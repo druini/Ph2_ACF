@@ -1186,7 +1186,7 @@ public:
 			if(burstNumbers==1) currentNumberOfEvents = lastBurstNumberOfEvents;
 			EventType fEventType = fDetectorContainer->at(fBoardIndex)->getEventType();
 
-			if (fEventType == EventType::SSAAS)
+			if (fEventType == EventType::SSAAS or fEventType == EventType::MPAAS )
 				fTool->ReadASEvent(fDetectorContainer->at(fBoardIndex), fNumberOfMSec );
 			else
 				fTool->ReadNEvents (fDetectorContainer->at(fBoardIndex), currentNumberOfEvents );
