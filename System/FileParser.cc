@@ -433,6 +433,27 @@ namespace Ph2_System
     //FrontEndType cType = pSSA->getFrontEndType();
   }
 
+  void FileParser::parseMPA (pugi::xml_node pModuleNode, Module* pModule, std::string cFilePrefix)
+  { // Get ID of MPA then add to the Module!
+    uint32_t cChipId = pModuleNode.attribute ( "Id" ).as_int();
+    std::string cFileName;
+    if ( !cFilePrefix.empty() )
+      {
+        if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
+          cFilePrefix.append ("/");
+
+        cFileName = cFilePrefix + expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
+      }
+    else cFileName = expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
+    ReadoutChip* cMPA = pModule->addChipContainer(cChipId, new MPA ( pModule->getBeId(), pModule->getFMCId(), pModule->getFeId(), cChipId,  cFileName ));
+    cMPA->setNumberOfChannels(1920);
+    this->parseMPASettings (pModuleNode, cMPA);
+  }
+
+  void FileParser::parseMPASettings (pugi::xml_node pModuleNode, ReadoutChip* pMPA)
+  {
+    //FrontEndType cType = pMPA->getFrontEndType();
+  }
   void FileParser::parseModuleContainer (pugi::xml_node pModuleNode, OpticalGroup* pOpticalGroup, std::ostream& os, BeBoard* pBoard)
   {
     bool cStatus = pModuleNode.attribute("Status").as_bool();
@@ -464,7 +485,7 @@ namespace Ph2_System
           {
             std::string cName = cChild.name();
             std::string cNextName = cChild.next_sibling().name();
-            if (cName.find("CBC") != std::string::npos || cName.find("RD53") != std::string::npos || cName.find("CIC") != std::string::npos || cName.find("SSA") != std::string::npos)
+            if (cName.find("CBC") != std::string::npos || cName.find("RD53") != std::string::npos || cName.find("CIC") != std::string::npos || cName.find("SSA") || cName.find("MPA") != std::string::npos)
               {
                 if (cName.find("_Files") != std::string::npos)
                   {
@@ -560,6 +581,11 @@ namespace Ph2_System
                       {
                         pBoard->setFrontEndType( FrontEndType::SSA);
                         this->parseSSA(cChild, cModule, cConfigFileDirectory);
+                      }
+                    else if (cName == "MPA")
+                      {
+                        pBoard->setFrontEndType( FrontEndType::MPA);
+                        this->parseMPA(cChild, cModule, cConfigFileDirectory);
                       }
                   }
               }

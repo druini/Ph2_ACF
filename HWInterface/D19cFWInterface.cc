@@ -817,6 +817,7 @@ namespace Ph2_HwInterface
                     //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
                     cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x41; 
                     cNBytes = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 2 : 1; 
+                 
                     if( fI2CSlaveMap.find(cChip->getId()) == fI2CSlaveMap.end()  )
                     { 
                       std::pair<uint8_t,std::vector<uint32_t>> cMapItem; 
@@ -999,6 +1000,7 @@ namespace Ph2_HwInterface
                   auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
                   LOG (INFO) << BOLDBLUE << "Trying to perform an I2C write to " << +cReadoutChip->getChipId() << " on FE" << +cFe->getId() << RESET;
                   cVec.clear();
+
                   cReplies.clear();
                   // find first non-zero register in the map
                   size_t cIndex=0;
@@ -1006,6 +1008,8 @@ namespace Ph2_HwInterface
                   auto cIterator = cRegisterMap.begin();
                   do
                   {
+                  LOG (INFO) << BOLDBLUE <<(*cIterator).first<< RESET;
+                  LOG (INFO) << BOLDBLUE <<(*cIterator).second.fValue<< RESET;
                     cIndex++;
                     if( (*cIterator).second.fValue != 0 )
                       cIterator++;
@@ -2434,7 +2438,7 @@ void D19cFWInterface::InitFMCPower()
     void D19cFWInterface::ReadASEvent (BeBoard* pBoard, std::vector<uint32_t>& pData )
     {
 
-
+               std::cout << "INAS"<<std::endl;
  	uint32_t raw_mode_en=0;
  	WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", raw_mode_en);
 	uint32_t ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
@@ -2457,11 +2461,11 @@ void D19cFWInterface::InitFMCPower()
 
  	std::vector<uint32_t> count(chans, 0);
 
-
-	std::vector< std::pair<std::string, uint32_t> > cVecReg;
+               std::cout << "INAS1"<<std::endl;
+	//std::vector< std::pair<std::string, uint32_t> > cVecReg;
 	//cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_reset", 1});
 	//cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_orbit_reset", 1});
-	this->WriteStackReg ( cVecReg );
+	//this->WriteStackReg ( cVecReg );
 
 
 	PS_Start_counters_read();
@@ -2473,7 +2477,7 @@ void D19cFWInterface::InitFMCPower()
 
  	uint32_t  timeout = 0;
 
- 	while ((ps_counters_ready == 0) & (timeout < 50))
+ 	while ((ps_counters_ready == 0) & (timeout < 500))
 	            {
 
 	                std::this_thread::sleep_for( cWait );
@@ -2522,7 +2526,9 @@ void D19cFWInterface::InitFMCPower()
 		//	std::chrono::milliseconds cWait( 10 );
 
 		//	}
+               std::cout << "gogo " <<chans<<std::endl;
 		pData = ReadBlockRegValue("fc7_daq_ctrl.physical_interface_block.fifo2_data",chans);
+                std::cout << pData[0]<<" "<<pData[1] <<std::endl;
 		//pData = ReadBlockRegValue ("fc7_daq_ctrl.calibration_2s_block.counter_fifo", chans);
 
 	        }
@@ -3792,7 +3798,7 @@ void D19cFWInterface::InitFMCPower()
     }
 
 
-    void D19cFWInterface::Pix_write_MPA(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
+    void D19cFWInterface::Pix_write_MPA(Chip* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
     {
         uint8_t cWriteAttempts = 0;
 
@@ -3801,18 +3807,18 @@ void D19cFWInterface::InitFMCPower()
         rowreg.fValue  = data;
         std::vector<uint32_t> cVecReq;
         cVecReq.clear();
-        this->EncodeReg (rowreg, cMPA->getFeId(), cMPA->getMPAId(), cVecReq, false, true);
+        this->EncodeReg (rowreg, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, true);
         this->WriteChipBlockReg (cVecReq, cWriteAttempts, false);
     }
 
-    uint32_t D19cFWInterface::Pix_read_MPA(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel)
+    uint32_t D19cFWInterface::Pix_read_MPA(Chip* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel)
     {
         uint8_t cWriteAttempts = 0;
         uint32_t rep;
 
         std::vector<uint32_t> cVecReq;
         cVecReq.clear();
-        this->EncodeReg (cRegItem, cMPA->getFeId(), cMPA->getMPAId(), cVecReq, false, false);
+        this->EncodeReg (cRegItem, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, false);
         this->WriteChipBlockReg (cVecReq,cWriteAttempts, false);
         std::chrono::milliseconds cShort( 1 );
     //uint32_t readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
@@ -3918,11 +3924,21 @@ void D19cFWInterface::InitFMCPower()
 	//some overlap for now...
     void D19cFWInterface::Send_pulses(uint32_t pNtriggers)
     {
+
+	PS_Clear_counters();
+	PS_Clear_counters();
+	this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0x0);
+	this->WriteReg ("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", 0);
+	this->WriteReg ("fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", 0);
+	this->WriteReg ("fc7_daq_cnfg.fast_command_block.test_pulse.en_test_pulse", 1);
+	this->WriteReg ("fc7_daq_cnfg.fast_command_block.test_pulse.en_l1a", 0);
+	this->WriteReg ("fc7_daq_cnfg.fast_command_block.trigger_source", 6);
 	this->WriteReg ("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNtriggers);
-	this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+	this->WriteReg ("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+
+	//std::cout<<"inFSM"<<std::endl;
 
 	usleep(10);
-
         this->WriteReg ("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
 	uint32_t nsleeps=0;
 	uint32_t maxsleeps=1000;
@@ -3935,13 +3951,14 @@ void D19cFWInterface::InitFMCPower()
 		{
 			LOG(INFO) << "Cal pulses timeout";
 			PS_Clear_counters();
+			PS_Clear_counters();
 			this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
 	        	usleep(10);
 	        	this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
 	        	usleep(10);
 			Send_pulses(pNtriggers);
 		}
-	WriteReg ("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
+	//WriteReg ("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
     }
 
 

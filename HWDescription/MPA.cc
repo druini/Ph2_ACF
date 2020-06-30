@@ -20,52 +20,42 @@
 
 
 namespace Ph2_HwDescription {
-    // C'tors with object FE Description
-
-    MPA::MPA ( const FrontEndDescription& pFeDesc, uint8_t pMPAId ) : FrontEndDescription ( pFeDesc ),
-        fMPAId ( pMPAId )
-
-    {}
-
+ 
     // C'tors which take BeId, FMCId, FeID, MPAId
 
-    MPA::MPA (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, const std::string &filename) : FrontEndDescription ( pBeId, pFMCId, pFeId ), fMPAId ( pMPAId )
+    MPA::MPA (uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, const std::string &filename) : ReadoutChip ( pBeId, pFMCId, pFeId, pMPAId)
     {
+   
+        fMaxRegValue=255; 
+        fChipOriginalMask = new ChannelGroup<1920>;
         loadfRegMap ( filename );
-        this->setFrontEndType (FrontEndType::MPA);
-    }
-
-    // Copy C'tor
-
-    MPA::MPA ( const MPA& MPAobj ) : FrontEndDescription ( MPAobj ),
-        fMPAId ( MPAobj.fMPAId )
-    {
-    }
-
-
-    // D'Tor
-
-    MPA::~MPA()
-    {
-
+        setFrontEndType ( FrontEndType::MPA);
     }
 
 
 
-    //load fRegMap from file
+    MPA::MPA ( const FrontEndDescription& pFeDesc, uint8_t pMPAId,  const std::string& filename ) : ReadoutChip ( pFeDesc, pMPAId )
+     {
+        fMaxRegValue=255; // 8 bit registers in CBC
+        fChipOriginalMask = new ChannelGroup<1920>;
+        loadfRegMap ( filename );
+        setFrontEndType ( FrontEndType::MPA);
+    }
+
 
     void MPA::loadfRegMap ( const std::string& filename )
-    {
+    { // start loadfRegMap
         std::ifstream file ( filename.c_str(), std::ios::in );
-
         if ( file )
         {
             std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
             int cLineCounter = 0;
             ChipRegItem fRegItem;
-
+            // fhasMaskedChannels = false;
             while ( getline ( file, line ) )
             {
+
+                //std::cout<< __PRETTY_FUNCTION__ << " " << line << std::endl;
                 if ( line.find_first_not_of ( " \t" ) == std::string::npos )
                 {
                     fCommentMap[cLineCounter] = line;
@@ -84,18 +74,31 @@ namespace Ph2_HwDescription {
                 {
                     std::istringstream input ( line );
                     input >> fName >> fPage_str >> fAddress_str >> fDefValue_str >> fValue_str;
-
                     fRegItem.fPage = strtoul ( fPage_str.c_str(), 0, 16 );
                     fRegItem.fAddress = strtoul ( fAddress_str.c_str(), 0, 16 );
                     fRegItem.fDefValue = strtoul ( fDefValue_str.c_str(), 0, 16 );
                     fRegItem.fValue = strtoul ( fValue_str.c_str(), 0, 16 );
-
+			//FIXME this channel masking part is currently using the CBC values. Need to check what the SSA format is
+                    if(fRegItem.fPage==0x00 && fRegItem.fAddress>=0x20 && fRegItem.fAddress<=0x3F){ //Register is a Mask
+                        if(fRegItem.fValue!=0xFF)
+                        {
+                            for(uint8_t channel=0; channel<8; ++channel)
+                            {
+                                if((fRegItem.fValue & (0x1<<channel)) == 0)
+                                {
+                                    fChipOriginalMask->disableChannel((fRegItem.fAddress - 0x20)*8 + channel);
+                                }
+                            }
+                        }
+                    }
                     fRegMap[fName] = fRegItem;
+                    //std::cout << __PRETTY_FUNCTION__ <<fName<<"," <<fRegItem.fValue << std::endl;
                     cLineCounter++;
                 }
             }
 
             file.close();
+
         }
         else
         {
@@ -103,61 +106,17 @@ namespace Ph2_HwDescription {
             exit (1);
         }
 
-        //for (auto cItem : fRegMap)
-        //LOG (DEBUG) << cItem.first;
-    }
+    } // end loadfRegMap
 
-
-
-    uint8_t MPA::getReg ( const std::string& pReg ) const
-    {
-        MPARegMap::const_iterator i = fRegMap.find ( pReg );
-
-        if ( i == fRegMap.end() )
-        {
-            LOG (INFO) << "The MPA object: " << +fMPAId << " doesn't have " << pReg ;
-            return 0;
-        }
-        else
-            return i->second.fValue;
-    }
-
-
-    void MPA::setReg ( const std::string& pReg, uint8_t psetValue )
-    {
-        MPARegMap::iterator i = fRegMap.find ( pReg );
-
-        if ( i == fRegMap.end() )
-            LOG (INFO) << "The MPA object: " << +fMPAId << " doesn't have " << pReg ;
-        else
-            i->second.fValue = psetValue;
-    }
-
-    ChipRegItem MPA::getRegItem ( const std::string& pReg )
-    {
-        ChipRegItem cItem;
-        MPARegMap::iterator i = fRegMap.find ( pReg );
-
-        if ( i != std::end ( fRegMap ) ) return ( i->second );
-        else
-        {
-            LOG (ERROR) << "Error, no Register " << pReg << " found in the RegisterMap of MPA " << +fMPAId << "!" ;
-            throw Exception ( "MPA: no matching register found" );
-            return cItem;
-        }
-    }
-
-
-    //Write RegValues in a file
 
     void MPA::saveRegMap ( const std::string& filename )
-    {
+    { // start saveRegMap
 
         std::ofstream file ( filename.c_str(), std::ios::out | std::ios::trunc );
 
         if ( file )
         {
-            std::set<MPARegPair, MPARegItemComparer> fSetRegItem;
+            std::set<MPARegPair, RegItemComparer> fSetRegItem;
 
             for ( auto& it : fRegMap )
                 fSetRegItem.insert ( {it.first, it.second} );
@@ -191,7 +150,9 @@ namespace Ph2_HwDescription {
         }
         else
             LOG (ERROR) << "Error opening file" ;
-    }
+    } // end saveRegMap
+
+
 
 
     bool MPARegItemComparer::operator() ( const MPARegPair& pRegItem1, const MPARegPair& pRegItem2 ) const

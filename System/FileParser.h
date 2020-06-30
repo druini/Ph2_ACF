@@ -91,6 +91,9 @@ namespace Ph2_System
     void parseSSA         (pugi::xml_node pModuleNode,   Ph2_HwDescription::Module* cModule, std::string cFilePrefix);
     void parseSSASettings (pugi::xml_node pModuleNode,   Ph2_HwDescription::ReadoutChip* cSSA);
 
+    void parseMPA         (pugi::xml_node pModuleNode,   Ph2_HwDescription::Module* cModule, std::string cFilePrefix);
+    void parseMPASettings (pugi::xml_node pModuleNode,   Ph2_HwDescription::ReadoutChip* cMPA);
+
     // ########################
     // # RD53 specific parser #
     // ########################

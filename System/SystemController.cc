@@ -102,24 +102,23 @@ namespace Ph2_System
   {
     fStreamerEnabled = streamData;
     if (streamData == true) fNetworkStreamer = new TCPPublishServer(6000,1);
-
+    std::cout<<1<<std::endl;
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     const BeBoard* theFirstBoard = fDetectorContainer->at(0);
-
     if (theFirstBoard->getBoardType() != BoardType::RD53)
       {
         OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>((theFirstBoard->at(0))->at(0));
         auto cChipType = (static_cast<ReadoutChip*>(theOuterTrackerModule->at(0))->getFrontEndType());
         if (cChipType == FrontEndType::CBC3)
-
           fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
         else if(cChipType == FrontEndType::SSA)
           fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+        else if(cChipType == FrontEndType::MPA)
+          fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
         fCicInterface = new CicInterface(fBeBoardFWMap);
-        fMPAInterface = new MPAInterface(fBeBoardFWMap);
       }
     else
       {
@@ -412,7 +411,7 @@ namespace Ph2_System
   {
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-    //LOG (INFO) << BOLDGREEN << "fsm "<< fsm<< RESET;
+    //LOG (INFO) << BOLDGREEN << "TEST"<< fsm<< RESET;
 
     std::vector<uint32_t> cData;
     if (fsm and (pulses>0)) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Send_pulses(pulses);
@@ -428,9 +427,11 @@ namespace Ph2_System
           }
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);
       }
+
     if(fast)
       {
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadASEvent(pBoard, cData);
+
       }
     else
       {
@@ -440,7 +441,9 @@ namespace Ph2_System
               {
                 for(auto cChip : *cHybrid)
                   {
-                    static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+        		if( pBoard->getFrontEndType() == FrontEndType::MPA )static_cast<MPAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+        		if( pBoard->getFrontEndType() == FrontEndType::SSA )static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+                    
                   }
               }
           }
@@ -511,6 +514,33 @@ namespace Ph2_System
           {
             fEventList.push_back(new D19cSSAEventAS(pBoard, maxind+1, fNFe, pData));
           }
+
+
+
+        if( pBoard->getFrontEndType() == FrontEndType::MPA )
+          {
+
+            uint16_t nMPA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_MPA) / D19C_EVENT_SIZE_32_MPA / fNFe;
+            if (fEventType == EventType::MPAAS) nMPA = pData.size()/1920;
+
+            for(auto opticalGroup: *pBoard)
+              {
+                for(auto hybrid: *opticalGroup)
+                  {
+                    for(auto chip: *hybrid)
+                      {
+                        maxind=std::max(maxind,uint32_t(chip->getId()+hybrid->getId()*nMPA));
+                      }
+                  }
+              }
+            //LOG (INFO) << BOLDBLUE << "maxind " << maxind << RESET;
+          }
+
+        if (fEventType == EventType::MPAAS)
+          {
+            fEventList.push_back(new D19cMPAEventAS(pBoard, maxind+1, fNFe, pData));
+          }
+
         else if (fEventType != EventType::ZS)
           {
             size_t cEventIndex=0;

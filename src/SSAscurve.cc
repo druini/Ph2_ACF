@@ -87,6 +87,7 @@ int main ( int argc, char* argv[] )
     cBackEndAligner.Initialise();
     bool cAligned = cBackEndAligner.Align();
     cBackEndAligner.resetPointers();
+
     if(!cAligned )
     {
         LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;

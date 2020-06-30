@@ -16,37 +16,221 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-MPAInterface::MPAInterface( const BeBoardFWMap& pBoardMap ) :
-    fBoardMap( pBoardMap ),
-    fBoardFW( nullptr ),
-    prevBoardIdentifier( 65535 ),
-    fRegisterCount( 0 ),
-    fTransactionCount( 0 )
-{
-#ifdef COUNT_FLAG
-    std::cout << "Counting number of Transactions!" << std::endl;
-#endif
-}
-
+MPAInterface::MPAInterface ( const BeBoardFWMap& pBoardMap ) : ReadoutChipInterface ( pBoardMap ){}
 MPAInterface::~MPAInterface()
 {
 }
 
-void MPAInterface::setBoard( uint16_t pBoardIdentifier )
-{
-    if ( prevBoardIdentifier != pBoardIdentifier )
-    {
-        BeBoardFWMap::iterator i = fBoardMap.find( pBoardIdentifier );
+uint16_t MPAInterface::ReadChipReg ( Chip* pMPA, const std::string& pRegNode )
+	{
+		setBoard ( pMPA->getBeBoardId() );
 
-        if ( i == fBoardMap.end() )
-            std::cout << "The Board: " << +( pBoardIdentifier >> 8 ) << "  doesn't exist" << std::endl;
-        else
+		ChipRegItem cRegItem = pMPA->getRegItem ( pRegNode );
+
+		std::vector<uint32_t> cVecReq;
+
+		fBoardFW->EncodeReg ( cRegItem, pMPA->getFeId(), pMPA->getChipId(), cVecReq, true, false );
+		fBoardFW->ReadChipBlockReg (  cVecReq );
+
+		//bools to find the values of failed and read
+		bool cFailed = false;
+		bool cRead;
+		uint8_t cMPAId;
+		fBoardFW->DecodeReg ( cRegItem, cMPAId, cVecReq[0], cRead, cFailed );
+		//std::cout<<"ritemread "<<cRegItem.fValue<<std::endl;
+		if (!cFailed) pMPA->setReg ( pRegNode, cRegItem.fValue );
+
+		return cRegItem.fValue & 0xFF;
+	}
+
+
+bool MPAInterface::WriteChipReg ( Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop )
+	{
+		//std::cout<<"Zoop 1"<<std::endl;
+		setBoard ( pMPA->getBeBoardId() );
+		//std::cout<<"Zoop 2"<<std::endl;
+		ChipRegItem cRegItem = pMPA->getRegItem ( pRegNode );
+		//std::cout<<"Zoop 3"<<std::endl;
+		cRegItem.fValue = pValue & 0xFF;
+		std::vector<uint32_t> cVec;
+		//std::cout<<pMPA->getFeId()<<" , "<<pMPA->getChipId()<<std::endl;
+		fBoardFW->EncodeReg ( cRegItem, pMPA->getFeId(), pMPA->getChipId(), cVec, pVerifLoop, true );
+		uint8_t cWriteAttempts = 0 ;
+        	bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
+
+		if (cSuccess)
+		    pMPA->setReg ( pRegNode, pValue );
+
+		#ifdef COUNT_FLAG
+			fRegisterCount++;
+			fTransactionCount++;
+		#endif
+		return cSuccess;
+	}
+
+
+bool MPAInterface::WriteChipMultReg ( Chip* pMPA, const std::vector< std::pair<std::string, uint16_t> >& pVecReq, bool pVerifLoop )
+	{
+	        //first, identify the correct BeBoardFWInterface
+	        setBoard ( pMPA->getBeBoardId() );
+
+	        std::vector<uint32_t> cVec;
+
+	        //Deal with the ChipRegItems and encode them
+	        ChipRegItem cRegItem;
+
+	        for ( const auto& cReg : pVecReq )
+	        {
+	            if ( cReg.second > 0xFF)
+	            {
+	                LOG (ERROR) << "SSA register are 8 bits, impossible to write " << cReg.second << " on registed " << cReg.first ;
+	                continue;
+	            }
+	            cRegItem = pMPA->getRegItem ( cReg.first );
+	            cRegItem.fValue = cReg.second;
+	            fBoardFW->EncodeReg ( cRegItem, pMPA->getFeId(), pMPA->getChipId(), cVec, pVerifLoop, true );
+
+		    //HACK! take out
+		    this->WriteChipReg(pMPA, cReg.first , cReg.second ,pVerifLoop );
+
+	            #ifdef COUNT_FLAG
+	                fRegisterCount++;
+	            #endif
+	        }
+
+	        // write the registers, the answer will be in the same cVec
+	        // the number of times the write operation has been attempted is given by cWriteAttempts
+	        //uint8_t cWriteAttempts = 0 ;
+
+		//HACK! put back in
+	        //bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
+		bool cSuccess = true;
+
+	        #ifdef COUNT_FLAG
+	            fTransactionCount++;
+	        #endif
+
+	        // if the transaction is successfull, update the HWDescription object
+	        if (cSuccess)
+	        {
+	            for ( const auto& cReg : pVecReq )
+	            {
+	                cRegItem = pMPA->getRegItem ( cReg.first );
+	                pMPA->setReg ( cReg.first, cReg.second );
+
+	            }
+	        }
+
+	        return cSuccess;
+	}
+
+bool MPAInterface::WriteChipAllLocalReg ( ReadoutChip* pMPA, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop )
         {
-            fBoardFW = i->second;
-            fMPAFW = dynamic_cast<D19cFWInterface*>(fBoardFW);
-            prevBoardIdentifier = pBoardIdentifier;
+            setBoard ( pMPA->getBeBoardId() );
+            assert(localRegValues.size()==pMPA->getNumberOfChannels());
+            std::string dacTemplate;
+            bool isMask = false;
+
+            if(dacName == "TrimDAC_P") dacTemplate = "TrimDAC_P%d";
+            else if(dacName == "Mask") isMask = true;
+            else LOG (ERROR) << "Error, DAC "<< dacName <<" is not a Local DAC";
+
+            std::vector<std::pair<std::string, uint16_t> > cRegVec;
+            // std::vector<uint32_t> listOfChannelToUnMask;
+            ChannelGroup<NSSACHANNELS,1> channelToEnable;
+
+            std::vector<uint32_t> cVec;cVec.clear();
+            for(uint8_t iChannel=0; iChannel<pMPA->getNumberOfChannels(); ++iChannel)
+            {
+                if(isMask)
+                {
+                    if( localRegValues.getChannel<uint16_t>(iChannel) )
+                    {
+                        channelToEnable.enableChannel(iChannel);
+                        // listOfChannelToUnMask.emplace_back(iChannel);
+                    }
+                }
+                else
+                {
+                    char dacName1[20];
+
+                    sprintf (dacName1, dacTemplate.c_str(), iChannel+1);
+                    // fBoardFW->EncodeReg ( cRegItem, pMPA->getFeId(), pMPA->getChipId(), cVec, pVerifLoop, true );
+                    // #ifdef COUNT_FLAG
+                    //     fRegisterCount++;
+                    // #endif
+                    cRegVec.emplace_back(dacName1,localRegValues.getChannel<uint16_t>(iChannel));
+                }
+            }
+
+            if(isMask)
+            {
+                return maskChannelsGroup (pMPA, &channelToEnable, pVerifLoop);
+            }
+            else
+            {
+                // uint8_t cWriteAttempts = 0 ;
+                // bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
+                // #ifdef COUNT_FLAG
+                //     fTransactionCount++;
+                // #endif
+                // return cSuccess;
+		//fReadoutChipInterface->WriteChipReg(theChip, "THTRIMMING_S" + std::to_string(istrip), THtowrite);
+
+
+                return WriteChipMultReg (pMPA, cRegVec, pVerifLoop);
+            }
+
         }
-    }
+
+
+
+bool MPAInterface::ConfigureChip ( Chip* pMPA, bool pVerifLoop, uint32_t pBlockSize )
+    	{
+    		uint8_t cWriteAttempts = 0 ;
+		//first, identify the correct BeBoardFWInterface
+        	setBoard ( pMPA->getBeBoardId() );
+		std::vector<uint32_t> cVec;
+		ChipRegMap cMPARegMap = pMPA->getRegMap();
+		int NumReg = 0;
+		for ( auto& cRegItem : cMPARegMap )
+	        {
+		        NumReg++;
+			#ifdef COUNT_FLAG
+				fRegisterCount++;
+			#endif
+			//LOG (INFO) << BOLDRED << "Write "<<cRegItem.first<< RESET;
+		     	fBoardFW->EncodeReg (cRegItem.second, pMPA->getFeId(), pMPA->getChipId(), cVec, pVerifLoop, true);
+		      	bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
+		      	if( cSuccess )
+			{
+				auto cReadBack = ReadChipReg( pMPA, cRegItem.first );
+				if( cReadBack != cRegItem.second.fValue )
+				{
+					std::size_t found=(cRegItem.first).find("ReadCounter");
+				        if (found==std::string::npos)
+						{
+						LOG (INFO) << BOLDRED << "Read back value from "
+							<< cRegItem.first << BOLDBLUE
+							<< " at I2C address " << std::hex
+							<< pMPA->getRegItem(cRegItem.first).fAddress << std::dec
+							<< " not equal to write value of "
+							<< std::hex << +cRegItem.second.fValue << std::dec << RESET;
+						//return false;
+						}
+				}
+			}
+			//LOG (INFO) << BOLDRED << "READ "<<ReadChipReg( pMPA, cRegItem.first )<< RESET;
+			//LOG (INFO) << BOLDBLUE << cRegItem.first << "  <   " << BOLDRED << cSuccess << RESET;
+		      	if (not cSuccess) return false;
+		        cVec.clear();
+		}
+		
+		LOG (INFO) << BOLDGREEN << "Wrote: " << NumReg << RESET;
+		#ifdef COUNT_FLAG
+	        fTransactionCount++;
+		#endif
+	        return true;
 }
 
 
@@ -55,305 +239,92 @@ void MPAInterface::setBoard( uint16_t pBoardIdentifier )
 void MPAInterface::setFileHandler (FileHandler* pHandler)
 {
     setBoard(0);
-    fMPAFW->setFileHandler ( pHandler);
+    fBoardFW->setFileHandler ( pHandler);
 }
 
 
 //Straight python port
-void MPAInterface::PowerOn(float VDDPST , float DVDD , float AVDD , float VBG , uint8_t mpaid  , uint8_t ssaid  )
-{
-    setBoard(0);
-    fMPAFW->PSInterfaceBoard_PowerOn_MPA( );
-
-}
-
-
-void MPAInterface::PowerOff(uint8_t mpaid , uint8_t ssaid )
-{
-    setBoard(0);
-    fMPAFW->PSInterfaceBoard_PowerOff_MPA( );
-}
-
-void MPAInterface::MainPowerOn(uint8_t mpaid , uint8_t ssaid )
-{
-    setBoard(0);
-    fMPAFW->PSInterfaceBoard_PowerOn( );
-}
+//void MPAInterface::PowerOn(float VDDPST , float DVDD , float AVDD , float VBG , uint8_t mpaid  , uint8_t ssaid  )
+//{
+  //  setBoard(0);
+    //fBoardFW->PSInterfaceBoard_PowerOn_MPA( );
+//}
 
 
+//void MPAInterface::PowerOff(uint8_t mpaid , uint8_t ssaid )
+//{
+  //  setBoard(0);
+    //fBoardFW->PSInterfaceBoard_PowerOff_MPA( );
+///}
 
-void MPAInterface::MainPowerOff()
-{
-    setBoard(0);
-    fMPAFW->PSInterfaceBoard_PowerOff( );
-}
+//void MPAInterface::MainPowerOn(uint8_t mpaid , uint8_t ssaid )
+//{
+ //   setBoard(0);
+   // fBoardFW->PSInterfaceBoard_PowerOn( );
+//}
 
-bool MPAInterface::ConfigureMPA (const MPA* pMPA, bool pVerifLoop)
-{
-    //first, identify the correct BeBoardFWInterface
-    setBoard ( pMPA->getBeBoardId() );
 
-    //vector to encode all the registers into
-    std::vector<uint32_t> cVec;
 
-    //Deal with the ChipRegItems and encode them
+//void MPAInterface::MainPowerOff()
+//{
+  //  setBoard(0);
+    //fBoardFW->PSInterfaceBoard_PowerOff( );
+//}
 
-    MPARegMap cMPARegMap = pMPA->getRegMap();
 
-    for ( auto& cRegItem : cMPARegMap )
+
+
+void MPAInterface::Pix_write(ReadoutChip* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
     {
-        fBoardFW->EncodeReg (cRegItem.second, pMPA->getFeId(), pMPA->getMPAId(), cVec, pVerifLoop, true);
-#ifdef COUNT_FLAG
-        fRegisterCount++;
-#endif
+        uint8_t cWriteAttempts = 0;
+
+        ChipRegItem rowreg =cRegItem;
+        rowreg.fAddress  = ((row & 0x0001f) << 11 ) | ((cRegItem.fAddress & 0x000f) << 7 ) | (pixel & 0xfffffff);
+        rowreg.fValue  = data;
+        std::vector<uint32_t> cVecReq;
+        cVecReq.clear();
+        fBoardFW->EncodeReg (rowreg, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, true);
+        fBoardFW->WriteChipBlockReg (cVecReq, cWriteAttempts, false);
     }
 
-    // write the registers, the answer will be in the same cVec
-    // the number of times the write operation has been attempted is given by cWriteAttempts
-    uint8_t cWriteAttempts = 0 ;
-    bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
 
-#ifdef COUNT_FLAG
-    fTransactionCount++;
-#endif
-
-    return cSuccess;
-}
-
-
-
-bool MPAInterface::WriteMPAReg ( MPA* pMPA, const std::string& pRegNode, uint8_t pValue, bool pVerifLoop )
-{
-    //first, identify the correct BeBoardFWInterface
-    setBoard ( pMPA->getBeBoardId() );
-
-    //next, get the reg item
-    ChipRegItem cRegItem = pMPA->getRegItem ( pRegNode );
-    cRegItem.fValue = pValue;
-
-    //vector for transaction
-    std::vector<uint32_t> cVec;
-
-    // encode the reg specific to the FW, pVerifLoop decides if it should be read back, true means to write it
-    fBoardFW->EncodeReg ( cRegItem, pMPA->getFeId(), pMPA->getMPAId(), cVec, pVerifLoop, true );
-    // write the registers, the answer will be in the same cVec
-    // the number of times the write operation has been attempted is given by cWriteAttempts
-    uint8_t cWriteAttempts = 0 ;
-    bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
-
-    //update the HWDescription object
-    if (cSuccess)
-        pMPA->setReg ( pRegNode, pValue );
-
-#ifdef COUNT_FLAG
-    fRegisterCount++;
-    fTransactionCount++;
-#endif
-
-    return cSuccess;
-}
-
-
-
-
-bool MPAInterface::WriteMPAMultReg ( MPA* pMPA, const std::vector< std::pair<std::string, uint8_t> >& pVecReq, bool pVerifLoop )
-{
-    //first, identify the correct BeBoardFWInterface
-    setBoard ( pMPA->getBeBoardId() );
-
-    std::vector<uint32_t> cVec;
-
-    //Deal with the ChipRegItems and encode them
-    ChipRegItem cRegItem;
-
-    for ( const auto& cReg : pVecReq )
+uint32_t MPAInterface::Pix_read(ReadoutChip* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel)
     {
-        cRegItem = pMPA->getRegItem ( cReg.first );
-        cRegItem.fValue = cReg.second;
+        uint8_t cWriteAttempts = 0;
+        uint32_t rep;
 
-        fBoardFW->EncodeReg ( cRegItem, pMPA->getFeId(), pMPA->getMPAId(), cVec, pVerifLoop, true );
-#ifdef COUNT_FLAG
-        fRegisterCount++;
-#endif
+        std::vector<uint32_t> cVecReq;
+        cVecReq.clear();
+        fBoardFW->EncodeReg (cRegItem, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, false);
+        fBoardFW->WriteChipBlockReg (cVecReq,cWriteAttempts, false);
+        std::chrono::milliseconds cShort( 1 );
+
+        rep = this->ReadChipReg(cMPA,"fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
+
+        return rep;
     }
 
-    // write the registers, the answer will be in the same cVec
-    // the number of times the write operation has been attempted is given by cWriteAttempts
-    uint8_t cWriteAttempts = 0 ;
-    bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
 
-#ifdef COUNT_FLAG
-    fTransactionCount++;
-#endif
 
-    // if the transaction is successfull, update the HWDescription object
-    if (cSuccess)
-    {
-        for ( const auto& cReg : pVecReq )
-        {
-            cRegItem = pMPA->getRegItem ( cReg.first );
-            pMPA->setReg ( cReg.first, cReg.second );
-        }
-    }
 
-    return cSuccess;
-}
-
-uint8_t MPAInterface::ReadMPAReg ( MPA* pMPA, const std::string& pRegNode )
-{
-    setBoard ( pMPA->getBeBoardId() );
-
-    ChipRegItem cRegItem = pMPA->getRegItem ( pRegNode );
-
-    std::vector<uint32_t> cVecReq;
-
-    fBoardFW->EncodeReg ( cRegItem, pMPA->getFeId(), pMPA->getMPAId(), cVecReq, true, false );
-    fBoardFW->ReadChipBlockReg (  cVecReq );
-
-    //bools to find the values of failed and read
-    bool cFailed = false;
-    bool cRead;
-    uint8_t cMPAId;
-    fBoardFW->DecodeReg ( cRegItem, cMPAId, cVecReq[0], cRead, cFailed );
-
-    if (!cFailed) pMPA->setReg ( pRegNode, cRegItem.fValue );
-
-    return cRegItem.fValue;
-}
-
-void MPAInterface::ReadMPAMultReg ( MPA* pMPA, const std::vector<std::string>& pVecReg )
-{
-    //first, identify the correct BeBoardFWInterface
-    setBoard ( pMPA->getBeBoardId() );
-
-    std::vector<uint32_t> cVec;
-
-    //Deal with the ChipRegItems and encode them
-    ChipRegItem cRegItem;
-
-    for ( const auto& cReg : pVecReg )
-    {
-        cRegItem = pMPA->getRegItem ( cReg );
-
-        fBoardFW->EncodeReg ( cRegItem, pMPA->getFeId(), pMPA->getMPAId(), cVec, true, false );
-#ifdef COUNT_FLAG
-        fRegisterCount++;
-#endif
-    }
-
-    // write the registers, the answer will be in the same cVec
-    fBoardFW->ReadChipBlockReg ( cVec);
-
-#ifdef COUNT_FLAG
-    fTransactionCount++;
-#endif
-
-    bool cFailed = false;
-    bool cRead;
-    uint8_t cMPAId;
-    //update the HWDescription object with the value I just read
-    uint32_t idxReadWord = 0;
-
-    for ( const auto& cReg : pVecReg )
-        //for ( const auto& cReadWord : cVec )
-    {
-        uint32_t cReadWord = cVec[idxReadWord++];
-        fBoardFW->DecodeReg ( cRegItem, cMPAId, cReadWord, cRead, cFailed );
-
-        // here I need to find the string matching to the reg item!
-        if (!cFailed)
-            pMPA->setReg ( cReg, cRegItem.fValue );
-    }
-}
-
-void MPAInterface::ReadMPA ( MPA* pMPA )
-{
-    //first, identify the correct BeBoardFWInterface
-    setBoard ( pMPA->getBeBoardId() );
-
-    //vector to encode all the registers into
-    std::vector<uint32_t> cVec;
-    //helper vector to store the register names in the same order as the ChipRegItems
-    std::vector<std::string> cNameVec;
-
-    //Deal with the ChipRegItems and encode them
-
-    MPARegMap cMPARegMap = pMPA->getRegMap();
-
-    for ( auto& cRegItem : cMPARegMap )
-    {
-        cRegItem.second.fValue = 0x00;
-        fBoardFW->EncodeReg (cRegItem.second, pMPA->getFeId(), pMPA->getMPAId(), cVec, true, false);
-        //push back the names in cNameVec for latercReg
-        cNameVec.push_back (cRegItem.first);
-#ifdef COUNT_FLAG
-        fRegisterCount++;
-#endif
-    }
-
-    // write the registers, the answer will be in the same cVec
-    //bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, pVerifLoop);
-
-    // write the registers, the answer will be in the same cVec
-    fBoardFW->ReadChipBlockReg ( cVec);
-
-#ifdef COUNT_FLAG
-    fTransactionCount++;
-#endif
-
-    bool cFailed = false;
-    bool cRead;
-    uint8_t cMPAId;
-    //update the HWDescription object with the value I just read
-    uint32_t idxReadWord = 0;
-
-    //for ( const auto& cReg : cVec )
-    for ( const auto& cReadWord : cVec )
-    {
-        ChipRegItem cRegItem;
-        std::string cName = cNameVec[idxReadWord++];
-        fBoardFW->DecodeReg ( cRegItem, cMPAId, cReadWord, cRead, cFailed );
-
-        // here I need to find the string matching to the reg item!
-        if (!cFailed)
-            pMPA->setReg ( cName, cRegItem.fValue );
-
-    }
-
-}
-
-void MPAInterface::Pix_write(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
+/*void MPAInterface::PS_Start_counters_read(uint32_t duration )
 {
     setBoard(0);
-    return fMPAFW->Pix_write_MPA(cMPA,cRegItem,row, pixel, data);
-}
-
-
-uint32_t MPAInterface::Pix_read(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel)
-{
-    setBoard(0);
-    return fMPAFW->Pix_read_MPA(cMPA, cRegItem, row, pixel);
-}
-
-
-void MPAInterface::PS_Start_counters_read(uint32_t duration )
-{
-    setBoard(0);
-    fMPAFW->PS_Start_counters_read(duration);
+    fBoardFW->PS_Start_counters_read(duration);
 }
 
 
 void MPAInterface::PS_Clear_counters(uint32_t duration)
 {
     setBoard(0);
-    fMPAFW->PS_Clear_counters(duration);
+    fBoardFW->PS_Clear_counters(duration);
 }
 
 std::vector<uint16_t> MPAInterface::ReadoutCounters_MPA(uint32_t raw_mode_en)
 {
     setBoard(0);
-    return fMPAFW->ReadoutCounters_MPA(raw_mode_en);
-}
+    return fBoardFW->ReadoutCounters_MPA(raw_mode_en);
+}*/
 
 Stubs MPAInterface::Format_stubs(std::vector<std::vector<uint8_t>> rawstubs)
 {
@@ -480,42 +451,38 @@ L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1,bool verbose)
     return formL1data;
 }
 
-void MPAInterface::Activate_async(MPA* pMPA)
+void MPAInterface::Activate_async(Chip* pMPA)
 {
-    WriteMPAReg( pMPA,"ReadoutMode",0x1);
+    this->WriteChipReg( pMPA,"ReadoutMode",0x1);
 }
 
-void MPAInterface::Activate_sync(MPA* pMPA)
+void MPAInterface::Activate_sync(Chip* pMPA)
 {
-    WriteMPAReg(pMPA,"ReadoutMode",0x0);
+    this->WriteChipReg(pMPA,"ReadoutMode",0x0);
 }
 
-void MPAInterface::Activate_pp(MPA* pMPA)
+void MPAInterface::Activate_pp(Chip* pMPA)
 {
-    WriteMPAReg(pMPA,"ECM",0x81);
+    this->WriteChipReg(pMPA,"ECM",0x81);
 }
 
-void MPAInterface::Activate_ss(MPA* pMPA)
+void MPAInterface::Activate_ss(Chip* pMPA)
 {
-    WriteMPAReg(pMPA,"ECM",0x41);
+    this->WriteChipReg(pMPA,"ECM",0x41);
 }
 
-void MPAInterface::Activate_ps(MPA* pMPA)
+void MPAInterface::Activate_ps(Chip* pMPA)
 {
-    WriteMPAReg(pMPA,"ECM", 0x8);
-}
-
-
-
-
-void MPAInterface::Pix_Set_enable(MPA* pMPA,uint32_t r,uint32_t p,uint32_t PixelMask=1,uint32_t Polarity=1,uint32_t EnEdgeBR=1,uint32_t EnLevelBR=0,uint32_t Encount=0,uint32_t DigCal=0,uint32_t AnCal=0,uint32_t BRclk=0)
-{
-    uint32_t comboword = (PixelMask) + (Polarity<<1) + (EnEdgeBR<<2) + (EnLevelBR<<3) + (Encount<<4) + (DigCal<<5) + (AnCal<<6)  + (BRclk<<7);
-    Pix_write(pMPA,pMPA->getRegItem("ENFLAGS"), r, p, comboword );
+    this->WriteChipReg(pMPA,"ECM", 0x8);
 }
 
 
-void MPAInterface::Pix_Smode(MPA* pMPA,uint32_t r,uint32_t p, std::string smode = "edge")
+
+
+
+
+
+void MPAInterface::Pix_Smode(ReadoutChip* pMPA,uint32_t p, std::string smode = "edge")
 {
     uint32_t smodewrite = 0x0;
     if (smode == "edge")
@@ -526,10 +493,11 @@ void MPAInterface::Pix_Smode(MPA* pMPA,uint32_t r,uint32_t p, std::string smode 
         smodewrite = 0x2;
     if (smode == "xor")
         smodewrite = 0x3;
-    Pix_write(pMPA,pMPA->getRegItem("ModeSel"), r, p, smodewrite ) ;
+    this->WriteChipReg(pMPA,"ModeSel_P"+std::to_string(p+1), smodewrite ) ;
 }
 
-void MPAInterface::Enable_pix_BRcal(MPA* pMPA,uint32_t r,uint32_t p,std::string polarity,std::string smode)
+
+void MPAInterface::Enable_pix_BRcal(ReadoutChip* pMPA,uint32_t p,std::string polarity,std::string smode)
 {
     uint32_t PixelMask=1,Polarity=1,EnEdgeBR=1,EnLevelBR=0,Encount=0,DigCal=0,AnCal=0,BRclk=0;
 
@@ -542,12 +510,12 @@ void MPAInterface::Enable_pix_BRcal(MPA* pMPA,uint32_t r,uint32_t p,std::string 
     }
     if (smode == "level")
     {
-        Pix_Smode(pMPA,r,p, "level");
+        Pix_Smode(pMPA,p, "level");
         EnEdgeBR=0,EnLevelBR=1,Encount=1,AnCal=1;
     }
     else if (smode == "edge")
     {
-        Pix_Smode(pMPA,r,p, "edge");
+        Pix_Smode(pMPA,p, "edge");
         EnEdgeBR=1,EnLevelBR=0,Encount=1,AnCal=1;
     }
     else
@@ -555,220 +523,134 @@ void MPAInterface::Enable_pix_BRcal(MPA* pMPA,uint32_t r,uint32_t p,std::string 
         std::cout<<"bad edge option"<<std::endl;
         return;
     }
-    Pix_Set_enable(pMPA,r,p,PixelMask,Polarity,EnEdgeBR,EnLevelBR,Encount,DigCal,AnCal,BRclk);
+    Pix_Set_enable(pMPA,p,PixelMask,Polarity,EnEdgeBR,EnLevelBR,Encount,DigCal,AnCal,BRclk);
 }
 
-void MPAInterface::Enable_pix_counter(MPA* pMPA,uint32_t r,uint32_t p)
+void MPAInterface::Enable_pix_counter(ReadoutChip* pMPA,uint32_t p)
 {
     uint32_t PixelMask=1,Polarity=1,EnEdgeBR=0,EnLevelBR=0,Encount=1,DigCal=0,AnCal=1,BRclk=0;
-    Pix_Set_enable(pMPA,r,p,PixelMask,Polarity,EnEdgeBR,EnLevelBR,Encount,DigCal,AnCal,BRclk);
+    Pix_Set_enable(pMPA,p,PixelMask,Polarity,EnEdgeBR,EnLevelBR,Encount,DigCal,AnCal,BRclk);
 }
 
-void MPAInterface::Enable_pix_sync(MPA* pMPA,uint32_t r,uint32_t p)
+void MPAInterface::Enable_pix_sync(ReadoutChip* pMPA,uint32_t p)
 {
     uint32_t PixelMask=1,Polarity=1,EnEdgeBR=0,EnLevelBR=0,Encount=1,DigCal=0,AnCal=1,BRclk=0;
-    Pix_Set_enable(pMPA,r,p,PixelMask,Polarity,EnEdgeBR,EnLevelBR,Encount,DigCal,AnCal,BRclk);
+    Pix_Set_enable(pMPA,p,PixelMask,Polarity,EnEdgeBR,EnLevelBR,Encount,DigCal,AnCal,BRclk);
 }
 
-void MPAInterface::Disable_pixel(MPA* pMPA,uint32_t r,uint32_t p)
+void MPAInterface::Disable_pixel(ReadoutChip* pMPA,uint32_t p)
 {
     uint32_t PixelMask=0,Polarity=0,EnEdgeBR=0,EnLevelBR=0,Encount=0,DigCal=0,AnCal=0,BRclk=0;
-    Pix_Set_enable(pMPA,r,p,PixelMask,Polarity,EnEdgeBR,EnLevelBR,Encount,DigCal,AnCal,BRclk);
+    Pix_Set_enable(pMPA,p,PixelMask,Polarity,EnEdgeBR,EnLevelBR,Encount,DigCal,AnCal,BRclk);
 }
 
-void MPAInterface::Enable_pix_digi(MPA* pMPA,uint32_t r,uint32_t p)
+void MPAInterface::Enable_pix_digi(ReadoutChip* pMPA,uint32_t p)
 {
     uint32_t PixelMask=0,Polarity=0,EnEdgeBR=0,EnLevelBR=0,Encount=0,DigCal=1,AnCal=0,BRclk=0;
-    Pix_Set_enable(pMPA,r,p,PixelMask,Polarity,EnEdgeBR,EnLevelBR,Encount,DigCal,AnCal,BRclk);
-}
-
-void MPAInterface::Set_calibration(MPA* pMPA,uint32_t cal)
-{
-    WriteMPAReg( pMPA,"CalDAC0",cal);
-    WriteMPAReg( pMPA,"CalDAC1",cal);
-    WriteMPAReg( pMPA,"CalDAC2",cal);
-    WriteMPAReg( pMPA,"CalDAC3",cal);
-    WriteMPAReg( pMPA,"CalDAC4",cal);
-    WriteMPAReg( pMPA,"CalDAC5",cal);
-    WriteMPAReg( pMPA,"CalDAC6",cal);
-}
-
-void MPAInterface::Set_threshold(MPA* pMPA,uint32_t th)
-{
-    setBoard(0);
-    WriteMPAReg( pMPA,"ThDAC0",th);
-    WriteMPAReg( pMPA,"ThDAC1",th);
-    WriteMPAReg( pMPA,"ThDAC2",th);
-    WriteMPAReg( pMPA,"ThDAC3",th);
-    WriteMPAReg( pMPA,"ThDAC4",th);
-    WriteMPAReg( pMPA,"ThDAC5",th);
-    WriteMPAReg( pMPA,"ThDAC6",th);
+    Pix_Set_enable(pMPA,p,PixelMask,Polarity,EnEdgeBR,EnLevelBR,Encount,DigCal,AnCal,BRclk);
 }
 
 
-void MPAInterface::Send_pulses(uint32_t n_pulse, uint32_t duration)
+void MPAInterface::Pix_Set_enable(ReadoutChip* pMPA,uint32_t p,uint32_t PixelMask=1,uint32_t Polarity=1,uint32_t EnEdgeBR=1,uint32_t EnLevelBR=0,uint32_t Encount=0,uint32_t DigCal=0,uint32_t AnCal=0,uint32_t BRclk=0)
+{
+    uint32_t comboword = (PixelMask) + (Polarity<<1) + (EnEdgeBR<<2) + (EnLevelBR<<3) + (Encount<<4) + (DigCal<<5) + (AnCal<<6)  + (BRclk<<7);
+    this->WriteChipReg(pMPA,"ENFLAGS_P"+ std::to_string(p+1), comboword );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void MPAInterface::Set_calibration(Chip* pMPA,uint32_t cal)
+{
+    this->WriteChipReg( pMPA,"CalDAC0",cal);
+    this->WriteChipReg( pMPA,"CalDAC1",cal);
+    this->WriteChipReg( pMPA,"CalDAC2",cal);
+    this->WriteChipReg( pMPA,"CalDAC3",cal);
+    this->WriteChipReg( pMPA,"CalDAC4",cal);
+    this->WriteChipReg( pMPA,"CalDAC5",cal);
+    this->WriteChipReg( pMPA,"CalDAC6",cal);
+}
+
+void MPAInterface::Set_threshold(Chip* pMPA,uint32_t th)
+{
+    setBoard ( pMPA->getBeBoardId() );
+    this->WriteChipReg( pMPA,"ThDAC0",th);
+    this->WriteChipReg( pMPA,"ThDAC1",th);
+    this->WriteChipReg( pMPA,"ThDAC2",th);
+    this->WriteChipReg( pMPA,"ThDAC3",th);
+    this->WriteChipReg( pMPA,"ThDAC4",th);
+    this->WriteChipReg( pMPA,"ThDAC5",th);
+    this->WriteChipReg( pMPA,"ThDAC6",th);
+}
+
+
+/*void MPAInterface::Send_pulses(uint32_t n_pulse, uint32_t duration)
 {
 
-    fMPAFW->PS_Open_shutter();
+    fBoardFW->PS_Open_shutter();
     std::this_thread::sleep_for (std::chrono::milliseconds (10) );
     //notworking
-    //for(int i=0; i<n_pulse; i++) fMPAFW->Send_test(duration);
+    //for(int i=0; i<n_pulse; i++) fBoardFW->Send_test(duration);
     std::this_thread::sleep_for (std::chrono::milliseconds (1) );
-    fMPAFW->PS_Close_shutter();
-}
+    fBoardFW->PS_Close_shutter();
+}*/
+
+void MPAInterface::ReadASEvent (ReadoutChip* pMPA,std::vector<uint32_t>& pData,std::pair<uint32_t,uint32_t> pSRange)
+	{
+		if (pSRange == std::pair<uint32_t,uint32_t>{0,0})
+        	pSRange = std::pair<uint32_t,uint32_t>{1,pMPA->getNumberOfChannels()};
+    		for (uint32_t i = pSRange.first; i<=pSRange.second;i++ )
+        	{
+        		uint8_t cRP1 = this->ReadChipReg(pMPA, "ReadCounter_LSB_P" + std::to_string(i));
+        		uint8_t cRP2 = this->ReadChipReg(pMPA, "ReadCounter_MSB_P" + std::to_string(i));
+
+			pData.push_back((cRP2*256) + cRP1);
+			//std::cout<<i<<" "<<(cRP2*256) + cRP1<<std::endl;
+        	}
+    	}
 
 
-uint32_t MPAInterface::Read_pixel_counter(MPA* pMPA,uint32_t row, uint32_t pixel)
+/*
+uint32_t MPAInterface::Read_pixel_counter(ReadoutChip* pMPA,uint32_t p)
 {
-    setBoard(0);
-    uint32_t data1 = Pix_read(pMPA,pMPA->getRegItem("ReadCounter_LSB"),row,pixel);
-    uint32_t data2 = Pix_read(pMPA,pMPA->getRegItem("ReadCounter_MSB"),row,pixel);
+    setBoard ( pMPA->getBeBoardId() );
+    uint32_t data1 = this->ReadChipReg(pMPA,"ReadCounter_LSB_P"+std::to_string(p+1));
+    uint32_t data2 = this->ReadChipReg(pMPA,"ReadCounter_MSB_P"+std::to_string(p+1));
 
     uint32_t data = ((data2 & 0x0ffffff) << 8) | (data1 & 0x0fffffff);
     return data;
-}
+}*/
 
 
 
 uint32_t MPAInterface::ReadData( BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait )
 {
     setBoard(0);
-    return fMPAFW->ReadData( pBoard, pBreakTrigger, pData, pWait );
+    return fBoardFW->ReadData( pBoard, pBreakTrigger, pData, pWait );
 }
 
 
 void MPAInterface::Cleardata()
 {
     setBoard(0);
-    //fMPAFW->Cleardata( );
+    //fBoardFW->Cleardata( );
 }
 
 
-std::vector< uint32_t > MPAInterface::ReadConfig(const std::string& pFilename, int nmpa, int conf)
-{
-
-	   	        pugi::xml_document doc;
-			std::string fullname = "settings/MPAFiles/Conf_"+pFilename+"_MPA"+std::to_string(nmpa)+"_config"+std::to_string(conf)+".xml";
-	    		pugi::xml_parse_result result = doc.load_file( fullname.c_str() );
-	    		if ( !result )
-	    		{
-				std::cout << "ERROR :\n Unable to open the file : " << pFilename << std::endl;
-				std::cout << "Error description : " << result.description() << std::endl;
-	    		}
-
-			std::vector< uint32_t > conf_upload(25);
-			int perif = -1;
-	    		for ( pugi::xml_node cBeBoardNode = doc.child( "CONF" ).child( "periphery" ).first_child(); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling() )
-				{
-				if (static_cast<std::string>(cBeBoardNode.name())=="OM") perif = convertAnyInt(cBeBoardNode.child_value());
-				if (static_cast<std::string>(cBeBoardNode.name())=="RT") perif |= ((convertAnyInt(cBeBoardNode.child_value())& 3)   << 2 );
-				if (static_cast<std::string>(cBeBoardNode.name())=="SCW") perif |= ((convertAnyInt(cBeBoardNode.child_value())& 15)   << 4 );
-				if (static_cast<std::string>(cBeBoardNode.name())=="SH2") perif |= ((convertAnyInt(cBeBoardNode.child_value())& 15)  << 8 );
-				if (static_cast<std::string>(cBeBoardNode.name())=="SH1") perif |= ((convertAnyInt(cBeBoardNode.child_value())& 15)  << 12);
-				if (static_cast<std::string>(cBeBoardNode.name())=="CALDAC") perif |= ((convertAnyInt(cBeBoardNode.child_value())& 255) << 16);
-				if (static_cast<std::string>(cBeBoardNode.name())=="THDAC") perif |= ((convertAnyInt(cBeBoardNode.child_value())& 255) << 24);
-				}
-			conf_upload[0] = perif;
-	    		for ( pugi::xml_node cBeBoardNode = doc.child( "CONF" ).first_child(); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling() )
-				{
-				int pix = 0;
-				if (static_cast<std::string>(cBeBoardNode.name())=="pixel")
-					{
-					int pixnum = convertAnyInt(cBeBoardNode.attribute("n").value());
-
-					if (pixnum<17 and pixnum>8)
-						{
-							for ( pugi::xml_node cBeBoardNode1 = cBeBoardNode.first_child(); cBeBoardNode1; cBeBoardNode1 = cBeBoardNode1.next_sibling() )
-							{
-								if (static_cast<std::string>(cBeBoardNode1.name())=="PMR") pix |= convertAnyInt(cBeBoardNode1.child_value());		
-								if (static_cast<std::string>(cBeBoardNode1.name())=="ARR") pix |= ((convertAnyInt(cBeBoardNode1.child_value()) & 1)	<< 1 );
-								if (static_cast<std::string>(cBeBoardNode1.name())=="TRIMDACL")  pix |= ((convertAnyInt(cBeBoardNode1.child_value())& 31)	<< 2 );
-								if (static_cast<std::string>(cBeBoardNode1.name())=="CER")  pix |= ((convertAnyInt(cBeBoardNode1.child_value())& 1)	<< 7 );
-								if (static_cast<std::string>(cBeBoardNode1.name())=="SP")  pix |= ((convertAnyInt(cBeBoardNode1.child_value()) & 1)	<< 8 );
-								if (static_cast<std::string>(cBeBoardNode1.name())=="SR")  pix |= ((convertAnyInt(cBeBoardNode1.child_value())& 1)	<< 9 ) ;
-								if (static_cast<std::string>(cBeBoardNode1.name())=="PML")  pix |= ((convertAnyInt(cBeBoardNode1.child_value())& 1)	<< 10);
-								if (static_cast<std::string>(cBeBoardNode1.name())=="ARL")  pix |= ((convertAnyInt(cBeBoardNode1.child_value()) & 1)	<< 11) ;
-								if (static_cast<std::string>(cBeBoardNode1.name())=="TRIMDACR")  pix |= ((convertAnyInt(cBeBoardNode1.child_value())& 31)	<< 12) ;
-								if (static_cast<std::string>(cBeBoardNode1.name())=="CEL")  pix |= ((convertAnyInt(cBeBoardNode1.child_value()) & 1)	<< 17);
-								if (static_cast<std::string>(cBeBoardNode1.name())=="CW")  pix |= ((convertAnyInt(cBeBoardNode1.child_value()) & 2)	<< 18);
-			
-
-							}
-						}
-					else if (pixnum<25 and pixnum>0)
-						{
-							for ( pugi::xml_node cBeBoardNode1 = cBeBoardNode.first_child(); cBeBoardNode1; cBeBoardNode1 = cBeBoardNode1.next_sibling() )
-							{
-								if (static_cast<std::string>(cBeBoardNode1.name())=="PML") pix |= convertAnyInt(cBeBoardNode1.child_value());
-								if (static_cast<std::string>(cBeBoardNode1.name())=="ARL") pix |= ((convertAnyInt(cBeBoardNode1.child_value()) & 1)	<< 1 );
-								if (static_cast<std::string>(cBeBoardNode1.name())=="TRIMDACL")  pix |= ((convertAnyInt(cBeBoardNode1.child_value())& 31)	<< 2 );
-								if (static_cast<std::string>(cBeBoardNode1.name())=="CEL")  pix |= ((convertAnyInt(cBeBoardNode1.child_value())& 1)	<< 7 ) ;
-								if (static_cast<std::string>(cBeBoardNode1.name())=="CW")  pix |= ((convertAnyInt(cBeBoardNode1.child_value()) & 3)	<< 8  );
-								if (static_cast<std::string>(cBeBoardNode1.name())=="PMR")  pix |= ((convertAnyInt(cBeBoardNode1.child_value())& 1)	<< 10) ;
-								if (static_cast<std::string>(cBeBoardNode1.name())=="ARR")  pix |= ((convertAnyInt(cBeBoardNode1.child_value())& 1)	<< 11);
-								if (static_cast<std::string>(cBeBoardNode1.name())=="TRIMDACR")  pix |= ((convertAnyInt(cBeBoardNode1.child_value()) & 31)	<< 12) ;
-								if (static_cast<std::string>(cBeBoardNode1.name())=="CER")  pix |= ((convertAnyInt(cBeBoardNode1.child_value()) & 1)	<< 17) ;
-								if (static_cast<std::string>(cBeBoardNode1.name())=="SP")  pix |= ((convertAnyInt(cBeBoardNode1.child_value()) & 1)	<< 18);
-								if (static_cast<std::string>(cBeBoardNode1.name())=="SR")  pix |= ((convertAnyInt(cBeBoardNode1.child_value()) & 1)	<< 19);
-
-							}
-						}
-					conf_upload[pixnum] = pix;
-					}
-
-				}
-	  return conf_upload;
-}
-
-
-void MPAInterface::ModifyPerif(std::pair < std::vector< std::string > ,std::vector< uint32_t >> mod , std::vector< uint32_t >* conf_upload)
-{
-	  std::vector<std::string> vars = mod.first;
-	  std::vector< uint32_t > vals = mod.second;
-	  uint32_t perif = conf_upload->at(0);
-
-	  for (uint32_t iperif=0;iperif<vars.size(); iperif++)
-	  {
-		if (vars[iperif]=="OM") 
-			{
-			perif = (perif&~3);
-			perif |= (vals[iperif]);
-			}
-		if (vars[iperif]=="RT") 
-			{
-			perif = (perif&~(3<<2));
-			perif |= ((vals[iperif]& 3)   << 2 );
-			}
-		if (vars[iperif]=="SCW") 
-			{
-			perif = (perif&~(15<<4));
-			perif |= ((vals[iperif]& 15)   << 4 );
-			}
-		if (vars[iperif]=="SH2") 
-			{
-			perif = (perif&~(15<<8));
-			perif |= ((vals[iperif]& 15)  << 8 );
-			}
-		if (vars[iperif]=="SH1") 
-			{
-			perif = (perif&~(15<<12));
-			perif |= ((vals[iperif]& 15)  << 12);
-			}
-		if (vars[iperif]=="CALDAC") 
-			{
-			perif = (perif&~(255<<16));
-			perif |= ((vals[iperif]& 255) << 16);
-			}
-		if (vars[iperif]=="THDAC") 
-			{
-			perif = (perif&~(255<<24));
-			perif |= ((vals[iperif]& 255) << 24);
-			}
-
-	  }
-	  conf_upload->at(0) = perif;
-
-}
 
 
 }

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include "../Utils/Utilities.h"
-#include "../HWDescription/SSA.h"
+#include "../HWDescription/MPA.h"
 #include "../HWDescription/OuterTrackerModule.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWInterface/MPAInterface.h"
@@ -13,6 +13,10 @@
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/FrontEndDescription.h"
 #include "../Utils/Timer.h"
+#include "../HWDescription/Chip.h"
+#include "../HWDescription/ReadoutChip.h"
+#include "../HWDescription/OuterTrackerModule.h"
+#include "../tools/Tool.h"
 #include <inttypes.h>
 #include "../Utils/argvparser.h"
 #include "../Utils/ConsoleColor.h"
@@ -33,37 +37,29 @@ int main( int argc, char* argv[] )
 {
 
 
-	std::string cHWFile = "settings/HWDescription_MPA.xml";
-	ofstream myfile;
-	//ofstream scurvecsv;
-	//scurvecsv.open ("scurvetemp.csv");
+	LOG (INFO) << BOLDRED << "=============" << RESET;
+	el::Configurations conf ("settings/logger.conf");
+	el::Loggers::reconfigureAllLoggers (conf);
+	std::string cHWFile = "settings/D19C_MPA_PreCalib.xml";
+	std::stringstream outp;
+	Tool cTool;
+	cTool.InitializeHw ( cHWFile, outp);
+	cTool.InitializeSettings ( cHWFile, outp );
+	//D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
+	//IB->PSInterfaceBoard_PowerOff_SSA();
+	cTool.ConfigureHw();
 
+	BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
 
-	SystemController mysyscontroller;
-	std::cout << "\nInitHW";
-	mysyscontroller.InitializeHw( cHWFile );
-	std::cout << "\nMPAI";
-        MPAInterface* fMPAInterface = mysyscontroller.fMPAInterface;
-	std::cout << "\nBOARD"<<std::endl;
-	MPA* mpa1 = new MPA(0, 0, 0, 0,"settings/MPAFiles/MPA_default.txt");
+	ModuleContainer* ChipVec = pBoard->at(0)->at(0);
 
-	mpa1->loadfRegMap("settings/MPAFiles/MPA_default.txt");
-	BeBoard* pBoard = static_cast<BeBoard*>(mysyscontroller.fDetectorContainer->at(0));
-
-	// OuterTrackerModule* MPAM = new OuterTrackerModule();
-	// OpticalGroup* theOpticalGroup = new OpticalGroup();
-	// MPAM->emplace_back(mpa1);
-	// theOpticalGroup->emplace_back(MPAM);
-	// pBoard->emplace_back(theOpticalGroup);
 
 	std::chrono::milliseconds LongPOWait( 500 );
 	std::chrono::milliseconds ShortWait( 10 );
 
-	fMPAInterface->PS_Clear_counters();
-	fMPAInterface->PS_Clear_counters();
-	//fMPAInterface->activate_I2C_chip();
+	//cTool.fMPAInterface->activate_I2C_chip();
 
-	std::pair<uint32_t, uint32_t> rows = {0,17};
+	std::pair<uint32_t, uint32_t> rows = {0,16};
 	std::pair<uint32_t, uint32_t> cols = {0,120};
 	//std::pair<uint32_t, uint32_t> rows = {5,7};
 	//std::pair<uint32_t, uint32_t> cols = {1,5};
@@ -72,26 +68,36 @@ int main( int argc, char* argv[] )
 	std::string title;
 	std::cout <<"Setup"<< std::endl;
 
-	fMPAInterface->Set_threshold(mpa1,100);
-	fMPAInterface->Activate_sync(mpa1);
-	fMPAInterface->Activate_pp(mpa1);
-	fMPAInterface->Set_calibration(mpa1,100);
+	for(auto cMPA: *ChipVec)
+	{
+	MPA* theMPA = static_cast<MPA*>(cMPA);
+	//ReadoutChip* theMPA = static_cast<ReadoutChip*>(cMPA);
+	
+
+	cTool.fMPAInterface->Set_threshold(cMPA,100);
+	cTool.fMPAInterface->Activate_sync(cMPA);
+	cTool.fMPAInterface->Activate_pp(cMPA);
+	cTool.fMPAInterface->Set_calibration(cMPA,100);
 	Stubs curstub;
 	uint32_t npixtot = 0;
-    //mysyscontroller.fMPAInterface->Start ( pBoard );
+    //mysyscontroller.cTool.fMPAInterface->Start ( pBoard );
 	for(size_t row=rows.first; row<rows.second; row++)
 		{
 		for(size_t col=cols.first; col<cols.second; col++)
 			{
 				std::cout <<row<<","<<col<<std::endl;
-				fMPAInterface->Disable_pixel(mpa1,0,0);
+
 				std::this_thread::sleep_for( ShortWait );
-				fMPAInterface->Enable_pix_BRcal(mpa1,row, col, "rise", "edge");
+				uint32_t gpix=theMPA->PNglobal(std::pair <uint32_t,uint32_t> (row,col));   
+				cTool.fMPAInterface->Disable_pixel(cMPA,0);
+				cTool.fMPAInterface->Enable_pix_BRcal(cMPA,gpix, "rise", "edge");
 				std::this_thread::sleep_for( ShortWait );
-				fMPAInterface->Send_pulses(1,8);
+				static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(1000);
 				std::this_thread::sleep_for( ShortWait );
-                //fMPAInterface->ReadData ( pBoard );
-                const std::vector<Event*>& events = mysyscontroller.GetEvents ( pBoard );
+                //cTool.fMPAInterface->ReadData ( pBoard );
+                const std::vector<Event*>& events = cTool.GetEvents ( pBoard );
+		//const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
+
 
                 for ( __attribute__((unused)) auto& ev : events )
                 {
@@ -101,7 +107,7 @@ int main( int argc, char* argv[] )
 				npixtot+=1;
 			}
 		}
-    //mysyscontroller.fMPAInterface->Stop ( pBoard );
+    //mysyscontroller.cTool.fMPAInterface->Stop ( pBoard );
 
 	std::cout <<"Numpix -- "<< npixtot <<std::endl;
 
@@ -130,5 +136,6 @@ int main( int argc, char* argv[] )
 
 
 	std::this_thread::sleep_for( LongPOWait );
+	}
 
 }//int main
