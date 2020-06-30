@@ -1008,8 +1008,6 @@ namespace Ph2_HwInterface
                   auto cIterator = cRegisterMap.begin();
                   do
                   {
-                  LOG (INFO) << BOLDBLUE <<(*cIterator).first<< RESET;
-                  LOG (INFO) << BOLDBLUE <<(*cIterator).second.fValue<< RESET;
                     cIndex++;
                     if( (*cIterator).second.fValue != 0 )
                       cIterator++;
@@ -2438,7 +2436,6 @@ void D19cFWInterface::InitFMCPower()
     void D19cFWInterface::ReadASEvent (BeBoard* pBoard, std::vector<uint32_t>& pData )
     {
 
-               std::cout << "INAS"<<std::endl;
  	uint32_t raw_mode_en=0;
  	WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", raw_mode_en);
 	uint32_t ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
@@ -2461,7 +2458,6 @@ void D19cFWInterface::InitFMCPower()
 
  	std::vector<uint32_t> count(chans, 0);
 
-               std::cout << "INAS1"<<std::endl;
 	//std::vector< std::pair<std::string, uint32_t> > cVecReg;
 	//cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_reset", 1});
 	//cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.fast_orbit_reset", 1});
@@ -2526,9 +2522,7 @@ void D19cFWInterface::InitFMCPower()
 		//	std::chrono::milliseconds cWait( 10 );
 
 		//	}
-               std::cout << "gogo " <<chans<<std::endl;
 		pData = ReadBlockRegValue("fc7_daq_ctrl.physical_interface_block.fifo2_data",chans);
-                std::cout << pData[0]<<" "<<pData[1] <<std::endl;
 		//pData = ReadBlockRegValue ("fc7_daq_ctrl.calibration_2s_block.counter_fifo", chans);
 
 	        }
