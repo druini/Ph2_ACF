@@ -123,7 +123,9 @@ int main ( int argc, char* argv[] )
 
     std::string cResultfile = "Hybrid";
     Timer t;
-
+    Timer cGlobalTimer;
+    cGlobalTimer.start();
+        
     // measure hybrid current and temperature 
     #ifdef __ANTENNA__
         char cBuffer[120]; 
@@ -343,6 +345,9 @@ int main ( int argc, char* argv[] )
     cTool.Destroy();
 
     if ( !batchMode ) cApp.Run();
+    cGlobalTimer.stop();
+    cGlobalTimer.show ( "Total execution time: " );
+
     return 0;
 
 }

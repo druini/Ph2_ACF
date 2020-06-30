@@ -255,9 +255,7 @@ namespace Ph2_HwInterface {
           * \brief Tune the 320MHz buses phase shift
           */
         bool PhaseTuning(Ph2_HwDescription::BeBoard *pBoard , uint8_t pFeId, uint8_t pChipId, uint8_t pLineId, uint16_t pPattern, uint16_t pPatternPeriod);
-        void PhaseTuning(const Ph2_HwDescription::BeBoard *pBoard);
-
-        uint32_t DecodeData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+        
         /*!
          * \brief Read data from DAQ
          * \param pBreakTrigger : if true, enable the break trigger
@@ -276,15 +274,16 @@ namespace Ph2_HwInterface {
         void ReadNEvents (Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true);
         // FMCs
         void InitFMCPower();
-
-        // ########################################
-        // # Vector containing the decoded events #
-        // ########################################
-        //static std::vector<D19cFWInterface::Event> decodedEvents;
-
-        static void DecodeSSAEvents (const std::vector<uint32_t>& data, std::vector<D19cSSAEvent*>& events, uint32_t fEventSize, uint32_t fNFe);
-
+        // vector of 32 bit words for ROC#pIndex [hits]
+        std::vector<uint32_t> GetHitData(uint8_t pIndex){return fD19cFWEvts.fBoardHitData[pIndex];}
+        // vector of 32 bit words for ROC#pIndex [stubs]
+        std::vector<uint32_t> GetStubData(uint8_t pIndex){return fD19cFWEvts.fBoardStubData[pIndex];}
       private:
+        uint8_t fFastCommandDuration=0;
+        uint8_t fWait_ms=1; 
+        uint8_t fResetMinPeriod_ms=1;//was 100
+        // split data per module/chip for a given board 
+        uint32_t SplitData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
         uint32_t computeEventSize ( Ph2_HwDescription::BeBoard* pBoard );
         //I2C command sending implementation
         bool WriteI2C (  std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pWriteRead, bool pBroadcast );
@@ -299,17 +298,52 @@ namespace Ph2_HwInterface {
         // ########################################
         void powerAllFMCs(bool pEnable=false);
         // dedicated method to power on dio5
-        void PowerOnDIO5();
+        void PowerOnDIO5(uint8_t pFMCId);
         // get fmc card name
         std::string getFMCCardName (uint32_t id);
         // convert code of the chip from firmware
         std::string getChipName(uint32_t pChipCode);
         FrontEndType getFrontEndType(uint32_t pChipCode);
-      	// set i2c address table depending on the hybrid
-      	void SetI2CAddressTable();
-      	void Align_out();
+      	
+        // FMC Maps 
+        std::map<uint32_t, std::string> fFMCMap = {{0, "NONE"},
+                                                        {1, "DIO5"},
+                                                        {2, "2CBC2"},
+                                                        {3, "8CBC2"},
+                                                        {4, "2CBC3"},
+                                                        {5, "8CBC3_1"},
+                                                        {6, "8CBC3_2"},
+                                                        {7, "1CBC3"},
+                                                        {8, "MPA_SSA"},
+                                                        {9, "FERMI_TRIGGER"},
+                                                        {10, "CIC1_FMC1"},
+                                                        {11, "CIC1_FMC2"},
+                                                        {12, "PS_FMC1"},
+                                                        {13, "PS_FMC2"},
+                                                        {14, "2S_FMC1"},
+                                                        {15, "2S_FMC2"},
+                                                        {16, "2S"},
+                                                        {17, "OPTO_QUAD"},
+                                                        {18, "OPTO_OCTA"},
+                                                        {19, "FMC_FE_FOR_PS_ROH_FMC1"},
+                                                        {20, "FMC_FE_FOR_PS_ROH_FMC2"}};
 
 
+        std::map<uint32_t, std::string> fChipNamesMap = {{0, "CBC2"},
+                                                        {1, "CBC3"},
+                                                        {2, "MPA"},
+                                                        {3, "SSA"},
+                                                        {4, "CIC"},
+                                                        {5, "CIC2"}};
+
+
+        std::map<uint32_t, FrontEndType> fFETypesMap = {{1, FrontEndType::CBC3},
+                                                        {2, FrontEndType::MPA},
+                                                        {3, FrontEndType::SSA},
+                                                        {4, FrontEndType::CIC},
+                                                        {5, FrontEndType::CIC2}};                                                        
+
+                                                                                                       
         //template to copy every nth element out of a vector to another vector
         template<class in_it, class out_it>
         out_it copy_every_n ( in_it b, in_it e, out_it r, size_t n)
@@ -347,7 +381,7 @@ namespace Ph2_HwInterface {
         }
 
         void ReadErrors();
-
+        void ReconfigureTriggerFSM(std::vector< std::pair<std::string, uint32_t>> pTriggerConfig);
 
       public:
         ///////////////////////////////////////////////////////
@@ -400,7 +434,7 @@ namespace Ph2_HwInterface {
         // consecutive triggers FSM
         void ConfigureAntennaFSM( uint16_t pNtriggers=1, uint16_t pTriggerRate=1, uint16_t pL1Delay=100 ) ;
         
-        void L1ADebug();
+        void L1ADebug(uint8_t pWait_ms=1);
         void StubDebug(bool pWithTestPulse=true, uint8_t pNlines=5);
         bool L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
         bool L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
@@ -425,6 +459,7 @@ namespace Ph2_HwInterface {
         // phase tuning commands - d19c
         struct PhaseTuner
         {
+            uint8_t fWait_ms=1;
             uint8_t fType;
             uint8_t fMode;
             uint8_t fDelay;
@@ -515,7 +550,9 @@ namespace Ph2_HwInterface {
                 // form command
                 uint32_t  command_final = fHybrid + fChip + fLine + fCommand  + mode_raw + l1a_en_raw + master_line_id_raw + delay_raw + bitslip_raw;
                 LOG (DEBUG) << BOLDBLUE << "Line " << +pLine << " setting line mode to " << std::hex << command_final << std::dec << RESET;
-                pInterface->WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
+                pInterface->WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );  
+                std::this_thread::sleep_for (std::chrono::microseconds (fWait_ms*1000) );
+              
             };
             void SetLinePattern(BeBoardFWInterface* pInterface,  uint8_t pHybrid, uint8_t pChip , uint8_t pLine, uint16_t pPattern, uint16_t pPatternPeriod)
             {
@@ -536,6 +573,7 @@ namespace Ph2_HwInterface {
                 command_final = fHybrid +  fChip + fLine + fCommand + byte_id_raw + pattern_raw;
                 LOG (DEBUG) << BOLDBLUE << "Setting line pattern  to " << std::hex << command_final << std::dec << RESET;
                 pInterface->WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
+                std::this_thread::sleep_for (std::chrono::microseconds (fWait_ms*1000) );
             };
             void SendControl(BeBoardFWInterface* pInterface,  uint8_t pHybrid, uint8_t pChip , uint8_t pLine, std::string pCommand)
             {
@@ -552,7 +590,8 @@ namespace Ph2_HwInterface {
                 else if( pCommand == "PhaseAlignment" )
                     command_final +=1;
                 LOG (DEBUG) << BOLDBLUE << pCommand << ": sending "  << std::hex << command_final << std::dec << RESET;
-                pInterface->WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
+                pInterface->WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );  
+                std::this_thread::sleep_for (std::chrono::microseconds (fWait_ms*1000) );
             };
             uint8_t GetLineStatus( BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip , uint8_t pLine )
             {
@@ -564,14 +603,14 @@ namespace Ph2_HwInterface {
                 ConfigureCommandType( command_type) ;
                 uint32_t command_final = fHybrid + fChip + fLine + fCommand ;
                 pInterface->WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
-                std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+                std::this_thread::sleep_for (std::chrono::microseconds (fWait_ms*1000) );
                 uint8_t cStatus = ParseStatus(pInterface);
                 //
                 command_type = 1;
                 ConfigureCommandType( command_type) ;
                 command_final = fHybrid + fChip + fLine + fCommand ;
                 pInterface->WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );
-                std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+                std::this_thread::sleep_for (std::chrono::microseconds (fWait_ms*1000) );
                 cStatus = ParseStatus(pInterface);
                 return cStatus;
             };
@@ -581,18 +620,14 @@ namespace Ph2_HwInterface {
                 if( pChangePattern )
                 {
                     SetLineMode( pInterface, pHybrid, pChip, pLine );
-                    std::this_thread::sleep_for (std::chrono::milliseconds (10) );
                     SetLinePattern( pInterface, pHybrid, pChip, pLine , pPattern, pPatternPeriod);
-                    std::this_thread::sleep_for (std::chrono::milliseconds (10) );
                 }
                 // perform phase alignment
                 //LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
                 SendControl(pInterface, pHybrid, pChip, pLine, "PhaseAlignment");
-                std::this_thread::sleep_for (std::chrono::milliseconds (100) );
                 // perform word alignment
                 //LOG (INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
                 SendControl(pInterface, pHybrid, pChip, pLine, "WordAlignment");
-                std::this_thread::sleep_for (std::chrono::milliseconds (100) );
                 uint8_t cLineStatus = GetLineStatus(pInterface, pHybrid, pChip, pLine);
                 return ( cLineStatus == 1);
             };
@@ -715,7 +750,7 @@ namespace Ph2_HwInterface {
         /*!
         * \breif Disconnect Setup with Multiplexing Backplane
         */
-        void DisconnectMultiplexingSetup() ;
+        void DisconnectMultiplexingSetup(uint8_t pWait_ms=100) ;
 
         /*!
         * \breif Scan Setup with Multiplexing Backplane
@@ -727,7 +762,7 @@ namespace Ph2_HwInterface {
         * \param BackplaneNum
         * \param CardNum
         */
-        uint32_t ConfigureMultiplexingSetup(int BackplaneNum, int CardNum) ;
+        uint32_t ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms=100) ;
 
 
         // ############################

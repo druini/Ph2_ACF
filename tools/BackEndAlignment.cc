@@ -309,7 +309,6 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard )
 
                 //now unmask all channels and set threshold and hit or logic back to their original values
                 fReadoutChipInterface-> maskChannelsGroup (theReadoutChip, cOriginalMask);
-                std::this_thread::sleep_for (std::chrono::milliseconds (50) );
                 LOG (INFO) << BOLDBLUE << "Setting threshold and HitOR back to orginal value [ " << +cThreshold << " ] DAC units." << RESET;
                 fReadoutChipInterface->WriteChipReg(theReadoutChip, "VCth" , cThreshold);
                 fReadoutChipInterface->WriteChipReg(theReadoutChip, "HitOr" , cHitOR);
