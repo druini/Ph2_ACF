@@ -83,7 +83,7 @@ bool MPAInterface::WriteChipMultReg ( Chip* pMPA, const std::vector< std::pair<s
 	        {
 	            if ( cReg.second > 0xFF)
 	            {
-	                LOG (ERROR) << "SSA register are 8 bits, impossible to write " << cReg.second << " on registed " << cReg.first ;
+	                LOG (ERROR) << "MPA register are 8 bits, impossible to write " << cReg.second << " on registed " << cReg.first ;
 	                continue;
 	            }
 	            cRegItem = pMPA->getRegItem ( cReg.first );
@@ -137,7 +137,7 @@ bool MPAInterface::WriteChipAllLocalReg ( ReadoutChip* pMPA, const std::string& 
 
             std::vector<std::pair<std::string, uint16_t> > cRegVec;
             // std::vector<uint32_t> listOfChannelToUnMask;
-            ChannelGroup<NSSACHANNELS,1> channelToEnable;
+            ChannelGroup<NMPACHANNELS,1> channelToEnable;
 
             std::vector<uint32_t> cVec;cVec.clear();
             for(uint8_t iChannel=0; iChannel<pMPA->getNumberOfChannels(); ++iChannel)
@@ -244,20 +244,20 @@ void MPAInterface::setFileHandler (FileHandler* pHandler)
 
 
 //Straight python port
-//void MPAInterface::PowerOn(float VDDPST , float DVDD , float AVDD , float VBG , uint8_t mpaid  , uint8_t ssaid  )
+//void MPAInterface::PowerOn(float VDDPST , float DVDD , float AVDD , float VBG , uint8_t mpaid  , uint8_t MPAid  )
 //{
   //  setBoard(0);
     //fBoardFW->PSInterfaceBoard_PowerOn_MPA( );
 //}
 
 
-//void MPAInterface::PowerOff(uint8_t mpaid , uint8_t ssaid )
+//void MPAInterface::PowerOff(uint8_t mpaid , uint8_t MPAid )
 //{
   //  setBoard(0);
     //fBoardFW->PSInterfaceBoard_PowerOff_MPA( );
 ///}
 
-//void MPAInterface::MainPowerOn(uint8_t mpaid , uint8_t ssaid )
+//void MPAInterface::MainPowerOn(uint8_t mpaid , uint8_t MPAid )
 //{
  //   setBoard(0);
    // fBoardFW->PSInterfaceBoard_PowerOn( );
@@ -299,7 +299,7 @@ uint32_t MPAInterface::Pix_read(ReadoutChip* cMPA,ChipRegItem cRegItem,uint32_t 
         fBoardFW->WriteChipBlockReg (cVecReq,cWriteAttempts, false);
         std::chrono::milliseconds cShort( 1 );
 
-        rep = this->ReadChipReg(cMPA,"fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
+        rep = this->ReadChipReg(cMPA,"fc7_daq_ctrl.command_processor_block.i2c.mpa_MPA_i2c_reply.data");
 
         return rep;
     }

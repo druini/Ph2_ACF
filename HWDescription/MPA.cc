@@ -36,7 +36,7 @@ namespace Ph2_HwDescription {
 
     MPA::MPA ( const FrontEndDescription& pFeDesc, uint8_t pMPAId,  const std::string& filename ) : ReadoutChip ( pFeDesc, pMPAId )
      {
-        fMaxRegValue=255; // 8 bit registers in CBC
+        fMaxRegValue=255; // 8 bit registers in MPA
         fChipOriginalMask = new ChannelGroup<1920>;
         loadfRegMap ( filename );
         setFrontEndType ( FrontEndType::MPA);
@@ -78,7 +78,7 @@ namespace Ph2_HwDescription {
                     fRegItem.fAddress = strtoul ( fAddress_str.c_str(), 0, 16 );
                     fRegItem.fDefValue = strtoul ( fDefValue_str.c_str(), 0, 16 );
                     fRegItem.fValue = strtoul ( fValue_str.c_str(), 0, 16 );
-			//FIXME this channel masking part is currently using the CBC values. Need to check what the SSA format is
+			//FIXME this channel masking part is currently using the MPA values. Need to check what the SSA format is
                     if(fRegItem.fPage==0x00 && fRegItem.fAddress>=0x20 && fRegItem.fAddress<=0x3F){ //Register is a Mask
                         if(fRegItem.fValue!=0xFF)
                         {

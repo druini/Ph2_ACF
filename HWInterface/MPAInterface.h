@@ -105,16 +105,16 @@ public:
 	{return true;}
 
 
-    bool maskChannelsGroup (Ph2_HwDescription::ReadoutChip* pSSA, const ChannelGroupBase *group, bool pVerifLoop)
+    bool maskChannelsGroup (Ph2_HwDescription::ReadoutChip* pMPA, const ChannelGroupBase *group, bool pVerifLoop)
 	{return true;}
 	//
     bool maskChannelsAndSetInjectionSchema  (Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase *group, bool mask, bool inject, bool pVerifLoop)
 	{return true;}
 	//
-    bool ConfigureChipOriginalMask (Ph2_HwDescription::ReadoutChip* pSSA, bool pVerifLoop, uint32_t pBlockSize )
+    bool ConfigureChipOriginalMask (Ph2_HwDescription::ReadoutChip* pMPA, bool pVerifLoop, uint32_t pBlockSize )
 	{return true;}
 	//
-    bool MaskAllChannels ( Ph2_HwDescription::ReadoutChip* pSSA, bool mask, bool pVerifLoop )
+    bool MaskAllChannels ( Ph2_HwDescription::ReadoutChip* pMPA, bool mask, bool pVerifLoop )
 	{return true;}
 
 
