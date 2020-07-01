@@ -532,14 +532,13 @@ namespace Ph2_System
                       if( pBoard->getFrontEndType() == FrontEndType::CBC3 )
                         {
                           fEventSize = static_cast<uint32_t>(cEventSize);
-                          fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
-                          fEventList.push_back ( new D19cCbc3Event ( pBoard, fNCbc, fNFe , cEvent ) );
+                          fEventList.push_back ( new D19cCbc3Event ( pBoard, cEvent ) );
                         }
                       else if( pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2  )
                         {
                           fNCbc = 8;
                           fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
-                          fEventList.push_back ( new D19cCic2Event ( pBoard, fNCbc , fNFe, cEvent ) );
+                          fEventList.push_back ( new D19cCic2Event ( pBoard, cEvent ) );
                         }
                       else if( pBoard->getFrontEndType() == FrontEndType::SSA )
                         {

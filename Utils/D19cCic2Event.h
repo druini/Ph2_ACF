@@ -49,7 +49,7 @@ namespace Ph2_HwInterface
          * \param pNbCbc
          * \param pEventBuf : the pointer to the raw Event buffer of this Event
          */
-        D19cCic2Event ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCic, uint32_t pNFe, const std::vector<uint32_t>& list );
+        D19cCic2Event ( const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list );
         /*!
          * \brief Copy Constructor of the Event Class
          */
@@ -64,6 +64,13 @@ namespace Ph2_HwInterface
             //fEventMap.clear();
             //fEventDataList.clear();
         }
+        
+        /*!
+         * \brief Set an Event to the Event map
+         * \param pEvent : Event to set
+         * \return Aknowledgement of the Event setting (1/0)
+         */
+        void Set ( const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list ) override;
         /*!
          * \brief Set an Event to the Event map
          * \param pEvent : Event to set

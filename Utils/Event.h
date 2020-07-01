@@ -286,6 +286,12 @@ namespace Ph2_HwInterface
          * \param pEvent : Event to set
          * \return Aknowledgement of the Event setting (1/0)
          */
+        virtual void Set ( const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list ) {}
+        /*!
+         * \brief Set an Event to the Event map
+         * \param pEvent : Event to set
+         * \return Aknowledgement of the Event setting (1/0)
+         */
         virtual void SetEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) {}
         /*!
          * \brief Convert Data to Hex string
@@ -435,8 +441,8 @@ namespace Ph2_HwInterface
         template<std::size_t N>
         void splitStream(const std::vector<uint32_t> pData, std::vector<std::bitset<N>>& pBitSet , size_t pOffset , size_t pSize )
         {
-            uint8_t cBitCounter=0;
-            uint8_t cId=0;
+            uint32_t cBitCounter=0;
+            uint32_t cId=0;
             auto cIterator = pData.begin() + pOffset;
             size_t cWordCounter=0;
             do
@@ -458,6 +464,7 @@ namespace Ph2_HwInterface
             }while( cIterator < pData.end() && cId < pSize );
         } 
         
+
       protected:
         virtual void print (std::ostream& out) const {}
     };

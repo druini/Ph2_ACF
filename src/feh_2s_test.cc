@@ -88,6 +88,8 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "checkSLink", "Check S-link ... data saved to file ", ArgvParser::OptionRequiresValue );
     cmd.defineOption ( "checkStubs", "Check Stubs... ", ArgvParser::NoOptionAttribute );
     cmd.defineOption ( "checkReadData", "Check ReadData method... ", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "checkAsync", "Check Async readout methods [PS objects only]... ", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "checkReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute );
     
     int result = cmd.parse ( argc, argv );
 
@@ -261,15 +263,20 @@ int main ( int argc, char* argv[] )
         DataChecker cDataChecker;
         cDataChecker.Inherit (&cTool);
         cDataChecker.Initialise ( );
-        cDataChecker.zeroContainers();
         if( cmd.foundOption("checkClusters"))
             cDataChecker.ClusterCheck(cArgs);
         if( cmd.foundOption("checkSLink") )
             cDataChecker.WriteSlinkTest(cmd.optionValue ("checkSLink" ));
         if( cmd.foundOption("checkStubs") )
-            cDataChecker.StubCheck();
+            cDataChecker.StubCheckWNoise();  
+            //cDataChecker.StubCheck();
         if( cmd.foundOption("checkReadData"))
             cDataChecker.ReadDataTest();
+        if( cmd.foundOption("checkAsync"))
+            cDataChecker.AsyncTest();
+        if( cmd.foundOption("checkReadNEvents"))
+            cDataChecker.ReadNeventsTest();
+
 
         //cDataChecker.ReadNeventsTest();
         //cDataChecker.DataCheck(cFEsToCheck,0,0);

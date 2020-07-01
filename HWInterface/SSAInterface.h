@@ -36,6 +36,26 @@ namespace Ph2_HwInterface { // start namespace
     	void ReadASEvent (Ph2_HwDescription::ReadoutChip* pSSA,std::vector<uint32_t>& pData,std::pair<uint32_t,uint32_t> pSRange = std::pair<uint32_t,uint32_t>({0,0}));
 	void Send_pulses(Ph2_HwDescription::ReadoutChip* pSSA, uint32_t n_pulse);
 	private:
+	 uint8_t ReadChipId( Ph2_HwDescription::Chip* pChip );
+	 bool WriteReg ( Ph2_HwDescription::Chip* pCbc, uint16_t pRegisterAddress, uint16_t pRegisterValue , bool pVerifLoop=true);
+	 bool WriteChipSingleReg ( Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true );
+	 bool ConfigureAmux( Ph2_HwDescription::Chip* pChip, const std::string& pRegister);
+	 std::map<std::string, uint8_t> fAmuxMap = {
+		{ "BoosterFeedback", 0 },
+		{ "PreampBias", 1 },
+		{ "Trim", 2 },
+		{ "VoltageBias", 3 },
+		{ "CurrentBias", 4 },
+		{ "CalLevel", 5 },
+		{ "BoosterBaseline", 6 },
+		{ "Threshold", 7 },
+		{ "HipThreshold", 8 },
+		{ "DAC", 9 },
+		{ "Bandgap", 10 },
+		{ "GND", 11 }, 
+		{ "HighZ", 12} 
+	};
+
 	}; // end class
 
 } // end namespace

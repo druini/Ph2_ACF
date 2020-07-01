@@ -900,14 +900,6 @@ namespace Ph2_HwInterface {
         this->ResetPhaseAligner(pChip, 200 );
         this->EnableFEs(pChip, {0,1,2,3,4,5,6,7} , true);
         
-        // check if we need a soft RESET
-        // cSuccess = this->CheckSoftReset(pChip);
-        // if( !cSuccess ) 
-        // {
-        //     LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC... " << RESET;
-        //     exit(0);
-        // }
-        
         // select fast command edge 
         bool cNegEdge=true;
         if( cNegEdge)

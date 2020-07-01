@@ -131,26 +131,6 @@ namespace Ph2_HwInterface {
         // some useful stuff
         int fResetAttempts;
       public:
-        // struct Event : public Ph2_HwInterface::Event
-        // {
-        //   Event (const uint32_t* data, size_t n);
-
-        //   void fillDataContainer          (BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
-        //   static void addBoardInfo2Events (const Ph2_HwDescription::BeBoard* pBoard, std::vector<D19cFWInterface::Event>& decodedEvents);
-
-        //   uint16_t block_size;
-        //   uint16_t tlu_trigger_id;
-        //   uint16_t data_format_ver;
-        //   uint16_t tdc;
-        //   uint32_t l1a_counter;
-        //   uint32_t bx_counter;
-        //   uint16_t evtStatus;
-
-
-        //   protected:
-
-        // };
-
         /*!
          *
          * \brief Constructor of the Cbc3Fc7FWInterface class
@@ -280,9 +260,10 @@ namespace Ph2_HwInterface {
         std::vector<uint32_t> GetStubData(uint8_t pIndex){return fD19cFWEvts.fBoardStubData[pIndex];}
       private:
         uint8_t fFastCommandDuration=0;
-        uint8_t fWait_ms=1; 
-        uint8_t fResetMinPeriod_ms=1;//was 100
+        uint16_t fWait_us=500; 
+        uint8_t fResetMinPeriod_ms=100;//was 100
         // split data per module/chip for a given board 
+        uint32_t SplitFWEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
         uint32_t SplitData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
         uint32_t computeEventSize ( Ph2_HwDescription::BeBoard* pBoard );
         //I2C command sending implementation
@@ -459,7 +440,7 @@ namespace Ph2_HwInterface {
         // phase tuning commands - d19c
         struct PhaseTuner
         {
-            uint8_t fWait_ms=1;
+            uint8_t fWait_ms=10;
             uint8_t fType;
             uint8_t fMode;
             uint8_t fDelay;

@@ -88,7 +88,7 @@
         <Register name="fast_command_block">
         <Register name="triggers_to_accept"> 0 </Register>
         <Register name="trigger_source"> 3 </Register>
-        <Register name="user_trigger_frequency"> 10 </Register>
+        <Register name="user_trigger_frequency"> 1 </Register>
         <Register name="stubs_mask"> 0 </Register>
                 <!--this is the delay for the stub trigger-->
         <Register name="stub_trigger_delay_value"> 10 </Register>
@@ -121,7 +121,7 @@
         </Register>
         <Register name="cic">
                 <Register name = "clock_enable"> 1 </Register>
-                <Register name = "stub_package_delay"> 2 </Register>
+                <Register name = "stub_package_delay"> 0 </Register>
         </Register>
     </Register>
     <!-- Readout Block -->
@@ -134,12 +134,12 @@
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
                     <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 51 </Register>
+                    <Register name="common_stubdata_delay"> 26 </Register>
             </Register>
         </Register>
     <!-- DIO5 Block -->
     <Register name="dio5_block">
-        <Register name="dio5_en"> 1 </Register>
+        <Register name="dio5_en"> 0 </Register>
             <Register name="ch1">
                 <Register name="out_enable"> 0 </Register>
                 <Register name="term_enable"> 1 </Register>
@@ -238,6 +238,11 @@
     <Setting name="LatencyStart">3</Setting>
     <Setting name="LatencyStop">2</Setting>
 
+
+    <!--[>Stubs Test<] -->
+    <Setting name="SweepPackageDelay">1</Setting>
+    <Setting name="SweepStubDelay">0</Setting>
+    
 </Settings>
 </HwDescription>
 
