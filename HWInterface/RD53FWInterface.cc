@@ -1249,12 +1249,12 @@ namespace Ph2_HwInterface
   // # injType == 2 --> Digital #
   // ############################
   {
-    const double FSMperiod = 100e-9;
+    const double FSMperiod = 100e-9; // Referred to 10 MHz clock [us]
     enum INJtype { None, Analog , Digital };
     enum INJdelay
     {
-      FirstCal  = 32,
-      SecondCal = 32,
+      FirstCal  = 16,
+      SecondCal =  8,
       Loop      = 40
     };
 
@@ -1272,7 +1272,7 @@ namespace Ph2_HwInterface
         // #######################################
         // # Configuration for digital injection #
         // #######################################
-        RD53::CalCmd calcmd_first(1,2,8,0,0);
+        RD53::CalCmd calcmd_first(1,0,4,0,0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data         = calcmd_first.getCalCmd(chipId);
         RD53::CalCmd calcmd_second(0,0,0,0,0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data        = calcmd_second.getCalCmd(chipId);
@@ -1327,12 +1327,13 @@ namespace Ph2_HwInterface
       }
     else LOG (ERROR) << BOLDRED << "Option not recognized " << injType << RESET;
 
-    LOG (ERROR) << GREEN << "Internal trigger rate: " << BOLDYELLOW << std::fixed << std::setprecision(0)
-                << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  +
-                                      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal +
-                                      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             +
-                                      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr))
-                << std::setprecision(-1) << RESET << GREEN << " Hz" << RESET;
+    if (injType != INJtype::None)
+      LOG (ERROR) << GREEN << "Internal trigger rate: " << BOLDYELLOW << std::fixed << std::setprecision(0)
+                  << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  +
+                                        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal +
+                                        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             +
+                                        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr))
+                  << std::setprecision(-1) << RESET << GREEN << " Hz" << RESET;
 
 
     // ##############################
