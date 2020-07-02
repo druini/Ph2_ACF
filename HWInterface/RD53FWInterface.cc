@@ -1335,12 +1335,12 @@ namespace Ph2_HwInterface
       }
     else LOG (ERROR) << BOLDRED << "Option not recognized " << injType << RESET;
 
-    LOG (ERROR) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
-                << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  +
-                                      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal +
-                                      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             +
-                                      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr))
-                << std::setprecision(-1) << RESET << GREEN << " Hz" << RESET;
+    LOG (INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
+               << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  +
+                                     RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal +
+                                     RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             +
+                                     RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr))
+               << std::setprecision(-1) << RESET << GREEN << " Hz" << RESET;
 
 
     // ##############################
