@@ -1253,8 +1253,8 @@ namespace Ph2_HwInterface
     enum INJtype { None, Analog , Digital };
     enum INJdelay
     {
-      FirstCal  = 16,
-      SecondCal =  8,
+      FirstCal  = 32,
+      SecondCal = 32,
       Loop      = 40
     };
 
@@ -1280,10 +1280,12 @@ namespace Ph2_HwInterface
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 0;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr        = 0;
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en                 = false;
       }
     else if (injType == INJtype::Analog)
       {
@@ -1298,10 +1300,12 @@ namespace Ph2_HwInterface
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = INJdelay::SecondCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr        = 0;
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en                 = false;
 
         // @TMP@
         if (enableAutozero == true)
@@ -1314,8 +1318,12 @@ namespace Ph2_HwInterface
       }
     else if (injType == INJtype::None)
       {
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop      = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en      = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en          = false;
 
         // @TMP@
         if (enableAutozero == true)
@@ -1327,13 +1335,12 @@ namespace Ph2_HwInterface
       }
     else LOG (ERROR) << BOLDRED << "Option not recognized " << injType << RESET;
 
-    if (injType != INJtype::None)
-      LOG (ERROR) << GREEN << "Internal trigger rate: " << BOLDYELLOW << std::fixed << std::setprecision(0)
-                  << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  +
-                                        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal +
-                                        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             +
-                                        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr))
-                  << std::setprecision(-1) << RESET << GREEN << " Hz" << RESET;
+    LOG (ERROR) << GREEN << "Internal trigger frequency: " << BOLDYELLOW << std::fixed << std::setprecision(0)
+                << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  +
+                                      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal +
+                                      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             +
+                                      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr))
+                << std::setprecision(-1) << RESET << GREEN << " Hz" << RESET;
 
 
     // ##############################
