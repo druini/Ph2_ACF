@@ -277,7 +277,7 @@ void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<NSSACHANNELS>* pGrou
                         cShortsReadoutChip.push_back(cIndex);
                         LOG (INFO) << BOLDRED << "Possible short in channel " << +cIndex << RESET;
                     }
-                    if( cBitset[cIndex] == 1 && float(abs(cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex) - fEventsPerPoint))/float(fEventsPerPoint)<THRESHOLD_IN )
+                    if( cBitset[cIndex] == 1 && abs(int(cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex) - fEventsPerPoint))/float(fEventsPerPoint)<THRESHOLD_IN )
                     {
                         cInjectionsReadoutChip.push_back(cIndex);
                     }
