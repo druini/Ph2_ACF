@@ -1707,7 +1707,7 @@ void DataChecker::L1Eye(std::vector<uint8_t> pChipIds )
 
 }
 
-void DataChecker::StubCheck()
+void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
 {
     std::string cDAQFileName = "StubCheck.daq";
     FileHandler* cDAQFileHandler = new FileHandler (cDAQFileName, 'w');
@@ -1725,13 +1725,16 @@ void DataChecker::StubCheck()
     // enable TP injection 
     //enableTestPulse( true ); 
     // configure test pulse trigger 
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(cFirmwareTPdelay,cFirmwareTriggerDelay,1000,0);
+    uint8_t cEnableFastReset=0; 
+    uint8_t cEnableTP=1; 
+    uint8_t cEnableL1A=1;
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(cFirmwareTPdelay,cFirmwareTriggerDelay,1000,cEnableFastReset,cEnableTP,cEnableL1A);
     
 
     // set threshold 
     uint8_t cTestPulseAmplitude = 0xFF-100; 
-    uint16_t cThreshold = 450;
-    uint8_t cTPgroup = 2;
+    uint16_t cThreshold = this->findValueInSettings("StubThreshold"); 
+    uint8_t cTPgroup = 0;
     //enable TP and set TP amplitude 
     fTestPulse=true;
     setSameGlobalDac("TestPulsePotNodeSel",  cTestPulseAmplitude );
@@ -1745,7 +1748,7 @@ void DataChecker::StubCheck()
     uint8_t cSecondSeed = static_cast<uint8_t>(2*(1+std::floor((cTPgroup*2 + 16*3)/2.))); // in half strips 
     uint8_t cThirdSeed = static_cast<uint8_t>(2*(1+std::floor((cTPgroup*2 + 16*5)/2.))); // in half strips 
 
-    std::vector<uint8_t> cSeeds{ cFirstSeed, cSecondSeed};// cThirdSeed};
+    std::vector<uint8_t> cSeeds{ cFirstSeed};// cThirdSeed};
     std::vector<int>     cBends( cSeeds.size(), cBend ); 
 
     LOG (INFO) << BOLDMAGENTA << "First stub expected to be " << std::bitset<8>(cFirstSeed) << RESET;
@@ -1756,7 +1759,8 @@ void DataChecker::StubCheck()
         auto cBeBoard = static_cast<BeBoard*>(cBoard);
         uint16_t cDelay = fBeBoardInterface->ReadBoardReg( cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse")-1;
         setSameDacBeBoard(cBeBoard, "TriggerLatency", cDelay);
-        
+        fBeBoardInterface->ChipReSync ( cBeBoard ); // NEED THIS! ?? 
+
         for(auto cOpticalGroup : *cBoard)
         {
             for (auto cHybrid : *cOpticalGroup)
@@ -1771,10 +1775,13 @@ void DataChecker::StubCheck()
                     // // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5 strips
                     // cBendCode = cBendLUT[ (cBend/2. - (-7.0))/0.5 ]; 
                     
-                    if( cChip->getId() == 0 )
+                    if( std::find(pChipIds.begin(),pChipIds.end(),cChip->getId()) != pChipIds.end() )
                     {
                         //first pattern - stubs lines 0,1,3
                         cReadoutChipInterface->injectStubs( cReadoutChip , cSeeds , cBends, false );
+                        //set threshold back to low 
+                        //fReadoutChipInterface->WriteChipReg(cReadoutChip,"VCth",cThreshold);
+                        //fReadoutChipInterface->WriteChipReg ( cReadoutChip, "TestPulseGroup", cTPgroup );
                         // switch off HitOr
                         fReadoutChipInterface->WriteChipReg ( cReadoutChip, "HitOr", 0);
                         //enable stub logic
@@ -1789,83 +1796,86 @@ void DataChecker::StubCheck()
             }
         }
 
-        auto cOriginalDelay = fBeBoardInterface->ReadBoardReg (cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
-        LOG (INFO) << BOLDMAGENTA << "Stub package delay set to " << +cOriginalDelay << RESET;
-        int cPackageDelayStart = (cSweepPackageDelay == 0 ) ? cOriginalDelay : 0 ;
-        int cPackageDelayStop = (cSweepPackageDelay == 0 ) ? cOriginalDelay+1 : 8 ;
-        for( int cPackageDelay = cPackageDelayStart ; cPackageDelay < cPackageDelayStop ; cPackageDelay++ )
+        for( int cAttempt = 0 ; cAttempt < this->findValueInSettings("StubAttempts") ; cAttempt++ )
         {
-            fBeBoardInterface->WriteBoardReg (cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay );
-            (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
-           
-            auto cStubLatency = fBeBoardInterface->ReadBoardReg (cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
-            int cStubDelayStart = (cSweepStubDelay == 0 ) ? cStubLatency : 0 ;
-            int cStubDelayStop = (cSweepStubDelay == 0 ) ? cStubLatency+1 : cDelay ;
-            for( auto cStubDelay=cStubDelayStart; cStubDelay <= cStubDelayStop ; cStubDelay++ )
+            LOG (INFO) << BOLDMAGENTA << "Attempt#" << +cAttempt << RESET;
+            auto cOriginalDelay = fBeBoardInterface->ReadBoardReg (cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+            LOG (INFO) << BOLDMAGENTA << "\t..Stub package delay set to " << +cOriginalDelay << RESET;
+            int cPackageDelayStart = (cSweepPackageDelay == 0 ) ? cOriginalDelay : 0 ;
+            int cPackageDelayStop = (cSweepPackageDelay == 0 ) ? cOriginalDelay+1 : 8 ;
+            for( int cPackageDelay = cPackageDelayStart ; cPackageDelay < cPackageDelayStop ; cPackageDelay++ )
             {
-                fBeBoardInterface->WriteBoardReg (cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDelay);
-                fBeBoardInterface->ChipReSync ( cBeBoard ); // NEED THIS! ?? 
-                LOG (INFO) << BOLDBLUE << "L1A latency set to "
-                     << +cDelay  
-                     << " stub latency set to " 
-                     << +cStubDelay 
-                     << " so delay is "
-                     << +(cDelay - cStubDelay) << RESET;
-
-                this->ReadNEvents( cBeBoard , 5);
-                const std::vector<Event*>& cEventsWithStubs = this->GetEvents ( cBeBoard );
-                LOG (INFO) << BOLDBLUE << +cEventsWithStubs.size() << " events read back from FC7 with ReadData" << RESET;
-                for ( auto& cEvent : cEventsWithStubs )
+                fBeBoardInterface->WriteBoardReg (cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay );
+                (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
+                
+                auto cStubLatency = fBeBoardInterface->ReadBoardReg (cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
+                int cStubDelayStart = (cSweepStubDelay == 0 ) ? cStubLatency-2 : 0 ;
+                int cStubDelayStop = (cSweepStubDelay == 0 ) ? cStubLatency+2 : cDelay+20 ;
+                for( auto cStubDelay=cStubDelayStart; cStubDelay <= cStubDelayStop ; cStubDelay++ )
                 {
-                    auto cEventCount = cEvent->GetEventCount();
-                    LOG (INFO) << BOLDBLUE << "Event " << +cEventCount << RESET;
-                    for(auto cOpticalGroup : *cBoard)
+                    fBeBoardInterface->WriteBoardReg (cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDelay);
+                    LOG (INFO) << BOLDBLUE << "\t..L1A latency set to "
+                         << +cDelay  
+                         << " stub latency set to " 
+                         << +cStubDelay 
+                         << " so delay is "
+                         << +(cDelay - cStubDelay) << RESET;
+
+                    this->ReadNEvents( cBeBoard , 5);
+                    const std::vector<Event*>& cEventsWithStubs = this->GetEvents ( cBeBoard );
+                    LOG (INFO) << BOLDBLUE << +cEventsWithStubs.size() << " events read back from FC7 with ReadData" << RESET;
+                    for ( auto& cEvent : cEventsWithStubs )
                     {
-                        for (auto cHybrid : *cOpticalGroup)
+                        auto cEventCount = cEvent->GetEventCount();
+                        LOG (INFO) << BOLDBLUE << "\t\t..Event " << +cEventCount << RESET;
+                        for(auto cOpticalGroup : *cBoard)
                         {
-                            auto cBx = cEvent->BxId ( cHybrid->getIndex() );
-                            LOG (INFO) << BOLDBLUE << "Hybrid " 
-                                << +cHybrid->getId() << " BxID " << +cBx << RESET;
-
-
-                            for (auto cChip : *cHybrid) 
+                            for (auto cHybrid : *cOpticalGroup)
                             {
-                                auto cStubs = cEvent->StubVector (cHybrid->getIndex(), cChip->getId() );
-                                auto cHits = cEvent->GetHits(cHybrid->getIndex(), cChip->getId() );
-                                if( cStubs.size() > 0 )
-                                    LOG (INFO) << BOLDGREEN << "Found "
+                                auto cBx = cEvent->BxId ( cHybrid->getIndex() );
+                                LOG (INFO) << BOLDBLUE << "\t\t..Hybrid " 
+                                    << +cHybrid->getId() << " BxID " << +cBx << RESET;
+
+                                for (auto cChip : *cHybrid) 
+                                {
+                                    auto cStubs = cEvent->StubVector (cHybrid->getIndex(), cChip->getId() );
+                                    auto cHits = cEvent->GetHits(cHybrid->getIndex(), cChip->getId() );
+                                    if( cStubs.size() > 0 )
+                                        LOG (INFO) << BOLDGREEN << "\t\t\t...Found "
+                                            << +cStubs.size() 
+                                            << " stubs in the readout."
+                                            << " and "
+                                            << +cHits.size()
+                                            << " hits."
+                                            << RESET;
+                                    else
+                                        LOG (INFO) << BOLDRED << "\t\t\t...Found "
                                         << +cStubs.size() 
                                         << " stubs in the readout."
                                         << " and "
                                         << +cHits.size()
                                         << " hits."
                                         << RESET;
-                                else
-                                    LOG (INFO) << BOLDRED << "Found "
-                                    << +cStubs.size() 
-                                    << " stubs in the readout."
-                                    << " and "
-                                    << +cHits.size()
-                                    << " hits."
-                                    << RESET;
-                                
-                            }
-                        }
-                    }
-                    //SLinkEvent cSLev = cEvent->GetSLinkEvent (cBeBoard);
-                    //auto cPayload = cSLev.getData<uint32_t>();
-                    //cDAQFileHandler->setData(cPayload);
-                }
-
-            }
-        }
-    }
+                                    
+                                }//chip
+                            }//hybrid
+                        }//modules
+                        //SLinkEvent cSLev = cEvent->GetSLinkEvent (cBeBoard);
+                        //auto cPayload = cSLev.getData<uint32_t>();
+                        //cDAQFileHandler->setData(cPayload);
+                    }//event
+                }//latency loop
+                fBeBoardInterface->WriteBoardReg (cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
+            }//package delay loop  
+            fBeBoardInterface->WriteBoardReg (cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay",cOriginalDelay);
+        }// attempt loop
+    }//board loop
     LOG (INFO) << BOLDBLUE << "Done!" << RESET;
     cDAQFileHandler->closeFile();
     delete cDAQFileHandler;
 }
 
-void DataChecker::StubCheckWNoise(uint8_t pChipId)
+void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
 {
     uint8_t cSweepPackageDelay = this->findValueInSettings("SweepPackageDelay"); 
     uint8_t cSweepStubDelay = this->findValueInSettings("SweepStubDelay"); 
@@ -1879,7 +1889,7 @@ void DataChecker::StubCheckWNoise(uint8_t pChipId)
                 {
                     auto cReadoutChip = static_cast<ReadoutChip*>(cChip);
                     auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                    if( cChip->getId() == pChipId )
+                    if( std::find( pChipIds.begin(), pChipIds.end(), cChip->getId()) != pChipIds.end() )
                     {
                         //first pattern - stubs lines 0,1,3
                         cReadoutChipInterface->injectStubs( cReadoutChip , {10} , {0}, true );

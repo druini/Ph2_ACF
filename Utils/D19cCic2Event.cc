@@ -57,7 +57,7 @@ namespace Ph2_HwInterface {
         fCBCDataType = 0;
         fBeStatus = 0;
         this->Set ( pBoard, list);
-        //SetEvent ( pBoard, pNbCic, list );
+        //this->SetEvent ( pBoard, fNCbc, list );
     }
      void D19cCic2Event::Set ( const BeBoard* pBoard, const std::vector<uint32_t>& pData )
     {

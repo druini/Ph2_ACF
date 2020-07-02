@@ -10,7 +10,7 @@
 
     <!-- RHS -->
     <OpticalGroup Id="0" FMCId="0" >
-      <GBT phaseTap="5" enable="0"/>
+      <GBT phaseTap="7" enable="0"/>
         <Module FeId="0" FMCId="0" ModuleId="0" Status="1" LinkId="0" >
             <Global>
                 <Settings threshold="550" latency="19"/>
@@ -85,7 +85,7 @@
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
 		<Register name="trigger_source"> 3 </Register>
-		<Register name="user_trigger_frequency"> 1 </Register>
+		<Register name="user_trigger_frequency"> 100 </Register>
 		<Register name="stubs_mask"> 0 </Register>
                 <!--this is the delay for the stub trigger-->
 		<Register name="stub_trigger_delay_value"> 10 </Register>
@@ -118,7 +118,7 @@
 		</Register>
         <Register name="cic">
                 <Register name = "clock_enable"> 1 </Register>
-                <Register name = "stub_package_delay"> 7 </Register>
+                <Register name = "stub_package_delay"> 6 </Register>
                 <!-- 6 -->
         </Register>
     </Register>
@@ -175,7 +175,7 @@
 
 <Settings>
    <!--PedestalEqualization-->
-    <Setting name="Nevents">5</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
@@ -240,6 +240,8 @@
     <!--[>Stubs Test<] -->
     <Setting name="SweepPackageDelay">0</Setting>
     <Setting name="SweepStubDelay">0</Setting>
+    <Setting name="StubThreshold">500</Setting>
+    <Setting name="StubAttempts">10</Setting>
 
 </Settings>
 </HwDescription>

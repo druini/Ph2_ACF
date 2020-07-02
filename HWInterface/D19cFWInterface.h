@@ -260,7 +260,7 @@ namespace Ph2_HwInterface {
         std::vector<uint32_t> GetStubData(uint8_t pIndex){return fD19cFWEvts.fBoardStubData[pIndex];}
       private:
         uint8_t fFastCommandDuration=0;
-        uint16_t fWait_us=500; 
+        uint16_t fWait_us=10000; //10 ms 
         uint8_t fResetMinPeriod_ms=100;//was 100
         // split data per module/chip for a given board 
         uint32_t SplitFWEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);

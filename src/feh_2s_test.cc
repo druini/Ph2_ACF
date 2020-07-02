@@ -90,7 +90,7 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "checkReadData", "Check ReadData method... ", ArgvParser::NoOptionAttribute );
     cmd.defineOption ( "checkAsync", "Check Async readout methods [PS objects only]... ", ArgvParser::NoOptionAttribute );
     cmd.defineOption ( "checkReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute );
-    
+    cmd.defineOption ( "noiseInjection" , "Check noise injection..." , ArgvParser::NoOptionAttribute );
     int result = cmd.parse ( argc, argv );
 
     if ( result != ArgvParser::NoParserError )
@@ -268,8 +268,9 @@ int main ( int argc, char* argv[] )
         if( cmd.foundOption("checkSLink") )
             cDataChecker.WriteSlinkTest(cmd.optionValue ("checkSLink" ));
         if( cmd.foundOption("checkStubs") )
-            cDataChecker.StubCheckWNoise();  
-            //cDataChecker.StubCheck();
+            cDataChecker.StubCheck(cArgs);
+        if( cmd.foundOption("noiseInjection") )
+            cDataChecker.StubCheckWNoise(cArgs);  
         if( cmd.foundOption("checkReadData"))
             cDataChecker.ReadDataTest();
         if( cmd.foundOption("checkAsync"))

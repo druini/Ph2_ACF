@@ -52,6 +52,7 @@ namespace Ph2_HwInterface
     , fNCic (0)
     , fFMCId (1)
     {
+
         if ( fFileHandler == nullptr ) fSaveToFile = false;
         else fSaveToFile = true;
         fResetAttempts = 0 ;
@@ -347,13 +348,9 @@ namespace Ph2_HwInterface
       std::vector< std::pair<std::string, uint32_t> > cVecReg;
       for( auto cBufferValue : cWriteBuffer )
       {
-        cVecReg.clear();
-        cVecReg.push_back({"sysreg.spi.tx_data", cBufferValue} );
-        cVecReg.push_back({"sysreg.spi.command", cSPIcommand} );
-        this->WriteStackReg( cVecReg );
-        std::this_thread::sleep_for (std::chrono::microseconds (10) );
-
         this->WriteReg("sysreg.spi.tx_data",cBufferValue);
+        this->WriteReg("sysreg.spi.command",cSPIcommand);
+        
         uint32_t cReadBack = this->ReadReg("sysreg.spi.rx_data");
         cReadBack = this->ReadReg("sysreg.spi.rx_data");
         LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
@@ -372,8 +369,8 @@ namespace Ph2_HwInterface
     // }
     void D19cFWInterface::syncCDCE() 
     {
-     uint32_t cDisableSync=0;
-     uint32_t cEnableSync=1-cDisableSync;
+        uint32_t cDisableSync=0;
+        uint32_t cEnableSync=1-cDisableSync;
 
         LOG (INFO) << BOLDBLUE << "\tCDCE Synchronization" << RESET;
         this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 1);
@@ -382,6 +379,19 @@ namespace Ph2_HwInterface
         
         LOG (INFO) << BOLDBLUE << "\t\tDe-Asserting Sync"<< RESET;
         this->WriteReg("sysreg.ctrl.cdce_sync", cDisableSync);
+        
+        // 0 --> secondary reference (internal)
+        // 1 --> primary reference (external) 
+        uint32_t cExternalClock = this->ReadReg("fc7_daq_cnfg.clock.ext_clk_en");   
+        this->WriteReg("sysreg.ctrl.cdce_refsel", cExternalClock );
+        cReadBack = this->ReadReg("sysreg.ctrl.cdce_refsel");
+        do
+        {
+            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+            cReadBack = this->ReadReg("sysreg.ctrl.cdce_refsel");
+        }while(cReadBack != cExternalClock );
+        LOG (INFO) << BOLDBLUE << "Read from CDCE ref sel returns : " << cReadBack << RESET;
+
         LOG (INFO) << BOLDBLUE << "\t\tAsserting Sync"<< RESET;
         this->WriteReg("sysreg.ctrl.cdce_sync", cEnableSync);
         cReadBack = this->ReadReg("sysreg.status.cdce_sync_done");
@@ -391,7 +401,6 @@ namespace Ph2_HwInterface
             std::this_thread::sleep_for (std::chrono::milliseconds (100) );
             cReadBack = this->ReadReg("sysreg.status.cdce_sync_done");
         }while(cReadBack != 1 );
-
 
         cReadBack = this->ReadReg("sysreg.status.cdce_lock");
         LOG (DEBUG) << BOLDBLUE << "Read from CDCE lock returns : " << cReadBack << RESET;
@@ -412,6 +421,7 @@ namespace Ph2_HwInterface
         uint32_t cReadBack = this->ReadReg("sysreg.spi.rx_data");
         cReadBack = this->ReadReg("sysreg.spi.rx_data");
         LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
+        std::this_thread::sleep_for (std::chrono::milliseconds (2000) ); 
     }
     void D19cFWInterface::powerAllFMCs(bool pEnable)
     {
@@ -429,32 +439,41 @@ namespace Ph2_HwInterface
           if ( std::find(cLinkIds.begin(), cLinkIds.end(), cOpticalReadout->getId() ) == cLinkIds.end() )
             cLinkIds.push_back(cOpticalReadout->getId() );
         }
-        // resync CDCE 
-        this->syncCDCE();
-
+        
         // switch off SEH       
         LOG (INFO) << BOLDRED << "Please switch off the SEH... press any key to continue once you have done so..." << RESET;
         do
         {
             std::this_thread::sleep_for (std::chrono::milliseconds (10) );
         }while( std::cin.get()!='\n');
+        // resync CDCE 
+        //this->syncCDCE();
         //reset GBT-FPGA
         this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
         std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+        //reset GBT-FPGA
+        //this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+        //std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+        //this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+        //std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+        bool cLinksLocked=true;
         // tell user to switch on SEH
         LOG (INFO) << BOLDRED << "Please switch on the SEH... press any key to continue once you have done so..." << RESET;
         do
         {
             std::this_thread::sleep_for (std::chrono::milliseconds (10) );
         }while( std::cin.get()!='\n');
-
-        //check link Ids
-        bool cLinksLocked=true;
+        
         for(auto cLinkId : cLinkIds )
         {
-            uint32_t cCommand = ( (0x1 & 0xf) << 22 ) | ( (cLinkId & 0x3f) << 26 );
+            // reset here for good measure 
+            uint32_t cCommand  = ( 0x0 << 22 ) | ( (cLinkId & 0x3f) << 26 );
+            //this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand ) ;
+            //std::this_thread::sleep_for (std::chrono::milliseconds (2000) );
+            //  get link status  
+            cCommand = ( (0x1 & 0xf) << 22 ) | ( (cLinkId & 0x3f) << 26 );
             this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand ) ;
-            std::this_thread::sleep_for (std::chrono::milliseconds (10) );
+            std::this_thread::sleep_for (std::chrono::milliseconds (500) );
             LOG (INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
             uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
             LOG (INFO) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
@@ -502,15 +521,15 @@ namespace Ph2_HwInterface
                 LOG (INFO) << BOLDBLUE << "SCA enabled successfully." << RESET;
             cGBTx.scaConfigureGPIO(this);
             // configure GBTx
-            //bool cRisingEdge=true;
+            bool cRisingEdge=true;
             //cGBTx.gbtxResetPhaseShifterClocks(this);
             cGBTx.gbtxConfigureChargePumps(this);
             cGBTx.gbtxResetPhaseShifterClocks(this);
             cGBTx.gbtxSetClocks(this, 0x3 , 0xa ); // 0xa
             cGBTx.gbtxConfigure(this);
             cGBTx.gbtxSetPhase(this, fGBTphase) ;
-            //cGBTx.gbtxSelectEdgeTx(this, cRisingEdge) ;
-            //cGBTx.gbtxSelectTerminationRx(this, true);
+            cGBTx.gbtxSelectEdgeTx(this, cRisingEdge) ;
+            cGBTx.gbtxSelectTerminationRx(this, true);
             cGBTx.gbtxSetDriveStrength(this,0xa);
         }
     }
@@ -600,7 +619,6 @@ namespace Ph2_HwInterface
           syncCDCE();
         }
         
-
         // reset FC7 if not mux crate
         uint32_t fmc1_card_type = ReadReg ("fc7_daq_stat.general.info.fmc1_card_type");
         uint32_t fmc2_card_type = ReadReg ("fc7_daq_stat.general.info.fmc2_card_type");
@@ -624,6 +642,8 @@ namespace Ph2_HwInterface
         // load dio5 configuration
         if (cEnableDIO5)
         {
+
+            //this->WriteReg("sysreg.fmc_pwr.l12_pwr_en",1);
             this->PowerOnDIO5(12);
             LOG (INFO) << BOLDBLUE << "Loading DIO5 configuration.." << RESET;
             this->WriteReg ("fc7_daq_ctrl.dio5_block.control.load_config", 0x1);
@@ -633,6 +653,10 @@ namespace Ph2_HwInterface
             LOG (INFO) << BOLDBLUE << "DIO5 status [not ready] : " << +cStatus << RESET;
             LOG (INFO) << BOLDBLUE << "DIO5 status [error] : " << +cError << RESET;
         }
+        
+        //set reference for CDCE 
+        uint32_t cExternalClock = this->ReadReg("fc7_daq_cnfg.clock.ext_clk_en");   
+        this->WriteReg("sysreg.ctrl.cdce_refsel", cExternalClock );
         
         // check status of clocks
         bool c40MhzLocked = false;
@@ -1062,11 +1086,9 @@ namespace Ph2_HwInterface
       auto cSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source");
       auto cRate = this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
       auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-      auto cDuration = this->ReadReg("fc7_daq_ctrl.fast_command_block.control.fast_duration");
       LOG (INFO) << BOLDMAGENTA << "Trigger Source is : " << +cSource << RESET;
       LOG (INFO) << BOLDMAGENTA << "Trigger Rate is : " << +cRate << RESET;
       LOG (INFO) << BOLDMAGENTA << "Trigger Multiplicity is : " << +cMultiplicity << RESET;
-      LOG (INFO) << BOLDMAGENTA << "Fast Command Duration is : " << +cDuration << RESET;
     }
     void D19cFWInterface::Start()
     {
@@ -2733,36 +2755,35 @@ namespace Ph2_HwInterface
         // send a resync and reset readout
         uint8_t cAttempts=0;
         cSuccess=false;
-        //this->ResetReadout();
-        //std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
         // reset decoder 
         this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset",0x1);
-        std::this_thread::sleep_for (std::chrono::microseconds (fWait_us*10) );
-        //this->WriteReg( "fc7_daq_ctrl.physical_interface_block.cic_decoder.start_bx0_alignment",0x1);
-        //std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
-        //this->WriteReg( "fc7_daq_ctrl.physical_interface_block.cic_decoder.backend_alignment_pattern_disable",0x1);
-        //std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
         do
         {
-            for( int i=0;i<1;i++)
-            {
-                this->ChipReSync();
-                std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
-            }
+            //pause after reset 
+            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us*10) );
+            // send a resync then wait 
+            this->ChipReSync();
+            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
             // check state of bx0 alignment block
             uint32_t cValue = this->ReadReg( "fc7_daq_stat.physical_interface_block.cic_decoder.bx0_alignment_state");
             if( cValue == 8 )
             {
                 LOG (INFO) << BOLDBLUE << "Bx0 alignment in back-end " << BOLDGREEN << "SUCCEEDED!" << BOLDBLUE << "\t... Stub package delay set to : " <<+cStubPackageDelay << RESET;
                 cSuccess = true;
-                //this->ChipReSync();
-                //std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
-                //this->ResetReadout();
-                //std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
+                // definitely works with
+                // figure out which one of these is needed 
+                // resync after bx0 alignment worked 
+                this->ChipReSync();
+                std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
+                // reset the readout as well 
+                this->ResetReadout();
+                std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
             }
             else
+            {
                 LOG (INFO) << BOLDBLUE << "Bx0 alignment in back-end " << BOLDRED << "FAILED! State of alignment : " << +cValue <<  RESET;
-            //std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
+                this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset",0x1);
+            }
             cAttempts++;
         }while(cAttempts<10 && !cSuccess);
         return cSuccess;
@@ -2779,6 +2800,8 @@ namespace Ph2_HwInterface
         // load new trigger configuration
         this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
         std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
+        // and reset the readout 
+        this->ResetReadout();
     }
     // configure trigger FSMs on the fly ...
     void D19cFWInterface::ConfigureTestPulseFSM(uint16_t pDelayAfterFastReset, uint16_t pDelayAfterTP, uint16_t pDelayBeforeNextTP, uint8_t pEnableFastReset, uint8_t pEnableTP, uint8_t pEnableL1A )
