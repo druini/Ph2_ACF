@@ -531,20 +531,15 @@ namespace Ph2_System
                       LOG (DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of " << +cEventSize <<  " 32 bit words..." << RESET;
                       if( pBoard->getFrontEndType() == FrontEndType::CBC3 )
                         {
-                          fEventSize = static_cast<uint32_t>(cEventSize);
                           fEventList.push_back ( new D19cCbc3Event ( pBoard, cEvent ) );
                         }
                       else if( pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2  )
                         {
-                          fNCbc = 8;
-                          fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
                           fEventList.push_back ( new D19cCic2Event ( pBoard, cEvent ) );
                         }
                       else if( pBoard->getFrontEndType() == FrontEndType::SSA )
                         {
-
                           fEventList.push_back(new D19cSSAEvent(pBoard, maxind+1, fNFe, cEvent));
-
                         }
                       cEventIndex++;
                     }

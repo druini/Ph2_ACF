@@ -1832,14 +1832,14 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
                         {
                             for (auto cHybrid : *cOpticalGroup)
                             {
-                                auto cBx = cEvent->BxId ( cHybrid->getIndex() );
+                                auto cBx = cEvent->BxId ( cHybrid->getId() );
                                 LOG (INFO) << BOLDBLUE << "\t\t..Hybrid " 
                                     << +cHybrid->getId() << " BxID " << +cBx << RESET;
 
                                 for (auto cChip : *cHybrid) 
                                 {
-                                    auto cStubs = cEvent->StubVector (cHybrid->getIndex(), cChip->getId() );
-                                    auto cHits = cEvent->GetHits(cHybrid->getIndex(), cChip->getId() );
+                                    auto cStubs = cEvent->StubVector (cHybrid->getId(), cChip->getId() );
+                                    auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId() );
                                     if( cStubs.size() > 0 )
                                         LOG (INFO) << BOLDGREEN << "\t\t\t...Found "
                                             << +cStubs.size() 
@@ -1860,9 +1860,9 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
                                 }//chip
                             }//hybrid
                         }//modules
-                        //SLinkEvent cSLev = cEvent->GetSLinkEvent (cBeBoard);
-                        //auto cPayload = cSLev.getData<uint32_t>();
-                        //cDAQFileHandler->setData(cPayload);
+                        SLinkEvent cSLev = cEvent->GetSLinkEvent (cBeBoard);
+                        auto cPayload = cSLev.getData<uint32_t>();
+                        cDAQFileHandler->setData(cPayload);
                     }//event
                 }//latency loop
                 fBeBoardInterface->WriteBoardReg (cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
@@ -1942,15 +1942,15 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
                     {
                         for (auto cHybrid : *cOpticalGroup)
                         {
-                            auto cBx = cEvent->BxId ( cHybrid->getIndex() );
+                            auto cBx = cEvent->BxId ( cHybrid->getId() );
                             LOG (INFO) << BOLDBLUE << "Hybrid " 
                                 << +cHybrid->getId() << " BxID " << +cBx << RESET;
 
 
                             for (auto cChip : *cHybrid) 
                             {
-                                auto cStubs = cEvent->StubVector (cHybrid->getIndex(), cChip->getId() );
-                                auto cHits = cEvent->GetHits(cHybrid->getIndex(), cChip->getId() );
+                                auto cStubs = cEvent->StubVector (cHybrid->getId(), cChip->getId() );
+                                auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId() );
                                 if( cStubs.size() > 0 )
                                     LOG (INFO) << BOLDGREEN << "ROC#" << +cChip->getId() 
                                         << " Found "

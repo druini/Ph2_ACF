@@ -379,19 +379,20 @@ namespace Ph2_HwInterface
         
         LOG (INFO) << BOLDBLUE << "\t\tDe-Asserting Sync"<< RESET;
         this->WriteReg("sysreg.ctrl.cdce_sync", cDisableSync);
+        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
         
         // 0 --> secondary reference (internal)
         // 1 --> primary reference (external) 
-        uint32_t cExternalClock = this->ReadReg("fc7_daq_cnfg.clock.ext_clk_en");   
-        this->WriteReg("sysreg.ctrl.cdce_refsel", cExternalClock );
-        cReadBack = this->ReadReg("sysreg.ctrl.cdce_refsel");
-        do
-        {
-            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-            cReadBack = this->ReadReg("sysreg.ctrl.cdce_refsel");
-        }while(cReadBack != cExternalClock );
-        LOG (INFO) << BOLDBLUE << "Read from CDCE ref sel returns : " << cReadBack << RESET;
-
+        // uint32_t cExternalClock = this->ReadReg("fc7_daq_cnfg.clock.ext_clk_en");   
+        // this->WriteReg("sysreg.ctrl.cdce_refsel", cExternalClock );
+        // cReadBack = this->ReadReg("sysreg.ctrl.cdce_refsel");
+        // do
+        // {
+        //     std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+        //     cReadBack = this->ReadReg("sysreg.ctrl.cdce_refsel");
+        // }while(cReadBack != cExternalClock );
+        // LOG (INFO) << BOLDBLUE << "Read from CDCE ref sel returns : " << cReadBack << RESET;
+        
         LOG (INFO) << BOLDBLUE << "\t\tAsserting Sync"<< RESET;
         this->WriteReg("sysreg.ctrl.cdce_sync", cEnableSync);
         cReadBack = this->ReadReg("sysreg.status.cdce_sync_done");
@@ -635,6 +636,9 @@ namespace Ph2_HwInterface
             }
         }
 
+        // power on FMCs 
+        this->InitFMCPower();
+
         // configure FC7 after the fast reset
         LOG (INFO) << BOLDBLUE << "Configuring FC7..." << RESET;
         this->WriteStackReg ( cBoardRegs );
@@ -642,9 +646,8 @@ namespace Ph2_HwInterface
         // load dio5 configuration
         if (cEnableDIO5)
         {
-
-            //this->WriteReg("sysreg.fmc_pwr.l12_pwr_en",1);
-            this->PowerOnDIO5(12);
+            // this->WriteReg("sysreg.fmc_pwr.l12_pwr_en",1);
+            // this->PowerOnDIO5(8);
             LOG (INFO) << BOLDBLUE << "Loading DIO5 configuration.." << RESET;
             this->WriteReg ("fc7_daq_ctrl.dio5_block.control.load_config", 0x1);
             std::this_thread::sleep_for (std::chrono::milliseconds (100) );
@@ -656,7 +659,10 @@ namespace Ph2_HwInterface
         
         //set reference for CDCE 
         uint32_t cExternalClock = this->ReadReg("fc7_daq_cnfg.clock.ext_clk_en");   
+        this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 1);
         this->WriteReg("sysreg.ctrl.cdce_refsel", cExternalClock );
+        this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 0);
+        this->syncCDCE();
         
         // check status of clocks
         bool c40MhzLocked = false;
@@ -2264,11 +2270,11 @@ namespace Ph2_HwInterface
     std::vector<uint32_t> D19cFWInterface::ReadBlockRegOffsetValue ( const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset )
     {
         std::vector<uint32_t> vBlock = ReadBlockRegOffset( pRegNode, pBlocksize, pBlockOffset );
-        LOG (INFO) << BOLDGREEN << +pBlocksize << " words read back from memory " << RESET;
+        LOG (DEBUG) << BOLDGREEN << +pBlocksize << " words read back from memory " << RESET;
         if (fIsDDR3Readout)
         {
             fDDR3Offset += pBlocksize;
-            LOG (INFO) << BOLDGREEN << "\t... " <<  +fDDR3Offset << " current offset in DDR3 " << RESET;
+            LOG (DEBUG) << BOLDGREEN << "\t... " <<  +fDDR3Offset << " current offset in DDR3 " << RESET;
         }
         return vBlock;
     }

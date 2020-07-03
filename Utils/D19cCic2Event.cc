@@ -31,7 +31,10 @@ namespace Ph2_HwInterface {
         fEventHitList.clear();
         fEventStubList.clear();
         fEventRawList.clear();
+        fFeIds.clear();
+        fROCIds.clear();
         fNCbc = 0;
+        // assuming that FEIds aren't shared between links 
         for( auto cModule : *pBoard )
         {
             for (auto cFe : *cModule )
@@ -41,6 +44,11 @@ namespace Ph2_HwInterface {
                 fNCbc += ( cCic == NULL ) ? cFe->size() : 1; 
                 FeData cFeData;
                 fEventStubList.push_back( cFeData );
+                fFeIds.push_back(cFe->getId());
+                std::vector<uint8_t> cROCIds(0); cROCIds.clear();
+                for( auto cChip : *cFe )
+                    cROCIds.push_back( cChip->getId() );
+                fROCIds.push_back( cROCIds );
                 if( fIsSparsified)
                 {
                     fEventHitList.push_back( cFeData );
@@ -59,7 +67,8 @@ namespace Ph2_HwInterface {
         this->Set ( pBoard, list);
         //this->SetEvent ( pBoard, fNCbc, list );
     }
-     void D19cCic2Event::Set ( const BeBoard* pBoard, const std::vector<uint32_t>& pData )
+    
+    void D19cCic2Event::Set ( const BeBoard* pBoard, const std::vector<uint32_t>& pData )
     {
         const uint16_t LENGTH_EVENT_HEADER = 4;
         const uint8_t  VALID_L1_HEADER=0x0A;
@@ -78,7 +87,7 @@ namespace Ph2_HwInterface {
             uint32_t cEventSize = (0x0000FFFF & (*cEventIterator))*4 ; // event size is given in 128 bit words
             uint32_t cDummyCount = (0xFF &  (*(cEventIterator+1)))*4;
             
-            LOG (INFO) << BOLDBLUE << "Event " << +cNEvents 
+            LOG (DEBUG) << BOLDBLUE << "Event " << +cNEvents 
               << "... event header is " << std::bitset<16>(cHeader) 
               << " ... " << +cEventSize << " 32 bit words ... "
               << +cDummyCount << " dummy 32 bit words .. " 
@@ -190,7 +199,7 @@ namespace Ph2_HwInterface {
                     }
                     if( cStatusWord == 0x03 )
                     {
-                        LOG (INFO) << BOLDGREEN << "\t... ReadoutChip#" << +cIndex 
+                        LOG (DEBUG) << BOLDGREEN << "\t... ReadoutChip#" << +cIndex 
                             << " adding stub data.. " << RESET;
                         uint32_t cStubInfo = *(cEventIterator + LENGTH_EVENT_HEADER + cHitInfoSize + 1); 
                         uint8_t cNStubs =  ( cStubInfo  & (0x3F << 16)) >> 16 ;
@@ -436,7 +445,7 @@ namespace Ph2_HwInterface {
     std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word( uint8_t pFeId , uint8_t pReadoutChipId) const 
     {
         auto cChipIdMapped = 7 - std::distance( fFeMapping.begin() , std::find( fFeMapping.begin(), fFeMapping.end() , pReadoutChipId ) ) ; 
-        auto& cDataBitset = fEventRawList[pFeId].second[ cChipIdMapped ];
+        auto& cDataBitset = fEventRawList[getFeIndex(pFeId)].second[ cChipIdMapped ];
         return cDataBitset;    
     }
 
@@ -503,7 +512,7 @@ namespace Ph2_HwInterface {
         // now only 1 bit per chip - OR of a few error flags 
         if( fIsSparsified )
         {
-            auto& cHitInformation = fEventHitList[pFeId].first;
+            auto& cHitInformation = fEventHitList[getFeIndex(pFeId)].first;
             auto cChipIdMapped = std::distance( fFeMapping.begin() , std::find( fFeMapping.begin(), fFeMapping.end() , pReadoutChipId ) ) ; 
             uint32_t cError = (cHitInformation.second & (0x1 << (1+cChipIdMapped) )) >> (1+cChipIdMapped);
             return cError;
@@ -520,19 +529,19 @@ namespace Ph2_HwInterface {
     }
     uint32_t D19cCic2Event::BxId ( uint8_t pFeId ) const
     {
-        auto& cStubInformation = fEventStubList[pFeId].first;
+        auto& cStubInformation = fEventStubList[getFeIndex(pFeId)].first;
         return cStubInformation.first;
     }
     uint16_t D19cCic2Event::Status ( uint8_t pFeId ) const
     {
-        auto& cStubInformation = fEventStubList[pFeId].first;
+        auto& cStubInformation = fEventStubList[getFeIndex(pFeId)].first;
         return cStubInformation.second;
     }
     uint32_t D19cCic2Event::L1Id ( uint8_t pFeId, uint8_t pReadoutChipId ) const
     {
         if(fIsSparsified)
         {
-            auto& cHitInformation = fEventHitList[pFeId].first;
+            auto& cHitInformation = fEventHitList[getFeIndex(pFeId)].first;
             return cHitInformation.first;
         }
         else
@@ -565,7 +574,7 @@ namespace Ph2_HwInterface {
     }
     std::bitset<NCHANNELS> D19cCic2Event::decodeClusters(uint8_t pFeId , uint8_t pReadoutChipId) const 
     {
-        auto& cClusterWords = fEventHitList[pFeId].second;
+        auto& cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
         std::bitset<NCHANNELS> cBitSet(0);
         size_t cClusterId=0;
         //LOG (DEBUG) << BOLDBLUE << "Decoding clusters for FE" << +pFeId << " readout chip " << +pReadoutChipId << RESET;
@@ -685,7 +694,7 @@ namespace Ph2_HwInterface {
 
     std::vector<Stub> D19cCic2Event::StubVector (uint8_t pFeId, uint8_t pReadoutChipId) const
     {
-        auto& cStubWords = fEventStubList[pFeId].second;
+        auto& cStubWords = fEventStubList[getFeIndex(pFeId)].second;
         auto cChipIdMapped = std::distance( fFeMapping.begin() , std::find( fFeMapping.begin(), fFeMapping.end() , pReadoutChipId ) ) ; 
         std::vector<Stub> cStubVec;
         for(auto cStubWord : cStubWords )
@@ -856,7 +865,7 @@ namespace Ph2_HwInterface {
     {
         // even hits ---> bottom sensor : cSensorId ==0 [bottom], cSensorId == 1 [top]
         std::vector<Cluster> cClusters(0);
-        auto& cClusterWords = fEventHitList[pFeId].second;
+        auto& cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
         std::bitset<NCHANNELS> cBitSet(0);
         for(auto cClusterWord : cClusterWords )
         {
@@ -877,7 +886,7 @@ namespace Ph2_HwInterface {
     std::vector<Cluster> D19cCic2Event::getClusters ( uint8_t pFeId, uint8_t pReadoutChipId) const
     {   
         std::vector<Cluster> cClusters(0);
-        auto& cClusterWords = fEventHitList[pFeId].second;
+        auto& cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
         std::bitset<NCHANNELS> cBitSet(0);
         for(auto cClusterWord : cClusterWords )
         {

@@ -224,9 +224,33 @@ namespace Ph2_HwInterface
 
         std::bitset<NCHANNELS> decodeClusters( uint8_t pFeId , uint8_t pReadoutChipId) const;
         std::bitset<RAW_L1_CBC> getRawL1Word( uint8_t pFeId , uint8_t pReadoutChipId) const;
-      
+        size_t getFeIndex (const uint8_t pFeId) const
+        {
+            //first find feIndex
+            auto cFeIterator = std::find(fFeIds.begin(), fFeIds.end(), pFeId);
+            if( cFeIterator != fFeIds.end() )
+            {
+                return std::distance(fFeIds.begin(),cFeIterator);
+            }
+            else
+                throw std::runtime_error(std::string("FeId not found in D19cCIC2Event .. check xml!"));
+        }
+        size_t getROCIndex (const uint8_t pFeIndex, const uint8_t pROCId) const
+        {
+            //first find feIndex
+            auto cROCIterator = std::find(fROCIds[pFeIndex].begin(), fROCIds[pFeIndex].end(), pROCId);
+            if( cROCIterator != fROCIds[pFeIndex].end() )
+            {
+                return std::distance(fROCIds[pFeIndex].begin(),cROCIterator);
+            }
+            else
+                throw std::runtime_error(std::string("ROCId not found in D19cCIC2Event .. check xml!"));
+        }
       private:
         std::vector<uint8_t> fFeMapping{ 3,2,1,0,4,5,6,7 }; // FE --> FE CIC
+        std::vector<uint8_t> fFeIds;
+        std::vector<std::vector<uint8_t>> fROCIds;
+
         bool fIsSparsified=true;
         EventList fEventHitList;
         RawEventList fEventRawList;
@@ -258,8 +282,8 @@ namespace Ph2_HwInterface
             return cClusters;
         }
         std::bitset<NCHANNELS> hitsFromClusters( uint8_t pFeId , uint8_t pReadoutChipId  );
-
-
+        
+        
         // L1 Id from chip
         void printL1Header (std::ostream& os, uint8_t pFeId, uint8_t pCbcId) const;
         SLinkEvent GetSLinkEvent ( Ph2_HwDescription::BeBoard* pBoard ) const override;
