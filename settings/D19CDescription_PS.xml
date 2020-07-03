@@ -170,7 +170,7 @@
     <!-- Async Test -->
     <Setting name="AsyncSweepTh">1</Setting>
     <Setting name="AsyncThreshold">100</Setting>
-    <Setting name="AsyncCalDac">10</Setting>
+    <Setting name="AsyncCalDac">50</Setting>
 
 
 

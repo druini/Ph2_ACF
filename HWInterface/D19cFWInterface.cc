@@ -2054,7 +2054,6 @@ namespace Ph2_HwInterface
         else
         {
             this->ReconfigureTriggerFSM(cVecReg);
-            cVecReg.clear();
             
             // resync  
             //this->ChipReSync ();
@@ -2071,14 +2070,36 @@ namespace Ph2_HwInterface
             //     //LOG (DEBUG) << BOLDBLUE << "Iter#" << +cIteration << " ...antenna status " << +cDone << RESET; 
             //     cDone = this->ReadReg("fc7_daq_stat.fast_command_block.general.antenna_async_done");
             // };
+            uint32_t cIterations=0;
             do 
             {
                 LOG (INFO) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
-            }while( this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") );
+                std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
+                cIterations++;
+            }while( this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < 10 );
+            if( this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") == 1 ) 
+            {
+                // try again 
+                this->ReconfigureTriggerFSM(cVecReg);
+                cIterations=0;
+                this->PS_Clear_counters(fFastCommandDuration);
+                std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
+                // start triggers 
+                this->Start();
+                std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
+                do 
+                {
+                    LOG (INFO) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+                    std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
+                    cIterations++;
+                }while( this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < 10 );
+                
+            }
             this->PS_Close_shutter(fFastCommandDuration);
             std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
             this->Stop();   
             std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
+            cVecReg.clear();    
         }
         return pFailed;
     }

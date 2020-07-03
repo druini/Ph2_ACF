@@ -450,7 +450,7 @@ void DataChecker::AsyncTest()
     uint8_t cSweepThreshold = this->findValueInSettings("AsyncSweepTh"); 
     uint8_t cThreshold = this->findValueInSettings("cThreshold");
     uint8_t cThresholdStart = (cSweepThreshold==0)? cThreshold : 0;
-    uint8_t cThresholdStop = (cSweepThreshold==0)? cThreshold+5 : 100;
+    uint8_t cThresholdStop = (cSweepThreshold==0)? cThreshold+5 : 200;
     std::stringstream outp;
     for(auto cBoard : *fDetectorContainer)
     {
