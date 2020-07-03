@@ -99,7 +99,7 @@ namespace Ph2_HwInterface
         for (auto const& v : pVecReg) std::cerr << v.first << ", ";
 
         std::cerr << std::endl;
-        throw ;
+        throw;
       }
 
     if (DEV_FLAG)
