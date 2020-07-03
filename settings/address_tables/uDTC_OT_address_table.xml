@@ -73,11 +73,24 @@
             <node id="test_pulse" description="configuration of the test pulse delays.">
                 <node id="delay_after_fast_reset"       address="0x004" description="delay between fast reset and following test pulse command"/>
                 <node id="delay_after_test_pulse"       address="0x005" description="delay after test pulse command before l1a signal sent to readout the data"/>
-		<node id="delay_before_next_pulse"      address="0x006" description="delay before next pulse"/>
-		<node id="en_fast_reset"		address="0x009" mask="0x00000010" description="enable fast reset in the test pulse sequence"/>
-		<node id="en_test_pulse"		address="0x009" mask="0x00000020" description="enable test pulse in the test pulse sequence"/>
-		<node id="en_l1a"			address="0x009" mask="0x00000040" description="enable l1a in the test pulse sequence"/>
+		        <node id="delay_before_next_pulse"      address="0x006" description="delay before next pulse"/>
+		        <node id="en_fast_reset"		address="0x009" mask="0x00000010" description="enable fast reset in the test pulse sequence"/>
+		        <node id="en_test_pulse"		address="0x009" mask="0x00000020" description="enable test pulse in the test pulse sequence"/>
+		        <node id="en_l1a"			address="0x009" mask="0x00000040" description="enable l1a in the test pulse sequence"/>
                 <node id="en_shutter"                   address="0x009" mask="0x00000080" description="enables automatic shutter for mpa-ssa in the test pulse sequence"/>
+            </node>
+            <node id="ps_async_delay" address="0x00E" description="configuration of PS antenna trigger block">
+                <node id="after_clear_counters"     mask="0x000000FF" description="delay between fast reset and following test pulse command"/>
+                <node id="after_open_shutter"       mask="0x0000FF00" description="delay after test pulse command before l1a signal sent to readout the data"/>
+                <node id="after_close_shutter"      mask="0x00FF0000" description="delay before abtenna stop"/>
+                <node id="after_stop_antenna"       mask="0xFF000000" description="delay before next pulse/clear counters"/>
+            </node>
+            <node id="ps_async_en" address="0x00F" description="configuration of PS antenna trigger block">
+                <node id="open_shutter"                 mask="0x00000001" description="enable opening shutter in async sequence"/>
+                <node id="close_shutter"                mask="0x00000002" description="enable close shutter in async sequence"/>
+                <node id="antenna"                      mask="0x00000004" description="choose antenna injection in async sequence"/>
+                <node id="clear_counters"               mask="0x00000008" description="enable clear counters in async sequence"/>
+                <node id="cal_pulse"                    mask="0x00000010" description="choose cal pulse injection in async sequence"/>
             </node>
 	    <node id="stub_trigger_delay_value"		address="0x007" mask="0x000001FF" description="stub trigger delay before sending to CBCs"/>
 	    <node id="ext_trigger_delay_value"		address="0x007" mask="0x0003FE00" description="sets the delay of the external trigger (dio5 ch 5)"/>
@@ -420,6 +433,7 @@
                 <node id="source"                           mask="0x0000000f"/>
                 <node id="fsm_state"                        mask="0x00000030"/>
                 <node id="configured"                       mask="0x00000040"/>
+                <node id="antenna_async_done"               mask="0x00000400"/>
             </node>
             <node id="trigger_in_counter"               address="0x001" mask="0xffffffff"/>
         </node>

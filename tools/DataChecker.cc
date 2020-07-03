@@ -447,29 +447,54 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t>pChipIds , st
 }
 void DataChecker::AsyncTest()
 {
+    uint8_t cSweepThreshold = this->findValueInSettings("AsyncSweepTh"); 
+    uint8_t cThreshold = this->findValueInSettings("cThreshold");
+    uint8_t cThresholdStart = (cSweepThreshold==0)? cThreshold : 0;
+    uint8_t cThresholdStop = (cSweepThreshold==0)? cThreshold+5 : 100;
     std::stringstream outp;
     for(auto cBoard : *fDetectorContainer)
     {
-        for(auto cOpticalGroup : *cBoard)
+        for( uint8_t cThreshold=cThresholdStart; cThreshold < cThresholdStop; cThreshold+=5 ) 
         {
-            for (auto cHybrid : *cOpticalGroup)
+            // set thresholds 
+            for(auto cOpticalGroup : *cBoard)
             {
-                for (auto cChip : *cHybrid) 
+                for (auto cHybrid : *cOpticalGroup)
                 {
-                    fReadoutChipInterface->WriteChipReg(cChip,"AnalogueAsync",1); 
-                    if( cChip->getId()%2 == 0 )
-                        fReadoutChipInterface->WriteChipReg(cChip,"Threshold",100); 
-                    else
-                        fReadoutChipInterface->WriteChipReg(cChip,"Threshold",1); 
+                    for (auto cChip : *cHybrid) 
+                    {
+                        fReadoutChipInterface->WriteChipReg(cChip,"AnalogueAsync",1); 
+                        fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold); 
+                        fReadoutChipInterface->WriteChipReg(cChip,"InjectedCharge",this->findValueInSettings("AsyncCalDac")); 
+                    }
                 }
             }
+            
+            // read counters 
+            BeBoard *theBoard = static_cast<BeBoard*>(cBoard);
+            LOG (INFO) << BOLDRED << "Reading counters .. " << RESET;
+            this->ReadNEvents( theBoard , this->findValueInSettings("Nevents"));
+            const std::vector<Event*>& cEvents = this->GetEvents ( theBoard );
+            for(auto cOpticalGroup : *cBoard)
+            {
+                for (auto cHybrid : *cOpticalGroup)
+                {
+                    for (auto cChip : *cHybrid) 
+                    {
+                        for( auto cEvent : cEvents )
+                        {
+                            auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId() );
+                            for( uint8_t cChnl=0; cChnl < 5; cChnl++)
+                            {
+                                LOG (INFO) << BOLDBLUE << "Counter value Strip#" << +cChnl << " is " << cHits[cChnl] << RESET;
+                            }
+                        }
+                    }
+                }
+            }
+            LOG (INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadNEvents" << RESET;
         }
-        
-        BeBoard *theBoard = static_cast<BeBoard*>(cBoard);
-        LOG (INFO) << BOLDRED << "Reading data .. " << RESET;
-        this->ReadData( theBoard , true);
-        const std::vector<Event*>& cEvents = this->GetEvents ( theBoard );
-        LOG (INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
+        //const std::vector<Event*>& cEvents = this->GetEvents ( theBoard );
     }
     LOG (INFO) << BOLDBLUE << "Done!" << RESET;
 }

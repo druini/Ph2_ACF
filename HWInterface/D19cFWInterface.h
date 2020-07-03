@@ -262,9 +262,15 @@ namespace Ph2_HwInterface {
         uint8_t fFastCommandDuration=0;
         uint16_t fWait_us=10000; //10 ms 
         uint8_t fResetMinPeriod_ms=100;//was 100
+        // get data from FC7 
+        uint32_t GetData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+        // wait for events from FC7
+        bool WaitForData(Ph2_HwDescription::BeBoard* pBoard);
         // split data per module/chip for a given board 
-        uint32_t SplitFWEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-        uint32_t SplitData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+        uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+        // read back SSA counters directly 
+        void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+
         uint32_t computeEventSize ( Ph2_HwDescription::BeBoard* pBoard );
         //I2C command sending implementation
         bool WriteI2C (  std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pWriteRead, bool pBroadcast );

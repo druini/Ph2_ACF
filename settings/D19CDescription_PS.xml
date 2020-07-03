@@ -10,7 +10,7 @@
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="7" side="0" configfile="SSA.txt" />
+            <SSA Id="0" side="0" configfile="SSA.txt" />
             <!-- <SSA Id="7" side="0" configfile="SSAPreCalib.txt" /> -->
             
             <CIC_Files path="./settings/CicFiles/" />
@@ -31,32 +31,45 @@
         </Register>
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
-		<Register name="triggers_to_accept"> 0 </Register>
-		<Register name="trigger_source"> 3 </Register>
-		<Register name="user_trigger_frequency"> 1 </Register>
-		<Register name="stubs_mask"> 1 </Register>
-                <!--this is the delay for the stub trigger-->
-		<Register name="stub_trigger_delay_value"> 0 </Register>
-                <Register name="stub_trigger_veto_length"> 0 </Register>
-		<Register name="test_pulse">
-			<Register name="delay_after_fast_reset"> 50 </Register>
-			<Register name="delay_after_test_pulse"> 200 </Register>
-			<Register name="delay_before_next_pulse"> 400 </Register>
-			<Register name="en_fast_reset"> 0 </Register>
-			<Register name="en_test_pulse"> 1 </Register>
-			<Register name="en_l1a"> 0 </Register>
-			<Register name="en_shutter"> 0 </Register>
-		</Register>
-                <Register name="ext_trigger_delay_value"> 50 </Register>
-                <Register name="antenna_trigger_delay_value"> 200 </Register>
-                <Register name="delay_between_two_consecutive"> 25 </Register>
-                <Register name="misc">
-                        <Register name="backpressure_enable"> 0 </Register>
-                        <Register name="stubOR"> 1 </Register>
-                        <Register name="initial_fast_reset_enable"> 1 </Register>
-			<Register name="trigger_timeout_enable"> 0 </Register>
-			<Register name="trigger_multiplicity"> 0 </Register>
-                </Register>
+    		<Register name="triggers_to_accept"> 0 </Register>
+    		<Register name="trigger_source"> 10 </Register>
+    		<Register name="user_trigger_frequency"> 1 </Register>
+    		<Register name="stubs_mask"> 1 </Register>
+                    <!--this is the delay for the stub trigger-->
+    		<Register name="stub_trigger_delay_value"> 0 </Register>
+                    <Register name="stub_trigger_veto_length"> 0 </Register>
+    		<Register name="test_pulse">
+    			<Register name="delay_after_fast_reset"> 10 </Register>
+    			<Register name="delay_after_test_pulse"> 10 </Register>
+    			<Register name="delay_before_next_pulse"> 10 </Register>
+    			<Register name="en_fast_reset"> 0 </Register>
+    			<Register name="en_test_pulse"> 1 </Register>
+    			<Register name="en_l1a"> 0 </Register>
+    			<Register name="en_shutter"> 0 </Register>
+    		</Register>
+            <Register name="ps_async_delay">
+                <Register name="after_clear_counters"> 200 </Register>
+                <Register name="after_open_shutter"> 1 </Register>
+                <Register name="after_close_shutter"> 200 </Register>
+                <Register name="after_stop_antenna"> 200 </Register>
+            </Register>
+            <Register name="ps_async_en">
+                <Register name="open_shutter"> 1 </Register>
+                <Register name="close_shutter"> 1 </Register>
+                <Register name="cal_pulse"> 1 </Register>
+                <Register name="antenna"> 0 </Register>
+                <Register name="clear_counters"> 0 </Register>
+            </Register>
+            <Register name="ext_trigger_delay_value"> 50 </Register>
+            <Register name="antenna_trigger_delay_value"> 1 </Register>
+            <Register name="delay_between_two_consecutive"> 25 </Register>
+            <Register name="misc">
+                    <Register name="backpressure_enable"> 0 </Register>
+                    <Register name="stubOR"> 1 </Register>
+                    <Register name="initial_fast_reset_enable"> 1 </Register>
+    	            <Register name="trigger_timeout_enable"> 0 </Register>
+    	           <Register name="trigger_multiplicity"> 0 </Register>
+            </Register>
         </Register>
 	<!-- I2C manager -->
         <Register name="command_processor_block">
@@ -153,6 +166,13 @@
     <!-- number of triggers to send in the case of L1A data -->
     <!-- L1 triggers sent once every 10 ms -->
     <Setting name="PSHybridDebugDuration">1</Setting>
+
+    <!-- Async Test -->
+    <Setting name="AsyncSweepTh">1</Setting>
+    <Setting name="AsyncThreshold">100</Setting>
+    <Setting name="AsyncCalDac">10</Setting>
+
+
 
     <!-- <Setting name="AntennaPotentiometer">526</Setting>
     <Setting name="AntennaTriggerRate">15</Setting>

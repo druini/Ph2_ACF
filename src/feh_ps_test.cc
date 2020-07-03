@@ -70,6 +70,8 @@ int main ( int argc, char* argv[] )
     cmd.defineOption("pattern", "Data Player Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("pattern", "p");
 
+    cmd.defineOption ( "checkAsync", "Check async readout", ArgvParser::NoOptionAttribute );
+    
     // general 
     cmd.defineOption ( "batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute );
     cmd.defineOptionAlternative ( "batch", "b" );
@@ -140,7 +142,13 @@ int main ( int argc, char* argv[] )
     */
     
 
-    
+    if( cmd.foundOption ( "checkAsync" ) )
+    {
+        DataChecker cDataChecker;
+        cDataChecker.Inherit (&cTool);
+        cDataChecker.AsyncTest();
+        //cDataChecker.resetPointers();
+    }
     
     // equalize thresholds on readout chips
     if( cTune ) 

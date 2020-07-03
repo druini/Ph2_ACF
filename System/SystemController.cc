@@ -511,11 +511,12 @@ namespace Ph2_System
               //LOG (INFO) << BOLDBLUE << "maxind " << maxind << RESET;
             }
 
-          if (fEventType == EventType::SSAAS)
+            if (fEventType == EventType::SSAAS)
             {
-              fEventList.push_back(new D19cSSAEventAS(pBoard, maxind+1, fNFe, pData));
+              LOG (INFO) << BOLDBLUE << "Decoding SSA asynchronous events .. " << RESET;
+              fEventList.push_back(new D19cSSAEventAS(pBoard, pData));
             }
-          else if (fEventType != EventType::ZS)
+            else if (fEventType != EventType::ZS)
             {
               size_t cEventIndex=0;
               auto cEventIterator = pData.begin();
