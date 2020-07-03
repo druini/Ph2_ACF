@@ -1986,7 +1986,7 @@ namespace Ph2_HwInterface
             {
                 LOG (INFO) << BOLDBLUE << "Async SSA [trigger source == 6]" << RESET;
                 cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", 0} );
-                cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.test_pulse.en_l1a", 1} );
+                cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.test_pulse.en_l1a", 0} );
                 cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.test_pulse.en_shutter", 0} );
                 cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 1} );
                 cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse",  1} );
@@ -1997,7 +1997,7 @@ namespace Ph2_HwInterface
             if( cTriggerSource == 6 && cAsync )
             {
                 this->PS_Clear_counters(fFastCommandDuration);
-                //this->PS_Open_shutter(fFastCommandDuration);
+                this->PS_Open_shutter(fFastCommandDuration);
             }
             // start triggering machine which will collect N events
             this->Start();
@@ -2046,21 +2046,10 @@ namespace Ph2_HwInterface
                 {
                     LOG (INFO) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
                 }while( this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") );
-                this->Stop();   
-                //uint32_t cWait_us = cNevents*1000;
-                //try and wait for the amount of time expected 
-                //if( cTriggerSource == 6 )
-                //{
-                //    auto cDelayAfterReset = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset");
-                //    auto cDelayAfterTP = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-                //    auto cDelayBeforeNextTP = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse");
-                //    cWait_us = (cDelayAfterReset + cDelayAfterTP + cDelayBeforeNextTP)*(25e-9)*(1e6)*(cMultiplicity+1)*cNevents;
-                //}
-                //LOG (INFO) << BOLDBLUE << "Going to wait for " << +cWait_us << " us ... my estimate for " << +cNevents << " nEvents." << RESET;
-                //std::this_thread::sleep_for (std::chrono::microseconds (100+cWait_us) );  
                 this->PS_Close_shutter(fFastCommandDuration);
             }
-            this->Stop();
+            //stop
+            this->Stop();   
         }
         else
         {
@@ -2068,20 +2057,26 @@ namespace Ph2_HwInterface
             cVecReg.clear();
             
             // resync  
-            this->ChipReSync ();
-            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
+            //this->ChipReSync ();
+            //std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
             //reset + clear counters 
             this->PS_Clear_counters(fFastCommandDuration);
             std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
             // start triggers 
             this->Start();
             std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
-            auto cDone = this->ReadReg("fc7_daq_stat.fast_command_block.general.antenna_async_done");
-            while( cDone != 1 )
+            // auto cDone = this->ReadReg("fc7_daq_stat.fast_command_block.general.antenna_async_done");
+            // while( cDone != 1 )
+            // {
+            //     //LOG (DEBUG) << BOLDBLUE << "Iter#" << +cIteration << " ...antenna status " << +cDone << RESET; 
+            //     cDone = this->ReadReg("fc7_daq_stat.fast_command_block.general.antenna_async_done");
+            // };
+            do 
             {
-                //LOG (DEBUG) << BOLDBLUE << "Iter#" << +cIteration << " ...antenna status " << +cDone << RESET; 
-                cDone = this->ReadReg("fc7_daq_stat.fast_command_block.general.antenna_async_done");
-            };
+                LOG (INFO) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+            }while( this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") );
+            this->PS_Close_shutter(fFastCommandDuration);
+            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
             this->Stop();   
             std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
         }
