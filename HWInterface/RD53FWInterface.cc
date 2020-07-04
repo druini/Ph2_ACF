@@ -1072,19 +1072,19 @@ namespace Ph2_HwInterface
     // #############################
     if (pBoard != nullptr)
       {
-        auto opticalGroup = std::find_if(pBoard->begin(), pBoard->end(), [=] (OpticalGroupContainer* cOpticalGroup)
+        auto opticalGroup = std::find_if(pBoard->begin(), pBoard->end(), [&] (OpticalGroupContainer* cOpticalGroup)
                                          {
                                            return cOpticalGroup->getId() == optGroup_id;
                                          });
         if (opticalGroup != pBoard->end())
           {
-            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [=] (ModuleContainer* cHybrid)
+            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [&] (ModuleContainer* cHybrid)
                                        {
                                          return cHybrid->getId() == hybrid_id;
                                        });
             if (hybrid != (*opticalGroup)->end())
               {
-                auto it = std::find_if((*hybrid)->begin(), (*hybrid)->end(), [=] (ChipContainer* pChip)
+                auto it = std::find_if((*hybrid)->begin(), (*hybrid)->end(), [&] (ChipContainer* pChip)
                                        {
                                          return static_cast<RD53*>(pChip)->getChipLane() == chip_lane;
                                        });
