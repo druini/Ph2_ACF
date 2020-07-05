@@ -19,7 +19,10 @@
 #include "TDirectory.h"
 #include "TTree.h"
 #include "TPaveStats.h"
-#include "TStyle.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#include <TStyle.h>
+#pragma GCC diagnostic pop
 #include "TIterator.h"
 #include "../Utils/Event.h"
 
