@@ -49,7 +49,7 @@ D19cSSAEventAS::D19cSSAEventAS(const BeBoard *pBoard, const std::vector<uint32_t
 }
 void D19cSSAEventAS::Set ( const BeBoard* pBoard, const std::vector<uint32_t>& pData )
 {
-    LOG (INFO) << BOLDBLUE << "Setting event for Async SSA " << RESET;
+    LOG (DEBUG) << BOLDBLUE << "Setting event for Async SSA " << RESET;
     auto cDataIterator = pData.begin();
     uint8_t cFeIndex=0;
     for( auto cModule : *pBoard )

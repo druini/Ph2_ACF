@@ -615,46 +615,44 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
 
 void DataChecker::ReadNeventsTest()
 {
-    auto cSetting = fSettingsMap.find ( "Nevents" );
-    uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
+    //auto cSetting = fSettingsMap.find ( "Nevents" );
+    //uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
     std::stringstream outp;
     for(auto cBoard : *fDetectorContainer)
     {
-        for(int cChipId=0; cChipId<1; cChipId++)
+        for(auto cOpticalGroup : *cBoard)
         {
-            for(auto cOpticalGroup : *cBoard)
+            for (auto cHybrid : *cOpticalGroup)
             {
-                for (auto cHybrid : *cOpticalGroup)
+                // matching 
+                uint16_t cTh1 = (cHybrid->getId()%2==0) ? 900 : 1; 
+                uint16_t cTh2 = (cHybrid->getId()%2==0) ? 1 : 900; 
+                for (auto cChip : *cHybrid) 
                 {
-                    // matching 
-                    uint16_t cTh1 = (cHybrid->getId()%2==0) ? 900 : 1; 
-                    uint16_t cTh2 = (cHybrid->getId()%2==0) ? 1 : 900; 
-                    for (auto cChip : *cHybrid) 
-                    {
-                        if( cChip->getId() == cChipId  )
-                            fReadoutChipInterface->WriteChipReg( static_cast<ReadoutChip*>(cChip), "VCth" , cTh1);
-                        else
-                            fReadoutChipInterface->WriteChipReg( static_cast<ReadoutChip*>(cChip), "VCth" , cTh2);
-                    }
+                    uint16_t cTh = ( cChip->getId()%2 == 0 ) ? cTh1 : cTh2;
+                    LOG (INFO) << BOLDBLUE << "Threshold on RoC#" << +cChip->getId() << " set to " << +cTh << RESET;
+                    fReadoutChipInterface->WriteChipReg( static_cast<ReadoutChip*>(cChip), "VCth" , cTh);
                 }
             }
-            BeBoard *cBeBoard = static_cast<BeBoard*>(cBoard);
-            this->ReadNEvents( cBeBoard , cNevents);
-            const std::vector<Event*>& cEvents = this->GetEvents ( cBeBoard );
-            LOG (INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
         }
-        // uint32_t cN=0;
-        // for ( auto& cEvent : cEvents )
-        // {
-        //     if( cN%5 == 0)
-        //     {
-        //         LOG (INFO) << ">>> Event #" << cN << RESET; ;
-        //         outp.str ("");
-        //         outp << *cEvent;
-        //         LOG (INFO) << outp.str();
-        //     }
-        //     cN++;
-        // }
+        BeBoard *cBeBoard = static_cast<BeBoard*>(cBoard);
+        this->ReadNEvents( cBeBoard , 1);
+        const std::vector<Event*>& cEvents = this->GetEvents ( cBeBoard );
+        LOG (INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
+        
+        uint32_t cN=0;
+        for ( auto& cEvent : cEvents )
+        {
+            if( cN%5 == 0)
+            {
+                LOG (INFO) << ">>> Event #" << cN << RESET; ;
+                outp.str ("");
+                outp << *cEvent;
+                LOG (INFO) << outp.str();
+            }
+            cN++;
+        }
+        
 
         // // // inject some stubs 
         // uint8_t cId=0;

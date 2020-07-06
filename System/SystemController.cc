@@ -513,7 +513,6 @@ namespace Ph2_System
 
             if (fEventType == EventType::SSAAS)
             {
-              LOG (INFO) << BOLDBLUE << "Decoding SSA asynchronous events .. " << RESET;
               fEventList.push_back(new D19cSSAEventAS(pBoard, pData));
             }
             else if (fEventType != EventType::ZS)

@@ -66,7 +66,7 @@ void SSASCurve::run(void)
 	this->enableTestPulse( true );
 	setFWTestPulse();
 
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM( NMpulse, 10000, 6, 0, 0);
+     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM( NMpulse, 10000, 6, 0, 0);
 	static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(50,200,1000,0,1,1);
 
 

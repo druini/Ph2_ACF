@@ -80,6 +80,7 @@ namespace Ph2_HwInterface {
         fTDC = (*(cEventIterator+1) >> 24) & 0xFF;
         fEventCount = 0x00FFFFFF &  *(cEventIterator+2);
         fBunch = 0xFFFFFFFF & *(cEventIterator+3);
+
         do
         {
             uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16 ;
@@ -93,12 +94,14 @@ namespace Ph2_HwInterface {
             // retrieve chunck of data vector belonging to this event
             if( cHeader == 0xFFFF )
             {
+              auto cIterator = cEventIterator + LENGTH_EVENT_HEADER;
               uint32_t cStatus=0x00000000; 
               size_t cRocIndex=0;
               for( auto cModule : *pBoard )
               {
                 for (auto cFe : *cModule )
                 {
+
                   auto cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
                   auto& cCic = cOuterTrackerModule->fCic;
                   size_t cNReadoutChips = ( cCic == NULL ) ? cFe->size() : 1; 
@@ -108,7 +111,7 @@ namespace Ph2_HwInterface {
                     auto cVectorIndex = encodeVectorIndex(cFe->getId(), cIndex,cNReadoutChips); 
                     // L1 info
                     uint8_t cStatusWord = 0x00;
-                    uint32_t cHitInfoHeader = *(cEventIterator+LENGTH_EVENT_HEADER);
+                    uint32_t cHitInfoHeader = *(cIterator);
                     uint32_t cGoodHitInfo = (cHitInfoHeader & (0xF << 28 ))  >> 28;
                     uint32_t cHitInfoSize = (cHitInfoHeader & 0xFFF)*4;
                     cStatusWord = static_cast<uint8_t>( cGoodHitInfo == VALID_L1_HEADER ); 
@@ -116,16 +119,11 @@ namespace Ph2_HwInterface {
                       << "...hit info header " << std::bitset<4>(cGoodHitInfo)
                       << "... " << +cHitInfoSize << " words in hit packet..." 
                       << "... status word " << std::bitset<2>(cStatusWord) << RESET;
-                    if( cStatusWord == 0x01 )
-                    {
-                      LOG (DEBUG) << BOLDGREEN << "\t... ReadoutChip#" << +cIndex 
-                        << " adding hit data.. " << RESET;
-                      std::vector<uint32_t> cHitWords(cEventIterator+LENGTH_EVENT_HEADER, cEventIterator+LENGTH_EVENT_HEADER+cHitInfoSize);
-                      fEventDataVector[cVectorIndex].insert( fEventDataVector[cVectorIndex].begin(), cHitWords.begin(), cHitWords.end());
-                    }
+                    if( cStatusWord != 0x01 )
+                        throw std::runtime_error(std::string("Incorrect L1 header found when decoding data ... stopping"));
                     
                     // stub info  
-                    uint32_t cStubInfoHeader = *(cEventIterator+LENGTH_EVENT_HEADER+cHitInfoSize); 
+                    uint32_t cStubInfoHeader = *(cIterator+cHitInfoSize); 
                     uint32_t cGoodStubInfo = (cStubInfoHeader & (0xF << 28 ))  >> 28;
                     uint32_t cStubInfoSize = (cStubInfoHeader & 0xFFF)*4;
                     cStatusWord = cStatusWord | ( static_cast<uint8_t>( cGoodStubInfo == VALID_STUB_HEADER ) << 1) ; 
@@ -133,13 +131,14 @@ namespace Ph2_HwInterface {
                       << "...stub info header " << std::bitset<4>(cGoodStubInfo) 
                       << "... " << +cStubInfoSize << " words in stub packet." 
                       << "... status word " << std::bitset<2>(cStatusWord) << RESET;
-                    if( cStatusWord == 0x03 )
-                    {
-                      LOG (DEBUG) << BOLDGREEN << "\t... ReadoutChip#" << +cIndex 
-                        << " adding stub data.. " << RESET;
-                      std::vector<uint32_t> cStubWords(cEventIterator+LENGTH_EVENT_HEADER+cHitInfoSize,cEventIterator+LENGTH_EVENT_HEADER+cHitInfoSize+cStubInfoSize);
-                      fEventDataVector[cVectorIndex].insert( fEventDataVector[cVectorIndex].begin(), cStubWords.begin(), cStubWords.end());
-                    }
+                    if( cStatusWord != 0x03 )
+                        throw std::runtime_error(std::string("Incorrect Stub header found when decoding data ... stopping"));
+                    
+                    std::vector<uint32_t> cDataWords(cIterator,cIterator+cHitInfoSize+cHitInfoSize+cStubInfoSize);
+                    fEventDataVector[cVectorIndex].clear();
+                    fEventDataVector[cVectorIndex].insert( fEventDataVector[cVectorIndex].begin(), cDataWords.begin(), cDataWords.end());
+                    // increment iterator 
+                    cIterator += cHitInfoSize + cStubInfoSize; 
                     cStatus = cStatus | ( cStatusWord << (cRocIndex*2) );
                     // increment ROC index 
                     cRocIndex++;

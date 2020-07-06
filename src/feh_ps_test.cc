@@ -3,6 +3,7 @@
 #include "Utils/Utilities.h"
 #include "Utils/Timer.h"
 #include "tools/SSASCurveAsync.h"
+#include "tools/PedestalEqualization.h"
 #include "tools/ShortFinder.h"
 #include "tools/OpenFinder.h"
 #include "tools/CicFEAlignment.h"
@@ -161,7 +162,23 @@ int main ( int argc, char* argv[] )
         cScurve.writeObjects();
         cScurve.dumpConfigFiles();
     }
-
+    // equalize thresholds on readout chips
+    // if( cTune ) 
+    // { 
+        
+    //     t.start();
+    //     // now create a PedestalEqualization object
+    //     PedestalEqualization cPedestalEqualization;
+    //     cPedestalEqualization.Inherit (&cTool);
+    //     // second parameter disables stub logic on CBC3
+    //     cPedestalEqualization.Initialise ( true, true );
+    //     cPedestalEqualization.FindVplus();
+    //     cPedestalEqualization.FindOffsets();
+    //     cPedestalEqualization.writeObjects();
+    //     cPedestalEqualization.dumpConfigFiles();
+    //     cPedestalEqualization.resetPointers();
+    //     t.show ( "Time to tune the front-ends on the system: " );
+    // }
     #ifdef __TCUSB__
     #endif
 
@@ -170,6 +187,17 @@ int main ( int argc, char* argv[] )
     if (cMeasurePedeNoise)
     {
         t.start();
+        //if this is true, I need to create an object of type PedeNoise from the members of Calibration
+        //tool provides an Inherit(Tool* pTool) for this purpose
+        PedeNoise cPedeNoise;
+        cPedeNoise.Inherit (&cTool);
+        //second parameter disables stub logic on CBC3
+        cPedeNoise.Initialise (true, true); // canvases etc. for fast calibration
+        cPedeNoise.measureNoise();
+        cPedeNoise.writeObjects();
+        cPedeNoise.dumpConfigFiles();
+        t.stop();
+        t.show ( "Time to Scan Pedestals and Noise" );
     }
     
     // For next step... set all thresholds on CBCs to 560 

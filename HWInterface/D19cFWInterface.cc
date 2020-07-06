@@ -566,9 +566,7 @@ namespace Ph2_HwInterface
 
         // configure CDCE - if needed
         std::pair<std::string,float> cCDCEselect;
-        uint32_t cReferenceSelect = this->ReadReg("sysreg.ctrl.cdce_refsel");
         bool cSecondaryReference=false;
-        LOG (INFO) << BOLDBLUE << "Reference select : " << +cReferenceSelect << RESET;
         for ( auto const& it : cRegMap )
         {
             if (it.first == "fc7_daq_cnfg.clock.ext_clk_en") cSecondaryReference = cSecondaryReference | (it.second == 0 );
@@ -1066,9 +1064,9 @@ namespace Ph2_HwInterface
       auto cSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source");
       auto cRate = this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
       auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-      LOG (INFO) << BOLDMAGENTA << "Trigger Source is : " << +cSource << RESET;
-      LOG (INFO) << BOLDMAGENTA << "Trigger Rate is : " << +cRate << RESET;
-      LOG (INFO) << BOLDMAGENTA << "Trigger Multiplicity is : " << +cMultiplicity << RESET;
+      LOG (DEBUG) << BOLDMAGENTA << "Trigger Source is : " << +cSource << RESET;
+      LOG (DEBUG) << BOLDMAGENTA << "Trigger Rate is : " << +cRate << RESET;
+      LOG (DEBUG) << BOLDMAGENTA << "Trigger Multiplicity is : " << +cMultiplicity << RESET;
     }
     void D19cFWInterface::Start()
     {
@@ -1649,16 +1647,12 @@ namespace Ph2_HwInterface
           {
             for(auto cChip: *cFe )
             {
-                LOG (INFO) << BOLDBLUE << "Directly reading back counters from SSA" << +cChip->getId() << RESET;
+                LOG (DEBUG) << BOLDBLUE << "Directly reading back counters from SSA" << +cChip->getId() << RESET;
                 bool cWrite=false;
-                uint32_t cDataWord=0x0000;
-                uint32_t cWordCounter=0;
-                for(size_t cChnl=0; cChnl< cChip->size(); cChnl++)
+                std::vector<uint32_t> cVec; cVec.clear();
+                std::vector<uint32_t> cReplies; cReplies.clear();
+                for(uint8_t cChnl=0; cChnl< cChip->size(); cChnl++)
                 {
-                    std::vector<uint32_t> cVec; cVec.clear();
-                    bool cFailed = false;
-                    bool cRead;
-                    uint8_t cSSAId;
                     // MSB 
                     ChipRegItem cReg_Counters_MSB;
                     cReg_Counters_MSB.fPage = 0x00;
@@ -1666,16 +1660,40 @@ namespace Ph2_HwInterface
                     cReg_Counters_MSB.fValue = 0x00;
                     this->EncodeReg( cReg_Counters_MSB, cFe->getId(), cChip->getId() , cVec , true, cWrite ) ;
                     this->ReadChipBlockReg( cVec );
-                    this->DecodeReg ( cReg_Counters_MSB, cSSAId, cVec[0], cRead, cFailed );
-                    cVec.clear(); 
-                    //LSB
+                    cReplies.push_back(cVec[0]);
+                    cVec.clear();
+                    // LSB 
                     ChipRegItem cReg_Counters_LSB;
                     cReg_Counters_LSB.fPage = 0x00;
                     cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
                     cReg_Counters_LSB.fValue = 0x00;
                     this->EncodeReg( cReg_Counters_LSB, cFe->getId(), cChip->getId() , cVec , true, cWrite ) ;
                     this->ReadChipBlockReg( cVec );
-                    this->DecodeReg ( cReg_Counters_LSB, cSSAId, cVec[0], cRead, cFailed );
+                    cReplies.push_back(cVec[0]);
+                    cVec.clear();
+                }
+                // read back 
+                //this->ReadChipBlockReg( cVec );
+                // set in data vector 
+                uint32_t cDataWord=0x0000;
+                uint32_t cWordCounter=0;
+                uint16_t cIndx=0;
+                for(uint8_t cChnl=0; cChnl< cChip->size(); cChnl++)
+                {
+                    uint8_t cSSAId;
+                    bool cFailed = false;
+                    bool cRead;
+                    ChipRegItem cReg_Counters_MSB;
+                    cReg_Counters_MSB.fPage = 0x00;
+                    cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
+                    cReg_Counters_MSB.fValue = 0x00;
+                    ChipRegItem cReg_Counters_LSB;
+                    cReg_Counters_LSB.fPage = 0x00;
+                    cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
+                    cReg_Counters_LSB.fValue = 0x00;
+                    this->DecodeReg ( cReg_Counters_MSB, cSSAId, cReplies[cIndx], cRead, cFailed );
+                    this->DecodeReg ( cReg_Counters_LSB, cSSAId, cReplies[cIndx+1], cRead, cFailed );
+                    cIndx+=2; 
                     uint16_t cCounterValue = ( (cReg_Counters_MSB.fValue&0xFF) << 8 ) | (cReg_Counters_LSB.fValue&0xFF);
                     LOG (DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl 
                         << " : " << +cCounterValue << " hits." 
@@ -1686,10 +1704,10 @@ namespace Ph2_HwInterface
                     if( (cWordCounter&0x1) == 1 )
                     {
                         pData.push_back(cDataWord);
-                        cDataWord = 0x00;
+                        cDataWord = 0x0000;
                     }
                     cWordCounter++;
-                }//chnl loop
+                }
             }// chip loop    
           }// hybrid loop
         }//module loop
@@ -1714,7 +1732,7 @@ namespace Ph2_HwInterface
             pData = ReadBlockRegOffsetValue ("fc7_daq_ddr3", cNWords, fDDR3Offset);
             // figure out how many events I've got 
             cNEvents=this->CountFwEvents( pBoard, pData );
-            LOG (INFO) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
+            LOG (DEBUG) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
               << " data size is " << +pData.size() << " 32 bit words." << RESET;
             //in the handshake mode offset is cleared after each handshake
             fDDR3Offset = 0;
@@ -1984,7 +2002,7 @@ namespace Ph2_HwInterface
             // really only want to inject 
             if( cTriggerSource == 6 && cAsync )
             {
-                LOG (INFO) << BOLDBLUE << "Async SSA [trigger source == 6]" << RESET;
+                LOG (DEBUG) << BOLDBLUE << "Async SSA [trigger source == 6]" << RESET;
                 cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", 0} );
                 cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.test_pulse.en_l1a", 0} );
                 cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.test_pulse.en_shutter", 0} );
@@ -2042,10 +2060,14 @@ namespace Ph2_HwInterface
             }
             else 
             {
+                uint32_t cIterations=0;
                 do 
                 {
-                    LOG (INFO) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
-                }while( this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") );
+                    LOG (DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+                    std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
+                    cIterations++;
+                }while( this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < 10 );
+                pFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == 10 ); 
                 this->PS_Close_shutter(fFastCommandDuration);
             }
             //stop
@@ -2054,11 +2076,7 @@ namespace Ph2_HwInterface
         else
         {
             this->ReconfigureTriggerFSM(cVecReg);
-            
-            // resync  
-            //this->ChipReSync ();
-            //std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
-            //reset + clear counters 
+            //resync + clear counters 
             this->PS_Clear_counters(fFastCommandDuration);
             std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
             // start triggers 
@@ -2073,28 +2091,11 @@ namespace Ph2_HwInterface
             uint32_t cIterations=0;
             do 
             {
-                LOG (INFO) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+                LOG (DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
                 std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
                 cIterations++;
             }while( this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < 10 );
-            if( this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") == 1 ) 
-            {
-                // try again 
-                this->ReconfigureTriggerFSM(cVecReg);
-                cIterations=0;
-                this->PS_Clear_counters(fFastCommandDuration);
-                std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
-                // start triggers 
-                this->Start();
-                std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
-                do 
-                {
-                    LOG (INFO) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
-                    std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
-                    cIterations++;
-                }while( this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < 10 );
-                
-            }
+            pFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == 10 ); 
             this->PS_Close_shutter(fFastCommandDuration);
             std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
             this->Stop();   
@@ -2113,16 +2114,23 @@ namespace Ph2_HwInterface
         // again check if failed to re-run in case
         else
         {
-            LOG (DEBUG) << BOLDRED << "Failed to readout all events..... Retrying..." << RESET;
+            LOG (INFO) << BOLDRED << "Failed to readout all events..... Retrying..." << RESET;
             uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
             uint32_t cNtriggers = ReadReg ("fc7_daq_stat.fast_command_block.trigger_in_counter");
             uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
-            LOG (DEBUG) << BOLDMAGENTA << "Read back " << +cNWords << " from FC7... readout request is " << +cReadoutReq << RESET;
-            LOG (DEBUG) << BOLDMAGENTA << "Number of triggers received " << +cNtriggers << RESET;
+            LOG (INFO) << BOLDRED << "Read back " << +cNWords << " from FC7... readout request is " << +cReadoutReq << RESET;
+            LOG (INFO) << BOLDRED << "Number of triggers received " << +cNtriggers << RESET;
             pData.clear();
             this->Stop();
 
-            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
+            //std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
+            // reset trigger
+            //this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
+            //std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
+            // reset the readout 
+            //std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
+            //this->ResetReadout();
+            // try again 
             this->ReadNEvents (pBoard, pNEvents, pData);
         }
 
@@ -2411,8 +2419,7 @@ namespace Ph2_HwInterface
         {
             //reset the I2C controller
             WriteReg ("fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 0x1);
-            usleep (10);
-
+            //usleep (10);
             try
             {
                 WriteBlockReg ( "fc7_daq_ctrl.command_processor_block.i2c.command_fifo", pVecSend );
@@ -2423,7 +2430,6 @@ namespace Ph2_HwInterface
             }
 
             uint32_t cNReplies = 0;
-
             for (auto word : pVecSend)
             {
                 // if read or readback for write == 1, then count
@@ -2441,7 +2447,8 @@ namespace Ph2_HwInterface
                     }
                 }
             }
-            usleep (20);
+            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
+            //usleep (20);
             cFailed = ReadI2C (  cNReplies, pReplies) ;
         }
         return cFailed;

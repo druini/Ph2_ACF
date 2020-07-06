@@ -157,7 +157,10 @@ namespace Ph2_HwInterface
         {
             try 
             {
-                return  ( fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc)).at( calculateChannelWordPosition(i) ) >> ( calculateChannelBitPosition(i)) ) & 0x1;
+                auto cWordPosition =  calculateChannelWordPosition(i);
+                auto cBitPosition = calculateChannelBitPosition(i); 
+                LOG (DEBUG) << BOLDBLUE << "Word#" << +cWordPosition << " Bit#" << +cBitPosition << RESET;
+                return  ( fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc)).at( cWordPosition ) >> ( cBitPosition) ) & 0x1;
             }
             catch (const std::out_of_range& outOfRange) {
                 LOG (ERROR) << "Word " << +i << " for FE " << +pFeId << " CBC " << +pCbcId << " is not found:" ;
