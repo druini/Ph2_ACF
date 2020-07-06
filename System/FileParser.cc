@@ -454,6 +454,7 @@ namespace Ph2_System
   {
     //FrontEndType cType = pMPA->getFrontEndType();
   }
+
   void FileParser::parseModuleContainer (pugi::xml_node pModuleNode, OpticalGroup* pOpticalGroup, std::ostream& os, BeBoard* pBoard)
   {
     bool cStatus = pModuleNode.attribute("Status").as_bool();
@@ -562,8 +563,8 @@ namespace Ph2_System
                                       cValueFromFile = (cValueFromFile == 320) ? 0 : 1; 
                                     if( cAttribute == "clockFrequency" && cCIC1 )
                                       continue;
-				    if(cAttribute == "enableSparsification")
-				      pBoard->setSparsification(bool(cValueFromFile));
+                                    if(cAttribute == "enableSparsification")
+                                      pBoard->setSparsification(bool(cValueFromFile));
 
                                     os << GREEN << "|\t|\t|\t|---- Setting " << cAttribute << " to  " << cValueFromFile << "\n" << RESET;
                                     LOG (DEBUG) << BOLDBLUE << " Global settings " << cAttribute << " [ " << *it << " ]-- set to " << cValueFromFile <<  RESET;
