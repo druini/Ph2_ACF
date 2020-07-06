@@ -450,14 +450,13 @@ namespace Ph2_System
         Module* cModule;
         if (pBoard->getBoardType() == BoardType::RD53)
           {
-            cModule = pOpticalGroup->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new Module ( pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
+            cModule = pOpticalGroup->addModuleContainer(pModuleNode.attribute("FeId").as_int(), new Module (pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute("FeId").as_int(), pModuleNode.attribute("FeId").as_int()));
           }
         else
           {
             cModule = pOpticalGroup->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new OuterTrackerModule ( pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
             static_cast<OuterTrackerModule*>(cModule)->setLinkId( pModuleNode.attribute ( "LinkId" ).as_int() );
           }
-        // pOpticalGroup->addModule ( cModule );
 
         std::string cConfigFileDirectory;
         for (pugi::xml_node cChild : pModuleNode.children())
