@@ -165,6 +165,30 @@ Firmware for the FC7 can be found in /firmware. Since the "old" FMC flavour is d
 You'll need Xilinx Vivado and a Xilinx Platform Cable USB II (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
 For more information on the firmware, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware
 
+### Gitlab CI setup for Developers (required to submit merge requests!!!)
+
+1. Add predefined variables
+
+    i. from your fork go to `Ph2_ACF > settings > CI/CD`
+
+    ii. expand the `Variables` section
+
+    iii. click the `Add variable` button
+
+        - add key: $USER_NAME and value: <your CERN user name>
+
+    iv. click the `Add variable` button
+
+        - select the flag `Mask variable`
+        - add key: $USER_PASS and value: <your CERN password encoded to base64>
+          e.g encode "thisword": printf "thisword" | base64
+
+2. Enable shared Runners (if not enabled)
+
+    i. from `settings > CI/CD` expand the `Runners` section
+
+    ii. click the `Allow shared Runners` button
+
 
 ### Setup on CC7 (Scroll down for instructions on setting up on SLC6)
 
