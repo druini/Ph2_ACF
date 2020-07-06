@@ -62,6 +62,8 @@ class SSASCurve : public Tool
   std::vector<uint32_t> lastval=decltype(lastval)(120, 0) ;
   std::vector<bool> pastmax ;
 
+    bool cWithMPA;
+    bool cWithSSA;
 
 
     #ifdef __USE_ROOT__

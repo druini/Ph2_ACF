@@ -34,7 +34,22 @@ void DQMHistogramSSASCurveAsync::book(TFile *theOutputFile, const DetectorContai
     // SoC utilities only - END
     // creating the histograms fo all the chips:
     // create the HistContainer<TH2F> as you would create a TH2F (it implements some feature needed to avoid memory leaks in copying histograms like the move constructor)
-    HistContainer<TH2F> theTH2FPedestalContainer("HitPerChannel", "Hit Per Channel", 120, -0.5, 119.5,100, -0.5, 99.5);
+    size_t chans=0;
+    for(auto board : theDetectorStructure) //for on boards - begin 
+    {
+        for(auto opticalGroup: *board) //for on opticalGroup - begin 
+        {
+            for(auto hybrid: *opticalGroup) //for on hybrid - begin 
+            {
+                for(auto chip: *hybrid) //for on chip - begin 
+                {
+			chans=chip->size();
+		}
+	    }
+	}
+    }
+	//std::cout<<chans<<std::endl;
+    HistContainer<TH2F> theTH2FPedestalContainer("HitPerChannel", "Hit Per Channel", chans, -0.5, float(chans)-0.5,255, -0.5, 254.5);
     // create Histograms for all the chips, they will be automatically accosiated to the output file, no need to save them, change the name for every chip or set their directory
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure,fDetectorHitHistograms, theTH2FPedestalContainer);
 }
@@ -64,8 +79,9 @@ void DQMHistogramSSASCurveAsync::fillSSASCurveAsyncPlots(DetectorDataContainer &
                 // Get channel data and fill the histogram
                 for(auto channel : *chip->getChannelContainer<std::pair<std::array<uint32_t,2>,float>>()) //for on channel - begin 
                 {
-                    //LOG (INFO) << BOLDRED << channelBin<<" "<<thresh<<" "<<channel << RESET;
+                    //LOG (INFO) << BOLDRED << channelBin << RESET;
                     chipHitHistogram->SetBinContent(channelBin++,thresh,channel.first[0]);
+                    //LOG (INFO) << BOLDRED << "DNE" << RESET;
                 } //for on channel - end 
             }
             } //for on chip - end 

@@ -381,13 +381,13 @@ namespace Ph2_HwInterface {
             if( cChipIdMapped != pReadoutChipId )
                 continue;
             
-            uint8_t cCbcChannelAddress = (( cClusterWord & (0xFF << 3)) >> 3) & 0x7F ; // I think the MSB is the layer ...
+            uint8_t cCbcChannelAddress = (( cClusterWord & (0xFF << 3)) >> 3); // the LSB is the layer ...
             uint8_t cWidth = 1+(cClusterWord & 0x3); 
             LOG (DEBUG) << BOLDBLUE << "\t\t\t... Cluster " << +cClusterId << " : " << std::bitset<CLUSTER_WORD_SIZE>(cClusterWord) << "... " << +cWidth << " strip cluster in strip " << +cCbcChannelAddress << " of chip " << +cChipId << " [ real hybrid  " << +cChipIdMapped  << " ]" << RESET;
             
             for(size_t cOffset = 0 ; cOffset < cWidth ; cOffset++)
             {
-                cBitSet[cCbcChannelAddress+cOffset] = 1;
+                cBitSet[cCbcChannelAddress+2*cOffset] = 1;
             }
             cClusterId++;
         }

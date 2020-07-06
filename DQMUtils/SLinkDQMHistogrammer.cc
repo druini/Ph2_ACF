@@ -19,8 +19,11 @@
 #include "TTree.h"
 #include "TString.h"
 #include "TDirectory.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include "TPaveStats.h"
-#include "TStyle.h"
+#include <TStyle.h>
+#pragma GCC diagnostic pop
 #include "TIterator.h"
 
 #ifdef __OTSDAQ__
