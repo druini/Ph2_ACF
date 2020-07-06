@@ -62,13 +62,12 @@ namespace Ph2_System
   class SystemController
   {
   public:
-    Ph2_HwInterface::BeBoardInterface* fBeBoardInterface; //!< Interface to the BeBoard
+    Ph2_HwInterface::BeBoardInterface*     fBeBoardInterface; //!< Interface to the BeBoard
     Ph2_HwInterface::ReadoutChipInterface* fReadoutChipInterface;
-    Ph2_HwInterface::ChipInterface* fChipInterface;       //!< Interface to the Chip
-    Ph2_HwInterface::lpGBTInterface* flpGBTInterface;     //!< Interface to the lpGBT
+    Ph2_HwInterface::ChipInterface*        fChipInterface;    //!< Interface to the Chip
+    Ph2_HwInterface::lpGBTInterface*       flpGBTInterface;   //!< Interface to the lpGBT
+    Ph2_HwInterface::CicInterface*         fCicInterface;     //!< Interface to a CIC [only valid for OT]
 
-    Ph2_HwInterface::CicInterface* fCicInterface; //!< Interface to a CIC [only valid for OT]
-    
     DetectorContainer* fDetectorContainer;
     BeBoardFWMap fBeBoardFWMap;
     SettingsMap fSettingsMap;
@@ -91,7 +90,7 @@ namespace Ph2_System
     /*!
      * \brief Method to construct a system controller object from another one while re-using the same members
      */
-    void Inherit(const SystemController* pController);
+    void Inherit (const SystemController* pController);
 
     /*!
      * \brief Destroy the SystemController object: clear the HWDescription Objects, FWInterface etc.
@@ -102,27 +101,27 @@ namespace Ph2_System
      * \brief create a FileHandler object with
      * \param pFilename : the filename of the binary file
      */
-    void addFileHandler(const std::string &pFilename, char pOption);
-    void closeFileHandler();
-    FileHandler* getFileHandler() { return fFileHandler; }
+    void addFileHandler         (const std::string &pFilename, char pOption);
+    void closeFileHandler       ();
+    FileHandler* getFileHandler () { return fFileHandler; }
 
     /*!
      * \brief issues a FileHandler for writing files to every BeBoardFWInterface if addFileHandler was called
      */
-    void initializeFileHandler();
-    uint32_t computeEventSize32(const Ph2_HwDescription::BeBoard *pBoard);
+    void initializeFileHandler  ();
+    uint32_t computeEventSize32 (const Ph2_HwDescription::BeBoard *pBoard);
 
     /*!
      * \brief read file in the a FileHandler object
      * \param pVec : the data vector
      */
-    void readFile(std::vector<uint32_t> &pVec, uint32_t pNWords32 = 0);
+    void readFile (std::vector<uint32_t> &pVec, uint32_t pNWords32 = 0);
 
     /*!
      * \brief acceptor method for HwDescriptionVisitor
      * \param pVisitor
      */
-    void accept(HwDescriptionVisitor &pVisitor)
+    void accept (HwDescriptionVisitor &pVisitor)
     {
       pVisitor.visitSystemController(*this);
 
@@ -174,7 +173,7 @@ namespace Ph2_System
      * \param pBeBoard
      * \return: number of packets
      */
-    uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pWait = true);
+    uint32_t ReadData (Ph2_HwDescription::BeBoard* pBoard, bool pWait = true);
 
     /*!
      * \brief Read Data from pBoard for use with OTSDAQ
@@ -183,12 +182,12 @@ namespace Ph2_System
      * \param pWait: wait  until sufficient data is there, default true
      * \return: number of packets
      */
-    uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t> &pData, bool pWait = true);
+    uint32_t ReadData (Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t> &pData, bool pWait = true);
 
     /*!
      * \brief Read Data from all boards
      */
-    void ReadData(bool pWait = true);
+    void ReadData (bool pWait = true);
 
     virtual void Start(int currentRun = -1);
     virtual void Stop();
@@ -208,7 +207,7 @@ namespace Ph2_System
      * \param pBeBoard
      * \param pNEvents
      */
-    void ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents);
+    void ReadNEvents (Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents);
 
     /*!
      * \brief Read N Events from pBoard
@@ -217,19 +216,17 @@ namespace Ph2_System
      * \param pData: data vector
      * \param pWait: contunue polling until enough data is present
      */
-    void ReadNEvents(Ph2_HwDescription::BeBoard *pBoard, uint32_t pNEvents, std::vector<uint32_t> &pData, bool pWait = true);
+    void ReadNEvents (Ph2_HwDescription::BeBoard *pBoard, uint32_t pNEvents, std::vector<uint32_t> &pData, bool pWait = true);
 
     /*!
      * \brief Read N Events from all boards
      * \param pNEvents
      */
-    void ReadNEvents(uint32_t pNEvents);
-
+    void ReadNEvents (uint32_t pNEvents);
 
     void ReadASEvent (Ph2_HwDescription::BeBoard *pBoard, uint32_t pNMsec, uint32_t pulses=0, bool fast=false, bool fsm=false);
 
-
-    const Ph2_HwDescription::BeBoard* getBoard(int index) const
+    const Ph2_HwDescription::BeBoard* getBoard (int index) const
     {
       return (index < static_cast<int>(fDetectorContainer->size()) ? fDetectorContainer->at(index) : nullptr);
     }
@@ -239,19 +236,19 @@ namespace Ph2_System
      * \param pBoard
      * \return Next event
      */
-    const Ph2_HwInterface::Event* GetNextEvent(const Ph2_HwDescription::BeBoard* pBoard)
+    const Ph2_HwInterface::Event* GetNextEvent (const Ph2_HwDescription::BeBoard* pBoard)
     {
       if (fFuture.valid() == true) fFuture.get();
       return ((fCurrentEvent >= fEventList.size()) ? nullptr : fEventList.at(fCurrentEvent++));
     }
 
-    const Ph2_HwInterface::Event* GetEvent(const Ph2_HwDescription::BeBoard* pBoard, unsigned int i)
+    const Ph2_HwInterface::Event* GetEvent (const Ph2_HwDescription::BeBoard* pBoard, unsigned int i)
     {
       if (fFuture.valid() == true) fFuture.get();
       return ((i >= fEventList.size()) ? nullptr : fEventList.at(i));
     }
 
-    const std::vector<Ph2_HwInterface::Event*>& GetEvents(const Ph2_HwDescription::BeBoard* pBoard)
+    const std::vector<Ph2_HwInterface::Event*>& GetEvents (const Ph2_HwDescription::BeBoard* pBoard)
     {
       if (fFuture.valid() == true) fFuture.get();
       return fEventList;
