@@ -62,8 +62,6 @@ namespace Ph2_System
 
     delete fCicInterface;
     fCicInterface = nullptr;
-    delete fMPAInterface;
-    fMPAInterface = nullptr;
 
     fBeBoardFWMap.clear();
     fSettingsMap.clear();

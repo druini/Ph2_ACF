@@ -87,8 +87,9 @@ int main( int argc, char* argv[] )
 
 	MPA* theMPA = static_cast<MPA*>(cMPA);
 
-	cTool.fMPAInterface->Activate_async(cMPA);
-	cTool.fMPAInterface->Set_calibration(cMPA,50);
+	auto theMPAInterface = static_cast<MPAInterface*>(cTool.fReadoutChipInterface);
+	theMPAInterface->Activate_async(cMPA);
+	theMPAInterface->Set_calibration(cMPA,50);
 
 	uint32_t npixtot = 0;
 	for(uint16_t row=rows.first; row<rows.second; row++)
@@ -96,7 +97,7 @@ int main( int argc, char* argv[] )
 		for(uint16_t col=cols.first; col<cols.second; col++)
 			{
 				uint32_t gpix=theMPA->PNglobal(std::pair <uint32_t,uint32_t> (row,col));   
-				cTool.fMPAInterface->Enable_pix_counter(theMPA,gpix);
+				theMPAInterface->Enable_pix_counter(theMPA,gpix);
 				title = std::to_string(row)+","+std::to_string(col);
  				scurves.push_back(new TH1F(title.c_str(),title.c_str(),255,-0.5,254.5));
 				npixtot+=1;
@@ -116,7 +117,7 @@ int main( int argc, char* argv[] )
 		static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
 
 		std::cout<<"ITH= "<<ith<<std::endl;
-		cTool.fMPAInterface->Set_threshold(theMPA,ith);
+		theMPAInterface->Set_threshold(theMPA,ith);
 
 		std::this_thread::sleep_for( ShortWait );
 		static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(2000);
