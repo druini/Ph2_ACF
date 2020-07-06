@@ -11,6 +11,7 @@
 #include "../tools/AntennaTester.h"
 #include "../tools/CBCPulseShape.h"
 #include "tools/BackEndAlignment.h"
+#include "tools/CicFEAlignment.h"
 
 #include "../Utils/argvparser.h"
 #include "TROOT.h"
@@ -80,6 +81,8 @@ int main ( int argc, char* argv[] )
 
     cmd.defineOption ( "pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute );
 
+    cmd.defineOption ( "withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute );
+
     int result = cmd.parse ( argc, argv );
 
     if ( result != ArgvParser::NoParserError )
@@ -91,6 +94,7 @@ int main ( int argc, char* argv[] )
     // now query the parsing results
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/Commissioning.xml";
     bool cLatency = ( cmd.foundOption ( "latency" ) ) ? true : false;
+    bool cWithCIC = ( cmd.foundOption ( "withCIC" ) ) ;
     bool cTriggerTDC = ( cmd.foundOption ( "triggerTdc" ) ) ? true : false;
     bool cStubLatency = ( cmd.foundOption ( "stublatency" ) ) ? true : false;
     bool cSignal = ( cmd.foundOption ( "signal" ) ) ? true : false;
@@ -144,10 +148,23 @@ int main ( int argc, char* argv[] )
     cBackEndAligner.Initialise();
     bool cAligned = cBackEndAligner.Align();
     cBackEndAligner.resetPointers();
+
     if(!cAligned )
     {
         LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
         exit(0);
+    }
+
+    // if CIC is enabled then align CIC first 
+    if( cWithCIC )
+    {
+        CicFEAlignment cCicAligner;
+        cCicAligner.Inherit (&cTool);
+        cCicAligner.Start(0);
+        //reset all chip and board registers 
+        // to what they were before this tool was called 
+        cCicAligner.Reset(); 
+        cCicAligner.dumpConfigFiles();
     }
 
     #ifdef __ANTENNA__

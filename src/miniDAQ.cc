@@ -17,6 +17,8 @@
 #include "../Utils/Timer.h"
 #include "../Utils/argvparser.h"
 #include "../Utils/ConsoleColor.h"
+#include "tools/CicFEAlignment.h"
+#include "tools/BackEndAlignment.h"
 
 #include "../System/SystemController.h"
 
@@ -41,7 +43,6 @@ int main ( int argc, char* argv[] )
 
     uint32_t pEventsperVcth;
 
-    SystemController cSystemController;
     ArgvParser cmd;
 
     // init
@@ -70,6 +71,8 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "output", "Output Directory for DQM plots & page. Default value: Results", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
     cmd.defineOptionAlternative ( "output", "o" );
 
+    cmd.defineOption ( "withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute );
+
     int result = cmd.parse ( argc, argv );
 
     if ( result != ArgvParser::NoParserError )
@@ -90,7 +93,7 @@ int main ( int argc, char* argv[] )
     cOutputFile = "Data/" + string_format ("run_%04d.raw", cRunNumber);
     pEventsperVcth = ( cmd.foundOption ( "events" ) ) ? convertAnyInt ( cmd.optionValue ( "events" ).c_str() ) : 10;
 
-    cSystemController.addFileHandler ( cOutputFile, 'w' );
+    bool cWithCIC = ( cmd.foundOption ( "withCIC" ) ) ;
 
     std::string cDAQFileName;
     FileHandler* cDAQFileHandler = nullptr;
@@ -116,29 +119,53 @@ int main ( int argc, char* argv[] )
         cScaleFactor = atoi ( cmd.optionValue ( "postscale" ).c_str() );
 
     std::stringstream outp;
-
-    cSystemController.InitializeHw ( cHWFile, outp );
+    Tool cTool;
+    cTool.InitializeHw ( cHWFile, outp );
+    cTool.InitializeSettings( cHWFile, outp );
     LOG (INFO) << outp.str();
     outp.str ("");
-    cSystemController.ConfigureHw ();
+    cTool.ConfigureHw ();
 
-    BeBoard* pBoard = static_cast<BeBoard*>(cSystemController.fDetectorContainer->at ( 0 ));
+    cTool.addFileHandler ( cOutputFile, 'w' );
+
+    // align back-end 
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit (&cTool);
+    cBackEndAligner.Initialise();
+    cBackEndAligner.Align();
+    //reset all chip and board registers 
+    // to what they were before this tool was called 
+    cBackEndAligner.resetPointers(); 
+
+    // if CIC is enabled then align CIC first 
+    if( cWithCIC )
+    {
+        CicFEAlignment cCicAligner;
+        cCicAligner.Inherit (&cTool);
+        cCicAligner.Start(0);
+        //reset all chip and board registers 
+        // to what they were before this tool was called 
+        cCicAligner.Reset(); 
+        // cCicAligner.dumpConfigFiles();
+    }
+
+    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at ( 0 ));
 
     // make event counter start at 1 as does the L1A counter
     uint32_t cN = 1;
     uint32_t cNthAcq = 0;
     uint32_t count = 0;
 
-    cSystemController.fBeBoardInterface->Start ( pBoard );
+    cTool.fBeBoardInterface->Start ( pBoard );
 
     while ( cN <= pEventsperVcth )
     {
-        uint32_t cPacketSize = cSystemController.ReadData ( pBoard );
+        uint32_t cPacketSize = cTool.ReadData ( pBoard );
 
         if ( cN + cPacketSize >= pEventsperVcth )
-            cSystemController.fBeBoardInterface->Stop ( pBoard );
+            cTool.fBeBoardInterface->Stop ( pBoard );
 
-        const std::vector<Event*>& events = cSystemController.GetEvents ( pBoard );
+        const std::vector<Event*>& events = cTool.GetEvents ( pBoard );
         std::vector<DQMEvent*> cDQMEvents;
 
         for ( auto& ev : events )

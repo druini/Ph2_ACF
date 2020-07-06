@@ -113,7 +113,7 @@ namespace Ph2_HwInterface {
 
         
         auto cIterator = list.begin() + EVENT_HEADER_SIZE;
-        LOG (INFO) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
+        LOG (DEBUG) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
         do
         {
             // L1 
