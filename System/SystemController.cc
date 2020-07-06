@@ -484,9 +484,8 @@ namespace Ph2_System
 
         uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
         LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
-        fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
+        if (pNevents != 0) fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
         uint32_t maxind=0;
-
         if( pBoard->getFrontEndType() == FrontEndType::SSA )
           {
 
