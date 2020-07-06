@@ -160,8 +160,8 @@ void Latency::analyze ()
       for (const auto cModule : *cOpticalGroup)
         for (const auto cChip : *cModule)
           {
-            auto best   = 0.;
-            auto regVal = 0;
+            auto best  = 0.;
+            int regVal = 0;
 
             for (auto i = 0u; i < dacList.size(); i++)
               {
@@ -175,7 +175,7 @@ void Latency::analyze ()
 
             if (nTRIGxEvent > 1)
               LOG (INFO) << GREEN << "Best latency for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is within ["
-                         << BOLDYELLOW << regVal - nTRIGxEvent + 1 << "," << regVal << GREEN << "] (n.bx)" << RESET;
+                         << BOLDYELLOW << (regVal - (int)nTRIGxEvent + 1 >= 0 ? std::to_string(regVal - (int)nTRIGxEvent + 1) : "N.A.") << "," << regVal << GREEN << "] (n.bx)" << RESET;
             else
               LOG (INFO) << GREEN << "Best latency for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "] is "
                          << BOLDYELLOW << regVal << RESET << GREEN << " (n.bx)" << RESET;

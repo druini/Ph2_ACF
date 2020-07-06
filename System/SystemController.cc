@@ -100,12 +100,13 @@ namespace Ph2_System
   {
     fStreamerEnabled = streamData;
     if (streamData == true) fNetworkStreamer = new TCPPublishServer(6000,1);
-    std::cout<<1<<std::endl;
+
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     const BeBoard* theFirstBoard = fDetectorContainer->at(0);
+
     if (theFirstBoard->getBoardType() != BoardType::RD53)
       {
         OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>((theFirstBoard->at(0))->at(0));
@@ -244,7 +245,7 @@ namespace Ph2_System
                   }
               }
 
-	    LOG (INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
+            LOG (INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
           }
       }
   }
@@ -439,8 +440,8 @@ namespace Ph2_System
               {
                 for(auto cChip : *cHybrid)
                   {
-        		if( pBoard->getFrontEndType() == FrontEndType::MPA )static_cast<MPAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
-        		if( pBoard->getFrontEndType() == FrontEndType::SSA )static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+                    if( pBoard->getFrontEndType() == FrontEndType::MPA )static_cast<MPAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+                    if( pBoard->getFrontEndType() == FrontEndType::SSA )static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
                     
                   }
               }
@@ -513,11 +514,8 @@ namespace Ph2_System
             fEventList.push_back(new D19cSSAEventAS(pBoard, maxind+1, fNFe, pData));
           }
 
-
-
-        if( pBoard->getFrontEndType() == FrontEndType::MPA )
+        if ( pBoard->getFrontEndType() == FrontEndType::MPA )
           {
-
             uint16_t nMPA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_MPA) / D19C_EVENT_SIZE_32_MPA / fNFe;
             if (fEventType == EventType::MPAAS) nMPA = pData.size()/1920;
 
