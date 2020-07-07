@@ -143,8 +143,8 @@
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">100</Setting>
-    <Setting name="PedeNoisePulseAmplitude">100</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">150</Setting>
+    <Setting name="PedeNoisePulseAmplitude">150</Setting>
     <Setting name="TriggerRate">10</Setting>
 
 
@@ -157,7 +157,7 @@
     <Setting name="FitSignal">0</Setting>
 
     <!--Antenna for Opens -->
-    <Setting name="AntennaPotentiometer">613</Setting>
+    <Setting name="AntennaPotentiometer">800</Setting>
     <Setting name="AntennaTriggerRate">50</Setting>
 
 

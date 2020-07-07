@@ -677,13 +677,22 @@ void Tool::setFWTestPulse()
 	for (auto cBoard : *fDetectorContainer)
 	{
 		std::vector<std::pair<std::string, uint32_t> > cRegVec;
-
+		uint8_t cAsync = ( cBoard->getEventType() == EventType::SSAAS ) ? 1 : 0;
 		switch(cBoard->getBoardType())
 		{
 		case BoardType::D19C :
 		{
-			cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
-			cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+			// for now I want to force Async trigger to use the new SM 
+			if( cAsync != 1 ) 
+			{
+				cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+				cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+			}
+			else
+			{
+				cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+				cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+			}
 			break;
 		}
 

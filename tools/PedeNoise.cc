@@ -325,8 +325,9 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
     uint16_t cMaxValue       = (1 << 10) - 1;
     if(cWithSSA)    cMaxValue       = (1 << 8) - 1;
 
+    float cFirstLimit = (cWithCBC) ? 0 : 1;
     std::vector<int> cSigns{-1,1};
-    std::vector<float> cLimits{1,0};
+    std::vector<float> cLimits{cFirstLimit,1-cFirstLimit};
     int cCounter=0;
     for( auto cSign : cSigns ) 
     {
@@ -361,7 +362,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
             auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
             if (cDistanceFromTarget <= cLimit ) 
             {
-                LOG (INFO) << BOLDBLUE << "Current value of threshold is  " 
+                LOG (INFO) << BOLDMAGENTA << "\t....Current value of threshold is  " 
                 << cValue 
                 << " Occupancy: " 
                 << std::setprecision(2)
@@ -374,6 +375,19 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
                 << RESET;
                 cLimitCounter++;
             }
+            else
+                LOG (INFO) << BOLDMAGENTA << "Current value of threshold is  " 
+                << cValue 
+                << " Occupancy: " 
+                << std::setprecision(2)
+                << std::fixed
+                << globalOccupancy 
+                << "\t.. " 
+                << "Incrementing limit found counter "
+                << " -- current value is " 
+                << +cLimitCounter 
+                << RESET;
+
             cValue += cSign;
             cLimitFound = (cValue == 0 || cValue == cMaxValue) || (cLimitCounter >= cMinBreakCount ); 
             if( cLimitFound )

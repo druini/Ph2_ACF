@@ -62,8 +62,8 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
     cmd.defineOptionAlternative ( "measurePedeNoise", "m" );
    
-    cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
-    cmd.defineOption ( "findShorts", "look for shorts", ArgvParser::NoOptionAttribute );
+    // cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
+    // cmd.defineOption ( "findShorts", "look for shorts", ArgvParser::NoOptionAttribute );
 
     cmd.defineOption ( "threshold", "Threshold value to set on chips for open and short finding",  ArgvParser::OptionRequiresValue );
     cmd.defineOption ( "hybridId", "Serial Number of front-end hybrid. Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
@@ -72,6 +72,7 @@ int main ( int argc, char* argv[] )
     cmd.defineOptionAlternative("pattern", "p");
 
     cmd.defineOption ( "checkAsync", "Check async readout", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "checkAntenna",  "Check Antenna",  ArgvParser::NoOptionAttribute );
     
     // general 
     cmd.defineOption ( "batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute );
@@ -89,10 +90,9 @@ int main ( int argc, char* argv[] )
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/Commissioning.xml";
     bool cTune = ( cmd.foundOption ( "tuneOffsets" ) ) ;
     bool cMeasurePedeNoise = ( cmd.foundOption( "measurePedeNoise") ); 
-    bool cFindOpens = (cmd.foundOption ("findOpens") )? true : false;
-    bool cShortFinder = ( cmd.foundOption ( "findShorts" ) ) ? true : false;
+    // bool cFindOpens = (cmd.foundOption ("findOpens") )? true : false;
+    // bool cShortFinder = ( cmd.foundOption ( "findShorts" ) ) ? true : false;
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
-    uint32_t  cThreshold = ( cmd.foundOption ( "threshold" ) )   ?  convertAnyInt ( cmd.optionValue ( "threshold" ).c_str() ) :  560 ;
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
     std::string cHybridId = ( cmd.foundOption ( "hybridId" ) ) ? cmd.optionValue ( "hybridId" ) : "xxxx";
     cDirectory += Form("FEH_2S_%s",cHybridId.c_str());
@@ -154,31 +154,20 @@ int main ( int argc, char* argv[] )
     // equalize thresholds on readout chips
     if( cTune ) 
     { 
-        t.start();
-        SSASCurve cScurve;  
-        cScurve.Inherit (&cTool);
-        cScurve.Initialise();
-        cScurve.run();
-        cScurve.writeObjects();
-        cScurve.dumpConfigFiles();
-    }
-    // equalize thresholds on readout chips
-    // if( cTune ) 
-    // { 
         
-    //     t.start();
-    //     // now create a PedestalEqualization object
-    //     PedestalEqualization cPedestalEqualization;
-    //     cPedestalEqualization.Inherit (&cTool);
-    //     // second parameter disables stub logic on CBC3
-    //     cPedestalEqualization.Initialise ( true, true );
-    //     cPedestalEqualization.FindVplus();
-    //     cPedestalEqualization.FindOffsets();
-    //     cPedestalEqualization.writeObjects();
-    //     cPedestalEqualization.dumpConfigFiles();
-    //     cPedestalEqualization.resetPointers();
-    //     t.show ( "Time to tune the front-ends on the system: " );
-    // }
+        t.start();
+        // now create a PedestalEqualization object
+        PedestalEqualization cPedestalEqualization;
+        cPedestalEqualization.Inherit (&cTool);
+        // second parameter disables stub logic on CBC3
+        cPedestalEqualization.Initialise ( true, true );
+        cPedestalEqualization.FindVplus();
+        cPedestalEqualization.FindOffsets();
+        cPedestalEqualization.writeObjects();
+        cPedestalEqualization.dumpConfigFiles();
+        cPedestalEqualization.resetPointers();
+        t.show ( "Time to tune the front-ends on the system: " );
+    }
     #ifdef __TCUSB__
     #endif
 
@@ -200,61 +189,82 @@ int main ( int argc, char* argv[] )
         t.show ( "Time to Scan Pedestals and Noise" );
     }
     
-    // For next step... set all thresholds on CBCs to 560 
-    if( cmd.foundOption ( "threshold" )  )
-    { 
-        cTool.setSameDac("VCth", cThreshold);
-        LOG (INFO) << BOLDBLUE << "Threshold for next steps is set to " << +cThreshold << " DAC units." << RESET;
-    }
-    // Inject charge with antenna circuit and look for opens 
-    if ( cFindOpens )
+    if( cmd.foundOption ( "checkAntenna" ) )
     {
-        #ifdef __ANTENNA__
-            int  cAntennaDelay = ( cmd.foundOption ( "antennaDelay" ) )   ?  convertAnyInt ( cmd.optionValue ( "antennaDelay" ).c_str() ) : -1;
-            int  cLatencyRange = ( cmd.foundOption ( "latencyRange" ) )   ?  convertAnyInt ( cmd.optionValue ( "latencyRange" ).c_str() ) :  -1;
+        cTool.setSameDac("Threshold", 1);
+        for(auto cBoard : *cTool.fDetectorContainer)
+        {
+            // read counters 
+            BeBoard *cBeBoard = static_cast<BeBoard*>(cBoard);
+            std::vector<uint32_t> cData(0);
+            (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->ReadNEvents(cBeBoard, 100, cData);
+            for( auto cDataWord : cData )
+            {
+                auto cCounter0 = (cDataWord & 0xFFFF);
+                auto cCounter1 = (cDataWord & ((0xFFFF) << 16)) >> 16 ;
+                LOG (INFO) << BOLDBLUE << std::bitset<32>(cDataWord) 
+                    << "\t" << std::bitset<16>(cCounter0) << " [ " << +cCounter0  << " ]" 
+                    << "\t" << std::bitset<16>(cCounter1) << " [ " << +cCounter1  << " ]"
+                    << RESET;
+            }
+        }
+    }
+    // // For next step... set all thresholds on CBCs to 560 
+    // if( cmd.foundOption ( "threshold" )  )
+    // { 
+    //     uint32_t  cThreshold = ( cmd.foundOption ( "threshold" ) )   ?  convertAnyInt ( cmd.optionValue ( "threshold" ).c_str() ) :  560 ;
+    //     cTool.setSameDac("VCth", cThreshold);
+    //     LOG (INFO) << BOLDBLUE << "Threshold for next steps is set to " << +cThreshold << " DAC units." << RESET;
+    // }
+    // // Inject charge with antenna circuit and look for opens 
+    // if ( cFindOpens )
+    // {
+    //     #ifdef __ANTENNA__
+    //         int  cAntennaDelay = ( cmd.foundOption ( "antennaDelay" ) )   ?  convertAnyInt ( cmd.optionValue ( "antennaDelay" ).c_str() ) : -1;
+    //         int  cLatencyRange = ( cmd.foundOption ( "latencyRange" ) )   ?  convertAnyInt ( cmd.optionValue ( "latencyRange" ).c_str() ) :  -1;
     
-            OpenFinder::Parameters cOfp;
-            // hard coded for now TODO: make this configurable
-            cOfp.potentiometer = 0x265;
-            // antenna group 
-            auto cSetting = cTool.fSettingsMap.find ( "AntennaGroup" );
-            cOfp.antennaGroup = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (0);
+    //         OpenFinder::Parameters cOfp;
+    //         // hard coded for now TODO: make this configurable
+    //         cOfp.potentiometer = 0x265;
+    //         // antenna group 
+    //         auto cSetting = cTool.fSettingsMap.find ( "AntennaGroup" );
+    //         cOfp.antennaGroup = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (0);
             
-            // antenna delay 
-            if( cAntennaDelay > 0 )
-                cOfp.antennaDelay = cAntennaDelay;
-            else
-            {
-                auto cSetting = cTool.fSettingsMap.find ( "AntennaDelay" );
-                cOfp.antennaDelay = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (200);
-            }
+    //         // antenna delay 
+    //         if( cAntennaDelay > 0 )
+    //             cOfp.antennaDelay = cAntennaDelay;
+    //         else
+    //         {
+    //             auto cSetting = cTool.fSettingsMap.find ( "AntennaDelay" );
+    //             cOfp.antennaDelay = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (200);
+    //         }
             
-            // scan range for latency  
-            if( cLatencyRange > 0 )
-                cOfp.latencyRange = cLatencyRange;
-            else
-            {
-                auto cSetting = cTool.fSettingsMap.find ( "ScanRange" );
-                cOfp.latencyRange = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (10);
-            }
+    //         // scan range for latency  
+    //         if( cLatencyRange > 0 )
+    //             cOfp.latencyRange = cLatencyRange;
+    //         else
+    //         {
+    //             auto cSetting = cTool.fSettingsMap.find ( "ScanRange" );
+    //             cOfp.latencyRange = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (10);
+    //         }
 
             
-            OpenFinder cOpenFinder;
-            cOpenFinder.Inherit (&cTool);
-            cOpenFinder.Initialise (cOfp);
-            LOG (INFO) << BOLDBLUE << "Starting open finding measurement [antenna potentiometer set to 0x" << std::hex << cOfp.potentiometer << std::dec << " written to the potentiometer" <<  RESET;
-            cOpenFinder.FindOpens();
-        #endif
-    }   
-    //inject charge with TP and look for shorts 
-    if ( cShortFinder )
-    {
-        ShortFinder cShortFinder;
-        cShortFinder.Inherit (&cTool);
-        cShortFinder.Initialise ();
-        cShortFinder.Start();
-        cShortFinder.Stop();
-    }
+    //         OpenFinder cOpenFinder;
+    //         cOpenFinder.Inherit (&cTool);
+    //         cOpenFinder.Initialise (cOfp);
+    //         LOG (INFO) << BOLDBLUE << "Starting open finding measurement [antenna potentiometer set to 0x" << std::hex << cOfp.potentiometer << std::dec << " written to the potentiometer" <<  RESET;
+    //         cOpenFinder.FindOpens();
+    //     #endif
+    // }   
+    // //inject charge with TP and look for shorts 
+    // if ( cShortFinder )
+    // {
+    //     ShortFinder cShortFinder;
+    //     cShortFinder.Inherit (&cTool);
+    //     cShortFinder.Initialise ();
+    //     cShortFinder.Start();
+    //     cShortFinder.Stop();
+    // }
 
     cTool.SaveResults();
     cTool.WriteRootFile();

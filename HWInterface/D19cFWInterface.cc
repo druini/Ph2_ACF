@@ -1659,21 +1659,21 @@ namespace Ph2_HwInterface
                     cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
                     cReg_Counters_MSB.fValue = 0x00;
                     this->EncodeReg( cReg_Counters_MSB, cFe->getId(), cChip->getId() , cVec , true, cWrite ) ;
-                    this->ReadChipBlockReg( cVec );
-                    cReplies.push_back(cVec[0]);
-                    cVec.clear();
+                    //this->ReadChipBlockReg( cVec );
+                    //cReplies.push_back(cVec[0]);
+                    //cVec.clear();
                     // LSB 
                     ChipRegItem cReg_Counters_LSB;
                     cReg_Counters_LSB.fPage = 0x00;
                     cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
                     cReg_Counters_LSB.fValue = 0x00;
                     this->EncodeReg( cReg_Counters_LSB, cFe->getId(), cChip->getId() , cVec , true, cWrite ) ;
-                    this->ReadChipBlockReg( cVec );
-                    cReplies.push_back(cVec[0]);
-                    cVec.clear();
+                    //this->ReadChipBlockReg( cVec );
+                    //cReplies.push_back(cVec[0]);
+                    //cVec.clear();
                 }
                 // read back 
-                //this->ReadChipBlockReg( cVec );
+                this->ReadChipBlockReg( cVec );
                 // set in data vector 
                 uint32_t cDataWord=0x0000;
                 uint32_t cWordCounter=0;
@@ -1691,15 +1691,18 @@ namespace Ph2_HwInterface
                     cReg_Counters_LSB.fPage = 0x00;
                     cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
                     cReg_Counters_LSB.fValue = 0x00;
-                    this->DecodeReg ( cReg_Counters_MSB, cSSAId, cReplies[cIndx], cRead, cFailed );
-                    this->DecodeReg ( cReg_Counters_LSB, cSSAId, cReplies[cIndx+1], cRead, cFailed );
+                    this->DecodeReg ( cReg_Counters_MSB, cSSAId, cVec[cIndx], cRead, cFailed );
+                    this->DecodeReg ( cReg_Counters_LSB, cSSAId, cVec[cIndx+1], cRead, cFailed );
                     cIndx+=2; 
                     uint16_t cCounterValue = ( (cReg_Counters_MSB.fValue&0xFF) << 8 ) | (cReg_Counters_LSB.fValue&0xFF);
-                    LOG (DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl 
-                        << " : " << +cCounterValue << " hits." 
-                        << " LSB " << +(cReg_Counters_LSB.fValue&0xFF)
-                        << " MSB " << +(cReg_Counters_MSB.fValue&0xFF)
-                        << RESET; 
+                    if( cChnl < 10 )
+                    {
+                        LOG (DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl 
+                            << " : " << +cCounterValue << " hits." 
+                            << " LSB " << +(cReg_Counters_LSB.fValue&0xFF)
+                            << " MSB " << +(cReg_Counters_MSB.fValue&0xFF)
+                            << RESET; 
+                    }
                     cDataWord = (cDataWord) | (cCounterValue << (cWordCounter&0x1)*16);
                     if( (cWordCounter&0x1) == 1 )
                     {
@@ -2075,6 +2078,7 @@ namespace Ph2_HwInterface
         }
         else
         {
+            LOG (DEBUG) << BOLDBLUE << "Async SSA [trigger source == 10]" << RESET;
             this->ReconfigureTriggerFSM(cVecReg);
             //resync + clear counters 
             this->PS_Clear_counters(fFastCommandDuration);
