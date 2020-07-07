@@ -699,11 +699,12 @@ namespace Ph2_HwInterface
                     //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
                     cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x41; 
                     cNBytes = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 2 : 1; 
+                    uint8_t cLastValue = 1;
                     if( fI2CSlaveMap.find(cChip->getId()) == fI2CSlaveMap.end()  )
                     { 
                       std::pair<uint8_t,std::vector<uint32_t>> cMapItem; 
                       cMapItem.first =  cChip->getId();
-                      cMapItem.second = { static_cast<uint8_t>(cBaseAddress + cChip->getId()), cNBytes , 1, 1, 1, 1} ; 
+                      cMapItem.second = { static_cast<uint8_t>(cBaseAddress + cChip->getId()), cNBytes , 1, 1, 1, cLastValue} ; 
                       LOG (INFO) << BOLDBLUE << "Adding chip with address " << +cChip->getId() << " to I2C slave map.." << RESET;
                       fI2CSlaveMap.insert(fI2CSlaveMap.begin(), cMapItem) ;
                     }  
@@ -2078,6 +2079,7 @@ namespace Ph2_HwInterface
         }
         else
         {
+            fFastCommandDuration=0;
             LOG (DEBUG) << BOLDBLUE << "Async SSA [trigger source == 10]" << RESET;
             this->ReconfigureTriggerFSM(cVecReg);
             //resync + clear counters 
@@ -3373,7 +3375,7 @@ namespace Ph2_HwInterface
       uint8_t cL1A = 0 ;
       uint8_t cBC0 = 0 ;
       // reset 
-      this->Compose_fast_command(pDuration ,cReSync, cL1A, cCalPulse , cBC0);
+      //this->Compose_fast_command(pDuration ,cReSync, cL1A, cCalPulse , cBC0);
       cReSync = 0;
       cBC0 = 1 ;
       cL1A = 1; 

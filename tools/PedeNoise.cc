@@ -360,9 +360,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
             #endif
 
             auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
-            if (cDistanceFromTarget <= cLimit ) 
-            {
-                LOG (INFO) << BOLDMAGENTA << "\t....Current value of threshold is  " 
+            LOG (INFO) << BOLDMAGENTA << "Current value of threshold is  " 
                 << cValue 
                 << " Occupancy: " 
                 << std::setprecision(2)
@@ -370,23 +368,19 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
                 << globalOccupancy 
                 << "\t.. " 
                 << "Incrementing limit found counter "
+                << " -- current value is " 
+                << +cLimitCounter 
+                << RESET;
+            if (cDistanceFromTarget <= cLimit ) 
+            {
+                LOG (INFO) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
                 << " -- current value is " 
                 << +cLimitCounter 
                 << RESET;
                 cLimitCounter++;
             }
-            else
-                LOG (INFO) << BOLDMAGENTA << "Current value of threshold is  " 
-                << cValue 
-                << " Occupancy: " 
-                << std::setprecision(2)
-                << std::fixed
-                << globalOccupancy 
-                << "\t.. " 
-                << "Incrementing limit found counter "
-                << " -- current value is " 
-                << +cLimitCounter 
-                << RESET;
+            
+            
 
             cValue += cSign;
             cLimitFound = (cValue == 0 || cValue == cMaxValue) || (cLimitCounter >= cMinBreakCount ); 
