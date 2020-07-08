@@ -82,7 +82,6 @@ namespace Ph2_HwInterface {
         fBunch = 0xFFFFFFFF & *(cEventIterator+3);
         do
         {
-            size_t cOffset= std::distance( pData.begin() , cEventIterator ) + LENGTH_EVENT_HEADER;
             uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16 ;
             uint32_t cEventSize = (0x0000FFFF & (*cEventIterator))*4 ; // event size is given in 128 bit words
             uint32_t cDummyCount = (0xFF &  (*(cEventIterator+1)))*4;
@@ -95,6 +94,7 @@ namespace Ph2_HwInterface {
             // retrieve chunck of data vector belonging to this event
             if( cHeader == 0xFFFF )
             {
+              auto cIterator = cEventIterator + LENGTH_EVENT_HEADER;
               uint32_t cStatus=0x00000000; 
               size_t cRocIndex=0;
               for( auto cModule : *pBoard )
@@ -107,9 +107,10 @@ namespace Ph2_HwInterface {
                   for( size_t cIndex=0; cIndex < cNReadoutChips; cIndex++ )
                   {
                     uint8_t cStatusWord = 0x00;
-                    uint32_t cHitInfoHeader = *(cEventIterator+LENGTH_EVENT_HEADER);
+                    uint32_t cHitInfoHeader = *(cIterator);
                     uint32_t cGoodHitInfo = (cHitInfoHeader & (0xF << 28 ))  >> 28;
                     uint32_t cHitInfoSize = (cHitInfoHeader & 0xFFF)*4;
+                    size_t cOffset= std::distance( pData.begin() , cIterator );
                     cStatusWord = static_cast<uint8_t>( cGoodHitInfo == VALID_L1_HEADER ); 
                     LOG (DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex 
                       << "...hit info header " << std::bitset<4>(cGoodHitInfo)
@@ -119,13 +120,13 @@ namespace Ph2_HwInterface {
                     {
                         bool cWithCIC2 = (cCic->getFrontEndType() == FrontEndType::CIC2);
                         std::pair<uint16_t,uint16_t> cL1Information; 
-                        cL1Information.first = ( *(cEventIterator + LENGTH_EVENT_HEADER + 2)  & 0x7FC000 ) >> 14;
-                        cL1Information.second = ( *(cEventIterator + LENGTH_EVENT_HEADER + 2)  & 0xFF800000 ) >> 23;
+                        cL1Information.first = ( *(cIterator + 2)  & 0x7FC000 ) >> 14;
+                        cL1Information.second = ( *(cIterator + 2)  & 0xFF800000 ) >> 23;
                         LOG (DEBUG) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +(cHitInfoSize) << " status " << std::bitset<9>(cL1Information.second) << RESET;
                         int cL1Offset = cOffset + 2 + int(cWithCIC2) ; 
                         if( fIsSparsified )
                         {
-                            uint8_t cNClusters =  ( *(cEventIterator + LENGTH_EVENT_HEADER + 2)  & 0x7F);
+                            uint8_t cNClusters =  ( *(cIterator + 2)  & 0x7F);
                             // clusters/hit data first 
                             std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNClusters, 0);
                             this->splitStream(pData , cL1Words , cOffset+3 , cNClusters ); // split 32 bit words in std::vector of CLUSTER_WORD_SIZE bits
@@ -179,10 +180,12 @@ namespace Ph2_HwInterface {
                             }
                         }
                     }
+                    else
+                        throw std::runtime_error(std::string("Incorrect L1 header found when decoding data ... stopping"));
                     
                     // stub info  
                     std::pair<uint16_t,uint16_t> cStubInformation; 
-                    uint32_t cStubInfoHeader = *(cEventIterator+LENGTH_EVENT_HEADER+cHitInfoSize); 
+                    uint32_t cStubInfoHeader = *(cIterator+cHitInfoSize); 
                     uint32_t cGoodStubInfo = (cStubInfoHeader & (0xF << 28 ))  >> 28;
                     uint32_t cStubInfoSize = (cStubInfoHeader & 0xFFF)*4;
                     cStatusWord = cStatusWord | ( static_cast<uint8_t>( cGoodStubInfo == VALID_STUB_HEADER ) << 1) ; 
@@ -190,18 +193,18 @@ namespace Ph2_HwInterface {
                       << "...stub info header " << std::bitset<4>(cGoodStubInfo) 
                       << "... " << +cStubInfoSize << " words in stub packet." 
                       << "... status word " << std::bitset<2>(cStatusWord) << RESET;
-                    for( uint32_t cIndx=0; cIndx < cStubInfoSize ; cIndx++) 
-                    {
-                         LOG (DEBUG) << BOLDBLUE << "\t...#" 
-                            << +cIndx 
-                            << ": " << std::bitset<32>(*(cEventIterator + LENGTH_EVENT_HEADER + cHitInfoSize + cIndx)) 
-                            << RESET;
-                    }
+                    // for( uint32_t cIndx=0; cIndx < cStubInfoSize ; cIndx++) 
+                    // {
+                    //      LOG (DEBUG) << BOLDBLUE << "\t...#" 
+                    //         << +cIndx 
+                    //         << ": " << std::bitset<32>(*(cIterator + cHitInfoSize + cIndx)) 
+                    //         << RESET;
+                    // }
                     if( cStatusWord == 0x03 )
                     {
                         LOG (DEBUG) << BOLDGREEN << "\t... ReadoutChip#" << +cIndex 
                             << " adding stub data.. " << RESET;
-                        uint32_t cStubInfo = *(cEventIterator + LENGTH_EVENT_HEADER + cHitInfoSize + 1); 
+                        uint32_t cStubInfo = *(cIterator + cHitInfoSize + 1); 
                         uint8_t cNStubs =  ( cStubInfo  & (0x3F << 16)) >> 16 ;
                         cStubInformation.first = ( cStubInfo  & 0xFFF);
                         cStubInformation.second = ( cStubInfo  & (0x1FF << 22)) >> 22 ;
@@ -215,9 +218,13 @@ namespace Ph2_HwInterface {
                             fEventStubList[cFe->getIndex()].second.push_back( cStubWord.to_ulong() );
                         }
                     }
+                    else
+                        throw std::runtime_error(std::string("Incorrect Stub header found when decoding data ... stopping"));
                     cStatus = cStatus | ( cStatusWord << (cRocIndex*2) );
                     // increment ROC index 
                     cRocIndex++;
+                    // increment iterator 
+                    cIterator += cHitInfoSize + cStubInfoSize; 
                   }
                 }//hybrid loop 
               }// module loop 

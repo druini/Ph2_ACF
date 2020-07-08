@@ -345,44 +345,64 @@ namespace Ph2_HwInterface
     {
         uint32_t cDisableSync=0;
         uint32_t cEnableSync=1-cDisableSync;
-
+        
         LOG (INFO) << BOLDBLUE << "\tCDCE Synchronization" << RESET;
         this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 1);
         uint32_t cReadBack = this->ReadReg("sysreg.ctrl.cdce_ctrl_sel");
-        LOG (DEBUG) << BOLDBLUE << "Read from CDCE ctrl returns : " << cReadBack << RESET;
+        LOG (INFO) << BOLDBLUE << "Read from CDCE ctrl returns : " << cReadBack << RESET;
         
-        LOG (INFO) << BOLDBLUE << "\t\tDe-Asserting Sync"<< RESET;
+        // de-assert sync 
         this->WriteReg("sysreg.ctrl.cdce_sync", cDisableSync);
-        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+        // two dummy reads 
+        this->ReadReg("sysreg.ctrl"); 
+        this->ReadReg("sysreg.ctrl"); 
+        cReadBack = this->ReadReg("sysreg.ctrl");
+        LOG (INFO) << BOLDBLUE << "\t\tCDCE Sync De-Asserted : 0x"<< std::hex << +cReadBack << std::dec << RESET;
         
         // 0 --> secondary reference (internal)
         // 1 --> primary reference (external) 
-        // uint32_t cExternalClock = this->ReadReg("fc7_daq_cnfg.clock.ext_clk_en");   
-        // this->WriteReg("sysreg.ctrl.cdce_refsel", cExternalClock );
-        // cReadBack = this->ReadReg("sysreg.ctrl.cdce_refsel");
-        // do
-        // {
-        //     std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-        //     cReadBack = this->ReadReg("sysreg.ctrl.cdce_refsel");
-        // }while(cReadBack != cExternalClock );
-        // LOG (INFO) << BOLDBLUE << "Read from CDCE ref sel returns : " << cReadBack << RESET;
+        uint32_t cExternalClock = this->ReadReg("fc7_daq_cnfg.clock.ext_clk_en");   
+        this->WriteReg("sysreg.ctrl.cdce_refsel", cExternalClock );
+        cReadBack = this->ReadReg("sysreg.ctrl.cdce_refsel");
+        do
+        {
+            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
+            cReadBack = this->ReadReg("sysreg.ctrl.cdce_refsel");
+        }while(cReadBack != cExternalClock );
+        LOG (INFO) << BOLDBLUE << "Read from CDCE ref sel returns : " << cReadBack << RESET;
         
-        LOG (INFO) << BOLDBLUE << "\t\tAsserting Sync"<< RESET;
+        // assert sync 
         this->WriteReg("sysreg.ctrl.cdce_sync", cEnableSync);
-        cReadBack = this->ReadReg("sysreg.status.cdce_sync_done");
+        // two dummy reads 
+        this->ReadReg("sysreg.ctrl"); 
+        this->ReadReg("sysreg.ctrl"); 
+        cReadBack = this->ReadReg("sysreg.ctrl");
+        LOG (INFO) << BOLDBLUE << "\t\tAsserting Sync : 0x"<< std::hex << +cReadBack << std::dec << RESET;
+        
+        // check sync done 
         do
         {
             LOG (DEBUG) << BOLDBLUE << "Read from CDCE sync done returns : " << cReadBack << RESET;
-            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
             cReadBack = this->ReadReg("sysreg.status.cdce_sync_done");
         }while(cReadBack != 1 );
-
+        LOG (INFO) << BOLDBLUE << "Read from CDCE Sync Done returns : " << cReadBack << RESET;
+        
+        //
+        uint32_t cReadCommandCDCE = 0x8E ;
+        uint32_t cSPICommand = 0x8FA38014;
+        this->WriteReg("sysreg.spi.tx_data",cReadCommandCDCE);
+        this->WriteReg("sysreg.spi.command",cSPICommand);
+        // dummy write 
+        this->WriteReg("sysreg.spi.tx_data",0xAAAAAAAA);
+        this->WriteReg("sysreg.spi.command",cSPICommand);
+        cReadBack = this->ReadReg("sysreg.spi.rx_data");
+        LOG (INFO) << BOLDBLUE << "\t\tCDCE Read returns 0x"<< std::hex << +cReadBack << std::dec << RESET;
+        
+        
         cReadBack = this->ReadReg("sysreg.status.cdce_lock");
-        LOG (DEBUG) << BOLDBLUE << "Read from CDCE lock returns : " << cReadBack << RESET;
-
+        LOG (INFO) << BOLDBLUE << "Read from CDCE Sync Lock returns : " << cReadBack << RESET;
         this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 0);
-        cReadBack = this->ReadReg("sysreg.ctrl.cdce_ctrl_sel");
-        LOG (DEBUG) << BOLDBLUE << "Read from CDCE ctrl returns : " << cReadBack << RESET;
     }
 
     void D19cFWInterface::epromCDCE()
