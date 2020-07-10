@@ -82,7 +82,7 @@ void PixelAlive::Start (int currentRun)
   if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_PixelAlive.raw", 'w');
-      this->initializeFileHandler();
+      this->initializeWriteFileHandler();
     }
 
   PixelAlive::run();
@@ -131,7 +131,7 @@ void PixelAlive::initializeFiles (const std::string fileRes_, int currentRun)
   if ((currentRun >= 0) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_PixelAlive.raw", 'w');
-      this->initializeFileHandler();
+      this->initializeWriteFileHandler();
     }
 
 #ifdef __USE_ROOT__

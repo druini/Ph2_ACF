@@ -125,7 +125,7 @@ namespace Ph2_System
         fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
       }
 
-    if (fWriteHandlerEnabled == true) this->initializeFileHandler();
+    if (fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
   }
 
   void SystemController::InitializeSettings (const std::string& pFilename, std::ostream& os, bool pIsFile)
@@ -256,42 +256,41 @@ namespace Ph2_System
       }
   }
 
-  void SystemController::initializeFileHandler()
+  void SystemController::initializeWriteFileHandler()
   {
-    if (fDetectorContainer != nullptr)
-      for (const auto cBoard : *fDetectorContainer)
-        {
-          uint32_t cNChip        = 0;
-          uint32_t cBeId         = cBoard->getId();
-          uint32_t cNEventSize32 = this->computeEventSize32(cBoard);
+    for (const auto cBoard : *fDetectorContainer)
+      {
+        uint32_t cNChip        = 0;
+        uint32_t cBeId         = cBoard->getId();
+        uint32_t cNEventSize32 = this->computeEventSize32(cBoard);
 
-          std::string cBoardTypeString;
-          BoardType cBoardType = cBoard->getBoardType();
+        std::string cBoardTypeString;
+        BoardType cBoardType = cBoard->getBoardType();
 
-          for (const auto cOpticalGroup : *cBoard)
-            for (const auto cHybrid : *cOpticalGroup)
-              cNChip += cHybrid->size();
+        for (const auto cOpticalGroup : *cBoard)
+          for (const auto cHybrid : *cOpticalGroup)
+            cNChip += cHybrid->size();
 
-          if      (cBoardType == BoardType::D19C) cBoardTypeString = "D19C";
-          else if (cBoardType == BoardType::RD53) cBoardTypeString = "RD53";
+        if      (cBoardType == BoardType::D19C) cBoardTypeString = "D19C";
+        else if (cBoardType == BoardType::RD53) cBoardTypeString = "RD53";
 
-          uint32_t cFWWord  = fBeBoardInterface->getBoardInfo(cBoard);
-          uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
-          uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
+        uint32_t cFWWord  = fBeBoardInterface->getBoardInfo(cBoard);
+        uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
+        uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
 
-          FileHeader cHeader(cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType());
+        FileHeader cHeader(cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType());
 
-          std::stringstream cBeBoardString;
-          cBeBoardString << "_Board" << std::setw(3) << std::setfill ('0') << cBeId;
-          std::string cFilename = fRawFileName;
-          if (fRawFileName.find (".raw") != std::string::npos)
-            cFilename.insert(fRawFileName.find(".raw"), cBeBoardString.str());
+        std::stringstream cBeBoardString;
+        cBeBoardString << "_Board" << std::setw(3) << std::setfill ('0') << cBeId;
+        std::string cFilename = fRawFileName;
+        if (fRawFileName.find (".raw") != std::string::npos)
+          cFilename.insert(fRawFileName.find(".raw"), cBeBoardString.str());
 
-          fFileHandler = new FileHandler(cFilename, 'w', cHeader);
+        fFileHandler = new FileHandler(cFilename, 'w', cHeader);
 
-          fBeBoardInterface->SetFileHandler(cBoard, fFileHandler);
-          LOG (INFO) << GREEN << "Saving binary data into: " << RESET << BOLDYELLOW << cFilename << RESET;
-        }
+        fBeBoardInterface->SetFileHandler(cBoard, fFileHandler);
+        LOG (INFO) << GREEN << "Saving binary data into: " << RESET << BOLDYELLOW << cFilename << RESET;
+      }
   }
 
   uint32_t SystemController::computeEventSize32 (const BeBoard* pBoard)

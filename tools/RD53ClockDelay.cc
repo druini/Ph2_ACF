@@ -73,7 +73,7 @@ void ClockDelay::Start (int currentRun)
   if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ClockDelay.raw", 'w');
-      this->initializeFileHandler();
+      this->initializeWriteFileHandler();
     }
 
   ClockDelay::run();
@@ -121,7 +121,7 @@ void ClockDelay::initializeFiles (const std::string fileRes_, int currentRun)
   if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ClockDelay.raw", 'w');
-      this->initializeFileHandler();
+      this->initializeWriteFileHandler();
     }
 
 #ifdef __USE_ROOT__

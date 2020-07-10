@@ -108,7 +108,7 @@ namespace Ph2_System
     /*!
      * \brief issues a FileHandler for writing files to every BeBoardFWInterface if addFileHandler was called
      */
-    void initializeFileHandler  ();
+    void initializeWriteFileHandler ();
     uint32_t computeEventSize32 (const Ph2_HwDescription::BeBoard *pBoard);
 
     /*!

@@ -65,7 +65,7 @@ void Physics::Start (int currentRun)
   if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
-      this->initializeFileHandler();
+      this->initializeWriteFileHandler();
     }
 
 
@@ -147,7 +147,7 @@ void Physics::initializeFiles (const std::string fileRes_, int currentRun)
   if ((currentRun >= 0) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
-      this->initializeFileHandler();
+      this->initializeWriteFileHandler();
     }
 
 #ifdef __USE_ROOT__
