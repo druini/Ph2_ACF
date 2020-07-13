@@ -322,67 +322,57 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
         //setSameGlobalDac("TestPulseGroup",  cTestGroup);
         // bitset for this group
         auto cBitset = std::bitset<NSSACHANNELS>( static_cast<const ChannelGroup<NSSACHANNELS>*>(cGroup)->getBitset() );
-	for(auto cModule : *pBoard)
+        for(auto cModule : *pBoard)
         {
-                for (auto cHybrid : *cModule)
+            for (auto cHybrid : *cModule)
+            {
+                for (auto cChip : *cHybrid)
                 {
-                    for (auto cChip : *cHybrid)
-                    {
-			this->fReadoutChipInterface->setInjectionSchema(static_cast<ReadoutChip*>(cChip), cGroup);
-                    }
+                   this->fReadoutChipInterface->setInjectionSchema(static_cast<ReadoutChip*>(cChip), cGroup);
                 }
-	}
+            }
+        }
         //LOG (INFO) << BOLDBLUE << "Injecting charge into CBCs using test capacitor " << +cTestGroup << RESET;
         LOG (INFO) << BOLDBLUE << "Test pulse channel mask is " << cBitset << RESET;
 
         auto& cThisShortsContainer = fShortsContainer.at(pBoard->getIndex());
         auto& cThisHitsContainer = fHitsContainer.at(pBoard->getIndex());
 
-	static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-        this->ReadASEvent( pBoard, 0,fEventsPerPoint, false , false);
-	const std::vector<Event*>& cEvents = this->GetEvents ( pBoard );
-
-
+    	//static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
+        //this->ReadASEvent( pBoard, 0,fEventsPerPoint, false , false);
+        
         for(auto cModule : *pBoard)
         {
-                auto& cShortsContainer = cThisShortsContainer->at(cModule->getIndex());
-                auto& cHitsContainer = cThisHitsContainer->at(cModule->getIndex());
-                for (auto cHybrid : *cModule)
+            this->ReadNEvents( pBoard , fEventsPerPoint);
+            const std::vector<Event*>& cEvents = this->GetEvents ( pBoard );
+        
+            auto& cShortsContainer = cThisShortsContainer->at(cModule->getIndex());
+            auto& cHitsContainer = cThisHitsContainer->at(cModule->getIndex());
+            for (auto cHybrid : *cModule)
+            {
+                auto& cHybridShorts = cShortsContainer->at(cHybrid->getIndex());
+                auto& cHybridHits = cHitsContainer->at(cHybrid->getIndex());
+                for (auto cChip : *cHybrid)
                 {
-                    auto& cHybridShorts = cShortsContainer->at(cHybrid->getIndex());
-                    auto& cHybridHits = cHitsContainer->at(cHybrid->getIndex());
-                    for (auto cChip : *cHybrid)
+
+                    for( auto cEvent : cEvents )
                     {
-
-
                         auto& cReadoutChipShorts = cHybridShorts->at(cChip->getIndex());
                         auto& cReadoutChipHits = cHybridHits->at(cChip->getIndex());
-			std::vector<uint32_t> cHits= cEvents.at(0)->GetHits(cHybrid->getId(), cChip->getId());
+                        std::vector<uint32_t> cHits= cEvent->GetHits(cHybrid->getId(), cChip->getId());
 
-                        //auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId() ) ;
-
-			//sync
-			//std::vector<uint32_t> cHits(NSSACHANNELS, 0);
-			//for( auto cEvent : cEvents )
-		        //{
-			//	for( uint32_t curch=0; curch < NSSACHANNELS; curch++ )
-			//	    {
-			//		cHits[curch] = cEvent->DataBit ( cHybrid->getId(), cChip->getId(), curch);
-			//	    }
-			//}
-
-			LOG (DEBUG) << BOLDBLUE << "\t\tGroup "
+                        LOG (DEBUG) << BOLDBLUE << "\t\tGroup "
                                 << +cTestGroup << " FE" << +cHybrid->getId()
                                 << " .. SSA" << +cChip->getId()
                                 << " - " << +cHits.size()
                                 << " hits found/"
                                 << cBitset.count() << " channels in test group" << RESET;
-			//LOG (INFO) << BOLDBLUE << "4.6 " << RESET;
-			unsigned int channelNumber = 0;
+            			//LOG (INFO) << BOLDBLUE << "4.6 " << RESET;
+            			unsigned int channelNumber = 0;
                         for ( auto cHit : cHits )
                         {
-			    //LOG (INFO) << BOLDBLUE << "cHit "<< cHit << RESET;
-    			    //LOG (INFO) << BOLDBLUE << "cBitset[channelNumber] "<<cBitset[channelNumber] << RESET;
+                            //LOG (INFO) << BOLDBLUE << "cHit "<< cHit << RESET;
+                            //LOG (INFO) << BOLDBLUE << "cBitset[channelNumber] "<<cBitset[channelNumber] << RESET;
                             if (cBitset[channelNumber] == 0)
                                 cReadoutChipShorts->getChannelContainer<uint16_t>()->at(channelNumber)=cHit;
                             else
@@ -391,6 +381,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                         }
                     }
                 }
+            }
         }
         this->Count(pBoard, static_cast<const ChannelGroup<NSSACHANNELS>*>(cGroup) );
         cTestGroup++;
