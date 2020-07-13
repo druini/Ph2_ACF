@@ -116,7 +116,7 @@
       <!-- <node id="Chips_en"             mask="0x000001FE"       permission="rw"      description="" /> -->
     </node>
 
-    <node id="Slow_cmd_fifo_din"     address="0x0000000D"     permission="rw"      description=""> </node>
+    <node id="Slow_cmd_fifo_din"     address="0x0000000D"     permission="rw"      mode="non-incremental"       description=""> </node>
 
     <node id="Slow_cmd"              address="0x0000000E"     permission="rw"      description="">
       <node id="fifo_prog_empty_thr"       mask="0x00000FFF"  permission="rw"      description="" />
@@ -244,7 +244,7 @@
     </node>
 
     <!-- Register Readout -->
-    <node id="Register_Rdback_fifo" address="0x00000011"    permission="r"      description="Fifo with Register Read-back data from all chips."> </node>
+    <node id="Register_Rdback_fifo" address="0x00000011"    permission="r"      mode="non-incremental"       description="Fifo with Register Read-back data from all chips."> </node>
 
     <node id="AutoRead_Reg_A"       address="0x00000012"    permission="r"      description="Auto-Read Register-A Data of the selected chip"> </node>
     <node id="AutoRead_Reg_B"       address="0x00000013"    permission="r"      description="Auto-Read Register-B Data of the selected chip"> </node>
