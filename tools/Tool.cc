@@ -677,22 +677,19 @@ void Tool::setFWTestPulse()
 	for (auto cBoard : *fDetectorContainer)
 	{
 		std::vector<std::pair<std::string, uint32_t> > cRegVec;
-		uint8_t cAsync = ( cBoard->getEventType() == EventType::SSAAS ) ? 1 : 0;
+		//uint8_t cAsync = ( cBoard->getEventType() == EventType::SSAAS || cBoard->getEventType() == EventType::MPAAS ) ? 1 : 0;
 		switch(cBoard->getBoardType())
 		{
 		case BoardType::D19C :
 		{
-			// for now I want to force Async trigger to use the new SM 
-			if( cAsync != 1 ) 
-			{
-				cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
-				cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-			}
-			else
-			{
-				cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
-				cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-			}
+			cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+			cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+			// later make it use the Async FSM 
+			// if( cAsync )
+			// {
+			// 	cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+			// 	cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+			// }
 			break;
 		}
 
@@ -1215,7 +1212,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
   doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
   // if in async mode normalization is a little different .. 
   // normalize by the number of triggers to accept 
-  if (fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS) 
+  if (fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS || fDetectorContainer->at(boardIndex)->getEventType() == EventType::MPAAS ) 
   {
   	numberOfEvents = fBeBoardInterface->ReadBoardReg( fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.triggers_to_accept");
   }

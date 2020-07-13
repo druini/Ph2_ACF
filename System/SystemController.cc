@@ -409,7 +409,7 @@ namespace Ph2_System
   {
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-    //LOG (INFO) << BOLDGREEN << "fsm "<< fsm<< RESET;
+    //LOG (INFO) << BOLDGREEN << "TEST"<< fsm<< RESET;
 
     std::vector<uint32_t> cData;
     if (fsm and (pulses>0)) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Send_pulses(pulses);
@@ -425,9 +425,11 @@ namespace Ph2_System
           }
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);
       }
+
     if(fast)
       {
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadASEvent(pBoard, cData);
+
       }
     else
       {
@@ -437,7 +439,9 @@ namespace Ph2_System
               {
                 for(auto cChip : *cHybrid)
                   {
-                    static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+                    if( pBoard->getFrontEndType() == FrontEndType::MPA )static_cast<MPAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+                    if( pBoard->getFrontEndType() == FrontEndType::SSA )static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+                    
                   }
               }
           }
@@ -512,6 +516,10 @@ namespace Ph2_System
             {
               fEventList.push_back(new D19cSSAEventAS(pBoard, pData));
             }
+            else if( fEventType == EventType::MPAAS )
+            {
+              fEventList.push_back(new D19cMPAEventAS(pBoard, pData));
+            }
             else if (fEventType != EventType::ZS)
             {
               size_t cEventIndex=0;
@@ -537,6 +545,10 @@ namespace Ph2_System
                       else if( pBoard->getFrontEndType() == FrontEndType::SSA )
                         {
                           fEventList.push_back(new D19cSSAEvent(pBoard, maxind+1, fNFe, cEvent));
+                        }
+                      else if( pBoard->getFrontEndType() == FrontEndType::MPA )
+                        {
+                          //TO-BE ADDED 
                         }
                       cEventIndex++;
                     }

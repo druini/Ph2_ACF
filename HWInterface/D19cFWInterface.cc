@@ -561,7 +561,6 @@ namespace Ph2_HwInterface
           std::this_thread::sleep_for (std::chrono::milliseconds (cWait_ms) );
           //this->WriteReg("fc7_daq_ctrl.optical_block.sca.reset",0x1);
           //std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-          std::this_thread::sleep_for (std::chrono::milliseconds (100) );
         }
     }
 
@@ -1672,6 +1671,98 @@ namespace Ph2_HwInterface
       }while( cEventIterator < pData.end());
       return cNEvents;
     }
+    void D19cFWInterface::ReadMPACounters( BeBoard* pBoard, std::vector<uint32_t>& pData) 
+    {
+      // get event type 
+      EventType cEventType = pBoard->getEventType();
+      if( cEventType == EventType::MPAAS )
+      {
+        pData.clear();
+        for( auto cModule : *pBoard )
+        {
+          for (auto cFe : *cModule )
+          {
+            for(auto cChip: *cFe )
+            {
+                LOG (DEBUG) << BOLDBLUE << "Directly reading back counters from SSA" << +cChip->getId() << RESET;
+                bool cWrite=false;
+                std::vector<uint32_t> cVec; cVec.clear();
+                std::vector<uint32_t> cReplies; cReplies.clear();
+                // I think it would also work to loop over rows 
+                // then columns 
+                // 16 columns , 120 rows? 
+                for(uint16_t cChnl=0; cChnl< cChip->size(); cChnl++)
+                {
+                    // address 
+                    uint32_t cBaseRegisterLSB = ( (12+8*(cChnl/120)) << 8) + 0x81;
+                    uint32_t cBaseRegisterMSB = cBaseRegisterLSB + 128; 
+                    // MSB 
+                    ChipRegItem cReg_Counters_MSB;
+                    cReg_Counters_MSB.fPage = 0x00;
+                    cReg_Counters_MSB.fAddress = cBaseRegisterMSB + cChnl;
+                    cReg_Counters_MSB.fValue = 0x00;
+                    this->EncodeReg( cReg_Counters_MSB, cFe->getId(), cChip->getId() , cVec , true, cWrite ) ;
+                    // LSB 
+                    ChipRegItem cReg_Counters_LSB;
+                    cReg_Counters_LSB.fPage = 0x00;
+                    cReg_Counters_LSB.fAddress = cBaseRegisterLSB + cChnl;
+                    cReg_Counters_LSB.fValue = 0x00;
+                    this->EncodeReg( cReg_Counters_LSB, cFe->getId(), cChip->getId() , cVec , true, cWrite ) ;
+                }
+                // read back 
+                this->ReadChipBlockReg( cVec );
+                // set in data vector 
+                uint32_t cDataWord=0x0000;
+                uint32_t cWordCounter=0;
+                uint16_t cIndx=0;
+                for(uint16_t cChnl=0; cChnl< cChip->size(); cChnl++)
+                {
+                    uint8_t cMPAId;
+                    bool cFailed = false;
+                    bool cRead;
+                    // address 
+                    uint32_t cBaseRegisterLSB = ( (12+8*(cChnl/120)) << 8) + 0x81;
+                    uint32_t cBaseRegisterMSB = cBaseRegisterLSB + 128; 
+                    ChipRegItem cReg_Counters_MSB;
+                    cReg_Counters_MSB.fPage = 0x00;
+                    cReg_Counters_MSB.fAddress =cBaseRegisterMSB + cChnl;
+                    cReg_Counters_MSB.fValue = 0x00;
+                    ChipRegItem cReg_Counters_LSB;
+                    cReg_Counters_LSB.fPage = 0x00;
+                    cReg_Counters_LSB.fAddress = cBaseRegisterLSB + cChnl;
+                    cReg_Counters_LSB.fValue = 0x00;
+                    this->DecodeReg ( cReg_Counters_MSB, cMPAId, cVec[cIndx], cRead, cFailed );
+                    this->DecodeReg ( cReg_Counters_LSB, cMPAId, cVec[cIndx+1], cRead, cFailed );
+                    cIndx+=2; 
+                    uint16_t cCounterValue = ( (cReg_Counters_MSB.fValue&0xFF) << 8 ) | (cReg_Counters_LSB.fValue&0xFF);
+                    if( cChnl < 10 )
+                    {
+                        LOG (DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl 
+                            << " : " << +cCounterValue << " hits." 
+                            << " LSB " << +(cReg_Counters_LSB.fValue&0xFF)
+                            << " MSB " << +(cReg_Counters_MSB.fValue&0xFF)
+                            << RESET; 
+                    }
+                    cDataWord = (cDataWord) | (cCounterValue << (cWordCounter&0x1)*16);
+                    if( (cWordCounter&0x1) == 1 )
+                    {
+                        pData.push_back(cDataWord);
+                        cDataWord = 0x0000;
+                    }
+                    cWordCounter++;
+                }
+            }// chip loop    
+          }// hybrid loop
+        }//module loop
+        // clear counters after they have been read 
+        this->PS_Clear_counters(fFastCommandDuration);
+      }
+      else
+      {
+        LOG (ERROR) << BOLDRED << "Trying to read SSA counters when EventType does not match..." << RESET;
+        throw std::runtime_error(std::string("Trying to read SSA counters when EventType does not match..."));
+      }
+    }
     void D19cFWInterface::ReadSSACounters( BeBoard* pBoard, std::vector<uint32_t>& pData) 
     {
       // get event type 
@@ -1764,7 +1855,20 @@ namespace Ph2_HwInterface
     uint32_t D19cFWInterface::GetData(  BeBoard* pBoard, std::vector<uint32_t>& pData)
     {
         EventType cEventType = pBoard->getEventType();
-        bool cAsync = ( cEventType ==  EventType::SSAAS ) ;
+        bool cAsync = ( cEventType ==  EventType::SSAAS || cEventType ==  EventType::MPAAS ) ;
+        bool cWithMPA=false;
+        bool cWithSSA=false;
+        for( auto cModule : *pBoard )
+        {
+          for (auto cFe : *cModule )
+          {
+            for ( auto cChip : *cFe)
+            {
+                cWithMPA = cWithMPA || (cChip->getFrontEndType()==FrontEndType::MPA);
+                cWithSSA = cWithSSA || (cChip->getFrontEndType()==FrontEndType::SSA);
+            }// chips 
+          }//hybrids
+        }//modules
         uint32_t cNEvents=0;
         uint32_t cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
         if (fIsDDR3Readout && !cAsync) 
@@ -1780,7 +1884,10 @@ namespace Ph2_HwInterface
         }
         else if(cAsync)
         {
-            this->ReadSSACounters(pBoard, pData);
+            if( cWithSSA )
+                this->ReadSSACounters(pBoard, pData);
+            else
+                this->ReadMPACounters(pBoard, pData);
             cNEvents=1;
         }
         else
@@ -1797,8 +1904,8 @@ namespace Ph2_HwInterface
         bool pFailed = false; 
         int cCounter = 0 ; 
         EventType cEventType = pBoard->getEventType();
-        bool cAsync = ( cEventType ==  EventType::SSAAS ) ;
-
+        bool cAsync = ( cEventType ==  EventType::SSAAS || cEventType ==  EventType::MPAAS ) ;
+        
         while (cNWords == 0 && cCounter < 1000 && !cAsync )
         {
             cNWords = ReadReg ("fc7_daq_stat.readout_block.general.words_cnt");
@@ -2008,7 +2115,7 @@ namespace Ph2_HwInterface
         auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
         
         EventType cEventType = pBoard->getEventType();
-        bool cAsync = ( cEventType ==  EventType::SSAAS ) ;
+        bool cAsync = ( cEventType ==  EventType::SSAAS || cEventType ==  EventType::MPAAS ) ;
         std::vector< std::pair<std::string, uint32_t> > cVecReg;
         cVecReg.push_back ( {"fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents*(cMultiplicity+1)} );
         if( cAsync && cTriggerSource == 3 )

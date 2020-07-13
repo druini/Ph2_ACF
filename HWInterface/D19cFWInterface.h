@@ -270,6 +270,8 @@ namespace Ph2_HwInterface {
         uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
         // read back SSA counters directly 
         void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+        void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+
 
         uint32_t computeEventSize ( Ph2_HwDescription::BeBoard* pBoard );
         //I2C command sending implementation
