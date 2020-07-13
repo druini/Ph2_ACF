@@ -3268,95 +3268,6 @@ namespace Ph2_HwInterface
         return 0;
     }
 
-
-    void D19cFWInterface::Pix_write_MPA(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
-    {
-        uint8_t cWriteAttempts = 0;
-
-        ChipRegItem rowreg =cRegItem;
-        rowreg.fAddress  = ((row & 0x0001f) << 11 ) | ((cRegItem.fAddress & 0x000f) << 7 ) | (pixel & 0xfffffff);
-        rowreg.fValue  = data;
-        std::vector<uint32_t> cVecReq;
-        cVecReq.clear();
-        this->EncodeReg (rowreg, cMPA->getFeId(), cMPA->getMPAId(), cVecReq, false, true);
-        this->WriteChipBlockReg (cVecReq, cWriteAttempts, false);
-    }
-
-    uint32_t D19cFWInterface::Pix_read_MPA(MPA* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel)
-    {
-        uint8_t cWriteAttempts = 0;
-        uint32_t rep;
-
-        std::vector<uint32_t> cVecReq;
-        cVecReq.clear();
-        this->EncodeReg (cRegItem, cMPA->getFeId(), cMPA->getMPAId(), cVecReq, false, false);
-        this->WriteChipBlockReg (cVecReq,cWriteAttempts, false);
-        rep = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
-
-        return rep;
-    }
-    std::vector<uint16_t> D19cFWInterface::ReadoutCounters_MPA(uint32_t raw_mode_en)
-    {
-        WriteReg("fc7_daq_cnfg.physical_interface_block.raw_mode_en", raw_mode_en);
-        uint32_t ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-        std::chrono::milliseconds cWait( fWait_us );
-        std::vector<uint16_t> count(2040, 0);
-    	   //std::cout<<"MCR  "<<ps_counters_ready<<std::endl;
-        PS_Start_counters_read();
-        uint32_t  timeout = 0;
-        while ((ps_counters_ready == 0) & (timeout < 50))
-        {
-            std::this_thread::sleep_for( cWait );
-            ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-            timeout += 1;
-        }
-        if (timeout >= 50)
-        {
-            std::cout<<"fail"<<std::endl;
-            return count;
-        }
-
-        if (raw_mode_en == 1)
-        {
-            uint32_t cycle = 0;
-            for (int i=0; i<20000;i++)
-            {
-                uint32_t fifo1_word = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo1_data");
-                uint32_t fifo2_word = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo2_data");
-
-                uint32_t line1 = (fifo1_word&0x0000FF)>>0; //to_number(fifo1_word,8,0)
-                uint32_t line2 = (fifo1_word&0x00FF00)>>8; // to_number(fifo1_word,16,8)
-                uint32_t line3 = (fifo1_word&0xFF0000)>>16; //  to_number(fifo1_word,24,16)
-
-                uint32_t line4 = (fifo2_word&0x0000FF)>>0; //to_number(fifo2_word,8,0)
-                uint32_t line5 = (fifo2_word&0x00FF00)>>8; // to_number(fifo2_word,16,8)
-
-                if (((line1 & 0x80) == 128) && ((line4 & 0x80) == 128))
-                {
-                    uint32_t temp = ((line2 & 0x20) << 9) | ((line3 & 0x20) << 8) | ((line4 & 0x20) << 7) | ((line5 & 0x20) << 6) | ((line1 & 0x10) << 6) | ((line2 & 0x10) << 5) | ((line3 & 0x10) << 4) | ((line4 & 0x10) << 3) | ((line5 & 0x80) >> 1) | ((line1 & 0x40) >> 1) | ((line2 & 0x40) >> 2) | ((line3 & 0x40) >> 3) | ((line4 & 0x40) >> 4) | ((line5 & 0x40) >> 5) | ((line1 & 0x20) >> 5);
-                    if (temp != 0)
-                    {
-                        count[cycle] = temp - 1;
-                        cycle += 1;
-                    }
-                }
-            }
-        }
-        else    {
-            ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo2_data");
-            for (int i=0; i<2040;i++)
-            {
-                count[i] = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo2_data") - 1;
-            }
-        }
-
-        std::this_thread::sleep_for( cWait );
-        ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-        return count;
-    }
-
-    
-
     void D19cFWInterface::PS_Open_shutter(uint32_t pDuration )
     {
       uint8_t cReSync = 0 ;
@@ -3940,6 +3851,104 @@ namespace Ph2_HwInterface
             }
         }
         return cAvailableCards;
+    }
+    // MPA specific 
+    void D19cFWInterface::Pix_write_MPA(Chip* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
+    {
+        uint8_t cWriteAttempts = 0;
+
+        ChipRegItem rowreg =cRegItem;
+        rowreg.fAddress  = ((row & 0x0001f) << 11 ) | ((cRegItem.fAddress & 0x000f) << 7 ) | (pixel & 0xfffffff);
+        rowreg.fValue  = data;
+        std::vector<uint32_t> cVecReq;
+        cVecReq.clear();
+        this->EncodeReg (rowreg, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, true);
+        this->WriteChipBlockReg (cVecReq, cWriteAttempts, false);
+    }
+
+    uint32_t D19cFWInterface::Pix_read_MPA(Chip* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel)
+    {
+        uint8_t cWriteAttempts = 0;
+        uint32_t rep;
+
+        std::vector<uint32_t> cVecReq;
+        cVecReq.clear();
+        this->EncodeReg (cRegItem, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, false);
+        this->WriteChipBlockReg (cVecReq,cWriteAttempts, false);
+        //std::chrono::milliseconds cShort( 1 );
+        //uint32_t readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
+        //while (readempty == 0)
+        //  {
+        //  std::cout<<"RE:"<<readempty<<std::endl;
+        //  //ReadStatus()
+        //  std::this_thread::sleep_for( cShort );
+        //  readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
+        //  }
+        //uint32_t forcedreply = ReadReg("fc7_daq_ctrl.command_processor_block.i2c.reply_fifo");
+        rep = ReadReg ("fc7_daq_ctrl.command_processor_block.i2c.mpa_ssa_i2c_reply.data");
+
+        return rep;
+    }
+
+
+
+    std::vector<uint16_t> D19cFWInterface::ReadoutCounters_MPA(uint32_t raw_mode_en)
+    {
+        WriteReg("fc7_daq_cnfg.physical_interface_block.raw_mode_en", raw_mode_en);
+        uint32_t ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+        std::vector<uint16_t> count(2040, 0);
+        PS_Start_counters_read();
+        uint32_t  timeout = 0;
+        while ((ps_counters_ready == 0) & (timeout < 50))
+        {
+            std::this_thread::sleep_for( std::chrono::microseconds(fWait_us) );
+            ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+            timeout += 1;
+        }
+        if (timeout >= 50)
+        {
+            std::cout<<"fail"<<std::endl;
+            return count;
+        }
+
+        if (raw_mode_en == 1)
+        {
+            uint32_t cycle = 0;
+            for (int i=0; i<20000;i++)
+            {
+                uint32_t fifo1_word = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo1_data");
+                uint32_t fifo2_word = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo2_data");
+
+                uint32_t line1 = (fifo1_word&0x0000FF)>>0; //to_number(fifo1_word,8,0)
+                uint32_t line2 = (fifo1_word&0x00FF00)>>8; // to_number(fifo1_word,16,8)
+                uint32_t line3 = (fifo1_word&0xFF0000)>>16; //  to_number(fifo1_word,24,16)
+
+                uint32_t line4 = (fifo2_word&0x0000FF)>>0; //to_number(fifo2_word,8,0)
+                uint32_t line5 = (fifo2_word&0x00FF00)>>8; // to_number(fifo2_word,16,8)
+
+                if (((line1 & 0x80) == 128) && ((line4 & 0x80) == 128))
+                {
+                    uint32_t temp = ((line2 & 0x20) << 9) | ((line3 & 0x20) << 8) | ((line4 & 0x20) << 7) | ((line5 & 0x20) << 6) | ((line1 & 0x10) << 6) | ((line2 & 0x10) << 5) | ((line3 & 0x10) << 4) | ((line4 & 0x10) << 3) | ((line5 & 0x80) >> 1) | ((line1 & 0x40) >> 1) | ((line2 & 0x40) >> 2) | ((line3 & 0x40) >> 3) | ((line4 & 0x40) >> 4) | ((line5 & 0x40) >> 5) | ((line1 & 0x20) >> 5);
+                    if (temp != 0)
+                    {
+                        count[cycle] = temp - 1;
+                        cycle += 1;
+                    }
+                }
+            }
+        }
+        else    
+        {
+            ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo2_data");
+            for (int i=0; i<2040;i++)
+            {
+                count[i] = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo2_data") - 1;
+            }
+        }
+
+        std::this_thread::sleep_for( std::chrono::microseconds(fWait_us) );
+        ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+        return count;
     }
 
 }
