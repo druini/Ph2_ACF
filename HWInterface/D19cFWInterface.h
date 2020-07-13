@@ -686,8 +686,8 @@ namespace Ph2_HwInterface {
         void KillI2C();
         ///
 
-        void Pix_write_MPA(Ph2_HwDescription::MPA* cMPA,Ph2_HwDescription::ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
-        uint32_t Pix_read_MPA(Ph2_HwDescription::MPA* cMPA,Ph2_HwDescription::ChipRegItem cRegItem,uint32_t row,uint32_t pixel);
+        void Pix_write_MPA(Ph2_HwDescription::Chip* cMPA,Ph2_HwDescription::ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data);
+        uint32_t Pix_read_MPA(Ph2_HwDescription::Chip* cMPA,Ph2_HwDescription::ChipRegItem cRegItem,uint32_t row,uint32_t pixel);
         std::vector<uint16_t> ReadoutCounters_MPA(uint32_t raw_mode_en = 0);
 
         void Compose_fast_command(uint32_t duration = 0,uint32_t resync_en = 0,uint32_t l1a_en = 0,uint32_t cal_pulse_en = 0,uint32_t bc0_en = 0);

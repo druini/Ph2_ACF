@@ -434,6 +434,28 @@ namespace Ph2_System
     //FrontEndType cType = pSSA->getFrontEndType();
   }
 
+  void FileParser::parseMPA (pugi::xml_node pModuleNode, Module* pModule, std::string cFilePrefix)
+  { // Get ID of MPA then add to the Module!
+    uint32_t cChipId = pModuleNode.attribute ( "Id" ).as_int();
+    std::string cFileName;
+    if ( !cFilePrefix.empty() )
+      {
+        if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
+          cFilePrefix.append ("/");
+
+        cFileName = cFilePrefix + expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
+      }
+    else cFileName = expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
+    ReadoutChip* cMPA = pModule->addChipContainer(cChipId, new MPA ( pModule->getBeId(), pModule->getFMCId(), pModule->getFeId(), cChipId,  cFileName ));
+    cMPA->setNumberOfChannels(1920);
+    this->parseMPASettings (pModuleNode, cMPA);
+  }
+
+  void FileParser::parseMPASettings (pugi::xml_node pModuleNode, ReadoutChip* pMPA)
+  {
+    //FrontEndType cType = pMPA->getFrontEndType();
+  }
+
   void FileParser::parseModuleContainer (pugi::xml_node pModuleNode, OpticalGroup* pOpticalGroup, std::ostream& os, BeBoard* pBoard)
   {
     bool cStatus = pModuleNode.attribute("Status").as_bool();
@@ -451,21 +473,20 @@ namespace Ph2_System
         Module* cModule;
         if (pBoard->getBoardType() == BoardType::RD53)
           {
-            cModule = pOpticalGroup->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new Module ( pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
+            cModule = pOpticalGroup->addModuleContainer(pModuleNode.attribute("FeId").as_int(), new Module (pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute("FeId").as_int(), pModuleNode.attribute("FeId").as_int()));
           }
         else
           {
             cModule = pOpticalGroup->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new OuterTrackerModule ( pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
             static_cast<OuterTrackerModule*>(cModule)->setLinkId( pModuleNode.attribute ( "LinkId" ).as_int() );
           }
-        // pOpticalGroup->addModule ( cModule );
 
         std::string cConfigFileDirectory;
         for (pugi::xml_node cChild : pModuleNode.children())
           {
             std::string cName = cChild.name();
             std::string cNextName = cChild.next_sibling().name();
-            if (cName.find("CBC") != std::string::npos || cName.find("RD53") != std::string::npos || cName.find("CIC") != std::string::npos || cName.find("SSA") != std::string::npos)
+            if (cName.find("CBC") != std::string::npos || cName.find("RD53") != std::string::npos || cName.find("CIC") != std::string::npos || cName.find("SSA") || cName.find("MPA") != std::string::npos)
               {
                 if (cName.find("_Files") != std::string::npos)
                   {
@@ -543,6 +564,8 @@ namespace Ph2_System
                                       cValueFromFile = (cValueFromFile == 320) ? 0 : 1; 
                                     if( cAttribute == "clockFrequency" && cCIC1 )
                                       continue;
+                                    if(cAttribute == "enableSparsification")
+                                      pBoard->setSparsification(bool(cValueFromFile));
 
                                     os << GREEN << "|\t|\t|\t|---- Setting " << cAttribute << " to  " << cValueFromFile << "\n" << RESET;
                                     LOG (DEBUG) << BOLDBLUE << " Global settings " << cAttribute << " [ " << *it << " ]-- set to " << cValueFromFile <<  RESET;
@@ -561,6 +584,11 @@ namespace Ph2_System
                       {
                         pBoard->setFrontEndType( FrontEndType::SSA);
                         this->parseSSA(cChild, cModule, cConfigFileDirectory);
+                      }
+                    else if (cName == "MPA")
+                      {
+                        pBoard->setFrontEndType( FrontEndType::MPA);
+                        this->parseMPA(cChild, cModule, cConfigFileDirectory);
                       }
                   }
               }

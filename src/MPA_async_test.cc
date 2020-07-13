@@ -5,7 +5,7 @@
 #include <fstream>
 #include <numeric>  // for std::accumulate
 #include "../Utils/Utilities.h"
-#include "../HWDescription/SSA.h"
+#include "../HWDescription/MPA.h"
 #include "../HWDescription/Module.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWInterface/MPAInterface.h"
@@ -13,6 +13,11 @@
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/FrontEndDescription.h"
+#include "../HWDescription/Chip.h"
+#include "../HWDescription/ReadoutChip.h"
+#include "../HWDescription/OuterTrackerModule.h"
+#include "../tools/Tool.h"
+
 #include "../Utils/Timer.h"
 #include <inttypes.h>
 #include "../Utils/argvparser.h"
@@ -32,52 +37,67 @@ INITIALIZE_EASYLOGGINGPP
 
 int main( int argc, char* argv[] )
 {
-
-
-	std::string cHWFile = "settings/HWDescription_MPA.xml";
 	ofstream myfile;
 	ofstream scurvecsv;
 	scurvecsv.open ("scurvetemp.csv");
 
 
-	SystemController mysyscontroller;
-	std::cout << "\nInitHW";
-	mysyscontroller.InitializeHw( cHWFile );
-	std::cout << "\nMPAI";
-        MPAInterface* fMPAInterface = mysyscontroller.fMPAInterface;
-	std::cout << "\nBOARD"<<std::endl;
 
-	MPA* mpa1 = new MPA(0, 0, 0, 0,"settings/MPAFiles/MPA_default.txt");
-	mpa1->loadfRegMap("settings/MPAFiles/MPA_default.txt");
+	LOG (INFO) << BOLDRED << "=============" << RESET;
+
+
+	el::Configurations conf ("settings/logger.conf");
+	el::Loggers::reconfigureAllLoggers (conf);
+	std::string cHWFile = "settings/D19C_MPA_PreCalib.xml";
+	std::stringstream outp;
+	Tool cTool;
+	cTool.InitializeHw ( cHWFile, outp);
+	cTool.InitializeSettings ( cHWFile, outp );
+	LOG (INFO) << BOLDRED << "1" << RESET;
+	//D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
+	//IB->PSInterfaceBoard_PowerOff_SSA();
+	cTool.ConfigureHw();
+	LOG (INFO) << BOLDRED << "2" << RESET;
+	BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
+	LOG (INFO) << BOLDRED << "3" << RESET;
+
+	ModuleContainer* ChipVec = pBoard->at(0)->at(0);
+
+
+
+	LOG (INFO) << BOLDRED << "4" << RESET;
 
 	std::chrono::milliseconds LongPOWait( 500 );
 	std::chrono::milliseconds ShortWait( 10 );
 
         // should be done from configure hw
-        //fMPAInterface->Align_out();
-
-	fMPAInterface->PS_Clear_counters();
-	fMPAInterface->PS_Clear_counters();
-	//fMPAInterface->activate_I2C_chip();
 
 
+	LOG (INFO) << BOLDRED << "5" << RESET;
 
-        std::pair<uint32_t, uint32_t> rows = {0,17};
+        std::pair<uint32_t, uint32_t> rows = {0,16};
         std::pair<uint32_t, uint32_t> cols = {0,120};
         std::pair<uint32_t, uint32_t> th = {0,40};
 
  	std::vector<TH1F*> scurves;
 	std::string title;
+	LOG (INFO) << BOLDRED << "6" << RESET;
+	for(auto cMPA: *ChipVec)
+	{
 
-	fMPAInterface->Activate_async(mpa1);
-	fMPAInterface->Set_calibration(mpa1,50);
+	MPA* theMPA = static_cast<MPA*>(cMPA);
+
+	auto theMPAInterface = static_cast<MPAInterface*>(cTool.fReadoutChipInterface);
+	theMPAInterface->Activate_async(cMPA);
+	theMPAInterface->Set_calibration(cMPA,50);
 
 	uint32_t npixtot = 0;
 	for(uint16_t row=rows.first; row<rows.second; row++)
 		{
 		for(uint16_t col=cols.first; col<cols.second; col++)
 			{
-				fMPAInterface->Enable_pix_counter(mpa1,row, col);
+				uint32_t gpix=theMPA->PNglobal(std::pair <uint32_t,uint32_t> (row,col));   
+				theMPAInterface->Enable_pix_counter(theMPA,gpix);
 				title = std::to_string(row)+","+std::to_string(col);
  				scurves.push_back(new TH1F(title.c_str(),title.c_str(),255,-0.5,254.5));
 				npixtot+=1;
@@ -91,17 +111,23 @@ int main( int argc, char* argv[] )
 	uint32_t nrep = 0;
 	for(uint16_t ith=th.first;ith<th.second;ith++)
 		{
+
+
+		static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
+		static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
+
 		std::cout<<"ITH= "<<ith<<std::endl;
-		fMPAInterface->Set_threshold(mpa1,ith);
+		theMPAInterface->Set_threshold(theMPA,ith);
 
 		std::this_thread::sleep_for( ShortWait );
-		fMPAInterface->Send_pulses(2000);
+		static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(2000);
 		std::this_thread::sleep_for( ShortWait );
 		// curpnum = 0;
 		scurvecsv << ith<<",";
 
 		//FIFO readout
-		countersfifo = fMPAInterface->ReadoutCounters_MPA(0);
+		countersfifo = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ReadoutCounters_MPA(0);
+
 
 		//Randomly the counters fail
 		//this fixes the issue but this needs to be looked at further
@@ -116,7 +142,7 @@ int main( int argc, char* argv[] )
 				totaleventsprev = 0;
 			}
 
-		for (size_t icc=0; icc<2040u; icc++)
+		for (size_t icc=0; icc<1920; icc++)
 			{
  			scurves[icc]->SetBinContent(scurves[icc]->FindBin(ith), countersfifo[icc]);
 			scurvecsv << countersfifo[icc]<<",";
@@ -139,11 +165,12 @@ int main( int argc, char* argv[] )
 		std::cout<<"Thresh "<<ith<<" - Counts[0] "<<counters[0]<<" - Counts[1] "<<counters[1]<<std::endl;
 		*/
 		scurvecsv <<"\n";
-		fMPAInterface->PS_Clear_counters(8);
-		fMPAInterface->PS_Clear_counters(8);
+		static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
+		static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
 		totaleventsprev = totalevents;
 		}
 
+	}
 
  	TCanvas * c1 = new TCanvas("c1", "c1", 1000, 500);
 	int ihist = 0;

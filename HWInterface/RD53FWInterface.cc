@@ -76,15 +76,6 @@ namespace Ph2_HwInterface
     RD53FWInterface::ResetReadoutBlk();
 
 
-    // ##############################
-    // # Initialize clock generator #
-    // ##############################
-    LOG (INFO) << GREEN << "Initializing clock generator (CDCE62005)..." << RESET;
-    RD53FWInterface::InitializeClockGenerator();
-    RD53FWInterface::ReadClockGenerator();
-    LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
-
-
     // ###############################################
     // # FW register initialization from config file #
     // ###############################################
@@ -121,6 +112,23 @@ namespace Ph2_HwInterface
         }
 
 
+    // ##################
+    // # Configure DIO5 #
+    // ##################
+    RD53FWInterface::ConfigureDIO5(&cfgDIO5);
+    LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
+    usleep(DEEPSLEEP);
+
+
+    // ##############################
+    // # Initialize clock generator #
+    // ##############################
+    LOG (INFO) << GREEN << "Initializing clock generator (CDCE62005)..." << RESET;
+    RD53FWInterface::InitializeClockGenerator();
+    RD53FWInterface::ReadClockGenerator();
+    LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
+
     // ################################
     // # Enabling hybrids and chips   #
     // # Hybrid_type hard coded in FW #
@@ -150,23 +158,14 @@ namespace Ph2_HwInterface
         }
     cVecReg.push_back({"user.ctrl_regs.Hybrids_en", enabledHybrids});
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
-
     if (cVecReg.size() != 0) WriteStackReg(cVecReg);
-
-
-    // ##################
-    // # Configure DIO5 #
-    // ##################
-    RD53FWInterface::ConfigureDIO5(&cfgDIO5);
-    LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
-    usleep(DEEPSLEEP);
 
 
     // ###########################
     // # Print clock measurement #
     // ###########################
-    uint32_t inputClk = ReadReg("user.stat_regs.stat_reg_22");
-    uint32_t gtxClk   = ReadReg("user.stat_regs.stat_reg_21");
+    uint32_t inputClk = ReadReg("user.stat_regs.clkin_rate");
+    uint32_t gtxClk   = ReadReg("user.stat_regs.gtx_refclk_rate");
     LOG (INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk/1000. << " MHz" << RESET;
     LOG (INFO) << GREEN << "GTX receiver clock frequency (should be ~160 MHz): " << BOLDYELLOW << gtxClk/1000. << " MHz" << RESET;
 
@@ -422,7 +421,7 @@ namespace Ph2_HwInterface
         bool lanes_up;
         for (unsigned int seq = 0; seq < MAXSEQUENCES; seq++)
           {
-            LOG (INFO)  << GREEN << "Trying sequence number: " << BOLDYELLOW << seq << RESET;
+            LOG (INFO)  << GREEN << "Trying initialization sequence number: " << BOLDYELLOW << seq << RESET;
             LOG (INFO)  << BOLDBLUE << "\t--> Number of required data lanes for [board/opticalGroup/hybrid = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << hybrid_id << BOLDBLUE << "]: "
                         << BOLDYELLOW << RD53Shared::countBitsOne(chips_en_to_check)
                         << BOLDBLUE << " i.e. "
@@ -443,7 +442,7 @@ namespace Ph2_HwInterface
                 lanes_up = false;
                 uint32_t channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
 
-                LOG (INFO)  << BOLDBLUE << "\t--> Number of active data lanes for try [" << BOLDYELLOW << i << BOLDBLUE << "]: "
+                LOG (INFO)  << BOLDBLUE << "\t--> Number of active data lanes for tentative n. " << BOLDYELLOW << i << BOLDBLUE << ": "
                             << BOLDYELLOW << RD53Shared::countBitsOne(channel_up)
                             << BOLDBLUE << " i.e. "
                             << BOLDYELLOW << std::bitset<12>(channel_up)
@@ -452,7 +451,7 @@ namespace Ph2_HwInterface
                 if ((channel_up & chips_en_to_check) == chips_en_to_check)
                   {
                     LOG (INFO) << GREEN << "Board/OpticalGroup/Hybrid [" << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << hybrid_id << RESET << GREEN << "] locked with sequence "
-                               << BOLDYELLOW << seq << RESET << GREEN << " on try " << BOLDYELLOW << i << RESET;
+                               << BOLDYELLOW << seq << RESET << GREEN << " on tentative n. " << BOLDYELLOW << i << RESET;
                     lanes_up = true;
                     break;
                   }
@@ -819,7 +818,7 @@ namespace Ph2_HwInterface
         // ##################
         decodedEvents.clear();
         uint16_t status = RD53FWInterface::DecodeEventsMultiThreads(pData, decodedEvents); // Decode events with multiple threads
-        // uint16_t status = RD53FWInterface::DecodeEvents(pData, decodedEvents);             // Decode events with a single thread
+        // uint16_t status = RD53FWInterface::DecodeEvents(pData, decodedEvents, {});         // Decode events with a single thread
         // RD53FWInterface::PrintEvents(decodedEvents, pData); // @TMP@
         if (RD53FWInterface::EvtErrorHandler(status) == false)
           {
@@ -849,10 +848,10 @@ namespace Ph2_HwInterface
     RD53RunProgress::update(pData.size(), true);
   }
   /*
-  // ########################################
-  // # Use of OpenMP (compil flag -fopenmp) #
-  // ########################################
-  uint16_t RD53FWInterface::DecodeEventsMultiThreads (std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
+  // ##########################################
+  // # Use of OpenMP (compiler flag -fopenmp) #
+  // ##########################################
+  uint16_t RD53FWInterface::DecodeEventsMultiThreads (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
   {
     // ######################
     // # Consistency checks #
@@ -862,47 +861,47 @@ namespace Ph2_HwInterface
 
     uint16_t evtStatus = RD53FWEvtEncoder::GOOD;
 
-    std::vector<size_t> event_start;
+    std::vector<size_t> eventStart;
     for (auto i = 0u; i < data.size(); i++)
-      if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) event_start.push_back(i);
-    if (event_start.size() == 0) return RD53FWEvtEncoder::NOHEADER;
+      if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) eventStart.push_back(i);
+    if (eventStart.size() == 0) return RD53FWEvtEncoder::NOHEADER;
+    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / omp_get_max_threads());
+    eventStart.push_back(data.size());
 
 
-    // ############################################
-    // # Use dynamic schedule to balance the load #
-    // ############################################
-    const int analyzeAtOnce = 10;
+    // ######################
+    // # Unpack data vector #
+    // ######################
     #pragma omp parallel
-    {
-    std::vector<RD53FWInterface::Event> vecEvents;
-
-    #pragma omp for schedule(dynamic, 1) nowait
-    for (auto i = 0u; i < event_start.size(); i+=analyzeAtOnce)
       {
-        const auto start = event_start[i];
-        const auto end   = (i >= event_start.size() - analyzeAtOnce ? data.size() : event_start[i+analyzeAtOnce]);
-        const auto first = std::next(data.begin(), start);
-        const auto last  = std::next(data.begin(), end);
+        std::vector<RD53FWInterface::Event> vecEvents;
+        std::vector<size_t>                 vecEventStart;
 
-        uint16_t status = RD53FWInterface::DecodeEvents(std::vector<uint32_t>(first, last), vecEvents);
+        if (eventStart.begin() + nEvents * omp_get_thread_num() < eventStart.end())
+          {
+            auto firstEvent = eventStart.begin() + nEvents * omp_get_thread_num();
+            auto lastEvent  = firstEvent + nEvents + 1 < eventStart.end() ? firstEvent + nEvents + 1 : eventStart.end();
+            std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart));
 
-        #pragma omp atomic
-        evtStatus |= status;
+            uint16_t status = RD53FWInterface::DecodeEvents(data, vecEvents, vecEventStart);
+
+            #pragma omp atomic
+            evtStatus |= status;
+
+
+            // #####################
+            // # Pack event vector #
+            // #####################
+            #pragma omp critical
+            std::move(vecEvents.begin(), vecEvents.end(), std::back_inserter(events));
+          }
       }
-
-
-    // #####################
-    // # Pack event vector #
-    // #####################
-    #pragma omp critical
-    std::move(vecEvents.begin(), vecEvents.end(), std::back_inserter(events));
-    }
 
 
     return evtStatus;
   }
   */
-  uint16_t RD53FWInterface::DecodeEventsMultiThreads (std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
+  uint16_t RD53FWInterface::DecodeEventsMultiThreads (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
   {
     // ######################
     // # Consistency checks #
@@ -915,35 +914,35 @@ namespace Ph2_HwInterface
 
     std::vector<std::vector<RD53FWInterface::Event>> vecEvents      (RD53Shared::NTHREADS);
     std::vector<std::thread>                         vecThrDecoders (RD53Shared::NTHREADS);
+    std::vector<std::vector<size_t>>                 vecEventStart  (RD53Shared::NTHREADS);
 
-    std::vector<size_t> event_start;
+    std::vector<size_t> eventStart;
     for (auto i = 0u; i < data.size(); i++)
-      if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) event_start.push_back(i);
-    if (event_start.size() == 0) return RD53FWEvtEncoder::NOHEADER;
-    const unsigned int nEvents = ceil(static_cast<double>(event_start.size()) / RD53Shared::NTHREADS);
+      if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) eventStart.push_back(i);
+    if (eventStart.size() == 0) return RD53FWEvtEncoder::NOHEADER;
+    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / RD53Shared::NTHREADS);
+    eventStart.push_back(data.size());
 
 
-    // #################################
-    // # Unpack event and data vectors #
-    // #################################
-    unsigned int i = 0;
-    for (; i < RD53Shared::NTHREADS-1; i++)
+    // ######################
+    // # Unpack data vector #
+    // ######################
+    auto i = 0u;
+    for (; i < RD53Shared::NTHREADS - 1; i++)
       {
-        if (nEvents * i >= event_start.size() - 1) break;
-        const auto start = event_start[nEvents * i];
-        const auto end   = event_start[nEvents * (i+1) < event_start.size() - 1 ? nEvents * (i+1) : event_start.size() - 1];
-        const auto first = std::next(data.begin(), start);
-        const auto last  = std::next(data.begin(), end);
+        auto firstEvent = eventStart.begin() + nEvents * i;
+        if (firstEvent + nEvents + 1 > eventStart.end() - 1) break;
+        auto lastEvent  = firstEvent + nEvents + 1;
+        std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart[i]));
 
-        vecThrDecoders[i] = std::thread(&RD53FWInterface::DecodeEventsWrapper, std::vector<uint32_t>(first, last), std::ref(vecEvents[i]), std::ref(evtStatus));
+        vecThrDecoders[i] = std::thread(&RD53FWInterface::DecodeEventsWrapper, std::ref(data), std::ref(vecEvents[i]), std::ref(vecEventStart[i]), std::ref(evtStatus));
       }
 
-    const auto start = event_start[nEvents * i < event_start.size() - 1 ? nEvents * i : event_start.size() - 1];
-    const auto end   = data.size();
-    const auto first = std::next(data.begin(), start);
-    const auto last  = std::next(data.begin(), end);
+    auto firstEvent = eventStart.begin() + nEvents * i;
+    auto lastEvent  = eventStart.end();
+    std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart[i]));
 
-    evtStatus |= RD53FWInterface::DecodeEvents(std::vector<uint32_t>(first, last), vecEvents[i]);
+    evtStatus |= RD53FWInterface::DecodeEvents(data, vecEvents[i], vecEventStart[i]);
 
 
     // ################
@@ -956,21 +955,23 @@ namespace Ph2_HwInterface
     // #####################
     // # Pack event vector #
     // #####################
-    for (const auto& v : vecEvents) std::move(v.begin(), v.end(), std::back_inserter(events));
+    for (auto i = 0u; i < RD53Shared::NTHREADS; i++)
+      std::move(vecEvents[i].begin(), vecEvents[i].end(), std::back_inserter(events));
 
 
     return evtStatus;
   }
 
-  void RD53FWInterface::DecodeEventsWrapper (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, std::atomic<uint16_t>& evtStatus)
+  void RD53FWInterface::DecodeEventsWrapper (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStart, std::atomic<uint16_t>& evtStatus)
   {
-    evtStatus |= RD53FWInterface::DecodeEvents(data, events);
+    evtStatus |= RD53FWInterface::DecodeEvents(data, events, eventStart);
   }
 
-  uint16_t RD53FWInterface::DecodeEvents (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
+  uint16_t RD53FWInterface::DecodeEvents (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStartExt)
   {
     uint16_t evtStatus = RD53FWEvtEncoder::GOOD;
-    std::vector<size_t> event_start;
+    std::vector<size_t> eventStartLocal;
+    std::vector<size_t>& refEventStart = const_cast<std::vector<size_t>&>(eventStartExt);
     const size_t maxL1Counter = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
 
@@ -980,14 +981,21 @@ namespace Ph2_HwInterface
     if (data.size() == 0) return RD53FWEvtEncoder::EMPTY;
 
 
-    for (auto i = 0u; i < data.size(); i++)
-      if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) event_start.push_back(i);
-    if (event_start.size() == 0) return RD53FWEvtEncoder::NOHEADER;
-
-    for (auto i = 0u; i < event_start.size(); i++)
+    if (eventStartExt.size() == 0)
       {
-        const auto start = event_start[i];
-        const auto end   = (i == event_start.size() - 1 ? data.size() : event_start[i+1]);
+        for (auto i = 0u; i < data.size(); i++)
+          if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) eventStartLocal.push_back(i);
+        if (eventStartLocal.size() == 0) return RD53FWEvtEncoder::NOHEADER;
+        eventStartLocal.push_back(data.size());
+        refEventStart = eventStartLocal;
+      }
+
+    events.reserve(events.size() + refEventStart.size() - 1);
+
+    for (auto i = 0u; i < refEventStart.size() - 1; i++)
+      {
+        const auto start = refEventStart[i];
+        const auto end   = refEventStart[i+1];
 
         events.emplace_back(&data[start], end - start);
         if (events.back().evtStatus != RD53FWEvtEncoder::GOOD) evtStatus |= events.back().evtStatus;
@@ -1046,14 +1054,15 @@ namespace Ph2_HwInterface
 
   bool RD53FWInterface::Event::isHittedChip (uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const
   {
-    for (auto i = 0u; i < chip_frames.size(); i++)
-      if ((hybrid_id == chip_frames[i].hybrid_id) && (chip_id == chip_frames[i].chip_id) && (chip_events[i].hit_data.size() != 0))
-        {
-          chipIndx = i;
-          return true;
-        }
+    auto it = chip_frames.begin();
+    it = std::find_if(it, chip_frames.end(), [&] (const ChipFrame& frame)
+      {
+        return ((frame.hybrid_id == hybrid_id) && (frame.chip_id == chip_id) && (chip_events[it - chip_frames.begin()].hit_data.size() != 0));
+      });
 
-    return false;
+    if (it == chip_frames.end()) return false;
+    chipIndx = it - chip_frames.begin();
+    return true;
   }
 
   int RD53FWInterface::Event::lane2chipId (const BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane)
@@ -1063,14 +1072,24 @@ namespace Ph2_HwInterface
     // #############################
     if (pBoard != nullptr)
       {
-        Module* hybrid = pBoard->at(optGroup_id)->at(hybrid_id);
-        if (hybrid != nullptr)
+        auto opticalGroup = std::find_if(pBoard->begin(), pBoard->end(), [&] (OpticalGroupContainer* cOpticalGroup)
+                                         {
+                                           return cOpticalGroup->getId() == optGroup_id;
+                                         });
+        if (opticalGroup != pBoard->end())
           {
-            auto it = std::find_if(hybrid->begin(), hybrid->end(), [=] (ChipContainer* pChip)
-                                   {
-                                     return static_cast<RD53*>(pChip)->getChipLane() == chip_lane;
-                                   });
-            if (it != hybrid->end()) return (*it)->getId();
+            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [&] (ModuleContainer* cHybrid)
+                                       {
+                                         return cHybrid->getId() == hybrid_id;
+                                       });
+            if (hybrid != (*opticalGroup)->end())
+              {
+                auto it = std::find_if((*hybrid)->begin(), (*hybrid)->end(), [&] (ChipContainer* pChip)
+                                       {
+                                         return static_cast<RD53*>(pChip)->getChipLane() == chip_lane;
+                                       });
+                if (it != (*hybrid)->end()) return (*it)->getId();
+              }
           }
       }
     return -1; // Chip not found
@@ -1114,7 +1133,7 @@ namespace Ph2_HwInterface
     size_t index = 4;
     while (index < n - dummy_size * NWORDS_DDR3)
       {
-        if (data[index] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_FRAMEHEAD + RD53FWEvtEncoder::NBIT_L1ASIZE) != RD53FWEvtEncoder::FRAME_HEADER)
+        if (data[index] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_CHIPID + RD53FWEvtEncoder::NBIT_L1ASIZE) != RD53FWEvtEncoder::FRAME_HEADER)
           {
             evtStatus |= RD53FWEvtEncoder::FRSIZE;
             return;
@@ -1159,7 +1178,7 @@ namespace Ph2_HwInterface
 
   RD53FWInterface::ChipFrame::ChipFrame (const uint32_t data0, const uint32_t data1)
   {
-    std::tie(error_code, hybrid_id, chip_lane, l1a_data_size) = bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_FRAMEHEAD, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
+    std::tie(error_code, hybrid_id, chip_lane, l1a_data_size) = bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_CHIPID, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
     std::tie(chip_type, frame_delay)                          = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
   }
   // ########################
@@ -1240,6 +1259,7 @@ namespace Ph2_HwInterface
   // # injType == 2 --> Digital #
   // ############################
   {
+    const double FSMperiod = 100e-9; // Referred to 10 MHz clock [us]
     enum INJtype { None, Analog , Digital };
     enum INJdelay
     {
@@ -1262,7 +1282,7 @@ namespace Ph2_HwInterface
         // #######################################
         // # Configuration for digital injection #
         // #######################################
-        RD53::CalCmd calcmd_first(1,2,8,0,0);
+        RD53::CalCmd calcmd_first(1,0,4,0,0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data         = calcmd_first.getCalCmd(chipId);
         RD53::CalCmd calcmd_second(0,0,0,0,0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data        = calcmd_second.getCalCmd(chipId);
@@ -1270,10 +1290,12 @@ namespace Ph2_HwInterface
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 0;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr        = 0;
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en                 = false;
       }
     else if (injType == INJtype::Analog)
       {
@@ -1288,10 +1310,12 @@ namespace Ph2_HwInterface
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = INJdelay::SecondCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr        = 0;
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en                 = false;
 
         // @TMP@
         if (enableAutozero == true)
@@ -1304,8 +1328,12 @@ namespace Ph2_HwInterface
       }
     else if (injType == INJtype::None)
       {
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop      = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en      = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en          = false;
 
         // @TMP@
         if (enableAutozero == true)
@@ -1316,6 +1344,13 @@ namespace Ph2_HwInterface
           }
       }
     else LOG (ERROR) << BOLDRED << "Option not recognized " << injType << RESET;
+
+    LOG (INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
+               << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  +
+                                     RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal +
+                                     RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             +
+                                     RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr))
+               << std::setprecision(-1) << RESET << GREEN << " Hz" << RESET;
 
 
     // ##############################

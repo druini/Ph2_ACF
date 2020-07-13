@@ -36,6 +36,8 @@
 #include "../Utils/D19cCic2Event.h"
 #include "../Utils/D19cSSAEvent.h"
 #include "../Utils/D19cSSAEventAS.h"
+#include "../Utils/D19cMPAEvent.h"
+#include "../Utils/D19cMPAEventAS.h"
 #include "../HWDescription/OuterTrackerModule.h"
 
 #include <unordered_map>
@@ -66,9 +68,7 @@ namespace Ph2_System
     Ph2_HwInterface::lpGBTInterface* flpGBTInterface;     //!< Interface to the lpGBT
 
     Ph2_HwInterface::CicInterface* fCicInterface; //!< Interface to a CIC [only valid for OT]
-    Ph2_HwInterface::SSAInterface* fSSAInterface; //!< Interface to the SSA
-    Ph2_HwInterface::MPAInterface* fMPAInterface; //!< Interface to the MPA
-
+    
     DetectorContainer* fDetectorContainer;
     BeBoardFWMap fBeBoardFWMap;
     SettingsMap fSettingsMap;

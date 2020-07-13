@@ -13,8 +13,9 @@
 #include "D19cFpgaConfig.h"
 #include "BeBoardFWInterface.h"
 #include "../HWDescription/RD53.h"
-#include "../Utils/RD53RunProgress.h"
 #include "../Utils/easylogging++.h"
+#include "../Utils/RD53RunProgress.h"
+#include "../Utils/RD53Shared.h"
 #include "../Utils/Event.h"
 #include "../Utils/DataContainer.h"
 #include "../Utils/OccupancyAndPh.h"
@@ -114,7 +115,7 @@ namespace Ph2_HwInterface
     void InitHybridByHybrid     (const Ph2_HwDescription::BeBoard* pBoard);
     std::vector<uint16_t> GetInitSequence (const unsigned int type);
 
-    void WriteChipCommand       (const std::vector<uint16_t>& data, int hybridId);
+    void WriteChipCommand (const std::vector<uint16_t>& data, int hybridId);
     std::vector<std::pair<uint16_t,uint16_t>> ReadChipRegisters (Ph2_HwDescription::Chip* pChip);
 
     struct ChipFrame
@@ -154,9 +155,9 @@ namespace Ph2_HwInterface
       static int lane2chipId (const Ph2_HwDescription::BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane);
     };
 
-    static uint16_t DecodeEventsMultiThreads (std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
-    static void     DecodeEventsWrapper      (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, std::atomic<uint16_t>& evtStatus);
-    static uint16_t DecodeEvents             (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
+    static uint16_t DecodeEventsMultiThreads (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
+    static void     DecodeEventsWrapper      (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStart, std::atomic<uint16_t>& evtStatus);
+    static uint16_t DecodeEvents             (const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStart);
     static bool     EvtErrorHandler          (uint16_t status);
     static void     PrintEvents              (const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
 
@@ -192,7 +193,7 @@ namespace Ph2_HwInterface
       uint32_t second_cal_data = 0;
 
       uint32_t delay_after_ecr        = 0;
-      uint32_t delay_after_autozero   = 0;
+      uint32_t delay_after_autozero   = 0; // @TMP@
       uint32_t delay_after_first_cal  = 0;
       uint32_t delay_after_second_cal = 0;
       uint16_t delay_loop             = 0;
@@ -201,7 +202,7 @@ namespace Ph2_HwInterface
     struct FastCommandsConfig
     {
       TriggerSource trigger_source   = TriggerSource::FastCMDFSM;
-      AutozeroSource autozero_source = AutozeroSource::Disabled;
+      AutozeroSource autozero_source = AutozeroSource::Disabled; // @TMP@
 
       bool initial_ecr_en  = false;
       bool backpressure_en = false;

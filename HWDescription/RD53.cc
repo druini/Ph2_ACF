@@ -21,7 +21,7 @@ namespace Ph2_HwDescription
 
   const RD53::FrontEnd* RD53::getMajorityFE (size_t colStart, size_t colStop)
   {
-    return *std::max_element(std::begin(frontEnds), std::end(frontEnds), [=] (const FrontEnd* a, const FrontEnd* b)
+    return *std::max_element(std::begin(frontEnds), std::end(frontEnds), [&] (const FrontEnd* a, const FrontEnd* b)
                              {
                                return int(std::min(colStop, a->colStop)) - int(std::max(colStart, a->colStart)) < int(std::min(colStop, b->colStop)) - int(std::max(colStart, b->colStart));
                              });
@@ -64,9 +64,9 @@ namespace Ph2_HwDescription
 
                 if (line.find("COL") != std::string::npos)
                   {
-                    pixData.Enable.reset();
-                    pixData.HitBus.reset();
-                    pixData.InjEn .reset();
+                    pixData.Enable.fill(0);
+                    pixData.HitBus.fill(0);
+                    pixData.InjEn .fill(0);
                     pixData.TDAC  .fill(0);
                   }
                 else if (line.find("ENABLE") != std::string::npos)
@@ -265,28 +265,28 @@ namespace Ph2_HwDescription
         file << "*-------------------------------------------------------------------------------------------------------" << std::endl;
         file << "PIXELCONFIGURATION" << std::endl;
         file << "*-------------------------------------------------------------------------------------------------------" << std::endl;
-        for (auto i = 0u; i < fPixelsMask.size(); i++)
+        for (auto col = 0u; col < fPixelsMask.size(); col++)
           {
-            file << "COL                  " << std::setfill ('0') << std::setw (3) << i << std::endl;
+            file << "COL                  " << std::setfill ('0') << std::setw (3) << col << std::endl;
 
-            file << "ENABLE " << fPixelsMask[i].Enable[0];
-            for (auto j = 1u; j < fPixelsMask[i].Enable.size(); j++)
-              file << "," << fPixelsMask[i].Enable[j];
+            file << "ENABLE " << +fPixelsMask[col].Enable[0];
+            for (auto row = 1u; row < fPixelsMask[col].Enable.size(); row++)
+              file << "," << +fPixelsMask[col].Enable[row];
             file << std::endl;
 
-            file << "HITBUS " << fPixelsMask[i].HitBus[0];
-            for (auto j = 1u; j < fPixelsMask[i].HitBus.size(); j++)
-              file << "," << fPixelsMask[i].HitBus[j];
+            file << "HITBUS " << +fPixelsMask[col].HitBus[0];
+            for (auto row = 1u; row < fPixelsMask[col].HitBus.size(); row++)
+              file << "," << +fPixelsMask[col].HitBus[row];
             file << std::endl;
 
-            file << "INJEN  " << fPixelsMask[i].InjEn[0];
-            for (auto j = 1u; j < fPixelsMask[i].InjEn.size(); j++)
-              file << "," << fPixelsMask[i].InjEn[j];
+            file << "INJEN  " << +fPixelsMask[col].InjEn[0];
+            for (auto row = 1u; row < fPixelsMask[col].InjEn.size(); row++)
+              file << "," << +fPixelsMask[col].InjEn[row];
             file << std::endl;
 
-            file << "TDAC   " << +fPixelsMask[i].TDAC[0];
-            for (auto j = 1u; j < fPixelsMask[i].TDAC.size(); j++)
-              file << "," << +fPixelsMask[i].TDAC[j];
+            file << "TDAC   " << +fPixelsMask[col].TDAC[0];
+            for (auto row = 1u; row < fPixelsMask[col].TDAC.size(); row++)
+              file << "," << +fPixelsMask[col].TDAC[row];
             file << std::endl;
 
             file << std::endl;
@@ -300,52 +300,52 @@ namespace Ph2_HwDescription
 
   void RD53::copyMaskFromDefault()
   {
-    for (auto i = 0u; i < fPixelsMask.size(); i++)
+    for (auto col = 0u; col < fPixelsMask.size(); col++)
       {
-        fPixelsMask[i].Enable = fPixelsMaskDefault[i].Enable;
-        fPixelsMask[i].HitBus = fPixelsMaskDefault[i].HitBus;
-        fPixelsMask[i].InjEn  = fPixelsMaskDefault[i].InjEn;
-        for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = fPixelsMaskDefault[i].TDAC[j];
+        fPixelsMask[col].Enable = fPixelsMaskDefault[col].Enable;
+        fPixelsMask[col].HitBus = fPixelsMaskDefault[col].HitBus;
+        fPixelsMask[col].InjEn  = fPixelsMaskDefault[col].InjEn;
+        for (auto row = 0u; row < fPixelsMask[col].TDAC.size(); row++) fPixelsMask[col].TDAC[row] = fPixelsMaskDefault[col].TDAC[row];
       }
   }
 
   void RD53::copyMaskToDefault()
   {
-    for (auto i = 0u; i < fPixelsMaskDefault.size(); i++)
+    for (auto col = 0u; col < fPixelsMaskDefault.size(); col++)
       {
-        fPixelsMaskDefault[i].Enable = fPixelsMask[i].Enable;
-        fPixelsMaskDefault[i].HitBus = fPixelsMask[i].HitBus;
-        fPixelsMaskDefault[i].InjEn  = fPixelsMask[i].InjEn;
-        for (auto j = 0u; j < fPixelsMaskDefault[i].TDAC.size(); j++) fPixelsMaskDefault[i].TDAC[j] = fPixelsMask[i].TDAC[j];
+        fPixelsMaskDefault[col].Enable = fPixelsMask[col].Enable;
+        fPixelsMaskDefault[col].HitBus = fPixelsMask[col].HitBus;
+        fPixelsMaskDefault[col].InjEn  = fPixelsMask[col].InjEn;
+        for (auto row = 0u; row < fPixelsMaskDefault[col].TDAC.size(); row++) fPixelsMaskDefault[col].TDAC[row] = fPixelsMask[col].TDAC[row];
       }
   }
 
   void RD53::resetMask()
   {
-    for (auto i = 0u; i < fPixelsMask.size(); i++)
+    for (auto col = 0u; col < fPixelsMask.size(); col++)
       {
-        fPixelsMask[i].Enable.reset();
-        fPixelsMask[i].HitBus.reset();
-        fPixelsMask[i].InjEn.reset();
-        for (auto j = 0u; j < fPixelsMask[i].TDAC.size(); j++) fPixelsMask[i].TDAC[j] = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) / 2;
+        fPixelsMask[col].Enable.fill(0);
+        fPixelsMask[col].HitBus.fill(0);
+        fPixelsMask[col].InjEn .fill(0);
+        fPixelsMask[col].TDAC  .fill(RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) / 2);
       }
   }
 
   void RD53::enableAllPixels()
   {
-    for (auto i = 0u; i < fPixelsMask.size(); i++)
+    for (auto col = 0u; col < fPixelsMask.size(); col++)
       {
-        fPixelsMask[i].Enable.set();
-        fPixelsMask[i].HitBus.set();
+        fPixelsMask[col].Enable.fill(1);
+        fPixelsMask[col].HitBus.fill(1);
       }
   }
 
   void RD53::disableAllPixels()
   {
-    for (auto i = 0u; i < fPixelsMask.size(); i++)
+    for (auto col = 0u; col < fPixelsMask.size(); col++)
       {
-        fPixelsMask[i].Enable.reset();
-        fPixelsMask[i].HitBus.reset();
+        fPixelsMask[col].Enable.fill(0);
+        fPixelsMask[col].HitBus.fill(0);
       }
   }
 
@@ -353,9 +353,9 @@ namespace Ph2_HwDescription
   {
     size_t cnt = 0;
 
-    for (auto i = 0u; i < fPixelsMask.size(); i++)
-      for (auto j = 0u; j < fPixelsMask[i].Enable.size(); j++)
-        if (fPixelsMask[i].Enable[j] == 0) cnt++;
+    for (auto col = 0u; col < fPixelsMask.size(); col++)
+      for (auto row = 0u; row < fPixelsMask[col].Enable.size(); row++)
+        if (fPixelsMask[col].Enable[row] == 0) cnt++;
 
     return cnt;
   }

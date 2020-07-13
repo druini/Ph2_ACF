@@ -44,14 +44,29 @@ void SSASCurve::Initialise(void)
 
 void SSASCurve::run(void)
 {
+  	ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+
+  	cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+  	cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+
 	DetectorDataContainer       theHitContainer;
 	ContainerFactory::copyAndInitChannel<std::pair<std::array<uint32_t,2>,float>>(*fDetectorContainer, theHitContainer);
 
 	for (auto cBoard : theHitContainer)
 	{
 	BeBoard* theBeBoard = static_cast<BeBoard*>( fDetectorContainer->at(cBoard->getIndex()) );
-	if (SyncDebug) LOG (INFO) << BOLDBLUE <<"SYNC DEBUG!"<<RESET;
-	else theBeBoard->setEventType(EventType::SSAAS);
+
+	if (cWithSSA)
+		{
+		if (SyncDebug) LOG (INFO) << BOLDBLUE <<"SYNC DEBUG!"<<RESET;
+		else theBeBoard->setEventType(EventType::SSAAS);
+		}
+	if (cWithMPA)
+		{
+		if (SyncDebug) LOG (INFO) << BOLDBLUE <<"SYNC DEBUG!"<<RESET;
+		else theBeBoard->setEventType(EventType::MPAAS);
+		}
+
 
         float rms=999.0;
         //float prevrms=999.0;
@@ -102,8 +117,28 @@ void SSASCurve::run(void)
 	                }
 	        }   */
 		bool runpulse=false;
+
 		if (NMpulse>0) runpulse=true;
-		if (runpulse) setSameDacBeBoard(theBeBoard, "Bias_CALDAC", TestPulsePotentiometer);
+		if (cWithSSA)
+			{
+			std::cout << "withSSA" << std::endl;
+			if (runpulse) setSameDacBeBoard(theBeBoard, "Bias_CALDAC", TestPulsePotentiometer);
+			}
+		if (cWithMPA)
+			{
+			std::cout << "withMPA" << std::endl;
+			if (runpulse) 
+				{
+				setSameDacBeBoard(theBeBoard, "CalDAC0", TestPulsePotentiometer);
+				setSameDacBeBoard(theBeBoard, "CalDAC1", TestPulsePotentiometer);
+				setSameDacBeBoard(theBeBoard, "CalDAC2", TestPulsePotentiometer);
+				setSameDacBeBoard(theBeBoard, "CalDAC3", TestPulsePotentiometer);
+				setSameDacBeBoard(theBeBoard, "CalDAC4", TestPulsePotentiometer);
+				setSameDacBeBoard(theBeBoard, "CalDAC5", TestPulsePotentiometer);
+				setSameDacBeBoard(theBeBoard, "CalDAC6", TestPulsePotentiometer);
+				}
+			}
+			
         	for (size_t thd = StartTHDAC; thd<=StopTHDAC; thd++)
         	{
             		Nstrip=0.0;
@@ -119,7 +154,20 @@ void SSASCurve::run(void)
 		                        for(auto cChip : *cHybrid)
 		                        {
 						ReadoutChip *theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard ->getIndex())->at(cOpticalGroup ->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
-		                            	this->fReadoutChipInterface->WriteChipReg(theChip, "Bias_THDAC", thd);
+						if (cWithSSA)
+						{
+		                            		this->fReadoutChipInterface->WriteChipReg(theChip, "Bias_THDAC", thd);
+						}
+						if (cWithMPA)
+						{
+		                            		this->fReadoutChipInterface->WriteChipReg(theChip, "ThDAC0", thd);
+		                            		this->fReadoutChipInterface->WriteChipReg(theChip, "ThDAC1", thd);
+		                            		this->fReadoutChipInterface->WriteChipReg(theChip, "ThDAC2", thd);
+		                            		this->fReadoutChipInterface->WriteChipReg(theChip, "ThDAC3", thd);
+		                            		this->fReadoutChipInterface->WriteChipReg(theChip, "ThDAC4", thd);
+		                            		this->fReadoutChipInterface->WriteChipReg(theChip, "ThDAC5", thd);
+		                            		this->fReadoutChipInterface->WriteChipReg(theChip, "ThDAC6", thd);
+						}
 		                            	//this->fReadoutChipInterface->WriteChipReg(theChip,"AsyncRead_StartDel_LSB", (11+1), false );
 
 						unsigned int channelNumber = 0;
@@ -223,7 +271,9 @@ void SSASCurve::run(void)
 
 	        mean/=Nmeans;
 
-
+		std::string prestr="";
+		if (cWithSSA) prestr="THTRIMMING_S" ;
+		if (cWithMPA) prestr="TrimDAC_P";
 
 	        float writeave=0.0;
 	        for(auto opticalGroup: *cBoard)
@@ -238,7 +288,9 @@ void SSASCurve::run(void)
 	                        	{
 	                            		ReadoutChip *theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard ->getIndex())->at(opticalGroup ->getIndex())->at(hybrid->getIndex())->at(cSSA->getIndex()));
 	                            		rms+=(channel.second-mean)*(channel.second-mean);
-						int32_t cr=fReadoutChipInterface->ReadChipReg(theChip, "THTRIMMING_S" + std::to_string(istrip));
+
+						int32_t cr=fReadoutChipInterface->ReadChipReg(theChip, prestr + std::to_string(istrip));
+
 						//LOG (INFO) << BOLDRED <<channel.second<< RESET;
 						//LOG (INFO) << BOLDRED <<float(cr)<< RESET;
 						//LOG (INFO) << BOLDRED <<float(vfac)<< RESET;
@@ -263,7 +315,7 @@ void SSASCurve::run(void)
 	                            		if (THtowrite==0) Nunt+=1.0;
 	                            		if (THtowrite==31) Nunt-=1.0;
 
-	                            		fReadoutChipInterface->WriteChipReg(theChip, "THTRIMMING_S" + std::to_string(istrip), THtowrite);
+	                            		fReadoutChipInterface->WriteChipReg(theChip, prestr + std::to_string(istrip), THtowrite);
 	                            		istrip+=1;
 	                        		}
 	                    		}
