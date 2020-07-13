@@ -230,20 +230,36 @@ namespace Ph2_HwInterface
         else if( pClockRate == 240 )
           cRegister = 0xEB840321 ;
         else // 320
-          cRegister = 0xEB820321;//321
-        std::vector<uint32_t> cRegisterValues = { 0xeb840320 ,cRegister , 0xEB840302, 0xeb840303, 0xeb140334, 0x013c0cb5, 0x33041be6, 0xbd800df7 };
-        std::vector< std::pair<std::string, uint32_t> > cVecReg;
+          cRegister = 0xEB820321;
+        // out0, out1 , out2, out3, out4 , reg5 , reg6, reg7, reg8
+        // 0xeb840320 - reg0 (out0=240MHz,LVDS, phase shift  0deg)
+        // 0xEB840302 - reg2 (out2=240MHz,LVDS) 
+        // 0xEB840303 - reg3 (out3=240MHz,LVDS) 
+        // 0xEB140334 - reg4 (out4= 40MHz,LVDS, R4.1=1, ph4adjc=0)
+        // 0x113C0CF5 - reg5 (3.4ns lockw, LVDS in, DC term, PRIM REF enable, SEC REF enable, smartMUX off, failsafe off etc.)
+        // 0x33041BE6 - reg6 (VCO1, PS=4, FD=12, FB=1, ChargePump 50uA, Internal Filter, R6.20=0, AuxOut= enable; AuxOut= Out2)
+        // 0xBD800DF7 - reg7 (C2=473.5pF, R2=98.6kR, C1=0pF, C3=0pF, R3=5kR etc, SEL_DEL2=1, SEL_DEL1=1)
+        // 0x20009978 - reg8 (various)};
+        std::vector<uint32_t> cRegisterValues = { 0xeb840320 ,cRegister , 0xEB840302, 0xEB840303, 0xEB140334, 0x113C0CF5, 0x33041BE6, 0xBD800DF7, 0x20009978 };
+        //std::vector<uint32_t> cRegisterValues = { 0xeb840320 ,cRegister , 0xEB840302, 0xeb840303, 0xeb140334, 0x013c0cb5, 0x33041be6, 0xbd800df7 };
         for( auto cRegisterValue : cRegisterValues )
         {
-            // cVecReg.clear();
-            cVecReg.push_back({"sysreg.spi.tx_data", cRegisterValue} );
-            cVecReg.push_back({"sysreg.spi.command", 0x8fa38014} );
-            this->WriteStackReg( cVecReg );
+            uint32_t cSPICommand = 0x8FA38014;
+            this->WriteReg("sysreg.spi.tx_data",cRegisterValue);
+            this->WriteReg("sysreg.spi.command",cSPICommand);
             uint32_t cReadBack = this->ReadReg("sysreg.spi.rx_data");
             cReadBack = this->ReadReg("sysreg.spi.rx_data");
             LOG (DEBUG) << BOLDBLUE << "Dummy read from SPI returns : " << cReadBack << RESET;
+            
+            uint32_t cReadCommandCDCE = 0x8E ;
+            this->WriteReg("sysreg.spi.tx_data",cReadCommandCDCE);
+            this->WriteReg("sysreg.spi.command",cSPICommand);
+            // dummy write 
+            this->WriteReg("sysreg.spi.tx_data",0xAAAAAAAA);
+            this->WriteReg("sysreg.spi.command",cSPICommand);
+            cReadBack = this->ReadReg("sysreg.spi.rx_data");
+            LOG (INFO) << BOLDBLUE << "\t\tCDCE Read returns 0x"<< std::hex << +cReadBack << std::dec << RESET;
         }
-        cVecReg.clear();
         std::this_thread::sleep_for (std::chrono::milliseconds (500) );
         // store in EEprom
         std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
@@ -317,7 +333,8 @@ namespace Ph2_HwInterface
       // rc network parameters, dont touch
       cWriteBuffer[7] = 0xBD800DF7;// # reg7
       // sync command configuration
-      cWriteBuffer[8] = 0x80001808;// # trigger sync
+      cWriteBuffer[8]= 0x20009978; 
+      //cWriteBuffer[8] = 0x80001808;// # trigger sync
 
       std::vector< std::pair<std::string, uint32_t> > cVecReg;
       for( auto cBufferValue : cWriteBuffer )
@@ -606,8 +623,8 @@ namespace Ph2_HwInterface
         auto cCDCEconfig = pBoard->configCDCE();
         if( cCDCEconfig.first )
         {
-          //configureCDCE_old(cCDCEconfig.second);
-          configureCDCE(cCDCEconfig.second, cCDCEselect);
+          configureCDCE_old(cCDCEconfig.second);
+          //configureCDCE(cCDCEconfig.second, cCDCEselect);
           // sync CDCE
           syncCDCE();
         }

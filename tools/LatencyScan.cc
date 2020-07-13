@@ -2,6 +2,7 @@
 
 #ifdef __USE_ROOT__
 #include "../HWDescription/Cbc.h"
+#include "../Utils/ContainerFactory.h"
 
 LatencyScan::LatencyScan() : Tool()
 {}
@@ -167,66 +168,145 @@ std::map<ModuleContainer*, uint8_t> LatencyScan::ScanLatency ( uint8_t pStartLat
 
 std::map<ModuleContainer*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStartLatency, uint8_t pLatencyRange )
 {
-    // This is not super clean but should work
-    // Take the default VCth which should correspond to the pedestal and add 8 depending on the mode to exclude noise
-    // ThresholdVisitor in read mode
-    //ThresholdVisitor cThresholdVisitor (fReadoutChipInterface);
-    //this->accept (cThresholdVisitor);
-    //uint16_t cVcth = cThresholdVisitor.getThreshold();
-
-    //int cVcthStep = ( fHoleMode == 1 ) ? +10 : -10;
-    //LOG (INFO) << "VCth value from config file is: " << +cVcth << " ;  changing by " << cVcthStep << "  to " << + ( cVcth + cVcthStep ) << " supress noise hits for crude latency scan!" ;
-    //cVcth += cVcthStep;
-
-    ////  Set that VCth Value on all FEs
-    //cThresholdVisitor.setOption ('w');
-    //cThresholdVisitor.setThreshold (cVcth);
-    //this->accept (cThresholdVisitor);
-
-    // set test pulse (if needed)
-    //setFWTestPulse();
-    //setSystemTestPulse ( fTestPulseAmplitude, 0, true, fHoleMode );
-
     // Now the actual scan
-    LOG (INFO) << "Scanning Stub Latency ... " ;
+    LOG (INFO) << BOLDBLUE << "Scanning Stub Latency ... " ;
 
-    for ( auto pBoard : *fDetectorContainer )
+    for ( auto cBoard : *fDetectorContainer )
     {
-        BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
+        BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
+        // check trigger source 
+        uint16_t cTriggerSource = fBeBoardInterface->ReadBoardReg( cBeBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+        if( cTriggerSource == 6 )
+        {
+            LOG (INFO) << BOLDBLUE << "Trigger source is ... using TP" << RESET;
+            // SetTestAllChannels(true);
+            // uint16_t cTPamplitude=0xFF-100;
+            // DetectorDataContainer *cTPpotential = new DetectorDataContainer();
+            // ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *cTPpotential, cTPamplitude);
+            // DetectorDataContainer *cTPdelay = new DetectorDataContainer();
+            // uint16_t cDelay=0;
+            // ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *cTPdelay, cDelay);
+
+            // if TP on .. and CIC 
+            // make sure stubs are only in one CBC 
+            uint8_t cTPgroup=0;
+            for(auto cOpticalGroup : *cBoard)
+            {
+                for (auto cHybrid : *cOpticalGroup)
+                {
+                    auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                    bool cMaskOthers = (cCic != NULL) ? true : false;     
+                    for (auto cChip : *cHybrid) 
+                    {
+                        auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
+                        if( cMaskOthers && cChip->getId() == 0 )
+                        {
+                            uint8_t cFirstSeed = static_cast<uint8_t>(2*(1+std::floor((cTPgroup*2 + 16*0)/2.))); // in half strips 
+                            cReadoutChipInterface->injectStubs( cChip , {cFirstSeed} , {0}, false );
+                            fReadoutChipInterface->WriteChipReg( cChip, "TestPulse" , (int)1 );
+                        }
+                        else if( cMaskOthers )
+                        {
+                            fReadoutChipInterface->WriteChipReg( cChip, "TestPulse" , (int)0);
+                        }
+                        else if(!cMaskOthers)
+                        {
+                            fReadoutChipInterface->WriteChipReg ( cChip, "TestPulseGroup", cTPgroup );
+                            fReadoutChipInterface->WriteChipReg( cChip, "TestPulse" , (int)1 );
+                        }
+                    }//roc 
+                }//hybrid
+            }//module
+        }
+        
         for ( uint8_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++ )
         {
-            uint32_t cN = 0;
             int cNStubs = 0;
-            uint32_t cNevents = 0 ;
-        // Take Data for all Modules
+            // Take Data for all Modules
             //here set the stub latency
-            for (auto cReg : getStubLatencyName (theBoard->getBoardType() ) )
-                fBeBoardInterface->WriteBoardReg (theBoard, cReg, cLat);
+            for (auto cReg : getStubLatencyName (cBeBoard->getBoardType() ) )
+                fBeBoardInterface->WriteBoardReg (cBeBoard, cReg, cLat);
 
-            fBeBoardInterface->Start(theBoard);
-            do
+            this->ReadNEvents( cBeBoard , this->findValueInSettings("Nevents"));
+            const std::vector<Event*>& cEvents = this->GetEvents ( cBeBoard );
+            // Loop over Events from this Acquisition
+            for ( auto& cEvent : cEvents )
             {
-                uint32_t cNeventsReadBack = ReadData( theBoard );
-                if( cNeventsReadBack == 0 )
+                auto cEventCount = cEvent->GetEventCount();
+                LOG (INFO) << BOLDBLUE << "\t\t..Event " << +cEventCount << RESET;
+                for(auto cOpticalGroup : *cBoard)
                 {
-                    LOG (INFO) << BOLDRED << "..... Read back " << +cNeventsReadBack << " events!! Why?!" << RESET ;
-                    continue;
-                }
+                    for (auto cHybrid : *cOpticalGroup)
+                    {
+                        auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                        if( cCic != NULL )
+                        {
+                            auto cBx = cEvent->BxId ( cHybrid->getId() );
+                            LOG (INFO) << BOLDBLUE << "\t\t..Hybrid " 
+                                << +cHybrid->getId() << " BxID " << +cBx << RESET;
+                        }
 
-                const std::vector<Event*>& events = GetEvents ( theBoard );
-                cNevents += events.size(); 
-
-                // Loop over Events from this Acquisition
-                for ( auto& cEvent : events )
-                {
-                    for(auto cOpticalGroup : *pBoard)
-                        for ( auto cFe : *cOpticalGroup )
-                            cNStubs += countStubs ( static_cast<OuterTrackerModule*>(cFe), cEvent, "module_stub_latency", cLat );
-                }
-
-            }while( cNevents < fNevents );
-            fBeBoardInterface->Stop(theBoard);
-            LOG (INFO) << "Stub Latency " << +cLat << " Stubs " << cNStubs  << " Events " << cN ;
+                        for (auto cChip : *cHybrid) 
+                        {
+                            auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
+                            std::vector<uint8_t> cBendLUT = cReadoutChipInterface->readLUT( cChip );
+                            auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId() );
+                            auto cStubs = cEvent->StubVector (cHybrid->getId(), cChip->getId() );
+                            int cMatchedHits=0; 
+                            for( auto cStub : cStubs )
+                            {
+                                // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5 strips
+                                //uint8_t cBendCode = cBendLUT[ (cStub.getBend()/2. - (-7.0))/0.5 ]; 
+                                // find bend code 
+                                auto cIter = std::find(cBendLUT.begin(), cBendLUT.end(), cStub.getBend());
+                                uint16_t cIndex = std::distance(cBendLUT.begin(), cIter);
+                                int cBend = (0.5*cIndex + (-7.0))*2.0;
+                                auto cExpectedHits = cReadoutChipInterface->stubInjectionPattern(cChip, cStub.getPosition(), cBend);
+                                LOG (INFO) << BOLDBLUE << "\t\t\t...Stub with seed " << +cStub.getPosition() 
+                                    << " and bendCode " << +cStub.getBend() 
+                                    << " which is bend " << +cBend << " half-strips"
+                                    << RESET;
+                                // check that the hits match 
+                                for( auto cHit : cHits )
+                                {
+                                    auto cFound = std::find( cExpectedHits.begin(), cExpectedHits.end() , cHit);
+                                    cMatchedHits += (cFound!=cExpectedHits.end()) ? 1 : 0;    
+                                }
+                                cNStubs += 1;
+                            }
+                            //
+                            if( cStubs.size() > 0 )
+                                LOG (INFO) << BOLDGREEN << "\t\t\t...Found "
+                                    << +cStubs.size() 
+                                    << " stubs in the readout."
+                                    << " and "
+                                    << +cHits.size()
+                                    << " hits of which .. "
+                                    << +cMatchedHits 
+                                    << " match the stubs!"
+                                    << RESET;
+                            else
+                                LOG (INFO) << BOLDRED << "\t\t\t...Found "
+                                << +cStubs.size() 
+                                << " stubs in the readout."
+                                << " and "
+                                << +cHits.size()
+                                << " hits of which .. "
+                                << +cMatchedHits 
+                                << " match the stubs!"
+                                << RESET;
+                            
+                        }//chip
+                    }//hybrid
+                }//modules
+                // for(auto cOpticalGroup : *pBoard)
+                //     for ( auto cFe : *cOpticalGroup )
+                //         cNStubs += countStubs ( static_cast<OuterTrackerModule*>(cFe), cEvent, "module_stub_latency", cLat );
+            }
+            LOG (INFO) << BOLDBLUE << "Stub Latency " << +cLat 
+                << " Stubs " << cNStubs  
+                << " in " << +cEvents.size() << " events" 
+                << RESET ;
 
             //ReadNEvents ( theBoard, fNevents );
             //const std::vector<Event*>& events = GetEvents ( theBoard );
@@ -392,36 +472,6 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
                         }
                     }
                 }
-                
-                // if interested in the tdc phase then do the latency scan (trigger only) with TDC on
-                // scan 4 clock cycles around optimal latency
-                // something fishy here ... needs to be fixed (binning on TDC histogram is weird)
-                // if( !pNoTdc )
-                // {
-                //     // I think I need to re-configure the histogram w/ TDC
-                //     TString cName =  Form ( "h_module_latency_Fe%d", cFe->getFeId() );
-                //     TObject* cObj = gROOT->FindObject ( cName );
-                //     if ( cObj ) delete cObj;
-
-                //     int cLatencyStart = std::max( 0, (int)cOptimalLatencies.second - 2 );
-                //     int cLatencyRange = 4 ; 
-                //     TH1F* cLatHist = new TH1F ( cName, Form ( "Latency FE%d; Latency; # of Hits", cFe->getFeId() ), (cLatencyRange) * fTDCBins, cLatencyStart,  cLatencyStart + (cLatencyRange )  * fTDCBins );
-                //     //modify the axis labels
-                //     uint32_t pLabel = cLatencyStart ;
-
-                //     for (uint32_t cLatency = cLatencyStart; cLatency < cLatencyStart + cLatencyRange; ++cLatency)
-                //     {
-                //         for (uint32_t cPhase = 0; cPhase < fTDCBins; ++cPhase)
-                //         {
-                //             int cBin = 1 + cLatHist->GetXaxis()->FindBin( convertLatencyPhase (cLatencyStart, cLatency, cPhase) );
-                //             if( cBin == 0 )
-                //                 LOG(INFO) << BOLDRED << "!!!! " << +cLatency << " [latency], " << cLatencyStart << " [start latency] " << +cPhase << " [TDC phase] : converted latency " << convertLatencyPhase (cLatencyStart, cLatency, cPhase) <<  RESET ; 
-                //             cLatHist->GetXaxis()->SetBinLabel (cBin, Form ("%d+%d", cLatency, cPhase) );
-                //         }
-                //     }
-                    
-                //     ScanLatency ( cLatencyStart , cLatencyRange , false );
-                // }
 
                 LOG (INFO) << BOLDRED << "************************************************************************************" << RESET ;
                 LOG (INFO) << BOLDRED << "For FE" << +cFe->getId() << " found optimal latencies to be : " << RESET ; 
