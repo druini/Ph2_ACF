@@ -81,6 +81,8 @@ void SSALatencyScan::run(void)
 				{
 					ReadoutChip *theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard ->getIndex())->at(cOpticalGroup ->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 					this->fReadoutChipInterface->WriteChipReg(theChip, "L1-Latency_LSB", lat);
+					this->fReadoutChipInterface->WriteChipReg(theChip, "L1Offset_1_ALL", lat);
+
 				}
 
 			}
