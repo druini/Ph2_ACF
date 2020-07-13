@@ -206,6 +206,7 @@ void SSASCurve::run(void)
 								{
 									Nstrip+=1.0;
 									curh=hits[channelNumber];
+									// now hit vector contains number 
 									// if (SyncDebug)
 									// {
 									// 	curh=0;
