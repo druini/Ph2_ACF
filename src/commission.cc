@@ -190,10 +190,10 @@ int main ( int argc, char* argv[] )
                 if( cAntenna)cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential );
             #endif
 
-            cLatencyScan.ScanLatency ( cStartLatency, cLatencyRange);
+            cLatencyScan.StubLatencyScan ( cStartLatency, cLatencyRange);
             }
 
-            if ( cStubLatency ) cLatencyScan.ScanStubLatency ( cStartLatency, cLatencyRange );
+            if ( cStubLatency ) cLatencyScan.StubLatencyScan ( cStartLatency, cLatencyRange );
 
             // if antenna was being used ... then disable it again at the end 
             #ifdef __ANTENNA__
