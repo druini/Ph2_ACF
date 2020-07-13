@@ -43,7 +43,7 @@ export AMC13DIR=$CACTUSINCLUDE/amc13
 export ANTENNADIR=$BASE_DIR/../CMSPh2_AntennaDriver
 export USBINSTDIR=$BASE_DIR/../Ph2_USBInstDriver
 export EUDAQDIR=$BASE_DIR/../eudaq
-export POWERSUPPLYDIR=$BASE_DIR/../power-supply
+export POWERSUPPLYDIR=$BASE_DIR/../power_supply
 
 ###########
 # ANTENNA #
