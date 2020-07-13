@@ -175,12 +175,12 @@ For more information on the firmware, please check the doc directory of https://
 
     iii. click the `Add variable` button
 
-        - add key: $USER_NAME and value: <your CERN user name>
+        - add key: USER_NAME and value: <your CERN user name>
 
     iv. click the `Add variable` button
 
         - select the flag `Mask variable`
-        - add key: $USER_PASS and value: <your CERN password encoded to base64>
+        - add key: USER_PASS and value: <your CERN password encoded to base64>
           e.g encode "thisword": printf "thisword" | base64
 
 2. Enable shared Runners (if not enabled)
