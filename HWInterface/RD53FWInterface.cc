@@ -1072,14 +1072,24 @@ namespace Ph2_HwInterface
     // #############################
     if (pBoard != nullptr)
       {
-        Module* hybrid = pBoard->at(optGroup_id)->at(hybrid_id);
-        if (hybrid != nullptr)
+        auto opticalGroup = std::find_if(pBoard->begin(), pBoard->end(), [&] (OpticalGroupContainer* cOpticalGroup)
+                                         {
+                                           return cOpticalGroup->getId() == optGroup_id;
+                                         });
+        if (opticalGroup != pBoard->end())
           {
-            auto it = std::find_if(hybrid->begin(), hybrid->end(), [=] (ChipContainer* pChip)
-                                   {
-                                     return static_cast<RD53*>(pChip)->getChipLane() == chip_lane;
-                                   });
-            if (it != hybrid->end()) return (*it)->getId();
+            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [&] (ModuleContainer* cHybrid)
+                                       {
+                                         return cHybrid->getId() == hybrid_id;
+                                       });
+            if (hybrid != (*opticalGroup)->end())
+              {
+                auto it = std::find_if((*hybrid)->begin(), (*hybrid)->end(), [&] (ChipContainer* pChip)
+                                       {
+                                         return static_cast<RD53*>(pChip)->getChipLane() == chip_lane;
+                                       });
+                if (it != (*hybrid)->end()) return (*it)->getId();
+              }
           }
       }
     return -1; // Chip not found
@@ -1249,6 +1259,7 @@ namespace Ph2_HwInterface
   // # injType == 2 --> Digital #
   // ############################
   {
+    const double FSMperiod = 100e-9; // Referred to 10 MHz clock [us]
     enum INJtype { None, Analog , Digital };
     enum INJdelay
     {
@@ -1271,7 +1282,7 @@ namespace Ph2_HwInterface
         // #######################################
         // # Configuration for digital injection #
         // #######################################
-        RD53::CalCmd calcmd_first(1,2,8,0,0);
+        RD53::CalCmd calcmd_first(1,0,4,0,0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data         = calcmd_first.getCalCmd(chipId);
         RD53::CalCmd calcmd_second(0,0,0,0,0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data        = calcmd_second.getCalCmd(chipId);
@@ -1279,10 +1290,12 @@ namespace Ph2_HwInterface
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 0;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr        = 0;
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = false;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en                 = false;
       }
     else if (injType == INJtype::Analog)
       {
@@ -1297,10 +1310,12 @@ namespace Ph2_HwInterface
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = INJdelay::SecondCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr        = 0;
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en           = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en          = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en                 = false;
 
         // @TMP@
         if (enableAutozero == true)
@@ -1313,8 +1328,12 @@ namespace Ph2_HwInterface
       }
     else if (injType == INJtype::None)
       {
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en             = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop      = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en      = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en          = false;
 
         // @TMP@
         if (enableAutozero == true)
@@ -1325,6 +1344,13 @@ namespace Ph2_HwInterface
           }
       }
     else LOG (ERROR) << BOLDRED << "Option not recognized " << injType << RESET;
+
+    LOG (INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
+               << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  +
+                                     RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal +
+                                     RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             +
+                                     RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr))
+               << std::setprecision(-1) << RESET << GREEN << " Hz" << RESET;
 
 
     // ##############################

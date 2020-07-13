@@ -1,0 +1,63 @@
+# YAML script for CI of Ph2_ACF Software/Middleware
+# Author: Emery Nibigira (IPHC-Strasbourg)
+#         emery.nibigira@cern.ch
+
+# The pipeline starts when a merge request is created
+
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+
+image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
+
+stages:
+  - compile
+  - run
+  - check
+
+build:
+  stage: compile
+  before_script:
+    - cat setup.sh | sed -e "s/source/#source/" > ci_setup.sh
+    - source ./ci_setup.sh
+  script:
+    - mkdir -p build; cd build
+    - cmake ..
+    - make -j4
+  artifacts:
+    paths:
+      - ci_setup.sh
+      - bin/calibrate
+    expire_in: 1 week
+
+run_on_2S:
+  stage: run
+  dependencies:
+    - build
+  before_script:
+    - printf $USER_PASS | base64 -d | kinit $USER_NAME
+    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
+    - python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
+  script:
+    - python ci_tools/status_manager.py 2s_status.txt --set_status 1
+    - source ./ci_setup.sh
+    - calibrate -b -f ci_tools/CMS2S.xml -n -o Results_2S/
+  after_script:
+    - python ci_tools/status_manager.py 2s_status.txt --set_status 0
+  artifacts:
+    paths:
+      - Results_2S
+      - ci_tools
+    expire_in: 1 week
+
+check_run_on_2S:
+  stage: check
+  dependencies:
+    - run_on_2S
+  script:
+    - cp Results_2S/*/*.root .
+    - python ci_tools/plot_hist.py PedestalEqualizationResults.root "Detector/Board_0/OpticalGroup_0/Module_0/D_B(0)_O(0)_ModuleNoiseDistribution_Module(0)" -o plots
+  artifacts:
+    paths:
+      - plots
+    expire_in: 1 week

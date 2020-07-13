@@ -57,7 +57,9 @@ int main( int argc, char* argv[] )
 	std::chrono::milliseconds LongPOWait( 500 );
 	std::chrono::milliseconds ShortWait( 10 );
 
-	//cTool.fMPAInterface->activate_I2C_chip();
+	auto theMPAInterface = static_cast<MPAInterface*>(cTool.fReadoutChipInterface);
+
+	//theMPAInterface->activate_I2C_chip();
 
 	std::pair<uint32_t, uint32_t> rows = {0,16};
 	std::pair<uint32_t, uint32_t> cols = {0,120};
@@ -74,13 +76,13 @@ int main( int argc, char* argv[] )
 	//ReadoutChip* theMPA = static_cast<ReadoutChip*>(cMPA);
 	
 
-	cTool.fMPAInterface->Set_threshold(cMPA,100);
-	cTool.fMPAInterface->Activate_sync(cMPA);
-	cTool.fMPAInterface->Activate_pp(cMPA);
-	cTool.fMPAInterface->Set_calibration(cMPA,100);
+	theMPAInterface->Set_threshold(cMPA,100);
+	theMPAInterface->Activate_sync(cMPA);
+	theMPAInterface->Activate_pp(cMPA);
+	theMPAInterface->Set_calibration(cMPA,100);
 	Stubs curstub;
 	uint32_t npixtot = 0;
-    //mysyscontroller.cTool.fMPAInterface->Start ( pBoard );
+    //mysyscontroller.theMPAInterface->Start ( pBoard );
 	for(size_t row=rows.first; row<rows.second; row++)
 		{
 		for(size_t col=cols.first; col<cols.second; col++)
@@ -89,12 +91,12 @@ int main( int argc, char* argv[] )
 
 				std::this_thread::sleep_for( ShortWait );
 				uint32_t gpix=theMPA->PNglobal(std::pair <uint32_t,uint32_t> (row,col));   
-				cTool.fMPAInterface->Disable_pixel(cMPA,0);
-				cTool.fMPAInterface->Enable_pix_BRcal(cMPA,gpix, "rise", "edge");
+				theMPAInterface->Disable_pixel(cMPA,0);
+				theMPAInterface->Enable_pix_BRcal(cMPA,gpix, "rise", "edge");
 				std::this_thread::sleep_for( ShortWait );
 				static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(1000);
 				std::this_thread::sleep_for( ShortWait );
-                //cTool.fMPAInterface->ReadData ( pBoard );
+                //theMPAInterface->ReadData ( pBoard );
                 const std::vector<Event*>& events = cTool.GetEvents ( pBoard );
 		//const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
 
@@ -107,7 +109,7 @@ int main( int argc, char* argv[] )
 				npixtot+=1;
 			}
 		}
-    //mysyscontroller.cTool.fMPAInterface->Stop ( pBoard );
+    //mysyscontroller.theMPAInterface->Stop ( pBoard );
 
 	std::cout <<"Numpix -- "<< npixtot <<std::endl;
 

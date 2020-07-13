@@ -203,45 +203,48 @@ std::map<ModuleContainer*, uint8_t> LatencyScan::ScanStubLatency ( uint8_t pStar
             for (auto cReg : getStubLatencyName (theBoard->getBoardType() ) )
                 fBeBoardInterface->WriteBoardReg (theBoard, cReg, cLat);
 
-            fBeBoardInterface->Start(theBoard);
-            do
-            {
-                uint32_t cNeventsReadBack = ReadData( theBoard );
-                if( cNeventsReadBack == 0 )
-                {
-                    LOG (INFO) << BOLDRED << "..... Read back " << +cNeventsReadBack << " events!! Why?!" << RESET ;
-                    continue;
-                }
+            // fBeBoardInterface->Start(theBoard);
+            // do
+            // {
+            //     uint32_t cNeventsReadBack = ReadData( theBoard );
+            //     if( cNeventsReadBack == 0 )
+            //     {
+            //         LOG (INFO) << BOLDRED << "..... Read back " << +cNeventsReadBack << " events!! Why?!" << RESET ;
+            //         continue;
+            //     }
 
-                const std::vector<Event*>& events = GetEvents ( theBoard );
-                cNevents += events.size(); 
+            //     const std::vector<Event*>& events = GetEvents ( theBoard );
+            //     cNevents += events.size(); 
 
-                // Loop over Events from this Acquisition
-                for ( auto& cEvent : events )
-                {
-                    for(auto cOpticalGroup : *pBoard)
-                        for ( auto cFe : *cOpticalGroup )
-                            cNStubs += countStubs ( static_cast<OuterTrackerModule*>(cFe), cEvent, "module_stub_latency", cLat );
-                }
+            //     // Loop over Events from this Acquisition
+            //     for ( auto& cEvent : events )
+            //     {
+            //         for(auto cOpticalGroup : *pBoard)
+            //             for ( auto cFe : *cOpticalGroup )
+            //                 cNStubs += countStubs ( static_cast<OuterTrackerModule*>(cFe), cEvent, "module_stub_latency", cLat );
+            //     }
 
-            }while( cNevents < fNevents );
-            fBeBoardInterface->Stop(theBoard);
-            LOG (INFO) << "Stub Latency " << +cLat << " Stubs " << cNStubs  << " Events " << cN ;
+            // }while( cNevents < fNevents );
+            // fBeBoardInterface->Stop(theBoard);
+            // LOG (INFO) << "Stub Latency " << +cLat << " Stubs " << cNStubs  << " Events " << cN ;
 
-            //ReadNEvents ( theBoard, fNevents );
-            //const std::vector<Event*>& events = GetEvents ( theBoard );
+            ReadNEvents ( theBoard, fNevents );
+            const std::vector<Event*>& events = GetEvents ( theBoard );
+            cNevents += events.size();
 
             // if(cN <3 ) LOG(INFO) << *cEvent ;
 
             // Loop over Events from this Acquisition
-            //for ( auto& cEvent : events )
-            //{
-            //    for ( auto cFe : theBoard->fModuleVector )
-            //        cNStubs += countStubs ( cFe, cEvent, "module_stub_latency", cLat );
-            //
-            //    cN++;
-            //}
-            //LOG (INFO) << "Stub Latency " << +cLat << " Stubs " << cNStubs  << " Events " << cN ;
+            for (auto & cEvent : events)
+            {
+                for ( auto cOpticalGroup : *pBoard )
+                {
+                    for ( auto cFe : *cOpticalGroup )
+                        cNStubs += countStubs ( static_cast<OuterTrackerModule*>(cFe), cEvent, "module_stub_latency", cLat );
+                //    cN++;
+                }
+            }
+            LOG (INFO) << "Stub Latency " << +cLat << " Stubs " << cNStubs  << " Events " << cN ;
 
         }
 

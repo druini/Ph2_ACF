@@ -30,7 +30,7 @@ Firmware setup:
 1. Check whether the DIP switches on FC7 board are setup for the use of a microSD card (`out-in-in-in-out-in-in-in`)
 2. Insert a microSD card in the PC and run `/sbin/fdisk -l` to understand to which dev it's attached to (`/dev/sd_card_name`)
 3. Upload a golden firmware* on the microSD card (read FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
-4. Download the proper IT firmware version from https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/releases
+4. Download the proper IT firmware version from https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/-/releases
 5. Plug the microSD card in the FC7
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware (see instructions: `Setup and run the IT-DAQ` before running this command)
 
@@ -164,6 +164,30 @@ fi
 Firmware for the FC7 can be found in /firmware. Since the "old" FMC flavour is deprecated, only new FMCs (both connectors on the same side) are supported.
 You'll need Xilinx Vivado and a Xilinx Platform Cable USB II (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
 For more information on the firmware, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware
+
+### Gitlab CI setup for Developers (required to submit merge requests!!!)
+
+1. Add predefined variables
+
+    i. from your fork go to `Ph2_ACF > settings > CI/CD`
+
+    ii. expand the `Variables` section
+
+    iii. click the `Add variable` button
+
+        - add key: $USER_NAME and value: <your CERN user name>
+
+    iv. click the `Add variable` button
+
+        - select the flag `Mask variable`
+        - add key: $USER_PASS and value: <your CERN password encoded to base64>
+          e.g encode "thisword": printf "thisword" | base64
+
+2. Enable shared Runners (if not enabled)
+
+    i. from `settings > CI/CD` expand the `Runners` section
+
+    ii. click the `Allow shared Runners` button
 
 
 ### Setup on CC7 (Scroll down for instructions on setting up on SLC6)

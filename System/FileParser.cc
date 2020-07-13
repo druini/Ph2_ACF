@@ -454,6 +454,7 @@ namespace Ph2_System
   {
     //FrontEndType cType = pMPA->getFrontEndType();
   }
+
   void FileParser::parseModuleContainer (pugi::xml_node pModuleNode, OpticalGroup* pOpticalGroup, std::ostream& os, BeBoard* pBoard)
   {
     bool cStatus = pModuleNode.attribute("Status").as_bool();
@@ -471,14 +472,13 @@ namespace Ph2_System
         Module* cModule;
         if (pBoard->getBoardType() == BoardType::RD53)
           {
-            cModule = pOpticalGroup->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new Module ( pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
+            cModule = pOpticalGroup->addModuleContainer(pModuleNode.attribute("FeId").as_int(), new Module (pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute("FeId").as_int(), pModuleNode.attribute("FeId").as_int()));
           }
         else
           {
             cModule = pOpticalGroup->addModuleContainer( pModuleNode.attribute ( "FeId" ).as_int(), new OuterTrackerModule ( pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pModuleNode.attribute ( "FeId" ).as_int(),  pModuleNode.attribute ( "FeId" ).as_int() ));
             static_cast<OuterTrackerModule*>(cModule)->setLinkId( pModuleNode.attribute ( "LinkId" ).as_int() );
           }
-        // pOpticalGroup->addModule ( cModule );
 
         std::string cConfigFileDirectory;
         for (pugi::xml_node cChild : pModuleNode.children())
@@ -563,6 +563,8 @@ namespace Ph2_System
                                       cValueFromFile = (cValueFromFile == 320) ? 0 : 1; 
                                     if( cAttribute == "clockFrequency" && cCIC1 )
                                       continue;
+                                    if(cAttribute == "enableSparsification")
+                                      pBoard->setSparsification(bool(cValueFromFile));
 
                                     os << GREEN << "|\t|\t|\t|---- Setting " << cAttribute << " to  " << cValueFromFile << "\n" << RESET;
                                     LOG (DEBUG) << BOLDBLUE << " Global settings " << cAttribute << " [ " << *it << " ]-- set to " << cValueFromFile <<  RESET;
