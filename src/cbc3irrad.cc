@@ -332,7 +332,7 @@ int main ( int argc, char* argv[] )
             //now take some data and save the binary files
             std::string cBinaryDataFileName = gResultDirectory + "/DAQ_data.raw";
             cTool.addFileHandler (cBinaryDataFileName, 'w');
-            cTool.initializeFileHandler();
+            cTool.initializeWriteFileHandler();
             cTool.ConfigureHw();
             BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at ( 0 ));
             uint32_t cN = 1;

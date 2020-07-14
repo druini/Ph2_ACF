@@ -59,7 +59,7 @@ void GainOptimization::Start (int currentRun)
   if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
-      this->initializeFileHandler();
+      this->initializeWriteFileHandler();
     }
 
   GainOptimization::run();
@@ -108,7 +108,7 @@ void GainOptimization::initializeFiles (const std::string fileRes_, int currentR
   if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
-      this->initializeFileHandler();
+      this->initializeWriteFileHandler();
     }
 
 #ifdef __USE_ROOT__

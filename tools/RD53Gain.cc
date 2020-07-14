@@ -79,7 +79,7 @@ void Gain::Start (int currentRun)
   if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Gain.raw", 'w');
-      this->initializeFileHandler();
+      this->initializeWriteFileHandler();
     }
 
   Gain::run();
@@ -132,7 +132,7 @@ void Gain::initializeFiles (const std::string fileRes_, int currentRun)
   if ((currentRun >= 0) && (saveBinaryData == true))
     {
       this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Gain.raw", 'w');
-      this->initializeFileHandler();
+      this->initializeWriteFileHandler();
     }
 
 #ifdef __USE_ROOT__

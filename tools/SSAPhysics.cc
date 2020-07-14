@@ -41,7 +41,7 @@ void SSAPhysics::Start(int currentRun)
   {
       char runString[6];
       sprintf(runString, "%06d", currentRun);
-      this->addFileHandler(std::string(RESULTDIR) + "/run_" + runString + ".raw", 'w');this->initializeFileHandler();
+      this->addFileHandler(std::string(RESULTDIR) + "/run_" + runString + ".raw", 'w'); this->initializeWriteFileHandler();
   }
 
   for (const auto cBoard : *fDetectorContainer)

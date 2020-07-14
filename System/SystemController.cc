@@ -125,7 +125,7 @@ namespace Ph2_System
         fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
       }
 
-    if (fWriteHandlerEnabled == true) this->initializeFileHandler();
+    if (fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
   }
 
   void SystemController::InitializeSettings (const std::string& pFilename, std::ostream& os, bool pIsFile)
@@ -135,9 +135,15 @@ namespace Ph2_System
 
   void SystemController::ConfigureHw (bool bIgnoreI2c)
   {
+    if (fDetectorContainer == nullptr)
+      {
+        LOG (ERROR) << BOLDRED << "Hardware not initialized: run SystemController::InitializeHw first" << RESET;
+        return;
+      }
+
     LOG (INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from .xml file @@@" << RESET;
 
-    for (auto cBoard : *fDetectorContainer)
+    for (const auto cBoard : *fDetectorContainer)
       {
         if (cBoard->getBoardType() != BoardType::RD53)
           {
@@ -250,9 +256,9 @@ namespace Ph2_System
       }
   }
 
-  void SystemController::initializeFileHandler()
+  void SystemController::initializeWriteFileHandler()
   {
-    for (const auto* cBoard : *fDetectorContainer)
+    for (const auto cBoard : *fDetectorContainer)
       {
         uint32_t cNChip        = 0;
         uint32_t cBeId         = cBoard->getId();
