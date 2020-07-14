@@ -101,28 +101,48 @@ namespace Ph2_System
     fStreamerEnabled = streamData;
     if (streamData == true) fNetworkStreamer = new TCPPublishServer(6000,1);
 
+    //std::stringstream outp;
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
-
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
-    const BeBoard* theFirstBoard = fDetectorContainer->at(0);
-
-    if (theFirstBoard->getBoardType() != BoardType::RD53)
+    if( fDetectorContainer->size() > 0 ) 
+    {
+      const BeBoard* cFirstBoard = fDetectorContainer->at(0);
+      if( cFirstBoard != NULL )
       {
-        OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>((theFirstBoard->at(0))->at(0));
-        auto cChipType = (static_cast<ReadoutChip*>(theOuterTrackerModule->at(0))->getFrontEndType());
-        if (cChipType == FrontEndType::CBC3)
-
-          fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
-        else if(cChipType == FrontEndType::SSA)
-          fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
-        fCicInterface = new CicInterface(fBeBoardFWMap);
+        if (cFirstBoard->getBoardType() != BoardType::RD53)
+        {
+          LOG (INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
+          if( cFirstBoard->size() > 0 )
+          {
+            auto cFirstOpticalGroup = cFirstBoard->at(0);
+            LOG (INFO) << BOLDBLUE << "\t...Initializing HwInterfaces for OpticalGroups.." << RESET;
+            if( cFirstOpticalGroup->size() > 0 )
+            {
+              //OuterTrackerModule* cFirstHybrid = static_cast<OuterTrackerModule*>(cFirstOpticalGroup->at(0));
+              auto cFirstROC = cFirstOpticalGroup->at(0);
+              if( cFirstROC->size() > 0 )
+              {
+                LOG (INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for ROCs + CIC" << RESET;
+                auto cChipType = cFirstROC->getFrontEndType();
+                if (cChipType == FrontEndType::CBC3)
+                  fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
+                else if(cChipType == FrontEndType::SSA)
+                  fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+                else if(cChipType == FrontEndType::MPA)
+                  fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
+                fCicInterface = new CicInterface(fBeBoardFWMap);
+              }
+            }
+          }
+        }
+        else
+        {
+          flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
+          fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
+        }
       }
-    else
-      {
-        flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
-        fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
-      }
+    }
 
     if (fWriteHandlerEnabled == true) this->initializeFileHandler();
   }
