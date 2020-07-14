@@ -2,6 +2,7 @@
 
 #include "Utils/Utilities.h"
 #include "Utils/Timer.h"
+#include "PSHybridTester.h"
 #include "tools/SSASCurveAsync.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/ShortFinder.h"
@@ -10,7 +11,6 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/DataChecker.h"
 #include "Utils/argvparser.h"
-#include "ExtraChecks.h"
 
 #ifdef __USE_ROOT__
     #include "TROOT.h"
@@ -21,11 +21,6 @@
 
 #ifdef __NAMEDPIPE__
     #include "gui_logger.h"
-#endif
-
-
-#ifdef __TCUSB__
-  #include "USB_a.h"
 #endif
 
 
@@ -88,8 +83,8 @@ int main ( int argc, char* argv[] )
 
     // now query the parsing results
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/Commissioning.xml";
-    bool cTune = ( cmd.foundOption ( "tuneOffsets" ) ) ;
-    bool cMeasurePedeNoise = ( cmd.foundOption( "measurePedeNoise") ); 
+    //bool cTune = ( cmd.foundOption ( "tuneOffsets" ) ) ;
+    //bool cMeasurePedeNoise = ( cmd.foundOption( "measurePedeNoise") ); 
     // bool cFindOpens = (cmd.foundOption ("findOpens") )? true : false;
     // bool cShortFinder = ( cmd.foundOption ( "findShorts" ) ) ? true : false;
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
@@ -111,17 +106,26 @@ int main ( int argc, char* argv[] )
     #endif
     
     std::stringstream outp;
-    Tool cTool;
-    cTool.InitializeHw ( cHWFile, outp);
-    cTool.InitializeSettings ( cHWFile, outp );
-    LOG (INFO) << outp.str();
-    cTool.CreateResultDirectory ( cDirectory );
-    cTool.InitResultFile ( cResultfile );
-    cTool.ConfigureHw ();
+    // Tool cTool;
+    // cTool.InitializeHw ( cHWFile, outp);
+    // cTool.InitializeSettings ( cHWFile, outp );
+    // LOG (INFO) << outp.str();
+    // cTool.CreateResultDirectory ( cDirectory );
 
-    // measure hybrid current and temperature 
-    #ifdef __TCUSB__
-    #endif
+    // hybrid testing tool 
+    PSHybridTester cHybridTester;
+    cHybridTester.InitializeHw ( cHWFile, outp);
+    cHybridTester.InitializeSettings ( cHWFile, outp );
+    cHybridTester.CreateResultDirectory ( cDirectory );
+    cHybridTester.InitResultFile ( cResultfile );
+    //set voltage  on PS FEH 
+    cHybridTester.SetHybridVoltage();
+    //check voltage on PS FEH 
+    cHybridTester.CheckHybridVoltages();
+    LOG (INFO) << outp.str();
+    //select CIC readout 
+    cHybridTester.SelectCIC(false);
+    cHybridTester.ConfigureHw ();
 
     // align back-end 
     /*BackEndAlignment cBackEndAligner;
@@ -146,130 +150,74 @@ int main ( int argc, char* argv[] )
     if( cmd.foundOption ( "checkAsync" ) )
     {
         DataChecker cDataChecker;
-        cDataChecker.Inherit (&cTool);
+        cDataChecker.Inherit (&cHybridTester);
         cDataChecker.AsyncTest();
         //cDataChecker.resetPointers();
     }
     
-    // equalize thresholds on readout chips
-    if( cTune ) 
-    { 
-        
-        t.start();
-        // now create a PedestalEqualization object
-        PedestalEqualization cPedestalEqualization;
-        cPedestalEqualization.Inherit (&cTool);
-        // second parameter disables stub logic on CBC3
-        cPedestalEqualization.Initialise ( true, true );
-        cPedestalEqualization.FindVplus();
-        cPedestalEqualization.FindOffsets();
-        cPedestalEqualization.writeObjects();
-        cPedestalEqualization.dumpConfigFiles();
-        cPedestalEqualization.resetPointers();
-        t.show ( "Time to tune the front-ends on the system: " );
-    }
-    #ifdef __TCUSB__
-    #endif
-
-
-    // measure noise on FE chips 
-    if (cMeasurePedeNoise)
-    {
-        t.start();
-        //if this is true, I need to create an object of type PedeNoise from the members of Calibration
-        //tool provides an Inherit(Tool* pTool) for this purpose
-        PedeNoise cPedeNoise;
-        cPedeNoise.Inherit (&cTool);
-        //second parameter disables stub logic on CBC3
-        cPedeNoise.Initialise (true, true); // canvases etc. for fast calibration
-        cPedeNoise.measureNoise();
-        cPedeNoise.writeObjects();
-        cPedeNoise.dumpConfigFiles();
-        t.stop();
-        t.show ( "Time to Scan Pedestals and Noise" );
-    }
-    
-    if( cmd.foundOption ( "checkAntenna" ) )
-    {
-        cTool.setSameDac("Threshold", 1);
-        for(auto cBoard : *cTool.fDetectorContainer)
-        {
-            // read counters 
-            BeBoard *cBeBoard = static_cast<BeBoard*>(cBoard);
-            std::vector<uint32_t> cData(0);
-            (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->ReadNEvents(cBeBoard, 100, cData);
-            for( auto cDataWord : cData )
-            {
-                auto cCounter0 = (cDataWord & 0xFFFF);
-                auto cCounter1 = (cDataWord & ((0xFFFF) << 16)) >> 16 ;
-                LOG (INFO) << BOLDBLUE << std::bitset<32>(cDataWord) 
-                    << "\t" << std::bitset<16>(cCounter0) << " [ " << +cCounter0  << " ]" 
-                    << "\t" << std::bitset<16>(cCounter1) << " [ " << +cCounter1  << " ]"
-                    << RESET;
-            }
-        }
-    }
-    // // For next step... set all thresholds on CBCs to 560 
-    // if( cmd.foundOption ( "threshold" )  )
+    // // equalize thresholds on readout chips
+    // if( cTune ) 
     // { 
-    //     uint32_t  cThreshold = ( cmd.foundOption ( "threshold" ) )   ?  convertAnyInt ( cmd.optionValue ( "threshold" ).c_str() ) :  560 ;
-    //     cTool.setSameDac("VCth", cThreshold);
-    //     LOG (INFO) << BOLDBLUE << "Threshold for next steps is set to " << +cThreshold << " DAC units." << RESET;
+        
+    //     t.start();
+    //     // now create a PedestalEqualization object
+    //     PedestalEqualization cPedestalEqualization;
+    //     cPedestalEqualization.Inherit (&cTool);
+    //     // second parameter disables stub logic on CBC3
+    //     cPedestalEqualization.Initialise ( true, true );
+    //     cPedestalEqualization.FindVplus();
+    //     cPedestalEqualization.FindOffsets();
+    //     cPedestalEqualization.writeObjects();
+    //     cPedestalEqualization.dumpConfigFiles();
+    //     cPedestalEqualization.resetPointers();
+    //     t.show ( "Time to tune the front-ends on the system: " );
     // }
-    // // Inject charge with antenna circuit and look for opens 
-    // if ( cFindOpens )
+    // #ifdef __TCUSB__
+    // #endif
+
+
+    // // measure noise on FE chips 
+    // if (cMeasurePedeNoise)
     // {
-    //     #ifdef __ANTENNA__
-    //         int  cAntennaDelay = ( cmd.foundOption ( "antennaDelay" ) )   ?  convertAnyInt ( cmd.optionValue ( "antennaDelay" ).c_str() ) : -1;
-    //         int  cLatencyRange = ( cmd.foundOption ( "latencyRange" ) )   ?  convertAnyInt ( cmd.optionValue ( "latencyRange" ).c_str() ) :  -1;
+    //     t.start();
+    //     //if this is true, I need to create an object of type PedeNoise from the members of Calibration
+    //     //tool provides an Inherit(Tool* pTool) for this purpose
+    //     PedeNoise cPedeNoise;
+    //     cPedeNoise.Inherit (&cTool);
+    //     //second parameter disables stub logic on CBC3
+    //     cPedeNoise.Initialise (true, true); // canvases etc. for fast calibration
+    //     cPedeNoise.measureNoise();
+    //     cPedeNoise.writeObjects();
+    //     cPedeNoise.dumpConfigFiles();
+    //     t.stop();
+    //     t.show ( "Time to Scan Pedestals and Noise" );
+    // }
     
-    //         OpenFinder::Parameters cOfp;
-    //         // hard coded for now TODO: make this configurable
-    //         cOfp.potentiometer = 0x265;
-    //         // antenna group 
-    //         auto cSetting = cTool.fSettingsMap.find ( "AntennaGroup" );
-    //         cOfp.antennaGroup = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (0);
-            
-    //         // antenna delay 
-    //         if( cAntennaDelay > 0 )
-    //             cOfp.antennaDelay = cAntennaDelay;
-    //         else
-    //         {
-    //             auto cSetting = cTool.fSettingsMap.find ( "AntennaDelay" );
-    //             cOfp.antennaDelay = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (200);
-    //         }
-            
-    //         // scan range for latency  
-    //         if( cLatencyRange > 0 )
-    //             cOfp.latencyRange = cLatencyRange;
-    //         else
-    //         {
-    //             auto cSetting = cTool.fSettingsMap.find ( "ScanRange" );
-    //             cOfp.latencyRange = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (10);
-    //         }
-
-            
-    //         OpenFinder cOpenFinder;
-    //         cOpenFinder.Inherit (&cTool);
-    //         cOpenFinder.Initialise (cOfp);
-    //         LOG (INFO) << BOLDBLUE << "Starting open finding measurement [antenna potentiometer set to 0x" << std::hex << cOfp.potentiometer << std::dec << " written to the potentiometer" <<  RESET;
-    //         cOpenFinder.FindOpens();
-    //     #endif
-    // }   
-    // //inject charge with TP and look for shorts 
-    // if ( cShortFinder )
+    // if( cmd.foundOption ( "checkAntenna" ) )
     // {
-    //     ShortFinder cShortFinder;
-    //     cShortFinder.Inherit (&cTool);
-    //     cShortFinder.Initialise ();
-    //     cShortFinder.Start();
-    //     cShortFinder.Stop();
+    //     cTool.setSameDac("Threshold", 1);
+    //     for(auto cBoard : *cTool.fDetectorContainer)
+    //     {
+    //         // read counters 
+    //         BeBoard *cBeBoard = static_cast<BeBoard*>(cBoard);
+    //         std::vector<uint32_t> cData(0);
+    //         (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->ReadNEvents(cBeBoard, 100, cData);
+    //         for( auto cDataWord : cData )
+    //         {
+    //             auto cCounter0 = (cDataWord & 0xFFFF);
+    //             auto cCounter1 = (cDataWord & ((0xFFFF) << 16)) >> 16 ;
+    //             LOG (INFO) << BOLDBLUE << std::bitset<32>(cDataWord) 
+    //                 << "\t" << std::bitset<16>(cCounter0) << " [ " << +cCounter0  << " ]" 
+    //                 << "\t" << std::bitset<16>(cCounter1) << " [ " << +cCounter1  << " ]"
+    //                 << RESET;
+    //         }
+    //     }
     // }
 
-    cTool.SaveResults();
-    cTool.WriteRootFile();
-    cTool.CloseResultFile();
-    cTool.Destroy();
+    cHybridTester.SaveResults();
+    cHybridTester.WriteRootFile();
+    cHybridTester.CloseResultFile();
+    cHybridTester.Destroy();
 
     if ( !batchMode ) cApp.Run();
     return 0;

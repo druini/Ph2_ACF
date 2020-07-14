@@ -2349,7 +2349,7 @@ namespace Ph2_HwInterface
     bool D19cFWInterface::WriteBlockReg ( const std::string& pRegNode, const std::vector< uint32_t >& pValues )
     {
       bool cWriteCorr = RegManager::WriteBlockReg ( pRegNode, pValues );
-      std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
+      //std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
       return cWriteCorr;
     }
 
@@ -2476,11 +2476,12 @@ namespace Ph2_HwInterface
         uint32_t counter_Attempts = 0;
 
         //read the number of received replies from ndata and use this number to compare with the number of expected replies and to read this number 32-bit words from the reply FIFO
-        usleep (single_WaitingTime);
-        uint32_t cNReplies = ReadReg ("fc7_daq_stat.command_processor_block.i2c.nreplies");
-
+        uint32_t cNReplies = 0;
         while (cNReplies != pNReplies)
         {
+            std::this_thread::sleep_for (std::chrono::microseconds (single_WaitingTime) );
+            cNReplies = ReadReg ("fc7_daq_stat.command_processor_block.i2c.nreplies");
+        
             if (counter_Attempts > max_Attempts)
             {
                 LOG (INFO) << "Error: Read " << cNReplies << " I2C replies whereas " << pNReplies << " are expected!" ;
@@ -2488,9 +2489,6 @@ namespace Ph2_HwInterface
                 cFailed = true;
                 break;
             }
-
-            usleep (single_WaitingTime);
-            cNReplies = ReadReg ("fc7_daq_stat.command_processor_block.i2c.nreplies");
             counter_Attempts++;
         }
 
@@ -2597,7 +2595,7 @@ namespace Ph2_HwInterface
                     }
                 }
             }
-            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
+            //std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
             //usleep (20);
             cFailed = ReadI2C (  cNReplies, pReplies) ;
         }

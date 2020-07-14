@@ -108,40 +108,86 @@ namespace Ph2_System
     if( fDetectorContainer->size() > 0 ) 
     {
       const BeBoard* cFirstBoard = fDetectorContainer->at(0);
-      if( cFirstBoard != NULL )
+      if (cFirstBoard->getBoardType() != BoardType::RD53)
       {
-        if (cFirstBoard->getBoardType() != BoardType::RD53)
+        LOG (INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
+        if( cFirstBoard->size() > 0 )//# of optical groups connected to Board0 
         {
-          LOG (INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
-          if( cFirstBoard->size() > 0 )
+          auto cFirstOpticalGroup = cFirstBoard->at(0);
+          LOG (INFO) << BOLDBLUE << "\t...Initializing HwInterfaces for OpticalGroups.." 
+            << +cFirstBoard->size() 
+            << " optical group(s) found ..."
+            << RESET;
+          if( cFirstOpticalGroup->size() > 0 )//# of hybrids connected to OpticalGroup0 
           {
-            auto cFirstOpticalGroup = cFirstBoard->at(0);
-            LOG (INFO) << BOLDBLUE << "\t...Initializing HwInterfaces for OpticalGroups.." << RESET;
-            if( cFirstOpticalGroup->size() > 0 )
+            LOG (INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for FrontEnd Hybrids.." 
+              << +cFirstOpticalGroup->size() 
+              << " hybrid(s) found ..."
+              << RESET;
+            auto cFirstHybrid = cFirstOpticalGroup->at(0);
+            for( auto cROC : *cFirstHybrid )
             {
-              //OuterTrackerModule* cFirstHybrid = static_cast<OuterTrackerModule*>(cFirstOpticalGroup->at(0));
-              auto cFirstROC = cFirstOpticalGroup->at(0);
-              if( cFirstROC->size() > 0 )
+              auto cChipType = cROC->getFrontEndType();
+              if( cROC->getIndex() > 0 )
+                continue;
+
+              LOG (INFO) << BOLDBLUE << "\t\t\t...Assuming ROC#" << +cROC->getId() 
+                << " represents all ROCs on this hybrid" 
+                << RESET;
+              if (cChipType == FrontEndType::CBC3)
               {
-                LOG (INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for ROCs + CIC" << RESET;
-                auto cChipType = cFirstROC->getFrontEndType();
-                if (cChipType == FrontEndType::CBC3)
-                  fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
-                else if(cChipType == FrontEndType::SSA)
-                  fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
-                else if(cChipType == FrontEndType::MPA)
-                  fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
-                fCicInterface = new CicInterface(fBeBoardFWMap);
+                LOG (INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
+                fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
+              }
+              else if(cChipType == FrontEndType::SSA)
+              {
+                LOG (INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
+                fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+              }
+              else if(cChipType == FrontEndType::MPA)
+              {
+                LOG (INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
+                fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
               }
             }
+            LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
+            fCicInterface = new CicInterface(fBeBoardFWMap);
+            //OuterTrackerModule* cFirstHybrid = static_cast<OuterTrackerModule*>(cFirstOpticalGroup->at(0));
+            // if( cFirstHybrid->size() > 0 )//# of ROCs connected to Hybrid0 
+            // {
+            //   LOG (INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for ROCs .."
+            //     << +cFirstHybrid->size() 
+            //     << " ROCs found ..."
+            //     << RESET;
+            //   auto cFirstROC = cFirstHybrid->at(0);
+            //   auto cChipType = cFirstROC->getFrontEndType();
+            //   if (cChipType == FrontEndType::CBC3)
+            //   {
+            //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
+            //     fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
+            //   }
+            //   else if(cChipType == FrontEndType::SSA)
+            //   {
+            //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
+            //     fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+            //   }
+            //   else if(cChipType == FrontEndType::MPA)
+            //   {
+            //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
+            //     fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
+            //   }
+            //   LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
+            //   fCicInterface = new CicInterface(fBeBoardFWMap);
+            // }
           }
         }
-        else
-        {
-          flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
-          fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
-        }
       }
+      else
+      {
+        flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
+        fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
+      }
+      
     }
 
     if (fWriteHandlerEnabled == true) this->initializeFileHandler();

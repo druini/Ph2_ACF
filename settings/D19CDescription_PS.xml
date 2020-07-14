@@ -4,13 +4,20 @@
     <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
     
     <CDCE configure="0" clockRate="120"/>
-    <!-- <OpticalGroup Id="0" FMCId="0" >
+    <OpticalGroup Id="0" FMCId="0" >
         <Module FeId="0" ModuleId="0" Status="1">
             <Global>
+                <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
             </Global>
+
+            <SSA_Files path="./settings/SSAFiles/" />
+            <SSA Id="0" configfile="SSAPreCalib.txt" />
+            
+            <CIC_Files path="./settings/CicFiles/" />
+            <CIC Id="8" configfile="CIC_default.txt" />
         </Module>
     </OpticalGroup>
- -->
+
     <!--CONFIG-->
     <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
     <Register name="fc7_daq_cnfg">

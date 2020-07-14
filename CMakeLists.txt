@@ -131,6 +131,26 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         message(STATUS "    Building the PowerSupply components")
     endif(PH2_POWERSUPPLY_FOUND)
 
+    # Ph2_TCUSB [USB control of hybrids]
+    find_package(PH2_TCUSB)  
+    if(PH2_TCUSB_FOUND)
+        message(STATUS "    Building the TestCards USB components")
+    endif(PH2_TCUSB_FOUND)
+
+    # EUDAQ
+    if ($ENV{CompileWithEUDAQ})
+        set(USE_EUDAQ ON)
+        include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
+        set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
+        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
+    else($ENV{CompileWithEUDAQ})
+        message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
+    endif($ENV{CompileWithEUDAQ})
+
+    
+
+
+
 
     # ZeroMQ optional
     find_package(ZMQ)         #========================================================
@@ -142,16 +162,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Boost
     find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
-
-   # EUDAQ
-    if ($ENV{CompileWithEUDAQ})
-        set(USE_EUDAQ ON)
-        include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
-        set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
-        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
-    else($ENV{CompileWithEUDAQ})
-        message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
-    endif($ENV{CompileWithEUDAQ})
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 

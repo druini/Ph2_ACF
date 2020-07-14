@@ -835,6 +835,34 @@ namespace Ph2_HwInterface {
         else
             return true;
     }
+     bool CicInterface::SelectMux(Chip* pChip , uint8_t pPhyPort)
+    {
+        // first .. enable bypass of logic 
+        if( !this->ControlMux(pChip,1)) 
+            return false;
+
+        // then select phy port 
+        setBoard ( pChip->getBeBoardId() ); 
+        LOG (INFO) << BOLDBLUE << "Selecting phyPort [0-11]: " << +pPhyPort << RESET;
+        std::string cRegName = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? "ctrlTestMux" : "MUX_CTRL";
+        uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
+        uint16_t cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pPhyPort : (cRegValue & 0x8 ) | pPhyPort ;
+        return this->WriteChipReg( pChip, cRegName, cValue);
+
+    }
+    bool CicInterface::ControlMux(Chip* pChip , uint8_t pEnable)
+    {
+        setBoard ( pChip->getBeBoardId() ); 
+        std::string cRegName = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? "enableMux" : "MUX_CTRL";
+        uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
+        uint16_t cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pEnable : (cRegValue & 0x7 ) | (pEnable << 3 ) ;
+        if( pEnable == 1 )
+            LOG (INFO) << BOLDBLUE << " Enabling CIC MUX .. so bypassing CIC logic " <<  RESET ;
+        else
+            LOG (INFO) << BOLDBLUE << " Disabling CIC MUX .. so activating CIC logic  " <<  RESET ;
+            
+        return this->WriteChipReg( pChip, cRegName, cValue);
+    }
     // start-up sequence for CIC [everything that does not require interaction
     // with the BE or the other readout ASICs on the chip 
     bool CicInterface::StartUp( Chip* pChip, uint8_t pDriveStrength) 
