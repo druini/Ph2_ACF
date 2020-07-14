@@ -23,95 +23,95 @@ namespace Ph2_HwInterface {// start namespace
     	SSAInterface::~SSAInterface(){}
 	//
 	
-	// bool SSAInterface::ConfigureChip ( Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize )
-	// {
-	// 	setBoard ( pSSA->getBeBoardId() );
-	// 	//uint8_t cWriteAttempts = 0 ;
-	// 	std::vector<uint32_t> cVec;
-	// 	ChipRegMap cSSARegMap = pSSA->getRegMap();
-	// 	bool cWrite=true;
-	// 	bool cSuccess=true;
-	// 	// for some reason this makes block write work
-	// 	// otherwise need to configure one by one which 
-	// 	// takes forever 
-	// 	std::map<uint16_t,ChipRegItem> cMap; cMap.clear();
-	// 	for ( auto& cRegInMap : cSSARegMap )
- //        {
- //        	cMap[cRegInMap.second.fAddress]=cRegInMap.second;
- //        }
- //        for( auto& cRegItem : cMap)
- //        {
- //        	fBoardFW->EncodeReg ( cRegItem.second , pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, cWrite );
-	// 	}// loop over map 
-	//  	uint8_t cWriteAttempts = 0 ;
- //    	cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
- //    	if( pVerifLoop && cSuccess )
- //    	{
- //    		cWrite=false;
- //    		cVec.clear();
- //    		for ( auto& cRegInMap : cSSARegMap )
-	//         {
-	//         	fBoardFW->EncodeReg ( cRegInMap.second, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, cWrite );
-	// 		}// loop over map 
-	// 	 	fBoardFW->ReadChipBlockReg ( cVec);
-	// 	 	uint16_t cIndx=0;
-	// 	 	for( auto& cRegInMap : cSSARegMap )
-	// 	 	{
-	// 	 		uint8_t cSSAId;
- //                bool cFailed = false;
- //                bool cRead;
- //                ChipRegItem cRegItem;
- //                fBoardFW->DecodeReg ( cRegItem, cSSAId, cVec[cIndx], cRead, cFailed );
- //                if( cRegInMap.second.fValue != cRegItem.fValue )
- //                {
- //                	throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
-	// 				/*if( this->WriteChipSingleReg ( pSSA, cRegInMap.first, cRegInMap.second.fValue, pVerifLoop) )
-	//                 {
-	//                 	LOG (INFO) << BOLDRED << "Initial write to register failed " << cRegInMap.first
-	//                 		<< " should be set to " << +cRegInMap.second.fValue
-	//                 		<< " found to be " << +cRegItem.fValue
-	//                 		<< BOLDGREEN 
-	//                 		<< " but single register write afterwards worked "
-	//                 		<<  RESET;
-	//                 }
-	//                 else
-	//                 throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);*/
-	// 			}
-	// 			cIndx++;
- //            }
-    	
- //    	}
- //    	#ifdef COUNT_FLAG
- //        	LOG (INFO) << BOLDGREEN << "Wrote: " << +fRegisterCount 
-	//  			<< " resgisters in SSA" << +pSSA->getId() << " config." << RESET;
-	//  	#endif
-	//  	return cSuccess;
-	// }
 	bool SSAInterface::ConfigureChip ( Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize )
+	{
+		setBoard ( pSSA->getBeBoardId() );
+		//uint8_t cWriteAttempts = 0 ;
+		std::vector<uint32_t> cVec;
+		ChipRegMap cSSARegMap = pSSA->getRegMap();
+		bool cWrite=true;
+		bool cSuccess=true;
+		// for some reason this makes block write work
+		// otherwise need to configure one by one which 
+		// takes forever 
+		std::map<uint16_t,ChipRegItem> cMap; cMap.clear();
+		for ( auto& cRegInMap : cSSARegMap )
+        {
+        	cMap[cRegInMap.second.fAddress]=cRegInMap.second;
+        }
+        for( auto& cRegItem : cMap)
+        {
+        	fBoardFW->EncodeReg ( cRegItem.second , pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, cWrite );
+		}// loop over map 
+	 	uint8_t cWriteAttempts = 0 ;
+    	cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
+    	if( pVerifLoop && cSuccess )
     	{
-    		//uint8_t cWriteAttempts = 0 ;
-			std::vector<uint32_t> cVec;
-			ChipRegMap cSSARegMap = pSSA->getRegMap();
-			for ( auto& cRegInMap : cSSARegMap )
+    		cWrite=false;
+    		cVec.clear();
+    		for ( auto& cRegInMap : cSSARegMap )
 	        {
-	        	if( this->WriteChipSingleReg ( pSSA, cRegInMap.first, cRegInMap.second.fValue, pVerifLoop) )
-	        	{
-					#ifdef COUNT_FLAG
-						fRegisterCount++;
-					#endif
+	        	fBoardFW->EncodeReg ( cRegInMap.second, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, cWrite );
+			}// loop over map 
+		 	fBoardFW->ReadChipBlockReg ( cVec);
+		 	uint16_t cIndx=0;
+		 	for( auto& cRegInMap : cSSARegMap )
+		 	{
+		 		uint8_t cSSAId;
+                bool cFailed = false;
+                bool cRead;
+                ChipRegItem cRegItem;
+                fBoardFW->DecodeReg ( cRegItem, cSSAId, cVec[cIndx], cRead, cFailed );
+                if( cRegInMap.second.fValue != cRegItem.fValue )
+                {
+                	throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
+					/*if( this->WriteChipSingleReg ( pSSA, cRegInMap.first, cRegInMap.second.fValue, pVerifLoop) )
+	                {
+	                	LOG (INFO) << BOLDRED << "Initial write to register failed " << cRegInMap.first
+	                		<< " should be set to " << +cRegInMap.second.fValue
+	                		<< " found to be " << +cRegItem.fValue
+	                		<< BOLDGREEN 
+	                		<< " but single register write afterwards worked "
+	                		<<  RESET;
+	                }
+	                else
+	                throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);*/
 				}
-				else
-				{
-					throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
-				}
-		 }
-		 #ifdef COUNT_FLAG
-	        fTransactionCount++;
-		 	LOG (INFO) << BOLDGREEN << "Wrote: " << +fRegisterCount 
-		 		<< " resgisters in SSA" << +pSSA->getId() << " config." << RESET;
-		 #endif
-	     return true;
+				cIndx++;
+            }
+    	
+    	}
+    	#ifdef COUNT_FLAG
+        	LOG (INFO) << BOLDGREEN << "Wrote: " << +fRegisterCount 
+	 			<< " resgisters in SSA" << +pSSA->getId() << " config." << RESET;
+	 	#endif
+	 	return cSuccess;
 	}
+	// bool SSAInterface::ConfigureChip ( Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize )
+ //    	{
+ //    		//uint8_t cWriteAttempts = 0 ;
+	// 		std::vector<uint32_t> cVec;
+	// 		ChipRegMap cSSARegMap = pSSA->getRegMap();
+	// 		for ( auto& cRegInMap : cSSARegMap )
+	//         {
+	//         	if( this->WriteChipSingleReg ( pSSA, cRegInMap.first, cRegInMap.second.fValue, pVerifLoop) )
+	//         	{
+	// 				#ifdef COUNT_FLAG
+	// 					fRegisterCount++;
+	// 				#endif
+	// 			}
+	// 			else
+	// 			{
+	// 				throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
+	// 			}
+	// 	 }
+	// 	 #ifdef COUNT_FLAG
+	//         fTransactionCount++;
+	// 	 	LOG (INFO) << BOLDGREEN << "Wrote: " << +fRegisterCount 
+	// 	 		<< " resgisters in SSA" << +pSSA->getId() << " config." << RESET;
+	// 	 #endif
+	//      return true;
+	// }
 
 
 	bool SSAInterface::enableInjection (ReadoutChip* pChip, bool inject, bool pVerifLoop)

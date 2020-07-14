@@ -26,6 +26,7 @@ class PSHybridTester : public Tool
     ~PSHybridTester();
 
     void Initialise ();
+    void CheckHybridCurrents();
     void CheckHybridVoltages();
     void CheckFastCommands(const std::string & pFastCommand, uint8_t pDuartion=1);
     void CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t> &pCounters);
@@ -48,6 +49,7 @@ private:
     void CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t> &pCounters);
     void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string & pFastCommand ,  uint8_t pDuartion=1);
     void ReadHybridVoltage(const std::string & pVoltageName );
+    void ReadHybridCurrent(const std::string & pCurrentName );
     // functions to test SSA outputs (pogo)
     void SSAPairSelect(Ph2_HwDescription::BeBoard* pBoard, const std::string& SSAPairSel);
     void SSAOutputsPogoDebug(Ph2_HwDescription::BeBoard* pBoard, bool pTrigger=false);
@@ -126,6 +128,15 @@ private:
     #endif
 
     #ifdef __TCUSB__
+        std::map<std::string, TC_PSFE::measurement> fHybridCurrentMap =
+        {
+            { "Hybrid1V00", TC_PSFE::measurement::ISEN_1V },
+            { "Hybrid1V25", TC_PSFE::measurement::ISEN_1V25 },
+            { "Hybrid3V30", TC_PSFE::measurement::ISEN_3V3 }
+        };
+    #endif
+
+    #ifdef __TCUSB__
         std::map<std::string, TC_PSFE::ant_channel> fAntennaControl =
         {
             { "EvenChannels", TC_PSFE::ant_channel::_1 },
@@ -135,8 +146,9 @@ private:
         };
     #endif
     int fVoltageMeasurementWait_ms=100;
-    int fNreadings=1;
+    int fNreadings=3;
     std::pair<float,float> fVoltageMeasurement;
+    std::pair<float,float> fCurrentMeasurement;
 };
 
 

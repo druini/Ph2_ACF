@@ -1274,7 +1274,7 @@ namespace Ph2_HwInterface
         auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
         std::vector<std::string> cLines(0);
         size_t cLine=0;
-        int cStrLength=0;
+        //int cStrLength=0;
         do
         {
           std::vector<std::string> cOutputWords(0);
@@ -1295,24 +1295,24 @@ namespace Ph2_HwInterface
               cOutput_wSpace += *cIt + " ";
               cOutput += *cIt;
           }
-          LOG (INFO) << BOLDBLUE <<  "Line " << +cLine << " : " << cOutput << RESET;
+          LOG (INFO) << BOLDBLUE <<  "Line " << +cLine << " : " << cOutput_wSpace << RESET;
           cLines.push_back(cOutput);
-          cStrLength = cOutput.length();
+          //cStrLength = cOutput.length();
           cLine++;
         }while( cLine < pNlines );
 
-        std::string cOutput="";
-        for( int i=0; i < cStrLength/5; i++)
-        {
-            for( int j=0; j < 5; j++ )
-            {
-                for(cLine=0; cLine < cLines.size(); cLine++)
-                {
-                    cOutput += cLines[cLine][5*i + j]; 
-                }
-            }
-        }
-        LOG (INFO) << BOLDBLUE << "StubWord : " << cOutput << RESET;
+        // std::string cOutput="";
+        // for( int i=0; i < cStrLength/5; i++)
+        // {
+        //     for( int j=0; j < 5; j++ )
+        //     {
+        //         for(cLine=0; cLine < cLines.size(); cLine++)
+        //         {
+        //             cOutput += cLines[cLine][5*i + j]; 
+        //         }
+        //     }
+        // }
+        //LOG (INFO) << BOLDBLUE << "StubWord : " << cOutput_wSpace << RESET;
         // do
         // {
         //   std::vector<std::string> cOutputWords(0);

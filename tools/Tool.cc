@@ -682,14 +682,20 @@ void Tool::setFWTestPulse()
 		{
 		case BoardType::D19C :
 		{
-			cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
-			cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-			// later make it use the Async FSM 
-			// if( cAsync )
-			// {
-			// 	cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
-			// 	cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-			// }
+			EventType cEventType = cBoard->getEventType();
+        	bool cAsync = ( cEventType ==  EventType::SSAAS || cEventType ==  EventType::MPAAS ) ;
+        
+			if( !cAsync )
+			{
+				cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+				cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+			}
+			else
+			{
+				LOG (INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10"<<RESET;
+				cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+				cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+			}
 			break;
 		}
 

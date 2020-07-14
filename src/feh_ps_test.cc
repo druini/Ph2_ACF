@@ -3,8 +3,9 @@
 #include "Utils/Utilities.h"
 #include "Utils/Timer.h"
 #include "PSHybridTester.h"
+#include "PedestalEqualization.h"
+#include "PedeNoise.h"
 #include "tools/SSASCurveAsync.h"
-#include "tools/PedestalEqualization.h"
 #include "tools/ShortFinder.h"
 #include "tools/OpenFinder.h"
 #include "tools/CicFEAlignment.h"
@@ -83,8 +84,6 @@ int main ( int argc, char* argv[] )
 
     // now query the parsing results
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/Commissioning.xml";
-    //bool cTune = ( cmd.foundOption ( "tuneOffsets" ) ) ;
-    //bool cMeasurePedeNoise = ( cmd.foundOption( "measurePedeNoise") ); 
     // bool cFindOpens = (cmd.foundOption ("findOpens") )? true : false;
     // bool cShortFinder = ( cmd.foundOption ( "findShorts" ) ) ? true : false;
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
@@ -106,13 +105,10 @@ int main ( int argc, char* argv[] )
     #endif
     
     std::stringstream outp;
-    // Tool cTool;
-    // cTool.InitializeHw ( cHWFile, outp);
-    // cTool.InitializeSettings ( cHWFile, outp );
-    // LOG (INFO) << outp.str();
-    // cTool.CreateResultDirectory ( cDirectory );
-
     // hybrid testing tool 
+    // going to use this because it also 
+    // allows me to initialize voltages
+    // and check voltages 
     PSHybridTester cHybridTester;
     cHybridTester.InitializeHw ( cHWFile, outp);
     cHybridTester.InitializeSettings ( cHWFile, outp );
@@ -120,25 +116,30 @@ int main ( int argc, char* argv[] )
     cHybridTester.InitResultFile ( cResultfile );
     //set voltage  on PS FEH 
     cHybridTester.SetHybridVoltage();
+    LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
+    cHybridTester.CheckHybridCurrents();
     //check voltage on PS FEH 
     cHybridTester.CheckHybridVoltages();
     LOG (INFO) << outp.str();
     //select CIC readout 
-    cHybridTester.SelectCIC(false);
+    //cHybridTester.SelectCIC(true);
     cHybridTester.ConfigureHw ();
-
+    LOG (INFO) << BOLDBLUE << "PS FEH current consumption post-configuration..." << RESET;
+    cHybridTester.CheckHybridCurrents();
+    
     // align back-end 
-    /*BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit (&cTool);
-    cBackEndAligner.Start(0);
-    //reset all chip and board registers 
-    // to what they were before this tool was called 
-    cBackEndAligner.Reset(); 
-    */
+    // BackEndAlignment cBackEndAligner;
+    // cBackEndAligner.Inherit (&cHybridTester);
+    // cBackEndAligner.Start(0);
+    // //reset all chip and board registers 
+    // // to what they were before this tool was called 
+    // cBackEndAligner.Reset(); 
+
     // if CIC is enabled then align CIC first 
     /*
+    cHybridTester.SelectCIC(true);
     CicFEAlignment cCicAligner;
-    cCicAligner.Inherit (&cTool);
+    cCicAligner.Inherit (&cHybridTester);
     cCicAligner.Start(0);
     //reset all chip and board registers 
     // to what they were before this tool was called 
@@ -156,42 +157,38 @@ int main ( int argc, char* argv[] )
     }
     
     // // equalize thresholds on readout chips
-    // if( cTune ) 
-    // { 
+    if( cmd.foundOption ( "tuneOffsets" ) ) 
+    { 
         
-    //     t.start();
-    //     // now create a PedestalEqualization object
-    //     PedestalEqualization cPedestalEqualization;
-    //     cPedestalEqualization.Inherit (&cTool);
-    //     // second parameter disables stub logic on CBC3
-    //     cPedestalEqualization.Initialise ( true, true );
-    //     cPedestalEqualization.FindVplus();
-    //     cPedestalEqualization.FindOffsets();
-    //     cPedestalEqualization.writeObjects();
-    //     cPedestalEqualization.dumpConfigFiles();
-    //     cPedestalEqualization.resetPointers();
-    //     t.show ( "Time to tune the front-ends on the system: " );
-    // }
-    // #ifdef __TCUSB__
-    // #endif
-
-
-    // // measure noise on FE chips 
-    // if (cMeasurePedeNoise)
-    // {
-    //     t.start();
-    //     //if this is true, I need to create an object of type PedeNoise from the members of Calibration
-    //     //tool provides an Inherit(Tool* pTool) for this purpose
-    //     PedeNoise cPedeNoise;
-    //     cPedeNoise.Inherit (&cTool);
-    //     //second parameter disables stub logic on CBC3
-    //     cPedeNoise.Initialise (true, true); // canvases etc. for fast calibration
-    //     cPedeNoise.measureNoise();
-    //     cPedeNoise.writeObjects();
-    //     cPedeNoise.dumpConfigFiles();
-    //     t.stop();
-    //     t.show ( "Time to Scan Pedestals and Noise" );
-    // }
+        t.start();
+        // now create a PedestalEqualization object
+        PedestalEqualization cPedestalEqualization;
+        cPedestalEqualization.Inherit (&cHybridTester);
+        // second parameter disables stub logic on CBC3
+        cPedestalEqualization.Initialise ( true, true );
+        cPedestalEqualization.FindVplus();
+        cPedestalEqualization.FindOffsets();
+        cPedestalEqualization.writeObjects();
+        cPedestalEqualization.dumpConfigFiles();
+        cPedestalEqualization.resetPointers();
+        t.show ( "Time to tune the front-ends on the system: " );
+    }
+    // measure noise on FE chips 
+    if (cmd.foundOption( "measurePedeNoise"))
+    {
+        t.start();
+        //if this is true, I need to create an object of type PedeNoise from the members of Calibration
+        //tool provides an Inherit(Tool* pTool) for this purpose
+        PedeNoise cPedeNoise;
+        cPedeNoise.Inherit (&cHybridTester);
+        //second parameter disables stub logic on CBC3
+        cPedeNoise.Initialise (true, true); // canvases etc. for fast calibration
+        cPedeNoise.measureNoise();
+        cPedeNoise.writeObjects();
+        cPedeNoise.dumpConfigFiles();
+        t.stop();
+        t.show ( "Time to Scan Pedestals and Noise" );
+    }
     
     // if( cmd.foundOption ( "checkAntenna" ) )
     // {

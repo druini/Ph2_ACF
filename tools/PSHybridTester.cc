@@ -337,6 +337,59 @@ void PSHybridTester::ReadHybridVoltage(const std::string & pVoltageName )
         }
     #endif
 }
+void PSHybridTester::ReadHybridCurrent(const std::string & pVoltageName )
+{
+    #ifdef __TCUSB__
+        // auto cMapIterator = fHybridCurrentMap.find(pVoltageName);
+        // if( cMapIterator != fHybridCurrentMap.end() )
+        // {
+        //     auto& cMeasurement = cMapIterator->second;
+            TC_PSFE cTC_PSFE;
+            std::vector<float> cMeasurements(fNreadings,0.);
+            for( int cIndex=0; cIndex < fNreadings; cIndex++)
+            {
+                std::this_thread::sleep_for (std::chrono::milliseconds (fVoltageMeasurementWait_ms) );
+                cTC_PSFE.adc_get(TC_PSFE::measurement::ISEN_1V,cMeasurements[cIndex]); 
+                LOG (INFO) << BOLDBLUE << "\t\t..After waiting for " 
+                    << (cIndex+1)*1e-3*fVoltageMeasurementWait_ms << " seconds ..." 
+                    << " reading from test card 1V  : " 
+                    << cMeasurements[cIndex] << " mA." << RESET;
+            }
+
+            std::vector<float> cMeasurements1(fNreadings,0.);
+            for( int cIndex=0; cIndex < fNreadings; cIndex++)
+            {
+                std::this_thread::sleep_for (std::chrono::milliseconds (fVoltageMeasurementWait_ms) );
+                cTC_PSFE.adc_get(TC_PSFE::measurement::ISEN_1V25,cMeasurements1[cIndex]); 
+                LOG (INFO) << BOLDBLUE << "\t\t..After waiting for " 
+                    << (cIndex+1)*1e-3*fVoltageMeasurementWait_ms << " seconds ..." 
+                    << " reading from test card  1V25 : " 
+                    << cMeasurements1[cIndex] << " mA." << RESET;
+            }
+            //fCurrentMeasurement = this->getStats(cMeasurements);
+        //}
+    #endif
+}
+void PSHybridTester::CheckHybridCurrents()
+{
+    ReadHybridCurrent("Hybrid1V00");
+    // LOG (INFO) << BOLDBLUE << "Current consumption on 1V00 : "
+    //     << fCurrentMeasurement.first << " mA on average " 
+    //     << fCurrentMeasurement.second << " mA rms. " << RESET;
+
+
+    // ReadHybridCurrent("Hybrid1V25");
+    // LOG (INFO) << BOLDBLUE << "Current consumption on 1V25 : "
+    //     << fCurrentMeasurement.first << " mA on average " 
+    //     << fCurrentMeasurement.second << " mA rms. " << RESET;
+
+
+    // ReadHybridCurrent("Hybrid3V30");
+    // LOG (INFO) << BOLDBLUE << "Current consumption on 3V30 : "
+    //     << fCurrentMeasurement.first << " mA on average " 
+    //     << fCurrentMeasurement.second << " mA rms. " << RESET;
+
+}
 void PSHybridTester::CheckHybridVoltages()
 {
     ReadHybridVoltage("TestCardGround");
