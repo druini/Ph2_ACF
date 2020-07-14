@@ -320,7 +320,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
 {
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
     float cLimit = 0.005;
-    int cMinBreakCount = 10;
+    int cMinBreakCount = 5;
     uint16_t cValue          = pStartValue;
     uint16_t cMaxValue       = (1 << 10) - 1;
     if(cWithSSA)    cMaxValue       = (1 << 8) - 1;
@@ -373,7 +373,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
                 << RESET;
             if (cDistanceFromTarget <= cLimit ) 
             {
-                LOG (INFO) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
+                LOG (DEBUG) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
                 << " -- current value is " 
                 << +cLimitCounter 
                 << RESET;
@@ -386,7 +386,7 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
             cLimitFound = (cValue == 0 || cValue == cMaxValue) || (cLimitCounter >= cMinBreakCount ); 
             if( cLimitFound )
             {
-                LOG (INFO) << BOLDMAGENTA << "Switching sign.." << RESET;
+                LOG (INFO) << BOLDYELLOW << "Switching sign.." << RESET;
             }
             
         }while(!cLimitFound);

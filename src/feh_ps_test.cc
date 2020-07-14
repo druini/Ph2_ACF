@@ -116,16 +116,16 @@ int main ( int argc, char* argv[] )
     cHybridTester.InitResultFile ( cResultfile );
     //set voltage  on PS FEH 
     cHybridTester.SetHybridVoltage();
-    LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
-    cHybridTester.CheckHybridCurrents();
+    //LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
+    //cHybridTester.CheckHybridCurrents();
     //check voltage on PS FEH 
     cHybridTester.CheckHybridVoltages();
     LOG (INFO) << outp.str();
     //select CIC readout 
     //cHybridTester.SelectCIC(true);
     cHybridTester.ConfigureHw ();
-    LOG (INFO) << BOLDBLUE << "PS FEH current consumption post-configuration..." << RESET;
-    cHybridTester.CheckHybridCurrents();
+    //LOG (INFO) << BOLDBLUE << "PS FEH current consumption post-configuration..." << RESET;
+    //cHybridTester.CheckHybridCurrents();
     
     // align back-end 
     // BackEndAlignment cBackEndAligner;
