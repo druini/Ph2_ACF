@@ -61,7 +61,8 @@ int main ( int argc, char* argv[] )
     // cmd.defineOption ( "findShorts", "look for shorts", ArgvParser::NoOptionAttribute );
     cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
     cmd.defineOption("mpaTest", "Check MPA input with Data Player Pattern [provide pattern]", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
-    
+    cmd.defineOption ( "ssapair", "Debug selected SSA pair. Possible options: 01, 12, 23, 34, 45, 56, 67", ArgvParser::OptionRequiresValue);
+
     cmd.defineOption ( "threshold", "Threshold value to set on chips for open and short finding",  ArgvParser::OptionRequiresValue );
     cmd.defineOption ( "hybridId", "Serial Number of front-end hybrid. Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
     
@@ -91,6 +92,7 @@ int main ( int argc, char* argv[] )
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
     std::string cHybridId = ( cmd.foundOption ( "hybridId" ) ) ? cmd.optionValue ( "hybridId" ) : "xxxx";
     uint8_t cPattern = ( cmd.foundOption ( "mpaTest" ) ) ? convertAnyInt ( cmd.optionValue ( "mpaTest" ).c_str() ) : 0; 
+    const std::string cSSAPair = ( cmd.foundOption ( "ssapair" ) )   ?   cmd.optionValue ( "ssapair" ) : "";
     cDirectory += Form("FEH_2S_%s",cHybridId.c_str());
     
     TApplication cApp ( "Root Application", &argc, argv );
@@ -156,7 +158,7 @@ int main ( int argc, char* argv[] )
 
         //Configure and Start DataPlayer
         // to send phase alignment pattern 
-        uint8_t cPhaseAlignmentPattern=0xAA;
+        uint8_t cPhaseAlignmentPattern=0x55;
         cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
         cDPInterfacer.Start(cInterface);
         if( cDPInterfacer.IsRunning(cInterface) )
@@ -236,52 +238,9 @@ int main ( int argc, char* argv[] )
     
     if( cmd.foundOption("findOpens"))
     {
-        // int cPotentiometer = cHybridTester.findValueInSettings("AntennaPotentiometer"); 
-        // // want to see S-curves with threshold 
-        // cHybridTester.SelectAntennaPosition("Enable",cPotentiometer);
-        // PedeNoise cMeasureWithAntenna;
-        // cMeasureWithAntenna.Inherit (&cHybridTester);
-        // //second parameter disables stub logic on CBC3
-        // cMeasureWithAntenna.Initialise (true, true); // canvases etc. for fast calibration
-        // cMeasureWithAntenna.measureNoise();
-        
         OpenFinder cOpenFinder;
         cOpenFinder.Inherit (&cHybridTester);
         cOpenFinder.FindOpensPS();
-    
-
-        // DetectorDataContainer *cContainer;
-        // if( !cmd.foundOption("measurePedeNoise") )
-        // {
-        //     PedeNoise cPedeNoise;
-        //     cPedeNoise.Inherit(&cHybridTester);
-        //     cPedeNoise.measureNoise();
-        //     cContainer = &cPedeNoise.fThresholdAndNoiseContainer; 
-        // }
-        // else 
-        //    cContainer = &cPedeNoise.fThresholdAndNoiseContainer; 
-             
-        // for ( auto cBoard : cContainer)
-        // {
-        //     for ( auto cOpticalGroup : *cBoard)
-        //     {
-        //         for ( auto cModule : *cOpticalGroup)
-        //         {
-        //             for ( auto cChip : *cModule )
-        //             {
-        //                 uint32_t cGlobalThreshold=0; 
-        //                 for(uint8_t iChannel=0; iChannel<cChip->size(); ++iChannel)
-        //                 {
-        //                     auto& cThreshold = cChip->getChannel<ThresholdAndNoise>(iChannel).fThreshold; 
-        //                     auto& cNoise = cChip->getChannel<ThresholdAndNoise>(iChannel).fNoise; 
-        //                     cGlobalThreshold += cThreshold + 3*cNoise;
-        //                 }
-        //                 cGlobalThreshold /= cChip->size();
-        //                 LOG (INFO) << BOLDBLUE << "Threshold set to " << +cGlobalThreshold << RESET;
-        //             }
-        //         }
-        //     }
-        // }
     }
     // test MPA outputs 
     if( cmd.foundOption ( "mpaTest" ) )
@@ -314,6 +273,58 @@ int main ( int argc, char* argv[] )
         }
         cHybridTester.SelectCIC(false);    
     }  
+    // ssa pair tests 
+    if ( !cSSAPair.empty() )
+    {
+        // make CIC output alignment pattern
+        /*for(auto cBoard : *cTool.fDetectorContainer)
+        {
+        for(auto cOpticalGroup : *cBoard)
+        {
+            for(auto cHybrid : *cOpticalGroup)
+            {
+                   auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                   cTool.fCicInterface->SelectOutput( cCic, true );
+             }
+        }
+        }*/
+        
+        LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
+        // configure SSA to output something on stub lines 
+        cHybridTester.SSATestStubOutput(cSSAPair);
+        // configure SSA to output something on L1 lines
+        cHybridTester.SSATestL1Output(cSSAPair);
+        // put it back in normal readout mode 
+        // and make sure we're in normal readout mode 
+        // i.e. synchronous
+        // auto cNevents  = 1;//cTool.findValueInSettings("Nevents" ,10);
+        // for(auto cBoard : *cTool.fDetectorContainer)
+        // {
+        //     BeBoard* cBeBoard = static_cast<BeBoard*>( cBoard );
+        //     cBeBoard->setEventType(EventType::VR);
+        //     for(auto cOpticalGroup : *cBoard)
+        //     {
+        //         for(auto cHybrid : *cOpticalGroup)
+        //         {
+        //             for (auto cReadoutChip : *cHybrid)
+        //             {
+        //                 if( cReadoutChip->getFrontEndType() != FrontEndType::SSA )
+        //                     continue;
+        //                 cHybridTester.fReadoutChipInterface->WriteChipReg(cReadoutChip, "Sync",1);
+        //                 cHybridTester.fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", 0xF);
+        //             }//chip
+        //         }//hybrid 
+        //     }// module 
+        //     // check if i can read anything     
+        //     for( uint32_t cThreshold=0; cThreshold < 10; cThreshold++)
+        //     {
+        //         cHybridTester.setSameDac("Threshold", cThreshold);
+        //         LOG (INFO) << BOLDRED << "Threshold is " << +cThreshold << RESET;
+        //         cHybridTester.ReadNEvents( cBeBoard , cNevents);
+        //     }
+        // }
+    }
+
     cHybridTester.SaveResults();
     cHybridTester.WriteRootFile();
     cHybridTester.CloseResultFile();
