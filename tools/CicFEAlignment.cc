@@ -481,6 +481,109 @@ bool CicFEAlignment::ManualPhaseAlignment(uint16_t pPhase)
     }
     return cConfigured;
 }
+bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms) 
+{
+    bool cAligned=true;
+    LOG (INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure .... " << RESET;
+    for(auto cBoard : *fDetectorContainer)
+    {
+        for(auto cModule : *cBoard)
+        {
+            for (auto cHybrid : *cModule)
+            {
+                // enable automatic phase aligner 
+                fCicInterface->SetAutomaticPhaseAlignment( static_cast<OuterTrackerModule*>(cHybrid)->fCic , true);
+                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+
+                bool cLocked=fCicInterface->CheckPhaseAlignerLock(cCic);
+                // 4 channels per phyPort ... 12 phyPorts per CIC 
+                std::vector<std::vector<uint8_t>> cPhaseTaps( 4, std::vector<uint8_t> (12, 0));
+                // 8 FEs per CIC .... 6 SLVS lines per FE
+                std::vector<std::vector<uint8_t>> cPhaseTapsFEs( 8, std::vector<uint8_t> (6, 0)) ; 
+                // read back phase aligner values 
+                if( cLocked ) 
+                {
+                    LOG (INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and swithcing to static phase " << RESET;
+                    cPhaseTaps = fCicInterface->GetOptimalTaps( cCic);
+                    cPhaseTapsFEs = this->SortOptimalTaps( cPhaseTaps ); 
+                    for (auto cChip : *cHybrid)
+                    {
+                        std::string cOutput;
+                        for(uint8_t cInput = 0 ; cInput < 6 ; cInput+=1)
+                        {
+                            char cBuffer[80]; sprintf(cBuffer,"%.2d ", cPhaseTapsFEs[cChip->getId()][cInput]);
+                            cOutput += cBuffer;
+                        }
+                        LOG (INFO) << BOLDBLUE << "Optimal tap found on FE" << +cChip->getId() << " : " << cOutput << RESET;
+                    }
+                    // put phase aligner in static mode
+                    fCicInterface->SetStaticPhaseAlignment( cCic, cPhaseTaps); 
+                }
+                else
+                {
+                    LOG (INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDRED << " FAILED to lock " << BOLDBLUE << " ... stopping procedure." << RESET;
+                    //exit(1);
+                }
+                
+                LOG (INFO) << BOLDBLUE << "Checking Reset/Resync for CIC on hybrid " << +cHybrid->getId() << RESET;
+                // check if a resync is needed
+                fCicInterface->CheckReSync( static_cast<OuterTrackerModule*>(cHybrid)->fCic); 
+            }
+        }
+    }
+    return cAligned;
+}
+bool CicFEAlignment::WordAlignmentMPA(uint16_t pWait_ms)
+{
+    LOG (INFO) << BOLDBLUE << "Starting CIC automated word alignment procedure .... " << RESET;
+
+    // phase alignment step - first 85 [] , 170 [] 
+    bool cAligned=true;
+    uint8_t cAlignmentPattern=0x7A;
+    std::vector<uint8_t> cAlignmentPatterns{ cAlignmentPattern, cAlignmentPattern, cAlignmentPattern, cAlignmentPattern, cAlignmentPattern}; 
+    for(auto cBoard : *fDetectorContainer)
+    {
+        BeBoard *theBoard = static_cast<BeBoard*>(cBoard);
+        
+        for (auto cModule : *cBoard)
+        {
+            
+            for (auto cHybrid : *cModule)
+            {
+                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                if( cCic == NULL )
+                    continue;
+                
+                // now send a fast reset 
+                fBeBoardInterface->ChipReSync ( theBoard );
+                
+                // run automated word alignment 
+                cAligned = cAligned && fCicInterface->AutomatedWordAlignment( cCic ,cAlignmentPatterns, pWait_ms);
+                std::vector<std::vector<uint8_t>> cWordAlignmentValues = fCicInterface->ReadWordAlignmentValues( cCic);
+                if( cAligned )
+                {
+                    LOG (INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET;
+                    std::vector<std::vector<uint8_t>> cValues = SortWordAlignmentValues( cWordAlignmentValues );
+                    for (auto cChip : *cHybrid)
+                    {
+                        std::string cOutput;
+                        for(uint8_t cLine = 0 ; cLine < 5 ; cLine+=1)
+                        {
+                            char cBuffer[80]; sprintf(cBuffer,"%.2d ", cValues[cChip->getId()][cLine]);
+                            cOutput += cBuffer;
+                        }
+                        LOG (INFO) << BOLDBLUE << "Word alignment values for FE" << +cChip->getId() << " : " << cOutput << RESET;
+                    }
+                }
+                else
+                    LOG (INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
+            }
+        }
+        // now send a fast reset 
+        fBeBoardInterface->ChipReSync ( theBoard );
+    }
+    return cAligned;
+}
 bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms) 
 {
     bool cAligned=true;

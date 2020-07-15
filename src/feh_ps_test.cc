@@ -5,8 +5,9 @@
 #include "PSHybridTester.h"
 #include "PedestalEqualization.h"
 #include "PedeNoise.h"
-#include "tools/OpenFinder.h"
+#include "OpenFinder.h"
 //#include "tools/ShortFinder.h"
+#include "DPInterface.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/DataChecker.h"
@@ -57,17 +58,18 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
     cmd.defineOptionAlternative ( "measurePedeNoise", "m" );
    
-    cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
     // cmd.defineOption ( "findShorts", "look for shorts", ArgvParser::NoOptionAttribute );
-
+    cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
+    cmd.defineOption("mpaTest", "Check MPA input with Data Player Pattern [provide pattern]", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+    
     cmd.defineOption ( "threshold", "Threshold value to set on chips for open and short finding",  ArgvParser::OptionRequiresValue );
     cmd.defineOption ( "hybridId", "Serial Number of front-end hybrid. Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
     
     cmd.defineOption("pattern", "Data Player Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("pattern", "p");
 
+    cmd.defineOption ( "withCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute );
     cmd.defineOption ( "checkAsync", "Check async readout", ArgvParser::NoOptionAttribute );
-    cmd.defineOption ( "checkAntenna",  "Check Antenna",  ArgvParser::NoOptionAttribute );
     
     // general 
     cmd.defineOption ( "batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute );
@@ -88,6 +90,7 @@ int main ( int argc, char* argv[] )
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
     std::string cHybridId = ( cmd.foundOption ( "hybridId" ) ) ? cmd.optionValue ( "hybridId" ) : "xxxx";
+    uint8_t cPattern = ( cmd.foundOption ( "mpaTest" ) ) ? convertAnyInt ( cmd.optionValue ( "mpaTest" ).c_str() ) : 0; 
     cDirectory += Form("FEH_2S_%s",cHybridId.c_str());
     
     TApplication cApp ( "Root Application", &argc, argv );
@@ -134,19 +137,61 @@ int main ( int argc, char* argv[] )
     // // to what they were before this tool was called 
     // cBackEndAligner.Reset(); 
 
-    // if CIC is enabled then align CIC first 
-    /*
-    cHybridTester.SelectCIC(true);
-    CicFEAlignment cCicAligner;
-    cCicAligner.Inherit (&cHybridTester);
-    cCicAligner.Start(0);
-    //reset all chip and board registers 
-    // to what they were before this tool was called 
-    cCicAligner.Reset(); 
-    cCicAligner.dumpConfigFiles();
-    */
-    
+    // interface to data player 
+    DPInterface cDPInterfacer;
+    BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>( cHybridTester.fBeBoardFWMap.find(0)->second );
+    // need to do this if 
+    // reading out CIC 
+    // or testing MPA 
+    if ( cmd.foundOption ( "withCIC" ) || cmd.foundOption ( "mpaTest" ) )
+    {
+        cHybridTester.SelectCIC(true);
+        
+        //Check if data player is running
+        if (cDPInterfacer.IsRunning(cInterface))
+        {
+            LOG (INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+            cDPInterfacer.Stop(cInterface);
+        }
 
+        //Configure and Start DataPlayer
+        // to send phase alignment pattern 
+        uint8_t cPhaseAlignmentPattern=0xAA;
+        cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
+        cDPInterfacer.Start(cInterface);
+        if( cDPInterfacer.IsRunning(cInterface) )
+        {
+            LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+        }
+        else
+            LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
+
+        // align CIC inputs 
+        CicFEAlignment cCicAligner;
+        cCicAligner.Inherit (&cHybridTester);
+        cCicAligner.PhaseAlignmentMPA(100);
+        cDPInterfacer.Stop(cInterface);
+        cDPInterfacer.CheckNPatterns(cInterface);
+
+        // // still needs to be de-bugged!!
+        // // does not work yet
+        // // Configure and Start DataPlayer
+        // // to send word alignment pattern 
+        // uint8_t cWordAlignmentPattern = 0x75;
+        // cDPInterfacer.ConfigureEmulator(cInterface, cWordAlignmentPattern);
+        // cDPInterfacer.StartEmulator(cInterface);
+        // if( cDPInterfacer.EmulatorIsRunning(cInterface) )
+        // {
+        //     LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+        // }
+        // else
+        //     LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
+
+        // cCicAligner.WordAlignmentMPA(100);
+        //reset all chip and board registers 
+        // to what they were before this tool was called 
+        //cCicAligner.dumpConfigFiles();
+    }
     if( cmd.foundOption ( "checkAsync" ) )
     {
         DataChecker cDataChecker;
@@ -238,27 +283,37 @@ int main ( int argc, char* argv[] )
         //     }
         // }
     }
-    // if( cmd.foundOption ( "checkAntenna" ) )
-    // {
-    //     cTool.setSameDac("Threshold", 1);
-    //     for(auto cBoard : *cTool.fDetectorContainer)
-    //     {
-    //         // read counters 
-    //         BeBoard *cBeBoard = static_cast<BeBoard*>(cBoard);
-    //         std::vector<uint32_t> cData(0);
-    //         (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->ReadNEvents(cBeBoard, 100, cData);
-    //         for( auto cDataWord : cData )
-    //         {
-    //             auto cCounter0 = (cDataWord & 0xFFFF);
-    //             auto cCounter1 = (cDataWord & ((0xFFFF) << 16)) >> 16 ;
-    //             LOG (INFO) << BOLDBLUE << std::bitset<32>(cDataWord) 
-    //                 << "\t" << std::bitset<16>(cCounter0) << " [ " << +cCounter0  << " ]" 
-    //                 << "\t" << std::bitset<16>(cCounter1) << " [ " << +cCounter1  << " ]"
-    //                 << RESET;
-    //         }
-    //     }
-    // }
+    // test MPA outputs 
+    if( cmd.foundOption ( "mpaTest" ) )
+    {
+        cHybridTester.SelectCIC(true);
+        //Configure and Start DataPlayer
+        for( uint8_t cAttempt=0; cAttempt < 1; cAttempt++)
+        {
+            //Check if data player is running
+            if (cDPInterfacer.IsRunning(cInterface))
+            {
+                LOG (INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+                cDPInterfacer.Stop(cInterface);
+            }
 
+            if( cAttempt == 0 )
+                LOG (INFO) << BOLDBLUE << "Attempt " << +cAttempt << RESET;
+            else if( cAttempt == 1 )
+                LOG (INFO) << BOLDGREEN << "Attempt " << +cAttempt << RESET;
+            else if( cAttempt == 2 )
+                LOG (INFO) << BOLDMAGENTA << "Attempt " << +cAttempt << RESET;
+            else if( cAttempt == 3 )
+                LOG (INFO) << BOLDYELLOW << "Attempt " << +cAttempt << RESET;
+
+            cDPInterfacer.Configure(cInterface, cPattern);
+            cDPInterfacer.Start(cInterface);
+            cHybridTester.MPATest(cPattern);
+            cDPInterfacer.Stop(cInterface);
+            cDPInterfacer.CheckNPatterns(cInterface);
+        }
+        cHybridTester.SelectCIC(false);    
+    }  
     cHybridTester.SaveResults();
     cHybridTester.WriteRootFile();
     cHybridTester.CloseResultFile();

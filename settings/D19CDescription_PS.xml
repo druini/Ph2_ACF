@@ -167,7 +167,6 @@
     <Setting name="ThresholdForOpens">10</Setting>
     <Setting name="AntennaTriggerRate">50</Setting>
 
-
     <!--PS hybrid SSA output test -->
     <!-- number of 10 ms periods to wait for in the case of stubs -->
     <!-- number of triggers to send in the case of L1A data -->
