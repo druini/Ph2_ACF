@@ -150,7 +150,7 @@
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
     <Setting name="PedestalEqualizationPulseAmplitude">60</Setting>
-    <Setting name="PedeNoisePulseAmplitude">0</Setting>
+    <Setting name="PedeNoisePulseAmplitude">8</Setting>
     <Setting name="TriggerRate">10</Setting>
 
 
