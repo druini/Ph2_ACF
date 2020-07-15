@@ -70,13 +70,13 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
         for(auto board : *fDetectorContainer)
         {
+            uint8_t cAsync = ( board->getEventType() == EventType::SSAAS ) ? 1 : 0;
             for(auto opticalGroup : *board)
             {
                 for(auto hybrid: *opticalGroup)
                 {
                     for(auto chip: *hybrid)
                     {
-
 
                         ReadoutChip *theChip = static_cast<ReadoutChip*>(chip);
                         //if it is a CBC3, disable the stub logic for this procedure
@@ -89,9 +89,11 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
                         uint8_t value = fReadoutChipInterface->ReadChipReg (theChip, "HIP&TestMode");
                         fHIPCountCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>() = value;
                             static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression( theChip, false, true , 0);
-                    }
-                        else
-                            LOG (INFO) << BOLDBLUE << "Not a CBC3 .. so doing nothing with stub logic." << RESET;
+                        }
+                        if( theChip->getFrontEndType() == FrontEndType::SSA )
+                        {
+                            fReadoutChipInterface->WriteChipReg(chip,"AnalogueAsync",cAsync);
+                        }
                     }
                 }
             }
@@ -117,7 +119,7 @@ void PedestalEqualization::FindVplus()
 	                        setFWTestPulse();
 	                        for ( auto cBoard : *fDetectorContainer )
 	                        {
-	                            if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", fTestPulseAmplitude);
+	                            if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fTestPulseAmplitude);
 	                            else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
 	                        }
 	                        LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
@@ -139,7 +141,7 @@ void PedestalEqualization::FindVplus()
     this->SetTestAllChannels(true);
 
     if(cWithCBC)    setSameLocalDac("ChannelOffset", fTargetOffset);
-    if(cWithSSA)    setSameLocalDac("THTRIMMING_S", fTargetOffset);
+    if(cWithSSA)    setSameLocalDac("ThresholdTrim", fTargetOffset);
 
     if(cWithCBC)    this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
     if(cWithSSA)    this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56);
@@ -151,7 +153,7 @@ void PedestalEqualization::FindVplus()
 
 
     if(cWithCBC)    setSameLocalDac("ChannelOffset", 0xFF);
-    if(cWithSSA)    setSameLocalDac("THTRIMMING_S", 0xFF);
+    if(cWithSSA)    setSameLocalDac("ThresholdTrim", 0xFF);
 
 
 
@@ -229,7 +231,7 @@ void PedestalEqualization::FindOffsets()
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
     if(cWithCBC)    this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56);
-    if(cWithSSA)    this->bitWiseScan("THTRIMMING_S", fEventsPerPoint, 0.56);
+    if(cWithSSA)    this->bitWiseScan("ThresholdTrim", fEventsPerPoint, 0.56);
 
 
     dumpConfigFiles();

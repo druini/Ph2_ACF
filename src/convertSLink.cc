@@ -27,10 +27,11 @@ struct SLinkEventHeader
     uint8_t fEventType;
     bool fSparisified;
     uint16_t fNStatusBits;
+    uint8_t fNStatusWords;
 
     void decode()
     {
-        fNReadoutChips = (fTrackerHeader[0] & 0xFFFF00) >> 8;
+        fNReadoutChips = (fTrackerHeader[0]&0xFFFF00) >> 8;
         std::bitset<8> cEnabledFEs_firstPart(fTrackerHeader[0] & 0xFF); 
         std::bitset<64> cEnabledFEs_secondPart(fTrackerHeader[1]);
         fNenabledFEs =  cEnabledFEs_firstPart.count() + cEnabledFEs_secondPart.count();
@@ -40,6 +41,7 @@ struct SLinkEventHeader
         //TO-DO : use event type and sparsification to calculate this for all possible event types
         fSparisified = (( (fEventType & (0x1 << 4)) >> 4) == 0 );
         fNStatusBits = fNReadoutChips*20;
+        fNStatusWords = std::ceil(fNStatusBits/64.);
     }
 
     void print()
@@ -47,8 +49,8 @@ struct SLinkEventHeader
         LOG (INFO) << BOLDYELLOW << "DAQ header : " << std::bitset<64>(fDAQHeader) << RESET;
         LOG (INFO) << BOLDYELLOW << "Tracker header : " << std::bitset<64>(fTrackerHeader[0]) << RESET;
         LOG (INFO) << BOLDYELLOW << "Tracker header : " << std::bitset<64>(fTrackerHeader[1]) << RESET;
-        LOG (INFO) << BOLDYELLOW << "S-link events contain information from " << +fNReadoutChips << " readout chips. Number of enabled FEs : " << +fNenabledFEs << RESET;
-        LOG (INFO) << BOLDYELLOW << "S-link debug level is " << std::bitset<2>(fDebugLevel) << " -- event type is " << std::bitset<4>(fEventType) << " event has " << +(fNStatusBits/64) << " status words." << RESET;
+        LOG (INFO) << BOLDYELLOW << "S-link events contain information from " << fNReadoutChips << " readout chips. Number of enabled FEs : " << +fNenabledFEs << RESET;
+        LOG (INFO) << BOLDYELLOW << "S-link debug level is " << std::bitset<2>(fDebugLevel) << " -- event type is " << std::bitset<4>(fEventType) << " event has " << +fNStatusWords << " status words." << RESET;
     }
 };
 
@@ -64,9 +66,9 @@ struct SLinkEventConditionData
         size_t cWordCount=0;
         for( auto cConditionData : fConditionData )
         {
-            LOG (DEBUG) << BOLDYELLOW << "S-link event condition data word #" << +cWordCount << " : " << std::bitset<64>(cConditionData) << RESET ;
-            auto cDataItem = fDataItems[cWordCount];
-            LOG (INFO) << BOLDYELLOW << "ConditionData [ " << +cWordCount << " ] : " << +cDataItem.fUID << " --- " << +cDataItem.fValue << " register " << +cDataItem.fRegister << RESET;
+            LOG (INFO) << BOLDYELLOW << "S-link event condition data word #" << +cWordCount << " : " << std::bitset<64>(cConditionData) << RESET ;
+            //auto cDataItem = fDataItems[cWordCount];
+            //LOG (INFO) << BOLDYELLOW << "ConditionData [ " << +cWordCount << " ] : " << +cDataItem.fUID << " --- " << +cDataItem.fValue << " register " << +cDataItem.fRegister << RESET;
             cWordCount++;
         }
     }   
@@ -138,17 +140,24 @@ void decodeHits ( std::vector<uint64_t>::iterator& pIterator , SLinkEventHeader 
                 }
                 //auto cBit = ( (uint64_t) *pIterator & ( (uint64_t) 0x1 << (64-(cBitCount+1)) ) ) >> (64-(cBitCount+1)) ;
                 cBitStream[cBitStream.size()-(1+cBitIndex)] = cStream[64-(1+cBitCount)];
-                if( cBitStream[cBitStream.size()-(1+cBitIndex)] == 1 ) 
-                {
-                    if( cBitIndex < cBitStream.size() )
-                    {
-                        LOG (DEBUG) << BOLDYELLOW << "Readout chip " << +cChipIndex << " hit in channel " << +(cBitIndex-pNpaddingBits) << RESET;
-                        cBitStream.set(cBitIndex);
-                    }
-                }
                 cBitCount++; 
             }
-            LOG (DEBUG) << BOLDYELLOW << "Readout chip " << +cChipIndex <<  " : " << cBitStream << RESET;
+            LOG (INFO) << BOLDYELLOW << "Readout chip " << +cChipIndex <<  " : " << cBitStream << RESET;
+            for( size_t cBitIndex=0; cBitIndex < cBitStream.size(); cBitIndex++)
+            {
+                if( cBitStream[cBitIndex] > 0 )
+                    LOG (INFO) << BOLDYELLOW << "Readout chip " << +cChipIndex << " hit in channel " << +(cBitStream.size()-1-cBitIndex) << RESET;
+                
+            }
+            // if( cBitStream[cBitStream.size()-(1+cBitIndex)] == 1 ) 
+                // {
+                //     if( cBitIndex < cBitStream.size() )
+                //     {
+                //         LOG (INFO) << BOLDYELLOW << "Readout chip " << +cChipIndex << " hit in channel " << +(cBitIndex) << RESET;
+                //         //LOG (INFO) << BOLDYELLOW << "Readout chip " << +cChipIndex << " hit in channel " << +(cBitIndex-pNpaddingBits) << RESET;
+                //         cBitStream.set(cBitIndex);
+                //     }
+                // }
         }
         //if( cReadoutChips >= pEventHeader.fNReadoutChips )
         //    continue;
@@ -196,7 +205,7 @@ void decodeStubs ( std::vector<uint64_t>::iterator& pIterator , SLinkEventHeader
             auto cChipId =  ( (uint16_t) cBitStream.to_ulong() & ( 0xF << 12 ) ) >> 12 ;
             auto cSeed =  ( (uint16_t) cBitStream.to_ulong() & ( 0xFF << 4 ) ) >> 4 ;
             auto cBendCode = ( (uint16_t) cBitStream.to_ulong() & ( 0xF << 0 ) ) >> 0 ;
-            LOG (DEBUG) << BOLDYELLOW << "\t\t.. stub : " << cBitStream << " stub in chip " << +cChipId <<  " with seed " << +cSeed << " and bend code " << std::bitset<4>(cBendCode) << RESET;
+            LOG (INFO) << BOLDYELLOW << "\t\t.. stub : " << cBitStream << " stub in chip " << +cChipId <<  " with seed " << +cSeed << " and bend code " << std::bitset<4>(cBendCode) << RESET;
         }
     }
     pIterator+=1;
@@ -240,6 +249,8 @@ int main ( int argc, char* argv[] )
 
     // now query the parsing results
     std::string rawFilename = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "";
+    int cNevents = cmd.foundOption ( "events" ) ?  convertAnyInt ( cmd.optionValue ( "events" ).c_str() ) :  0;
+    bool cDecode = ( cmd.foundOption ( "decode" ) );
     
     if ( rawFilename.empty() )
     {
@@ -257,12 +268,12 @@ int main ( int argc, char* argv[] )
     // Create the Histogrammer object
     Tool cTool;
     auto cFirstLocation = rawFilename.find("/");
-    auto cLastLocation = rawFilename.find(".raw");
+    auto cLastLocation = rawFilename.find(".daq");
     std::string cRunNumber = rawFilename.substr(cFirstLocation+1 , cLastLocation  -  cFirstLocation - 1 );
     std::string cDAQFileName = cRunNumber + ".daq";
-    // FileHandler* cDAQFileHandler = nullptr;
-    // cDAQFileHandler = new FileHandler(cDAQFileName, 'w');
-    LOG (INFO) << "Writing DAQ File to:   " << cDAQFileName << " - ConditionData, if present, parsed from " << cHWFile ;
+    //FileHandler* cDAQFileHandler = nullptr;
+    //cDAQFileHandler = new FileHandler(cDAQFileName, 'w');
+    //LOG (INFO) << "Writing DAQ File to:   " << cDAQFileName << " - ConditionData, if present, parsed from " << cHWFile ;
     
     TString cDirectory = Form("Results/MiniSlinkConverter_%s", cRunNumber.c_str() );
     cTool.CreateResultDirectory ( cDirectory.Data() );
@@ -270,21 +281,22 @@ int main ( int argc, char* argv[] )
     std::stringstream outp;
     LOG (INFO) << "HWfile=" << cHWFile;
     cTool.InitializeHw ( cHWFile, outp );
+    //BeBoard* cBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at ( 0 ));
     
     // Add File handler
-    cTool.addFileHandler ( rawFilename, 'r' );
-    FileHeader cHeader;
-    cTool.getFileHandler()->getHeader(cHeader);
+    //cTool.addFileHandler ( rawFilename, 'r' );
+    //FileHeader cHeader;
+    //cTool.getFileHandler()->getHeader(cHeader);
     
     // Build the hardware setup
-    LOG (INFO) << outp.str();
-    outp.str ("");
+    //LOG (INFO) << outp.str();
+    //outp.str ("");
    
     // Read the first event from the raw data file, needed to retrieve the event map
-    std::vector<uint32_t> dataVec;
-    LOG (INFO) << BOLDBLUE << "Reading .raw file" << RESET;
-    cTool.readFile (dataVec);
-    LOG (INFO) << BOLDBLUE << "Read back " << +dataVec.size() << " 32 bit words from .raw file" << RESET;
+    //std::vector<uint32_t> dataVec;
+    //LOG (INFO) << BOLDBLUE << "Reading .raw file" << RESET;
+    //cTool.readFile (dataVec);
+    //LOG (INFO) << BOLDBLUE << "Read back " << +dataVec.size() << " 32 bit words from .raw file" << RESET;
     // set data 
     // Sarah - fix this....
     /*
@@ -301,7 +313,8 @@ int main ( int argc, char* argv[] )
         cDAQFileHandler->set ( cSLev.getData<uint32_t>() );
     }
     cDAQFileHandler->closeFile();
-    
+    */
+
     if( cDecode )
     {
         // now want to read back s-link file 
@@ -313,6 +326,7 @@ int main ( int argc, char* argv[] )
         GenericPayload cSlinkPayload;
         for( auto cWord : dataVecSLink )
         {
+            LOG (INFO) << BOLDBLUE << std::bitset<32>(cWord) << RESET;
             cSlinkPayload.append (cWord);
         }
         auto cSlinkData = cSlinkPayload.Data<uint64_t>();
@@ -329,43 +343,44 @@ int main ( int argc, char* argv[] )
             auto& cTrackerHeader1 =  *(cIterator+1);
             auto& cTrackerHeader2 =  *(cIterator+2);
             cEventHeader.fDAQHeader =  cDAQHeader;
+            cEventHeader.fTrackerHeader.clear();
             cEventHeader.fTrackerHeader.push_back( cTrackerHeader1 ) ;
             cEventHeader.fTrackerHeader.push_back( cTrackerHeader2 ) ;
             cEventHeader.decode();
+            cEventHeader.print();
             if( cEventHeader.fNReadoutChips == 0 )
             {
                 cIterator = cSlinkData.end();
                 continue;
             }
-            //cEventHeader.print();
             cIterator += 3;
 
-            // now - status words 
+            // // now - status words 
             std::vector<uint64_t> cStatusWords( cIterator, cIterator + cEventHeader.fNStatusBits/64);
             std::string cStatus="";
             for( auto cStatusWord : cStatusWords )
             {
                 std::bitset<64> cWord( cStatusWord );
-                LOG (DEBUG) << BOLDYELLOW << "\t.. Status : " << cWord << RESET;
+                LOG (INFO) << BOLDYELLOW << "\t.. Status : " << cWord << RESET;
                 cStatus += cWord.to_string();
             }
-            cIterator+= cEventHeader.fNStatusBits/64;
+            cIterator+= cEventHeader.fNStatusWords;
             
-            // now - decode hits 
+            // // now - decode hits 
             decodeHits ( cIterator , cEventHeader );
             
-            // then decode stubs 
+            // // then decode stubs 
             LOG (DEBUG) << BOLDYELLOW << "First S-link word with stub data should : " << std::bitset<64>(*cIterator) << RESET;
             decodeStubs ( cIterator , cEventHeader );
             
-            // next - condition data 
+            // // next - condition data 
             SLinkEventConditionData cEventConditionData; 
             LOG (DEBUG) << BOLDYELLOW << "First word of condition data : " << std::bitset<64>(*cIterator) << RESET;
             cEventConditionData.fSize = *(cIterator); 
             cIterator ++;
             cEventConditionData.set(cIterator);
             cEventConditionData.decode();
-            //cEventConditionData.print();
+            cEventConditionData.print();
 
             // now - event trailer 
             auto& cDAQTrailer = *(cIterator);
@@ -373,10 +388,11 @@ int main ( int argc, char* argv[] )
             cIterator++; 
             LOG (DEBUG) << BOLDBLUE << "At word " << std::distance( cSlinkData.begin() , cIterator) << " of the list of s-link events [list contains " << +cSlinkData.size() << " words]." << RESET;
             cEventCount++;
+            //cIterator = cSlinkData.end();
         }
         LOG (INFO) << BOLDBLUE << "Decoded " << +cEventCount << " events out of an expected " << +cNevents << " events from the S-link file." << RESET;
     }
-    */
+    
     cTool.Destroy();
     return 0;
 

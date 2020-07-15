@@ -48,10 +48,12 @@ namespace Ph2_HwDescription { //open namespace
 		uint32_t getNumberOfChannels() const override { return NSSACHANNELS; }
 		bool isDACLocal(const std::string &dacName) override {
 		    if(dacName.find("THTRIMMING_S",0,12)!=std::string::npos ) return true;
+		    else if(dacName.find("ThresholdTrim")!=std::string::npos ) return true;
 		    else return false;
 		}
 		uint8_t getNumberOfBits(const std::string &dacName) override {
 		    if(dacName.find("THTRIMMING_S",0,12)!=std::string::npos) return 5;
+		    else if(dacName.find("ThresholdTrim")!=std::string::npos ) return 5;
 		    else return 8;
 		}
 	protected:

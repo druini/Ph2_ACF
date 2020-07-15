@@ -84,7 +84,13 @@ int main ( int argc, char* argv[] )
     cmd.defineOptionAlternative ( "evaluate", "e" );
     
     cmd.defineOption ( "withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute );
-
+    cmd.defineOption ( "checkClusters", "Check CIC2 sparsification... ", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "checkSLink", "Check S-link ... data saved to file ", ArgvParser::OptionRequiresValue );
+    cmd.defineOption ( "checkStubs", "Check Stubs... ", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "checkReadData", "Check ReadData method... ", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "checkAsync", "Check Async readout methods [PS objects only]... ", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "checkReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "noiseInjection" , "Check noise injection..." , ArgvParser::NoOptionAttribute );
     int result = cmd.parse ( argc, argv );
 
     if ( result != ArgvParser::NoParserError )
@@ -119,7 +125,9 @@ int main ( int argc, char* argv[] )
 
     std::string cResultfile = "Hybrid";
     Timer t;
-
+    Timer cGlobalTimer;
+    cGlobalTimer.start();
+        
     // measure hybrid current and temperature 
     #ifdef __ANTENNA__
         char cBuffer[120]; 
@@ -241,22 +249,36 @@ int main ( int argc, char* argv[] )
     //inject hits and stubs using mask and compare input against output 
     if( cCheckData )
     {
-        std::string sFEsToCheck = cmd.optionValue ( "checkData" );
-        std::vector<uint8_t> cFEsToCheck;
-        std::stringstream ssFEsToCheck( sFEsToCheck );
+        std::string cArgsStr = cmd.optionValue ( "checkData" );
+        std::vector<uint8_t> cArgs;
+        std::stringstream cArgsSS( cArgsStr );
         int i;
-        while ( ssFEsToCheck >> i )
+        while ( cArgsSS >> i )
         {
-            cFEsToCheck.push_back( i );
-            if ( ssFEsToCheck.peek() == ',' ) ssFEsToCheck.ignore();
+            cArgs.push_back( i );
+            if ( cArgsSS.peek() == ',' ) cArgsSS.ignore();
         };
 
         t.start();
         DataChecker cDataChecker;
         cDataChecker.Inherit (&cTool);
         cDataChecker.Initialise ( );
-        cDataChecker.zeroContainers();
-        cDataChecker.StubCheck();
+        if( cmd.foundOption("checkClusters"))
+            cDataChecker.ClusterCheck(cArgs);
+        if( cmd.foundOption("checkSLink") )
+            cDataChecker.WriteSlinkTest(cmd.optionValue ("checkSLink" ));
+        if( cmd.foundOption("checkStubs") )
+            cDataChecker.StubCheck(cArgs);
+        if( cmd.foundOption("noiseInjection") )
+            cDataChecker.StubCheckWNoise(cArgs);  
+        if( cmd.foundOption("checkReadData"))
+            cDataChecker.ReadDataTest();
+        if( cmd.foundOption("checkAsync"))
+            cDataChecker.AsyncTest();
+        if( cmd.foundOption("checkReadNEvents"))
+            cDataChecker.ReadNeventsTest();
+
+
         //cDataChecker.ReadNeventsTest();
         //cDataChecker.DataCheck(cFEsToCheck,0,0);
         //cDataChecker.ReadDataTest();
@@ -331,6 +353,9 @@ int main ( int argc, char* argv[] )
     cTool.Destroy();
 
     if ( !batchMode ) cApp.Run();
+    cGlobalTimer.stop();
+    cGlobalTimer.show ( "Total execution time: " );
+
     return 0;
 
 }

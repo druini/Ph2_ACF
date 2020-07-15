@@ -16,12 +16,17 @@
 #include <iterator>
 #include <numeric>
 
+
 const size_t CLUSTER_WORD_SIZE = 3+8+3;
 const size_t L1_BLOCK_SIZE = 11;
 const size_t RAW_L1_CBC = 275;
 const size_t HIT_WORD_SIZE = 2+9+9+254;
 const size_t STUB_WORD_SIZE = 3+8+4; 
 const size_t EVENT_HEADER_SIZE = 4; // in 32 bit words 
+
+const uint8_t INVALID_L1HEADER = 1;
+const uint8_t INVALID_STUBHEADER = 2;
+const uint8_t INVALID = 3;
 
 namespace Ph2_HwInterface 
 {
@@ -44,7 +49,7 @@ namespace Ph2_HwInterface
          * \param pNbCbc
          * \param pEventBuf : the pointer to the raw Event buffer of this Event
          */
-        D19cCic2Event ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCic, uint32_t pNFe, const std::vector<uint32_t>& list );
+        D19cCic2Event ( const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list );
         /*!
          * \brief Copy Constructor of the Event Class
          */
@@ -59,6 +64,13 @@ namespace Ph2_HwInterface
             //fEventMap.clear();
             //fEventDataList.clear();
         }
+        
+        /*!
+         * \brief Set an Event to the Event map
+         * \param pEvent : Event to set
+         * \return Aknowledgement of the Event setting (1/0)
+         */
+        void Set ( const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list ) override;
         /*!
          * \brief Set an Event to the Event map
          * \param pEvent : Event to set
@@ -212,9 +224,33 @@ namespace Ph2_HwInterface
 
         std::bitset<NCHANNELS> decodeClusters( uint8_t pFeId , uint8_t pReadoutChipId) const;
         std::bitset<RAW_L1_CBC> getRawL1Word( uint8_t pFeId , uint8_t pReadoutChipId) const;
-      
+        size_t getFeIndex (const uint8_t pFeId) const
+        {
+            //first find feIndex
+            auto cFeIterator = std::find(fFeIds.begin(), fFeIds.end(), pFeId);
+            if( cFeIterator != fFeIds.end() )
+            {
+                return std::distance(fFeIds.begin(),cFeIterator);
+            }
+            else
+                throw std::runtime_error(std::string("FeId not found in D19cCIC2Event .. check xml!"));
+        }
+        size_t getROCIndex (const uint8_t pFeIndex, const uint8_t pROCId) const
+        {
+            //first find feIndex
+            auto cROCIterator = std::find(fROCIds[pFeIndex].begin(), fROCIds[pFeIndex].end(), pROCId);
+            if( cROCIterator != fROCIds[pFeIndex].end() )
+            {
+                return std::distance(fROCIds[pFeIndex].begin(),cROCIterator);
+            }
+            else
+                throw std::runtime_error(std::string("ROCId not found in D19cCIC2Event .. check xml!"));
+        }
       private:
         std::vector<uint8_t> fFeMapping{ 3,2,1,0,4,5,6,7 }; // FE --> FE CIC
+        std::vector<uint8_t> fFeIds;
+        std::vector<std::vector<uint8_t>> fROCIds;
+
         bool fIsSparsified=true;
         EventList fEventHitList;
         RawEventList fEventRawList;
@@ -246,8 +282,8 @@ namespace Ph2_HwInterface
             return cClusters;
         }
         std::bitset<NCHANNELS> hitsFromClusters( uint8_t pFeId , uint8_t pReadoutChipId  );
-
-
+        
+        
         // L1 Id from chip
         void printL1Header (std::ostream& os, uint8_t pFeId, uint8_t pCbcId) const;
         SLinkEvent GetSLinkEvent ( Ph2_HwDescription::BeBoard* pBoard ) const override;

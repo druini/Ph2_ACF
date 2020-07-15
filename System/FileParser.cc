@@ -144,6 +144,7 @@ namespace Ph2_System
       {
         cEventTypeString = cEventTypeAttribute.value();
         if (cEventTypeString == "ZS") cBeBoard->setEventType (EventType::ZS);
+        else if( cEventTypeString == "Async") cBeBoard->setEventType (EventType::SSAAS);
         else cBeBoard->setEventType (EventType::VR);
       }
 

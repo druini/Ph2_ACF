@@ -756,6 +756,13 @@ namespace Ph2_HwInterface {
         LOG (INFO) << BOLDBLUE << "CIC output pattern configured by setting " << cRegName << " to " << std::bitset<8>(cRegValue) << RESET;
         return true;
     }
+    bool CicInterface::SetSparsification(Chip* pChip, uint8_t pEnable ) 
+    {
+        std::string cRegName = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? "CBC_SPARSIFICATION_SEL" : "FE_CONFIG";
+        uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
+        uint16_t cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pEnable : (cRegValue & 0x2F ) | ( pEnable << 4) ;
+        return this->WriteChipReg( pChip, cRegName, cValue) ;
+    }
     bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFEs , bool pEnable)
     {
         setBoard ( pChip->getBeBoardId() ); 
@@ -892,14 +899,6 @@ namespace Ph2_HwInterface {
         this->EnableFEs(pChip, {0,1,2,3,4,5,6,7} , false);
         this->ResetPhaseAligner(pChip, 200 );
         this->EnableFEs(pChip, {0,1,2,3,4,5,6,7} , true);
-        
-        // check if we need a soft RESET
-        // cSuccess = this->CheckSoftReset(pChip);
-        // if( !cSuccess ) 
-        // {
-        //     LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC... " << RESET;
-        //     exit(0);
-        // }
         
         // select fast command edge 
         bool cNegEdge=true;

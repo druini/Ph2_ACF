@@ -68,6 +68,7 @@ namespace Ph2_HwInterface
         // CIC specific functions
         std::pair<bool, uint16_t> ReadChipReg ( Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem pRegItem );
         std::vector<std::vector<uint8_t>> GetOptimalTaps(Ph2_HwDescription::Chip* pChip); 
+        bool SetSparsification(Ph2_HwDescription::Chip* pChip, uint8_t pState=0);
         bool PhaseAlignerPorts(Ph2_HwDescription::Chip* pChip, uint8_t pState );
         bool SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, uint8_t pFeId=0 , uint8_t pLineId=0, uint8_t pPhase=0);
         bool SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, std::vector<std::vector<uint8_t>> pPhaseTaps);
