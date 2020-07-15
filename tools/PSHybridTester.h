@@ -37,6 +37,7 @@ class PSHybridTester : public Tool
     void SetHybridVoltage();
     void MPATest(uint32_t pPattern);
     void SelectCIC(bool pSelect);
+    void SelectAntennaPosition(const std::string &pPosition, uint16_t pPotentiometer);
     
     void Start(int currentRun) override;
     void Stop() override;
@@ -125,9 +126,6 @@ private:
             { "Hybrid3V3", TC_PSFE::measurement::_3V3 },// end group 1V25O 
             { "ADC" , TC_PSFE::measurement::AMUX}
         };
-    #endif
-
-    #ifdef __TCUSB__
         std::map<std::string, TC_PSFE::measurement> fHybridCurrentMap =
         {
             { "Hybrid1V00", TC_PSFE::measurement::ISEN_1V },
@@ -136,15 +134,6 @@ private:
         };
     #endif
 
-    #ifdef __TCUSB__
-        std::map<std::string, TC_PSFE::ant_channel> fAntennaControl =
-        {
-            { "EvenChannels", TC_PSFE::ant_channel::_1 },
-            { "OddChannels", TC_PSFE::ant_channel::_2 },
-            { "Enable_All", TC_PSFE::ant_channel::ALL },
-            { "Disable_All" , TC_PSFE::ant_channel::NONE}
-        };
-    #endif
     int fVoltageMeasurementWait_ms=100;
     int fNreadings=3;
     std::pair<float,float> fVoltageMeasurement;

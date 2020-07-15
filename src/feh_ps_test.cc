@@ -5,9 +5,8 @@
 #include "PSHybridTester.h"
 #include "PedestalEqualization.h"
 #include "PedeNoise.h"
-#include "tools/SSASCurveAsync.h"
-#include "tools/ShortFinder.h"
 #include "tools/OpenFinder.h"
+//#include "tools/ShortFinder.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/DataChecker.h"
@@ -58,7 +57,7 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
     cmd.defineOptionAlternative ( "measurePedeNoise", "m" );
    
-    // cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
     // cmd.defineOption ( "findShorts", "look for shorts", ArgvParser::NoOptionAttribute );
 
     cmd.defineOption ( "threshold", "Threshold value to set on chips for open and short finding",  ArgvParser::OptionRequiresValue );
@@ -190,6 +189,55 @@ int main ( int argc, char* argv[] )
         t.show ( "Time to Scan Pedestals and Noise" );
     }
     
+    if( cmd.foundOption("findOpens"))
+    {
+        // int cPotentiometer = cHybridTester.findValueInSettings("AntennaPotentiometer"); 
+        // // want to see S-curves with threshold 
+        // cHybridTester.SelectAntennaPosition("Enable",cPotentiometer);
+        // PedeNoise cMeasureWithAntenna;
+        // cMeasureWithAntenna.Inherit (&cHybridTester);
+        // //second parameter disables stub logic on CBC3
+        // cMeasureWithAntenna.Initialise (true, true); // canvases etc. for fast calibration
+        // cMeasureWithAntenna.measureNoise();
+        
+        OpenFinder cOpenFinder;
+        cOpenFinder.Inherit (&cHybridTester);
+        cOpenFinder.FindOpensPS();
+    
+
+        // DetectorDataContainer *cContainer;
+        // if( !cmd.foundOption("measurePedeNoise") )
+        // {
+        //     PedeNoise cPedeNoise;
+        //     cPedeNoise.Inherit(&cHybridTester);
+        //     cPedeNoise.measureNoise();
+        //     cContainer = &cPedeNoise.fThresholdAndNoiseContainer; 
+        // }
+        // else 
+        //    cContainer = &cPedeNoise.fThresholdAndNoiseContainer; 
+             
+        // for ( auto cBoard : cContainer)
+        // {
+        //     for ( auto cOpticalGroup : *cBoard)
+        //     {
+        //         for ( auto cModule : *cOpticalGroup)
+        //         {
+        //             for ( auto cChip : *cModule )
+        //             {
+        //                 uint32_t cGlobalThreshold=0; 
+        //                 for(uint8_t iChannel=0; iChannel<cChip->size(); ++iChannel)
+        //                 {
+        //                     auto& cThreshold = cChip->getChannel<ThresholdAndNoise>(iChannel).fThreshold; 
+        //                     auto& cNoise = cChip->getChannel<ThresholdAndNoise>(iChannel).fNoise; 
+        //                     cGlobalThreshold += cThreshold + 3*cNoise;
+        //                 }
+        //                 cGlobalThreshold /= cChip->size();
+        //                 LOG (INFO) << BOLDBLUE << "Threshold set to " << +cGlobalThreshold << RESET;
+        //             }
+        //         }
+        //     }
+        // }
+    }
     // if( cmd.foundOption ( "checkAntenna" ) )
     // {
     //     cTool.setSameDac("Threshold", 1);

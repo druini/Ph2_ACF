@@ -544,6 +544,32 @@ void PSHybridTester::CheckHybridInputs(std::vector<std::string> pInputs, std::ve
         this->CheckHybridInputs(cBoard, pInputs, pCounters);
     }
 }
+void PSHybridTester::SelectAntennaPosition(const std::string &pPosition, uint16_t pPotentiometer)
+{
+    #ifdef __TCUSB__
+        std::map<std::string, TC_PSFE::ant_channel> cAntennaControl =
+        {
+            { "Disable" , TC_PSFE::ant_channel::NONE},
+            { "EvenChannels", TC_PSFE::ant_channel::_1 },
+            { "OddChannels", TC_PSFE::ant_channel::_2 },
+            { "Enable", TC_PSFE::ant_channel::ALL }
+        };
+
+        auto cMapIterator = cAntennaControl.find(pPosition);
+        if( cMapIterator != cAntennaControl.end() )
+        {
+            auto& cChannel = cMapIterator->second;
+            LOG (INFO) << BOLDBLUE << "Selecting antenna channel to "
+              << " inject charge in [ "
+              << pPosition 
+              << " ] position. This is switch position " 
+              << +cChannel
+              << RESET;
+            TC_PSFE cTC_PSFE;
+            cTC_PSFE.antenna_fc7(pPotentiometer, cChannel);
+        }
+    #endif
+}
 
 void PSHybridTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters )
 {

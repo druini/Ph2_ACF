@@ -38,7 +38,7 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
     		<Register name="triggers_to_accept"> 0 </Register>
-    		<Register name="trigger_source"> 3 </Register>
+    		<Register name="trigger_source"> 10 </Register>
     		<Register name="user_trigger_frequency"> 1 </Register>
     		<Register name="stubs_mask"> 1 </Register>
                     <!--this is the delay for the stub trigger-->
@@ -149,8 +149,8 @@
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">25</Setting>
-    <Setting name="PedeNoisePulseAmplitude">25</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">60</Setting>
+    <Setting name="PedeNoisePulseAmplitude">0</Setting>
     <Setting name="TriggerRate">10</Setting>
 
 
@@ -163,7 +163,8 @@
     <Setting name="FitSignal">0</Setting>
 
     <!--Antenna for Opens -->
-    <Setting name="AntennaPotentiometer">800</Setting>
+    <Setting name="AntennaPotentiometer">640</Setting>
+    <Setting name="ThresholdForOpens">10</Setting>
     <Setting name="AntennaTriggerRate">50</Setting>
 
 
@@ -188,8 +189,5 @@
     <Setting name="TestPulsePotentiometer">0x50</Setting>
     <Setting name="SyncDebug">0</Setting>
 
-    <!-- <Setting name="AntennaPotentiometer">526</Setting>
-    <Setting name="AntennaTriggerRate">15</Setting>
- -->
 </Settings>
 </HwDescription>

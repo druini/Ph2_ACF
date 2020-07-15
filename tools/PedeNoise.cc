@@ -79,7 +79,6 @@ void PedeNoise::disableStubLogic()
 
     for (auto cBoard : *fDetectorContainer)
     {
-        uint8_t cAsync = ( cBoard->getEventType() == EventType::SSAAS ) ? 1 : 0;
         for(auto cOpticalGroup : *cBoard)
         {
             for ( auto cHybrid : *cOpticalGroup )
@@ -93,10 +92,6 @@ void PedeNoise::disableStubLogic()
                         fHIPCountValue .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cROC), "HIP&TestMode"           );
                         fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth", 0x23);
                         fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cROC), "HIP&TestMode", 0x00);
-                    }
-                    if( cROC->getFrontEndType() == FrontEndType::SSA)
-                    {
-                        fReadoutChipInterface->WriteChipReg(cROC,"AnalogueAsync",cAsync);
                     }
                 }
             }
@@ -142,16 +137,16 @@ void PedeNoise::sweepSCurves ()
         LOG (INFO) << RED <<  "Cannot inject pulse for all channels, test in groups enabled. " << RESET ;
     }
 
+    //configure TP amplitude 
+    for ( auto cBoard : *fDetectorContainer )
+    {
+        if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
+        else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
+    }
     if(fPulseAmplitude != 0)
     {
         this->enableTestPulse( true );
-
         setFWTestPulse();
-        for ( auto cBoard : *fDetectorContainer )
-        {
-            if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
-            else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
-        }
         LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
         cStartValue = this->findPedestal ();
     }

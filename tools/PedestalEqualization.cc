@@ -70,7 +70,6 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
 
         for(auto board : *fDetectorContainer)
         {
-            uint8_t cAsync = ( board->getEventType() == EventType::SSAAS ) ? 1 : 0;
             for(auto opticalGroup : *board)
             {
                 for(auto hybrid: *opticalGroup)
@@ -89,10 +88,6 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
                         uint8_t value = fReadoutChipInterface->ReadChipReg (theChip, "HIP&TestMode");
                         fHIPCountCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>() = value;
                             static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression( theChip, false, true , 0);
-                        }
-                        if( theChip->getFrontEndType() == FrontEndType::SSA )
-                        {
-                            fReadoutChipInterface->WriteChipReg(chip,"AnalogueAsync",cAsync);
                         }
                     }
                 }

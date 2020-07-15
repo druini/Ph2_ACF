@@ -204,6 +204,7 @@ namespace Ph2_System
 
     for (auto cBoard : *fDetectorContainer)
       {
+        uint8_t cAsync = ( cBoard->getEventType() == EventType::SSAAS ) ? 1 : 0;
         if (cBoard->getBoardType() != BoardType::RD53)
           {
             //setting up back-end board
@@ -257,10 +258,16 @@ namespace Ph2_System
                       {
                         ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
                         if ( !bIgnoreI2c )
-                          {
-                            LOG (INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
-                            fReadoutChipInterface->ConfigureChip ( theReadoutChip );
-                          }
+                        {
+                          LOG (INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
+                          fReadoutChipInterface->ConfigureChip ( theReadoutChip );
+                        }
+                        // if SSA + ASYNC
+                        // make sure ROCs are configured for that 
+                        if( theReadoutChip->getFrontEndType() == FrontEndType::SSA)
+                        {
+                          fReadoutChipInterface->WriteChipReg(cReadoutChip,"AnalogueAsync",cAsync);
+                        }
                       }
                   }
               }
