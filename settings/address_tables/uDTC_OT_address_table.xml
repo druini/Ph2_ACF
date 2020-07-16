@@ -133,8 +133,10 @@
             </node>
             
             <node id="slvs_debug" address = "0x000">
-                <node id="hybrid_select"                   mask="0x000F0000"/>
+                <!--<node id="hybrid_select"                   mask="0x000F0000"/>
                 <node id="chip_select"                     mask="0x00F00000"/>
+            --> <!-- for firmware with multiple hybrids -->
+                <node id="chip_select"                     mask="0x000F0000"/>
             </node>
 
             <!-- line debug -->
@@ -534,10 +536,10 @@
                 <node id="fcmd_from_ssa1_test_is_payload_error" mask="0x00000400" description="payload error in the return fast command from SSA1"/>
                 <node id="fcmd_from_ssa2_test_is_payload_error" mask="0x00000800" description="payload error in the return fast command from SSA2"/>
             </node>
-
             <node id="stub_debug"                address="0x042" description="stub scoping " mode="incremental" size="80"/>
             <node id="l1a_debug"                address="0x010" description="l1a scoping " mode="incremental" size="50"/>
 
+            
             <!-- debug counters -->
             <node id="debug_blk_counter00"                address="0x0BD" mask="0xFFFFFFFF" description="counter on debug block input line 00"/>
             <node id="debug_blk_counter01"                address="0x0BE" mask="0xFFFFFFFF" description="counter on debug block input line 01"/>
@@ -571,6 +573,9 @@
             <node id="debug_blk_counter29"                address="0x0DA" mask="0xFFFFFFFF" description="counter on debug block input line 29"/>
             <node id="debug_blk_counter30"                address="0x0DB" mask="0xFFFFFFFF" description="counter on debug block input line 30"/>
             <node id="debug_blk_counter31"                address="0x0DC" mask="0xFFFFFFFF" description="counter on debug block input line 31"/>
+            <node id="input_lines_debug_done"             address="0x0DE" mask="0xFFFFFFFF" description="debugging of input lines done"/>
+            <node id="input_lines_debug_done"             address="0x0DF" mask="0xFFFFFFFF" description="debugging of output lines done"/>
+       
         </node>
 
         <node id="be_proc"                      address="0x4000">

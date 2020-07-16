@@ -93,7 +93,7 @@ int main ( int argc, char* argv[] )
     std::string cHybridId = ( cmd.foundOption ( "hybridId" ) ) ? cmd.optionValue ( "hybridId" ) : "xxxx";
     uint8_t cPattern = ( cmd.foundOption ( "mpaTest" ) ) ? convertAnyInt ( cmd.optionValue ( "mpaTest" ).c_str() ) : 0; 
     const std::string cSSAPair = ( cmd.foundOption ( "ssapair" ) )   ?   cmd.optionValue ( "ssapair" ) : "";
-    cDirectory += Form("FEH_2S_%s",cHybridId.c_str());
+    cDirectory += Form("FEH_PS_%s",cHybridId.c_str());
     
     TApplication cApp ( "Root Application", &argc, argv );
     
@@ -293,7 +293,8 @@ int main ( int argc, char* argv[] )
         // configure SSA to output something on stub lines 
         cHybridTester.SSATestStubOutput(cSSAPair);
         // configure SSA to output something on L1 lines
-        cHybridTester.SSATestL1Output(cSSAPair);
+        //cHybridTester.SSATestL1Output(cSSAPair);
+        
         // put it back in normal readout mode 
         // and make sure we're in normal readout mode 
         // i.e. synchronous

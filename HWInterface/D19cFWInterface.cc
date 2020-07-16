@@ -563,7 +563,7 @@ namespace Ph2_HwInterface
           //std::this_thread::sleep_for (std::chrono::milliseconds (100) );
         }
     }
-
+   
     void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
     {
 
@@ -631,6 +631,11 @@ namespace Ph2_HwInterface
         // reset FC7 if not mux crate
         uint32_t fmc1_card_type = ReadReg ("fc7_daq_stat.general.info.fmc1_card_type");
         uint32_t fmc2_card_type = ReadReg ("fc7_daq_stat.general.info.fmc2_card_type");
+
+        std::string cFMC1name = fFMCMap[fmc1_card_type]; 
+        std::string cFMC2name = fFMCMap[fmc2_card_type]; 
+        bool cWithDIO5 = (cFMC1name == "DIO5" || cFMC2name == "DIO5");//DIO5 in either slot 
+        
         LOG (INFO) << BOLDBLUE << "FMC1  " << +fmc1_card_type << " FMC2 " << +fmc2_card_type << RESET;
         LOG (INFO) << BOLDBLUE << "FMC1 Card: " << RESET << getFMCCardName (fmc1_card_type);
         LOG (INFO) << BOLDBLUE << "FMC2 Card: " << RESET << getFMCCardName (fmc2_card_type);
@@ -652,17 +657,20 @@ namespace Ph2_HwInterface
         this->WriteStackReg ( cBoardRegs );
         cBoardRegs.clear();
         // load dio5 configuration
-        if (cEnableDIO5)
+        if (cEnableDIO5 && cWithDIO5)
         {
-            // this->WriteReg("sysreg.fmc_pwr.l12_pwr_en",1);
-            // this->PowerOnDIO5(8);
             LOG (INFO) << BOLDBLUE << "Loading DIO5 configuration.." << RESET;
             this->WriteReg ("fc7_daq_ctrl.dio5_block.control.load_config", 0x1);
-            std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+            std::this_thread::sleep_for (std::chrono::milliseconds (fWait_us*1000) );
             auto cStatus = this->ReadReg("fc7_daq_stat.dio5_block.status.not_ready");
             auto cError = this->ReadReg("fc7_daq_stat.dio5_block.status.error");
             LOG (INFO) << BOLDBLUE << "DIO5 status [not ready] : " << +cStatus << RESET;
             LOG (INFO) << BOLDBLUE << "DIO5 status [error] : " << +cError << RESET;
+        }
+        else if(cEnableDIO5)
+        {
+            LOG (INFO) << BOLDRED << "DID NOT ENABLE DIO5.. FW not configured for that option" << RESET;
+            throw std::runtime_error(std::string("Trying to enable DIO5 when firmware isn't configured for that mezzanine!"));
         }
         
         //set reference for CDCE 
@@ -718,96 +726,159 @@ namespace Ph2_HwInterface
         if(fI2CVersion >= 1) 
         {
             fI2CSlaveMap.clear();
+            fSlaveMap.clear();
             // assuming only one type of CIC per board ...
             for( auto cModule : *pBoard )
             {
-              for (auto cFe : *cModule )
-              {
-                auto cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
-                auto& cCic = cOuterTrackerModule->fCic;
-                uint8_t cBaseAddress;
-                uint8_t cNBytes;
-                std::cout<<cCic<<std::endl;
-                if( cCic != NULL )
+                // default I2C map is for 8CBC3 
+                for (auto cFe : *cModule )
                 {
-                  for ( auto cChip : *cFe)
-                  {
-                    //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
-                    cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x41; 
-                    cNBytes = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 2 : 1; 
-                    uint8_t cLastValue = 1;
-                    if( fI2CSlaveMap.find(cChip->getId()) == fI2CSlaveMap.end()  )
-                    { 
-                      std::pair<uint8_t,std::vector<uint32_t>> cMapItem; 
-                      cMapItem.first =  cChip->getId();
-                      cMapItem.second = { static_cast<uint8_t>(cBaseAddress + cChip->getId()), cNBytes , 1, 1, 1, cLastValue} ; 
-                      LOG (INFO) << BOLDBLUE << "Adding chip with address " << +cChip->getId() << " to I2C slave map.." << RESET;
-                      fI2CSlaveMap.insert(fI2CSlaveMap.begin(), cMapItem) ;
-                    }  
-                  }// chips 
-                  cBaseAddress = 0x60;
-                  cNBytes=2;
-                  if( fI2CSlaveMap.find(cCic->getChipId()) == fI2CSlaveMap.end()  )
-                  { 
-                    std::pair<uint8_t,std::vector<uint32_t>> cMapItem; 
-                    cMapItem.first =  cCic->getChipId(); 
-                    cMapItem.second = { static_cast<uint8_t>(cBaseAddress), cNBytes , 1, 1, 1, 1} ; 
-                    LOG (INFO) << BOLDBLUE << "Adding chip with address " << +cCic->getChipId() << " to I2C slave map.." << RESET;
-                    fI2CSlaveMap.insert(fI2CSlaveMap.begin(), cMapItem) ;
-                  }
-                }
-                else
-                {
-                  for ( auto cChip : *cFe)
-                  {
-                    //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
-                    // if( cChip->getFrontEndType() == FrontEndType::CBC3 ) 
-                    //   continue; 
-                    // TO - DO .. check MPA address 
-                    cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x40; 
-                    cBaseAddress += cChip->getId();
-                    cNBytes = 2;
-                    LOG (INFO) << BOLDBLUE << "Adding slave with I2C address 0x" 
-                      << std::hex <<  +cBaseAddress << std::dec 
-                      << RESET;
-                    if( fI2CSlaveMap.find(cChip->getId()) == fI2CSlaveMap.end()  )
-                    { 
-                      std::pair<uint8_t,std::vector<uint32_t>> cMapItem; 
-                      cMapItem.first =  cChip->getId();
-                      cMapItem.second = { static_cast<uint8_t>(cBaseAddress + cChip->getId()), cNBytes , 1, 1, 1, 1} ; 
-                      fI2CSlaveMap.insert(fI2CSlaveMap.begin(), cMapItem) ;
-                    }  
-                  }// chips 
-                }
-              }//hybrids
+                    auto cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
+                    auto& cCic = cOuterTrackerModule->fCic;
+                    uint8_t cBaseAddress;
+                    uint8_t cNBytes;
+                    std::cout<<cCic<<std::endl;
+                    if( cCic != NULL )
+                    {
+                      for ( auto cChip : *cFe)
+                      {
+                        //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
+                        cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x41;
+                        cBaseAddress +=  cChip->getId();
+                        cNBytes = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 2 : 1; 
+                        uint8_t cLastValue = 1;
+                        if( fI2CSlaveMap.find(cChip->getId()) == fI2CSlaveMap.end()  )
+                        { 
+                          std::vector<uint32_t> cOldI2CSlaveDescription = { cBaseAddress, cNBytes , 1, 1, 1, cLastValue, cChip->getId() }; 
+                          std::vector<uint32_t> cI2CSlaveDescription = { cBaseAddress , cNBytes , 1, 1, 1, cLastValue };
+
+                          LOG (INFO) << BOLDBLUE << "Adding chip with address " << +cChip->getId() << " to I2C slave map.." << RESET;
+                          fI2CSlaveMap[cChip->getId()]=cI2CSlaveDescription;
+                          fSlaveMap.push_back(cOldI2CSlaveDescription);
+                        }  
+                      }// chips 
+                      cBaseAddress = 0x60;
+                      cNBytes=2;
+                      std::vector<uint32_t> cOldI2CSlaveDescription = { cBaseAddress, cNBytes , 1, 1, 1, 1, cCic->getChipId() }; 
+                      std::vector<uint32_t> cI2CSlaveDescription = { cBaseAddress , cNBytes , 1, 1, 1, 1 };
+                      fI2CSlaveMap[cCic->getChipId()]=cI2CSlaveDescription;
+                      fSlaveMap.push_back(cOldI2CSlaveDescription);
+                    }
+                    else
+                    {
+                      for ( auto cChip : *cFe)
+                      {
+                        cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x41; 
+                        cBaseAddress += cChip->getId();
+                        cNBytes = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 2 : 1; 
+                        uint8_t cLastValue = 1;
+                        LOG (INFO) << BOLDBLUE << "Adding slave with I2C address 0x" 
+                          << std::hex <<  +cBaseAddress << std::dec 
+                          << RESET;
+                        
+                        std::vector<uint32_t> cOldI2CSlaveDescription = { cBaseAddress, cNBytes , 1, 1, 1, cLastValue, cChip->getId() }; 
+                        std::vector<uint32_t> cI2CSlaveDescription = { cBaseAddress , cNBytes , 1, 1, 1, cLastValue };
+                        fI2CSlaveMap[cChip->getId()]=cI2CSlaveDescription;
+                        fSlaveMap.push_back(cOldI2CSlaveDescription);
+                      }// chips 
+                    }
+                }//hybrids
             }//modules
             // and then loop over map and write 
-            if (fFirmwareFrontEndType != FrontEndType::CBC3)
+            for (auto cIterator=fI2CSlaveMap.begin(); cIterator!=fI2CSlaveMap.end(); cIterator++)
             {
-                for (auto cIterator=fI2CSlaveMap.begin(); cIterator!=fI2CSlaveMap.end(); cIterator++)
-                {
-                  //auto cChipId = cIterator->first;
-                  auto cDescription = cIterator->second ;
-                  // setting the params
-                  uint32_t shifted_i2c_address =  cDescription[0] << 25;
-                  uint32_t shifted_register_address_nbytes = cDescription[1]<<10;
-                  uint32_t shifted_data_wr_nbytes = cDescription[2]<<5;
-                  uint32_t shifted_data_rd_nbytes = cDescription[3]<<0;
-                  uint32_t shifted_stop_for_rd_en = cDescription[4]<<24;
-                  uint32_t shifted_nack_en = cDescription[5]<<23;
+                //auto cChipId = cIterator->first;
+                auto cDescription = cIterator->second ;
+                // setting the params
+                uint32_t shifted_i2c_address = ( cDescription[0] ) << 25;
+                uint32_t shifted_register_address_nbytes = cDescription[1]<<10;
+                uint32_t shifted_data_wr_nbytes = cDescription[2]<<5;
+                uint32_t shifted_data_rd_nbytes = cDescription[3]<<0;
+                uint32_t shifted_stop_for_rd_en = cDescription[4]<<24;
+                uint32_t shifted_nack_en = cDescription[5]<<23;
 
-                  // writing the item to the firmware
+                // writing the item to the firmware
+                if (fFirmwareFrontEndType != FrontEndType::CBC3)
+                {
                   uint32_t final_item = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
                   std::string curreg = "fc7_daq_cnfg.command_processor_block.i2c_address_table.slave_" + std::to_string(std::distance(fI2CSlaveMap.begin(),cIterator)) + "_config";
-                  LOG (DEBUG) << BOLDMAGENTA << "Writing "
-                  << std::bitset<32>(final_item)
-                  << " to register "
-                  << curreg 
-                  << RESET;
+                  LOG (INFO) << BOLDMAGENTA << "Writing "
+                      << std::bitset<32>(final_item)
+                      << " to register "
+                      << curreg 
+                      << RESET;
                   this->WriteReg(curreg, final_item);
                 }
             }
         }
+
+        // if(fI2CVersion >= 1) 
+        // {
+        //   fSlaveMap.clear();
+        //   // assuming only one type of CIC per board ...
+        //   for( auto cModule : *pBoard )
+        //   {
+        //       for (auto cFe : *cModule )
+        //       {
+        //         auto cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
+        //         auto& cCic = cOuterTrackerModule->fCic;
+        //         uint8_t cBaseAddress;
+        //         uint8_t cNBytes;
+        //         if( cCic != NULL )
+        //         {
+        //           for ( auto cChip : *cFe)
+        //           {
+        //             //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
+        //             cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x41; 
+        //             cNBytes = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 2 : 1; 
+        //             fSlaveMap.push_back({ static_cast<uint8_t>(cBaseAddress + cChip->getId()), cNBytes , 1, 1, 1, 1, cChip->getId()});
+        //           }// chips 
+        //           cBaseAddress = 0x60;
+        //           cNBytes=2;
+        //           fSlaveMap.push_back({ cBaseAddress, cNBytes , 1, 1, 1, 1, 8});
+        //         }
+        //         else
+        //         {
+        //           for ( auto cChip : *cFe)
+        //           {
+        //             //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
+        //             if( cChip->getFrontEndType() == FrontEndType::CBC3 ) 
+        //               continue; 
+        //             // TO - DO .. check MPA address 
+        //             cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x40; 
+        //             cBaseAddress += cChip->getId();
+        //             cNBytes = 2;
+        //             LOG (INFO) << BOLDBLUE << "Adding slave with I2C address 0x" 
+        //               << std::hex <<  +cBaseAddress << std::dec 
+        //               << RESET;
+        //             fSlaveMap.push_back({ cBaseAddress, cNBytes , 1, 1, 1, 1, cChip->getId()});
+        //           }// chips 
+        //         }
+        //       }//hybrids
+        //   }//modules
+        //   // and then loop over map and write 
+        //   for (unsigned int ism = 0; ism < fSlaveMap.size(); ism++) 
+        //   {
+        //     // setting the params
+        //     uint32_t shifted_i2c_address =  fSlaveMap[ism][0] << 25;
+        //     uint32_t shifted_register_address_nbytes = fSlaveMap[ism][1]<<10;
+        //     uint32_t shifted_data_wr_nbytes = fSlaveMap[ism][2]<<5;
+        //     uint32_t shifted_data_rd_nbytes = fSlaveMap[ism][3]<<0;
+        //     uint32_t shifted_stop_for_rd_en = fSlaveMap[ism][4]<<24;
+        //     uint32_t shifted_nack_en = fSlaveMap[ism][5]<<23;
+
+        //     // writing the item to the firmware
+        //     uint32_t final_item = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
+        //     std::string curreg = "fc7_daq_cnfg.command_processor_block.i2c_address_table.slave_" + std::to_string(ism) + "_config";
+        //     LOG (INFO) << BOLDBLUE << "Writing "
+        //       << std::bitset<32>(final_item)
+        //       << " to register "
+        //       << curreg 
+        //       << RESET;
+        //     this->WriteReg(curreg, final_item);
+        //   }
+        //   //this->SetI2CAddressTable();
+        // }
 
         fOptical = pBoard->ifOptical();
         // if optical readout .. then configure links
@@ -1031,7 +1102,8 @@ namespace Ph2_HwInterface
         {
             if( cFMCStates[cIndx] == false)
               continue;
-            this->PowerOnDIO5(cFMCIds[cIndx]);
+            if( cFMC1name == "DIO5" || cFMC2name == "DIO5" )
+                this->PowerOnDIO5(cFMCIds[cIndx]);
         }
 
         if( !(cWithDIO5 || cPSMux || c2SMux) )
@@ -1339,7 +1411,7 @@ namespace Ph2_HwInterface
         this->WriteReg("fc7_daq_cnfg.stub_debug.enable",0x00);
         this->ResetReadout();
     }
-
+    
     // tuning of L1A lines
     bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard , bool pScope)
     {
@@ -1630,8 +1702,7 @@ namespace Ph2_HwInterface
       
     bool D19cFWInterface::PhaseTuning (BeBoard* pBoard, uint8_t pFeId, uint8_t pChipId ,uint8_t pLineId ,  uint16_t pPattern , uint16_t pPatternPeriod )
     {
-        uint8_t cEnableL1=0;
-        LOG (INFO) << BOLDBLUE << "Phase and word alignement on BeBoard" << +pBoard->getId() << " FE" << +pFeId << " CBC" << +pChipId << " - line " << +pLineId << RESET;
+        LOG (DEBUG) << BOLDBLUE << "Phase and word alignement on BeBoard" << +pBoard->getId() << " FE" << +pFeId << " CBC" << +pChipId << " - line " << +pLineId << RESET;
         PhaseTuner pTuner;
         this->ChipReSync();
         pTuner.SetLineMode( this, pFeId , pChipId , pLineId , 2 , 0, 0, 0, 0 );
@@ -1640,22 +1711,21 @@ namespace Ph2_HwInterface
         do
         {
             cSuccess = pTuner.TuneLine(this,  pFeId , pChipId , pLineId , pPattern , pPatternPeriod , true);
-            if( pTuner.fBitslip == 0 )
-             cSuccess = false;
-            pTuner.GetLineStatus(this,  pFeId , pChipId , pLineId );
-            LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
+            //pTuner.GetLineStatus(this,  pFeId , pChipId , pLineId );
+            //if( pTuner.fBitslip == 0 )
+            // cSuccess = false;
+            LOG (DEBUG) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
             cAttempts++;
         }while(!cSuccess && cAttempts <10);
         if( pLineId == 1 && (fFirmwareFrontEndType == FrontEndType::CBC3 ||fFirmwareFrontEndType == FrontEndType::SSA) )
         {
-            LOG (INFO) << BOLDBLUE << "Forcing L1A line to match alignment result for first stub line." << RESET;
-            // force L1A line to match phase tuning result for first stub lines to match
-            uint8_t pDelay = pTuner.fDelay;
-            uint8_t cMode=2;
-            uint8_t cBitslip = pTuner.fBitslip;
-            if( fFirmwareFrontEndType == FrontEndType::SSA )
-              cBitslip = cBitslip + 1;
-            pTuner.SetLineMode( this, pFeId , pChipId , 0 , cMode , pDelay, cBitslip, cEnableL1, 0 );
+             uint8_t cEnableL1=0;
+             LOG (INFO) << BOLDBLUE << "Forcing L1A line to match alignment result for first stub line." << RESET;
+             // force L1A line to match phase tuning result for first stub lines to match
+             uint8_t pDelay = pTuner.fDelay;
+             uint8_t cMode=2;
+             uint8_t cBitslip = pTuner.fBitslip+1;
+             pTuner.SetLineMode( this, pFeId , pChipId , 0 , cMode , pDelay, cBitslip, cEnableL1, 0 );
         }
         return cSuccess;
     }
@@ -2382,11 +2452,12 @@ namespace Ph2_HwInterface
         bool cFound = ( cMapIterator != fI2CSlaveMap.end() );
         if( cFound )
         {
-          uint8_t pIndex = std::distance(fI2CSlaveMap.begin(), cMapIterator);//cMapIterator->first;
-          LOG (DEBUG) << BOLDBLUE << "I2C version " << +fI2CVersion << RESET;
+          //remember .. encoded command the chip id is .. the index and not the id!!
+          uint8_t pIndex = std::distance(fI2CSlaveMap.begin(), cMapIterator);
           LOG (DEBUG) << BOLDGREEN << "Encoding register from chip " << +pCbcId 
             << " which is index " << +pIndex << " in I2C map " << RESET;
           pCbcId = pIndex;
+          
           //use fBroadcastCBCId for broadcast commands
           bool pUseMask = false;
           if( fOptical )
@@ -2420,11 +2491,6 @@ namespace Ph2_HwInterface
           LOG (INFO) << BOLDRED << "Could not find address in I2C map.. " << RESET;
         }
     }
-
-
-
-
-
 
 
     void D19cFWInterface::BCEncodeReg ( const ChipRegItem& pRegItem,

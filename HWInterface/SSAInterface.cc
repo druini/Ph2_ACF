@@ -88,22 +88,22 @@ namespace Ph2_HwInterface {// start namespace
 	 	return cSuccess;
 	}
 	// bool SSAInterface::ConfigureChip ( Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize )
- //    	{
- //    		//uint8_t cWriteAttempts = 0 ;
-	// 		std::vector<uint32_t> cVec;
-	// 		ChipRegMap cSSARegMap = pSSA->getRegMap();
-	// 		for ( auto& cRegInMap : cSSARegMap )
-	//         {
-	//         	if( this->WriteChipSingleReg ( pSSA, cRegInMap.first, cRegInMap.second.fValue, pVerifLoop) )
-	//         	{
-	// 				#ifdef COUNT_FLAG
-	// 					fRegisterCount++;
-	// 				#endif
-	// 			}
-	// 			else
-	// 			{
-	// 				throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
-	// 			}
+	// {
+	// 	//uint8_t cWriteAttempts = 0 ;
+	// 	std::vector<uint32_t> cVec;
+	// 	ChipRegMap cSSARegMap = pSSA->getRegMap();
+	// 	for ( auto& cRegInMap : cSSARegMap )
+ //        {
+ //        	if( this->WriteChipSingleReg ( pSSA, cRegInMap.first, cRegInMap.second.fValue, pVerifLoop) )
+ //        	{
+	// 			#ifdef COUNT_FLAG
+	// 				fRegisterCount++;
+	// 			#endif
+	// 		}
+	// 		else
+	// 		{
+	// 			throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
+	// 		}
 	// 	 }
 	// 	 #ifdef COUNT_FLAG
 	//         fTransactionCount++;
@@ -200,6 +200,8 @@ namespace Ph2_HwInterface {// start namespace
 		}
 		else if( pRegName == "EnableSLVSTestOutput" ) 
 		{
+		   LOG (INFO) << BOLDBLUE << "Enabling SLVS test output on SSA#" 
+		   	<< +pSSA->getChipId() << RESET;
 		   uint8_t cRegValue  = ReadChipReg( pSSA, "ReadoutMode");
 		   cRegValue = ( cRegValue & 0x4 ) | ( pValue << 1 ); 
   		   return WriteChipSingleReg( pSSA, "ReadoutMode", cRegValue, pVerifLoop); 

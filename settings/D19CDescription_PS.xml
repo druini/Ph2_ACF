@@ -163,9 +163,12 @@
     <Setting name="FitSignal">0</Setting>
 
     <!--Antenna for Opens -->
-    <Setting name="AntennaPotentiometer">640</Setting>
+    <Setting name="AntennaPotentiometer">647</Setting>
     <Setting name="ThresholdForOpens">10</Setting>
     <Setting name="AntennaTriggerRate">50</Setting>
+
+    <!-- Shorts -->
+    <Setting name="ShortsPulseAmplitude"> 50 </Setting>
 
     <!--PS hybrid SSA output test -->
     <!-- number of 10 ms periods to wait for in the case of stubs -->

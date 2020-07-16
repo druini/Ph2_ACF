@@ -56,7 +56,7 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
                 if( !cAligned )
                     LOG (INFO) << BOLDRED << "Alignment failed on line " << +cLineId << RESET;
             }
-            // if aligned then try and scope 
+            //if aligned then try and scope 
             LOG (INFO) << "SLVS debug [stub lines] : Chip "
                 << +cPairId 
                 << RESET;
@@ -154,7 +154,7 @@ void PSHybridTester::SSAPairSelect(BeBoard* pBoard, const std::string& SSAPairSe
     {
         auto BitPattern = fSSAPairSelMap.at(SSAPairSel);
         this->fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.ssa_pair_select", BitPattern);
-        std::this_thread::sleep_for (std::chrono::milliseconds (1) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (10) );
         auto cRegister = this->fBeBoardInterface->ReadBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.ssa_pair_select");
         LOG(INFO) << BLUE << "SSA pair " << SSAPairSel << " is selected register value is " << std::bitset<4>(cRegister) << RESET;
     } 
@@ -211,7 +211,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
 }
 void PSHybridTester::SSATestStubOutput(BeBoard* pBoard,  const std::string& cSSAPairSel)
 {
-    // select SSA pair 
+    this->SelectCIC(false);
     this->SSAPairSelect(pBoard , cSSAPairSel);
     // now cycle through chips one at a time ..
     // and configure chips to output a fixed pattern  
@@ -227,14 +227,6 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard,  const std::string& cSSA
                     continue;
 
         		uint8_t cPattern= (cReadoutChip->getId()%2 == 0 ) ? 0x01 : 0x05; 
-                // if( cReadoutChip->getId() == 0 || cReadoutChip->getId() == 4 ) //2,3
-        		//   cPattern = 0x01; 
-        		// else if( cReadoutChip->getId() == 1 || cReadoutChip->getId() == 5 ) //2,3
-        		//   cPattern = 0x05; 
-        		// else if( cReadoutChip->getId() == 2 || cReadoutChip->getId() == 6 )//4,5
-        		//   cPattern = 0x15;
-        		// else if( cReadoutChip->getId() == 3 || cReadoutChip->getId() == 7 )//6,7   
-        		//   cPattern = 0x55;
                         
         		LOG (INFO) << BOLDBLUE << "Chip " 
         			<< +cReadoutChip->getId() 
@@ -259,7 +251,6 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard,  const std::string& cSSA
     // now capture output on pogo sockets 
     //this->SSAOutputsPogoDebug(pBoard, false);
     this->SSAOutputsPogoScope(pBoard, false);
-
 }
 void PSHybridTester::SSATestL1Output(BeBoard* pBoard,  const std::string& cSSAPairSel)
 {
@@ -311,8 +302,8 @@ void PSHybridTester::SetHybridVoltage()
 {
     #ifdef __TCUSB__
    	    TC_PSFE cTC_PSFE;
-	    cTC_PSFE.set_voltage(cTC_PSFE._1100mV,cTC_PSFE._1250mV);
-	    //cTC_PSFE.set_voltage(cTC_PSFE._1050mV,cTC_PSFE._1250mV);
+	    //cTC_PSFE.set_voltage(cTC_PSFE._1100mV,cTC_PSFE._1250mV);
+	    cTC_PSFE.set_voltage(cTC_PSFE._1050mV,cTC_PSFE._1250mV);
     #endif
 }
 void PSHybridTester::ReadHybridVoltage(const std::string & pVoltageName )

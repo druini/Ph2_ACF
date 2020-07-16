@@ -101,21 +101,13 @@ void ShortFinder::Initialise ()
 {
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-
-    cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-
-
-    if(ShortFinder::cWithCBC)    fChannelGroupHandler = new CBCChannelGroupHandler();
-    if(ShortFinder::cWithSSA)
-		{
-		fChannelGroupHandler = new SSAChannelGroupHandler();
-		THRESHOLD_IN=0.01;
-		}
+    fWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
+    fWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
 
 
-
-
+    if(ShortFinder::fWithCBC)    fChannelGroupHandler = new CBCChannelGroupHandler();
+    if(ShortFinder::fWithSSA)   fChannelGroupHandler = new SSAChannelGroupHandler();
+	//THRESHOLD_IN=0.01;
 
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
 
@@ -142,9 +134,6 @@ void ShortFinder::Initialise ()
     ContainerFactory::copyAndInitStructure<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for (auto cBoard : *fDetectorContainer)
     {
-	BeBoard* theBeBoard = static_cast<BeBoard*>( fDetectorContainer->at(cBoard->getIndex()) );
-	if(cWithSSA)theBeBoard->setEventType(EventType::SSAAS);
-
         fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
         auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
         auto& cShorts = fShorts.at(cBoard->getIndex());
@@ -234,158 +223,158 @@ void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<NCHANNELS>* pGroup)
 
 }
 
-//Hacky, temporary
-void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<NSSACHANNELS>* pGroup)
-{
+// //Hacky, temporary
+// void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<NSSACHANNELS>* pGroup)
+// {
 
-    auto cBitset = std::bitset<NSSACHANNELS>( pGroup->getBitset() );
-    auto& cThisShortsContainer = fShortsContainer.at(pBoard->getIndex());
-    auto& cThisHitsContainer = fHitsContainer.at(pBoard->getIndex());
-    auto& cShorts = fShorts.at(pBoard->getIndex());
-    auto& cInjections = fInjections.at(pBoard->getIndex());
-
-
-    for(auto cModule : *pBoard)
-    {
-        auto& cModuleShorts = cThisShortsContainer->at(cModule->getIndex());
-        auto& cModuleHits = cThisHitsContainer->at(cModule->getIndex());
-        auto& cShortsModule = cShorts->at(cModule->getIndex());
-        auto& cInjectionsModule = cInjections->at(cModule->getIndex());
-
-        for (auto cHybrid : *cModule)
-        {
-            auto& cHybridShorts = cModuleShorts->at(cHybrid->getIndex());
-            auto& cHybridHits = cModuleHits->at(cHybrid->getIndex());
-            auto& cShortsHybrid = cShortsModule->at(cHybrid->getIndex());
-            auto& cInjectionsHybrid = cInjectionsModule->at(cHybrid->getIndex());
-            for (auto cChip : *cHybrid)
-            {
-
-                auto& cReadoutChipShorts = cHybridShorts->at(cChip->getIndex());
-                auto& cReadoutChipHits = cHybridHits->at(cChip->getIndex());
-                auto& cShortsReadoutChip = cShortsHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
-                auto& cInjectionsReadoutChip = cInjectionsHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
-
-                for( size_t cIndex=0; cIndex < cBitset.size(); cIndex++ )
-                {
-		    //LOG (INFO) << BOLDRED <<"SF "<< cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex)<<" "<<fEventsPerPoint<< RESET;
-		   // LOG (INFO) << BOLDRED <<" "<< float(abs(cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex) - fEventsPerPoint))/float(fEventsPerPoint)<< RESET;
-
-                    //LOG (INFO) << BOLDRED <<"SF "<< cBitset[cIndex]<<" "<< cReadoutChipShorts->getChannelContainer<uint16_t>()->at(cIndex) <<" "<< THRESHOLD_SHORT<<" "<<fEventsPerPoint<< RESET;
-                    if (cBitset[cIndex] == 0 && cReadoutChipShorts->getChannelContainer<uint16_t>()->at(cIndex) > THRESHOLD_SHORT*fEventsPerPoint )
-                    {
-                        cShortsReadoutChip.push_back(cIndex);
-                        LOG (INFO) << BOLDRED << "Possible short in channel " << +cIndex << RESET;
-                    }
-                    if( cBitset[cIndex] == 1 && float(abs(cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex) - fEventsPerPoint))/float(fEventsPerPoint)<THRESHOLD_IN )
-                    {
-                        cInjectionsReadoutChip.push_back(cIndex);
-                    }
-                }
-
-                if( cInjectionsReadoutChip.size() == 0 )
-                {
-                    LOG (INFO) << BOLDRED << "Problem injecting charge in readout chip"
-                        << +cChip->getId()
-                        << " on FE hybrid "
-                        << +cHybrid->getId()
-                        << " .. STOPPING PROCEDURE!"
-                        << RESET;
-                    exit(FAILED_INJECTION);
-                }
-            }
-        }
-    }
+//     auto cBitset = std::bitset<NSSACHANNELS>( pGroup->getBitset() );
+//     auto& cThisShortsContainer = fShortsContainer.at(pBoard->getIndex());
+//     auto& cThisHitsContainer = fHitsContainer.at(pBoard->getIndex());
+//     auto& cShorts = fShorts.at(pBoard->getIndex());
+//     auto& cInjections = fInjections.at(pBoard->getIndex());
 
 
-}
+//     for(auto cModule : *pBoard)
+//     {
+//         auto& cModuleShorts = cThisShortsContainer->at(cModule->getIndex());
+//         auto& cModuleHits = cThisHitsContainer->at(cModule->getIndex());
+//         auto& cShortsModule = cShorts->at(cModule->getIndex());
+//         auto& cInjectionsModule = cInjections->at(cModule->getIndex());
+
+//         for (auto cHybrid : *cModule)
+//         {
+//             auto& cHybridShorts = cModuleShorts->at(cHybrid->getIndex());
+//             auto& cHybridHits = cModuleHits->at(cHybrid->getIndex());
+//             auto& cShortsHybrid = cShortsModule->at(cHybrid->getIndex());
+//             auto& cInjectionsHybrid = cInjectionsModule->at(cHybrid->getIndex());
+//             for (auto cChip : *cHybrid)
+//             {
+
+//                 auto& cReadoutChipShorts = cHybridShorts->at(cChip->getIndex());
+//                 auto& cReadoutChipHits = cHybridHits->at(cChip->getIndex());
+//                 auto& cShortsReadoutChip = cShortsHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
+//                 auto& cInjectionsReadoutChip = cInjectionsHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
+
+//                 for( size_t cIndex=0; cIndex < cBitset.size(); cIndex++ )
+//                 {
+// 		    //LOG (INFO) << BOLDRED <<"SF "<< cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex)<<" "<<fEventsPerPoint<< RESET;
+// 		   // LOG (INFO) << BOLDRED <<" "<< float(abs(cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex) - fEventsPerPoint))/float(fEventsPerPoint)<< RESET;
+
+//                     //LOG (INFO) << BOLDRED <<"SF "<< cBitset[cIndex]<<" "<< cReadoutChipShorts->getChannelContainer<uint16_t>()->at(cIndex) <<" "<< THRESHOLD_SHORT<<" "<<fEventsPerPoint<< RESET;
+//                     if (cBitset[cIndex] == 0 && cReadoutChipShorts->getChannelContainer<uint16_t>()->at(cIndex) > THRESHOLD_SHORT*fEventsPerPoint )
+//                     {
+//                         cShortsReadoutChip.push_back(cIndex);
+//                         LOG (INFO) << BOLDRED << "Possible short in channel " << +cIndex << RESET;
+//                     }
+//                     if( cBitset[cIndex] == 1 && float(abs(cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex) - fEventsPerPoint))/float(fEventsPerPoint)<THRESHOLD_IN )
+//                     {
+//                         cInjectionsReadoutChip.push_back(cIndex);
+//                     }
+//                 }
+
+//                 if( cInjectionsReadoutChip.size() == 0 )
+//                 {
+//                     LOG (INFO) << BOLDRED << "Problem injecting charge in readout chip"
+//                         << +cChip->getId()
+//                         << " on FE hybrid "
+//                         << +cHybrid->getId()
+//                         << " .. STOPPING PROCEDURE!"
+//                         << RESET;
+//                     exit(FAILED_INJECTION);
+//                 }
+//             }
+//         }
+//     }
+
+
+// }
 
 void ShortFinder::FindShortsPS(BeBoard* pBoard)
 {
     // configure test pulse on chip
-
     setSameDacBeBoard(pBoard, "Bias_CALDAC", fTestPulseAmplitude);
-    setSameDacBeBoard(pBoard, "Bias_THDAC", 80);
+    
+    // setSameDacBeBoard(pBoard, "Bias_THDAC", 80);
 
-    //uint16_t cDelay = fBeBoardInterface->ReadBoardReg( pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse") - 1;
-    //setSameDacBeBoard(pBoard, "L1-Latency_LSB", cDelay);
+    // //uint16_t cDelay = fBeBoardInterface->ReadBoardReg( pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse") - 1;
+    // //setSameDacBeBoard(pBoard, "L1-Latency_LSB", cDelay);
 
-    fBeBoardInterface->ChipReSync ( pBoard ); // NEED THIS! ??
-    //LOG (INFO) << BOLDBLUE << "L1A latency set to " << +cDelay << RESET;
+    // fBeBoardInterface->ChipReSync ( pBoard ); // NEED THIS! ??
+    // //LOG (INFO) << BOLDBLUE << "L1A latency set to " << +cDelay << RESET;
 
 
-    // for (auto cBoard : this->fBoardVector)
-    uint8_t cTestGroup=0;
-    LOG (INFO) << BOLDBLUE << "Starting short finding loop for PS hybrid " << RESET;
-    for(auto cGroup : *fChannelGroupHandler)
-    {
-        //setSameGlobalDac("TestPulseGroup",  cTestGroup);
-        // bitset for this group
-        auto cBitset = std::bitset<NSSACHANNELS>( static_cast<const ChannelGroup<NSSACHANNELS>*>(cGroup)->getBitset() );
-        for(auto cModule : *pBoard)
-        {
-            for (auto cHybrid : *cModule)
-            {
-                for (auto cChip : *cHybrid)
-                {
-                   this->fReadoutChipInterface->setInjectionSchema(static_cast<ReadoutChip*>(cChip), cGroup);
-                }
-            }
-        }
-        //LOG (INFO) << BOLDBLUE << "Injecting charge into CBCs using test capacitor " << +cTestGroup << RESET;
-        LOG (INFO) << BOLDBLUE << "Test pulse channel mask is " << cBitset << RESET;
+    // // for (auto cBoard : this->fBoardVector)
+    // uint8_t cTestGroup=0;
+    // LOG (INFO) << BOLDBLUE << "Starting short finding loop for PS hybrid " << RESET;
+    // for(auto cGroup : *fChannelGroupHandler)
+    // {
+    //     //setSameGlobalDac("TestPulseGroup",  cTestGroup);
+    //     // bitset for this group
+    //     auto cBitset = std::bitset<NSSACHANNELS>( static_cast<const ChannelGroup<NSSACHANNELS>*>(cGroup)->getBitset() );
+    //     for(auto cModule : *pBoard)
+    //     {
+    //         for (auto cHybrid : *cModule)
+    //         {
+    //             for (auto cChip : *cHybrid)
+    //             {
+    //                this->fReadoutChipInterface->setInjectionSchema(static_cast<ReadoutChip*>(cChip), cGroup);
+    //             }
+    //         }
+    //     }
+    //     //LOG (INFO) << BOLDBLUE << "Injecting charge into CBCs using test capacitor " << +cTestGroup << RESET;
+    //     LOG (INFO) << BOLDBLUE << "Test pulse channel mask is " << cBitset << RESET;
 
-        auto& cThisShortsContainer = fShortsContainer.at(pBoard->getIndex());
-        auto& cThisHitsContainer = fHitsContainer.at(pBoard->getIndex());
+    //     auto& cThisShortsContainer = fShortsContainer.at(pBoard->getIndex());
+    //     auto& cThisHitsContainer = fHitsContainer.at(pBoard->getIndex());
 
-    	//static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-        //this->ReadASEvent( pBoard, 0,fEventsPerPoint, false , false);
+    // 	//static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
+    //     //this->ReadASEvent( pBoard, 0,fEventsPerPoint, false , false);
         
-        for(auto cModule : *pBoard)
-        {
-            this->ReadNEvents( pBoard , fEventsPerPoint);
-            const std::vector<Event*>& cEvents = this->GetEvents ( pBoard );
+    //     for(auto cModule : *pBoard)
+    //     {
+    //         this->ReadNEvents( pBoard , fEventsPerPoint);
+    //         const std::vector<Event*>& cEvents = this->GetEvents ( pBoard );
         
-            auto& cShortsContainer = cThisShortsContainer->at(cModule->getIndex());
-            auto& cHitsContainer = cThisHitsContainer->at(cModule->getIndex());
-            for (auto cHybrid : *cModule)
-            {
-                auto& cHybridShorts = cShortsContainer->at(cHybrid->getIndex());
-                auto& cHybridHits = cHitsContainer->at(cHybrid->getIndex());
-                for (auto cChip : *cHybrid)
-                {
+    //         auto& cShortsContainer = cThisShortsContainer->at(cModule->getIndex());
+    //         auto& cHitsContainer = cThisHitsContainer->at(cModule->getIndex());
+    //         for (auto cHybrid : *cModule)
+    //         {
+    //             auto& cHybridShorts = cShortsContainer->at(cHybrid->getIndex());
+    //             auto& cHybridHits = cHitsContainer->at(cHybrid->getIndex());
+    //             for (auto cChip : *cHybrid)
+    //             {
 
-                    for( auto cEvent : cEvents )
-                    {
-                        auto& cReadoutChipShorts = cHybridShorts->at(cChip->getIndex());
-                        auto& cReadoutChipHits = cHybridHits->at(cChip->getIndex());
-                        std::vector<uint32_t> cHits= cEvent->GetHits(cHybrid->getId(), cChip->getId());
+    //                 for( auto cEvent : cEvents )
+    //                 {
+    //                     auto& cReadoutChipShorts = cHybridShorts->at(cChip->getIndex());
+    //                     auto& cReadoutChipHits = cHybridHits->at(cChip->getIndex());
+    //                     std::vector<uint32_t> cHits= cEvent->GetHits(cHybrid->getId(), cChip->getId());
 
-                        LOG (DEBUG) << BOLDBLUE << "\t\tGroup "
-                                << +cTestGroup << " FE" << +cHybrid->getId()
-                                << " .. SSA" << +cChip->getId()
-                                << " - " << +cHits.size()
-                                << " hits found/"
-                                << cBitset.count() << " channels in test group" << RESET;
-            			//LOG (INFO) << BOLDBLUE << "4.6 " << RESET;
-            			unsigned int channelNumber = 0;
-                        for ( auto cHit : cHits )
-                        {
-                            //LOG (INFO) << BOLDBLUE << "cHit "<< cHit << RESET;
-                            //LOG (INFO) << BOLDBLUE << "cBitset[channelNumber] "<<cBitset[channelNumber] << RESET;
-                            if (cBitset[channelNumber] == 0)
-                                cReadoutChipShorts->getChannelContainer<uint16_t>()->at(channelNumber)=cHit;
-                            else
-                                cReadoutChipHits->getChannelContainer<uint16_t>()->at(channelNumber)=cHit;
-                            channelNumber++;
-                        }
-                    }
-                }
-            }
-        }
-        this->Count(pBoard, static_cast<const ChannelGroup<NSSACHANNELS>*>(cGroup) );
-        cTestGroup++;
-    }
+    //                     LOG (DEBUG) << BOLDBLUE << "\t\tGroup "
+    //                             << +cTestGroup << " FE" << +cHybrid->getId()
+    //                             << " .. SSA" << +cChip->getId()
+    //                             << " - " << +cHits.size()
+    //                             << " hits found/"
+    //                             << cBitset.count() << " channels in test group" << RESET;
+    //         			//LOG (INFO) << BOLDBLUE << "4.6 " << RESET;
+    //         			unsigned int channelNumber = 0;
+    //                     for ( auto cHit : cHits )
+    //                     {
+    //                         //LOG (INFO) << BOLDBLUE << "cHit "<< cHit << RESET;
+    //                         //LOG (INFO) << BOLDBLUE << "cBitset[channelNumber] "<<cBitset[channelNumber] << RESET;
+    //                         if (cBitset[channelNumber] == 0)
+    //                             cReadoutChipShorts->getChannelContainer<uint16_t>()->at(channelNumber)=cHit;
+    //                         else
+    //                             cReadoutChipHits->getChannelContainer<uint16_t>()->at(channelNumber)=cHit;
+    //                         channelNumber++;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     this->Count(pBoard, static_cast<const ChannelGroup<NSSACHANNELS>*>(cGroup) );
+    //     cTestGroup++;
+    // }
 }
 void ShortFinder::FindShorts2S(BeBoard* pBoard)
 {
@@ -467,20 +456,23 @@ void ShortFinder::FindShorts()
     enableTestPulse( true );
 
     // configure test pulse trigger
-    if( cWithSSA ) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM( fEventsPerPoint, 10000, 6, 0, 0);
-    else static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(cFirmwareTPdelay,cFirmwareTriggerDelay,1000);
-
+    if( fWithSSA ) 
+    {
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM( fEventsPerPoint, 10000, 6, 0, 0);
+    }
+    else
+    { 
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(cFirmwareTPdelay,cFirmwareTriggerDelay,1000);
+    }
     for (auto cBoard : *fDetectorContainer)
     {
-        //ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cBoard->at(0)->at(0)->at(0));
-        //bool cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-        //bool cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-        if( cWithCBC )
+        LOG(INFO) << BOLDBLUE << "Starting short finding procedure on BeBoard#" << +cBoard->getIndex() << RESET;
+        if( fWithCBC )
             this->FindShorts2S( static_cast<BeBoard*>(cBoard) );
-        if( cWithSSA )
+        else if( fWithSSA )
             this->FindShortsPS( static_cast<BeBoard*>(cBoard) );
         else
-            LOG (INFO) << BOLDRED << "Short finding for this hybrid type not yet implemented." << RESET;
+            LOG (INFO) << BOLDRED << "\t....Short finding for this hybrid type not yet implemented." << RESET;
     }
 
 }
