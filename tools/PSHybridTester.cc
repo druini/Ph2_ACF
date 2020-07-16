@@ -45,13 +45,13 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
     // pair id 
     for( uint8_t cPairId=0; cPairId < 2; cPairId++)
     {
+        uint8_t cAlignmentPattern = (cPairId == 0 ) ? 0x05 : 0x01; 
         // first I would like to align the lines in the back-end 
         if( !pTrigger )
         {
             bool cAligned=true;
             for( uint8_t cLineId=1; cLineId < 8; cLineId++)
             { 
-                uint8_t cAlignmentPattern = (cPairId == 0 ) ? 0x05 : 0x01; 
                 cAligned=static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, 0 , cPairId , cLineId , cAlignmentPattern , 8);
                 if( !cAligned )
                     LOG (INFO) << BOLDRED << "Alignment failed on line " << +cLineId << RESET;
@@ -71,7 +71,9 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
         if( pTrigger )
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug(false);
         else
+        {
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 7);
+        }
         
     }
 }

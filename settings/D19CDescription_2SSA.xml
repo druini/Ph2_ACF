@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="Async">
+  <BeBoard Id="0" boardType="D19C" eventType="VR">
     <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
     
     <CDCE configure="0" clockRate="120"/>
@@ -10,8 +10,8 @@
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="0" configfile="SSA.txt" />
-            <SSA Id="1" configfile="SSA.txt" />
+            <SSA Id="6" configfile="SSA.txt" />
+            <SSA Id="7" configfile="SSA.txt" />
         </Module>
     </OpticalGroup>
 
@@ -29,7 +29,7 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
     		<Register name="triggers_to_accept"> 0 </Register>
-    		<Register name="trigger_source"> 10 </Register>
+    		<Register name="trigger_source"> 3 </Register>
     		<Register name="user_trigger_frequency"> 1 </Register>
     		<Register name="stubs_mask"> 1 </Register>
                     <!--this is the delay for the stub trigger-->

@@ -17,7 +17,7 @@
             <SSA Id="4" configfile="SSA.txt" />
             <SSA Id="5" configfile="SSA.txt" />
             <SSA Id="6" configfile="SSA.txt" />
-            <SSA Id="7" configfile="SSA.txt" />
+            <SSA Id="7" configfile="SSA.txt" /> 
             
             <CIC_Files path="./settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
@@ -168,7 +168,7 @@
     <Setting name="AntennaTriggerRate">50</Setting>
 
     <!-- Shorts -->
-    <Setting name="ShortsPulseAmplitude"> 50 </Setting>
+    <Setting name="ShortsPulseAmplitude"> 20 </Setting>
 
     <!--PS hybrid SSA output test -->
     <!-- number of 10 ms periods to wait for in the case of stubs -->

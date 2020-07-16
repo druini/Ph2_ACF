@@ -6,7 +6,7 @@
 #include "PedestalEqualization.h"
 #include "PedeNoise.h"
 #include "OpenFinder.h"
-//#include "tools/ShortFinder.h"
+#include "ShortFinder.h"
 #include "DPInterface.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/BackEndAlignment.h"
@@ -58,7 +58,7 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
     cmd.defineOptionAlternative ( "measurePedeNoise", "m" );
    
-    // cmd.defineOption ( "findShorts", "look for shorts", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "findShorts", "look for shorts", ArgvParser::NoOptionAttribute );
     cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
     cmd.defineOption("mpaTest", "Check MPA input with Data Player Pattern [provide pattern]", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOption ( "ssapair", "Debug selected SSA pair. Possible options: 01, 12, 23, 34, 45, 56, 67", ArgvParser::OptionRequiresValue);
@@ -131,14 +131,6 @@ int main ( int argc, char* argv[] )
     //LOG (INFO) << BOLDBLUE << "PS FEH current consumption post-configuration..." << RESET;
     //cHybridTester.CheckHybridCurrents();
     
-    // align back-end 
-    // BackEndAlignment cBackEndAligner;
-    // cBackEndAligner.Inherit (&cHybridTester);
-    // cBackEndAligner.Start(0);
-    // //reset all chip and board registers 
-    // // to what they were before this tool was called 
-    // cBackEndAligner.Reset(); 
-
     // interface to data player 
     DPInterface cDPInterfacer;
     BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>( cHybridTester.fBeBoardFWMap.find(0)->second );
@@ -148,7 +140,14 @@ int main ( int argc, char* argv[] )
     if ( cmd.foundOption ( "withCIC" ) || cmd.foundOption ( "mpaTest" ) )
     {
         cHybridTester.SelectCIC(true);
-        
+        // align back-end 
+        BackEndAlignment cBackEndAligner;
+        cBackEndAligner.Inherit (&cHybridTester);
+        cBackEndAligner.Start(0);
+        //reset all chip and board registers 
+        // to what they were before this tool was called 
+        cBackEndAligner.Reset(); 
+   
         //Check if data player is running
         if (cDPInterfacer.IsRunning(cInterface))
         {
@@ -242,6 +241,14 @@ int main ( int argc, char* argv[] )
         cOpenFinder.Inherit (&cHybridTester);
         cOpenFinder.FindOpensPS();
     }
+    if( cmd.foundOption("findShorts"))
+    {
+
+        ShortFinder cShortFinder;
+        cShortFinder.Inherit (&cHybridTester);
+        cShortFinder.Initialise();
+        cShortFinder.FindShorts();
+    }
     // test MPA outputs 
     if( cmd.foundOption ( "mpaTest" ) )
     {
@@ -276,33 +283,19 @@ int main ( int argc, char* argv[] )
     // ssa pair tests 
     if ( !cSSAPair.empty() )
     {
-        // make CIC output alignment pattern
-        /*for(auto cBoard : *cTool.fDetectorContainer)
-        {
-        for(auto cOpticalGroup : *cBoard)
-        {
-            for(auto cHybrid : *cOpticalGroup)
-            {
-                   auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-                   cTool.fCicInterface->SelectOutput( cCic, true );
-             }
-        }
-        }*/
-        
-        LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
+       LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
         // configure SSA to output something on stub lines 
         cHybridTester.SSATestStubOutput(cSSAPair);
+        // still needs to be debugged 
         // configure SSA to output something on L1 lines
         //cHybridTester.SSATestL1Output(cSSAPair);
-        
         // put it back in normal readout mode 
         // and make sure we're in normal readout mode 
         // i.e. synchronous
-        // auto cNevents  = 1;//cTool.findValueInSettings("Nevents" ,10);
-        // for(auto cBoard : *cTool.fDetectorContainer)
+        // auto cNevents  = 9;//cTool.findValueInSettings("Nevents" ,10);
+        // for(auto cBoard : *cHybridTester.fDetectorContainer)
         // {
         //     BeBoard* cBeBoard = static_cast<BeBoard*>( cBoard );
-        //     cBeBoard->setEventType(EventType::VR);
         //     for(auto cOpticalGroup : *cBoard)
         //     {
         //         for(auto cHybrid : *cOpticalGroup)
@@ -312,12 +305,12 @@ int main ( int argc, char* argv[] )
         //                 if( cReadoutChip->getFrontEndType() != FrontEndType::SSA )
         //                     continue;
         //                 cHybridTester.fReadoutChipInterface->WriteChipReg(cReadoutChip, "Sync",1);
-        //                 cHybridTester.fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", 0xF);
+        //                 cHybridTester.fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", 0x3);
         //             }//chip
         //         }//hybrid 
         //     }// module 
         //     // check if i can read anything     
-        //     for( uint32_t cThreshold=0; cThreshold < 10; cThreshold++)
+        //     for( uint32_t cThreshold=0; cThreshold < 20; cThreshold++)
         //     {
         //         cHybridTester.setSameDac("Threshold", cThreshold);
         //         LOG (INFO) << BOLDRED << "Threshold is " << +cThreshold << RESET;

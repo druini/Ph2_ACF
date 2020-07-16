@@ -617,6 +617,13 @@ namespace Ph2_System
                         }
                       else if( pBoard->getFrontEndType() == FrontEndType::SSA )
                         {
+                          LOG (INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
+                          auto cL1Counter0 = (cEvent[4+2] & (0xF<<16)) >> 16; 
+                          auto cL1Counter1 = (cEvent[4+8+4+2] & (0xF<<16)) >> 16; 
+                          LOG (INFO) << BOLDBLUE << "L1A counter chip0 : " << cL1Counter0 << RESET;
+                          LOG (INFO) << BOLDBLUE << "L1A counter chip1 : " << cL1Counter1 << RESET;
+                          for(auto cWord : cEvent )
+                            LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
                           fEventList.push_back(new D19cSSAEvent(pBoard, maxind+1, fNFe, cEvent));
                         }
                       else if( pBoard->getFrontEndType() == FrontEndType::MPA )

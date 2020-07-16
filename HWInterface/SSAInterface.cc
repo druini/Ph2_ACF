@@ -257,7 +257,7 @@ namespace Ph2_HwInterface {// start namespace
 		}
 		else if( pRegName == "Threshold" ) 
 		{
-			LOG (INFO) << BOLDRED << "Setting threshold to "<< +pValue << RESET;
+			LOG (DEBUG) << BOLDRED << "Setting threshold to "<< +pValue << RESET;
 			return WriteChipSingleReg ( pSSA, "Bias_THDAC", ( pValue ) , pVerifLoop);
 		}
 		else
@@ -504,6 +504,10 @@ namespace Ph2_HwInterface {// start namespace
 		else if( pRegNode == "ChipId")
 		{
 			return this->ReadChipId( pSSA );
+		}
+		else if( pRegNode == "Threshold")
+		{
+			return this->ReadChipReg( pSSA , "Bias_THDAC");
 		}
 		else
 		{
