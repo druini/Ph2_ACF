@@ -45,6 +45,7 @@ namespace Ph2_HwInterface {
         }//module loop
         fNCbc = cNROCs;
         Set(pBoard, list);
+        //SetEvent (pBoard, fNCbc, list );
     }
 
 
@@ -134,9 +135,11 @@ namespace Ph2_HwInterface {
                     if( cStatusWord != 0x03 )
                         throw std::runtime_error(std::string("Incorrect Stub header found when decoding data ... stopping"));
                     
-                    std::vector<uint32_t> cDataWords(cIterator,cIterator+cHitInfoSize+cHitInfoSize+cStubInfoSize);
+                    std::vector<uint32_t> cDataWords(cIterator,cIterator+cHitInfoSize+cStubInfoSize);
                     fEventDataVector[cVectorIndex].clear();
                     fEventDataVector[cVectorIndex].insert( fEventDataVector[cVectorIndex].begin(), cDataWords.begin(), cDataWords.end());
+                    //for( auto cWord : fEventDataVector[cVectorIndex] ) 
+                    //    LOG (DEBUG) << BOLDBLUE << "\t\t.." << std::bitset<32>(cWord) << RESET;
                     // increment iterator 
                     cIterator += cHitInfoSize + cStubInfoSize; 
                     cStatus = cStatus | ( cStatusWord << (cRocIndex*2) );
@@ -182,7 +185,7 @@ namespace Ph2_HwInterface {
         fEventDataSize = fEventSize;
 
         auto cIterator = list.begin() + D19C_EVENT_HEADER1_SIZE_32_CBC3;
-        LOG (DEBUG) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
+        LOG (INFO) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
         do
         {
             // L1 

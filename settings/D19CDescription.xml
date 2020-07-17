@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR">
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.75:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="120"/>
     
     <OpticalGroup Id="0" FMCId="0" >
@@ -18,22 +18,6 @@
             <CBC_Files path="./settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             <CBC Id="1" configfile="CBC3_default.txt" />
-            <!-- <CBC Id="2" configfile="CBC3_default.txt" />  
-            <CBC Id="3" configfile="CBC3_default.txt" />
-            <CBC Id="4" configfile="CBC3_default.txt" />
-            <CBC Id="5" configfile="CBC3_default.txt" />
-            <CBC Id="6" configfile="CBC3_default.txt" />
-            <CBC Id="7" configfile="CBC3_default.txt" /> -->
-
-            <!-- <CBC_Files path="./Results/FEH_2S_xxxx_Electron_15-03-20_13h44m46/" />
-            <CBC Id="0" configfile="BE0_FE0_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_FE0_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_FE0_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_FE0_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_FE0_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_FE0_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_FE0_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_FE0_Chip7.txt" /> -->
         </Module>
     </OpticalGroup>
 

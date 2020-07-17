@@ -670,68 +670,6 @@ void DataChecker::ReadNeventsTest()
             }
             cN++;
         }
-        
-
-        // // // inject some stubs 
-        // uint8_t cId=0;
-        // for(auto cOpticalGroup : *cBoard)
-        // {
-        //     for (auto cHybrid : *cOpticalGroup)
-        //     {
-        //         for (auto cChip : *cHybrid) 
-        //         {
-        //             auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-        //             auto cReadoutChip = static_cast<ReadoutChip*>(cChip);
-        //             if( cChip->getId() == cId )
-        //                 cReadoutChipInterface->injectStubs( cReadoutChip , {10,100,200} , {0,0,0}, true );
-        //         }
-        //     }
-        // }
-        // auto cOriginalDelay = fBeBoardInterface->ReadBoardReg (cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
-        // for( uint8_t cPackageDelay=0; cPackageDelay < 8; cPackageDelay ++)
-        // {
-        //     LOG (INFO) << BOLDMAGENTA << "Setting stub package delay to " << +cPackageDelay << RESET;
-        //     fBeBoardInterface->WriteBoardReg (cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
-        //     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Bx0Alignment();
-
-        //     (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,6);
-
-        //     this->ReadNEvents( cBeBoard , cNevents);
-        //     const std::vector<Event*>& cEventsWithStubs = this->GetEvents ( cBeBoard );
-        //     LOG (INFO) << BOLDBLUE << +cEventsWithStubs.size() << " events read back from FC7 with ReadData" << RESET;
-        //     cN=0;
-        //     for ( auto& cEvent : cEventsWithStubs )
-        //     {
-        //         auto cEventCount = cEvent->GetEventCount();
-        //         LOG (INFO) << BOLDBLUE << "Event " << +cEventCount << RESET;
-        //         for(auto cOpticalGroup : *cBoard)
-        //         {
-        //             for (auto cHybrid : *cOpticalGroup)
-        //             {
-        //                 auto cBx = cEvent->BxId ( cHybrid->getId() );
-        //                 LOG (INFO) << BOLDBLUE << "Hybrid " 
-        //                     << +cHybrid->getId() << " BxID " << +cBx << RESET;
-        //                 for (auto cChip : *cHybrid) 
-        //                 {
-        //                     auto cStubs = cEvent->StubVector (cHybrid->getId(), cChip->getId() );
-        //                     LOG (INFO) << BOLDBLUE << "Found "
-        //                         << +cStubs.size() 
-        //                         << " stubs in the readout."
-        //                         << RESET;
-        //                 }
-        //             }
-        //         }
-        //         // if( cN%5 == 0)
-        //         // {
-        //         //     LOG (INFO) << ">>> Event #" << cN << RESET; ;
-        //         //     outp.str ("");
-        //         //     outp << *cEvent;
-        //         //     LOG (INFO) << outp.str();
-        //         // }
-        //         cN++;
-        //     }
-        // }
-        // fBeBoardInterface->WriteBoardReg (cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cOriginalDelay);
     }
     LOG (INFO) << BOLDBLUE << "Done!" << RESET;
 

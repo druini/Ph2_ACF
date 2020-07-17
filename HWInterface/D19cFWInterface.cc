@@ -1724,7 +1724,7 @@ namespace Ph2_HwInterface
              // force L1A line to match phase tuning result for first stub lines to match
              uint8_t pDelay = pTuner.fDelay;
              uint8_t cMode=2;
-             uint8_t cBitslip = pTuner.fBitslip+1;
+             uint8_t cBitslip = pTuner.fBitslip+ (uint8_t)(fFirmwareFrontEndType == FrontEndType::SSA);
              pTuner.SetLineMode( this, pFeId , pChipId , 0 , cMode , pDelay, cBitslip, cEnableL1, 0 );
         }
         return cSuccess;
