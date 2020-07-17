@@ -612,7 +612,25 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
     cDAQFileHandler->closeFile();
     delete cDAQFileHandler;
 }
-
+void DataChecker::CollectEvents()
+{
+    uint32_t cNevents = this->findValueInSettings("Nevents"); 
+    uint32_t cMaxNevents = 65535;
+    for(auto cBoard : *fDetectorContainer)
+    {
+        BeBoard *cBeBoard = static_cast<BeBoard*>(cBoard);
+        int cNBursts = 1 + cNevents/cMaxNevents;
+        int cNrecordedEvents=0;
+        for( int cBurst=0; cBurst < cNBursts; cBurst++)
+        {
+            int cEventsToRead = (cBurst == (cNBursts-1)) ? (cNevents%cMaxNevents) : cMaxNevents;
+            this->ReadNEvents( cBeBoard , cEventsToRead );
+            const std::vector<Event*>& cEvents = this->GetEvents ( cBeBoard );
+            LOG (INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
+            cNrecordedEvents+= cEvents.size();
+        }
+    }
+}
 void DataChecker::ReadNeventsTest()
 {
     //auto cSetting = fSettingsMap.find ( "Nevents" );
@@ -1738,8 +1756,8 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
     uint8_t cSweepPackageDelay = this->findValueInSettings("SweepPackageDelay"); 
     uint8_t cSweepStubDelay = this->findValueInSettings("SweepStubDelay"); 
 
-    uint8_t cFirmwareTPdelay=80;
-    uint8_t cFirmwareTriggerDelay=75;
+    uint8_t cFirmwareTPdelay= this->findValueInSettings("StubFWTestPulseDelay"); 
+    uint8_t cFirmwareTriggerDelay=this->findValueInSettings("StubFWTriggerDelay"); 
  
     // set-up for TP
     fAllChan = true;
@@ -1839,7 +1857,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
 
                 auto cStubLatency = fBeBoardInterface->ReadBoardReg (cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
                 int cStubDelayStart = (cSweepStubDelay == 0 ) ? cStubLatency-2 : 0 ;
-                int cStubDelayStop = (cSweepStubDelay == 0 ) ? cStubLatency+2 : cDelay+200 ;
+                int cStubDelayStop = (cSweepStubDelay == 0 ) ? cStubLatency+2 : cDelay ;
                 for( auto cStubDelay=cStubDelayStart; cStubDelay <= cStubDelayStop ; cStubDelay++ )
                 {
                     fBeBoardInterface->WriteBoardReg (cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDelay);

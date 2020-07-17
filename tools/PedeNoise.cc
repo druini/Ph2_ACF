@@ -59,6 +59,8 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     fFitSCurves                  = findValueInSettings("FitSCurves"                 ,  0);
     fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude"    ,  0);
     fEventsPerPoint              = findValueInSettings("Nevents"                    , 10);
+    fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
+
 
     LOG (INFO) << "Parsed settings:" ;
     LOG (INFO) << " Nevents = " << fEventsPerPoint ;
@@ -276,8 +278,8 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
-    if(cWithCBC)    this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
-    if(cWithSSA)    this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56);
+    if(cWithCBC)    this->bitWiseScan("VCth", fEventsPerPoint, 0.56, fNEventsPerBurst);
+    if(cWithSSA)    this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56, fNEventsPerBurst);
 
     if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
 
@@ -323,6 +325,9 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
     float cFirstLimit = (cWithCBC) ? 0 : 1;
     std::vector<int> cSigns{-1,1};
     std::vector<float> cLimits{cFirstLimit,1-cFirstLimit};
+
+    //(fDetectorContainer[0]->getBoardType() == BoardType::D19C)
+    
     int cCounter=0;
     for( auto cSign : cSigns ) 
     {
@@ -334,8 +339,8 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
             fDetectorDataContainer = theOccupancyContainer;
             fSCurveOccupancyMap[cValue] = theOccupancyContainer;
             
-            if(cWithCBC)    this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
-            if(cWithSSA)    this->setDacAndMeasureData("Bias_THDAC", cValue, fEventsPerPoint);
+            if(cWithCBC)    this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint, fNEventsPerBurst);
+            if(cWithSSA)    this->setDacAndMeasureData("Bias_THDAC", cValue, fEventsPerPoint,fNEventsPerBurst);
             //this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
             
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy,Occupancy>().fOccupancy;
@@ -391,107 +396,6 @@ void PedeNoise::measureSCurves (uint16_t pStartValue)
     // this->HttpServerProcess();
     LOG (DEBUG) << YELLOW << "Found minimal and maximal occupancy " << cMinBreakCount << " times, SCurves finished! " << RESET ;
 }
-// void PedeNoise::measureSCurves (uint16_t pStartValue)
-// {
-//     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
-//     float cLimit = 0;
-//     int cMinBreakCount = 10;
-//     if(cWithSSA) pStartValue = 20;
-
-//     bool     cAllZero        = false;
-//     bool     cAllOne         = false;
-//     int      cAllZeroCounter = 0;
-//     int      cAllOneCounter  = 0;
-//     uint16_t cValue          = pStartValue;
-//     int      cSign           = 1;
-//     int      cIncrement      = 0;
-//     uint16_t cMaxValue       = (1 << 10) - 1;
-//     if(cWithSSA)
-// 	{
-// 	cMaxValue       = (1 << 8) - 1;
-// 	cMinBreakCount = 10;
-// 	cLimit = 0.02;
-// 	}
-
-
-//     while (! (cAllZero && cAllOne) )
-//     {
-//         DetectorDataContainer *theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
-//         fDetectorDataContainer = theOccupancyContainer;
-//         fSCurveOccupancyMap[cValue] = theOccupancyContainer;
-
-//         if(cWithCBC)    this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
-//         if(cWithSSA)    this->setDacAndMeasureData("Bias_THDAC", cValue, fEventsPerPoint);
-
-//         #ifdef __USE_ROOT__
-//             if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue,*theOccupancyContainer);
-//         #else
-//             if(fPlotSCurves)
-//             {
-//                 auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy,uint16_t>("SCurve");
-//                 theSCurveStreamer.setHeaderElement(cValue);
-//                 for(auto board : *theOccupancyContainer )
-//                 {
-//                     if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
-//                 }
-//             }
-
-//         #endif
-
-
-//         float globalOccupancy = theOccupancyContainer->getSummary<Occupancy,Occupancy>().fOccupancy;
-
-//         if (globalOccupancy <= (0 + cLimit) ) ++cAllZeroCounter;
-//         if (globalOccupancy >= (1-cLimit)) ++cAllOneCounter;
-
-//         //it will either find one or the other extreme first and thus these will be mutually exclusive
-//         //if any of the two conditions is true, just revert the sign and go the opposite direction starting from startvalue+1
-//         //check that cAllZero is not yet set, otherwise I'll be reversing signs a lot because once i switch direction, the statement stays true
-//         if (!cAllZero && cAllZeroCounter == cMinBreakCount )
-//         {
-//             cAllZero = true;
-//             cSign = 1;
-//             cIncrement = 0;
-//         }
-
-//         if (!cAllOne && cAllOneCounter == cMinBreakCount)
-//         {
-//             cAllOne = true;
-//             cSign = -1;
-//             cIncrement = 0;
-//         }
-
-//         cIncrement++;
-//         // following checks if we're not going out of bounds
-//         if (cSign == 1 && (pStartValue + (cIncrement * cSign) > cMaxValue) )
-//         {
-//             cAllOne = true;
-//             cIncrement = 1;
-//             cSign = -1 * cSign;
-//         }
-
-//         if (cSign == -1 && (pStartValue + (cIncrement * cSign) < 0) )
-//         {
-// 	    //LOG (INFO) <<pStartValue<<" "<<cIncrement<<" "<<cSign<< RESET;
-
-//             cAllZero = true;
-
-//             cIncrement = 1;
-//             cSign = -1 * cSign;
-//         }
-
-// 	if(cWithSSA) cSign = 1.0;
-// 	//LOG (INFO) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
-
-//         LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
-//         cValue = pStartValue + (cIncrement * cSign);
-//     }
-
-//     // this->HttpServerProcess();
-//     LOG (DEBUG) << YELLOW << "Found minimal and maximal occupancy " << cMinBreakCount << " times, SCurves finished! " << RESET ;
-
-// }
-
 void PedeNoise::extractPedeNoise ()
 {
 

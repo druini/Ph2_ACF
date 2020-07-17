@@ -57,7 +57,8 @@ class DataChecker : public Tool
     void WriteSlinkTest(std::string pDAQFileName="");
     void StubCheck(std::vector<uint8_t> pChipIds);
     void MaskForStubs(Ph2_HwDescription::BeBoard* pBoard, uint16_t pSeed, bool pSeedLayer);
-
+    void CollectEvents();
+    
     void HitCheck2S(Ph2_HwDescription::BeBoard* pBoard);
     void HitCheck();
     void zeroContainers();

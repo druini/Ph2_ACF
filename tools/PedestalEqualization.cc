@@ -45,6 +45,7 @@ void PedestalEqualization::Initialise ( bool pAllChan, bool pDisableStubLogic )
     fCheckLoop                   = findValueInSettings("VerificationLoop"                  ,    1);
     fTestPulseAmplitude          = findValueInSettings("PedestalEqualizationPulseAmplitude",    0);
     fEventsPerPoint              = findValueInSettings("Nevents"                           ,   10);
+    fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     fTargetOffset = 0x7F;
     fTargetVcth   =  0x0;
     if(cWithSSA)    fTargetOffset = 0xF;
@@ -138,8 +139,8 @@ void PedestalEqualization::FindVplus()
     if(cWithCBC)    setSameLocalDac("ChannelOffset", fTargetOffset);
     if(cWithSSA)    setSameLocalDac("ThresholdTrim", fTargetOffset);
 
-    if(cWithCBC)    this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
-    if(cWithSSA)    this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56);
+    if(cWithCBC)    this->bitWiseScan("VCth", fEventsPerPoint, 0.56,fNEventsPerBurst);
+    if(cWithSSA)    this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56,fNEventsPerBurst);
 
 
 
@@ -225,8 +226,8 @@ void PedestalEqualization::FindOffsets()
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
-    if(cWithCBC)    this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56);
-    if(cWithSSA)    this->bitWiseScan("ThresholdTrim", fEventsPerPoint, 0.56);
+    if(cWithCBC)    this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56,fNEventsPerBurst);
+    if(cWithSSA)    this->bitWiseScan("ThresholdTrim", fEventsPerPoint, 0.56,fNEventsPerBurst);
 
 
     dumpConfigFiles();

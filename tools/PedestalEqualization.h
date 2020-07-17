@@ -52,6 +52,8 @@ class PedestalEqualization : public Tool
     bool     fCheckLoop          { true};
     bool     fAllChan            { true};
     bool     fDisableStubLogic   { true};
+    uint32_t fMaxNevents         {      65535};
+    int      fNEventsPerBurst    {-1};
 
     //to hold the original register values
     DetectorDataContainer fStubLogicCointainer;

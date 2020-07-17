@@ -661,7 +661,7 @@ namespace Ph2_HwInterface
         {
             LOG (INFO) << BOLDBLUE << "Loading DIO5 configuration.." << RESET;
             this->WriteReg ("fc7_daq_ctrl.dio5_block.control.load_config", 0x1);
-            std::this_thread::sleep_for (std::chrono::milliseconds (fWait_us*1000) );
+            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
             auto cStatus = this->ReadReg("fc7_daq_stat.dio5_block.status.not_ready");
             auto cError = this->ReadReg("fc7_daq_stat.dio5_block.status.error");
             LOG (INFO) << BOLDBLUE << "DIO5 status [not ready] : " << +cStatus << RESET;
@@ -1447,8 +1447,8 @@ namespace Ph2_HwInterface
                 int cChipId = cCic->getChipId();
                 // need to know the address
                 // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging
-                if( cHybrid->getId() > 0 )
-                  this->WriteReg( "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select" , cHybrid->getId()) ;
+                // if( cHybrid->getId() > 0 )
+                //   this->WriteReg( "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select" , cHybrid->getId()) ;
                 uint8_t cLineId=0;
                 // tune phase on l1A line - don't have t do anything on the FEs
                 if( fOptical )
@@ -1518,8 +1518,8 @@ namespace Ph2_HwInterface
             {
                 auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
                 int cChipId = cCic->getChipId();
-                if( cHybrid->getId() > 0 )
-                  this->WriteReg( "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select" , cHybrid->getId()) ;
+                // if( cHybrid->getId() > 0 )
+                //   this->WriteReg( "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select" , cHybrid->getId()) ;
                 uint8_t cLineId=0;
                 this->ChipReSync();
                 LOG (INFO) << BOLDBLUE << "Performing word alignment [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid->getId() << " Chip" << +cChipId << RESET;
@@ -2180,7 +2180,7 @@ namespace Ph2_HwInterface
         auto cNevents = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
         auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
         // in kHz .. if external trigger assume 1 kHz or TP assume lowest possible rate
-        auto cTriggerRate = (cTriggerSource == 5 || cTriggerSource == 6 ) ? 1 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); 
+        auto cTriggerRate = (cTriggerSource == 5 || cTriggerSource == 6 ) ? 0.01 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"); 
         uint32_t  cTimeSingleTrigger_us = std::ceil(1.5e3/(cTriggerRate));
         auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
         
