@@ -535,6 +535,7 @@ namespace Ph2_System
           {
             fEventList.push_back(new D19cMPAEventAS(pBoard, maxind+1, fNFe, pData));
           }
+     
 
         else if (fEventType != EventType::ZS)
           {
@@ -573,6 +574,12 @@ namespace Ph2_System
                       {
 
                         fEventList.push_back(new D19cSSAEvent(pBoard, maxind+1, fNFe, cEvent));
+
+                      }
+                    else if( pBoard->getFrontEndType() == FrontEndType::MPA )
+                      {
+
+                        fEventList.push_back(new D19cMPAEvent(pBoard, maxind+1, fNFe, cEvent));
 
                       }
                     cEventIndex++;

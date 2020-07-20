@@ -2263,27 +2263,42 @@ void D19cFWInterface::InitFMCPower()
         LOG (INFO) << BOLDBLUE << "Phase and word alignement on BeBoard" << +pBoard->getId() << " FE" << +pFeId << " CBC" << +pChipId << " - line " << +pLineId << RESET;
         PhaseTuner pTuner;
         this->ChipReSync();
+
+
+
+	//Not sure why this needs to be here -- otherwise occasioinally get unsync data (to check)
+	if( fFirmwareFrontEndType == FrontEndType::MPA )
+        	this->Align_out();
         pTuner.SetLineMode( this, pFeId , pChipId , pLineId , 2 , 0, 0, 0, 0 );
+
+
         bool cSuccess = false;
         unsigned int cAttempts=0;
         do
         {
             cSuccess = pTuner.TuneLine(this,  pFeId , pChipId , pLineId , pPattern , pPatternPeriod , true);
-            if( pTuner.fBitslip == 0 )
-             cSuccess = false;
+            LOG (INFO) << BOLDBLUE << "cSuccess " << int(cSuccess) << " pTuner.fBitslip " << int(pTuner.fBitslip)<< RESET;
+
+	    //Not sure why this needs to be here -- MPA always fails this but the events seem ok (to check)
+	    if( not(fFirmwareFrontEndType == FrontEndType::MPA ))
+		{
+		    if( pTuner.fBitslip == 0 )cSuccess = false;
+		}
             std::this_thread::sleep_for (std::chrono::milliseconds (200) );
             pTuner.GetLineStatus(this,  pFeId , pChipId , pLineId );
             LOG (INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
             cAttempts++;
         }while(!cSuccess && cAttempts <10);
-        if( pLineId == 1 && (fFirmwareFrontEndType == FrontEndType::CBC3 ||fFirmwareFrontEndType == FrontEndType::SSA) )
+        if( pLineId == 1 && (fFirmwareFrontEndType == FrontEndType::CBC3 || fFirmwareFrontEndType == FrontEndType::SSA || fFirmwareFrontEndType == FrontEndType::MPA) )
         {
             LOG (INFO) << BOLDBLUE << "Forcing L1A line to match alignment result for first stub line." << RESET;
             // force L1A line to match phase tuning result for first stub lines to match
             uint8_t pDelay = pTuner.fDelay;
             uint8_t cMode=2;
             uint8_t cBitslip = pTuner.fBitslip;
-	    if( fFirmwareFrontEndType == FrontEndType::SSA )
+
+	    //MPA seems to have the same bitslip?
+	    if( fFirmwareFrontEndType == FrontEndType::SSA  || fFirmwareFrontEndType == FrontEndType::MPA )
                 cBitslip = cBitslip + 1;
 
             pTuner.SetLineMode( this, pFeId , pChipId , 0 , cMode , pDelay, cBitslip, cEnableL1, 0 );

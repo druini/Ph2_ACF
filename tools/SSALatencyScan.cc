@@ -29,20 +29,51 @@ void SSALatencyScan::Initialise(void)
 
 void SSALatencyScan::run(void)
 {
+
+  	ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+
+  	cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+  	cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+
+
 	DetectorDataContainer       theHitContainer;
 	ContainerFactory::copyAndInitChannel<std::pair<std::array<uint32_t,2>,float>>(*fDetectorContainer, theHitContainer);
 
 	for (auto cBoard : theHitContainer)
 	{
 	BeBoard* theBeBoard = static_cast<BeBoard*>( fDetectorContainer->at(cBoard->getIndex()) );
-        theBeBoard->setEventType(EventType::SSA);
+	if (cWithSSA) theBeBoard->setEventType(EventType::SSA);
+	if (cWithMPA) theBeBoard->setEventType(EventType::MPA);
 
 
 	this->enableTestPulse( true );
 	setFWTestPulse();
 
-	setSameDacBeBoard(theBeBoard, "Bias_CALDAC", 120);
-	setSameDacBeBoard(theBeBoard, "Bias_THDAC", 60);
+	if (cWithSSA)
+		{
+		setSameDacBeBoard(theBeBoard, "Bias_CALDAC", 120);
+		setSameDacBeBoard(theBeBoard, "Bias_THDAC", 60);
+		}
+
+	if (cWithMPA)
+		{
+		int mpacal=170;
+		int mpath=120;
+		setSameDacBeBoard(theBeBoard, "CalDAC0", mpacal);
+		setSameDacBeBoard(theBeBoard, "CalDAC1", mpacal);
+		setSameDacBeBoard(theBeBoard, "CalDAC2", mpacal);
+		setSameDacBeBoard(theBeBoard, "CalDAC3", mpacal);
+		setSameDacBeBoard(theBeBoard, "CalDAC4", mpacal);
+		setSameDacBeBoard(theBeBoard, "CalDAC5", mpacal);
+		setSameDacBeBoard(theBeBoard, "CalDAC6", mpacal);
+		setSameDacBeBoard(theBeBoard, "ThDAC0", mpath);
+		setSameDacBeBoard(theBeBoard, "ThDAC1", mpath);
+		setSameDacBeBoard(theBeBoard, "ThDAC2", mpath);
+		setSameDacBeBoard(theBeBoard, "ThDAC3", mpath);
+		setSameDacBeBoard(theBeBoard, "ThDAC4", mpath);
+		setSameDacBeBoard(theBeBoard, "ThDAC5", mpath);
+		setSameDacBeBoard(theBeBoard, "ThDAC6", mpath);
+		}
 
 	for(auto cOpticalGroup : *cBoard)
 	{
@@ -60,8 +91,17 @@ void SSALatencyScan::run(void)
 				//	    this->fReadoutChipInterface->WriteChipReg(theChip, "THTRIMMING_S" + std::to_string(i), 0);
 				//	    this->fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_S" + std::to_string(i), 17); // 17 = 10001 (enable strobe)
 			    	//	}
-			    this->fReadoutChipInterface->WriteChipReg(theChip, "L1-Latency_MSB", 0x0);
+			    if (cWithSSA)
+			    {
+			    	this->fReadoutChipInterface->WriteChipReg(theChip, "L1-Latency_MSB", 0x0);
+			    }
+			    if (cWithMPA)
+			    {
+			    	//this->fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 0x0);
+			    	this->fReadoutChipInterface->WriteChipReg(theChip, "L1Offset_2_ALL", 0x0);
+			    	//this->fReadoutChipInterface->WriteChipReg(theChip, "ECM", 0x81);
 
+			    }
 			}
 		}
 	}
@@ -70,6 +110,10 @@ void SSALatencyScan::run(void)
 	uint32_t bestlat=0;
 	uint32_t maxcount=0;
 
+	int Nchans = NSSACHANNELS;
+	if (cWithMPA)Nchans = NMPACHANNELS;
+
+		
 
 	for (uint32_t lat = 0; lat<=255; lat++)
 	{
@@ -80,18 +124,28 @@ void SSALatencyScan::run(void)
 				for(auto cChip : *cHybrid)
 				{
 					ReadoutChip *theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard ->getIndex())->at(cOpticalGroup ->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
-					this->fReadoutChipInterface->WriteChipReg(theChip, "L1-Latency_LSB", lat);
-					this->fReadoutChipInterface->WriteChipReg(theChip, "L1Offset_1_ALL", lat);
+					if (cWithSSA)
+					{
+						this->fReadoutChipInterface->WriteChipReg(theChip, "L1-Latency_LSB", lat);
+					}	
+					if (cWithMPA)	
 
+					{
+					    
+						this->fReadoutChipInterface->WriteChipReg(theChip, "L1Offset_1_ALL", lat);
+						//this->fReadoutChipInterface->WriteChipReg(theChip, "LatencyRx320", lat);
+					}
 				}
 
 			}
 		}
-		//static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM( 100, 1000, 6, 0, 0);
-
+		//static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(50,200,1000,0,1,1);
+        	//this->enableTestPulse( true );
+        	//setFWTestPulse();
 		this->ReadNEvents(theBeBoard, 200);
 		const std::vector<Event*> &eventVector = this->GetEvents ( theBeBoard );
 		unsigned int thiscount = 0;
+
 		for ( auto &event : eventVector ) //for on events - begin
 		{
 			for(auto cOpticalGroup : *cBoard)
@@ -100,11 +154,26 @@ void SSALatencyScan::run(void)
 				{
 					for(auto cSSA: *hybrid) // for on chip - begin
 					{
+
 						unsigned int channelNumber = 0;
-						for (int i = 1; i<=120;i++ )
+						if (cWithSSA)
 						{
-							thiscount = thiscount + event->DataBit ( hybrid->getId(), cSSA->getId(), channelNumber);
-			                		channelNumber++;
+							for (int i = 1; i<=Nchans;i++ )
+							{
+								
+
+								thiscount = thiscount + event->DataBit ( hybrid->getId(), cSSA->getId(), channelNumber);
+					        		channelNumber++;
+							}
+
+							
+
+						}
+						if (cWithMPA)
+						{
+							std::vector<PCluster> pclus = static_cast<D19cMPAEvent*>(event)->GetPixelClusters(hybrid->getId(), cSSA->getId());
+							thiscount += pclus.size();
+				    			//std::cout<<thiscount<<std::endl;
 						}
 					}
 				}
@@ -127,7 +196,19 @@ void SSALatencyScan::run(void)
 			for(auto cChip : *cHybrid)
 			{
 				ReadoutChip *theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard ->getIndex())->at(cOpticalGroup ->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
-				this->fReadoutChipInterface->WriteChipReg(theChip, "L1-Latency_LSB", bestlat);
+
+
+				if (cWithSSA)
+				{
+					this->fReadoutChipInterface->WriteChipReg(theChip, "L1-Latency_LSB", bestlat);
+				}
+
+				if (cWithMPA)
+				{
+					this->fReadoutChipInterface->WriteChipReg(theChip, "L1Offset_1_ALL", bestlat);
+				}
+					
+
 			}
 
 		}

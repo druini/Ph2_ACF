@@ -517,22 +517,6 @@ void MPAInterface::Pix_Set_enable(ReadoutChip* pMPA,uint32_t p,uint32_t PixelMas
 
 
 
-void MPAInterface::Set_latency(Chip* pMPA,uint32_t th)
-{
-    setBoard ( pMPA->getBeBoardId() );
-    this->WriteChipReg( pMPA,"ThDAC0",th);
-    this->WriteChipReg( pMPA,"ThDAC1",th);
-    this->WriteChipReg( pMPA,"ThDAC2",th);
-    this->WriteChipReg( pMPA,"ThDAC3",th);
-    this->WriteChipReg( pMPA,"ThDAC4",th);
-    this->WriteChipReg( pMPA,"ThDAC5",th);
-    this->WriteChipReg( pMPA,"ThDAC6",th);
-}
-
-
-
-
-
 
 
 void MPAInterface::Set_calibration(Chip* pMPA,uint32_t cal)
@@ -575,6 +559,21 @@ void MPAInterface::ReadASEvent (ReadoutChip* pMPA,std::vector<uint32_t>& pData,s
     	}
 
 
+bool MPAInterface::enableInjection (ReadoutChip* pChip, bool inject, bool pVerifLoop)
+	{
+		setBoard ( pChip->getBeBoardId() );
+		//if sync
+
+		//uint32_t enwrite=1;
+        	//if(inject) enwrite=17;
+
+        	uint32_t enwrite=0x17;
+        	if(inject) enwrite=0x47;
+
+		//std::cout<<"enwrite "<<enwrite<<std::endl;
+        	for (uint32_t i = 1; i<=pChip->getNumberOfChannels();i++ ) this->WriteChipReg(pChip, "ENFLAGS_P" + std::to_string(i), enwrite);
+        	return true;
+	}
 
 
 
