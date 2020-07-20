@@ -101,8 +101,7 @@ public:
 
 
     void Send_pulses(uint32_t n_pulse, uint32_t duration = 0 );
-    bool enableInjection (Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true) 
-	{return true;}
+    bool enableInjection (Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true);
 
 
     bool maskChannelsGroup (Ph2_HwDescription::ReadoutChip* pMPA, const ChannelGroupBase *group, bool pVerifLoop)

@@ -552,6 +552,7 @@ namespace Ph2_System
         for (auto &pevt : fEventList) delete pevt;
         fEventList.clear();
         fCurrentEvent = 0;
+
         if( pNevents == 0 )
         {
           LOG (INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET;
@@ -628,7 +629,7 @@ namespace Ph2_System
                         }
                       else if( pBoard->getFrontEndType() == FrontEndType::MPA )
                         {
-                          //TO-BE ADDED 
+                           fEventList.push_back(new D19cMPAEvent(pBoard, maxind+1, fNFe, cEvent));
                         }
                       cEventIndex++;
                     }
@@ -636,6 +637,7 @@ namespace Ph2_System
                 }while( cEventIterator < pData.end());
             }
         }// end zero check 
+
       }
   }
 }

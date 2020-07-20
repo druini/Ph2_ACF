@@ -82,6 +82,56 @@ void BackEndAlignment::Initialise ()
         }
     }
 }
+
+
+
+
+bool BackEndAlignment::MPAAlignment(BeBoard* pBoard )
+{
+    	bool cTuned=true;
+    	LOG (INFO) << GREEN << "Trying Phase Tuning for MPA Chip(s)" << RESET;
+
+    	for(auto cOpticalReadout : *pBoard)
+    	{
+    		for (auto cHybrid : *cOpticalReadout)
+    		{
+	        	for (auto cChip : *cHybrid) // for each chip (makes sense)
+	        	{
+	            		ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
+			    	std::vector<std::string> cRegNames{ "ReadoutMode" , "ECM", "LFSR_data"};
+			    	std::vector<uint8_t> cOriginalValues;
+	            		uint8_t cAlignmentPattern = 0xa0;
+			    	std::vector<uint8_t> cRegValues{0x0 , 0x08,cAlignmentPattern};
+			    	for( size_t cIndex = 0 ;cIndex < 3 ; cIndex ++ )
+			    	{
+			    	    	cOriginalValues.push_back( fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegNames[cIndex]) );
+			    	    	fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cRegValues[cIndex]);
+			    	} 
+
+
+
+	            		for( uint8_t cLineId = 0 ; cLineId < 6 ; cLineId ++ )
+	            		{
+	                		cTuned = cTuned && static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cHybrid->getId(), cChip->getId() , cLineId , cAlignmentPattern , 8);
+	            		}
+
+
+				for( size_t cIndex = 0 ;cIndex < 3 ; cIndex ++ )
+				{
+				    	fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]);
+				}
+;		
+			}
+		}
+	}
+
+    LOG (INFO) << GREEN << "MPA Phase tuning finished succesfully" << RESET;
+    return cTuned;
+}
+
+
+
+
 bool BackEndAlignment::SSAAlignment(BeBoard* pBoard )
 {
     LOG (INFO) << GREEN << "Trying Phase Tuning for SSA Chip(s)" << RESET;
@@ -108,7 +158,7 @@ bool BackEndAlignment::SSAAlignment(BeBoard* pBoard )
 
 	            // configure output pattern on sutb lines
 	            uint8_t cAlignmentPattern = 0x80;
-	            for( uint8_t cLineId = 1 ; cLineId < 3 ; cLineId ++ )
+	            for( uint8_t cLineId = 0 ; cLineId < 6 ; cLineId ++ )
 	            {
 	                char cBuffer[11];
 	                sprintf(cBuffer,"OutPattern%d", cLineId-1);
@@ -326,6 +376,7 @@ bool BackEndAlignment::Align()
             ReadoutChip* theFirstReadoutChip = static_cast<ReadoutChip*>(cBoard->at(0)->at(0)->at(0));
             bool cWithCBC = (theFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
             bool cWithSSA = (theFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+            bool cWithMPA = (theFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
             if( cWithCBC )
             {
                 this->CBCAlignment(theBoard);
@@ -333,6 +384,10 @@ bool BackEndAlignment::Align()
             else if( cWithSSA )
             {
                 this->SSAAlignment(theBoard);
+            }
+            else if( cWithMPA )
+            {
+                this->MPAAlignment(theBoard);
             }
             else
             {
