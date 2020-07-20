@@ -65,6 +65,10 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "postscale", "Print only every i-th event (only send every i-th event to DQM Histogramer)", ArgvParser::OptionRequiresValue );
     cmd.defineOptionAlternative ( "postscale", "p" );
 
+    cmd.defineOption ( "raw", "Save the data into a .raw file using the Ph2ACF format  ", ArgvParser::OptionRequiresValue );
+    cmd.defineOptionAlternative ( "raw", "r" );
+
+
     cmd.defineOption ( "daq", "Save the data into a .daq file using the phase-2 Tracker data format.  ", ArgvParser::OptionRequiresValue );
     cmd.defineOptionAlternative ( "daq", "d" );
 
@@ -120,6 +124,12 @@ int main ( int argc, char* argv[] )
 
     std::stringstream outp;
     Tool cTool;
+    if( cmd.foundOption("raw") )
+    {
+        std::string cRawFile =  cmd.optionValue ( "raw" );
+        cTool.addFileHandler ( cRawFile, 'w' );
+        LOG (INFO) << BOLDBLUE << "Writing Binary Rawdata to:   " << cRawFile ;
+    }
     cTool.InitializeHw ( cHWFile, outp );
     cTool.InitializeSettings( cHWFile, outp );
     LOG (INFO) << outp.str();
@@ -157,7 +167,6 @@ int main ( int argc, char* argv[] )
     uint32_t count = 0;
 
     cTool.fBeBoardInterface->Start ( pBoard );
-
     while ( cN <= pEventsperVcth )
     {
         uint32_t cPacketSize = cTool.ReadData ( pBoard );

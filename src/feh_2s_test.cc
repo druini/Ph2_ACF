@@ -66,6 +66,8 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
     cmd.defineOption ( "findShorts", "look for shorts", ArgvParser::NoOptionAttribute );
 
+    cmd.defineOption ( "save", "Save the data to a raw file.  ", ArgvParser::OptionRequiresValue );
+   
     // general 
     cmd.defineOption ( "batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute );
     cmd.defineOptionAlternative ( "batch", "b" );
@@ -111,6 +113,9 @@ int main ( int argc, char* argv[] )
     bool cCheckData = ( cmd.foundOption ( "checkData" ) ) ;
     bool cEvaluate = ( cmd.foundOption ( "evaluate" ) ) ;
     
+    bool cSaveToFile = cmd.foundOption ( "save" ) ;
+
+
     uint32_t  cThreshold = ( cmd.foundOption ( "threshold" ) )   ?  convertAnyInt ( cmd.optionValue ( "threshold" ).c_str() ) :  560 ;
     std::string cHybridId = ( cmd.foundOption ( "hybridId" ) ) ? cmd.optionValue ( "hybridId" ) : "xxxx";
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
@@ -142,6 +147,12 @@ int main ( int argc, char* argv[] )
     
     std::stringstream outp;
     Tool cTool;
+    if( cSaveToFile )
+    {
+        std::string cRawFile =  cmd.optionValue ( "save" );
+        cTool.addFileHandler ( cRawFile, 'w' );
+        LOG (INFO) << BOLDBLUE << "Writing Binary Rawdata to:   " << cRawFile ;
+    }
     cTool.InitializeHw ( cHWFile, outp);
     cTool.InitializeSettings ( cHWFile, outp );
     LOG (INFO) << outp.str();
@@ -277,7 +288,8 @@ int main ( int argc, char* argv[] )
             cDataChecker.AsyncTest();
         if( cmd.foundOption("checkReadNEvents"))
             cDataChecker.ReadNeventsTest();
-
+        if( cSaveToFile )
+            cDataChecker.CollectEvents();
 
         //cDataChecker.ReadNeventsTest();
         //cDataChecker.DataCheck(cFEsToCheck,0,0);

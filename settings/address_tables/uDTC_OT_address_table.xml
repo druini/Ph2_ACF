@@ -127,13 +127,16 @@
                 <node id="card_select_tri"                  mask="0x00004000" description="control tri-state buffer"/>
             </node>
 
-            <node id="fe_for_ps_roh"                    address="0x040">
-                <node id="fe_for_ps_roh_data_player_pattern"                 mask="0x000000ff"/>
+             <node id="fe_data_player"                    address="0x03A">
+                <node id="pattern_320MHz"                 mask="0x000000ff"/>
+                <node id="pattern_640MHz"                 mask="0x0000ff00"/>
             </node>
-
+            
             <node id="slvs_debug" address = "0x000">
-                <node id="hybrid_select"                   mask="0x000F0000"/>
+                <!--<node id="hybrid_select"                   mask="0x000F0000"/>
                 <node id="chip_select"                     mask="0x00F00000"/>
+            --> <!-- for firmware with multiple hybrids -->
+                <node id="chip_select"                     mask="0x000F0000"/>
             </node>
 
             <!-- line debug -->
@@ -311,9 +314,13 @@
                 <node id="check_payload_ntriggers"          mask="0x00000ff0" description="user required number of trigger commands to test the paylaod of the return fast command from SSAs"/>
             </node>
 
-            <node id="fe_for_ps_roh"              address="0x019">
-                <node id="start_fe_for_ps_roh_data_player"                  mask="0x00000001"/>
-                <node id="stop_fe_for_ps_roh_data_player"                 mask="0x00000002"/>
+            <node id="fe_data_player"              address="0x019">
+                <node id="start_data_player"                  mask="0x00000001"/>
+                <node id="stop_data_player"                 mask="0x00000002"/>
+                <node id="i2c_slave_reset"                mask="0x00000004"/>
+                <node id="write_ref_fcmd_to_bram"                 mask="0x00000008"/>
+                <node id="write_test_fcmd_to_bram"                 mask="0x00000010"/>
+                <node id="start_fe_for_ps_roh_fcmd_test"                 mask="0x00000020"/>
             </node>
 
             <!-- debug -->
@@ -465,10 +472,56 @@
                 <node id="cards_disconnected"                mask="0x80000000" description="cards are disconnected after running            "/>
             </node>
 
-            <node id="fe_for_ps_roh"              address="0x00E">
-                <node id="stat_fe_for_ps_roh_data_player"                  mask="0x00001000"/>
+            <node id="fe_data_player"              address="0x00E">
+                <node id="stat_roh_data_player"                  mask="0x00001000"/>
+                <node id="stat_feh_data_player"                  mask="0x20000000"/>
+                <node id="fe_for_ps_roh_clk_320_l_test_done"                  mask="0x00002000"/>
+                <node id="fe_for_ps_roh_clk_320_r_test_done"                  mask="0x00004000"/>
+                <node id="fe_for_ps_roh_clk_320_l_stat"                  mask="0x00008000"/>
+                <node id="fe_for_ps_roh_clk_320_r_stat"                  mask="0x00010000"/>
+                <node id="fe_for_ps_roh_clk_640_l_test_done"                  mask="0x00020000"/>
+                <node id="fe_for_ps_roh_clk_640_r_test_done"                  mask="0x00040000"/>
+                <node id="fe_for_ps_roh_clk_640_l_stat"                  mask="0x00080000"/>
+                <node id="fe_for_ps_roh_clk_640_r_stat"                  mask="0x00100000"/>
+                <node id="fe_for_ps_roh_fcmd_SSA_l_test_done"                  mask="0x00200000"/>
+                <node id="fe_for_ps_roh_fcmd_SSA_r_test_done"                  mask="0x00400000"/>
+                <node id="fe_for_ps_roh_fcmd_SSA_l_stat"                  mask="0x00800000"/>
+                <node id="fe_for_ps_roh_fcmd_SSA_r_stat"                  mask="0x01000000"/>
+                <node id="fe_for_ps_roh_fcmd_CIC_l_test_done"                  mask="0x02000000"/>
+                <node id="fe_for_ps_roh_fcmd_CIC_r_test_done"                  mask="0x04000000"/>
+                <node id="fe_for_ps_roh_fcmd_CIC_l_stat"                  mask="0x08000000"/>
+                <node id="fe_for_ps_roh_fcmd_CIC_r_stat"                  mask="0x10000000"/>
             </node>
 
+            <node id="fcmd_debug"              address="0x00E">
+                <node id="ssa_l"                  mask="0xFFFFFFFF"/>
+                <node id="ssa_r"                  mask="0xFFFFFFFF"/>
+                <node id="cic_l"                  mask="0xFFFFFFFF"/>
+                <node id="cic_r"                  mask="0xFFFFFFFF"/>
+            </node>
+
+            <node id="fcmd_debug_ssa_l"                address="0x0B4" mask="0xFFFFFFFF" description="scope ssa_l for 4 clock cycles"/>
+            <node id="fcmd_debug_ssa_r"                address="0x0B5" mask="0xFFFFFFFF" description="scope ssa_r for 4 clock cycles"/>
+            <node id="fcmd_debug_cic_l"                address="0x0B6" mask="0xFFFFFFFF" description="scope cic_l for 4 clock cycles"/>
+            <node id="fcmd_debug_cic_r"                address="0x0B7" mask="0xFFFFFFFF" description="scope cic_r for 4 clock cycles"/>
+            
+
+            <node id="fe_for_ps_roh_ssa_fcmd_test"              address="0x0F7">
+                <node id="fe_for_ps_roh_fcmd_SSA_l_ref"                  mask="0x000000ff"/>
+                <node id="fe_for_ps_roh_fcmd_SSA_r_ref"                  mask="0x0000ff00"/>
+                <node id="fe_for_ps_roh_fcmd_SSA_l_check"                  mask="0x00ff0000"/>
+                <node id="fe_for_ps_roh_fcmd_SSA_r_check"                  mask="0xff000000"/>
+            </node>
+
+            <node id="fe_for_ps_roh_cic_fcmd_test"              address="0x0F8">
+                <node id="fe_for_ps_roh_fcmd_CIC_l_ref"                  mask="0x000000ff"/>
+                <node id="fe_for_ps_roh_fcmd_CIC_r_ref"                  mask="0x0000ff00"/>
+                <node id="fe_for_ps_roh_fcmd_CIC_l_check"                  mask="0x00ff0000"/>
+                <node id="fe_for_ps_roh_fcmd_CIC_r_check"                  mask="0xff000000"/>
+            </node>
+
+            <node id="mpa_to_cic_cntr"            address="0x0F9" mask="0xFFFFFFFF"/>
+            
             <node id="ps_return"                address="0x00E">
                 <node id="clock_from_ssa1_test_done"            mask="0x00000001" description="test of the return clock from SSA1 done           "/>
                 <node id="clock_from_ssa2_test_done"            mask="0x00000002" description="test of the return clock from SSA2 done           "/>
@@ -478,14 +531,15 @@
                 <node id="fcmd_from_ssa2_test_done"             mask="0x00000020" description="test of the return fast command from SSA2 done    "/>
                 <node id="fcmd_from_ssa1_test_stat"             mask="0x00000040" description="status of the return fast command from SSA1       "/>
                 <node id="fcmd_from_ssa2_test_stat"             mask="0x00000080" description="status of the return fast command from SSA2       "/>
-                <node id="fcmd_from_ssa1_test_is_pattern_error"	mask="0x00000100" description="pattern error in the return fast command from SSA1"/>
-                <node id="fcmd_from_ssa2_test_is_pattern_error"	mask="0x00000200" description="pattern error in the return fast command from SSA2"/>
-                <node id="fcmd_from_ssa1_test_is_payload_error"	mask="0x00000400" description="payload error in the return fast command from SSA1"/>
-                <node id="fcmd_from_ssa2_test_is_payload_error"	mask="0x00000800" description="payload error in the return fast command from SSA2"/>
+                <node id="fcmd_from_ssa1_test_is_pattern_error" mask="0x00000100" description="pattern error in the return fast command from SSA1"/>
+                <node id="fcmd_from_ssa2_test_is_pattern_error" mask="0x00000200" description="pattern error in the return fast command from SSA2"/>
+                <node id="fcmd_from_ssa1_test_is_payload_error" mask="0x00000400" description="payload error in the return fast command from SSA1"/>
+                <node id="fcmd_from_ssa2_test_is_payload_error" mask="0x00000800" description="payload error in the return fast command from SSA2"/>
             </node>
             <node id="stub_debug"                address="0x042" description="stub scoping " mode="incremental" size="80"/>
             <node id="l1a_debug"                address="0x010" description="l1a scoping " mode="incremental" size="50"/>
 
+            
             <!-- debug counters -->
             <node id="debug_blk_counter00"                address="0x0BD" mask="0xFFFFFFFF" description="counter on debug block input line 00"/>
             <node id="debug_blk_counter01"                address="0x0BE" mask="0xFFFFFFFF" description="counter on debug block input line 01"/>
@@ -519,6 +573,9 @@
             <node id="debug_blk_counter29"                address="0x0DA" mask="0xFFFFFFFF" description="counter on debug block input line 29"/>
             <node id="debug_blk_counter30"                address="0x0DB" mask="0xFFFFFFFF" description="counter on debug block input line 30"/>
             <node id="debug_blk_counter31"                address="0x0DC" mask="0xFFFFFFFF" description="counter on debug block input line 31"/>
+            <node id="input_lines_debug_done"             address="0x0DE" mask="0xFFFFFFFF" description="debugging of input lines done"/>
+            <node id="input_lines_debug_done"             address="0x0DF" mask="0xFFFFFFFF" description="debugging of output lines done"/>
+       
         </node>
 
         <node id="be_proc"                      address="0x4000">

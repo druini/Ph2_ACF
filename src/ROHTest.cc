@@ -1,7 +1,7 @@
 #include "../tools/Tool.h"
 #include "../Utils/argvparser.h"
 #include "../Utils/Timer.h"
-#include "../HWInterface/ROHInterface.h"
+#include "DPInterface.h"
 #include <csignal>
 
 using namespace Ph2_HwDescription;
@@ -50,20 +50,22 @@ int main(int argc, char* argv[])
   LOG (INFO) << outp.str();
   outp.str ("");
 
-  ROHInterface cROHInterfacer;
+  DPInterface cDPInterfacer;
   BeBoardFWInterface* pInterface = dynamic_cast<BeBoardFWInterface*>( cTool.fBeBoardFWMap.find(0)->second );
   
   //Check if Emulator is running
-  if (cROHInterfacer.EmulatorIsRunning(pInterface))
+  // DP type == 1 for ROH 
+  uint8_t cDPtype=1;
+  if (cDPInterfacer.IsRunning(pInterface,cDPtype))
   {
     LOG (INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
-    cROHInterfacer.StopEmulator(pInterface);
+    cDPInterfacer.Stop(pInterface);
   }
 
   //Configure and Start DataPlayer
-  cROHInterfacer.ConfigureEmulator(pInterface, pPattern);
-  cROHInterfacer.StartEmulator(pInterface);
-  if( cROHInterfacer.EmulatorIsRunning(pInterface) )
+  cDPInterfacer.Configure(pInterface, pPattern);
+  cDPInterfacer.Start(pInterface,cDPtype);
+  if( cDPInterfacer.IsRunning(pInterface,cDPtype) )
     LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
   else
     LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;

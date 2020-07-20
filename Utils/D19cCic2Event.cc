@@ -1007,7 +1007,7 @@ namespace Ph2_HwInterface {
                     {
                         std::bitset<16> cBitsetStubs( ( (cChip->getId() + 8*(cHybridId%2)) << 12) | (cStub.getPosition() << 4) | cStub.getBend() );
                         cStubString += cBitsetStubs.to_string();
-                        LOG (INFO) << BOLDBLUE << "\t.. stub in seed " << +cStub.getPosition() << " and bench code " << std::bitset<4>(cStub.getBend()) << RESET;
+                        LOG (DEBUG) << BOLDBLUE << "\t.. stub in seed " << +cStub.getPosition() << " and bench code " << std::bitset<4>(cStub.getBend()) << RESET;
                         cFeStubCounter+=1;
                     }
                     cCbcCounter++;

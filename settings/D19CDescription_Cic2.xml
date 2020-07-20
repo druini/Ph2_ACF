@@ -5,12 +5,13 @@
       <!-- <connection id="board" uri="ipbusudp-2.0://192.168.13.207:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />      \ -->
       <!-- <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
       <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.8:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+      <!-- <connection id="board" uri="chtcp-2.0://jadsdesktop.cern.ch:10203?target=192.168.2.100:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
       
     <CDCE configure="0" clockRate="120"/>
 
     <!-- RHS -->
     <OpticalGroup Id="0" FMCId="0" >
-      <GBT phaseTap="7" enable="0"/>
+      <GBT phaseTap="8" enable="0"/>
         <Module FeId="0" FMCId="0" ModuleId="0" Status="1" LinkId="0" >
             <Global>
                 <Settings threshold="550" latency="74"/>
@@ -175,7 +176,7 @@
 
 <Settings>
    <!--PedestalEqualization-->
-    <Setting name="Nevents">10</Setting>
+    <Setting name="Nevents">100000</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
@@ -241,7 +242,7 @@
     <Setting name="SweepPackageDelay">0</Setting>
     <Setting name="SweepStubDelay">0</Setting>
     <Setting name="StubThreshold">500</Setting>
-    <Setting name="StubAttempts">10</Setting>
+    <Setting name="StubAttempts">1</Setting>
 
 </Settings>
 </HwDescription>

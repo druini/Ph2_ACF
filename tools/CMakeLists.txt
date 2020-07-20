@@ -55,6 +55,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
     endif()
 
+    #check for TestCard USBDriver
+    if(${PH2_TCUSB_FOUND})
+        include_directories(${PH2_TCUSB_INCLUDE_DIRS})
+        link_directories(${PH2_TCUSB_LIBRARY_DIRS})
+        set(LIBS ${LIBS} usb ${PH2_TCUSB_LIBRARIES})
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
+    endif()
+    
     #last but not least, find root and link against it
     if(NoDataShipping)
         if(${ROOT_FOUND})

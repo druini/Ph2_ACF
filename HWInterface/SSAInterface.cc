@@ -87,7 +87,31 @@ namespace Ph2_HwInterface {// start namespace
 	 	#endif
 	 	return cSuccess;
 	}
-
+	// bool SSAInterface::ConfigureChip ( Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize )
+	// {
+	// 	//uint8_t cWriteAttempts = 0 ;
+	// 	std::vector<uint32_t> cVec;
+	// 	ChipRegMap cSSARegMap = pSSA->getRegMap();
+	// 	for ( auto& cRegInMap : cSSARegMap )
+ //        {
+ //        	if( this->WriteChipSingleReg ( pSSA, cRegInMap.first, cRegInMap.second.fValue, pVerifLoop) )
+ //        	{
+	// 			#ifdef COUNT_FLAG
+	// 				fRegisterCount++;
+	// 			#endif
+	// 		}
+	// 		else
+	// 		{
+	// 			throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
+	// 		}
+	// 	 }
+	// 	 #ifdef COUNT_FLAG
+	//         fTransactionCount++;
+	// 	 	LOG (INFO) << BOLDGREEN << "Wrote: " << +fRegisterCount 
+	// 	 		<< " resgisters in SSA" << +pSSA->getId() << " config." << RESET;
+	// 	 #endif
+	//      return true;
+	// }
 
 
 	bool SSAInterface::enableInjection (ReadoutChip* pChip, bool inject, bool pVerifLoop)
@@ -176,6 +200,8 @@ namespace Ph2_HwInterface {// start namespace
 		}
 		else if( pRegName == "EnableSLVSTestOutput" ) 
 		{
+		   LOG (INFO) << BOLDBLUE << "Enabling SLVS test output on SSA#" 
+		   	<< +pSSA->getChipId() << RESET;
 		   uint8_t cRegValue  = ReadChipReg( pSSA, "ReadoutMode");
 		   cRegValue = ( cRegValue & 0x4 ) | ( pValue << 1 ); 
   		   return WriteChipSingleReg( pSSA, "ReadoutMode", cRegValue, pVerifLoop); 
@@ -231,7 +257,7 @@ namespace Ph2_HwInterface {// start namespace
 		}
 		else if( pRegName == "Threshold" ) 
 		{
-			LOG (INFO) << BOLDRED << "Setting threshold to "<< +pValue << RESET;
+			LOG (DEBUG) << BOLDRED << "Setting threshold to "<< +pValue << RESET;
 			return WriteChipSingleReg ( pSSA, "Bias_THDAC", ( pValue ) , pVerifLoop);
 		}
 		else
@@ -478,6 +504,10 @@ namespace Ph2_HwInterface {// start namespace
 		else if( pRegNode == "ChipId")
 		{
 			return this->ReadChipId( pSSA );
+		}
+		else if( pRegNode == "Threshold")
+		{
+			return this->ReadChipReg( pSSA , "Bias_THDAC");
 		}
 		else
 		{

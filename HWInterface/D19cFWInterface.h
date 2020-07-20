@@ -99,6 +99,7 @@ namespace Ph2_HwInterface {
 
       private:
         D19cFWEvtEncoder::D19cFWEvt fD19cFWEvts; 
+        std::vector< std::vector<uint32_t> > fSlaveMap;
         std::map<uint8_t,std::vector<uint32_t>> fI2CSlaveMap ;
         D19cFpgaConfig* fpgaConfig;
         FileHandler* fFileHandler ;
@@ -445,6 +446,7 @@ namespace Ph2_HwInterface {
         void syncCDCE();
         void epromCDCE();
 
+        
         // phase tuning commands - d19c
         struct PhaseTuner
         {
@@ -541,7 +543,6 @@ namespace Ph2_HwInterface {
                 LOG (DEBUG) << BOLDBLUE << "Line " << +pLine << " setting line mode to " << std::hex << command_final << std::dec << RESET;
                 pInterface->WriteReg( "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final );  
                 std::this_thread::sleep_for (std::chrono::microseconds (fWait_ms*1000) );
-              
             };
             void SetLinePattern(BeBoardFWInterface* pInterface,  uint8_t pHybrid, uint8_t pChip , uint8_t pLine, uint16_t pPattern, uint16_t pPatternPeriod)
             {

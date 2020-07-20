@@ -613,6 +613,24 @@ namespace Ph2_HwInterface
             uint16_t cThreshold = ((cReg1 & 0x3) << 8) | cReg0;
             return cThreshold;
         }
+        else  if(pRegNode=="Threshold")
+        {
+            fBoardFW->EncodeReg ( pCbc->getRegItem ( "VCth1" ), pCbc->getFeId(), pCbc->getChipId(), cVecReq, true, false );
+            fBoardFW->EncodeReg ( pCbc->getRegItem ( "VCth2" ), pCbc->getFeId(), pCbc->getChipId(), cVecReq, true, false );
+            fBoardFW->ReadChipBlockReg (  cVecReq );
+            fBoardFW->DecodeReg ( cRegItem, cCbcId, cVecReq[0], cRead, cFailed );
+            
+            uint16_t cReg0 = cRegItem.fValue;
+            pCbc->setReg ( "VCth1" , cRegItem.fValue );
+            fBoardFW->DecodeReg ( cRegItem, cCbcId, cVecReq[1], cRead, cFailed );
+            if(cFailed)
+                return 0;
+            
+            pCbc->setReg ( "VCth2" , cRegItem.fValue );
+            uint16_t cReg1 = cRegItem.fValue;
+            uint16_t cThreshold = ((cReg1 & 0x3) << 8) | cReg0;
+            return cThreshold;
+        }
         else if( pRegNode == "HitLogic")
         {
             cRegItem = pCbc->getRegItem ( "Pipe&StubInpSel&Ptwidth" );

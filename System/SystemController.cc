@@ -101,30 +101,94 @@ namespace Ph2_System
     fStreamerEnabled = streamData;
     if (streamData == true) fNetworkStreamer = new TCPPublishServer(6000,1);
 
+    //std::stringstream outp;
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
-
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
-    const BeBoard* theFirstBoard = fDetectorContainer->at(0);
-
-    if (theFirstBoard->getBoardType() != BoardType::RD53)
+    if( fDetectorContainer->size() > 0 ) 
+    {
+      const BeBoard* cFirstBoard = fDetectorContainer->at(0);
+      if (cFirstBoard->getBoardType() != BoardType::RD53)
       {
-        OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>((theFirstBoard->at(0))->at(0));
-        auto cChipType = (static_cast<ReadoutChip*>(theOuterTrackerModule->at(0))->getFrontEndType());
-        if (cChipType == FrontEndType::CBC3)
+        LOG (INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
+        if( cFirstBoard->size() > 0 )//# of optical groups connected to Board0 
+        {
+          auto cFirstOpticalGroup = cFirstBoard->at(0);
+          LOG (INFO) << BOLDBLUE << "\t...Initializing HwInterfaces for OpticalGroups.." 
+            << +cFirstBoard->size() 
+            << " optical group(s) found ..."
+            << RESET;
+          if( cFirstOpticalGroup->size() > 0 )//# of hybrids connected to OpticalGroup0 
+          {
+            LOG (INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for FrontEnd Hybrids.." 
+              << +cFirstOpticalGroup->size() 
+              << " hybrid(s) found ..."
+              << RESET;
+            auto cFirstHybrid = cFirstOpticalGroup->at(0);
+            for( auto cROC : *cFirstHybrid )
+            {
+              auto cChipType = cROC->getFrontEndType();
+              if( cROC->getIndex() > 0 )
+                continue;
 
-          fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
-        else if(cChipType == FrontEndType::SSA)
-          fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
-        else if(cChipType == FrontEndType::MPA)
-          fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
-        fCicInterface = new CicInterface(fBeBoardFWMap);
+              LOG (INFO) << BOLDBLUE << "\t\t\t...Assuming ROC#" << +cROC->getId() 
+                << " represents all ROCs on this hybrid" 
+                << RESET;
+              if (cChipType == FrontEndType::CBC3)
+              {
+                LOG (INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
+                fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
+              }
+              else if(cChipType == FrontEndType::SSA)
+              {
+                LOG (INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
+                fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+              }
+              else if(cChipType == FrontEndType::MPA)
+              {
+                LOG (INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
+                fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
+              }
+            }
+            LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
+            fCicInterface = new CicInterface(fBeBoardFWMap);
+            //OuterTrackerModule* cFirstHybrid = static_cast<OuterTrackerModule*>(cFirstOpticalGroup->at(0));
+            // if( cFirstHybrid->size() > 0 )//# of ROCs connected to Hybrid0 
+            // {
+            //   LOG (INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for ROCs .."
+            //     << +cFirstHybrid->size() 
+            //     << " ROCs found ..."
+            //     << RESET;
+            //   auto cFirstROC = cFirstHybrid->at(0);
+            //   auto cChipType = cFirstROC->getFrontEndType();
+            //   if (cChipType == FrontEndType::CBC3)
+            //   {
+            //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
+            //     fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
+            //   }
+            //   else if(cChipType == FrontEndType::SSA)
+            //   {
+            //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
+            //     fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+            //   }
+            //   else if(cChipType == FrontEndType::MPA)
+            //   {
+            //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
+            //     fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
+            //   }
+            //   LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
+            //   fCicInterface = new CicInterface(fBeBoardFWMap);
+            // }
+          }
+        }
       }
-    else
+      else
       {
         flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
         fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
       }
+      
+    }
 
     if (fWriteHandlerEnabled == true) this->initializeFileHandler();
   }
@@ -140,6 +204,7 @@ namespace Ph2_System
 
     for (auto cBoard : *fDetectorContainer)
       {
+        uint8_t cAsync = ( cBoard->getEventType() == EventType::SSAAS ) ? 1 : 0;
         if (cBoard->getBoardType() != BoardType::RD53)
           {
             //setting up back-end board
@@ -193,10 +258,16 @@ namespace Ph2_System
                       {
                         ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
                         if ( !bIgnoreI2c )
-                          {
-                            LOG (INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
-                            fReadoutChipInterface->ConfigureChip ( theReadoutChip );
-                          }
+                        {
+                          LOG (INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
+                          fReadoutChipInterface->ConfigureChip ( theReadoutChip );
+                        }
+                        // if SSA + ASYNC
+                        // make sure ROCs are configured for that 
+                        if( theReadoutChip->getFrontEndType() == FrontEndType::SSA)
+                        {
+                          fReadoutChipInterface->WriteChipReg(cReadoutChip,"AnalogueAsync",cAsync);
+                        }
                       }
                   }
               }
@@ -546,6 +617,13 @@ namespace Ph2_System
                         }
                       else if( pBoard->getFrontEndType() == FrontEndType::SSA )
                         {
+                          // LOG (INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
+                          // auto cL1Counter0 = (cEvent[4+2] & (0xF<<16)) >> 16; 
+                          // auto cL1Counter1 = (cEvent[4+8+4+2] & (0xF<<16)) >> 16; 
+                          // LOG (INFO) << BOLDBLUE << "L1A counter chip0 : " << cL1Counter0 << RESET;
+                          // LOG (INFO) << BOLDBLUE << "L1A counter chip1 : " << cL1Counter1 << RESET;
+                          // for(auto cWord : cEvent )
+                          //   LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
                           fEventList.push_back(new D19cSSAEvent(pBoard, maxind+1, fNFe, cEvent));
                         }
                       else if( pBoard->getFrontEndType() == FrontEndType::MPA )
