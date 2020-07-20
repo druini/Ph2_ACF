@@ -15,6 +15,7 @@
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../HWDescription/Definition.h"
+#include "../HWDescription/OuterTrackerModule.h"
 
 using namespace Ph2_HwDescription;
 
@@ -22,10 +23,29 @@ using namespace Ph2_HwDescription;
 namespace Ph2_HwInterface {
 
     // Event implementation
-    D19cCbc3Event::D19cCbc3Event ( const BeBoard* pBoard,  uint32_t pNbCbc, uint32_t pNFe, const std::vector<uint32_t>& list ) 
-    : fEventDataVector(8*pNFe)
+    // removed nCBCs and nFEs since both are actually provided by the board 
+    D19cCbc3Event::D19cCbc3Event ( const BeBoard* pBoard,  const std::vector<uint32_t>& list ) 
     {
-        SetEvent ( pBoard, pNbCbc, list );
+        fEventDataVector.clear();
+        uint8_t cNROCs=0;
+        for( auto cModule : *pBoard )
+        {
+            for (auto cFe : *cModule )
+            {
+                auto cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
+                auto& cCic = cOuterTrackerModule->fCic;
+                size_t cNReadoutChips = ( cCic == NULL ) ? cFe->size() : 1; 
+                for( size_t cIndex=0; cIndex < cNReadoutChips; cIndex++ )
+                {
+                    std::vector<uint32_t> cEmpty(0);
+                    fEventDataVector.push_back(cEmpty);
+                    cNROCs += cNReadoutChips;
+                }
+            }//hybrids loop
+        }//module loop
+        fNCbc = cNROCs;
+        Set(pBoard, list);
+        //SetEvent (pBoard, fNCbc, list );
     }
 
 
@@ -49,7 +69,91 @@ namespace Ph2_HwInterface {
             }
     	}
     }
+    void D19cCbc3Event::Set ( const BeBoard* pBoard, const std::vector<uint32_t>& pData )
+    {
+        const uint16_t LENGTH_EVENT_HEADER = 4;
+        const uint8_t  VALID_L1_HEADER=0x0A;
+        const uint8_t  VALID_STUB_HEADER=0x05;
+        uint32_t cNEvents=0;
+        auto cEventIterator = pData.begin();
+        // counters from event header 
+        fExternalTriggerID = (*(cEventIterator+1) >> 16) & 0x7FFF;
+        fTDC = (*(cEventIterator+1) >> 24) & 0xFF;
+        fEventCount = 0x00FFFFFF &  *(cEventIterator+2);
+        fBunch = 0xFFFFFFFF & *(cEventIterator+3);
 
+        do
+        {
+            uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16 ;
+            uint32_t cEventSize = (0x0000FFFF & (*cEventIterator))*4 ; // event size is given in 128 bit words
+            uint32_t cDummyCount = (0xFF &  (*(cEventIterator+1)))*4;
+            LOG (DEBUG) << BOLDBLUE << "Event " << +cNEvents 
+              << "... event header is " << std::bitset<16>(cHeader) 
+              << " ... " << +cEventSize << " 32 bit words ... "
+              << +cDummyCount << " dummy 32 bit words .. " 
+              << RESET;
+            // retrieve chunck of data vector belonging to this event
+            if( cHeader == 0xFFFF )
+            {
+              auto cIterator = cEventIterator + LENGTH_EVENT_HEADER;
+              uint32_t cStatus=0x00000000; 
+              size_t cRocIndex=0;
+              for( auto cModule : *pBoard )
+              {
+                for (auto cFe : *cModule )
+                {
+
+                  auto cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
+                  auto& cCic = cOuterTrackerModule->fCic;
+                  size_t cNReadoutChips = ( cCic == NULL ) ? cFe->size() : 1; 
+                  LOG (DEBUG) << BOLDBLUE << "Number of ROCs is " << +cNReadoutChips << RESET;
+                  for( size_t cIndex=0; cIndex < cNReadoutChips; cIndex++ )
+                  {
+                    auto cVectorIndex = encodeVectorIndex(cFe->getId(), cIndex,cNReadoutChips); 
+                    // L1 info
+                    uint8_t cStatusWord = 0x00;
+                    uint32_t cHitInfoHeader = *(cIterator);
+                    uint32_t cGoodHitInfo = (cHitInfoHeader & (0xF << 28 ))  >> 28;
+                    uint32_t cHitInfoSize = (cHitInfoHeader & 0xFFF)*4;
+                    cStatusWord = static_cast<uint8_t>( cGoodHitInfo == VALID_L1_HEADER ); 
+                    LOG (DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex 
+                      << "...hit info header " << std::bitset<4>(cGoodHitInfo)
+                      << "... " << +cHitInfoSize << " words in hit packet..." 
+                      << "... status word " << std::bitset<2>(cStatusWord) << RESET;
+                    if( cStatusWord != 0x01 )
+                        throw std::runtime_error(std::string("Incorrect L1 header found when decoding data ... stopping"));
+                    
+                    // stub info  
+                    uint32_t cStubInfoHeader = *(cIterator+cHitInfoSize); 
+                    uint32_t cGoodStubInfo = (cStubInfoHeader & (0xF << 28 ))  >> 28;
+                    uint32_t cStubInfoSize = (cStubInfoHeader & 0xFFF)*4;
+                    cStatusWord = cStatusWord | ( static_cast<uint8_t>( cGoodStubInfo == VALID_STUB_HEADER ) << 1) ; 
+                    LOG (DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex 
+                      << "...stub info header " << std::bitset<4>(cGoodStubInfo) 
+                      << "... " << +cStubInfoSize << " words in stub packet." 
+                      << "... status word " << std::bitset<2>(cStatusWord) << RESET;
+                    if( cStatusWord != 0x03 )
+                        throw std::runtime_error(std::string("Incorrect Stub header found when decoding data ... stopping"));
+                    
+                    std::vector<uint32_t> cDataWords(cIterator,cIterator+cHitInfoSize+cStubInfoSize);
+                    fEventDataVector[cVectorIndex].clear();
+                    fEventDataVector[cVectorIndex].insert( fEventDataVector[cVectorIndex].begin(), cDataWords.begin(), cDataWords.end());
+                    //for( auto cWord : fEventDataVector[cVectorIndex] ) 
+                    //    LOG (DEBUG) << BOLDBLUE << "\t\t.." << std::bitset<32>(cWord) << RESET;
+                    // increment iterator 
+                    cIterator += cHitInfoSize + cStubInfoSize; 
+                    cStatus = cStatus | ( cStatusWord << (cRocIndex*2) );
+                    // increment ROC index 
+                    cRocIndex++;
+                  }
+                }//hybrid loop 
+              }// module loop 
+              cNEvents++; 
+            }
+            cEventIterator += cEventSize;
+        }while( cEventIterator < pData.end());
+
+    }
     void D19cCbc3Event::SetEvent ( const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list )
     {
         // block size
@@ -81,7 +185,7 @@ namespace Ph2_HwInterface {
         fEventDataSize = fEventSize;
 
         auto cIterator = list.begin() + D19C_EVENT_HEADER1_SIZE_32_CBC3;
-        LOG (DEBUG) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
+        LOG (INFO) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
         do
         {
             // L1 

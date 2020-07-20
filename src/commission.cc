@@ -94,7 +94,6 @@ int main ( int argc, char* argv[] )
     // now query the parsing results
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/Commissioning.xml";
     bool cLatency = ( cmd.foundOption ( "latency" ) ) ? true : false;
-    bool cWithCIC = ( cmd.foundOption ( "withCIC" ) ) ;
     bool cTriggerTDC = ( cmd.foundOption ( "triggerTdc" ) ) ? true : false;
     bool cStubLatency = ( cmd.foundOption ( "stublatency" ) ) ? true : false;
     bool cSignal = ( cmd.foundOption ( "signal" ) ) ? true : false;
@@ -104,6 +103,7 @@ int main ( int argc, char* argv[] )
     bool cAntenna = (cmd.foundOption ("antenna") )? true : false;
     bool cPulseShape = (cmd.foundOption ("pulseShape") )? true : false;
 
+    bool cWithCIC = ( cmd.foundOption ( "withCIC" ) ) ;
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
 
     if ( cNoise )          cDirectory += "NoiseScan";
@@ -148,7 +148,6 @@ int main ( int argc, char* argv[] )
     cBackEndAligner.Initialise();
     bool cAligned = cBackEndAligner.Align();
     cBackEndAligner.resetPointers();
-
     if(!cAligned )
     {
         LOG (ERROR) << BOLDRED << "Failed to align back-end" << RESET;
@@ -166,6 +165,7 @@ int main ( int argc, char* argv[] )
         cCicAligner.Reset(); 
         cCicAligner.dumpConfigFiles();
     }
+    
 
     #ifdef __ANTENNA__
     AntennaTester cAntennaTester;
@@ -190,10 +190,10 @@ int main ( int argc, char* argv[] )
                 if( cAntenna)cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential );
             #endif
 
-            cLatencyScan.ScanLatency ( cStartLatency, cLatencyRange);
+            cLatencyScan.StubLatencyScan ( cStartLatency, cLatencyRange);
             }
 
-            if ( cStubLatency ) cLatencyScan.ScanStubLatency ( cStartLatency, cLatencyRange );
+            if ( cStubLatency ) cLatencyScan.StubLatencyScan ( cStartLatency, cLatencyRange );
 
             // if antenna was being used ... then disable it again at the end 
             #ifdef __ANTENNA__

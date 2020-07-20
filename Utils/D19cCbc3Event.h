@@ -37,7 +37,7 @@ namespace Ph2_HwInterface
          * \param pNbCbc
          * \param pEventBuf : the pointer to the raw Event buffer of this Event
          */
-        D19cCbc3Event ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, uint32_t pNFe, const std::vector<uint32_t>& list );
+        D19cCbc3Event ( const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list );
         /*!
          * \brief Copy Constructor of the Event Class
          */
@@ -48,6 +48,12 @@ namespace Ph2_HwInterface
         ~D19cCbc3Event()
         {
         }
+        /*!
+         * \brief Set an Event to the Event map
+         * \param pEvent : Event to set
+         * \return Aknowledgement of the Event setting (1/0)
+         */
+        void Set ( const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list ) override;
         /*!
          * \brief Set an Event to the Event map
          * \param pEvent : Event to set
@@ -151,7 +157,10 @@ namespace Ph2_HwInterface
         {
             try 
             {
-                return  ( fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc)).at( calculateChannelWordPosition(i) ) >> ( calculateChannelBitPosition(i)) ) & 0x1;
+                auto cWordPosition =  calculateChannelWordPosition(i);
+                auto cBitPosition = calculateChannelBitPosition(i); 
+                LOG (DEBUG) << BOLDBLUE << "Word#" << +cWordPosition << " Bit#" << +cBitPosition << RESET;
+                return  ( fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId,fNCbc)).at( cWordPosition ) >> ( cBitPosition) ) & 0x1;
             }
             catch (const std::out_of_range& outOfRange) {
                 LOG (ERROR) << "Word " << +i << " for FE " << +pFeId << " CBC " << +pCbcId << " is not found:" ;

@@ -15,7 +15,76 @@ D19cMPAEventAS::D19cMPAEventAS(const BeBoard *pBoard, uint32_t pNMPA, uint32_t p
 	fNMPA = pNMPA;
 	SetEvent(pBoard, pNMPA, list);
 }
-
+D19cMPAEventAS::D19cMPAEventAS(const BeBoard *pBoard, const std::vector<uint32_t> &list)
+{
+    fEventDataVector.clear();
+    fNSSA = 0;
+    fFeIds.clear();
+    fROCIds.clear();
+    fCounterData.clear();
+    // assuming that FEIds aren't shared between links 
+    for( auto cModule : *pBoard )
+    {
+        for (auto cFe : *cModule )
+        {
+            fFeIds.push_back( cFe->getId() );
+            fNSSA += cFe->size();
+            HybridCounterData cHybridCounterData; 
+            cHybridCounterData.clear();
+            std::vector<uint8_t> cROCIds(0); cROCIds.clear();
+            for( auto cChip : *cFe )
+            {
+                if( cChip->getFrontEndType() == FrontEndType::MPA )
+                {
+                    RocCounterData cRocData; cRocData.clear();
+                    cHybridCounterData.push_back(cRocData);
+                    cROCIds.push_back( cChip->getId() );
+                }
+            }//chip
+            fCounterData.push_back(cHybridCounterData);
+            fROCIds.push_back(cROCIds);
+        } // hybrids
+    }// modules 
+    this->Set(pBoard, list);
+}
+void D19cMPAEventAS::Set ( const BeBoard* pBoard, const std::vector<uint32_t>& pData )
+{
+    LOG (DEBUG) << BOLDBLUE << "Setting event for Async MPA " << RESET;
+    auto cDataIterator = pData.begin();
+    uint8_t cFeIndex=0;
+    for( auto cModule : *pBoard )
+    {
+        for (auto cFe : *cModule )
+        {
+            auto& cHybridCounterData = fCounterData[cFeIndex];
+            uint8_t cRocIndex=0;
+            // loop over chips 
+            for( auto cChip : *cFe )
+            {
+                if( cChip->getFrontEndType() == FrontEndType::MPA )
+                {
+                    auto& cChipCounterData = cHybridCounterData[cRocIndex];
+                    for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
+                    {
+                        if( cChnl%2 != 0 )
+                        {
+                            auto cWord = *(cDataIterator);
+                            cChipCounterData.push_back( (cWord&0xFFFF) );
+                            cChipCounterData.push_back( (cWord&(0xFFFF<<16)) >> 16 );
+                            LOG (DEBUG) << BOLDBLUE << "ROC#" << +cRocIndex 
+                                << " .. hits: " << + (cWord&0xFFFF) 
+                                << " , " <<  +((cWord&(0xFFFF<<16)) >> 16)
+                                << RESET;
+                            cDataIterator++;
+                        }//
+                    }//chnl loop
+                    cRocIndex++;
+                }//[if MPA]
+            }//chips
+            cFeIndex++;
+        }//hybrids
+    }//modules
+}
 //required by event but not sure if makes sense for AS
 void D19cMPAEventAS::fillDataContainer(BoardDataContainer *boardContainer, const ChannelGroupBase *cTestChannelGroup)
 {
@@ -64,16 +133,24 @@ void D19cMPAEventAS::SetEvent(const BeBoard *pBoard, uint32_t pNMPA, const std::
     }
 }
 
-uint32_t D19cMPAEventAS::GetNHits(uint8_t pFeId, uint8_t pMPAId) const
+uint32_t D19cMPAEventAS::GetNHits(uint8_t pFeId, uint8_t pSSAId) const
 {
-    const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId,fNMPA));
-    return std::accumulate(hitVector.begin()+1, hitVector.end(), 0);
+    uint8_t cFeIndex = getFeIndex(pFeId);
+    uint8_t cRocIndex = getROCIndex(pFeId, pSSAId);
+    auto& cHitVecotr = fCounterData.at(cFeIndex).at(cRocIndex);
+    return std::accumulate(cHitVecotr.begin(), cHitVecotr.end(), 0);
+    //const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId,fNMPA));
+    //return std::accumulate(hitVector.begin()+1, hitVector.end(), 0);
 }
-std::vector<uint32_t> D19cMPAEventAS::GetHits(uint8_t pFeId, uint8_t pMPAId) const
+std::vector<uint32_t> D19cMPAEventAS::GetHits(uint8_t pFeId, uint8_t pSSAId) const
 {
-    const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId,fNMPA));
+    uint8_t cFeIndex = getFeIndex(pFeId);
+    uint8_t cRocIndex = getROCIndex(pFeId, pSSAId);
+    return fCounterData.at(cFeIndex).at(cRocIndex);
+    //const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId,fNMPA));
     //LOG (INFO) << BOLDBLUE << hitVector[0] << RESET;
-    return hitVector;
+    //return hitVector;
 }
+
 
 } // namespace Ph2_HwInterface

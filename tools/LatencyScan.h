@@ -52,7 +52,7 @@ class LatencyScan : public Tool
     std::map<ModuleContainer*, uint8_t> ScanStubLatency ( uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20 );
     void MeasureTriggerTDC();
     void ScanLatency2D(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
-
+    void StubLatencyScan(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
     void writeObjects();
 
     void Start(int currentRun) override;

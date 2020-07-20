@@ -11,6 +11,11 @@
 #ifndef __DQMHISTOGRAMMER_H__
 #define __DQMHISTOGRAMMER_H__
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#include <TStyle.h>
+#pragma GCC diagnostic pop
+
 #include "../tools/Tool.h"
 #include "../Utils/easylogging++.h"
 

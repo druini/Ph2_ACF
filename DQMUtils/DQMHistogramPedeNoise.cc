@@ -39,8 +39,8 @@ DQMHistogramPedeNoise::~DQMHistogramPedeNoise ()
 //========================================================================================================================
 void DQMHistogramPedeNoise::book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
-    uint32_t NCH = NCHANNELS;
-    if (static_cast<Ph2_HwDescription::ReadoutChip*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getFrontEndType() == FrontEndType::SSA) NCH = NSSACHANNELS;
+    uint32_t NCH = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
+    //if (static_cast<Ph2_HwDescription::ReadoutChip*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getFrontEndType() == FrontEndType::SSA) NCH = NSSACHANNELS;
 
     auto cSetting = pSettingsMap.find ( "PlotSCurves" );
     fPlotSCurves = ( cSetting != std::end ( pSettingsMap ) ) ? cSetting->second : 0;

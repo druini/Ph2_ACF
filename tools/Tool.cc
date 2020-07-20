@@ -677,13 +677,25 @@ void Tool::setFWTestPulse()
 	for (auto cBoard : *fDetectorContainer)
 	{
 		std::vector<std::pair<std::string, uint32_t> > cRegVec;
-
+		//uint8_t cAsync = ( cBoard->getEventType() == EventType::SSAAS || cBoard->getEventType() == EventType::MPAAS ) ? 1 : 0;
 		switch(cBoard->getBoardType())
 		{
 		case BoardType::D19C :
 		{
-			cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
-			cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+			EventType cEventType = cBoard->getEventType();
+        	bool cAsync = ( cEventType ==  EventType::SSAAS || cEventType ==  EventType::MPAAS ) ;
+        
+			if( !cAsync )
+			{
+				cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+				cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+			}
+			else
+			{
+				LOG (INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10"<<RESET;
+				cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+				cRegVec.push_back ({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+			}
 			break;
 		}
 
@@ -937,11 +949,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string &dacName, u
 
 	for(int iBit = numberOfBits-1; iBit>=0; --iBit)
 	{
-
-
-		LOG (DEBUG) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
-		//LOG (INFO) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
-
+		LOG (INFO) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
 		for ( auto cOpticalGroup : *(fDetectorContainer->at(boardIndex)))
 		{
             for ( auto cHybrid : *cOpticalGroup )
@@ -1184,12 +1192,8 @@ public:
 		{
 			uint32_t currentNumberOfEvents = uint32_t(fNumberOfEventsPerBurst);
 			if(burstNumbers==1) currentNumberOfEvents = lastBurstNumberOfEvents;
-			EventType fEventType = fDetectorContainer->at(fBoardIndex)->getEventType();
-
-			if (fEventType == EventType::SSAAS or fEventType == EventType::MPAAS )
-				fTool->ReadASEvent(fDetectorContainer->at(fBoardIndex), fNumberOfMSec );
-			else
-				fTool->ReadNEvents (fDetectorContainer->at(fBoardIndex), currentNumberOfEvents );
+			
+			fTool->ReadNEvents (fDetectorContainer->at(fBoardIndex), currentNumberOfEvents );
 			// Loop over Events from this Acquisition
 			const std::vector<Event*>& events = fTool->GetEvents (fDetectorContainer->at(fBoardIndex));
 			for ( auto& event : events )
@@ -1212,7 +1216,12 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
   theScan.setDataContainer(fDetectorDataContainer);
 
   doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
-
+  // if in async mode normalization is a little different .. 
+  // normalize by the number of triggers to accept 
+  if (fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS || fDetectorContainer->at(boardIndex)->getEventType() == EventType::MPAAS ) 
+  {
+  	numberOfEvents = fBeBoardInterface->ReadBoardReg( fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.triggers_to_accept");
+  }
   fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
 }
 

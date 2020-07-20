@@ -756,6 +756,13 @@ namespace Ph2_HwInterface {
         LOG (INFO) << BOLDBLUE << "CIC output pattern configured by setting " << cRegName << " to " << std::bitset<8>(cRegValue) << RESET;
         return true;
     }
+    bool CicInterface::SetSparsification(Chip* pChip, uint8_t pEnable ) 
+    {
+        std::string cRegName = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? "CBC_SPARSIFICATION_SEL" : "FE_CONFIG";
+        uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
+        uint16_t cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pEnable : (cRegValue & 0x2F ) | ( pEnable << 4) ;
+        return this->WriteChipReg( pChip, cRegName, cValue) ;
+    }
     bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFEs , bool pEnable)
     {
         setBoard ( pChip->getBeBoardId() ); 
@@ -828,6 +835,34 @@ namespace Ph2_HwInterface {
         else
             return true;
     }
+     bool CicInterface::SelectMux(Chip* pChip , uint8_t pPhyPort)
+    {
+        // first .. enable bypass of logic 
+        if( !this->ControlMux(pChip,1)) 
+            return false;
+
+        // then select phy port 
+        setBoard ( pChip->getBeBoardId() ); 
+        LOG (INFO) << BOLDBLUE << "Selecting phyPort [0-11]: " << +pPhyPort << RESET;
+        std::string cRegName = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? "ctrlTestMux" : "MUX_CTRL";
+        uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
+        uint16_t cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pPhyPort : (cRegValue & 0x8 ) | pPhyPort ;
+        return this->WriteChipReg( pChip, cRegName, cValue);
+
+    }
+    bool CicInterface::ControlMux(Chip* pChip , uint8_t pEnable)
+    {
+        setBoard ( pChip->getBeBoardId() ); 
+        std::string cRegName = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? "enableMux" : "MUX_CTRL";
+        uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
+        uint16_t cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pEnable : (cRegValue & 0x7 ) | (pEnable << 3 ) ;
+        if( pEnable == 1 )
+            LOG (INFO) << BOLDBLUE << " Enabling CIC MUX .. so bypassing CIC logic " <<  RESET ;
+        else
+            LOG (INFO) << BOLDBLUE << " Disabling CIC MUX .. so activating CIC logic  " <<  RESET ;
+            
+        return this->WriteChipReg( pChip, cRegName, cValue);
+    }
     // start-up sequence for CIC [everything that does not require interaction
     // with the BE or the other readout ASICs on the chip 
     bool CicInterface::StartUp( Chip* pChip, uint8_t pDriveStrength) 
@@ -892,14 +927,6 @@ namespace Ph2_HwInterface {
         this->EnableFEs(pChip, {0,1,2,3,4,5,6,7} , false);
         this->ResetPhaseAligner(pChip, 200 );
         this->EnableFEs(pChip, {0,1,2,3,4,5,6,7} , true);
-        
-        // check if we need a soft RESET
-        // cSuccess = this->CheckSoftReset(pChip);
-        // if( !cSuccess ) 
-        // {
-        //     LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC... " << RESET;
-        //     exit(0);
-        // }
         
         // select fast command edge 
         bool cNegEdge=true;

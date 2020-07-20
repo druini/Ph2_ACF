@@ -2,14 +2,16 @@
 
 #include "Utils/Utilities.h"
 #include "Utils/Timer.h"
-#include "tools/SSASCurveAsync.h"
-#include "tools/ShortFinder.h"
-#include "tools/OpenFinder.h"
+#include "PSHybridTester.h"
+#include "PedestalEqualization.h"
+#include "PedeNoise.h"
+#include "OpenFinder.h"
+#include "ShortFinder.h"
+#include "DPInterface.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/DataChecker.h"
 #include "Utils/argvparser.h"
-#include "ExtraChecks.h"
 
 #ifdef __USE_ROOT__
     #include "TROOT.h"
@@ -20,11 +22,6 @@
 
 #ifdef __NAMEDPIPE__
     #include "gui_logger.h"
-#endif
-
-
-#ifdef __TCUSB__
-  #include "USB_a.h"
 #endif
 
 
@@ -61,8 +58,10 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
     cmd.defineOptionAlternative ( "measurePedeNoise", "m" );
    
-    cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
     cmd.defineOption ( "findShorts", "look for shorts", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
+    cmd.defineOption("mpaTest", "Check MPA input with Data Player Pattern [provide pattern]", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+    cmd.defineOption ( "ssapair", "Debug selected SSA pair. Possible options: 01, 12, 23, 34, 45, 56, 67", ArgvParser::OptionRequiresValue);
 
     cmd.defineOption ( "threshold", "Threshold value to set on chips for open and short finding",  ArgvParser::OptionRequiresValue );
     cmd.defineOption ( "hybridId", "Serial Number of front-end hybrid. Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
@@ -70,6 +69,9 @@ int main ( int argc, char* argv[] )
     cmd.defineOption("pattern", "Data Player Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("pattern", "p");
 
+    cmd.defineOption ( "withCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute );
+    cmd.defineOption ( "checkAsync", "Check async readout", ArgvParser::NoOptionAttribute );
+    
     // general 
     cmd.defineOption ( "batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute );
     cmd.defineOptionAlternative ( "batch", "b" );
@@ -84,15 +86,14 @@ int main ( int argc, char* argv[] )
 
     // now query the parsing results
     std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/Commissioning.xml";
-    bool cTune = ( cmd.foundOption ( "tuneOffsets" ) ) ;
-    bool cMeasurePedeNoise = ( cmd.foundOption( "measurePedeNoise") ); 
-    bool cFindOpens = (cmd.foundOption ("findOpens") )? true : false;
-    bool cShortFinder = ( cmd.foundOption ( "findShorts" ) ) ? true : false;
+    // bool cFindOpens = (cmd.foundOption ("findOpens") )? true : false;
+    // bool cShortFinder = ( cmd.foundOption ( "findShorts" ) ) ? true : false;
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
-    uint32_t  cThreshold = ( cmd.foundOption ( "threshold" ) )   ?  convertAnyInt ( cmd.optionValue ( "threshold" ).c_str() ) :  560 ;
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
     std::string cHybridId = ( cmd.foundOption ( "hybridId" ) ) ? cmd.optionValue ( "hybridId" ) : "xxxx";
-    cDirectory += Form("FEH_2S_%s",cHybridId.c_str());
+    uint8_t cPattern = ( cmd.foundOption ( "mpaTest" ) ) ? convertAnyInt ( cmd.optionValue ( "mpaTest" ).c_str() ) : 0; 
+    const std::string cSSAPair = ( cmd.foundOption ( "ssapair" ) )   ?   cmd.optionValue ( "ssapair" ) : "";
+    cDirectory += Form("FEH_PS_%s",cHybridId.c_str());
     
     TApplication cApp ( "Root Application", &argc, argv );
     
@@ -108,122 +109,220 @@ int main ( int argc, char* argv[] )
     #endif
     
     std::stringstream outp;
-    Tool cTool;
-    cTool.InitializeHw ( cHWFile, outp);
-    cTool.InitializeSettings ( cHWFile, outp );
+    // hybrid testing tool 
+    // going to use this because it also 
+    // allows me to initialize voltages
+    // and check voltages 
+    PSHybridTester cHybridTester;
+    cHybridTester.InitializeHw ( cHWFile, outp);
+    cHybridTester.InitializeSettings ( cHWFile, outp );
+    cHybridTester.CreateResultDirectory ( cDirectory );
+    cHybridTester.InitResultFile ( cResultfile );
+    //set voltage  on PS FEH 
+    cHybridTester.SetHybridVoltage();
+    //LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
+    //cHybridTester.CheckHybridCurrents();
+    //check voltage on PS FEH 
+    cHybridTester.CheckHybridVoltages();
     LOG (INFO) << outp.str();
-    cTool.CreateResultDirectory ( cDirectory );
-    cTool.InitResultFile ( cResultfile );
-    cTool.ConfigureHw ();
-
-    // measure hybrid current and temperature 
-    #ifdef __TCUSB__
-    #endif
-
-    // align back-end 
-    /*BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit (&cTool);
-    cBackEndAligner.Start(0);
-    //reset all chip and board registers 
-    // to what they were before this tool was called 
-    cBackEndAligner.Reset(); 
-    */
-    // if CIC is enabled then align CIC first 
-    /*
-    CicFEAlignment cCicAligner;
-    cCicAligner.Inherit (&cTool);
-    cCicAligner.Start(0);
-    //reset all chip and board registers 
-    // to what they were before this tool was called 
-    cCicAligner.Reset(); 
-    cCicAligner.dumpConfigFiles();
-    */
+    //select CIC readout 
+    //cHybridTester.SelectCIC(true);
+    cHybridTester.ConfigureHw ();
+    //LOG (INFO) << BOLDBLUE << "PS FEH current consumption post-configuration..." << RESET;
+    //cHybridTester.CheckHybridCurrents();
     
+    // interface to data player 
+    DPInterface cDPInterfacer;
+    BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>( cHybridTester.fBeBoardFWMap.find(0)->second );
+    // need to do this if 
+    // reading out CIC 
+    // or testing MPA 
+    if ( cmd.foundOption ( "withCIC" ) || cmd.foundOption ( "mpaTest" ) )
+    {
+        cHybridTester.SelectCIC(true);
+        // align back-end 
+        BackEndAlignment cBackEndAligner;
+        cBackEndAligner.Inherit (&cHybridTester);
+        cBackEndAligner.Start(0);
+        //reset all chip and board registers 
+        // to what they were before this tool was called 
+        cBackEndAligner.Reset(); 
+   
+        //Check if data player is running
+        if (cDPInterfacer.IsRunning(cInterface))
+        {
+            LOG (INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+            cDPInterfacer.Stop(cInterface);
+        }
 
-    
-    
-    // equalize thresholds on readout chips
-    if( cTune ) 
-    { 
-        t.start();
-        SSASCurve cScurve;  
-        cScurve.Inherit (&cTool);
-        cScurve.Initialise();
-        cScurve.run();
-        cScurve.writeObjects();
-        cScurve.dumpConfigFiles();
+        //Configure and Start DataPlayer
+        // to send phase alignment pattern 
+        uint8_t cPhaseAlignmentPattern=0x55;
+        cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
+        cDPInterfacer.Start(cInterface);
+        if( cDPInterfacer.IsRunning(cInterface) )
+        {
+            LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+        }
+        else
+            LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
+
+        // align CIC inputs 
+        CicFEAlignment cCicAligner;
+        cCicAligner.Inherit (&cHybridTester);
+        cCicAligner.PhaseAlignmentMPA(100);
+        cDPInterfacer.Stop(cInterface);
+        cDPInterfacer.CheckNPatterns(cInterface);
+
+        // // still needs to be de-bugged!!
+        // // does not work yet
+        // // Configure and Start DataPlayer
+        // // to send word alignment pattern 
+        // uint8_t cWordAlignmentPattern = 0x75;
+        // cDPInterfacer.ConfigureEmulator(cInterface, cWordAlignmentPattern);
+        // cDPInterfacer.StartEmulator(cInterface);
+        // if( cDPInterfacer.EmulatorIsRunning(cInterface) )
+        // {
+        //     LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+        // }
+        // else
+        //     LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
+
+        // cCicAligner.WordAlignmentMPA(100);
+        //reset all chip and board registers 
+        // to what they were before this tool was called 
+        //cCicAligner.dumpConfigFiles();
     }
-
-    #ifdef __TCUSB__
-    #endif
-
-
+    if( cmd.foundOption ( "checkAsync" ) )
+    {
+        DataChecker cDataChecker;
+        cDataChecker.Inherit (&cHybridTester);
+        cDataChecker.AsyncTest();
+        //cDataChecker.resetPointers();
+    }
+    
+    // // equalize thresholds on readout chips
+    if( cmd.foundOption ( "tuneOffsets" ) ) 
+    { 
+        
+        t.start();
+        // now create a PedestalEqualization object
+        PedestalEqualization cPedestalEqualization;
+        cPedestalEqualization.Inherit (&cHybridTester);
+        // second parameter disables stub logic on CBC3
+        cPedestalEqualization.Initialise ( true, true );
+        cPedestalEqualization.FindVplus();
+        cPedestalEqualization.FindOffsets();
+        cPedestalEqualization.writeObjects();
+        cPedestalEqualization.dumpConfigFiles();
+        cPedestalEqualization.resetPointers();
+        t.show ( "Time to tune the front-ends on the system: " );
+    }
     // measure noise on FE chips 
-    if (cMeasurePedeNoise)
+    if (cmd.foundOption( "measurePedeNoise"))
     {
         t.start();
+        //if this is true, I need to create an object of type PedeNoise from the members of Calibration
+        //tool provides an Inherit(Tool* pTool) for this purpose
+        PedeNoise cPedeNoise;
+        cPedeNoise.Inherit (&cHybridTester);
+        //second parameter disables stub logic on CBC3
+        cPedeNoise.Initialise (true, true); // canvases etc. for fast calibration
+        cPedeNoise.measureNoise();
+        cPedeNoise.writeObjects();
+        cPedeNoise.dumpConfigFiles();
+        t.stop();
+        t.show ( "Time to Scan Pedestals and Noise" );
     }
     
-    // For next step... set all thresholds on CBCs to 560 
-    if( cmd.foundOption ( "threshold" )  )
-    { 
-        cTool.setSameDac("VCth", cThreshold);
-        LOG (INFO) << BOLDBLUE << "Threshold for next steps is set to " << +cThreshold << " DAC units." << RESET;
-    }
-    // Inject charge with antenna circuit and look for opens 
-    if ( cFindOpens )
+    if( cmd.foundOption("findOpens"))
     {
-        #ifdef __ANTENNA__
-            int  cAntennaDelay = ( cmd.foundOption ( "antennaDelay" ) )   ?  convertAnyInt ( cmd.optionValue ( "antennaDelay" ).c_str() ) : -1;
-            int  cLatencyRange = ( cmd.foundOption ( "latencyRange" ) )   ?  convertAnyInt ( cmd.optionValue ( "latencyRange" ).c_str() ) :  -1;
-    
-            OpenFinder::Parameters cOfp;
-            // hard coded for now TODO: make this configurable
-            cOfp.potentiometer = 0x265;
-            // antenna group 
-            auto cSetting = cTool.fSettingsMap.find ( "AntennaGroup" );
-            cOfp.antennaGroup = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (0);
-            
-            // antenna delay 
-            if( cAntennaDelay > 0 )
-                cOfp.antennaDelay = cAntennaDelay;
-            else
-            {
-                auto cSetting = cTool.fSettingsMap.find ( "AntennaDelay" );
-                cOfp.antennaDelay = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (200);
-            }
-            
-            // scan range for latency  
-            if( cLatencyRange > 0 )
-                cOfp.latencyRange = cLatencyRange;
-            else
-            {
-                auto cSetting = cTool.fSettingsMap.find ( "ScanRange" );
-                cOfp.latencyRange = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : (10);
-            }
+        OpenFinder cOpenFinder;
+        cOpenFinder.Inherit (&cHybridTester);
+        cOpenFinder.FindOpensPS();
+    }
+    if( cmd.foundOption("findShorts"))
+    {
 
-            
-            OpenFinder cOpenFinder;
-            cOpenFinder.Inherit (&cTool);
-            cOpenFinder.Initialise (cOfp);
-            LOG (INFO) << BOLDBLUE << "Starting open finding measurement [antenna potentiometer set to 0x" << std::hex << cOfp.potentiometer << std::dec << " written to the potentiometer" <<  RESET;
-            cOpenFinder.FindOpens();
-        #endif
-    }   
-    //inject charge with TP and look for shorts 
-    if ( cShortFinder )
-    {
         ShortFinder cShortFinder;
-        cShortFinder.Inherit (&cTool);
-        cShortFinder.Initialise ();
-        cShortFinder.Start();
-        cShortFinder.Stop();
+        cShortFinder.Inherit (&cHybridTester);
+        cShortFinder.Initialise();
+        cShortFinder.FindShorts();
+    }
+    // test MPA outputs 
+    if( cmd.foundOption ( "mpaTest" ) )
+    {
+        cHybridTester.SelectCIC(true);
+        //Configure and Start DataPlayer
+        for( uint8_t cAttempt=0; cAttempt < 1; cAttempt++)
+        {
+            //Check if data player is running
+            if (cDPInterfacer.IsRunning(cInterface))
+            {
+                LOG (INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+                cDPInterfacer.Stop(cInterface);
+            }
+
+            if( cAttempt == 0 )
+                LOG (INFO) << BOLDBLUE << "Attempt " << +cAttempt << RESET;
+            else if( cAttempt == 1 )
+                LOG (INFO) << BOLDGREEN << "Attempt " << +cAttempt << RESET;
+            else if( cAttempt == 2 )
+                LOG (INFO) << BOLDMAGENTA << "Attempt " << +cAttempt << RESET;
+            else if( cAttempt == 3 )
+                LOG (INFO) << BOLDYELLOW << "Attempt " << +cAttempt << RESET;
+
+            cDPInterfacer.Configure(cInterface, cPattern);
+            cDPInterfacer.Start(cInterface);
+            cHybridTester.MPATest(cPattern);
+            cDPInterfacer.Stop(cInterface);
+            cDPInterfacer.CheckNPatterns(cInterface);
+        }
+        cHybridTester.SelectCIC(false);    
+    }  
+    // ssa pair tests 
+    if ( !cSSAPair.empty() )
+    {
+       LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
+        // configure SSA to output something on stub lines 
+        cHybridTester.SSATestStubOutput(cSSAPair);
+        // still needs to be debugged 
+        // configure SSA to output something on L1 lines
+        //cHybridTester.SSATestL1Output(cSSAPair);
+        // put it back in normal readout mode 
+        // and make sure we're in normal readout mode 
+        // i.e. synchronous
+        // auto cNevents  = 9;//cTool.findValueInSettings("Nevents" ,10);
+        // for(auto cBoard : *cHybridTester.fDetectorContainer)
+        // {
+        //     BeBoard* cBeBoard = static_cast<BeBoard*>( cBoard );
+        //     for(auto cOpticalGroup : *cBoard)
+        //     {
+        //         for(auto cHybrid : *cOpticalGroup)
+        //         {
+        //             for (auto cReadoutChip : *cHybrid)
+        //             {
+        //                 if( cReadoutChip->getFrontEndType() != FrontEndType::SSA )
+        //                     continue;
+        //                 cHybridTester.fReadoutChipInterface->WriteChipReg(cReadoutChip, "Sync",1);
+        //                 cHybridTester.fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", 0x3);
+        //             }//chip
+        //         }//hybrid 
+        //     }// module 
+        //     // check if i can read anything     
+        //     for( uint32_t cThreshold=0; cThreshold < 20; cThreshold++)
+        //     {
+        //         cHybridTester.setSameDac("Threshold", cThreshold);
+        //         LOG (INFO) << BOLDRED << "Threshold is " << +cThreshold << RESET;
+        //         cHybridTester.ReadNEvents( cBeBoard , cNevents);
+        //     }
+        // }
     }
 
-    cTool.SaveResults();
-    cTool.WriteRootFile();
-    cTool.CloseResultFile();
-    cTool.Destroy();
+    cHybridTester.SaveResults();
+    cHybridTester.WriteRootFile();
+    cHybridTester.CloseResultFile();
+    cHybridTester.Destroy();
 
     if ( !batchMode ) cApp.Run();
     return 0;

@@ -229,7 +229,7 @@ int main ( int argc, char* argv[] )
         exit ( 1 );
     }
 
-    bool cUseTHttpServer = true;
+    //bool cUseTHttpServer = cmd.foundOption ("noserver") ? false : true;
     std::string cOutputFile;
     time_t cTimestamp;
     int cServerPort = 9099;
@@ -249,9 +249,6 @@ int main ( int argc, char* argv[] )
     }
 
     cServerPort = ( cmd.foundOption ( "port" ) ) ? atoi (cmd.optionValue ( "port" ).c_str() ) : 9099;
-
-    if ( cmd.foundOption ("noserver") )
-        cUseTHttpServer = false;
 
     //here create TGraphs for T and I monitoring
     cTGraph = new TGraph();
@@ -310,16 +307,15 @@ int main ( int argc, char* argv[] )
 
     ////open the file for dump of the values
     gmutex.lock();
-    bool cFileOpen = false;
     gFile.open (cOutputFile.c_str(), std::fstream::app |  std::fstream::out);
-
+    bool cFileOpen = gFile.is_open();
+    
     //if (fFile.fail() )
-    if (!gFile.is_open() )
+    if (!cFileOpen )
         LOG (ERROR) << RED << "Error, could not open log file " << cOutputFile << RESET;
     else
     {
         cTimestamp = std::time (nullptr);
-        cFileOpen = true;
         LOG (INFO) << GREEN << "Successfully opened log file " << cOutputFile << RESET;
         gFile << "## File Format: ## " << std::endl;
         gFile << "## Timestamp\tTemperature\tCurrent ##" << std::endl;
