@@ -15,9 +15,9 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/ThresholdAndNoise.h"
-#include "DQMUtils/DQMHistogramSSASCurveAsync.h"
 
 #ifdef __USE_ROOT__
+#include "DQMUtils/DQMHistogramSSASCurveAsync.h"
 #include "TApplication.h"
 #endif
 

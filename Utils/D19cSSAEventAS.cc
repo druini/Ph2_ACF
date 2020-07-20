@@ -5,6 +5,7 @@
 #include "../Utils/ChannelGroupHandler.h"
 #include "../HWDescription/Definition.h"
 
+#include <numeric>
 
 using namespace Ph2_HwDescription;
 
