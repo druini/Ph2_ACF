@@ -68,7 +68,9 @@ class OpenFinder : public PSHybridTester
     void FindOpens2S();
     void FindOpensPS();
     void FindOpens();
+    #ifdef __USE_ROOT__
     void Print();
+    #endif
     void Reset();
 
   private:
