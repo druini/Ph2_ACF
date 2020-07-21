@@ -115,6 +115,7 @@ void D19cMPAEventAS::fillDataContainer(BoardDataContainer *boardContainer, const
 
 void D19cMPAEventAS::SetEvent(const BeBoard *pBoard, uint32_t pNMPA, const std::vector<uint32_t> &list)
 {
+        std::cout << "MPAASEV"<<std::endl;
 
     for(auto cOpticalGroup : *pBoard)
     {

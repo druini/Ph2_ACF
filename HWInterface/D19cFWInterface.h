@@ -131,6 +131,8 @@ namespace Ph2_HwInterface {
 
         // some useful stuff
         int fResetAttempts;
+      	void Align_out();
+
       public:
         /*!
          *

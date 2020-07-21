@@ -44,6 +44,9 @@ class SSALatencyScan : public Tool
     ~SSALatencyScan();
     void Initialise(void);
     void run(void);
+
+    bool cWithSSA;
+    bool cWithMPA;
 };
 
 #endif

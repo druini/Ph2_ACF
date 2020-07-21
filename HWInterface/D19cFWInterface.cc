@@ -743,9 +743,13 @@ namespace Ph2_HwInterface
                       for ( auto cChip : *cFe)
                       {
                         //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
-                        cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x41;
+                        cBaseAddress = 0x41;
+
+			if ( cChip->getFrontEndType()  == FrontEndType::SSA ) cBaseAddress = 0x20;
+			if ( cChip->getFrontEndType()  == FrontEndType::MPA ) cBaseAddress = 0x40;
+
                         cBaseAddress +=  cChip->getId();
-                        cNBytes = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 2 : 1; 
+                        cNBytes = ( cChip->getFrontEndType()  == FrontEndType::SSA  || cChip->getFrontEndType()  == FrontEndType::MPA) ? 2 : 1; 
                         uint8_t cLastValue = 1;
                         if( fI2CSlaveMap.find(cChip->getId()) == fI2CSlaveMap.end()  )
                         { 
@@ -768,9 +772,11 @@ namespace Ph2_HwInterface
                     {
                       for ( auto cChip : *cFe)
                       {
-                        cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x41; 
+                        cBaseAddress = 0x41;
+			if ( cChip->getFrontEndType()  == FrontEndType::SSA ) cBaseAddress = 0x20;
+			if ( cChip->getFrontEndType()  == FrontEndType::MPA ) cBaseAddress = 0x40;
                         cBaseAddress += cChip->getId();
-                        cNBytes = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 2 : 1; 
+                        cNBytes = ( cChip->getFrontEndType()  == FrontEndType::SSA  || cChip->getFrontEndType()  == FrontEndType::MPA) ? 2 : 1; 
                         uint8_t cLastValue = 1;
                         LOG (INFO) << BOLDBLUE << "Adding slave with I2C address 0x" 
                           << std::hex <<  +cBaseAddress << std::dec 
@@ -1705,27 +1711,42 @@ namespace Ph2_HwInterface
         LOG (DEBUG) << BOLDBLUE << "Phase and word alignement on BeBoard" << +pBoard->getId() << " FE" << +pFeId << " CBC" << +pChipId << " - line " << +pLineId << RESET;
         PhaseTuner pTuner;
         this->ChipReSync();
+
+
+
+	//Not sure why this needs to be here -- otherwise occasioinally get unsync data (to check)
+	if( fFirmwareFrontEndType == FrontEndType::MPA )
+        	this->Align_out();
         pTuner.SetLineMode( this, pFeId , pChipId , pLineId , 2 , 0, 0, 0, 0 );
+
+
         bool cSuccess = false;
         unsigned int cAttempts=0;
         do
         {
             cSuccess = pTuner.TuneLine(this,  pFeId , pChipId , pLineId , pPattern , pPatternPeriod , true);
+
+
             //pTuner.GetLineStatus(this,  pFeId , pChipId , pLineId );
             //if( pTuner.fBitslip == 0 )
             // cSuccess = false;
             LOG (DEBUG) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
+
             cAttempts++;
         }while(!cSuccess && cAttempts <10);
-        if( pLineId == 1 && (fFirmwareFrontEndType == FrontEndType::CBC3 ||fFirmwareFrontEndType == FrontEndType::SSA) )
+        if( pLineId == 1 && (fFirmwareFrontEndType == FrontEndType::CBC3 || fFirmwareFrontEndType == FrontEndType::SSA || fFirmwareFrontEndType == FrontEndType::MPA) )
         {
+
+
+
              uint8_t cEnableL1=0;
              LOG (INFO) << BOLDBLUE << "Forcing L1A line to match alignment result for first stub line." << RESET;
              // force L1A line to match phase tuning result for first stub lines to match
              uint8_t pDelay = pTuner.fDelay;
              uint8_t cMode=2;
-             uint8_t cBitslip = pTuner.fBitslip+ (uint8_t)(fFirmwareFrontEndType == FrontEndType::SSA);
+             uint8_t cBitslip = pTuner.fBitslip+ (uint8_t)(fFirmwareFrontEndType == FrontEndType::SSA || fFirmwareFrontEndType == FrontEndType::MPA );
              pTuner.SetLineMode( this, pFeId , pChipId , 0 , cMode , pDelay, cBitslip, cEnableL1, 0 );
+
         }
         return cSuccess;
     }
@@ -3531,13 +3552,15 @@ namespace Ph2_HwInterface
         LOG(INFO) << "Interface Board Power ON";
 
         PSInterfaceBoard_ConfigureI2CMaster(1, SLOW);
-        std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
         PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);
-        std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
         PSInterfaceBoard_SendI2CCommand(powerenable, 0, write, 0, 0x00); // There is an inverter! Be Careful!
-        std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
         PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
-        std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+
+
 
     }
 
@@ -3569,7 +3592,7 @@ namespace Ph2_HwInterface
 
     void D19cFWInterface::PSInterfaceBoard_PowerOff()
     {
-        std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
 
         uint32_t write = 0;
         uint32_t SLOW = 2;
@@ -3582,9 +3605,9 @@ namespace Ph2_HwInterface
 
         PSInterfaceBoard_ConfigureI2CMaster(1, SLOW);
         PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);
-        std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
         PSInterfaceBoard_SendI2CCommand(powerenable, 0, write, 0, 0x01);
-        std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
         PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
 
     }
@@ -3601,7 +3624,7 @@ namespace Ph2_HwInterface
         uint32_t ina226_5 = 5;
 
         LOG (INFO) << BOLDBLUE << "power information:" << RESET;
-        std::this_thread::sleep_for (std::chrono::milliseconds (450) );
+        std::this_thread::sleep_for (std::chrono::milliseconds (100) );
         PSInterfaceBoard_SetSlaveMap();
         PSInterfaceBoard_ConfigureI2CMaster(1,SLOW);
 
@@ -3655,8 +3678,9 @@ namespace Ph2_HwInterface
         uint32_t i2cmux = 0;
         uint32_t pcf8574 = 1;
         uint32_t dac7678 = 4;
-        std::chrono::milliseconds cWait( 1500 );
-
+        std::chrono::milliseconds cWait( 100 );
+        this->getBoardInfo();
+        this->PSInterfaceBoard_PowerOn(0, 0);
         PSInterfaceBoard_SetSlaveMap();
         PSInterfaceBoard_ConfigureI2CMaster(1,SLOW);
 
@@ -3672,7 +3696,7 @@ namespace Ph2_HwInterface
         setvoltage = setvoltage << 4;
 
         PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
-        PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x33, setvoltage);  // tx to DAC C
+        PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x34, setvoltage);  // tx to DAC C
         std::this_thread::sleep_for( cWait );
 
         LOG(INFO) << "mpa vddD on";
@@ -3683,7 +3707,7 @@ namespace Ph2_HwInterface
         if (setvoltage > 4095) setvoltage = 4095;
         setvoltage = setvoltage << 4;
         PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);  // to SCO on PCA9646
-        PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x31, setvoltage);  // tx to DAC C
+        PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x30, setvoltage);  // tx to DAC C
         std::this_thread::sleep_for( cWait );
 
         LOG(INFO) << "mpa vddA on";
@@ -3694,7 +3718,7 @@ namespace Ph2_HwInterface
         if (setvoltage > 4095) setvoltage = 4095;
         setvoltage = setvoltage << 4;
         PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01) ; // to SCO on PCA9646
-        PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x35, setvoltage) ; // tx to DAC C
+        PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x32, setvoltage) ; // tx to DAC C
         std::this_thread::sleep_for( cWait );
 
         LOG(INFO) << "mpa VBG on";
@@ -3709,7 +3733,8 @@ namespace Ph2_HwInterface
 
 
         LOG(INFO) << "mpa enable";
-        uint32_t val2 = (mpaid << 5) + (ssaid << 1) + 1; // reset bit for MPA
+	uint32_t val2 = (mpaid << 5) + 16;
+        //uint32_t val2 = (mpaid << 5) + (ssaid << 1) + 1; // reset bit for MPA
         PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);  // route to 2nd PCF8574
         PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, val2);  // set reset bit
         std::this_thread::sleep_for( cWait );
@@ -4121,5 +4146,46 @@ namespace Ph2_HwInterface
         ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
         return count;
     }
+
+
+
+    void D19cFWInterface::Align_out()
+    {
+        int cCounter = 0;
+        int cMaxAttempts = 10;
+
+        uint32_t hardware_ready = 0;
+
+        while (hardware_ready < 1)
+        {
+            if (cCounter++ > cMaxAttempts)
+            {
+                uint32_t delay5_done_cbc0 = ReadReg ("fc7_daq_stat.physical_interface_block.delay5_done_cbc0");
+                uint32_t serializer_done_cbc0 = ReadReg ("fc7_daq_stat.physical_interface_block.serializer_done_cbc0");
+                uint32_t bitslip_done_cbc0 = ReadReg ("fc7_daq_stat.physical_interface_block.bitslip_done_cbc0");
+
+                uint32_t delay5_done_cbc1 = ReadReg ("fc7_daq_stat.physical_interface_block.delay5_done_cbc1");
+                uint32_t serializer_done_cbc1 = ReadReg ("fc7_daq_stat.physical_interface_block.serializer_done_cbc1");
+                uint32_t bitslip_done_cbc1 = ReadReg ("fc7_daq_stat.physical_interface_block.bitslip_done_cbc1");
+                LOG (INFO) << "Clock Data Timing tuning failed after " << cMaxAttempts << " attempts with value - aborting!";
+                LOG (INFO) << "Debug Info CBC0: delay5 done: " << delay5_done_cbc0 << ", serializer_done: " << serializer_done_cbc0 << ", bitslip_done: " << bitslip_done_cbc0;
+                LOG (INFO) << "Debug Info CBC1: delay5 done: " << delay5_done_cbc1 << ", serializer_done: " << serializer_done_cbc1 << ", bitslip_done: " << bitslip_done_cbc1;
+                uint32_t tuning_state_cbc0 = ReadReg("fc7_daq_stat.physical_interface_block.state_tuning_cbc0");
+                uint32_t tuning_state_cbc1 = ReadReg("fc7_daq_stat.physical_interface_block.state_tuning_cbc1");
+                LOG(INFO) << "tuning state cbc0: " << tuning_state_cbc0 << ", cbc1: " << tuning_state_cbc1;
+                exit (1);
+            }
+
+        this->ChipReSync();
+        usleep (10);
+        // reset  the timing tuning
+    WriteReg("fc7_daq_ctrl.physical_interface_block.control.cbc3_tune_again", 0x1);
+
+    std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+    hardware_ready = ReadReg ("fc7_daq_stat.physical_interface_block.hardware_ready");
+        }
+    }
+
+
 
 }
