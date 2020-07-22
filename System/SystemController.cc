@@ -308,7 +308,7 @@ namespace Ph2_System
             // ###################
             // # Configure chips #
             // ###################
-            for(auto cOpticalGroup : *cBoard)
+            for (auto cOpticalGroup : *cBoard)
               {
                 if (cOpticalGroup->flpGBT != nullptr) flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                 for (auto cHybrid : *cOpticalGroup)
@@ -323,7 +323,7 @@ namespace Ph2_System
                   }
               }
 
-            LOG (INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads (including hyper-threading) to decode the data at run time" << RESET;
+            LOG (INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
           }
       }
   }
