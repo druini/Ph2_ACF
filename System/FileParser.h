@@ -88,8 +88,8 @@ namespace Ph2_System
     void parseCbcSettings            (pugi::xml_node pCbcNode         , Ph2_HwDescription::ReadoutChip*  pCbc         , std::ostream& os);
     void parseGlobalCbcSettings      (pugi::xml_node pModuleNode      , Ph2_HwDescription::Module*       pModule      , std::ostream& os);
     //
-    void parseSSAContainer        (pugi::xml_node pModuleNode,   Ph2_HwDescription::Module* cModule, std::string cFilePrefix, std::ostream& os );
-    void parseSSASettings (pugi::xml_node pModuleNode,   Ph2_HwDescription::ReadoutChip* cSSA);
+    void parseSSAContainer (pugi::xml_node pModuleNode,   Ph2_HwDescription::Module* cModule, std::string cFilePrefix, std::ostream& os );
+    void parseSSASettings  (pugi::xml_node pModuleNode,   Ph2_HwDescription::ReadoutChip* cSSA);
     //
     void parseMPA         (pugi::xml_node pModuleNode,   Ph2_HwDescription::Module* cModule, std::string cFilePrefix);
     void parseMPASettings (pugi::xml_node pModuleNode,   Ph2_HwDescription::ReadoutChip* cMPA);

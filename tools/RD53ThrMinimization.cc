@@ -56,7 +56,7 @@ void ThrMinimization::Start (int currentRun)
   if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrMinimization.raw", 'w');
-      this->initializeFileHandler();
+      this->initializeWriteFileHandler();
     }
 
   ThrMinimization::run();
@@ -105,7 +105,7 @@ void ThrMinimization::initializeFiles (const std::string fileRes_, int currentRu
   if (saveBinaryData == true)
     {
       this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrMinimization.raw", 'w');
-      this->initializeFileHandler();
+      this->initializeWriteFileHandler();
     }
 
 #ifdef __USE_ROOT__

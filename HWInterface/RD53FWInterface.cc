@@ -158,7 +158,7 @@ namespace Ph2_HwInterface
         }
     cVecReg.push_back({"user.ctrl_regs.Hybrids_en", enabledHybrids});
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
-    if (cVecReg.size() != 0) WriteStackReg(cVecReg);
+    if (cVecReg.size() != 0) RegManager::WriteStackReg(cVecReg);
 
 
     // ###########################
@@ -194,8 +194,8 @@ namespace Ph2_HwInterface
 
     if (cVecReg.size() != 0)
       {
-        WriteStackReg(cVecReg);
-        SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
+        RegManager::WriteStackReg(cVecReg);
+        RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
       }
 
     LOG (INFO) << BOLDBLUE << "\t--> Done" << RESET;
@@ -224,28 +224,29 @@ namespace Ph2_HwInterface
     // #######################
     // # Load command vector #
     // #######################
-    std::vector<std::pair<std::string, uint32_t>> stackRegisters;
+    std::vector<uint32_t> stackRegisters;
     stackRegisters.reserve(n32bitWords + 1);
 
     // Header
-    stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<6, 10, 4, 12>(HEADEAR_WRTCMD, (hybridId < 0 ? enabledHybrids : 1 << hybridId), 0, n32bitWords));
+    stackRegisters.emplace_back(bits::pack<6, 10, 4, 12>(HEADEAR_WRTCMD, (hybridId < 0 ? enabledHybrids : 1 << hybridId), 0, n32bitWords));
 
     // Commands
     for (auto i = 1u; i < data.size(); i += 2)
-      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<16, 16>(data[i - 1], data[i]));
+      stackRegisters.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
 
     // If data.size() is not even, add a sync command
     if (data.size() % 2 != 0)
-      stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd_fifo_din", bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
+      stackRegisters.emplace_back(bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
 
 
     // ###############################
     // # Send command(s) to the chip #
     // ###############################
-    stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd.dispatch_packet", 1);
-    stackRegisters.emplace_back("user.ctrl_regs.Slow_cmd.dispatch_packet", 0);
-
-    WriteStackReg(stackRegisters);
+    RegManager::WriteBlockReg("user.ctrl_regs.Slow_cmd_fifo_din", stackRegisters);
+    RegManager::WriteStackReg({
+        {"user.ctrl_regs.Slow_cmd.dispatch_packet", 1},
+        {"user.ctrl_regs.Slow_cmd.dispatch_packet", 0}
+      });
 
 
     // ####################################
@@ -506,27 +507,27 @@ namespace Ph2_HwInterface
     RD53FWInterface::ChipReSync();
     RD53FWInterface::ResetReadoutBlk();
 
-    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
   }
 
   void RD53FWInterface::Stop()
   {
-    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.stop_trigger");
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.stop_trigger");
   }
 
   void RD53FWInterface::Pause()
   {
-    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.stop_trigger");
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.stop_trigger");
   }
 
   void RD53FWInterface::Resume()
   {
-    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
   }
 
   void RD53FWInterface::TurnOffFMC()
   {
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"system.ctrl_2.fmc_pg_c2m",    0},
         {"system.ctrl_2.fmc_l8_pwr_en", 0},
         {"system.ctrl_2.fmc_l12_pwr_en",0}});
@@ -534,7 +535,7 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::TurnOnFMC()
   {
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"system.ctrl_2.fmc_l12_pwr_en",1},
         {"system.ctrl_2.fmc_l8_pwr_en", 1},
         {"system.ctrl_2.fmc_pg_c2m",    1}});
@@ -582,14 +583,14 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ResetFastCmdBlk()
   {
-    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset");
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset");
 
     WriteReg("user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration",IPBUS_FASTDURATION);
   }
 
   void RD53FWInterface::ResetSlowCmdBlk()
   {
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"user.ctrl_regs.Slow_cmd.fifo_reset", 1},
         {"user.ctrl_regs.Slow_cmd.fifo_reset", 0},
         {"user.ctrl_regs.Register_RdBack.fifo_reset", 1},
@@ -599,14 +600,14 @@ namespace Ph2_HwInterface
   void RD53FWInterface::ResetReadoutBlk()
   {
     ddr3Offset = 0;
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"user.ctrl_regs.reset_reg.readout_block_rst",1},
         {"user.ctrl_regs.reset_reg.readout_block_rst",0}});
   }
 
   void RD53FWInterface::ChipReset()
   {
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"user.ctrl_regs.reset_reg.scc_rst",1},
         {"user.ctrl_regs.reset_reg.scc_rst",0},
         {"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr",1},
@@ -615,7 +616,7 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ChipReSync()
   {
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",1},
         {"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr",0}});
   }
@@ -1188,7 +1189,7 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::SendBoardCommand (const std::string& cmd_reg)
   {
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {cmd_reg, 1},
         {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 1},
         {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0},
@@ -1205,7 +1206,7 @@ namespace Ph2_HwInterface
     // ##################################
     // # Configuring fast command block #
     // ##################################
-    WriteStackReg({
+    RegManager::WriteStackReg({
         // ############################
         // # General data for trigger #
         // ############################
@@ -1241,12 +1242,12 @@ namespace Ph2_HwInterface
         {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data",           (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, 8, 0)}
       });
 
-    SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
 
     // #############################
     // # Configuring readout block #
     // #############################
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"user.ctrl_regs.readout_block.data_handshake_en", HANDSHAKE_EN},
         {"user.ctrl_regs.readout_block.l1a_timeout_value", L1A_TIMEOUT},
       });
@@ -1370,7 +1371,7 @@ namespace Ph2_HwInterface
     if (ReadReg("user.stat_regs.stat_dio5.dio5_error") == true)
       LOG (ERROR) << BOLDRED << "DIO5 is in error" << RESET;
 
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"user.ctrl_regs.ext_tlu_reg1.dio5_en",            (uint32_t)cfg->enable},
         {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en",     (uint32_t)cfg->ch_out_en},
         {"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)fiftyOhmEnable},
@@ -1400,14 +1401,14 @@ namespace Ph2_HwInterface
 
   void RD53FWInterface::ResetOptoLink(Chip* pChip)
   {
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"user.ctrl_regs.Optical_link.ic_tx_reset", 0x01},
         {"user.ctrl_regs.Optical_link.ic_rx_reset", 0x01}
       });
 
     usleep(DEEPSLEEP);
 
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"user.ctrl_regs.Optical_link.ic_tx_reset", 0x00},
         {"user.ctrl_regs.Optical_link.ic_rx_reset", 0x00}
       });
@@ -1418,14 +1419,14 @@ namespace Ph2_HwInterface
     const uint8_t lpGBTAddress = 0x70;
 
     // Config
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"user.ctrl_regs.Optical_link_cnfg1.ic_tx_fifo_din",  pData},
         {"user.ctrl_regs.Optical_link_cnfg1.ic_chip_addr_tx", lpGBTAddress},
         {"user.ctrl_regs.Optical_link_cnfg2.ic_reg_addr_tx",  pAddress}
       });
 
     // Perform operation
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"user.ctrl_regs.Optical_link.ic_tx_fifo_wr_en", 0x01},
         {"user.ctrl_regs.Optical_link.ic_tx_fifo_wr_en", 0x00},
         {"user.ctrl_regs.Optical_link.ic_send_wr_cmd",   0x01},
@@ -1450,14 +1451,14 @@ namespace Ph2_HwInterface
     const uint8_t lpGBTAddress = 0x70;
 
     // Config
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"user.ctrl_regs.Optical_link_cnfg1.ic_chip_addr_tx",            lpGBTAddress},
         {"user.ctrl_regs.Optical_link_cnfg2.ic_reg_addr_tx",             pAddress},
         {"user.ctrl_regs.Optical_link_cnfg2.ic_nb_of_words_to_read_tx",  0x01}
       });
 
     // Perform operation
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"user.ctrl_regs.Optical_link_cnfg2.ic_nb_of_words_to_read_tx", 0x01},
         {"user.ctrl_regs.Optical_link.ic_send_rd_cmd",                  0x01},
         {"user.ctrl_regs.Optical_link.ic_send_rd_cmd",                  0x00}
@@ -1467,7 +1468,7 @@ namespace Ph2_HwInterface
     uint32_t chipAddrRx  = ReadReg("user.stat_regs.lpgbt_1.ic_chip_addr_rx"); // Should be the same as lpGBTAddress
     uint32_t regAddrRx   = ReadReg("user.stat_regs.lpgbt_2.ic_reg_addr_rx");
     uint32_t nWords2Read = ReadReg("user.stat_regs.lpgbt_2.ic_nb_of_words_rx");
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"user.ctrl_regs.Optical_link.ic_rx_fifo_rd_en", 0x01},
         {"user.ctrl_regs.Optical_link.ic_rx_fifo_rd_en", 0x00}});
     uint32_t cRead         = ReadReg("user.stat_regs.lpgbt_1.ic_rx_fifo_dout");
@@ -1582,7 +1583,7 @@ namespace Ph2_HwInterface
     // ############################################################################
     // # Load new settings otherwise CDCE uses whatever was in EEPROM at power up #
     // ############################################################################
-    WriteStackReg({
+    RegManager::WriteStackReg({
         {"system.ctrl.cdce_sync", 0},
         {"system.ctrl.cdce_sync", 1}});
 
@@ -1649,24 +1650,24 @@ namespace Ph2_HwInterface
   {
     const uint16_t I2CwriteREQ = 0x01;
 
-    WriteReg("CTRL.BOARD.i2c_req",0); // Disable
+    WriteReg("ctrl.board.i2c_req",0); // Disable
     usleep(DEEPSLEEP);
-    WriteReg("CTRL.BOARD.i2c_reset",1);
+    WriteReg("ctrl.board.i2c_reset",1);
     usleep(DEEPSLEEP);
-    WriteReg("CTRL.BOARD.i2c_reset",0);
+    WriteReg("ctrl.board.i2c_reset",0);
     usleep(DEEPSLEEP);
-    WriteReg("CTRL.BOARD.i2c_fifo_rx_dsel",1);
+    WriteReg("ctrl.board.i2c_fifo_rx_dsel",1);
     usleep(DEEPSLEEP);
-    WriteReg("CTRL.BOARD.i2c_req",I2CwriteREQ);
+    WriteReg("ctrl.board.i2c_req",I2CwriteREQ);
     usleep(DEEPSLEEP);
 
-    /* bool outcome = */ RegManager::WriteBlockReg ("CTRL.BOARD.i2c_fifo_tx", data);
+    /* bool outcome = */ RegManager::WriteBlockReg("ctrl.board.i2c_fifo_tx", data);
     usleep(DEEPSLEEP);
 
     if (I2cCmdAckWait (20) == false)
       throw Exception ("[RD53FWInterface::WriteI2C] I2C transaction error");
 
-    WriteReg("CTRL.BOARD.i2c_req",0); // Disable
+    WriteReg("ctrl.board.i2c_req",0); // Disable
     usleep(DEEPSLEEP);
   }
 
@@ -1674,18 +1675,18 @@ namespace Ph2_HwInterface
   {
     const uint16_t I2CreadREQ = 0x03;
 
-    WriteReg("CTRL.BOARD.i2c_req",0); // Disable
+    WriteReg("ctrl.board.i2c_req",0); // Disable
     usleep(DEEPSLEEP);
-    WriteReg("CTRL.BOARD.i2c_reset",1);
+    WriteReg("ctrl.board.i2c_reset",1);
     usleep(DEEPSLEEP);
-    WriteReg("CTRL.BOARD.i2c_reset",0);
+    WriteReg("ctrl.board.i2c_reset",0);
     usleep(DEEPSLEEP);
-    WriteReg("CTRL.BOARD.i2c_fifo_rx_dsel",1);
+    WriteReg("ctrl.board.i2c_fifo_rx_dsel",1);
     usleep(DEEPSLEEP);
-    WriteReg("CTRL.BOARD.i2c_req",I2CreadREQ);
+    WriteReg("ctrl.board.i2c_req",I2CreadREQ);
     usleep(DEEPSLEEP);
 
-    uint32_t sizeI2Cfifo = ReadReg("STAT.BOARD.i2c_fifo_rx_dcnt");
+    uint32_t sizeI2Cfifo = ReadReg("stat.board.i2c_fifo_rx_dcnt");
     usleep(DEEPSLEEP);
 
     int size2read = 0;
@@ -1696,13 +1697,13 @@ namespace Ph2_HwInterface
       }
     else size2read = sizeI2Cfifo;
 
-    data = RegManager::ReadBlockReg("CTRL.BOARD.i2c_fifo_rx", size2read);
+    data = RegManager::ReadBlockReg("ctrl.board.i2c_fifo_rx", size2read);
     usleep(DEEPSLEEP);
 
     if (RD53FWInterface::I2cCmdAckWait(20) == false)
       throw Exception ("[RD53FWInterface::ReadI2C] I2C transaction error");
 
-    WriteReg("CTRL.BOARD.i2c_req",0); // Disable
+    WriteReg("ctrl.board.i2c_req",0); // Disable
   }
 
   void RD53FWInterface::ConfigureClockSi5324 ()
