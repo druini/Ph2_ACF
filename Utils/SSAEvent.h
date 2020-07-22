@@ -45,7 +45,7 @@ namespace Ph2_HwInterface
          * \param pEvent : Event to set
          * \return Aknowledgement of the Event setting (1/0)
          */
-        void SetEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) override;
+        void SetEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list ) override {;}
 
         uint32_t GetEventCountCBC() const override{ return 0;};
 

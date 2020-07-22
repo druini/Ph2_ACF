@@ -59,6 +59,9 @@ class PedeNoise : public Tool
 
     uint8_t  fPulseAmplitude     {    0};
     uint32_t fEventsPerPoint     {    0};
+    uint32_t fMaxNevents         {      65535};
+    int      fNEventsPerBurst    {-1};
+
     DetectorDataContainer fThresholdAndNoiseContainer;
 
   private:

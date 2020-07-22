@@ -240,37 +240,9 @@ void MPAInterface::setFileHandler (FileHandler* pHandler)
 }
 
 
-//Straight python port
-//void MPAInterface::PowerOn(float VDDPST , float DVDD , float AVDD , float VBG , uint8_t mpaid  , uint8_t MPAid  )
-//{
-  //  setBoard(0);
-    //fBoardFW->PSInterfaceBoard_PowerOn_MPA( );
-//}
 
 
-//void MPAInterface::PowerOff(uint8_t mpaid , uint8_t MPAid )
-//{
-  //  setBoard(0);
-    //fBoardFW->PSInterfaceBoard_PowerOff_MPA( );
-///}
-
-//void MPAInterface::MainPowerOn(uint8_t mpaid , uint8_t MPAid )
-//{
- //   setBoard(0);
-   // fBoardFW->PSInterfaceBoard_PowerOn( );
-//}
-
-
-
-//void MPAInterface::MainPowerOff()
-//{
-  //  setBoard(0);
-    //fBoardFW->PSInterfaceBoard_PowerOff( );
-//}
-
-
-
-
+//These are not currently used but can encode pix registers
 void MPAInterface::Pix_write(ReadoutChip* cMPA,ChipRegItem cRegItem,uint32_t row,uint32_t pixel,uint32_t data)
     {
         uint8_t cWriteAttempts = 0;
@@ -303,25 +275,6 @@ uint32_t MPAInterface::Pix_read(ReadoutChip* cMPA,ChipRegItem cRegItem,uint32_t 
 
 
 
-
-/*void MPAInterface::PS_Start_counters_read(uint32_t duration )
-{
-    setBoard(0);
-    fBoardFW->PS_Start_counters_read(duration);
-}
-
-
-void MPAInterface::PS_Clear_counters(uint32_t duration)
-{
-    setBoard(0);
-    fBoardFW->PS_Clear_counters(duration);
-}
-
-std::vector<uint16_t> MPAInterface::ReadoutCounters_MPA(uint32_t raw_mode_en)
-{
-    setBoard(0);
-    return fBoardFW->ReadoutCounters_MPA(raw_mode_en);
-}*/
 
 Stubs MPAInterface::Format_stubs(std::vector<std::vector<uint8_t>> rawstubs)
 {
@@ -566,11 +519,6 @@ void MPAInterface::Pix_Set_enable(ReadoutChip* pMPA,uint32_t p,uint32_t PixelMas
 
 
 
-
-
-
-
-
 void MPAInterface::Set_calibration(Chip* pMPA,uint32_t cal)
 {
     this->WriteChipReg( pMPA,"CalDAC0",cal);
@@ -595,16 +543,6 @@ void MPAInterface::Set_threshold(Chip* pMPA,uint32_t th)
 }
 
 
-/*void MPAInterface::Send_pulses(uint32_t n_pulse, uint32_t duration)
-{
-
-    fBoardFW->PS_Open_shutter();
-    std::this_thread::sleep_for (std::chrono::milliseconds (10) );
-    //notworking
-    //for(int i=0; i<n_pulse; i++) fBoardFW->Send_test(duration);
-    std::this_thread::sleep_for (std::chrono::milliseconds (1) );
-    fBoardFW->PS_Close_shutter();
-}*/
 
 void MPAInterface::ReadASEvent (ReadoutChip* pMPA,std::vector<uint32_t>& pData,std::pair<uint32_t,uint32_t> pSRange)
 	{
@@ -621,16 +559,21 @@ void MPAInterface::ReadASEvent (ReadoutChip* pMPA,std::vector<uint32_t>& pData,s
     	}
 
 
-/*
-uint32_t MPAInterface::Read_pixel_counter(ReadoutChip* pMPA,uint32_t p)
-{
-    setBoard ( pMPA->getBeBoardId() );
-    uint32_t data1 = this->ReadChipReg(pMPA,"ReadCounter_LSB_P"+std::to_string(p+1));
-    uint32_t data2 = this->ReadChipReg(pMPA,"ReadCounter_MSB_P"+std::to_string(p+1));
+bool MPAInterface::enableInjection (ReadoutChip* pChip, bool inject, bool pVerifLoop)
+	{
+		setBoard ( pChip->getBeBoardId() );
+		//if sync
 
-    uint32_t data = ((data2 & 0x0ffffff) << 8) | (data1 & 0x0fffffff);
-    return data;
-}*/
+		//uint32_t enwrite=1;
+        	//if(inject) enwrite=17;
+
+        	uint32_t enwrite=0x17;
+        	if(inject) enwrite=0x47;
+
+		//std::cout<<"enwrite "<<enwrite<<std::endl;
+        	for (uint32_t i = 1; i<=pChip->getNumberOfChannels();i++ ) this->WriteChipReg(pChip, "ENFLAGS_P" + std::to_string(i), enwrite);
+        	return true;
+	}
 
 
 

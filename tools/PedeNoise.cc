@@ -59,6 +59,8 @@ void PedeNoise::Initialise (bool pAllChan, bool pDisableStubLogic)
     fFitSCurves                  = findValueInSettings("FitSCurves"                 ,  0);
     fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude"    ,  0);
     fEventsPerPoint              = findValueInSettings("Nevents"                    , 10);
+    fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
+
 
     LOG (INFO) << "Parsed settings:" ;
     LOG (INFO) << " Nevents = " << fEventsPerPoint ;
@@ -85,11 +87,14 @@ void PedeNoise::disableStubLogic()
             {
                 for ( auto cROC : *cHybrid )
                 {
-                    LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET ;
-                    fStubLogicValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth");
-                    fHIPCountValue .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cROC), "HIP&TestMode"           );
-                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth", 0x23);
-                    fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cROC), "HIP&TestMode", 0x00);
+                    if( cROC->getFrontEndType() == FrontEndType::CBC3 )
+                    {
+                        LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET ;
+                        fStubLogicValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth");
+                        fHIPCountValue .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg (static_cast<ReadoutChip*>(cROC), "HIP&TestMode"           );
+                        fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth", 0x23);
+                        fReadoutChipInterface->WriteChipReg (static_cast<ReadoutChip*>(cROC), "HIP&TestMode", 0x00);
+                    }
                 }
             }
         }
@@ -109,12 +114,13 @@ void PedeNoise::reloadStubLogic()
                 for ( auto cROC : *cHybrid )
                 {
                     RegisterVector cRegVec;
-
-                    LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
-                    cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>()});
-                    cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>()});
-
-                    fReadoutChipInterface->WriteChipMultReg (cROC, cRegVec);
+                    if( cROC->getFrontEndType() == FrontEndType::CBC3 )
+                    {
+                        LOG (INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
+                        cRegVec.push_back ({"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>()});
+                        cRegVec.push_back ({"HIP&TestMode"           , fHIPCountValue .at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>()});
+                        fReadoutChipInterface->WriteChipMultReg (cROC, cRegVec);
+                    }
                 }
             }
         }
@@ -127,24 +133,22 @@ void PedeNoise::sweepSCurves ()
     uint16_t cStartValue = 0;
     bool originalAllChannelFlag = this->fAllChan;
 
-    if(fPulseAmplitude != 0 && originalAllChannelFlag){
+    if(fPulseAmplitude != 0 && originalAllChannelFlag && cWithCBC)
+    {
         this->SetTestAllChannels(false);
         LOG (INFO) << RED <<  "Cannot inject pulse for all channels, test in groups enabled. " << RESET ;
     }
 
-
-    if(fPulseAmplitude != 0){
+    //configure TP amplitude 
+    for ( auto cBoard : *fDetectorContainer )
+    {
+        if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
+        else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
+    }
+    if(fPulseAmplitude != 0)
+    {
         this->enableTestPulse( true );
-
         setFWTestPulse();
-        for ( auto cBoard : *fDetectorContainer )
-        {
-            std::cout<<"Bias_CALDAC "<<fPulseAmplitude<<std::endl;
-            if(cWithSSA) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Bias_CALDAC", fPulseAmplitude);
-            else setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
-        }
-
-        // setSameGlobalDac("TestPulsePotNodeSel",  fPulseAmplitude);
         LOG (INFO) << BLUE <<  "Enabled test pulse. " << RESET ;
         cStartValue = this->findPedestal ();
     }
@@ -164,7 +168,7 @@ void PedeNoise::sweepSCurves ()
     this->SetTestAllChannels(originalAllChannelFlag);
     if(fPulseAmplitude != 0){
     this->enableTestPulse( false );
-    if(cWithSSA) setSameGlobalDac("Bias_CALDAC",  0);
+    if(cWithSSA) setSameGlobalDac("InjectedCharge",  0);
     else setSameGlobalDac("TestPulsePotNodeSel",  0);
 
     LOG (INFO) << BLUE <<  "Disabled test pulse. " << RESET ;
@@ -274,8 +278,8 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
-    if(cWithCBC)    this->bitWiseScan("VCth", fEventsPerPoint, 0.56);
-    if(cWithSSA)    this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56);
+    if(cWithCBC)    this->bitWiseScan("VCth", fEventsPerPoint, 0.56, fNEventsPerBurst);
+    if(cWithSSA)    this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56, fNEventsPerBurst);
 
     if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
 
@@ -309,108 +313,89 @@ uint16_t PedeNoise::findPedestal (bool forceAllChannels)
     return cMean;
 
 }
-
 void PedeNoise::measureSCurves (uint16_t pStartValue)
 {
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
-    float cLimit = 0;
-    int cMinBreakCount = 10;
-    if(cWithSSA) pStartValue = 20;
-
-    bool     cAllZero        = false;
-    bool     cAllOne         = false;
-    int      cAllZeroCounter = 0;
-    int      cAllOneCounter  = 0;
+    float cLimit = 0.005;
+    int cMinBreakCount = 5;
     uint16_t cValue          = pStartValue;
-    int      cSign           = 1;
-    int      cIncrement      = 0;
     uint16_t cMaxValue       = (1 << 10) - 1;
-    if(cWithSSA)
-	{
-	cMaxValue       = (1 << 8) - 1;
-	cMinBreakCount = 10;
-	cLimit = 0.02;
-	}
+    if(cWithSSA)    cMaxValue       = (1 << 8) - 1;
 
+    float cFirstLimit = (cWithCBC) ? 0 : 1;
+    std::vector<int> cSigns{-1,1};
+    std::vector<float> cLimits{cFirstLimit,1-cFirstLimit};
 
-    while (! (cAllZero && cAllOne) )
+    //(fDetectorContainer[0]->getBoardType() == BoardType::D19C)
+    
+    int cCounter=0;
+    for( auto cSign : cSigns ) 
     {
-        DetectorDataContainer *theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
-        fDetectorDataContainer = theOccupancyContainer;
-        fSCurveOccupancyMap[cValue] = theOccupancyContainer;
-
-        if(cWithCBC)    this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
-        if(cWithSSA)    this->setDacAndMeasureData("Bias_THDAC", cValue, fEventsPerPoint);
-
-        #ifdef __USE_ROOT__
-            if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue,*theOccupancyContainer);
-        #else
-            if(fPlotSCurves)
-            {
-                auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy,uint16_t>("SCurve");
-                theSCurveStreamer.setHeaderElement(cValue);
-                for(auto board : *theOccupancyContainer )
+        bool cLimitFound=false;
+        int cLimitCounter=0;
+        do
+        {
+            DetectorDataContainer *theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
+            fDetectorDataContainer = theOccupancyContainer;
+            fSCurveOccupancyMap[cValue] = theOccupancyContainer;
+            
+            if(cWithCBC)    this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint, fNEventsPerBurst);
+            if(cWithSSA)    this->setDacAndMeasureData("Bias_THDAC", cValue, fEventsPerPoint,fNEventsPerBurst);
+            //this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
+            
+            float globalOccupancy = theOccupancyContainer->getSummary<Occupancy,Occupancy>().fOccupancy;
+            
+            #ifdef __USE_ROOT__
+                if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue,*theOccupancyContainer);
+            #else
+                if(fPlotSCurves)
                 {
-                    if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
+                    auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy,uint16_t>("SCurve");
+                    theSCurveStreamer.setHeaderElement(cValue);
+                    for(auto board : *theOccupancyContainer )
+                    {
+                        if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
+                    }
                 }
+            #endif
+
+            auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
+            LOG (INFO) << BOLDMAGENTA << "Current value of threshold is  " 
+                << cValue 
+                << " Occupancy: " 
+                << std::setprecision(2)
+                << std::fixed
+                << globalOccupancy 
+                << "\t.. " 
+                << "Incrementing limit found counter "
+                << " -- current value is " 
+                << +cLimitCounter 
+                << RESET;
+            if (cDistanceFromTarget <= cLimit ) 
+            {
+                LOG (DEBUG) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
+                << " -- current value is " 
+                << +cLimitCounter 
+                << RESET;
+                cLimitCounter++;
             }
+            
+            
 
-        #endif
-
-
-        float globalOccupancy = theOccupancyContainer->getSummary<Occupancy,Occupancy>().fOccupancy;
-
-        if (globalOccupancy <= (0 + cLimit) ) ++cAllZeroCounter;
-        if (globalOccupancy >= (1-cLimit)) ++cAllOneCounter;
-
-        //it will either find one or the other extreme first and thus these will be mutually exclusive
-        //if any of the two conditions is true, just revert the sign and go the opposite direction starting from startvalue+1
-        //check that cAllZero is not yet set, otherwise I'll be reversing signs a lot because once i switch direction, the statement stays true
-        if (!cAllZero && cAllZeroCounter == cMinBreakCount )
-        {
-            cAllZero = true;
-            cSign = 1;
-            cIncrement = 0;
-        }
-
-        if (!cAllOne && cAllOneCounter == cMinBreakCount)
-        {
-            cAllOne = true;
-            cSign = -1;
-            cIncrement = 0;
-        }
-
-        cIncrement++;
-        // following checks if we're not going out of bounds
-        if (cSign == 1 && (pStartValue + (cIncrement * cSign) > cMaxValue) )
-        {
-            cAllOne = true;
-            cIncrement = 1;
-            cSign = -1 * cSign;
-        }
-
-        if (cSign == -1 && (pStartValue + (cIncrement * cSign) < 0) )
-        {
-	    //LOG (INFO) <<pStartValue<<" "<<cIncrement<<" "<<cSign<< RESET;
-
-            cAllZero = true;
-
-            cIncrement = 1;
-            cSign = -1 * cSign;
-        }
-
-	if(cWithSSA) cSign = 1.0;
-	//LOG (INFO) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
-
-        LOG (DEBUG) << "All 0: " << cAllZero << " | All 1: " << cAllOne << " current value: " << cValue << " | next value: " << pStartValue + (cIncrement * cSign) << " | Sign: " << cSign << " | Increment: " << cIncrement << " Occupancy: " << globalOccupancy << RESET;
-        cValue = pStartValue + (cIncrement * cSign);
+            cValue += cSign;
+            cLimitFound = (cValue == 0 || cValue == cMaxValue) || (cLimitCounter >= cMinBreakCount ); 
+            if( cLimitFound )
+            {
+                LOG (INFO) << BOLDYELLOW << "Switching sign.." << RESET;
+            }
+            
+        }while(!cLimitFound);
+        cCounter++;
+        cValue = pStartValue + cSigns[cCounter];
     }
-
     // this->HttpServerProcess();
     LOG (DEBUG) << YELLOW << "Found minimal and maximal occupancy " << cMinBreakCount << " times, SCurves finished! " << RESET ;
-
 }
-
 void PedeNoise::extractPedeNoise ()
 {
 

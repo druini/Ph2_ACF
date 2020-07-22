@@ -101,29 +101,94 @@ namespace Ph2_System
     fStreamerEnabled = streamData;
     if (streamData == true) fNetworkStreamer = new TCPPublishServer(6000,1);
 
+    //std::stringstream outp;
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
-
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
-    const BeBoard* theFirstBoard = fDetectorContainer->at(0);
-
-    if (theFirstBoard->getBoardType() != BoardType::RD53)
+    if( fDetectorContainer->size() > 0 ) 
+    {
+      const BeBoard* cFirstBoard = fDetectorContainer->at(0);
+      if (cFirstBoard->getBoardType() != BoardType::RD53)
       {
-        OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>((theFirstBoard->at(0))->at(0));
-        auto cChipType = (static_cast<ReadoutChip*>(theOuterTrackerModule->at(0))->getFrontEndType());
-        if (cChipType == FrontEndType::CBC3)
-          fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
-        else if(cChipType == FrontEndType::SSA)
-          fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
-        else if(cChipType == FrontEndType::MPA)
-          fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
-        fCicInterface = new CicInterface(fBeBoardFWMap);
+        LOG (INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
+        if( cFirstBoard->size() > 0 )//# of optical groups connected to Board0 
+        {
+          auto cFirstOpticalGroup = cFirstBoard->at(0);
+          LOG (INFO) << BOLDBLUE << "\t...Initializing HwInterfaces for OpticalGroups.." 
+            << +cFirstBoard->size() 
+            << " optical group(s) found ..."
+            << RESET;
+          if( cFirstOpticalGroup->size() > 0 )//# of hybrids connected to OpticalGroup0 
+          {
+            LOG (INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for FrontEnd Hybrids.." 
+              << +cFirstOpticalGroup->size() 
+              << " hybrid(s) found ..."
+              << RESET;
+            auto cFirstHybrid = cFirstOpticalGroup->at(0);
+            for( auto cROC : *cFirstHybrid )
+            {
+              auto cChipType = cROC->getFrontEndType();
+              if( cROC->getIndex() > 0 )
+                continue;
+
+              LOG (INFO) << BOLDBLUE << "\t\t\t...Assuming ROC#" << +cROC->getId() 
+                << " represents all ROCs on this hybrid" 
+                << RESET;
+              if (cChipType == FrontEndType::CBC3)
+              {
+                LOG (INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
+                fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
+              }
+              else if(cChipType == FrontEndType::SSA)
+              {
+                LOG (INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
+                fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+              }
+              else if(cChipType == FrontEndType::MPA)
+              {
+                LOG (INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
+                fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
+              }
+            }
+            LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
+            fCicInterface = new CicInterface(fBeBoardFWMap);
+            //OuterTrackerModule* cFirstHybrid = static_cast<OuterTrackerModule*>(cFirstOpticalGroup->at(0));
+            // if( cFirstHybrid->size() > 0 )//# of ROCs connected to Hybrid0 
+            // {
+            //   LOG (INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for ROCs .."
+            //     << +cFirstHybrid->size() 
+            //     << " ROCs found ..."
+            //     << RESET;
+            //   auto cFirstROC = cFirstHybrid->at(0);
+            //   auto cChipType = cFirstROC->getFrontEndType();
+            //   if (cChipType == FrontEndType::CBC3)
+            //   {
+            //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
+            //     fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
+            //   }
+            //   else if(cChipType == FrontEndType::SSA)
+            //   {
+            //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
+            //     fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+            //   }
+            //   else if(cChipType == FrontEndType::MPA)
+            //   {
+            //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
+            //     fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
+            //   }
+            //   LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
+            //   fCicInterface = new CicInterface(fBeBoardFWMap);
+            // }
+          }
+        }
       }
-    else
+      else
       {
         flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
         fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
       }
+      
+    }
 
     if (fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
   }
@@ -145,6 +210,7 @@ namespace Ph2_System
 
     for (const auto cBoard : *fDetectorContainer)
       {
+        uint8_t cAsync = ( cBoard->getEventType() == EventType::SSAAS ) ? 1 : 0;
         if (cBoard->getBoardType() != BoardType::RD53)
           {
             //setting up back-end board
@@ -198,10 +264,16 @@ namespace Ph2_System
                       {
                         ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
                         if ( !bIgnoreI2c )
-                          {
-                            LOG (INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
-                            fReadoutChipInterface->ConfigureChip ( theReadoutChip );
-                          }
+                        {
+                          LOG (INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
+                          fReadoutChipInterface->ConfigureChip ( theReadoutChip );
+                        }
+                        // if SSA + ASYNC
+                        // make sure ROCs are configured for that 
+                        if( theReadoutChip->getFrontEndType() == FrontEndType::SSA)
+                        {
+                          fReadoutChipInterface->WriteChipReg(cReadoutChip,"AnalogueAsync",cAsync);
+                        }
                       }
                   }
               }
@@ -251,7 +323,7 @@ namespace Ph2_System
                   }
               }
 
-            LOG (INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
+	    LOG (INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads (including hyper-threading) to decode the data at run time" << RESET;
           }
       }
   }
@@ -487,105 +559,91 @@ namespace Ph2_System
         fEventList.clear();
         fCurrentEvent = 0;
 
-        EventType fEventType = pBoard->getEventType();
-        uint32_t fNFe = pBoard->getNFe();
+        if( pNevents == 0 )
+        {
+          LOG (INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET;
+        }
+        else
+        {
+          EventType fEventType = pBoard->getEventType();
+          uint32_t fNFe = pBoard->getNFe();
+          uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
+          LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
+          fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
+          uint32_t maxind=0;
 
-        uint32_t cBlockSize = 0x0000FFFF & pData.at(0) ;
-        LOG (DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize*4 << " 32 bit words to decode]" << RESET;
-        if (pNevents != 0) fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
-        uint32_t maxind=0;
-        if( pBoard->getFrontEndType() == FrontEndType::SSA )
-          {
+          if( pBoard->getFrontEndType() == FrontEndType::SSA )
+            {
 
-            uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-            if (fEventType == EventType::SSAAS) nSSA = pData.size()/120;
+              uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+              if (fEventType == EventType::SSAAS) nSSA = pData.size()/120;
 
-            for(auto opticalGroup: *pBoard)
-              {
-                for(auto hybrid: *opticalGroup)
-                  {
-                    for(auto chip: *hybrid)
-                      {
-                        //LOG (INFO) << BOLDBLUE <<chip->getId()+hybrid->getId()*nSSA <<RESET;
-                        maxind=std::max(maxind,uint32_t(chip->getId()+hybrid->getId()*nSSA));
-                      }
-                  }
-              }
-            //LOG (INFO) << BOLDBLUE << "maxind " << maxind << RESET;
-          }
+              for(auto opticalGroup: *pBoard)
+                {
+                  for(auto hybrid: *opticalGroup)
+                    {
+                      for(auto chip: *hybrid)
+                        {
+                          //LOG (INFO) << BOLDBLUE <<chip->getId()+hybrid->getId()*nSSA <<RESET;
+                          maxind=std::max(maxind,uint32_t(chip->getId()+hybrid->getId()*nSSA));
+                        }
+                    }
+                }
+              //LOG (INFO) << BOLDBLUE << "maxind " << maxind << RESET;
+            }
 
-        if (fEventType == EventType::SSAAS)
-          {
-            fEventList.push_back(new D19cSSAEventAS(pBoard, maxind+1, fNFe, pData));
-          }
+            if (fEventType == EventType::SSAAS)
+            {
+              fEventList.push_back(new D19cSSAEventAS(pBoard, pData));
+            }
+            else if( fEventType == EventType::MPAAS )
+            {
+              fEventList.push_back(new D19cMPAEventAS(pBoard, pData));
+            }
+            else if (fEventType != EventType::ZS)
+            {
+              size_t cEventIndex=0;
+              auto cEventIterator = pData.begin();
+              do
+                {
+                  uint32_t cEventSize = (0x0000FFFF & (*cEventIterator))*4 ; // event size is given in 128 bit words
+                  auto cEnd = ( (cEventIterator+cEventSize) > pData.end() ) ? pData.end() : (cEventIterator + cEventSize) ;
+                  // retrieve chunck of data vector belonging to this event
+                  if( cEnd - cEventIterator == cEventSize )
+                    {
+                      std::vector<uint32_t> cEvent(cEventIterator, cEnd);
+                      //some useful debug information
+                      LOG (DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of " << +cEventSize <<  " 32 bit words..." << RESET;
+                      if( pBoard->getFrontEndType() == FrontEndType::CBC3 )
+                        {
+                          fEventList.push_back ( new D19cCbc3Event ( pBoard, cEvent ) );
+                        }
+                      else if( pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2  )
+                        {
+                          fEventList.push_back ( new D19cCic2Event ( pBoard, cEvent ) );
+                        }
+                      else if( pBoard->getFrontEndType() == FrontEndType::SSA )
+                        {
+                          // LOG (INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
+                          // auto cL1Counter0 = (cEvent[4+2] & (0xF<<16)) >> 16; 
+                          // auto cL1Counter1 = (cEvent[4+8+4+2] & (0xF<<16)) >> 16; 
+                          // LOG (INFO) << BOLDBLUE << "L1A counter chip0 : " << cL1Counter0 << RESET;
+                          // LOG (INFO) << BOLDBLUE << "L1A counter chip1 : " << cL1Counter1 << RESET;
+                          // for(auto cWord : cEvent )
+                          //   LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
+                          fEventList.push_back(new D19cSSAEvent(pBoard, maxind+1, fNFe, cEvent));
+                        }
+                      else if( pBoard->getFrontEndType() == FrontEndType::MPA )
+                        {
+                           fEventList.push_back(new D19cMPAEvent(pBoard, maxind+1, fNFe, cEvent));
+                        }
+                      cEventIndex++;
+                    }
+                  cEventIterator += cEventSize;
+                }while( cEventIterator < pData.end());
+            }
+        }// end zero check 
 
-        if ( pBoard->getFrontEndType() == FrontEndType::MPA )
-          {
-            uint16_t nMPA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_MPA) / D19C_EVENT_SIZE_32_MPA / fNFe;
-            if (fEventType == EventType::MPAAS) nMPA = pData.size()/1920;
-
-            for(auto opticalGroup: *pBoard)
-              {
-                for(auto hybrid: *opticalGroup)
-                  {
-                    for(auto chip: *hybrid)
-                      {
-                        maxind=std::max(maxind,uint32_t(chip->getId()+hybrid->getId()*nMPA));
-                      }
-                  }
-              }
-            //LOG (INFO) << BOLDBLUE << "maxind " << maxind << RESET;
-          }
-
-        if (fEventType == EventType::MPAAS)
-          {
-            fEventList.push_back(new D19cMPAEventAS(pBoard, maxind+1, fNFe, pData));
-          }
-
-        else if (fEventType != EventType::ZS)
-          {
-            size_t cEventIndex=0;
-            auto cEventIterator = pData.begin();
-            do
-              {
-                uint32_t cEventSize = (0x0000FFFF & (*cEventIterator))*4 ; // event size is given in 128 bit words
-                auto cEnd = ( (cEventIterator+cEventSize) > pData.end() ) ? pData.end() : (cEventIterator + cEventSize) ;
-                // retrieve chunck of data vector belonging to this event
-                if( cEnd - cEventIterator == cEventSize )
-                  {
-                    std::vector<uint32_t> cEvent(cEventIterator, cEnd);
-                    //some useful debug information
-                    LOG (DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of " << +cEventSize <<  " 32 bit words..." << RESET;
-                    if( pBoard->getFrontEndType() == FrontEndType::CBC3 )
-                      {
-                        fEventSize = static_cast<uint32_t>(cEventSize);
-                        fNCbc = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_CBC3) / D19C_EVENT_SIZE_32_CBC3 / fNFe;
-                        fEventList.push_back ( new D19cCbc3Event ( pBoard, fNCbc, fNFe , cEvent ) );
-                      }
-                    else if( pBoard->getFrontEndType() == FrontEndType::CIC )
-                      {
-                        fNCbc = 8;
-                        fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
-                        fEventList.push_back ( new D19cCicEvent ( pBoard, fNCbc , fNFe, cEvent ) );
-                      }
-                    else if(pBoard->getFrontEndType() == FrontEndType::CIC2   )
-                      {
-                        fNCbc = 8;
-                        fNFe = 8*2; // maximum of 8 links x 2 FEHs per link
-                        // check if the board is reading sparsified or unsparsified data
-                        fEventList.push_back ( new D19cCic2Event ( pBoard, fNCbc , fNFe, cEvent ) );
-                      }
-                    else if( pBoard->getFrontEndType() == FrontEndType::SSA )
-                      {
-
-                        fEventList.push_back(new D19cSSAEvent(pBoard, maxind+1, fNFe, cEvent));
-
-                      }
-                    cEventIndex++;
-                  }
-                cEventIterator += cEventSize;
-              }while( cEventIterator < pData.end());
-          }
       }
   }
 }

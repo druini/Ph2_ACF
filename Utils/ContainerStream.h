@@ -540,7 +540,7 @@ public:
 		{
 			size_t vectorSize = (fDataSize - bufferReadingPosition) / (sizeof(T) * fNumberOfChips);
 			std::cout << __PRETTY_FUNCTION__ << "vectorSize = " << +vectorSize << std::endl;
-
+			
 			for (size_t chipIndex = 0; chipIndex < fNumberOfChips; ++chipIndex)
 			{
 				ChannelContainer<T> *channelContainer = new ChannelContainer<T>(vectorSize);
@@ -655,6 +655,8 @@ protected:
 		this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroupId);
 		this->fHeaderStream.template setHeaderInfo<HeaderId::ModuleId>(module->getIndex());
 		this->fDataStream.fNumberOfChips = module->size();
+		this->fDataStream.fChipSummaryContainerVector.clear();
+		this->fDataStream.fChannelContainerVector.clear();
 		if (module->getSummaryContainer<M, C>() != nullptr)
 		{
 			this->fDataStream.fContainerCarried.carryModuleContainer();

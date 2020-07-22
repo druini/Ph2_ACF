@@ -31,10 +31,8 @@ class ShortFinder : public Tool
     ~ShortFinder();
     void Initialise();
 
-
-
     void Count(Ph2_HwDescription::BeBoard* pBoard, const ChannelGroup<NCHANNELS>* pGroup);
-    void Count(Ph2_HwDescription::BeBoard* pBoard, const ChannelGroup<NSSACHANNELS>* pGroup);
+    //void Count(Ph2_HwDescription::BeBoard* pBoard, const ChannelGroup<NSSACHANNELS>* pGroup);
 
     void FindShorts2S(Ph2_HwDescription::BeBoard* pBoard);
     void FindShortsPS(Ph2_HwDescription::BeBoard* pBoard);
@@ -63,9 +61,8 @@ class ShortFinder : public Tool
 
     float THRESHOLD_IN= 0.0;
 
-    bool cWithCBC = true;
-    bool cWithSSA = false;
-    //uint32_t nchannels = 0;
+    bool fWithCBC = false;
+    bool fWithSSA = false;
 
 };
 

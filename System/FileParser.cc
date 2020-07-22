@@ -144,6 +144,7 @@ namespace Ph2_System
       {
         cEventTypeString = cEventTypeAttribute.value();
         if (cEventTypeString == "ZS") cBeBoard->setEventType (EventType::ZS);
+        else if( cEventTypeString == "Async") cBeBoard->setEventType (EventType::SSAAS);
         else cBeBoard->setEventType (EventType::VR);
       }
 
@@ -411,21 +412,26 @@ namespace Ph2_System
     pBoard->addConditionDataSet (cSet);
   }
 
-  void FileParser::parseSSA (pugi::xml_node pModuleNode, Module* pModule, std::string cFilePrefix)
-  { // Get ID of SSA then add to the Module!
-    uint32_t cChipId = pModuleNode.attribute ( "Id" ).as_int();
+  void FileParser::parseSSAContainer (pugi::xml_node pSSAnode, Module* pModule, std::string cFilePrefix, std::ostream& os )
+  {
+    os << BOLDCYAN << "|" << "  " << "|" << "   " << "|" << "----" << pSSAnode.name() << "  "
+       << pSSAnode.first_attribute().name() << " :" << pSSAnode.attribute ( "Id" ).value()
+       << ", File: " << expandEnvironmentVariables (pSSAnode.attribute ( "configfile" ).value() ) << RESET << std:: endl;
+ 
+    // Get ID of SSA then add to the Module!
+    uint32_t cChipId = pSSAnode.attribute ( "Id" ).as_int();
     std::string cFileName;
     if ( !cFilePrefix.empty() )
       {
         if (cFilePrefix.at (cFilePrefix.length() - 1) != '/')
           cFilePrefix.append ("/");
 
-        cFileName = cFilePrefix + expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
+        cFileName = cFilePrefix + expandEnvironmentVariables (pSSAnode.attribute ( "configfile" ).value() );
       }
-    else cFileName = expandEnvironmentVariables (pModuleNode.attribute ( "configfile" ).value() );
+    else cFileName = expandEnvironmentVariables (pSSAnode.attribute ( "configfile" ).value() );
     ReadoutChip* cSSA = pModule->addChipContainer(cChipId, new SSA ( pModule->getBeId(), pModule->getFMCId(), pModule->getFeId(), cChipId, 0, cFileName ));
     cSSA->setNumberOfChannels(120);
-    this->parseSSASettings (pModuleNode, cSSA);
+    this->parseSSASettings (pSSAnode, cSSA);
   }
 
   void FileParser::parseSSASettings (pugi::xml_node pModuleNode, ReadoutChip* pSSA)
@@ -485,112 +491,116 @@ namespace Ph2_System
           {
             std::string cName = cChild.name();
             std::string cNextName = cChild.next_sibling().name();
-            if (cName.find("CBC") != std::string::npos || cName.find("RD53") != std::string::npos || cName.find("CIC") != std::string::npos || cName.find("SSA") || cName.find("MPA") != std::string::npos)
-              {
-                if (cName.find("_Files") != std::string::npos)
-                  {
-                    cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute("path").value()));
-                  }
-                else
-                  {
-                    int cChipId = cChild.attribute("Id").as_int();
-                    std::string cFileName = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute("configfile").value()));
-                    LOG (DEBUG) << BOLDBLUE << "Configuration file ...." << cName << " --- " << cConfigFileDirectory << RESET;
-                    LOG (DEBUG) << BOLDGREEN << cName << " Id = " << +cChipId << " --- " << cFileName << RESET;
-                    if (cName == "RD53")
+            bool cIsTrackerASIC = cName.find("CBC") != std::string::npos; 
+            cIsTrackerASIC = cIsTrackerASIC || cName.find("SSA") != std::string::npos; 
+            cIsTrackerASIC = cIsTrackerASIC || cName.find("MPA") != std::string::npos; 
+            cIsTrackerASIC = cIsTrackerASIC || cName.find("CIC") != std::string::npos; 
+            cIsTrackerASIC = cIsTrackerASIC || cName.find("RD53") != std::string::npos; 
+            if( cIsTrackerASIC )
+            {
+              if (cName.find("_Files") != std::string::npos)
+                {
+                  cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute("path").value()));
+                }
+              else
+                {
+                  int cChipId = cChild.attribute("Id").as_int();
+                  std::string cFileName = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute("configfile").value()));
+                  //LOG (DEBUG) << BOLDBLUE << "Configuration file ...." << cName << " --- " << cConfigFileDirectory << RESET;
+                  //LOG (DEBUG) << BOLDGREEN << cName << " Id = " << +cChipId << " --- " << cFileName << RESET;
+                  if (cName.find("RD53") != std::string::npos)
+                    {
+                      this->parseRD53(cChild, cModule, cConfigFileDirectory, os);
+                      if (cNextName.empty() || cNextName!=cName) this->parseGlobalRD53Settings(pModuleNode, cModule, os);
+                    }
+                  else if (cName.find("CBC") != std::string::npos)
+                    {
+                      pBoard->setFrontEndType(FrontEndType::CBC3);
+                      this->parseCbcContainer(cChild, cModule, cConfigFileDirectory, os);
+                      // check if this is the last node with this name
+                      if (cNextName.empty() || cNextName!=cName)
                       {
-                        this->parseRD53(cChild, cModule, cConfigFileDirectory, os);
-                        if (cNextName.empty() || cNextName!=cName) this->parseGlobalRD53Settings(pModuleNode, cModule, os);
+                        // Parse the GlobalSettings so that Global regisers take precedence over Global settings which take precedence over specific settings
+                        this->parseGlobalCbcSettings(pModuleNode, cModule, os);
                       }
-                    else if (cName == "CBC")
-                      {
-                        pBoard->setFrontEndType(FrontEndType::CBC3);
-                        this->parseCbcContainer(cChild, cModule, cConfigFileDirectory, os);
-                        // check if this is the last node with this name
-                        if (cNextName.empty() || cNextName!=cName)
-                          {
-                            // Parse the GlobalSettings so that Global regisers take precedence over Global settings which take precedence over specific settings
-                            this->parseGlobalCbcSettings(pModuleNode, cModule, os);
-                          }
-                      }
-                    else if (cName == "CIC" || cName == "CIC2")
-                      {
-                        bool cCIC1 = (cName == "CIC");
-                        FrontEndType cType = cCIC1 ? FrontEndType::CIC : FrontEndType::CIC2 ;
+                    }
+                  else if (cName.find("CIC") != std::string::npos )
+                    {
+                      bool cCIC1 = (cName.find("CIC2") == std::string::npos);
+                      FrontEndType cType = cCIC1 ? FrontEndType::CIC : FrontEndType::CIC2 ;
+                      pBoard->setFrontEndType( cType );
+                      if ( !cConfigFileDirectory.empty() )
+                        {
+                          if (cConfigFileDirectory.at (cConfigFileDirectory.length() - 1) != '/')
+                            cConfigFileDirectory.append ("/");
 
-                        pBoard->setFrontEndType( cCIC1 ? FrontEndType::CIC : FrontEndType::CIC2 );
-                        if ( !cConfigFileDirectory.empty() )
-                          {
-                            if (cConfigFileDirectory.at (cConfigFileDirectory.length() - 1) != '/')
-                              cConfigFileDirectory.append ("/");
+                          cFileName = cConfigFileDirectory + cFileName;
+                        }
+                      LOG (INFO) << BOLDBLUE << "Loading configuration for CIC from " << cFileName << RESET;
+                      os << BOLDCYAN << "|" << "  " << "|" << "   " << "|" << "----" << cName << "  "
+                         << "Id" << cChipId << " , File: " << cFileName << RESET << std::endl;
+                      Cic* cCic = new Cic ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId , cFileName );
+                      static_cast<OuterTrackerModule*>(cModule)->addCic (cCic);
+                      cCic->setFrontEndType(cType);
 
-                            cFileName = cConfigFileDirectory + cFileName;
-                          }
-                        LOG (INFO) << BOLDBLUE << "Loading configuration for CIC from " << cFileName << RESET;
-                        os << BOLDCYAN << "|" << "  " << "|" << "   " << "|" << "----" << cName << "  "
-                           << "Id" << cChipId << " , File: " << cFileName << RESET << std::endl;
-                        Cic* cCic = new Cic ( cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), cChipId , cFileName );
-                        static_cast<OuterTrackerModule*>(cModule)->addCic (cCic);
-                        cCic->setFrontEndType(cType);
+                      os << GREEN << "|\t|\t|\t|----FrontEndType: ";
+                      if (cType == FrontEndType::CIC )
+                        os << RED << "CIC";
+                      else
+                        os << RED << "CIC2";
 
-                        os << GREEN << "|\t|\t|\t|----FrontEndType: ";
-                        if (cType == FrontEndType::CIC )
-                          os << RED << "CIC";
-                        else
-                          os << RED << "CIC2";
+                      os << RESET << std::endl;
+                      // Now global settings
+                      pugi::xml_node cGlobalSettingsNode = pModuleNode.child ("Global");
+                      for (pugi::xml_node cChildGlobal: cGlobalSettingsNode.children())
+                        {
+                          std::string cNameGlobal = cChildGlobal.name();
+                          if ( cNameGlobal.find("CIC") != std::string::npos  ||  cNameGlobal.find("CIC2") != std::string::npos )
+                            {
+                              LOG (INFO) << BOLDBLUE << " Global settings " << cNameGlobal << RESET;
+                              std::vector<std::string> cAttributes{"clockFrequency", "enableBend","enableLastLine", "enableSparsification"};
+                              std::vector<std::string> cRegNames{ "", "BEND_SEL", "N_OUTPUT_TRIGGER_LINES_SEL", "CBC_SPARSIFICATION_SEL"};
+                              std::vector<uint16_t> cBitPositions{ 1, 2 , 3 , 4 };
+                              for( auto it = cRegNames.begin(); it != cRegNames.end(); ++it)
+                                {
+                                  auto cIndex = std::distance(cRegNames.begin(), it); 
+                                  auto cAttribute = cAttributes[cIndex];
+                                  auto cBitPosition = cBitPositions[cIndex];
+                                  uint16_t cMask = (~(1 << cBitPosition)) & 0xFF; 
 
-                        os << RESET << std::endl;
-                        // Now global settings
-                        pugi::xml_node cGlobalSettingsNode = pModuleNode.child ("Global");
-                        for (pugi::xml_node cChildGlobal: cGlobalSettingsNode.children())
-                          {
-                            std::string cNameGlobal = cChildGlobal.name();
-                            if ( cNameGlobal.find("CIC") != std::string::npos  ||  cNameGlobal.find("CIC2") != std::string::npos )
-                              {
-                                LOG (INFO) << BOLDBLUE << " Global settings " << cNameGlobal << RESET;
-                                std::vector<std::string> cAttributes{"clockFrequency", "enableBend","enableLastLine", "enableSparsification"};
-                                std::vector<std::string> cRegNames{ "", "BEND_SEL", "N_OUTPUT_TRIGGER_LINES_SEL", "CBC_SPARSIFICATION_SEL"};
-                                std::vector<uint16_t> cBitPositions{ 1, 2 , 3 , 4 };
-                                for( auto it = cRegNames.begin(); it != cRegNames.end(); ++it)
-                                  {
-                                    auto cIndex = std::distance(cRegNames.begin(), it); 
-                                    auto cAttribute = cAttributes[cIndex];
-                                    auto cBitPosition = cBitPositions[cIndex];
-                                    uint16_t cMask = (~(1 << cBitPosition)) & 0xFF; 
+                                  uint16_t cValueFromFile = cChildGlobal.attribute(cAttribute.c_str()).as_int();
+                                  if (cAttribute == "clockFrequency" ) 
+                                    cValueFromFile = (cValueFromFile == 320) ? 0 : 1; 
+                                  if( cAttribute == "clockFrequency" && cCIC1 )
+                                    continue;
+                                  if(cAttribute == "enableSparsification")
+                                    pBoard->setSparsification(bool(cValueFromFile));
 
-                                    uint16_t cValueFromFile = cChildGlobal.attribute(cAttribute.c_str()).as_int();
-                                    if (cAttribute == "clockFrequency" ) 
-                                      cValueFromFile = (cValueFromFile == 320) ? 0 : 1; 
-                                    if( cAttribute == "clockFrequency" && cCIC1 )
-                                      continue;
-                                    if(cAttribute == "enableSparsification")
-                                      pBoard->setSparsification(bool(cValueFromFile));
+                                  os << GREEN << "|\t|\t|\t|---- Setting " << cAttribute << " to  " << cValueFromFile << "\n" << RESET;
+                                  LOG (DEBUG) << BOLDBLUE << " Global settings " << cAttribute << " [ " << *it << " ]-- set to " << cValueFromFile <<  RESET;
 
-                                    os << GREEN << "|\t|\t|\t|---- Setting " << cAttribute << " to  " << cValueFromFile << "\n" << RESET;
-                                    LOG (DEBUG) << BOLDBLUE << " Global settings " << cAttribute << " [ " << *it << " ]-- set to " << cValueFromFile <<  RESET;
+                                  std::string cRegName = cCIC1 ? std::string(*it) : "FE_CONFIG";
+                                  auto cRegValue = cCic->getReg ( cRegName ) ;
+                                  uint16_t cNewValue = cCIC1 ? cValueFromFile : ( ( cRegValue & cMask ) | (cValueFromFile << cBitPosition )) ; 
 
-                                    std::string cRegName = cCIC1 ? std::string(*it) : "FE_CONFIG";
-                                    auto cRegValue = cCic->getReg ( cRegName ) ;
-                                    uint16_t cNewValue = cCIC1 ? cValueFromFile : ( ( cRegValue & cMask ) | (cValueFromFile << cBitPosition )) ; 
-
-                                    LOG (INFO) << BOLDBLUE << "  Setting [ " << cRegName << " " << *it << " == " << +cValueFromFile <<  "]-- set to. Mask " << std::bitset<5>(cMask) << " -- old value " << std::bitset<5>(cRegValue) << " -- new value " << std::bitset<5>(cNewValue) << RESET;
-                                    cCic->setReg ( cRegName , cNewValue ) ;
-                                  }
-                              }
-                          }
-                      }
-                    else if (cName == "SSA")
-                      {
-                        pBoard->setFrontEndType( FrontEndType::SSA);
-                        this->parseSSA(cChild, cModule, cConfigFileDirectory);
-                      }
-                    else if (cName == "MPA")
-                      {
-                        pBoard->setFrontEndType( FrontEndType::MPA);
-                        this->parseMPA(cChild, cModule, cConfigFileDirectory);
-                      }
-                  }
-              }
+                                  LOG (INFO) << BOLDBLUE << "  Setting [ " << cRegName << " " << *it << " == " << +cValueFromFile <<  "]-- set to. Mask " << std::bitset<5>(cMask) << " -- old value " << std::bitset<5>(cRegValue) << " -- new value " << std::bitset<5>(cNewValue) << RESET;
+                                  cCic->setReg ( cRegName , cNewValue ) ;
+                                }
+                            }
+                        }
+                    }
+                  else if (cName == "SSA")
+                    {
+                      pBoard->setFrontEndType( FrontEndType::SSA);
+                      this->parseSSAContainer(cChild, cModule, cConfigFileDirectory, os);
+                    }
+                  else if (cName == "MPA")
+                    {
+                      pBoard->setFrontEndType( FrontEndType::MPA);
+                      this->parseMPA(cChild, cModule, cConfigFileDirectory);
+                    }
+                }
+            }
           }
       }
   }

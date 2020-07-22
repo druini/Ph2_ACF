@@ -43,7 +43,7 @@ export AMC13DIR=$CACTUSINCLUDE/amc13
 export ANTENNADIR=$BASE_DIR/../CMSPh2_AntennaDriver
 export USBINSTDIR=$BASE_DIR/../Ph2_USBInstDriver
 export EUDAQDIR=$BASE_DIR/../eudaq
-export POWERSUPPLYDIR=$BASE_DIR/../power-supply
+export POWERSUPPLYDIR=$BASE_DIR/../power_supply
 
 ###########
 # ANTENNA #
@@ -73,6 +73,7 @@ export HttpFlag='-D__HTTP__'
 export ZmqFlag='-D__ZMQ__'
 export USBINSTFlag='-D__USBINST__'
 export Amc13Flag='-D__AMC13__'
+export TCUSBFlag='-D__TCUSB__'
 export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'

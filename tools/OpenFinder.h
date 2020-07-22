@@ -12,12 +12,23 @@
 #ifndef OpenFinder_h__
 #define OpenFinder_h__
 
-#include "Tool.h" 
+#include "PSHybridTester.h"
+#ifdef __USE_ROOT__
+  #include "TTree.h"
+#endif
+
+#ifdef __ANTENNA__
+#include "Antenna.h"
+#endif
+#ifdef __TCUSB__
+  #include "USB_a.h"
+#endif
 
 #define ADC_SLAVE 4
 #define CLOCK_SLAVE 3 
 #define POTENTIOMETER_SLAVE 2
 #define SWITCH_SLAVE 0 
+
 
 const float THRESHOLD_OPEN = 0.1;
 #ifndef ChannelList
@@ -30,20 +41,23 @@ typedef std::vector<ScanSummary> ScanSummaries;
 // add exit codes here 
 const uint8_t FAILED_LATENCY = 1;
 
-class OpenFinder : public Tool
+class OpenFinder : public PSHybridTester 
 {
   public:
     // parameters for FindOpens
     class Parameters
     {
     public:
+      uint32_t nTriggers=0;
       uint8_t  antennaGroup = 0;
       uint16_t potentiometer = 0;
       uint16_t latencyRange = 0;
       uint16_t antennaDelay = 0;
+      uint32_t triggerRate=0;
       uint8_t fExternalTriggerSource=5;
       uint8_t fAntennaTriggerSource=7;
       float fThreshold=1;
+      std::string UsbId = "";
     };
 
     bool FindLatency(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint16_t> pLatencies);
@@ -51,11 +65,17 @@ class OpenFinder : public Tool
     OpenFinder();
     ~OpenFinder();
     void Initialise(Parameters pParameters);
+    void FindOpens2S();
+    void FindOpensPS();
     void FindOpens();
+    #ifdef __USE_ROOT__
     void Print();
+    #endif
     void Reset();
 
   private:
+    void SelectAntennaPosition(const std::string &cPosition);
+
     // type aliases
     using channelVector = std::vector<int>;
     using cbcChannelsMap = std::map<int, channelVector>;
@@ -73,12 +93,23 @@ class OpenFinder : public Tool
     // Add detector container and shorts container
     DetectorDataContainer fLatencyContainer;
     DetectorDataContainer fOpens;
+    DetectorDataContainer fHitDataContainer;
     // container to hold result of latency scan 
     DetectorDataContainer fInTimeOccupancy;
 
 
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
+
+    #ifdef __TCUSB__
+        std::map<std::string, TC_PSFE::ant_channel> fAntennaControl =
+        {
+            { "EvenChannels", TC_PSFE::ant_channel::_1 },
+            { "OddChannels", TC_PSFE::ant_channel::_2 },
+            { "Enable", TC_PSFE::ant_channel::ALL },
+            { "Disable" , TC_PSFE::ant_channel::NONE}
+        };
+    #endif
 };
 
 

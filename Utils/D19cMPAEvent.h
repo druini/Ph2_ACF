@@ -14,29 +14,21 @@
 
 #include "Event.h"
 
-namespace Ph2_HwInterface
-{
-    /*!
-     * \class MPAEvent
-     * \brief Event container to manipulate event flux from the MPA2
-     */
+
+namespace Ph2_HwInterface { // Begin namespace
+
+
+    using EventDataVector = std::vector<std::vector<uint32_t>>;
+    using EventHeader = std::vector<uint32_t>;
+
+
     class D19cMPAEvent : public Event
     {
       public:
-        /*!
-         * \brief Constructor of the Event Class
-         * \param pBoard : Board to work with
-         * \param pNbMPA
-         * \param pEventBuf : the pointer to the raw Event buffer of this Event
-         */
-        D19cMPAEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbMPA, const std::vector<uint32_t>& list );
-        /*!
-         * \brief Copy Constructor of the Event Class
-         */
-        //MPAEvent ( const Event& pEvent );
-        /*!
-         * \brief Destructor of the Event Class
-         */
+
+
+        D19cMPAEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNMPA, uint32_t pNFe, const std::vector<uint32_t>& list );
+
         ~D19cMPAEvent()
         {
         }
@@ -45,7 +37,7 @@ namespace Ph2_HwInterface
          * \param pEvent : Event to set
          * \return Aknowledgement of the Event setting (1/0)
          */
-        void SetEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbMPA, const std::vector<uint32_t>& list ) override;
+        void SetEvent ( const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNMPA, const std::vector<uint32_t>& list ) override;
 
         /*!
          * \brief Get the MPA Event counter
@@ -124,8 +116,6 @@ namespace Ph2_HwInterface
         * \return vector with hit channels
         */
         std::vector<uint32_t> GetHits (uint8_t pFeId, uint8_t pMPAId) const override;
-
-        std::vector<Cluster> getClusters ( uint8_t pFeId, uint8_t pMPAId) const override;
         /*!
          * \brief Function to get pipeline address
          * \param pFeId : FE Id
@@ -162,7 +152,8 @@ namespace Ph2_HwInterface
          * \param pCbcId : Cbc Id
          * \return Glib flag string
          */
-
+         std::vector<Cluster> getClusters ( uint8_t pFeId, uint8_t pCbcId) const override;
+	 void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup) override;
          std::string GlibFlagString ( uint8_t pFeId, uint8_t pCbcId ) const override;
          /*!
           * \brief Function to get Stub bit
@@ -185,98 +176,60 @@ namespace Ph2_HwInterface
          */
          std::vector<Stub> StubVector (uint8_t pFeId, uint8_t pCbcId ) const override;
 
-         /*!
-         * \brief Function to count the Hits in this event
-         * \param pFeId : FE Id
-         * \param pCbcId : Cbc Id
-         * \return number of hits
-         */
+         uint16_t GetMPAL1Counter( uint8_t pFeId, uint8_t pMPAId ) const;
 
+         uint8_t GetNStripClusters( uint8_t pFeId, uint8_t pMPAId ) const;
 
+         std::vector<SCluster> GetStripClusters ( uint8_t pFeId, uint8_t pMPAId) const;
 
-        uint32_t GetMPAL1Counter( uint8_t pFeId, uint8_t pMPAId ) const;
+         uint8_t GetNPixelClusters( uint8_t pFeId, uint8_t pMPAId ) const;
 
-        uint32_t GetNStripClusters( uint8_t pFeId, uint8_t pMPAId ) const;
+         std::vector<PCluster> GetPixelClusters ( uint8_t pFeId, uint8_t pMPAId) const;
 
-        std::vector<SCluster> GetStripClusters ( uint8_t pFeId, uint8_t pMPAId) const;
+         uint8_t GetMPAChipType ( uint8_t pFeId, uint8_t pMPAId ) const;
 
-        uint32_t GetNPixelClusters( uint8_t pFeId, uint8_t pMPAId ) const;
+         uint8_t GetMPAChipID ( uint8_t pFeId, uint8_t pMPAId ) const;
 
-        std::vector<PCluster> GetPixelClusters ( uint8_t pFeId, uint8_t pMPAId) const;
+         uint16_t GetMPAHybridID ( uint8_t pFeId, uint8_t pMPAId ) const;
 
-        uint32_t GetSync1( uint8_t pFeId, uint8_t pMPAId) const;
+         uint8_t GetMPAError ( uint8_t pFeId, uint8_t pMPAId ) const;
 
-        uint32_t GetSync2( uint8_t pFeId, uint8_t pMPAId) const;
+         //uint32_t GetSync1( uint8_t pFeId, uint8_t pMPAId) const;
 
-        uint32_t GetBX1_NStubs( uint8_t pFeId, uint8_t pMPAId) const;
+         //uint32_t GetSync2( uint8_t pFeId, uint8_t pMPAId) const;
 
-        uint32_t DivideBy2RoundUp(uint32_t value) const;
+         uint32_t GetBX1_NStubs( uint8_t pFeId, uint8_t pMPAId) const;
 
-        void print (std::ostream& out) const override;
+         uint16_t GetStubDataDelay( uint8_t pFeId, uint8_t pMPAId) const;
 
+         uint32_t DivideBy2RoundUp(uint32_t value) const;
 
+         uint32_t GetCluster(std::vector<uint32_t> lvec,uint8_t nclus,uint8_t cClusterSize,uint8_t deltaword) const;
 
-
+         void print (std::ostream& out) const override;
+         static constexpr size_t encodeVectorIndex(const uint8_t pFeId, const uint8_t pSSAId, const uint8_t numberOfSSAs)
+		{
+			return pSSAId + pFeId * numberOfSSAs;
+		}
 
       private:
-        uint32_t reverse_bits ( uint32_t n) const
-        {
+	EventDataVector fEventDataVector;
+	EventHeader fEventHeader;
+
+         uint32_t reverse_bits ( uint32_t n) const
+         {
             n = ( (n >> 1) & 0x55555555) | ( (n << 1) & 0xaaaaaaaa) ;
             n = ( (n >> 2) & 0x33333333) | ( (n << 2) & 0xcccccccc) ;
             n = ( (n >> 4) & 0x0f0f0f0f) | ( (n << 4) & 0xf0f0f0f0) ;
             n = ( (n >> 8) & 0x00ff00ff) | ( (n << 8) & 0xff00ff00) ;
             n = ( (n >> 16) & 0x0000ffff) | ( (n << 16) & 0xffff0000) ;
             return n;
-        }
+         }
 
+         void printMPAHeader (std::ostream& os, uint8_t pFeId, uint8_t pMPAId) const;
 
-        //Not sure what most of these do -- probably dont work
-        void calculate_address (uint32_t& cWordP, uint32_t& cBitP, uint32_t i) const
-        {
-            // we have odd and even channels, so let's first define the oddness.
-            if ( i % 2 == 1 )
-            {
-                // the word with channel 1 (from zero)
-                cWordP = 7;
-            }
-            else
-            {
-                // the word with channel 0 (from zero)
-                cWordP = 3;
-            }
-
-            // then let's find real position and word
-            if (i <= 61)
-            {
-                cWordP = cWordP;
-                cBitP = (int) (i / 2);
-            }
-            else if (i >= 62 && i <= 125)
-            {
-                cWordP = cWordP - 1;
-                cBitP = (int) ( (i - 62) / 2);
-            }
-            else if (i >= 126 && i <= 189)
-            {
-                cWordP = cWordP - 2;
-                cBitP = (int) ( (i - 62) / 2);
-            }
-            else if (i >= 190)
-            {
-                cWordP = cWordP - 3;
-                cBitP = (int) ( (i - 190) / 2);
-            }
-        }
-
-        void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase *cTestChannelGroup) override
-        {
-            std::cout<< __PRETTY_FUNCTION__ << " YOU NEED TO IMPLEMENT ME!!!!";
-            abort();
-        }
-        
-        void printMPAHeader (std::ostream& os, uint8_t pFeId, uint8_t pMPAId) const;
-
-        SLinkEvent GetSLinkEvent ( Ph2_HwDescription::BeBoard* pBoard) const override;
+         SLinkEvent GetSLinkEvent ( Ph2_HwDescription::BeBoard* pBoard) const override;
     };
 }
 #endif
+
