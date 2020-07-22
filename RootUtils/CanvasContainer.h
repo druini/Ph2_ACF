@@ -15,6 +15,7 @@
 #include "PlotContainer.h"
 
 #include <TCanvas.h>
+#include <TDirectory.h>
 
 #include <iostream>
 

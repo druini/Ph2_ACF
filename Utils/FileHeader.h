@@ -20,7 +20,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define SEPARATOR 0xAAAAAAAA
+#define HEADER_SEPARATOR 0xAAAAAAAA
 
 class FileHeader
 {
@@ -64,7 +64,7 @@ class FileHeader
         std::vector<uint32_t> cVec;
 
         // Surround every block with 10101...
-        cVec.push_back(SEPARATOR);
+        cVec.push_back(HEADER_SEPARATOR);
         char cType[8] = {0};
 
         if(fType.size() < 9)
@@ -75,18 +75,18 @@ class FileHeader
         cVec.push_back(cType[0] << 24 | cType[1] << 16 | cType[2] << 8 | cType[3]);
         cVec.push_back(cType[4] << 24 | cType[5] << 16 | cType[6] << 8 | cType[7]);
 
-        cVec.push_back(SEPARATOR);
+        cVec.push_back(HEADER_SEPARATOR);
         cVec.push_back(fVersionMajor);
         cVec.push_back(fVersionMinor);
 
-        cVec.push_back(SEPARATOR);
+        cVec.push_back(HEADER_SEPARATOR);
         cVec.push_back((uint32_t(fEventType) & 0x3) << 30 | (fBeId & 0x000003FF));
         cVec.push_back(fNchip);
 
-        cVec.push_back(SEPARATOR);
+        cVec.push_back(HEADER_SEPARATOR);
         cVec.push_back(fEventSize);
 
-        cVec.push_back(SEPARATOR);
+        cVec.push_back(HEADER_SEPARATOR);
 
         std::string cEventTypeString;
 
@@ -100,7 +100,7 @@ class FileHeader
 
     void decodeHeader(const std::vector<uint32_t>& pVec)
     {
-        if(pVec.at(0) == SEPARATOR && pVec.at(3) == SEPARATOR && pVec.at(6) == SEPARATOR && pVec.at(9) == SEPARATOR && pVec.at(11) == SEPARATOR)
+        if(pVec.at(0) == HEADER_SEPARATOR && pVec.at(3) == HEADER_SEPARATOR && pVec.at(6) == HEADER_SEPARATOR && pVec.at(9) == HEADER_SEPARATOR && pVec.at(11) == HEADER_SEPARATOR)
         {
             char cType[8] = {0};
             cType[0]      = (pVec.at(1) & 0xFF000000) >> 24;
