@@ -82,8 +82,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         if(std::all_of(readWord.begin(), readWord.end(), isdigit))
                         {
                             pixData.Enable[row] = atoi(readWord.c_str());
-                            if(pixData.Enable[row] == 0)
-                                fChipOriginalMask->disableChannel(row, col);
+                            if(pixData.Enable[row] == 0) fChipOriginalMask->disableChannel(row, col);
                             row++;
                         }
                     }
@@ -249,8 +248,7 @@ void RD53::saveRegMap(const std::string& fName2Add)
     if(file)
     {
         std::set<ChipRegPair, RegItemComparer> fSetRegItem;
-        for(const auto& it: fRegMap)
-            fSetRegItem.insert({it.first, it.second});
+        for(const auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
 
         int cLineCounter = 0;
         for(const auto& v: fSetRegItem)
@@ -264,8 +262,7 @@ void RD53::saveRegMap(const std::string& fName2Add)
             }
 
             file << v.first;
-            for(auto j = 0; j < Nspaces; j++)
-                file << " ";
+            for(auto j = 0; j < Nspaces; j++) file << " ";
             file.seekp(-v.first.size(), std::ios_base::cur);
             file << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fAddress) << "          0x" << std::setfill('0') << std::setw(4) << std::hex
                  << std::uppercase << int(v.second.fDefValue) << "                  0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue)
@@ -287,23 +284,19 @@ void RD53::saveRegMap(const std::string& fName2Add)
             file << "COL                  " << std::setfill('0') << std::setw(3) << col << std::endl;
 
             file << "ENABLE " << +fPixelsMask[col].Enable[0];
-            for(auto row = 1u; row < fPixelsMask[col].Enable.size(); row++)
-                file << "," << +fPixelsMask[col].Enable[row];
+            for(auto row = 1u; row < fPixelsMask[col].Enable.size(); row++) file << "," << +fPixelsMask[col].Enable[row];
             file << std::endl;
 
             file << "HITBUS " << +fPixelsMask[col].HitBus[0];
-            for(auto row = 1u; row < fPixelsMask[col].HitBus.size(); row++)
-                file << "," << +fPixelsMask[col].HitBus[row];
+            for(auto row = 1u; row < fPixelsMask[col].HitBus.size(); row++) file << "," << +fPixelsMask[col].HitBus[row];
             file << std::endl;
 
             file << "INJEN  " << +fPixelsMask[col].InjEn[0];
-            for(auto row = 1u; row < fPixelsMask[col].InjEn.size(); row++)
-                file << "," << +fPixelsMask[col].InjEn[row];
+            for(auto row = 1u; row < fPixelsMask[col].InjEn.size(); row++) file << "," << +fPixelsMask[col].InjEn[row];
             file << std::endl;
 
             file << "TDAC   " << +fPixelsMask[col].TDAC[0];
-            for(auto row = 1u; row < fPixelsMask[col].TDAC.size(); row++)
-                file << "," << +fPixelsMask[col].TDAC[row];
+            for(auto row = 1u; row < fPixelsMask[col].TDAC.size(); row++) file << "," << +fPixelsMask[col].TDAC[row];
             file << std::endl;
 
             file << std::endl;
@@ -322,8 +315,7 @@ void RD53::copyMaskFromDefault()
         fPixelsMask[col].Enable = fPixelsMaskDefault[col].Enable;
         fPixelsMask[col].HitBus = fPixelsMaskDefault[col].HitBus;
         fPixelsMask[col].InjEn  = fPixelsMaskDefault[col].InjEn;
-        for(auto row = 0u; row < fPixelsMask[col].TDAC.size(); row++)
-            fPixelsMask[col].TDAC[row] = fPixelsMaskDefault[col].TDAC[row];
+        for(auto row = 0u; row < fPixelsMask[col].TDAC.size(); row++) fPixelsMask[col].TDAC[row] = fPixelsMaskDefault[col].TDAC[row];
     }
 }
 
@@ -334,8 +326,7 @@ void RD53::copyMaskToDefault()
         fPixelsMaskDefault[col].Enable = fPixelsMask[col].Enable;
         fPixelsMaskDefault[col].HitBus = fPixelsMask[col].HitBus;
         fPixelsMaskDefault[col].InjEn  = fPixelsMask[col].InjEn;
-        for(auto row = 0u; row < fPixelsMaskDefault[col].TDAC.size(); row++)
-            fPixelsMaskDefault[col].TDAC[row] = fPixelsMask[col].TDAC[row];
+        for(auto row = 0u; row < fPixelsMaskDefault[col].TDAC.size(); row++) fPixelsMaskDefault[col].TDAC[row] = fPixelsMask[col].TDAC[row];
     }
 }
 
@@ -374,8 +365,7 @@ size_t RD53::getNbMaskedPixels()
 
     for(auto col = 0u; col < fPixelsMask.size(); col++)
         for(auto row = 0u; row < fPixelsMask[col].Enable.size(); row++)
-            if(fPixelsMask[col].Enable[row] == 0)
-                cnt++;
+            if(fPixelsMask[col].Enable[row] == 0) cnt++;
 
     return cnt;
 }
@@ -396,16 +386,14 @@ uint32_t RD53::getNumberOfChannels() const { return nRows * nCols; }
 
 bool RD53::isDACLocal(const std::string& regName)
 {
-    if(regName != "PIX_PORTAL")
-        return false;
+    if(regName != "PIX_PORTAL") return false;
     return true;
 }
 
 uint8_t RD53::getNumberOfBits(const std::string& regName)
 {
     auto it = fRegMap.find(regName);
-    if(it == fRegMap.end())
-        return 0;
+    if(it == fRegMap.end()) return 0;
     return it->second.fBitSize;
 }
 
@@ -420,10 +408,8 @@ void RD53::Event::DecodeQuad(uint32_t data)
     bits::RangePacker<RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION>::unpack_reverse(all_tots, tots);
 
     for(int i = 0; i < RD53Constants::NPIX_REGION; i++)
-        if(tots[i] != RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION))
-            hit_data.emplace_back(row, col + i, tots[i]);
-    if((row >= RD53::nRows) || (col >= (RD53::nCols - (RD53Constants::NPIX_REGION - 1))))
-        evtStatus |= RD53EvtEncoder::CHIPPIX;
+        if(tots[i] != RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) hit_data.emplace_back(row, col + i, tots[i]);
+    if((row >= RD53::nRows) || (col >= (RD53::nCols - (RD53Constants::NPIX_REGION - 1)))) evtStatus |= RD53EvtEncoder::CHIPPIX;
 }
 
 RD53::Event::Event(const uint32_t* data, size_t n)
@@ -433,20 +419,17 @@ RD53::Event::Event(const uint32_t* data, size_t n)
     evtStatus = RD53EvtEncoder::CHIPGOOD;
 
     std::tie(header, trigger_id, trigger_tag, bc_id) = bits::unpack<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
-    if(header != RD53EvtEncoder::HEADER)
-        evtStatus |= RD53EvtEncoder::CHIPHEAD;
+    if(header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHIPHEAD;
 
     const size_t noHitToT = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT);
     for(auto i = 1u; i < n; i++)
-        if(data[i] != noHitToT)
-            DecodeQuad(data[i]);
+        if(data[i] != noHitToT) DecodeQuad(data[i]);
     // #######################################################
     // # If the number of 32bit words do not make an integer #
     // # number of 128bit words, then 0x0000FFFF words are   #
     // # added to the event                                  #
     // #######################################################
-    if(n == 1)
-        evtStatus |= RD53EvtEncoder::CHIPNOHIT;
+    if(n == 1) evtStatus |= RD53EvtEncoder::CHIPNOHIT;
 }
 
 RD53::CalCmd::CalCmd(const uint8_t& cal_edge_mode, const uint8_t& cal_edge_delay, const uint8_t& cal_edge_width, const uint8_t& cal_aux_mode, const uint8_t& cal_aux_delay)
@@ -505,8 +488,7 @@ WrRegLong::WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16
     fields[5] = packAndEncode<5>(values[0]);
 
     bits::unpack_range<5>(values.begin() + 1, values.end(), fields.begin() + 6);
-    for(auto i = 6u; i < fields.size(); i++)
-        fields[i] = map5to8bit[fields[i]];
+    for(auto i = 6u; i < fields.size(); i++) fields[i] = map5to8bit[fields[i]];
 }
 
 RdReg::RdReg(uint8_t chip_id, uint16_t address)

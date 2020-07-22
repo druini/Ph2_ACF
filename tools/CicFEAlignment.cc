@@ -23,8 +23,7 @@ void CicFEAlignment::Reset()
         auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap)
-            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
+        for(auto cReg: cBeRegMap) cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
         uint16_t boardIndex = cBoard->getIndex();
@@ -112,8 +111,7 @@ void CicFEAlignment::Initialise()
                     for(int cLine = 0; cLine < 6; cLine++)
                     {
                         cPhaseAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>().push_back(0);
-                        if(cLine < 5)
-                            cWordAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>().push_back(0);
+                        if(cLine < 5) cWordAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>().push_back(0);
                     }
                 }
             }
@@ -185,10 +183,7 @@ std::vector<std::vector<uint8_t>> CicFEAlignment::SortWordAlignmentValues(std::v
     std::vector<std::vector<uint8_t>> cValuesFEs(8, std::vector<uint8_t>(5, 0));
     for(uint8_t cFe = 0; cFe < 8; cFe += 1)
     {
-        for(uint8_t cLine = 0; cLine < 5; cLine += 1)
-        {
-            cValuesFEs[fFEMapping[cFe]][cLine] = pWordAlignmentValues[cFe][cLine];
-        }
+        for(uint8_t cLine = 0; cLine < 5; cLine += 1) { cValuesFEs[fFEMapping[cFe]][cLine] = pWordAlignmentValues[cFe][cLine]; }
     }
     return cValuesFEs;
 }
@@ -340,8 +335,7 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine, uint16_t pDelay, u
                 {
                     auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                     auto cReadoutChip          = static_cast<ReadoutChip*>(cChip);
-                    if(cReadoutChip->getChipId() != pFe)
-                        continue;
+                    if(cReadoutChip->getChipId() != pFe) continue;
 
                     std::vector<uint8_t> cBendLUT = cReadoutChipInterface->readLUT(cReadoutChip);
                     // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5
@@ -360,17 +354,13 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine, uint16_t pDelay, u
                 }
                 // configure Bx0 alignment patterns in CIC
                 auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-                if(cCic == NULL)
-                    continue;
+                if(cCic == NULL) continue;
 
                 uint8_t              cSLVS3 = (cBendCode << 4) | cBendCode;
                 uint8_t              cSLVS4 = (1 << 7) | (0 << 5) | cBendCode;
                 std::vector<uint8_t> cPatterns{cSeeds[0], cSeeds[1], cSeeds[2], cSLVS3, cSLVS4};
                 bool                 cConfigured = fCicInterface->ConfigureBx0Alignment(cCic, cPatterns, pFe, pLine);
-                if(!cConfigured)
-                {
-                    LOG(ERROR) << BOLDRED << "Could not set Bx0 alignment pattern on CIC ... " << RESET;
-                }
+                if(!cConfigured) { LOG(ERROR) << BOLDRED << "Could not set Bx0 alignment pattern on CIC ... " << RESET; }
 
                 fCicInterface->AutoBx0Alignment(cCic, 1);
                 // start trigger
@@ -402,8 +392,7 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine, uint16_t pDelay, u
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cChip);
-                    if(theReadoutChip->getChipId() != pFe)
-                        continue;
+                    if(theReadoutChip->getChipId() != pFe) continue;
 
                     LOG(DEBUG) << BOLDBLUE << "Setting threshold on CBC" << +cChip->getId() << " back to " << +cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
                     fReadoutChipInterface->WriteChipReg(theReadoutChip, "VCth", cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
@@ -461,10 +450,7 @@ bool CicFEAlignment::ManualPhaseAlignment(uint16_t pPhase)
                     fCicInterface->SetAutomaticPhaseAlignment(cCic, false);
                     for(auto cChip: *cHybrid)
                     {
-                        for(int cLineId = 0; cLineId < 6; cLineId++)
-                        {
-                            cConfigured = cConfigured && fCicInterface->SetStaticPhaseAlignment(cCic, cChip->getId(), cLineId, pPhase);
-                        }
+                        for(int cLineId = 0; cLineId < 6; cLineId++) { cConfigured = cConfigured && fCicInterface->SetStaticPhaseAlignment(cCic, cChip->getId(), cLineId, pPhase); }
                     }
                 }
             }
@@ -543,8 +529,7 @@ bool CicFEAlignment::WordAlignmentMPA(uint16_t pWait_ms)
             for(auto cHybrid: *cModule)
             {
                 auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-                if(cCic == NULL)
-                    continue;
+                if(cCic == NULL) continue;
 
                 // now send a fast reset
                 fBeBoardInterface->ChipReSync(theBoard);
@@ -592,8 +577,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
 
         ChannelGroup<NCHANNELS, 1> cChannelMask;
         cChannelMask.disableAllChannels();
-        for(uint8_t cChannel = 0; cChannel < NCHANNELS; cChannel += 10)
-            cChannelMask.enableChannel(cChannel); // generate a hit in every Nth channel
+        for(uint8_t cChannel = 0; cChannel < NCHANNELS; cChannel += 10) cChannelMask.enableChannel(cChannel); // generate a hit in every Nth channel
 
         for(auto cModule: *cBoard)
         {
@@ -786,14 +770,10 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                 auto& cPtCutThisHybrid         = cPtCutThisModule->at(cHybrid->getIndex());
                 auto& cWordAlignmentThisHybrid = cWordAlignmentThisModule->at(cHybrid->getIndex());
                 auto& cCic                     = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-                if(cCic == NULL)
-                    continue;
+                if(cCic == NULL) continue;
 
                 // now inject stubs that can generate word alignment pattern
-                for(auto cChip: *cHybrid)
-                {
-                    this->WordAlignmentPattern(static_cast<ReadoutChip*>(cChip), cAlignmentPatterns);
-                }
+                for(auto cChip: *cHybrid) { this->WordAlignmentPattern(static_cast<ReadoutChip*>(cChip), cAlignmentPatterns); }
                 // now send a fast reset
                 fBeBoardInterface->ChipReSync(theBoard);
 

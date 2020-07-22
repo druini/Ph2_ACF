@@ -30,8 +30,7 @@ void CBCPulseShape::Initialise(void)
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
 
-    if(fChannelGroup >= 8)
-        throw Exception(std::string(__PRETTY_FUNCTION__) + " fChannelGroup cannot be grater than 7");
+    if(fChannelGroup >= 8) throw Exception(std::string(__PRETTY_FUNCTION__) + " fChannelGroup cannot be grater than 7");
     if(fChannelGroup < 0)
         fChannelGroupHandler = new CBCChannelGroupHandler();
     else
@@ -84,10 +83,7 @@ void CBCPulseShape::runCBCPulseShape(void)
             auto theThresholdAndNoiseStream = prepareChipContainerStreamer<ThresholdAndNoise, ThresholdAndNoise, uint16_t>();
             theThresholdAndNoiseStream.setHeaderElement<0>(delay);
 
-            for(auto board: fThresholdAndNoiseContainer)
-            {
-                theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
-            }
+            for(auto board: fThresholdAndNoiseContainer) { theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer); }
         }
 #endif
         fThresholdAndNoiseContainer.reset();

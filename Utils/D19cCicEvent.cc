@@ -42,10 +42,7 @@ void D19cCicEvent::fillDataContainer(BoardDataContainer* boardContainer, const C
                 LOG(DEBUG) << "\t.... " << +cHits.size() << " hits in chip." << RESET;
                 for(auto cHit: cHits)
                 {
-                    if(cTestChannelGroup->isChannelEnabled(cHit))
-                    {
-                        chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
-                    }
+                    if(cTestChannelGroup->isChannelEnabled(cHit)) { chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; }
                 }
             }
         }
@@ -90,13 +87,9 @@ void D19cCicEvent::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::v
     LOG(DEBUG) << BOLDBLUE << "Event header is " << std::bitset<32>(cEventHeader) << RESET;
     LOG(DEBUG) << BOLDBLUE << "Block size is " << +fEventSize << " 32 bit words." << RESET;
     // check header
-    if(((list.at(0) >> 16) & 0xFFFF) != 0xFFFF)
-    {
-        LOG(ERROR) << "Event header does not contain 0xFFFF start sequence - please, check the firmware";
-    }
+    if(((list.at(0) >> 16) & 0xFFFF) != 0xFFFF) { LOG(ERROR) << "Event header does not contain 0xFFFF start sequence - please, check the firmware"; }
 
-    if(fEventSize != list.size())
-        LOG(ERROR) << "Vector size doesnt match the BLOCK_SIZE in Header1";
+    if(fEventSize != list.size()) LOG(ERROR) << "Vector size doesnt match the BLOCK_SIZE in Header1";
 
     // dummy size
     uint8_t fDummySize = (0xFF & list.at(1)) >> 0;
@@ -137,9 +130,7 @@ void D19cCicEvent::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::v
         uint8_t  cHeader        = (*cIterator & 0xF0000000) >> 28;
         bool     cValidL1Header = (cHeader == 10);
         if(!cValidL1Header) // cL1DataSize == 0 || cHeader != 10 || (cIterator +cL1DataSize) > list.end() )
-        {
-            LOG(INFO) << BOLDRED << "Weird L1 header for hybrid" << +cFeId << RESET;
-        }
+        { LOG(INFO) << BOLDRED << "Weird L1 header for hybrid" << +cFeId << RESET; }
         std::vector<uint32_t> cL1data(cIterator + 2, cIterator + cL1DataSize);
 
         // const size_t L1_BLOCK_SIZE=274;
@@ -195,10 +186,7 @@ void D19cCicEvent::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::v
         fEventDataList[cFeId].first.first.second = cStubStatus;
         fEventDataList[cFeId].first.second.clear();
         fEventDataList[cFeId].second.clear();
-        for(auto cWord: cStubDataComplete)
-        {
-            LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWord) << RESET;
-        }
+        for(auto cWord: cStubDataComplete) { LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWord) << RESET; }
         for(auto cWord: cStubData)
         {
             std::bitset<32> cBitset(cWord);
@@ -207,8 +195,7 @@ void D19cCicEvent::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::v
             for(size_t cIndex = 0; cIndex < std::floor(sStubPacket.length() / cPacketLength); cIndex++)
             {
                 std::bitset<15> cDataBitset(sStubPacket.substr(cPacketLength * cIndex, cPacketLength));
-                if(sStubPacket.length() - cPacketLength * (cIndex + 1) > 0)
-                    cRemainder = sStubPacket.substr(cPacketLength * (cIndex + 1), sStubPacket.length() - cPacketLength * (cIndex + 1));
+                if(sStubPacket.length() - cPacketLength * (cIndex + 1) > 0) cRemainder = sStubPacket.substr(cPacketLength * (cIndex + 1), sStubPacket.length() - cPacketLength * (cIndex + 1));
                 LOG(DEBUG) << "\t\t..." << std::bitset<15>(cDataBitset) << " --- left with " << +(sStubPacket.length() - cPacketLength * (cIndex + 1)) << " bits." << RESET;
                 if(cDataBitset.to_ulong() != 0) // if all 0s then do not count this stub...
                 {
@@ -229,8 +216,7 @@ void D19cCicEvent::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::v
         for(auto cWord: cL1data)
         {
             LOG(DEBUG) << BOLDBLUE << "\t....." << std::bitset<32>(cWord) << RESET;
-            if(cReadoutChipId >= 8)
-                continue;
+            if(cReadoutChipId >= 8) continue;
             std::bitset<32> cBitset(cWord);
             sL1packet += cBitset.to_string();
             if(sL1packet.size() > 274)
@@ -319,10 +305,7 @@ uint32_t D19cCicEvent::Error(uint8_t pFeId, uint8_t pReadoutChipId) const
     std::bitset<274> cMask;
     // L1 data is : 2 error bits + 9 pipeline address + 9 L1A + 254 hit
     // data
-    for(uint16_t cPos = 273; cPos > 273 - (2); cPos--)
-    {
-        cMask.set(cPos);
-    }
+    for(uint16_t cPos = 273; cPos > 273 - (2); cPos--) { cMask.set(cPos); }
     uint32_t cError = static_cast<uint32_t>(std::bitset<274>(((cDataBitset & cMask)) >> (NCHANNELS + 9 + 9)).to_ulong());
     return cError;
 }
@@ -335,10 +318,7 @@ uint32_t D19cCicEvent::L1Id(uint8_t pFeId, uint8_t pReadoutChipId) const
     std::bitset<274> cMask;
     // L1 data is : 2 error bits + 9 pipeline address + 9 L1A + 254 hit
     // data
-    for(uint16_t cPos = 273 - (2 + 9); cPos > 273 - (2 + 9 + 9); cPos--)
-    {
-        cMask.set(cPos);
-    }
+    for(uint16_t cPos = 273 - (2 + 9); cPos > 273 - (2 + 9 + 9); cPos--) { cMask.set(cPos); }
     uint32_t cL1Id = static_cast<uint32_t>(std::bitset<274>(((cDataBitset & cMask)) >> (NCHANNELS)).to_ulong());
     return cL1Id;
 }
@@ -351,10 +331,7 @@ uint32_t D19cCicEvent::PipelineAddress(uint8_t pFeId, uint8_t pReadoutChipId) co
     std::bitset<274> cMask;
     // L1 data is : 2 error bits + 9 pipeline address + 9 L1A + 254 hit
     // data
-    for(uint16_t cPos = 273 - 2; cPos > 273 - (2 + 9); cPos--)
-    {
-        cMask.set(cPos);
-    }
+    for(uint16_t cPos = 273 - 2; cPos > 273 - (2 + 9); cPos--) { cMask.set(cPos); }
     uint32_t cPipelineAddress = static_cast<uint32_t>(std::bitset<274>(((cDataBitset & cMask)) >> (NCHANNELS + 9)).to_ulong());
     return cPipelineAddress;
 }
@@ -363,8 +340,7 @@ bool D19cCicEvent::DataBit(uint8_t pFeId, uint8_t pReadoutChipId, uint32_t i) co
 {
     auto  cIndex      = 7 - std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pReadoutChipId));
     auto& cDataBitset = fEventDataList[pFeId].second[cIndex];
-    if(i >= NCHANNELS)
-        return 0;
+    if(i >= NCHANNELS) return 0;
     std::bitset<274> cMask;
     cMask.set(NCHANNELS - 1 - i);
     uint32_t cNhits = std::bitset<274>(cDataBitset & cMask).count();
@@ -374,14 +350,10 @@ bool D19cCicEvent::DataBit(uint8_t pFeId, uint8_t pReadoutChipId, uint32_t i) co
 std::string D19cCicEvent::DataBitString(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
     auto cIndex = 7 - std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pReadoutChipId));
-    if(cIndex >= (int)fEventDataList[pFeId].second.size())
-        return "";
+    if(cIndex >= (int)fEventDataList[pFeId].second.size()) return "";
     auto&            cDataBitset = fEventDataList[pFeId].second[cIndex];
     std::bitset<274> cMask;
-    for(uint8_t cPos = 0; cPos < NCHANNELS; cPos++)
-    {
-        cMask.set(NCHANNELS - 1 - cPos);
-    }
+    for(uint8_t cPos = 0; cPos < NCHANNELS; cPos++) { cMask.set(NCHANNELS - 1 - cPos); }
     std::string cBitStream = std::bitset<274>(cDataBitset & cMask).to_string();
     cBitStream             = cBitStream.substr(cBitStream.size() - NCHANNELS, NCHANNELS);
     // not sure I need this....
@@ -429,8 +401,7 @@ std::string D19cCicEvent::StubBitString(uint8_t pFeId, uint8_t pCbcId) const
 
     std::vector<Stub> cStubVector = this->StubVector(pFeId, pCbcId);
 
-    for(auto cStub: cStubVector)
-        os << std::bitset<8>(cStub.getPosition()) << " " << std::bitset<4>(cStub.getBend()) << " ";
+    for(auto cStub: cStubVector) os << std::bitset<8>(cStub.getPosition()) << " " << std::bitset<4>(cStub.getBend()) << " ";
 
     return os.str();
     // return BitString ( pFeId, pCbcId, OFFSET_CBCSTUBDATA, WIDTH_CBCSTUBDATA );
@@ -479,10 +450,7 @@ uint32_t D19cCicEvent::GetNHits(uint8_t pFeId, uint8_t pReadoutChipId) const
     auto& cDataBitset = fEventDataList[pFeId].second[cIndex];
     LOG(DEBUG) << BOLDBLUE << "L1 data from CIC : " << std::bitset<274>(cDataBitset) << RESET;
     std::bitset<274> cMask;
-    for(uint8_t cPos = 0; cPos < NCHANNELS; cPos++)
-    {
-        cMask.set(NCHANNELS - 1 - cPos);
-    }
+    for(uint8_t cPos = 0; cPos < NCHANNELS; cPos++) { cMask.set(NCHANNELS - 1 - cPos); }
     cNHits = std::bitset<274>(cDataBitset & cMask).count();
     return cNHits;
 }
@@ -499,8 +467,7 @@ std::vector<uint32_t> D19cCicEvent::GetHits(uint8_t pFeId, uint8_t pReadoutChipI
         for(uint32_t i = 0; i < NCHANNELS; ++i)
         {
             cMask.set(NCHANNELS - 1 - i);
-            if(std::bitset<274>(cDataBitset & cMask).count() > 0)
-                cHits.push_back(i);
+            if(std::bitset<274>(cDataBitset & cMask).count() > 0) cHits.push_back(i);
             cMask.flip(NCHANNELS - 1 - i);
         }
     }
@@ -565,20 +532,17 @@ void D19cCicEvent::print(std::ostream& os) const
             // channel data
             std::string data(this->DataBitString(cFeId, cReadoutChipId));
             os << "Ch. Data:      ";
-            for(int i = 0; i < FIRST_LINE_WIDTH; i += 2)
-                os << data.substr(i, 2) << " ";
+            for(int i = 0; i < FIRST_LINE_WIDTH; i += 2) os << data.substr(i, 2) << " ";
 
             os << std::endl;
 
             for(int i = 0; i < 7; ++i)
             {
-                for(int j = 0; j < LINE_WIDTH; j += 2)
-                    os << data.substr(FIRST_LINE_WIDTH + LINE_WIDTH * i + j, 2) << " ";
+                for(int j = 0; j < LINE_WIDTH; j += 2) os << data.substr(FIRST_LINE_WIDTH + LINE_WIDTH * i + j, 2) << " ";
 
                 os << std::endl;
             }
-            for(int i = 0; i < LAST_LINE_WIDTH; i += 2)
-                os << data.substr(FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i, 2) << " ";
+            for(int i = 0; i < LAST_LINE_WIDTH; i += 2) os << data.substr(FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i, 2) << " ";
             os << std::endl;
             // stubs
             uint8_t cCounter = 0;
@@ -677,8 +641,7 @@ std::vector<Cluster> D19cCicEvent::getClusters(uint8_t pFeId, uint8_t pCbcId) co
         }
 
         // Fix clusters at the end of the sensor
-        if(inCluster)
-            result.push_back(aCluster);
+        if(inCluster) result.push_back(aCluster);
     }
 
     return result;
@@ -721,16 +684,14 @@ SLinkEvent D19cCicEvent::GetSLinkEvent(BeBoard* pBoard) const
         for(auto cFe: *pBoard->at(0))
         {
             uint8_t linkId = static_cast<OuterTrackerModule*>(cFe)->getLinkId();
-            if(linkId != cLinkId)
-                continue;
+            if(linkId != cLinkId) continue;
 
             uint8_t cFeId = cFe->getId();
             for(auto cChip: *cFe)
             {
                 uint8_t cChipId = cChip->getId();
                 auto    cIndex  = 7 - std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), cChipId));
-                if(cIndex >= (int)fEventDataList[cFeId].second.size())
-                    continue;
+                if(cIndex >= (int)fEventDataList[cFeId].second.size()) continue;
                 auto&    cDataBitset  = fEventDataList[cFeId].second[cIndex];
                 uint32_t cError       = this->Error(cFeId, cChipId);
                 uint32_t cPipeAddress = this->PipelineAddress(cFeId, cChipId);
@@ -751,10 +712,7 @@ SLinkEvent D19cCicEvent::GetSLinkEvent(BeBoard* pBoard) const
 
                 // 254 channels + 2 padding bits at the end
                 std::bitset<256> cBitsetHitData;
-                for(uint8_t cPos = 0; cPos < NCHANNELS; cPos++)
-                {
-                    cBitsetHitData[NCHANNELS - 1 - cPos] = cDataBitset[NCHANNELS - 1 - cPos];
-                }
+                for(uint8_t cPos = 0; cPos < NCHANNELS; cPos++) { cBitsetHitData[NCHANNELS - 1 - cPos] = cDataBitset[NCHANNELS - 1 - cPos]; }
                 // convert bitset to string.. this is useful in case I need to reverse this later
                 cHitString += cBitsetHitData.to_string();
                 if(cNHits > 0)
@@ -762,10 +720,7 @@ SLinkEvent D19cCicEvent::GetSLinkEvent(BeBoard* pBoard) const
                     LOG(DEBUG) << BOLDBLUE << "Readout chip " << +cChip->getId() << " on link " << +linkId << RESET;
                     //" : " << cBitsetHitData.to_string() << RESET;
                     auto cHits = this->GetHits(cFe->getId(), cChip->getId());
-                    for(auto cHit: this->GetHits(cFe->getId(), cChip->getId()))
-                    {
-                        LOG(DEBUG) << BOLDBLUE << "\t... Hit in channel " << +cHit << RESET;
-                    }
+                    for(auto cHit: this->GetHits(cFe->getId(), cChip->getId())) { LOG(DEBUG) << BOLDBLUE << "\t... Hit in channel " << +cHit << RESET; }
                 }
                 // now stubs
                 for(auto cStub: this->StubVector(cFe->getId(), cChip->getId()))
@@ -805,10 +760,7 @@ SLinkEvent D19cCicEvent::GetSLinkEvent(BeBoard* pBoard) const
         cStubPayload.append(cWord);
     }
     std::vector<uint64_t> cStubData = cStubPayload.Data<uint64_t>();
-    for(auto cStub: cStubData)
-    {
-        LOG(DEBUG) << BOLDBLUE << std::bitset<64>(cStub) << RESET;
-    }
+    for(auto cStub: cStubData) { LOG(DEBUG) << BOLDBLUE << std::bitset<64>(cStub) << RESET; }
 
     LOG(DEBUG) << BOLDBLUE << +cCbcCounter << " CBCs present in this event... " << +cEnabledFe.size() << " FEs enabled." << RESET;
     uint32_t   cEvtCount = this->GetEventCount();

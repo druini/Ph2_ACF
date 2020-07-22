@@ -24,10 +24,7 @@ void SignalScanFit::Initialize()
                 // Make a canvas for the live plot
                 uint32_t cFeId = cFe->getId();
                 fNCbc          = 0; // cFe->getNChip();
-                for(auto cCbc: *cFe)
-                {
-                    fNCbc = (cCbc->getId() >= fNCbc) ? (cCbc->getId() + 1) : fNCbc;
-                }
+                for(auto cCbc: *cFe) { fNCbc = (cCbc->getId() >= fNCbc) ? (cCbc->getId() + 1) : fNCbc; }
                 TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%d", cFeId), Form("FE%d  Online Canvas", cFeId));
                 fCanvasMap[cFe]     = ctmpCanvas;
 
@@ -35,8 +32,7 @@ void SignalScanFit::Initialize()
                 TString  cName = Form("h_module_thresholdScan_Fe%d", cFeId);
                 TObject* cObj  = gROOT->FindObject(cName);
 
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
 
                 // 2D-plot with all the channels on the x-axis, Vcth on the y-axis and #clusters on the z-axis.
                 cName             = Form("h_module_thresholdScan_SingleStripClusters_S0_Fe%d", cFeId);
@@ -94,8 +90,7 @@ void SignalScanFit::Initialize()
                     uint32_t cCbcId = cCbc->getId();
                     cCbcCount++;
 
-                    if(cCbcId > cCbcIdMax)
-                        cCbcIdMax = cCbcId;
+                    if(cCbcId > cCbcIdMax) cCbcIdMax = cCbcId;
 
                     TString cHistname;
                     TH1D*   cHist;
@@ -172,10 +167,7 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                 fBeBoardInterface->Start(theBoard);
                 std::this_thread::sleep_for(std::chrono::microseconds(100));
                 // if timeout is enabled ... then wait here until the trigger FMS is ready
-                while(fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.fast_command_block.general.fsm_state") != 0)
-                {
-                    std::this_thread::sleep_for(std::chrono::microseconds(100));
-                }
+                while(fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.fast_command_block.general.fsm_state") != 0) { std::this_thread::sleep_for(std::chrono::microseconds(100)); }
                 ReadData(theBoard, false);
                 fBeBoardInterface->Stop(theBoard);
                 std::this_thread::sleep_for(std::chrono::microseconds(100));
@@ -265,16 +257,14 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                                 LOG(DEBUG) << BOLDBLUE << "\t " << cClusterSize << " strip cluster found with center in strip " << cStrip << " [half-strips] of sensor " << +cCluster.fSensor << RESET;
                                 if(cCluster.fSensor == 0)
                                 {
-                                    if(cCluster.fClusterWidth == 1)
-                                        cClustersS0->Fill(cStrip, cVCth);
+                                    if(cCluster.fClusterWidth == 1) cClustersS0->Fill(cStrip, cVCth);
                                     cClustersEvenHist->Fill(cVCth);
                                     cClusterSizeEven->Fill(cVCth, cClusterSize);
                                     cClusters2DEvenHist->Fill(cVCth, cClusterSize);
                                 }
                                 else if(cCluster.fSensor == 1)
                                 {
-                                    if(cCluster.fClusterWidth == 1)
-                                        cClustersS1->Fill(cStrip, cVCth);
+                                    if(cCluster.fClusterWidth == 1) cClustersS1->Fill(cStrip, cVCth);
                                     cClustersOddHist->Fill(cVCth);
                                     cClusterSizeOdd->Fill(cVCth, cClusterSize);
                                     cClusters2DOddHist->Fill(cVCth, cClusterSize);

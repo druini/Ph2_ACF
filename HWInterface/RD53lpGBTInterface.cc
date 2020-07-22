@@ -20,8 +20,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     bool       writeGood   = true;
     ChipRegMap lpGBTRegMap = pChip->getRegMap();
 
-    for(auto& cRegItem: lpGBTRegMap)
-        writeGood &= RD53lpGBTInterface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, true);
+    for(auto& cRegItem: lpGBTRegMap) writeGood &= RD53lpGBTInterface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, true);
 
     return writeGood;
 }
@@ -52,8 +51,7 @@ bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pa
 {
     bool writeGood = true;
 
-    for(const auto& cReg: pRegVec)
-        writeGood = RD53lpGBTInterface::WriteChipReg(pChip, cReg.first, cReg.second);
+    for(const auto& cReg: pRegVec) writeGood = RD53lpGBTInterface::WriteChipReg(pChip, cReg.first, cReg.second);
 
     return writeGood;
 }
@@ -90,8 +88,7 @@ void RD53lpGBTInterface::ConfigureDownLinks(Chip* pChip, uint8_t pCurrent, uint8
 
     // Configure EPTXDataRate
     uint32_t cValueDataRate = 0;
-    for(const auto& cGroup: fDLGroups)
-        cValueDataRate = (cValueDataRate & ~(0x03 << 2 * cGroup)) | (2 << 2 * cGroup);
+    for(const auto& cGroup: fDLGroups) cValueDataRate = (cValueDataRate & ~(0x03 << 2 * cGroup)) | (2 << 2 * cGroup);
     fBoardFW->WriteOptoLinkRegister(pChip, 0x0A7, cValueDataRate);
 
     // Configure EPTXEnable
@@ -132,8 +129,7 @@ void RD53lpGBTInterface::DisableDownLinks(Chip* pChip, const std::vector<uint8_t
 
     // Configure EPTXDataRate
     uint32_t cValueDataRate = 0;
-    for(const auto& cGroup: pGroups)
-        cValueDataRate = (cValueDataRate & ~(0x03 << 2 * cGroup)) | (0 << 2 * cGroup);
+    for(const auto& cGroup: pGroups) cValueDataRate = (cValueDataRate & ~(0x03 << 2 * cGroup)) | (0 << 2 * cGroup);
     fBoardFW->WriteOptoLinkRegister(pChip, 0x0A7, cValueDataRate);
 }
 
@@ -143,8 +139,7 @@ void RD53lpGBTInterface::ConfigureUpLinks(Chip* pChip, uint8_t pDataRate, uint8_
     for(const auto& cGroup: fULGroups)
     {
         uint32_t cValueEnableRx = 0;
-        for(const auto& cChannel: fULChannels)
-            cValueEnableRx += (1 << (cChannel + 4));
+        for(const auto& cChannel: fULChannels) cValueEnableRx += (1 << (cChannel + 4));
         uint32_t cValueEPRxControl = (cValueEnableRx << 4) | (pDataRate << 2) | (pPhaseMode << 0);
         char     cBuffer[12];
         sprintf(cBuffer, "EPRX%iControl", cGroup);

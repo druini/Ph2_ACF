@@ -40,8 +40,7 @@ void Latency::ConfigureCalibration()
     const size_t nSteps = ((stopValue - startValue) / nTRIGxEvent + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? (stopValue - startValue) / nTRIGxEvent + 1
                                                                                                                             : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
     const size_t step   = nTRIGxEvent;
-    for(auto i = 0u; i < nSteps; i++)
-        dacList.push_back(startValue + step * i);
+    for(auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
     // #######################
     // # Initialize progress #
@@ -74,10 +73,8 @@ void Latency::sendData()
 
     if(fStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer)
-            theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theLatencyContainer)
-            theLatencyStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theLatencyContainer) theLatencyStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
 
@@ -133,8 +130,7 @@ void Latency::draw(int currentRun)
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true)
-        myApp = new TApplication("myApp", nullptr, nullptr);
+    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     this->InitResultFile(fileRes);
     LOG(INFO) << BOLDBLUE << "\t--> Latency saving histograms..." << RESET;
@@ -146,8 +142,7 @@ void Latency::draw(int currentRun)
     this->WriteRootFile();
     this->CloseResultFile();
 
-    if(doDisplay == true)
-        myApp->Run(true);
+    if(doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -210,8 +205,7 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
         // # Download new DAC values #
         // ###########################
         LOG(INFO) << BOLDMAGENTA << ">>> Register value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
-        for(const auto cBoard: *fDetectorContainer)
-            this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, dacList[i]);
+        for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, dacList[i]);
 
         // ################
         // # Run analysis #
@@ -272,8 +266,7 @@ void Latency::saveChipRegisters(int currentRun)
                 for(const auto cChip: *cModule)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true)
-                        static_cast<RD53*>(cChip)->saveRegMap("");
+                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());

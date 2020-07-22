@@ -403,8 +403,7 @@ class Event
             LOG(DEBUG) << BOLDBLUE << "Word " << +cWordCounter << " : " << cWord << RESET;
             for(size_t cIndex = 0; cIndex < 32; cIndex++)
             {
-                if(cId >= pSize)
-                    continue;
+                if(cId >= pSize) continue;
 
                 pBitSet[cId][N - 1 - cBitCounter] = cWord[31 - cIndex];
                 // LOG (INFO) << "\t..Bit index " << +(31  - cIndex) << " bit counter in hit word at index " <<

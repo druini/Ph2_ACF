@@ -257,8 +257,7 @@ class HybridTester : public Tool
     {
         std::stringstream ss;
 
-        for(uint8_t i = 0; i < buf_size; i++)
-            ss << buf[i] + 0 << " ";
+        for(uint8_t i = 0; i < buf_size; i++) ss << buf[i] + 0 << " ";
 
         ss << std::endl;
         LOG(INFO) << ss.str();
@@ -268,8 +267,7 @@ class HybridTester : public Tool
     {
         std::string output_string = "";
 
-        for(std::vector<int>::iterator it = int_vector.begin(); it != int_vector.end(); ++it)
-            output_string += patch::to_string(*it) + "; ";
+        for(std::vector<int>::iterator it = int_vector.begin(); it != int_vector.end(); ++it) output_string += patch::to_string(*it) + "; ";
 
         return output_string;
     }
@@ -278,8 +276,7 @@ class HybridTester : public Tool
     {
         std::string output_string = "";
 
-        for(std::vector<double>::iterator it = int_vector.begin(); it != int_vector.end(); ++it)
-            output_string += patch::to_string(*it) + "; ";
+        for(std::vector<double>::iterator it = int_vector.begin(); it != int_vector.end(); ++it) output_string += patch::to_string(*it) + "; ";
 
         return output_string;
     }

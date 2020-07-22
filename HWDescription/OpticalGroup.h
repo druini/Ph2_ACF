@@ -51,8 +51,7 @@ class OpticalGroup
     {
         pVisitor.visitOpticalGroup(*this);
 
-        for(auto* cHybrid: *this)
-            static_cast<Module*>(cHybrid)->accept(pVisitor);
+        for(auto* cHybrid: *this) static_cast<Module*>(cHybrid)->accept(pVisitor);
     }
 
     uint8_t getOpticalGroupId() const { return fOpticalGroupId; };

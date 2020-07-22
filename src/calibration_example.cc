@@ -91,7 +91,6 @@ int main(int argc, char* argv[])
     t.stop();
     t.show("Time to Run Calibration example");
 
-    if(!batchMode)
-        cApp.Run();
+    if(!batchMode) cApp.Run();
     return 0;
 }

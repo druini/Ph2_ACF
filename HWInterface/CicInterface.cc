@@ -22,12 +22,10 @@ namespace Ph2_HwInterface
 CicInterface::CicInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap)
 {
     fFeStates.clear(); // 8 FEs
-    for(size_t cIndex = 0; cIndex < 8; cIndex++)
-        fFeStates.push_back(0);
+    for(size_t cIndex = 0; cIndex < 8; cIndex++) fFeStates.push_back(0);
 
     fPortStates.clear(); // 12 ports
-    for(size_t cIndex = 0; cIndex < 12; cIndex++)
-        fPortStates.push_back(0);
+    for(size_t cIndex = 0; cIndex < 12; cIndex++) fPortStates.push_back(0);
 }
 
 CicInterface::~CicInterface() {}
@@ -93,8 +91,7 @@ uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
     bool    cRead;
     uint8_t cChipId;
     fBoardFW->DecodeReg(cRegItem, cChipId, cVecReq[0], cRead, cFailed);
-    if(!cFailed)
-        pChip->setReg(pRegNode, cRegItem.fValue);
+    if(!cFailed) pChip->setReg(pRegNode, cRegItem.fValue);
 
     return cRegItem.fValue & 0xFF;
 }
@@ -122,8 +119,7 @@ bool CicInterface::CheckReSync(Chip* pChip)
     cRegItem.fAddress                   = cRegAddress;
     std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
     LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
-    if(!cReadBack.first)
-        return false;
+    if(!cReadBack.first) return false;
 
     bool cResyncNeeded = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x8) >> 3);
     if(!cResyncNeeded)
@@ -160,8 +156,7 @@ bool CicInterface::CheckFastCommandLock(Chip* pChip)
     cRegItem.fPage                      = 0x00;
     cRegItem.fAddress                   = cRegAddress;
     std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
-    if(!cReadBack.first)
-        return false;
+    if(!cReadBack.first) return false;
     LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
     bool cLocked = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x10) >> 4);
     if(cLocked)
@@ -181,10 +176,7 @@ bool CicInterface::ConfigureAlignmentPatterns(Chip* pChip, std::vector<uint8_t> 
         sprintf(cBuffer, "CALIB_PATTERN%d", cIndex);
         std::string cRegName(cBuffer, sizeof(cBuffer));
         cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, pAlignmentPatterns[cIndex]);
-        if(cSuccess)
-        {
-            LOG(DEBUG) << BOLDBLUE << "Calibration pattern [for word alignment] on stub line " << +cIndex << " set to " << std::bitset<8>(pAlignmentPatterns[cIndex]) << RESET;
-        }
+        if(cSuccess) { LOG(DEBUG) << BOLDBLUE << "Calibration pattern [for word alignment] on stub line " << +cIndex << " set to " << std::bitset<8>(pAlignmentPatterns[cIndex]) << RESET; }
     }
     return cSuccess;
 }
@@ -197,8 +189,7 @@ bool CicInterface::ManualBx0Alignment(Chip* pChip, uint8_t pBx0delay)
     setBoard(pChip->getBeBoardId());
     LOG(INFO) << BOLDBLUE << "Manually settomg BX0 delay value in CIC on FE" << +pChip->getFeId() << " to " << +pBx0delay << " clock cycles." << RESET;
     bool cSuccess = this->WriteChipReg(pChip, cRegName, cValue);
-    if(!cSuccess)
-        return cSuccess;
+    if(!cSuccess) return cSuccess;
     cSuccess = cSuccess && this->WriteChipReg(pChip, "EXT_BX0_DELAY", pBx0delay);
     return cSuccess;
 }
@@ -215,15 +206,13 @@ bool CicInterface::ConfigureBx0Alignment(Chip* pChip, std::vector<uint8_t> pAlig
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
     uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x00 : ((cRegValue & 0x7F) | (0x00 << 7));
     cSuccess              = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
-    if(!cSuccess)
-        return cSuccess;
+    if(!cSuccess) return cSuccess;
 
     cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "BX0_ALIGNMENT_FE" : "BX0_ALIGN_CONFIG";
     cRegValue = this->ReadChipReg(pChip, cRegName);
     cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pFEId : ((cRegValue & 0xC7) | (cFeMapping[pFEId] << 3));
     cSuccess  = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
-    if(!cSuccess)
-        return cSuccess;
+    if(!cSuccess) return cSuccess;
 
     cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "BX0_ALIGNMENT_LINE" : "BX0_ALIGN_CONFIG";
     cRegValue = this->ReadChipReg(pChip, cRegName);
@@ -239,15 +228,13 @@ bool CicInterface::AutoBx0Alignment(Chip* pChip, uint8_t pStatus)
     uint16_t    cRegValue  = this->ReadChipReg(pChip, cRegName);
     uint16_t    cToggleOff = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x00 : ((cRegValue & 0x1D) | (0x0 << 0));
     bool        cSuccess   = this->WriteChipReg(pChip, cRegName, cToggleOff);
-    if(!cSuccess)
-        return cSuccess;
+    if(!cSuccess) return cSuccess;
 
     cRegName        = (pChip->getFrontEndType() == FrontEndType::CIC) ? "AUTO_BX0_ALIGNMENT_REQUEST" : "BX0_ALIGN_CONFIG";
     cRegValue       = this->ReadChipReg(pChip, cRegName);
     uint16_t cValue = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x01 : ((cRegValue & 0xF8) | (pStatus << 6));
     cSuccess        = this->WriteChipReg(pChip, cRegName, cValue);
-    if(!cSuccess)
-        return cSuccess;
+    if(!cSuccess) return cSuccess;
 
     return cSuccess;
 }
@@ -257,8 +244,7 @@ std::pair<bool, uint8_t> CicInterface::CheckBx0Alignment(Chip* pChip)
     setBoard(pChip->getBeBoardId());
 
     bool cSuccess = this->AutoBx0Alignment(pChip, 0);
-    if(!cSuccess)
-        return std::make_pair(cSuccess, cDelay);
+    if(!cSuccess) return std::make_pair(cSuccess, cDelay);
     // remember to send a resync
     fBoardFW->ChipReSync();
 
@@ -342,17 +328,13 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
         }
         cDone = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x01) == 1);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        if(cIteration % 10 == 0)
-            LOG(INFO) << BOLDBLUE << "\t....Iteration " << +cIteration << " ... : " << cDone << RESET;
+        if(cIteration % 10 == 0) LOG(INFO) << BOLDBLUE << "\t....Iteration " << +cIteration << " ... : " << cDone << RESET;
         // stop either if done or if the maximum number of iterations
         // has been exceeded
         cStop = cDone || (cIteration > cMaxIterations);
         cIteration += 1;
     } while(!cStop);
-    if(!cDone)
-    {
-        return cDone;
-    }
+    if(!cDone) { return cDone; }
     LOG(INFO) << BOLDBLUE << "Requesting CIC to stop automated word alignment..." << RESET;
     cSuccess = this->WriteChipReg(pChip, cRegName, cToggleOff);
     if(!cSuccess)
@@ -412,8 +394,7 @@ bool CicInterface::CheckDLL(Chip* pChip)
         cRegItem.fPage                      = 0x00;
         cRegItem.fAddress                   = cRegAddress + cIndex;
         std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
-        if(cReadBack.first)
-            cValues[cIndex] = cReadBack.second & 0xFF;
+        if(cReadBack.first) cValues[cIndex] = cReadBack.second & 0xFF;
         LOG(DEBUG) << BOLDBLUE << "Lock" << cIndex << " -- " << cValues[cIndex] << RESET;
     }
     uint16_t cLock   = (cValues[1] << 8) | cValues[0];
@@ -653,10 +634,7 @@ std::vector<std::vector<uint8_t>> CicInterface::GetOptimalTaps(Chip* pChip)
 {
     // 4 channels per phyPort ... 12 phyPorts per CIC
     std::vector<std::vector<uint8_t>> cPhaseTaps(4, std::vector<uint8_t>(12, 0));
-    for(uint8_t cPhyPortChannel = 0; cPhyPortChannel < 4; cPhyPortChannel += 1)
-    {
-        this->ReadOptimalTap(pChip, cPhyPortChannel, cPhaseTaps);
-    }
+    for(uint8_t cPhyPortChannel = 0; cPhyPortChannel < 4; cPhyPortChannel += 1) { this->ReadOptimalTap(pChip, cPhyPortChannel, cPhaseTaps); }
     return cPhaseTaps;
 }
 bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
@@ -675,8 +653,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
         cRegItem.fPage                      = 0x00;
         cRegItem.fAddress                   = cRegBaseAddress + cIndex;
         std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
-        if(cReadBack.first)
-            cLocked = cLocked & (cReadBack.second == pCheckValue);
+        if(cReadBack.first) cLocked = cLocked & (cReadBack.second == pCheckValue);
         LOG(DEBUG) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cReadBack.second) << RESET;
         for(size_t cBitIndex = 0; cBitIndex < 8; cBitIndex++)
         {
@@ -721,13 +698,11 @@ bool CicInterface::SoftReset(Chip* pChip, uint32_t cWait_ms)
     uint16_t    cToggleOff = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x00 : (cRegValue & 0x0F) | (0x0 << 4);
 
     LOG(INFO) << BOLDBLUE << "Setting register " << cRegName << " to " << std::bitset<5>(cToggleOn) << " to toggle ON soft reset." << RESET;
-    if(!this->WriteChipReg(pChip, cRegName, cToggleOn))
-        return false;
+    if(!this->WriteChipReg(pChip, cRegName, cToggleOn)) return false;
     std::this_thread::sleep_for(std::chrono::milliseconds(cWait_ms));
 
     LOG(INFO) << BOLDBLUE << "Setting register " << cRegName << " to " << std::bitset<5>(cToggleOff) << " to toggle OFF soft reset." << RESET;
-    if(!this->WriteChipReg(pChip, cRegName, cToggleOff))
-        return false;
+    if(!this->WriteChipReg(pChip, cRegName, cToggleOff)) return false;
     std::this_thread::sleep_for(std::chrono::milliseconds(cWait_ms));
     return true;
 }
@@ -744,8 +719,7 @@ bool CicInterface::SelectOutput(Chip* pChip, bool pFixedPattern)
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
     uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? static_cast<uint8_t>(pFixedPattern) : ((cRegValue & 0x1B) | (static_cast<uint8_t>(pFixedPattern) << 2));
 
-    if(!this->WriteChipReg(pChip, cRegName, cValue))
-        return false;
+    if(!this->WriteChipReg(pChip, cRegName, cValue)) return false;
 
     cRegValue = this->ReadChipReg(pChip, cRegName);
     LOG(INFO) << BOLDBLUE << "CIC output pattern configured by setting " << cRegName << " to " << std::bitset<8>(cRegValue) << RESET;
@@ -768,8 +742,7 @@ bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFEs, bool pEnabl
         uint8_t cMask = ~(0x1 << pFe) & 0xFF;
         cValue        = (cValue & cMask) | (static_cast<uint8_t>(pEnable) << pFe);
     }
-    if(!this->WriteChipReg(pChip, cRegName, cValue))
-        return false;
+    if(!this->WriteChipReg(pChip, cRegName, cValue)) return false;
 
     LOG(INFO) << BOLDBLUE << "Setting FE enable register [" << cRegName << "] to " << std::bitset<8>(cValue) << RESET;
     return true;
@@ -785,8 +758,7 @@ bool CicInterface::SelectMode(Chip* pChip, uint8_t pMode)
     if(pMode == 0) // for CBC mode .. always320 MHz and without last line
         cValue = (cValue & 0x35) | (pMode << 1) | (pMode << 3);
 
-    if(!this->WriteChipReg(pChip, cRegName, cValue))
-        return false;
+    if(!this->WriteChipReg(pChip, cRegName, cValue)) return false;
 
     cRegValue = this->ReadChipReg(pChip, cRegName);
     LOG(INFO) << BOLDBLUE << "Register " << cRegName << " set to " << std::bitset<6>(cRegValue) << " to select CIC Mode " << +pMode << RESET;
@@ -833,8 +805,7 @@ bool CicInterface::CheckSoftReset(Chip* pChip)
 bool CicInterface::SelectMux(Chip* pChip, uint8_t pPhyPort)
 {
     // first .. enable bypass of logic
-    if(!this->ControlMux(pChip, 1))
-        return false;
+    if(!this->ControlMux(pChip, 1)) return false;
 
     // then select phy port
     setBoard(pChip->getBeBoardId());

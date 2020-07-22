@@ -229,10 +229,7 @@ float TPCalibration::ConvertAmpToElectrons(float pTPAmp, bool pOffset = true)
     // taken from the CBC3 manual (should be the same for CBC2)
     // 255 equals no test pulse with decreasing values the injected charge
     // increases
-    if(!pOffset)
-    {
-        return pTPAmp * 537.;
-    }
+    if(!pOffset) { return pTPAmp * 537.; }
     return -(pTPAmp - 255) * 537.;
 }
 

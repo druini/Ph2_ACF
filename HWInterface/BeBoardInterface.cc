@@ -68,8 +68,7 @@ void BeBoardInterface::WriteBoardMultReg(BeBoard* pBoard, const std::vector<std:
 {
     setBoard(pBoard->getBeBoardId());
     fBoardFW->WriteStackReg(pRegVec);
-    for(const auto& cReg: pRegVec)
-        pBoard->setReg(cReg.first, cReg.second);
+    for(const auto& cReg: pRegVec) pBoard->setReg(cReg.first, cReg.second);
 }
 
 uint32_t BeBoardInterface::ReadBoardReg(BeBoard* pBoard, const std::string& pRegNode)
@@ -83,8 +82,7 @@ uint32_t BeBoardInterface::ReadBoardReg(BeBoard* pBoard, const std::string& pReg
 void BeBoardInterface::ReadBoardMultReg(BeBoard* pBoard, std::vector<std::pair<std::string, uint32_t>>& pRegVec)
 {
     setBoard(pBoard->getBeBoardId());
-    for(auto& cReg: pRegVec)
-        try
+    for(auto& cReg: pRegVec) try
         {
             cReg.second = static_cast<uint32_t>(fBoardFW->ReadReg(cReg.first));
             pBoard->setReg(cReg.first, cReg.second);

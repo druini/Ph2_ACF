@@ -44,8 +44,7 @@ void SSAPhysics::Start(int currentRun)
         this->initializeWriteFileHandler();
     }
 
-    for(const auto cBoard: *fDetectorContainer)
-        static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->ChipReSync();
+    for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->ChipReSync();
     SystemController::Start(currentRun);
 
     keepRunning = true;
@@ -56,10 +55,7 @@ void SSAPhysics::sendData(BoardContainer* const& cBoard)
 {
     auto theOccStream = prepareChannelContainerStreamer<Occupancy>("Occ");
 
-    if(fStreamerEnabled == true)
-    {
-        theOccStream.streamAndSendBoard(fOccContainer.at(cBoard->getIndex()), fNetworkStreamer);
-    }
+    if(fStreamerEnabled == true) { theOccStream.streamAndSendBoard(fOccContainer.at(cBoard->getIndex()), fNetworkStreamer); }
 }
 
 void SSAPhysics::Stop()
@@ -68,8 +64,7 @@ void SSAPhysics::Stop()
 
     SystemController::Stop();
     keepRunning = false;
-    if(thrRun.joinable() == true)
-        thrRun.join();
+    if(thrRun.joinable() == true) thrRun.join();
 
     // ################
     // # Error report #
@@ -89,8 +84,7 @@ void SSAPhysics::initialize(const std::string fileRes_, const std::string fileRe
 #ifdef __USE_ROOT__
     myApp = nullptr;
 
-    if(doDisplay == true)
-        myApp = new TApplication("myApp", nullptr, nullptr);
+    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     this->InitResultFile(fileRes);
 
@@ -122,8 +116,7 @@ void SSAPhysics::run()
 
     LOG(WARNING) << BOLDBLUE << "Number of collected events = " << totalDataSize << RESET;
 
-    if(totalDataSize == 0)
-        LOG(WARNING) << BOLDBLUE << "No data collected" << RESET;
+    if(totalDataSize == 0) LOG(WARNING) << BOLDBLUE << "No data collected" << RESET;
 }
 
 void SSAPhysics::draw()
@@ -132,8 +125,7 @@ void SSAPhysics::draw()
     SSAPhysics::fillHisto();
     SSAPhysics::display();
 
-    if(doDisplay == true)
-        myApp->Run(true);
+    if(doDisplay == true) myApp->Run(true);
     this->WriteRootFile();
     this->CloseResultFile();
 #endif
@@ -178,10 +170,7 @@ void SSAPhysics::fillDataContainer(BoardContainer* const& cBoard)
     // # Fill containers #
     // ###################
     const std::vector<Event*>& events = SystemController::GetEvents(static_cast<BeBoard*>(cBoard));
-    for(const auto& event: events)
-    {
-        event->fillDataContainer(fOccContainer.at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup());
-    }
+    for(const auto& event: events) { event->fillDataContainer(fOccContainer.at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup()); }
 }
 
 void SSAPhysics::chipErrorReport() {}

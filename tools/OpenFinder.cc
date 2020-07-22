@@ -27,8 +27,7 @@ void OpenFinder::Reset()
         auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap)
-            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
+        for(auto cReg: cBeRegMap) cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
         auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
@@ -45,8 +44,7 @@ void OpenFinder::Reset()
                     auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     cVecRegisters.clear();
-                    for(auto cReg: cRegMapThisChip)
-                        cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+                    for(auto cReg: cRegMapThisChip) cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
                     fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
                 }
             }
@@ -140,10 +138,7 @@ OpenFinder::antennaChannelsMap OpenFinder::returnAntennaMap()
             int           cOffset = cOffsets[(cCbc % 2)];
             channelVector cTmpList;
             cTmpList.clear();
-            for(int cChannel = cOffset; cChannel < 254; cChannel += 4)
-            {
-                cTmpList.push_back(cChannel);
-            }
+            for(int cChannel = cOffset; cChannel < 254; cChannel += 4) { cTmpList.push_back(cChannel); }
             cTmpMap.emplace(cCbc, cTmpList);
         }
         cAntennaMap.emplace(cAntennaSwitch, cTmpMap);
@@ -186,10 +181,7 @@ bool OpenFinder::FindLatency(BeBoard* pBoard, std::vector<uint16_t> pLatencies)
                         auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                         for(auto cHit: cHits)
                         {
-                            if(std::find(cConnectedChannels.begin(), cConnectedChannels.end(), cHit) != cConnectedChannels.end())
-                            {
-                                cOccupancy++;
-                            }
+                            if(std::find(cConnectedChannels.begin(), cConnectedChannels.end(), cHit) != cConnectedChannels.end()) { cOccupancy++; }
                         }
                     }
                     float cEventOccupancy = cOccupancy / static_cast<float>(fEventsPerPoint * cConnectedChannels.size());
@@ -264,10 +256,7 @@ void OpenFinder::CountOpens(BeBoard* pBoard)
                     auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                     for(auto cConnectedChannel: cConnectedChannels)
                     {
-                        if(std::find(cHits.begin(), cHits.end(), cConnectedChannel) == cHits.end())
-                        {
-                            cSummaryThisChip->getChannelContainer<Occupancy>()->at(cConnectedChannel).fOccupancy += 1;
-                        }
+                        if(std::find(cHits.begin(), cHits.end(), cConnectedChannel) == cHits.end()) { cSummaryThisChip->getChannelContainer<Occupancy>()->at(cConnectedChannel).fOccupancy += 1; }
                     }
                 }
 
@@ -342,10 +331,7 @@ void OpenFinder::Print()
             // fillSummaryTree( "nOpens", totalOpens );
             fResultFile->cd();
             OpensTree->Write();
-            if(totalOpens == 0)
-            {
-                gDirectory->Delete("Opens;*");
-            }
+            if(totalOpens == 0) { gDirectory->Delete("Opens;*"); }
         }
     }
 }
@@ -497,8 +483,7 @@ void OpenFinder::FindOpensPS()
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() != FrontEndType::SSA)
-                                continue;
+                            if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
                             // if( cChip->getId() != 0 )
                             //  continue;
 
@@ -534,8 +519,7 @@ void OpenFinder::FindOpensPS()
                     }         // hybrid
                 }             // module
             }
-            if(!cOpensFound)
-                LOG(INFO) << BOLDGREEN << "No opens found on this hybrid." << RESET;
+            if(!cOpensFound) LOG(INFO) << BOLDGREEN << "No opens found on this hybrid." << RESET;
         }
         // disable
         SelectAntennaPosition("Disable");

@@ -42,8 +42,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, const DetectorContainer& 
     fPlotSCurves  = (cSetting != std::end(pSettingsMap)) ? cSetting->second : 0;
     cSetting      = pSettingsMap.find("FitSCurves");
     fFitSCurves   = (cSetting != std::end(pSettingsMap)) ? cSetting->second : 0;
-    if(fFitSCurves)
-        fPlotSCurves = true;
+    if(fFitSCurves) fPlotSCurves = true;
 
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 
@@ -157,8 +156,7 @@ bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 //========================================================================================================================
 void DQMHistogramPedeNoise::process()
 {
-    if(fFitSCurves)
-        fitSCurves();
+    if(fFitSCurves) fitSCurves();
 
     for(auto board: fDetectorPedestalHistograms)
     {
@@ -345,8 +343,7 @@ void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer& theOccupa
                                                         .fTheHistogram;
                     uint channelBin = 1;
 
-                    if(chip->getChannelContainer<Occupancy>() == nullptr)
-                        continue;
+                    if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
                     for(auto channel: *chip->getChannelContainer<Occupancy>())
                     {
                         chipValidationHistogram->SetBinContent(channelBin, channel.fOccupancy);
@@ -407,8 +404,7 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                                                            ->getSummary<HistContainer<TH1F>>()
                                                            .fTheHistogram;
 
-                    if(chip->getChannelContainer<ThresholdAndNoise>() == nullptr)
-                        continue;
+                    if(chip->getChannelContainer<ThresholdAndNoise>() == nullptr) continue;
                     uint8_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<ThresholdAndNoise>())
                     {
@@ -460,8 +456,7 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContaine
                     TH2F* chipSCurve =
                         fDetectorSCurveHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
-                    if(chip->getChannelContainer<Occupancy>() == nullptr)
-                        continue;
+                    if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
                     uint8_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<Occupancy>())
                     {
@@ -515,8 +510,7 @@ void DQMHistogramPedeNoise::fitSCurves()
 
                             if(!cFirstNon0)
                             {
-                                if(cContent)
-                                    cFirstNon0 = channelSCurve->GetBinCenter(cBin);
+                                if(cContent) cFirstNon0 = channelSCurve->GetBinCenter(cBin);
                             }
                             else if(cContent > 0.85)
                             {

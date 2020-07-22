@@ -34,8 +34,7 @@ class HistContainer : public PlotContainer
 
     ~HistContainer()
     {
-        if(fHasToBeDeletedManually)
-            delete fTheHistogram;
+        if(fHasToBeDeletedManually) delete fTheHistogram;
         fTheHistogram = nullptr;
     }
 

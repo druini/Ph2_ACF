@@ -55,8 +55,7 @@ void makeMainPage(RootWSite& site, const std::string& inFilename)
         while((hkey = dynamic_cast<TKey*>(next())))
         {
             TClass* cl = gROOT->GetClass(hkey->GetClassName());
-            if(!cl->InheritsFrom("TH1"))
-                continue;
+            if(!cl->InheritsFrom("TH1")) continue;
             TH1* h = dynamic_cast<TH1*>(hkey->ReadObj());
             h->SetDirectory(0);
             std::string canvasName("c");

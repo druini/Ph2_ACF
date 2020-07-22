@@ -111,14 +111,12 @@ int main(int argc, char* argv[])
     bool                                  cDQM = cmd.foundOption("dqm");
     std::unique_ptr<SLinkDQMHistogrammer> dqmH = nullptr;
 
-    if(cDQM)
-        dqmH = std::unique_ptr<SLinkDQMHistogrammer>(new SLinkDQMHistogrammer(0));
+    if(cDQM) dqmH = std::unique_ptr<SLinkDQMHistogrammer>(new SLinkDQMHistogrammer(0));
 
     bool cPostscale   = cmd.foundOption("postscale");
     int  cScaleFactor = 1;
 
-    if(cPostscale)
-        cScaleFactor = atoi(cmd.optionValue("postscale").c_str());
+    if(cPostscale) cScaleFactor = atoi(cmd.optionValue("postscale").c_str());
 
     std::stringstream outp;
     Tool              cTool;
@@ -169,8 +167,7 @@ int main(int argc, char* argv[])
     {
         uint32_t cPacketSize = cTool.ReadData(pBoard);
 
-        if(cN + cPacketSize >= pEventsperVcth)
-            cTool.fBeBoardInterface->Stop(pBoard);
+        if(cN + cPacketSize >= pEventsperVcth) cTool.fBeBoardInterface->Stop(pBoard);
 
         const std::vector<Event*>& events = cTool.GetEvents(pBoard);
         std::vector<DQMEvent*>     cDQMEvents;
@@ -197,8 +194,7 @@ int main(int argc, char* argv[])
 
                 if(cDQM)
                 {
-                    if(count % cScaleFactor == 0)
-                        cDQMEvents.emplace_back(new DQMEvent(&cSLev));
+                    if(count % cScaleFactor == 0) cDQMEvents.emplace_back(new DQMEvent(&cSLev));
                 }
             }
 
@@ -213,8 +209,7 @@ int main(int argc, char* argv[])
                 }
             }
 
-            if(count % 100 == 0)
-                LOG(INFO) << ">>> Recorded Event #" << count;
+            if(count % 100 == 0) LOG(INFO) << ">>> Recorded Event #" << count;
 
             // increment event counter
             count++;

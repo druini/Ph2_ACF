@@ -26,8 +26,7 @@ void ShortFinder::Reset()
         auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap)
-            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
+        for(auto cReg: cBeRegMap) cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
         auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
@@ -44,8 +43,7 @@ void ShortFinder::Reset()
                     auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     cVecRegisters.clear();
-                    for(auto cReg: cRegMapThisChip)
-                        cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+                    for(auto cReg: cRegMapThisChip) cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
                     fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
                 }
             }
@@ -93,8 +91,7 @@ void ShortFinder::Initialise()
         fSkipMaskedChannels = findValueInSettings("SkipMaskedChannels", 0);
         this->SetSkipMaskedChannels(fSkipMaskedChannels);
     }
-    if(ShortFinder::fWithSSA)
-        fChannelGroupHandler = new SSAChannelGroupHandler();
+    if(ShortFinder::fWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
     // THRESHOLD_IN=0.01;
 
     // now read the settings from the map
@@ -179,10 +176,7 @@ void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<NCHANNELS>* pGroup)
                         cShortsReadoutChip.push_back(cIndex);
                         LOG(DEBUG) << BOLDRED << "Possible short in channel " << +cIndex << RESET;
                     }
-                    if(cBitset[cIndex] == 1 && cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex) == fEventsPerPoint)
-                    {
-                        cInjectionsReadoutChip.push_back(cIndex);
-                    }
+                    if(cBitset[cIndex] == 1 && cReadoutChipHits->getChannelContainer<uint16_t>()->at(cIndex) == fEventsPerPoint) { cInjectionsReadoutChip.push_back(cIndex); }
                 }
 
                 if(cInjectionsReadoutChip.size() == 0)
@@ -343,8 +337,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                 for(auto cReadoutChip: *cHybrid)
                 {
                     // add check for SSA
-                    if(cReadoutChip->getFrontEndType() != FrontEndType::SSA)
-                        continue;
+                    if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
 
                     LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << RESET;
 
@@ -378,8 +371,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                     for(auto cReadoutChip: *cHybrid)
                     {
                         // add check for SSA
-                        if(cReadoutChip->getFrontEndType() != FrontEndType::SSA)
-                            continue;
+                        if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
 
                         LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << RESET;
                         auto cHitVector = cEvent->GetHits(cHybrid->getId(), cReadoutChip->getId());
@@ -401,8 +393,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                         } // chnl
                         auto& cShortsData = cShortsContainer.at(pBoard->getIndex())->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex())->at(cReadoutChip->getIndex());
                         // first time .. set to 0
-                        if(cInject == 0)
-                            cShortsData->getSummary<uint16_t>() = 0;
+                        if(cInject == 0) cShortsData->getSummary<uint16_t>() = 0;
                         cShortsData->getSummary<uint16_t>() += (uint16_t)cShorts.size();
                         LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << " found " << +cShorts.size() << " potential shorts..."
                                    << " total shorts found are " << +cShortsData->getSummary<uint16_t>() << RESET;
@@ -422,8 +413,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
             for(auto cReadoutChip: *cHybrid)
             {
                 // add check for SSA
-                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA)
-                    continue;
+                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
 
                 auto& cShortsData = cShortsContainer.at(pBoard->getIndex())->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex())->at(cReadoutChip->getIndex());
                 if(cShortsData->getSummary<uint16_t>() == 0)
@@ -510,10 +500,7 @@ void ShortFinder::FindShorts()
     enableTestPulse(true);
 
     // configure test pulse trigger
-    if(fWithSSA)
-    {
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(fEventsPerPoint, 10000, 6, 0, 0);
-    }
+    if(fWithSSA) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(fEventsPerPoint, 10000, 6, 0, 0); }
     else
     {
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(cFirmwareTPdelay, cFirmwareTriggerDelay, 1000);

@@ -20,8 +20,7 @@ class TCPReceiverSocket : public virtual TCPSocket
         T buffer;
         buffer.resize(maxSocketSize);
         int length = receive(static_cast<char*>(&buffer.at(0)), maxSocketSize);
-        if(length == -1)
-            length = 0;
+        if(length == -1) length = 0;
         // std::cout << __PRETTY_FUNCTION__ << "Message received-" << buffer.at(0) << "- length: " << length <<
         // std::endl;
         buffer.resize(length);

@@ -95,10 +95,7 @@ int main(int argc, char* argv[])
                 const std::vector<Event*>& events = cTool.GetEvents(pBoard);
                 // const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
 
-                for(__attribute__((unused)) auto& ev: events)
-                {
-                    std::cout << "tst" << std::endl;
-                }
+                for(__attribute__((unused)) auto& ev: events) { std::cout << "tst" << std::endl; }
 
                 npixtot += 1;
             }

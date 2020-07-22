@@ -72,9 +72,7 @@ struct ReadoutChipRegWriter : public HwDescriptionVisitor
 
     void visitReadoutChip(Ph2_HwDescription::ReadoutChip& pChip)
     {
-        if(fLocal)
-        {
-        }
+        if(fLocal) {}
         else
             fInterface->WriteChipReg(&pChip, fRegisterName, fRegisterValue);
     }

@@ -39,8 +39,7 @@ SLinkDQMHistogrammer::~SLinkDQMHistogrammer()
 
     while((obj = next()))
     {
-        if(obj->InheritsFrom("TH1") || obj->InheritsFrom("TTree"))
-            delete obj;
+        if(obj->InheritsFrom("TH1") || obj->InheritsFrom("TTree")) delete obj;
     }
 }
 
@@ -49,8 +48,7 @@ void SLinkDQMHistogrammer::bookHistograms(const std::vector<std::pair<uint8_t, s
     std::cout << "nModules: " << link_mapping.size() << std::endl;
 
     // Open Tree
-    if(addTree_)
-        _ftree = new TTree("dqm", "Flat nTuple");
+    if(addTree_) _ftree = new TTree("dqm", "Flat nTuple");
 
     for(auto const& it: link_mapping)
     {
@@ -59,8 +57,7 @@ void SLinkDQMHistogrammer::bookHistograms(const std::vector<std::pair<uint8_t, s
 
         LOG(INFO) << " Booking Histograms for Link Id: " << +linkId << " with " << rous.size() << " ROUs " << std::endl;
         bookMODHistograms(linkId, rous);
-        if(addTree_)
-            bookNtuple(linkId);
+        if(addTree_) bookNtuple(linkId);
     }
 }
 void SLinkDQMHistogrammer::fillHistograms(const std::vector<DQMEvent*>& event_list)
@@ -100,10 +97,8 @@ void SLinkDQMHistogrammer::fillHistograms(const DQMEvent* event)
         uint8_t   modId   = imod.first;
         MODHistos mod_h   = imod.second;
         uint8_t   nRouMod = mod_h.totROUs_;
-        if(nRouMod == 0)
-            continue;
-        if(!mod_h.bookedHistos)
-            continue;
+        if(nRouMod == 0) continue;
+        if(!mod_h.bookedHistos) continue;
 
         uint8_t nrou = 0;
         // std::cout << " Entering Module # " << +modId << std::endl;
@@ -124,8 +119,7 @@ void SLinkDQMHistogrammer::fillHistograms(const DQMEvent* event)
 
             nrou++;
 
-            if(!rou_h.bookedHistos)
-                continue;
+            if(!rou_h.bookedHistos) continue;
 
             // get Readout Data
             const std::pair<ReadoutStatus, std::vector<bool>>& readoutData = event->trkPayload().readoutData(dataKey);
@@ -133,10 +127,8 @@ void SLinkDQMHistogrammer::fillHistograms(const DQMEvent* event)
             // Fill Readout Status
             const ReadoutStatus& rs        = readoutData.first;
             uint8_t              error_rou = 0;
-            if(rs.error2())
-                error_rou = 1;
-            if(rs.error1())
-                error_rou |= 1 << 1;
+            if(rs.error2()) error_rou = 1;
+            if(rs.error1()) error_rou |= 1 << 1;
 
             uint16_t pladdress_rou = rs.PA();
             rouErrs.push_back(error_rou);
@@ -149,8 +141,7 @@ void SLinkDQMHistogrammer::fillHistograms(const DQMEvent* event)
 
             for(size_t i = 0; i < channelData.size(); ++i) // CBC channels
             {
-                if(!channelData[i])
-                    continue;
+                if(!channelData[i]) continue;
 
                 rou_h.channelOccupancyH_->Fill(i);
                 modStripIndex = rouId * 127 + std::floor(i / 2);
@@ -204,15 +195,13 @@ void SLinkDQMHistogrammer::fillHistograms(const DQMEvent* event)
             }
         }
     }
-    if(addTree_ && _ftree)
-        _ftree->Fill();
+    if(addTree_ && _ftree) _ftree->Fill();
 }
 void SLinkDQMHistogrammer::fillROUProperties(MODHistos& mod_h, std::vector<uint16_t>& errs, std::vector<uint16_t>& adds, std::vector<uint16_t>& counts)
 {
     uint8_t totRous     = mod_h.totROUs_;
     uint8_t nRousPerFeu = mod_h.nROUsPerFEU_;
-    if(errs.size() != totRous || adds.size() != totRous || counts.size() != totRous)
-        return;
+    if(errs.size() != totRous || adds.size() != totRous || counts.size() != totRous) return;
 
     for(size_t ir = 0; ir < totRous; ir++)
     {
@@ -226,8 +215,7 @@ void SLinkDQMHistogrammer::fillROUProperties(MODHistos& mod_h, std::vector<uint1
 
             for(size_t ir2 = 0; ir2 < totRous; ir2++)
             {
-                if(ir == ir2)
-                    continue;
+                if(ir == ir2) continue;
                 uint32_t phase = (adds[ir] - adds[ir2] + 511) % 511;
                 feu_h.PLAddPhaseDiffH_->Fill(phase);
                 feu_h.PLAddPhaseCorrH_->Fill(adds[ir], adds[ir2]);
@@ -238,8 +226,7 @@ void SLinkDQMHistogrammer::fillROUProperties(MODHistos& mod_h, std::vector<uint1
 }
 void SLinkDQMHistogrammer::fillMODHistograms(MODHistos& mod_h, uint32_t& tot_hits, uint32_t& tot_stubs, std::vector<uint16_t>& even_list, std::vector<uint16_t>& odd_list)
 {
-    if(!mod_h.bookedHistos)
-        return;
+    if(!mod_h.bookedHistos) return;
 
     uint8_t  nRousPerFeu = mod_h.nROUsPerFEU_;
     uint16_t strEven;
@@ -265,8 +252,7 @@ void SLinkDQMHistogrammer::fillMODHistograms(MODHistos& mod_h, uint32_t& tot_hit
         else
             fe_id = 1;
         strEven = even_list[i] - fe_id * nRousPerFeu * 127;
-        if(odd_list.size() == even_list.size())
-            strOdd = odd_list[i] - fe_id * nRousPerFeu * 127;
+        if(odd_list.size() == even_list.size()) strOdd = odd_list[i] - fe_id * nRousPerFeu * 127;
 
         if(fe_id == 0)
             strEvenSwapped = strEven;
@@ -288,8 +274,7 @@ void SLinkDQMHistogrammer::fillMODHistograms(MODHistos& mod_h, uint32_t& tot_hit
         }
         mod_h.bottomSensorHitProfH_->Fill((2 - fe_id), strEvenSwapped);
         mod_h.bottomSensorHitProfUnfoldH_->Fill(even_list[i]);
-        if(strOdd != 9999)
-            mod_h.hitCorrH_->Fill(odd_list[i], even_list[i]);
+        if(strOdd != 9999) mod_h.hitCorrH_->Fill(odd_list[i], even_list[i]);
     }
     for(uint16_t i = 0; i < odd_list.size(); i++)
     {
@@ -390,8 +375,7 @@ void SLinkDQMHistogrammer::saveHistograms(const std::string& dqmFile, const std:
             fout->mkdir(name);
             fout->cd(name);
             FEUHistos feu_h = ifeu.second;
-            if(!feu_h.bookedHistos)
-                continue;
+            if(!feu_h.bookedHistos) continue;
 
             feu_h.bottomSensorHitProfH_->Write();
             feu_h.topSensorHitProfH_->Write();
@@ -408,8 +392,7 @@ void SLinkDQMHistogrammer::saveHistograms(const std::string& dqmFile, const std:
         for(auto& irou: mod_h.rouHMap_)
         {
             ROUHistos rou_h = irou.second;
-            if(!rou_h.bookedHistos)
-                continue;
+            if(!rou_h.bookedHistos) continue;
 
             uint16_t key   = irou.first;
             uint8_t  feId  = (key >> 8) & 0xFF;
@@ -453,18 +436,15 @@ void SLinkDQMHistogrammer::resetHistograms()
     TIter    next(gROOT->GetList());
     TObject* obj;
     while((obj = next()))
-        if(obj->InheritsFrom("TH1"))
-            dynamic_cast<TH1*>(obj)->Reset();
+        if(obj->InheritsFrom("TH1")) dynamic_cast<TH1*>(obj)->Reset();
 }
 void SLinkDQMHistogrammer::bookMODHistograms(uint8_t mod_id, std::vector<uint8_t>& rou_vec)
 {
-    if(moduleHMap_.find(mod_id) != moduleHMap_.end())
-        return;
+    if(moduleHMap_.find(mod_id) != moduleHMap_.end()) return;
 
     uint8_t nRouTot    = rou_vec.size();
     uint8_t nRouPerFeu = nRouTot / 2;
-    if(nRouTot == 2)
-        nRouPerFeu = 2;
+    if(nRouTot == 2) nRouPerFeu = 2;
 
     TString ss_mod = "Module_";
     ss_mod += mod_id;
@@ -624,23 +604,20 @@ void SLinkDQMHistogrammer::bookNtuple(uint8_t mod_id)
 }
 void SLinkDQMHistogrammer::fillStubInformation(MODHistos& mod_h, const std::vector<StubInfo>& stubs)
 {
-    if(!mod_h.bookedHistos)
-        return;
+    if(!mod_h.bookedHistos) return;
 
     uint8_t               nrou = mod_h.totROUs_;
     std::vector<uint16_t> scount(nrou, 0);
 
     for(const auto& istub: stubs)
     {
-        if(istub.chipId() < scount.size())
-            scount[istub.chipId()]++;
+        if(istub.chipId() < scount.size()) scount[istub.chipId()]++;
 
         mod_h.stubPositionH_->Fill(istub.chipId() * 127 + istub.address() / 2.);
         mod_h.stubBendH_->Fill(istub.bend());
     }
 
-    for(size_t i = 0; i < nrou; i++)
-        mod_h.stubCountH_->Fill(i * 4 + scount[i]);
+    for(size_t i = 0; i < nrou; i++) mod_h.stubCountH_->Fill(i * 4 + scount[i]);
 }
 void SLinkDQMHistogrammer::readConditionData(const DQMEvent* evt)
 {
@@ -656,8 +633,7 @@ void SLinkDQMHistogrammer::readConditionData(const DQMEvent* evt)
         {
             uint8_t                                mod_id = std::get<0>(data);
             std::map<uint8_t, MODHistos>::iterator fPosM  = moduleHMap_.find(mod_id);
-            if(fPosM != moduleHMap_.end())
-                fPosM->second.hvSetting_ = std::get<5>(data);
+            if(fPosM != moduleHMap_.end()) fPosM->second.hvSetting_ = std::get<5>(data);
         }
 
         // Get VCTH status
@@ -675,8 +651,7 @@ void SLinkDQMHistogrammer::readConditionData(const DQMEvent* evt)
                 uint16_t  key        = fe_id << 8 | rou_id;
 
                 std::map<uint16_t, ROUHistos>::iterator fPosR = mod_h.rouHMap_.find(key);
-                if(fPosR != mod_h.rouHMap_.end())
-                    fPosR->second.vcthSetting_ = std::get<5>(data);
+                if(fPosR != mod_h.rouHMap_.end()) fPosR->second.vcthSetting_ = std::get<5>(data);
             }
         }
     }

@@ -31,8 +31,7 @@ class Gain : public Tool
   public:
     ~Gain()
     {
-        for(auto container: detectorContainerVector)
-            theRecyclingBin.free(container);
+        for(auto container: detectorContainerVector) theRecyclingBin.free(container);
     }
 
     void Start(int currentRun) override;

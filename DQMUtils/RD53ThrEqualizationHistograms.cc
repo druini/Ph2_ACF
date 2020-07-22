@@ -61,16 +61,14 @@ void ThrEqualizationHistograms::fillOccupancy(const DetectorDataContainer& Occup
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr)
-                        continue;
+                    if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
 
                     auto* hThrEqualization =
                         ThrEqualization.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED)
-                                hThrEqualization->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED) hThrEqualization->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
                 }
 }
 
@@ -83,15 +81,13 @@ void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContai
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<uint16_t>() == nullptr)
-                        continue;
+                    if(cChip->getChannelContainer<uint16_t>() == nullptr) continue;
 
                     auto* hTDAC = TDAC.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(cChip->getChannel<uint16_t>(row, col) != TDACsize)
-                                hTDAC->Fill(cChip->getChannel<uint16_t>(row, col));
+                            if(cChip->getChannel<uint16_t>(row, col) != TDACsize) hTDAC->Fill(cChip->getChannel<uint16_t>(row, col));
                 }
 }
 

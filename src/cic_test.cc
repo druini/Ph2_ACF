@@ -316,10 +316,7 @@ int main(int argc, char* argv[])
     //         cExtra.ExternalTriggers(cNconsecutiveTriggers);
     // }
 
-    if(cCheckOccupancy)
-    {
-        cExtra.OccupancyCheck(cTriggerRate, cDisableStubLogic);
-    }
+    if(cCheckOccupancy) { cExtra.OccupancyCheck(cTriggerRate, cDisableStubLogic); }
     if(cDAQ)
     {
         // cExtra.ConsecutiveTriggers(cNconsecutiveTriggers);
@@ -335,7 +332,6 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     cTool.Destroy();
 
-    if(!batchMode)
-        cApp.Run();
+    if(!batchMode) cApp.Run();
     return 0;
 }

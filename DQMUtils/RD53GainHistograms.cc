@@ -77,8 +77,7 @@ void GainHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContain
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr)
-                        continue;
+                    if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
 
                     auto* hOcc2D = Occupancy2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
                     auto* ErrorReadOut2DHist =
@@ -87,10 +86,8 @@ void GainHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContain
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                         {
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED)
-                                hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fPh);
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true)
-                                ErrorReadOut2DHist->Fill(col + 1, row + 1);
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED) hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fPh);
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
                         }
                 }
 }
@@ -102,8 +99,7 @@ void GainHistograms::fillGainAndIntercept(const DetectorDataContainer& GainAndIn
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<GainAndIntercept>() == nullptr)
-                        continue;
+                    if(cChip->getChannelContainer<GainAndIntercept>() == nullptr) continue;
 
                     auto* Gain1DHist = Gain1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
                     auto* Intercept1DHist =

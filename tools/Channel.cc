@@ -53,8 +53,7 @@ void Channel::initializePulse(TString pName)
 {
     TObject* cObj = gROOT->FindObject(pName);
 
-    if(cObj)
-        delete cObj;
+    if(cObj) delete cObj;
 
     fPulse = new TGraph();
     fPulse->SetName(pName);
@@ -76,8 +75,7 @@ void Channel::initializeHist(uint16_t pValue, TString pParameter)
 
     fScurve = dynamic_cast<TH1F*>(gROOT->FindObject(histname));
 
-    if(fScurve)
-        delete fScurve;
+    if(fScurve) delete fScurve;
 
     fScurve = new TH1F(histname, Form("Scurve_Be%d_Fe%d_Cbc%d_Channel%d", fBeId, fFeId, fCbcId, fChannelId), 1024, -0.5, 1023.5);
     fScurve->GetXaxis()->SetTitle(pParameter);
@@ -98,8 +96,7 @@ void Channel::fitHist(uint32_t pEventsperVcth, bool pHole, uint16_t pValue, TStr
 
     fFit = dynamic_cast<TF1*>(gROOT->FindObject(fitname));
 
-    if(fFit)
-        delete fFit;
+    if(fFit) delete fFit;
 
     if(fScurve != nullptr && fFit == nullptr)
     {
@@ -120,8 +117,7 @@ void Channel::fitHist(uint32_t pEventsperVcth, bool pHole, uint16_t pValue, TStr
 
                 if(!cFirstNon0)
                 {
-                    if(cContent)
-                        cFirstNon0 = fScurve->GetBinCenter(cBin);
+                    if(cContent) cFirstNon0 = fScurve->GetBinCenter(cBin);
                 }
                 else if(cContent > 0.85)
                 {
@@ -139,8 +135,7 @@ void Channel::fitHist(uint32_t pEventsperVcth, bool pHole, uint16_t pValue, TStr
 
                 if(!cFirstNon0)
                 {
-                    if(cContent)
-                        cFirstNon0 = fScurve->GetBinCenter(cBin);
+                    if(cContent) cFirstNon0 = fScurve->GetBinCenter(cBin);
                 }
                 else if(cContent > 0.85)
                 {
@@ -172,8 +167,7 @@ void Channel::fitHist(uint32_t pEventsperVcth, bool pHole, uint16_t pValue, TStr
         cDirName         = pParameter + Form("%d", pValue);
         TDirectory* cDir = dynamic_cast<TDirectory*>(gROOT->FindObject(cDirName));
 
-        if(!cDir)
-            cDir = pResultfile->mkdir(cDirName);
+        if(!cDir) cDir = pResultfile->mkdir(cDirName);
 
         pResultfile->cd(cDirName);
 
@@ -199,8 +193,7 @@ void Channel::differentiateHist(uint32_t pEventsperVcth, bool pHole, uint16_t pV
 
     fDerivative = dynamic_cast<TH1F*>(gROOT->FindObject(graphname));
 
-    if(fDerivative)
-        delete fDerivative;
+    if(fDerivative) delete fDerivative;
 
     fDerivative = new TH1F(graphname, Form("Derivative_Scurve_Be%d_Fe%d_Cbc%d_Channel%d", fBeId, fFeId, fCbcId, fChannelId), 1024, 0, 1024);
     fDerivative->GetXaxis()->SetTitle(pParameter);
@@ -233,21 +226,17 @@ void Channel::differentiateHist(uint32_t pEventsperVcth, bool pHole, uint16_t pV
                 cCurrent = fScurve->GetBinContent(cBin);
                 cDiff    = cPrev - cCurrent;
 
-                if(cPrev > 0.75)
-                    cActive = true; // sampling begins
+                if(cPrev > 0.75) cActive = true; // sampling begins
 
                 int iBinDerivative = fDerivative->FindBin((fScurve->GetBinCenter(cBin + 1) + fScurve->GetBinCenter(cBin)) / 2);
 
-                if(cActive)
-                    fDerivative->SetBinContent(iBinDerivative, cDiff);
+                if(cActive) fDerivative->SetBinContent(iBinDerivative, cDiff);
 
                 // if ( cActive ) fDerivative->SetBinContent ( cBin + 1,  cDiff  );
 
-                if(cActive && cDiff == 0 && cCurrent == 0)
-                    cDiffCounter++;
+                if(cActive && cDiff == 0 && cCurrent == 0) cDiffCounter++;
 
-                if(cDiffCounter == 8)
-                    break;
+                if(cDiffCounter == 8) break;
 
                 cPrev = cCurrent;
             }
@@ -262,23 +251,19 @@ void Channel::differentiateHist(uint32_t pEventsperVcth, bool pHole, uint16_t pV
                 cCurrent = fScurve->GetBinContent(cBin);
                 cDiff    = cPrev - cCurrent;
 
-                if(cPrev > 0.75)
-                    cActive = true; // sampling begins
+                if(cPrev > 0.75) cActive = true; // sampling begins
 
                 int iBinDerivative = fDerivative->FindBin((fScurve->GetBinCenter(cBin - 1) + fScurve->GetBinCenter(cBin)) / 2.0);
 
-                if(cActive)
-                    fDerivative->SetBinContent(iBinDerivative, cDiff);
+                if(cActive) fDerivative->SetBinContent(iBinDerivative, cDiff);
 
                 // original
                 // if ( cActive ) fDerivative->SetBinContent ( fDerivative->FindBin ( cBin - 0.5 ),   cDiff  );
                 // if ( cActive ) fDerivative->SetBinContent ( cBin - 1,   cDiff  );
 
-                if(cActive && cDiff == 0 && cCurrent == 0)
-                    cDiffCounter++;
+                if(cActive && cDiff == 0 && cCurrent == 0) cDiffCounter++;
 
-                if(cDiffCounter == 8)
-                    break;
+                if(cDiffCounter == 8) break;
 
                 cPrev = cCurrent;
             }
@@ -290,8 +275,7 @@ void Channel::differentiateHist(uint32_t pEventsperVcth, bool pHole, uint16_t pV
         cDirName         = pParameter + Form("%d", pValue);
         TDirectory* cDir = dynamic_cast<TDirectory*>(gROOT->FindObject(cDirName));
 
-        if(!cDir)
-            cDir = pResultfile->mkdir(cDirName);
+        if(!cDir) cDir = pResultfile->mkdir(cDirName);
 
         pResultfile->cd(cDirName);
 
@@ -318,8 +302,7 @@ TestGroupGraph::TestGroupGraph(uint8_t pBeId, uint8_t pFeId, uint8_t pCbcId, uin
     TString graphname = Form("VplusVcthGraph_Fe%d_Cbc%d_Group%d", pFeId, pCbcId, pGroupId);
     fVplusVcthGraph   = dynamic_cast<TGraphErrors*>(gROOT->FindObject(graphname));
 
-    if(fVplusVcthGraph)
-        delete fVplusVcthGraph;
+    if(fVplusVcthGraph) delete fVplusVcthGraph;
 
     fVplusVcthGraph = new TGraphErrors();
     fVplusVcthGraph->SetName(graphname);

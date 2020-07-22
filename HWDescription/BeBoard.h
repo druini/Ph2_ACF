@@ -77,8 +77,7 @@ class BeBoard : public BoardContainer
     {
         pVisitor.visitBeBoard(*this);
 
-        for(auto cOpticalGroup: *this)
-            static_cast<OpticalGroup*>(cOpticalGroup)->accept(pVisitor);
+        for(auto cOpticalGroup: *this) static_cast<OpticalGroup*>(cOpticalGroup)->accept(pVisitor);
     }
 
     /*!
@@ -88,8 +87,7 @@ class BeBoard : public BoardContainer
     uint8_t getNFe() const
     {
         uint16_t nFe = 0;
-        for(auto opticalGroup: *this)
-            nFe += opticalGroup->size();
+        for(auto opticalGroup: *this) nFe += opticalGroup->size();
         return nFe;
     }
 
@@ -157,8 +155,7 @@ class BeBoard : public BoardContainer
 
     void addConditionDataSet(ConditionDataSet* pSet)
     {
-        if(pSet != nullptr)
-            fCondDataSet = pSet;
+        if(pSet != nullptr) fCondDataSet = pSet;
     }
 
     ConditionDataSet* getConditionDataSet() const { return fCondDataSet; }

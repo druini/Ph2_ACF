@@ -205,10 +205,7 @@ class D19cCic2Event : public Event
     {
         // first find feIndex
         auto cFeIterator = std::find(fFeIds.begin(), fFeIds.end(), pFeId);
-        if(cFeIterator != fFeIds.end())
-        {
-            return std::distance(fFeIds.begin(), cFeIterator);
-        }
+        if(cFeIterator != fFeIds.end()) { return std::distance(fFeIds.begin(), cFeIterator); }
         else
             throw std::runtime_error(std::string("FeId not found in D19cCIC2Event .. check xml!"));
     }
@@ -216,10 +213,7 @@ class D19cCic2Event : public Event
     {
         // first find feIndex
         auto cROCIterator = std::find(fROCIds[pFeIndex].begin(), fROCIds[pFeIndex].end(), pROCId);
-        if(cROCIterator != fROCIds[pFeIndex].end())
-        {
-            return std::distance(fROCIds[pFeIndex].begin(), cROCIterator);
-        }
+        if(cROCIterator != fROCIds[pFeIndex].end()) { return std::distance(fROCIds[pFeIndex].begin(), cROCIterator); }
         else
             throw std::runtime_error(std::string("ROCId not found in D19cCIC2Event .. check xml!"));
     }

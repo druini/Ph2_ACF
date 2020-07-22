@@ -38,8 +38,7 @@ void PixelAlive::ConfigureCalibration()
     customChannelGroup.disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)
-        for(auto col = colStart; col <= colStop; col++)
-            customChannelGroup.enableChannel(row, col);
+        for(auto col = colStart; col <= colStop; col++) customChannelGroup.enableChannel(row, col);
 
     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
         customChannelGroup, injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol);
@@ -49,8 +48,7 @@ void PixelAlive::ConfigureCalibration()
     // # Set injection type #
     // ######################
     size_t inj = 0;
-    if(injType == INJtype::Digital)
-        inj = 1 << static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY");
+    if(injType == INJtype::Digital) inj = 1 << static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY");
     size_t maxDelay = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
 
     for(const auto cBoard: *fDetectorContainer)
@@ -100,12 +98,9 @@ void PixelAlive::sendData()
 
     if(fStreamerEnabled == true)
     {
-        for(const auto cBoard: *theOccContainer.get())
-            theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theBCIDContainer)
-            theBCIDStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTrgIDContainer)
-            theTrgIDStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: *theOccContainer.get()) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theBCIDContainer) theBCIDStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theTrgIDContainer) theTrgIDStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
 
@@ -160,14 +155,12 @@ void PixelAlive::run()
 
 void PixelAlive::draw(int currentRun)
 {
-    if(currentRun >= 0)
-        PixelAlive::saveChipRegisters(currentRun);
+    if(currentRun >= 0) PixelAlive::saveChipRegisters(currentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true)
-        myApp = new TApplication("myApp", nullptr, nullptr);
+    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     if(currentRun >= 0)
     {
@@ -185,8 +178,7 @@ void PixelAlive::draw(int currentRun)
         this->CloseResultFile();
     }
 
-    if(doDisplay == true)
-        myApp->Run(true);
+    if(doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -230,8 +222,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                       ->getChannel<OccupancyAndPh>(row, col)
                                                       .fOccupancy;
                                 static_cast<RD53*>(cChip)->enablePixel(row, col, injType == INJtype::None ? occupancy < thrOccupancy : occupancy != 0);
-                                if(((injType == INJtype::None) && (occupancy >= thrOccupancy)) || ((injType != INJtype::None) && (occupancy == 0)))
-                                    nMaskedPixelsPerCalib++;
+                                if(((injType == INJtype::None) && (occupancy >= thrOccupancy)) || ((injType != INJtype::None) && (occupancy == 0))) nMaskedPixelsPerCalib++;
                             }
 
                     LOG(INFO) << BOLDBLUE << "\t--> Number of potentially masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
@@ -359,8 +350,7 @@ void PixelAlive::saveChipRegisters(int currentRun)
             for(const auto cModule: *cOpticalGroup)
                 for(const auto cChip: *cModule)
                 {
-                    if(doUpdateChip == true)
-                        static_cast<RD53*>(cChip)->saveRegMap("");
+                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());

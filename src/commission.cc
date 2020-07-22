@@ -187,21 +187,18 @@ int main(int argc, char* argv[])
         cLatencyScan.Initialize(cStartLatency, cLatencyRange);
 
         // Here comes our Part:
-        if(cAntenna)
-            LOG(INFO) << BOLDBLUE << "Enabling antenna with " << +cAntennaPotential << " written to the potentiometer" << RESET;
+        if(cAntenna) LOG(INFO) << BOLDBLUE << "Enabling antenna with " << +cAntennaPotential << " written to the potentiometer" << RESET;
 
         if(cLatency)
         {
 #ifdef __ANTENNA__
-            if(cAntenna)
-                cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential);
+            if(cAntenna) cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential);
 #endif
 
             cLatencyScan.StubLatencyScan(cStartLatency, cLatencyRange);
         }
 
-        if(cStubLatency)
-            cLatencyScan.StubLatencyScan(cStartLatency, cLatencyRange);
+        if(cStubLatency) cLatencyScan.StubLatencyScan(cStartLatency, cLatencyRange);
 
 // if antenna was being used ... then disable it again at the end
 #ifdef __ANTENNA__
@@ -257,10 +254,8 @@ int main(int argc, char* argv[])
 
 #ifdef __ANTENNA__
 
-        if(cAntenna)
-            LOG(INFO) << BOLDBLUE << "Enabling antenna with " << +cAntennaPotential << " written to the potentiometer" << RESET;
-        if(cAntenna)
-            cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential);
+        if(cAntenna) LOG(INFO) << BOLDBLUE << "Enabling antenna with " << +cAntennaPotential << " written to the potentiometer" << RESET;
+        if(cAntenna) cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential);
 #endif
 
         cPedeNoise.Initialise(cAllChan); // canvases etc. for fast calibration
@@ -302,8 +297,7 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     cTool.Destroy();
 
-    if(!batchMode)
-        cApp.Run();
+    if(!batchMode) cApp.Run();
 
     return 0;
 }

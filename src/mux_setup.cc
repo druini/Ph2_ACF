@@ -64,10 +64,7 @@ int main(int argc, char** argv)
     MultiplexingSetup cMuxControl;
     cMuxControl.Inherit(&cTool);
     cMuxControl.Initialise();
-    if(cMuxDisconnect)
-    {
-        cMuxControl.Disconnect();
-    }
+    if(cMuxDisconnect) { cMuxControl.Disconnect(); }
     else if(cMuxScan)
     {
         cMuxControl.Scan();
@@ -81,8 +78,7 @@ int main(int argc, char** argv)
         while(ssBPNumCardNum >> i)
         {
             vBPNumCardNum.push_back(i);
-            if(ssBPNumCardNum.peek() == ',')
-                ssBPNumCardNum.ignore();
+            if(ssBPNumCardNum.peek() == ',') ssBPNumCardNum.ignore();
         };
         uint8_t cBackplaneNum = vBPNumCardNum.at(0);
         uint8_t cCardNum      = vBPNumCardNum.at(1);

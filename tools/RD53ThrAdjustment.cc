@@ -73,8 +73,7 @@ void ThrAdjustment::sendData()
     auto theThrStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>();
 
     if(fStreamerEnabled == true)
-        for(const auto cBoard: theThrContainer)
-            theThrStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theThrContainer) theThrStream.streamAndSendBoard(cBoard, fNetworkStreamer);
 }
 
 void ThrAdjustment::Stop()
@@ -143,8 +142,7 @@ void ThrAdjustment::draw(int currentRun)
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true)
-        myApp = new TApplication("myApp", nullptr, nullptr);
+    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     this->InitResultFile(fileRes);
     LOG(INFO) << BOLDBLUE << "\t--> ThrAdjustment saving histograms..." << RESET;
@@ -158,8 +156,7 @@ void ThrAdjustment::draw(int currentRun)
     this->WriteRootFile();
     this->CloseResultFile();
 
-    if(doDisplay == true)
-        myApp->Run(true);
+    if(doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -202,8 +199,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, uint32_t nEven
     for(const auto cBoard: bestContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
-                    cChip->getSummary<float>() = 0;
+                for(const auto cChip: *cModule) cChip->getSummary<float>() = 0;
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -314,8 +310,7 @@ std::shared_ptr<DetectorDataContainer> ThrAdjustment::bitWiseScanGlobal_MeasureT
     for(const auto cBoard: bestContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
-                    cChip->getSummary<OccupancyAndPh>().fPh = 0;
+                for(const auto cChip: *cModule) cChip->getSummary<OccupancyAndPh>().fPh = 0;
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -425,8 +420,7 @@ void ThrAdjustment::saveChipRegisters(int currentRun)
                 for(const auto cChip: *cModule)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true)
-                        static_cast<RD53*>(cChip)->saveRegMap("");
+                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());

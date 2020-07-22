@@ -126,8 +126,7 @@ int main(int argc, char* argv[])
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cTool.fDetectorContainer->at(0)->at(0)->at(0)->at(0));
     bool         fDisableStubLogic = true;
-    if(cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA)
-        fDisableStubLogic = false;
+    if(cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA) fDisableStubLogic = false;
 
     // now create a PedestalEqualization object
     PedestalEqualization cPedestalEqualization;
@@ -136,8 +135,7 @@ int main(int argc, char* argv[])
     // cPedestalEqualization.Initialise ( false, true );
     cPedestalEqualization.Initialise(cAllChan, fDisableStubLogic);
 
-    if(cVplus)
-        cPedestalEqualization.FindVplus();
+    if(cVplus) cPedestalEqualization.FindVplus();
 
     cPedestalEqualization.FindOffsets();
     cPedestalEqualization.writeObjects();
@@ -173,7 +171,6 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     cTool.Destroy();
 
-    if(!batchMode)
-        cApp.Run();
+    if(!batchMode) cApp.Run();
     return 0;
 }

@@ -49,8 +49,7 @@ RegManager::~RegManager() { delete fBoard; }
 
 bool RegManager::WriteReg(const std::string& pRegNode, const uint32_t& pVal)
 {
-    if(mode == Mode::Replay)
-        return true;
+    if(mode == Mode::Replay) return true;
 
     fBoard->getNode(pRegNode).write(pVal);
     fBoard->dispatch();
@@ -77,11 +76,9 @@ bool RegManager::WriteReg(const std::string& pRegNode, const uint32_t& pVal)
 
 bool RegManager::WriteStackReg(const std::vector<std::pair<std::string, uint32_t>>& pVecReg)
 {
-    if(mode == Mode::Replay)
-        return true;
+    if(mode == Mode::Replay) return true;
 
-    for(auto const& v: pVecReg)
-        fBoard->getNode(v.first).write(v.second);
+    for(auto const& v: pVecReg) fBoard->getNode(v.first).write(v.second);
 
     try
     {
@@ -91,8 +88,7 @@ bool RegManager::WriteStackReg(const std::vector<std::pair<std::string, uint32_t
     {
         std::cerr << "Error while writing the following parameters: ";
 
-        for(auto const& v: pVecReg)
-            std::cerr << v.first << ", ";
+        for(auto const& v: pVecReg) std::cerr << v.first << ", ";
 
         std::cerr << std::endl;
         throw;
@@ -110,8 +106,7 @@ bool RegManager::WriteStackReg(const std::vector<std::pair<std::string, uint32_t
 
             comp = reply.value();
 
-            if(comp == v.second)
-                LOG(DEBUG) << "Values written correctly: " << v.first << "=" << v.second;
+            if(comp == v.second) LOG(DEBUG) << "Values written correctly: " << v.first << "=" << v.second;
         }
 
         if(cNbErrors == 0)
@@ -128,8 +123,7 @@ bool RegManager::WriteStackReg(const std::vector<std::pair<std::string, uint32_t
 
 bool RegManager::WriteBlockReg(const std::string& pRegNode, const std::vector<uint32_t>& pValues)
 {
-    if(mode == Mode::Replay)
-        return true;
+    if(mode == Mode::Replay) return true;
 
     fBoard->getNode(pRegNode).writeBlock(pValues);
     fBoard->dispatch();
@@ -162,8 +156,7 @@ bool RegManager::WriteBlockReg(const std::string& pRegNode, const std::vector<ui
 
 bool RegManager::WriteBlockAtAddress(uint32_t uAddr, const std::vector<uint32_t>& pValues, bool bNonInc)
 {
-    if(mode == Mode::Replay)
-        return true;
+    if(mode == Mode::Replay) return true;
 
     fBoard->getClient().writeBlock(uAddr, pValues, bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL);
     fBoard->dispatch();
@@ -196,8 +189,7 @@ bool RegManager::WriteBlockAtAddress(uint32_t uAddr, const std::vector<uint32_t>
 
 uint32_t RegManager::ReadReg(const std::string& pRegNode)
 {
-    if(mode == Mode::Replay)
-        return replayRead();
+    if(mode == Mode::Replay) return replayRead();
 
     uhal::ValWord<uint32_t> cValRead = fBoard->getNode(pRegNode).read();
     fBoard->dispatch();
@@ -208,16 +200,14 @@ uint32_t RegManager::ReadReg(const std::string& pRegNode)
         LOG(DEBUG) << "Value in register ID " << pRegNode << " : " << read;
     }
 
-    if(mode == Mode::Capture)
-        captureRead(cValRead.value());
+    if(mode == Mode::Capture) captureRead(cValRead.value());
 
     return cValRead.value();
 }
 
 uint32_t RegManager::ReadAtAddress(uint32_t uAddr, uint32_t uMask)
 {
-    if(mode == Mode::Replay)
-        return replayRead();
+    if(mode == Mode::Replay) return replayRead();
 
     uhal::ValWord<uint32_t> cValRead = fBoard->getClient().read(uAddr, uMask);
     fBoard->dispatch();
@@ -228,16 +218,14 @@ uint32_t RegManager::ReadAtAddress(uint32_t uAddr, uint32_t uMask)
         LOG(DEBUG) << "Value at address " << std::hex << uAddr << std::dec << " : " << read;
     }
 
-    if(mode == Mode::Capture)
-        captureRead(cValRead.value());
+    if(mode == Mode::Capture) captureRead(cValRead.value());
 
     return cValRead.value();
 }
 
 std::vector<uint32_t> RegManager::ReadBlockReg(const std::string& pRegNode, const uint32_t& pBlockSize)
 {
-    if(mode == Mode::Replay)
-        return replayBlockRead(pBlockSize);
+    if(mode == Mode::Replay) return replayBlockRead(pBlockSize);
 
     uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode(pRegNode).readBlock(pBlockSize);
     fBoard->dispatch();
@@ -253,16 +241,14 @@ std::vector<uint32_t> RegManager::ReadBlockReg(const std::string& pRegNode, cons
         }
     }
 
-    if(mode == Mode::Capture)
-        captureBlockRead(cBlockRead.value());
+    if(mode == Mode::Capture) captureBlockRead(cBlockRead.value());
 
     return std::move(cBlockRead.value());
 }
 
 std::vector<uint32_t> RegManager::ReadBlockRegOffset(const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset)
 {
-    if(mode == Mode::Replay)
-        return replayBlockRead(pBlocksize);
+    if(mode == Mode::Replay) return replayBlockRead(pBlocksize);
 
     uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode(pRegNode).readBlockOffset(pBlocksize, pBlockOffset);
     fBoard->dispatch();
@@ -278,8 +264,7 @@ std::vector<uint32_t> RegManager::ReadBlockRegOffset(const std::string& pRegNode
         }
     }
 
-    if(mode == Mode::Capture)
-        captureBlockRead(cBlockRead.value());
+    if(mode == Mode::Capture) captureBlockRead(cBlockRead.value());
 
     return std::move(cBlockRead.value());
 }
@@ -287,8 +272,7 @@ std::vector<uint32_t> RegManager::ReadBlockRegOffset(const std::string& pRegNode
 void RegManager::StackReg(const std::string& pRegNode, const uint32_t& pVal, bool pSend)
 {
     for(std::vector<std::pair<std::string, uint32_t>>::iterator cIt = fStackReg.begin(); cIt != fStackReg.end(); cIt++)
-        if(cIt->first == pRegNode)
-            fStackReg.erase(cIt);
+        if(cIt->first == pRegNode) fStackReg.erase(cIt);
 
     std::pair<std::string, uint32_t> cPair(pRegNode, pVal);
     fStackReg.push_back(cPair);
@@ -349,8 +333,7 @@ std::vector<uint32_t> RegManager::replayBlockRead(size_t size)
     }
 
     std::vector<uint32_t> data(read_size);
-    for(auto& d: data)
-        read_binary(replay_file, d);
+    for(auto& d: data) read_binary(replay_file, d);
 
     return data;
 }
@@ -360,7 +343,6 @@ void RegManager::captureRead(uint32_t value) { captureBlockRead({value}); }
 void RegManager::captureBlockRead(std::vector<uint32_t> data)
 {
     write_binary(capture_file, uint32_t(data.size()));
-    for(const auto& d: data)
-        write_binary(capture_file, d);
+    for(const auto& d: data) write_binary(capture_file, d);
 }
 } // namespace Ph2_HwInterface

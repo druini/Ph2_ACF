@@ -125,8 +125,7 @@ class SystemController
     {
         pVisitor.visitSystemController(*this);
 
-        for(auto* cBoard: *fDetectorContainer)
-            static_cast<Ph2_HwDescription::BeBoard*>(cBoard)->accept(pVisitor);
+        for(auto* cBoard: *fDetectorContainer) static_cast<Ph2_HwDescription::BeBoard*>(cBoard)->accept(pVisitor);
     }
 
     /*!
@@ -236,22 +235,19 @@ class SystemController
      */
     const Ph2_HwInterface::Event* GetNextEvent(const Ph2_HwDescription::BeBoard* pBoard)
     {
-        if(fFuture.valid() == true)
-            fFuture.get();
+        if(fFuture.valid() == true) fFuture.get();
         return ((fCurrentEvent >= fEventList.size()) ? nullptr : fEventList.at(fCurrentEvent++));
     }
 
     const Ph2_HwInterface::Event* GetEvent(const Ph2_HwDescription::BeBoard* pBoard, unsigned int i)
     {
-        if(fFuture.valid() == true)
-            fFuture.get();
+        if(fFuture.valid() == true) fFuture.get();
         return ((i >= fEventList.size()) ? nullptr : fEventList.at(i));
     }
 
     const std::vector<Ph2_HwInterface::Event*>& GetEvents(const Ph2_HwDescription::BeBoard* pBoard)
     {
-        if(fFuture.valid() == true)
-            fFuture.get();
+        if(fFuture.valid() == true) fFuture.get();
         return fEventList;
     }
 

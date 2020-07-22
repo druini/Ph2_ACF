@@ -57,13 +57,11 @@ void ExtraChecks::Initialise()
                 {
                     TString  cName = Form("h_BendCheck_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     TObject* cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     // occupancy
                     cName = Form("h_Occupancy_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     TH2D* cHist =
                         new TH2D(cName, Form("Occupancy CBC%d; Threshold [DAC units]; Number of hits", (int)cChip->getId()), 1023, 0 - 0.5, 1023. - 0.5, NCHANNELS + 10, 0 - 0.5, 10 + NCHANNELS - 0.5);
                     bookHistogram(static_cast<ReadoutChip*>(cChip), "Occupancy", cHist);
@@ -71,112 +69,97 @@ void ExtraChecks::Initialise()
                     // error bits
                     cName = Form("h_ErrorBits_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     cHist = new TH2D(cName, Form("Error Flag CBC%d; Event Id; Threshold [DAC units]; Error Bit", (int)cChip->getId()), 200, 0, 200, 1023, 0 - 0.5, 1023. - 0.5);
                     bookHistogram(static_cast<ReadoutChip*>(cChip), "ErrorFlag", cHist);
 
                     // pipeline addrress
                     cName = Form("h_Pipeline_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     cHist = new TH2D(cName, Form("Pipeline Address CBC%d; Event Id; Threshold [DAC units]; Pipeline Address", (int)cChip->getId()), 200, 0, 200, 1023, 0 - 0.5, 1023. - 0.5);
                     bookHistogram(static_cast<ReadoutChip*>(cChip), "Pipeline", cHist);
                     // L1Id
                     cName = Form("h_L1Id_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     cHist = new TH2D(cName, Form("L1 Id CBC%d; Event Id; Threshold [DAC units]; L1 Id", (int)cChip->getId()), 200, 0, 200, 1023, 0 - 0.5, 1023. - 0.5);
                     bookHistogram(static_cast<ReadoutChip*>(cChip), "L1", cHist);
 
                     cName = Form("h_PedeNoise_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     TH1D* cHist1D = new TH1D(cName, Form("Pedestal and noise - CBC%d; Channel; Pedestal and noise [DAC units]", (int)cChip->getId()), NCHANNELS, 0 - 0.5, NCHANNELS - 0.5);
                     bookHistogram(static_cast<ReadoutChip*>(cChip), "PedeNoise", cHist1D);
                 }
                 // matched stubs
                 TString  cName = Form("h_MatchedStubs");
                 TObject* cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 TProfile* cProfile = new TProfile(cName, Form("Number of matched stubs - CIC%d; CBC; Fraction of matched stubs", (int)cHybrid->getId()), 8, 0 - 0.5, 8 - 0.5);
                 bookHistogram(cHybrid, "MatchedStubs", cProfile);
                 // correct bend
                 cName = Form("h_CorrectBend");
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 cProfile = new TProfile(cName, Form("Fraction of events with correct bend - CIC%d; CBC; Fraction with correct bends", (int)cHybrid->getId()), 8, 0 - 0.5, 8 - 0.5);
                 bookHistogram(cHybrid, "CorrectBend", cProfile);
                 // wTP
                 cName = Form("h_CorrectBend_TP");
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 TProfile2D* cProf2D = new TProfile2D(cName, Form("Fraction of events with correct bend - CIC%d; CBC; Stub Latency", (int)cHybrid->getId()), 8, 0 - 0.5, 8 - 0.5, 512, 0, 512);
                 bookHistogram(cHybrid, "CorrectBend_TP", cProf2D);
 
                 // correct seed
                 cName = Form("h_CorrectSeed");
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 cProfile = new TProfile(cName, Form("Fraction of events with correct seed - CIC%d; CBC; Fraction with correct seed", (int)cHybrid->getId()), 8, 0 - 0.5, 8 - 0.5);
                 bookHistogram(cHybrid, "CorrectSeed", cProfile);
                 // wTP
                 cName = Form("h_CorrectSeed_TP");
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 cProf2D = new TProfile2D(cName, Form("Fraction of events with correct seed - CIC%d; CBC; Stub Latency", (int)cHybrid->getId()), 8, 0 - 0.5, 8 - 0.5, 512, 0, 512);
                 bookHistogram(cHybrid, "CorrectSeed_TP", cProf2D);
 
                 // matched hits
                 cName = Form("h_MatchedHits");
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 cProfile = new TProfile(cName, Form("Number of matched hits - CIC%d; CBC; Fraction of matched hits", (int)cHybrid->getId()), 8, 0 - 0.5, 8 - 0.5);
                 bookHistogram(cHybrid, "MatchedHits", cProfile);
 
                 // bunch crossing counters
                 cName = Form("h_BunchCrossingCounter");
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 TH2D* cHist2D = new TH2D(cName, Form("Number of matched stubs - CIC%d; Event Id; FE ASIC Id [CBC]", (int)cHybrid->getId()), 1000, 0 - 0.5, 1000 - 0.5, 8, 0 - 0., 8 - 0.5);
                 bookHistogram(cHybrid, "BxCounter", cHist2D);
                 // number of stubs
                 // wTP
                 cName = Form("h_Nstubs_TP");
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 cHist2D = new TProfile2D(cName, Form("Number of stubs - CIC%d; CBC; Stub Latency", (int)cHybrid->getId()), 8, 0 - 0.5, 8 - 0.5, 512, 0, 512);
                 bookHistogram(cHybrid, "Nstubs_TP", cHist2D);
 
                 cName = Form("h_L1Status_Fe%d", cHybrid->getId());
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 cHist2D = new TH2D(cName, Form("Error Flag CIC%d; Event Id; Chip Id; Error Bit", (int)cHybrid->getId()), 1000, 0, 1000, 9, 0 - 0.5, 9 - 0.5);
                 bookHistogram(cHybrid, "L1Status", cHist2D);
 
                 cName = Form("h_NominalOccupancy_Fe%d", cHybrid->getId());
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 TH1D* cHist = new TH1D(cName, Form("Occupancy FE%d at nominal threshold; Number of hits", (int)cHybrid->getId()), 10 + NCHANNELS * 8, 0 - 0.5, 10 + NCHANNELS * 8 - 0.5);
                 bookHistogram(cHybrid, "NominalOccupancy", cHist);
 
                 cName = Form("h_hitMap_Fe%d", cHybrid->getId());
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 cHist2D = new TH2D(cName, Form("HitMap [FEH%d]; Strip Number; Number of Hits", (int)cHybrid->getId()), 8 * NCHANNELS / 2., 0 - 0.5, 8 * NCHANNELS / 2. - 0.5, 2, 0, 2);
                 cHist2D->GetYaxis()->SetBinLabel(1, "Bottom");
                 cHist2D->GetYaxis()->SetBinLabel(2, "Top");
@@ -184,8 +167,7 @@ void ExtraChecks::Initialise()
 
                 cName = Form("h_hitMap_BottomSensor_Fe%d", cHybrid->getId());
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 cHist2D = new TH2D(cName,
                                    Form("Hit Map Bottom Sensor [FEH%d]; Threshold [DAC units]; Strip Number; Number of Hits", (int)cHybrid->getId()),
                                    1023,
@@ -198,8 +180,7 @@ void ExtraChecks::Initialise()
 
                 cName = Form("h_hitMap_TopSensor_Fe%d", cHybrid->getId());
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 cHist2D = new TH2D(cName,
                                    Form("Hit Map Top Sensor [FEH%d]; Threshold [DAC units]; Strip Number; Number of Hits", (int)cHybrid->getId()),
                                    1023,
@@ -213,8 +194,7 @@ void ExtraChecks::Initialise()
                 // pedestal and noise
                 cName = Form("h_Pedestal_PerSide");
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 TProfile2D* cProfile2D = new TProfile2D(cName,
                                                         Form("Pedestal distribution [FEH%d]; Strip Number; Sensor Layer; Pedestal [DAC units]", (int)cHybrid->getId()),
                                                         8 * NCHANNELS / 2,
@@ -229,16 +209,14 @@ void ExtraChecks::Initialise()
 
                 cName = Form("h_Noise_PerSide");
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 cProfile2D = new TProfile2D(
                     cName, Form("Noise distribution [FEH%d]; Strip Number; Sensor Layer; Noise [DAC units]", (int)cHybrid->getId()), 8 * NCHANNELS / 2, 0 - 0.5, 8 * NCHANNELS / 2 - 0.5, 2, 0, 2);
                 bookHistogram(cHybrid, "Noise_perSide", cProfile2D);
 
                 cName = Form("h_Occupancy_Fe%d", cHybrid->getId());
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 cProfile2D = new TProfile2D(cName, Form("Occupancy FE%d; Threshold [DAC units]; Number of strips with a hit", (int)cHybrid->getId()), 1023, 0 - 0.5, 1023. - 0.5, 2, 0, 2, "S");
                 cProfile2D->GetYaxis()->SetBinLabel(1, "Bottom");
                 cProfile2D->GetYaxis()->SetBinLabel(2, "Top");
@@ -247,15 +225,13 @@ void ExtraChecks::Initialise()
             // event counter
             TString  cName = Form("h_EventCount_Be%d", cBoard->getId());
             TObject* cObj  = gROOT->FindObject(cName);
-            if(cObj)
-                delete cObj;
+            if(cObj) delete cObj;
             TProfile* cProfile = new TProfile(cName, Form("Received events BE Board%d; Threshold [DAC units]; Number of hits", (int)cBoard->getId()), 1023, 0 - 0.5, 1023 - 0.5);
             bookHistogram(cBoard, "ReadoutEvents", cProfile);
 
             cName = Form("h_V1V5");
             cObj  = gROOT->FindObject(cName);
-            if(cObj)
-                delete cObj;
+            if(cObj) delete cObj;
             cProfile = new TProfile(cName, Form("Measurement of 1V5 on SEH; Distance from pedestal; Corrected ADC reading [V]"), 100, -50 - 0.5, 50 - 0.5, "S");
             bookHistogram(cBoard, "Vmonitor1V5", cProfile);
         }
@@ -411,10 +387,7 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
                 for(auto cChip: *cFe)
                 {
                     // enable stub logic
-                    if(pDisableStubs)
-                    {
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression(static_cast<ReadoutChip*>(cChip), false, pDisableStubs, 0);
-                    }
+                    if(pDisableStubs) { static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression(static_cast<ReadoutChip*>(cChip), false, pDisableStubs, 0); }
                     else
                         static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(static_cast<ReadoutChip*>(cChip), "Sampled", true, true);
                 }
@@ -460,9 +433,7 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
                 this->ReadNEvents(theBoard, cNevents);
                 const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
                 if(cIteration == 0 && cStepCount % 10 == 0)
-                {
-                    LOG(INFO) << BOLDBLUE << "Threshold set to " << cVcth << "...\tIteration " << +cIteration << " : " << +cEvents.size() << " events read back from fc7." << RESET;
-                }
+                { LOG(INFO) << BOLDBLUE << "Threshold set to " << cVcth << "...\tIteration " << +cIteration << " : " << +cEvents.size() << " events read back from fc7." << RESET; }
 
                 cEventHist->Fill(cVcth, (int)cEvents.size());
                 for(auto cOpticalGroup: *cBoard)
@@ -500,8 +471,7 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
                                 cHistPipeline->Fill(cEventCounter, cVcth, cPipeline);
                                 cHistErrors->Fill(cEventCounter, cVcth, 1 + cError);
                                 cHistL1Id->Fill(cEventCounter, cVcth, cL1Id);
-                                if(cError != 0)
-                                    LOG(INFO) << BOLDRED << "Event " << +cEventCounter << " : error in FE" << +cFe->getId() << " CBC" << +cChip->getId() << RESET;
+                                if(cError != 0) LOG(INFO) << BOLDRED << "Event " << +cEventCounter << " : error in FE" << +cFe->getId() << " CBC" << +cChip->getId() << RESET;
                                 // hits
                                 std::vector<uint32_t> cHits = cEvent->GetHits(cFe->getId(), cChip->getId());
                                 cHist->Fill(cVcth, static_cast<int>(cHits.size()));
@@ -629,10 +599,7 @@ void ExtraChecks::OccupancyCheck(uint16_t pTriggerRate, bool pDisableStubs)
                 for(auto cChip: *cFe)
                 {
                     // enable stub logic
-                    if(pDisableStubs)
-                    {
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression(static_cast<ReadoutChip*>(cChip), false, pDisableStubs, 0);
-                    }
+                    if(pDisableStubs) { static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression(static_cast<ReadoutChip*>(cChip), false, pDisableStubs, 0); }
                     else
                         static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(static_cast<ReadoutChip*>(cChip), "Sampled", true, true);
                 }
@@ -761,8 +728,7 @@ void ExtraChecks::ConsecutiveTriggers(uint8_t pNconsecutive)
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cFe)->getLinkId());
                 for(auto cChip: *cFe)
                 {
-                    if(cChip->getId() == 0)
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(static_cast<ReadoutChip*>(cChip), "VCth", 100);
+                    if(cChip->getId() == 0) static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(static_cast<ReadoutChip*>(cChip), "VCth", 100);
                     static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(static_cast<ReadoutChip*>(cChip), {100, 150}, {0, 0}, true);
                 }
             }
@@ -934,16 +900,14 @@ void ExtraChecks::MonitorAmux(bool pAll)
                         // set threshold on all CBCs except the one being scanned to 0
                         for(auto cChip: *cFe)
                         {
-                            if(cChip->getIndex() == cChipIndex)
-                                continue;
+                            if(cChip->getIndex() == cChipIndex) continue;
                             static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(static_cast<ReadoutChip*>(cChip), "VCth", static_cast<uint16_t>(0));
                         }
 
                         // now scan thereshold on one of the CBCs
                         for(auto cChip: *cFe)
                         {
-                            if(cChip->getIndex() != cChipIndex)
-                                continue;
+                            if(cChip->getIndex() != cChipIndex) continue;
                             // fixed values
                             std::vector<float> cThresholdValues{0., 50., 900., 1000.};
                             for(auto cThreshold: cThresholdValues)
@@ -1045,8 +1009,7 @@ void ExtraChecks::DataCheckTP(std::vector<uint8_t> pChipIds, uint8_t pTPamplitud
                             std::vector<uint8_t> cHits = static_cast<CbcInterface*>(fReadoutChipInterface)->stubInjectionPattern(theChip, cSeeds[cIndex], cBends[cIndex]);
                             for(auto& cHit: cHits)
                             {
-                                if(std::find(cExpectedHits.begin(), cExpectedHits.end(), cHit) == cExpectedHits.end())
-                                    cExpectedHits.push_back(cHit);
+                                if(std::find(cExpectedHits.begin(), cExpectedHits.end(), cHit) == cExpectedHits.end()) cExpectedHits.push_back(cHit);
                             }
                         }
                     }
@@ -1057,10 +1020,7 @@ void ExtraChecks::DataCheckTP(std::vector<uint8_t> pChipIds, uint8_t pTPamplitud
         }
     }
     LOG(INFO) << BOLDBLUE << "Expect to see hits in channels " << RESET;
-    for(auto cHit: cExpectedHits)
-    {
-        LOG(INFO) << BOLDBLUE << "\t\t.... " << +cHit << RESET;
-    }
+    for(auto cHit: cExpectedHits) { LOG(INFO) << BOLDBLUE << "\t\t.... " << +cHit << RESET; }
 
     // set-up for TP
     fAllChan                     = true;
@@ -1118,8 +1078,7 @@ void ExtraChecks::DataCheckTP(std::vector<uint8_t> pChipIds, uint8_t pTPamplitud
                         int cNmatchedHits = 0;
                         for(auto cChip: *cFe)
                         {
-                            if(std::find(pChipIds.begin(), pChipIds.end(), cChip->getId()) == pChipIds.end())
-                                continue;
+                            if(std::find(pChipIds.begin(), pChipIds.end(), cChip->getId()) == pChipIds.end()) continue;
 
                             int cNstubsCBC = 0;
                             // check stubs + hits
@@ -1129,10 +1088,7 @@ void ExtraChecks::DataCheckTP(std::vector<uint8_t> pChipIds, uint8_t pTPamplitud
                                 auto cHits = cEvent->GetHits(cFe->getId(), cChip->getId());
                                 for(auto cHit: cHits)
                                 {
-                                    if(std::find(cExpectedHits.begin(), cExpectedHits.end(), cHit) != cExpectedHits.end())
-                                    {
-                                        cNmatchedHits += 1;
-                                    }
+                                    if(std::find(cExpectedHits.begin(), cExpectedHits.end(), cHit) != cExpectedHits.end()) { cNmatchedHits += 1; }
                                 }
 
                                 auto cStubs = cEvent->StubVector(cFe->getId(), cChip->getId());
@@ -1438,10 +1394,7 @@ void ExtraChecks::QuickStubCheck(std::vector<uint8_t> pChipIds, uint16_t pTrigge
                         cBxCounter->Fill(static_cast<float>(cEventCount), cChipId, cBxId);
                         // hits
                         auto cHits = cEvent->GetHits(cFeId, cChipId);
-                        for(auto cHit: cHits)
-                        {
-                            LOG(DEBUG) << BOLDMAGENTA << "\t\t... hit found in channel " << +cHit << RESET;
-                        }
+                        for(auto cHit: cHits) { LOG(DEBUG) << BOLDMAGENTA << "\t\t... hit found in channel " << +cHit << RESET; }
                         cNhits += cHits.size();
                         // std::vector<uint8_t> cExpectedHits =
                         // static_cast<CbcInterface*>(fReadoutChipInterface)->stubInjectionPattern( cChip, pSeed, pBend
@@ -1547,8 +1500,7 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
                         std::vector<uint8_t> cHits = static_cast<CbcInterface*>(fReadoutChipInterface)->stubInjectionPattern(theChip, pSeed, pBend);
                         for(auto& cHit: cHits)
                         {
-                            if(std::find(cExpectedHits.begin(), cExpectedHits.end(), cHit) == cExpectedHits.end())
-                                cExpectedHits.push_back(cHit);
+                            if(std::find(cExpectedHits.begin(), cExpectedHits.end(), cHit) == cExpectedHits.end()) cExpectedHits.push_back(cHit);
                         }
                     }
                     else
@@ -1559,10 +1511,7 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
     }
 
     LOG(DEBUG) << BOLDBLUE << "Expect to see hits in channels " << RESET;
-    for(auto cHit: cExpectedHits)
-    {
-        LOG(DEBUG) << BOLDBLUE << "\t\t.... " << +cHit << RESET;
-    }
+    for(auto cHit: cExpectedHits) { LOG(DEBUG) << BOLDBLUE << "\t\t.... " << +cHit << RESET; }
 
     // configure trigger generation in firmware
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0, pTriggerRate, 3, 0, cDefaultStubLatency);
@@ -1605,8 +1554,7 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
                         for(auto cChip: *cFe)
                         {
                             auto cChipId = cChip->getId();
-                            if(std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end())
-                                continue;
+                            if(std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end()) continue;
 
                             auto cErrorBit = cEvent->Error(cFeId, cChipId);
                             cL1Status->Fill(cEventCount, cChipId, cErrorBit);
@@ -1615,10 +1563,7 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
                             LOG(DEBUG) << BOLDBLUE << "Chip" << +cChipId << " : L1 counter " << +cL1Id << " error bits " << +cErrorBit << RESET;
                             // hits
                             auto cHits = cEvent->GetHits(cFeId, cChipId);
-                            for(auto cHit: cHits)
-                            {
-                                LOG(DEBUG) << BOLDMAGENTA << "\t... hit found in channel " << +cHit << " of readout chip" << +cChipId << RESET;
-                            }
+                            for(auto cHit: cHits) { LOG(DEBUG) << BOLDMAGENTA << "\t... hit found in channel " << +cHit << " of readout chip" << +cChipId << RESET; }
                             std::vector<uint8_t> cExpectedHits = static_cast<CbcInterface*>(fReadoutChipInterface)->stubInjectionPattern(static_cast<ReadoutChip*>(cChip), pSeed, pBend);
                             size_t               cMatched      = 0;
                             for(auto cExpectedHit: cExpectedHits)
@@ -1655,8 +1600,7 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
                     for(auto cChip: *cHybrid)
                     {
                         auto cChipId = cChip->getId();
-                        if(std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end())
-                            continue;
+                        if(std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end()) continue;
 
                         auto cHitCheck  = fHitCheckContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<int>();
                         auto cStubCheck = fStubCheckContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<int>();
@@ -1804,8 +1748,7 @@ void ExtraChecks::StubCheck(uint8_t pChipId, bool pUseNoise, uint8_t pTestPulseA
         uint8_t  cNbits    = static_cast<ReadoutChip*>(cBoard->at(0)->at(0)->at(0))->getNumberOfBits("TriggerLatency");
         uint16_t cMaxValue = std::min(static_cast<uint16_t>(cDelay + 1), static_cast<uint16_t>(std::pow(2, cNbits) - 1));
         uint16_t cStep     = 1;
-        if(pUseNoise)
-            cMaxValue = cStart + cStep;
+        if(pUseNoise) cMaxValue = cStart + cStep;
         std::vector<uint16_t> cListOfValues(std::floor((cMaxValue - cStart) / cStep));
         uint16_t              cValue = cStart - cStep;
         std::generate(cListOfValues.begin(), cListOfValues.end(), [&]() { return cValue += cStep; });
@@ -1980,8 +1923,7 @@ void ExtraChecks::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
         for(auto cOpticalGroup: *cBoard)
             for(auto cFe: *cOpticalGroup)
             {
-                if(theBoard->ifOptical())
-                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cFe)->getLinkId());
+                if(theBoard->ifOptical()) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cFe)->getLinkId());
                 // configure CBCs
                 for(auto cChip: *cFe)
                 {
@@ -2004,8 +1946,7 @@ void ExtraChecks::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
     LOG(INFO) << BOLDBLUE << "Starting short finding loop." << RESET;
     // configure test pulse trigger
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(cFirmwareTPdelay, cFirmwareTriggerDelay, 1000);
-    if(cOptical)
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Bx0Alignment();
+    if(cOptical) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Bx0Alignment();
     // check that the hits are there... so find test pulse
     for(auto cBoard: *fDetectorContainer)
     {
@@ -2045,10 +1986,7 @@ void ExtraChecks::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
                                       << " - " << +cHits.size() << " hits found/" << +cBitset.count() << " channels in test group" << RESET;
                             for(auto cHit: cHits)
                             {
-                                if(cBitset[cHit] == 0)
-                                {
-                                    cReadoutChipShorts->getChannelContainer<int>()->at(cHit) += 1;
-                                }
+                                if(cBitset[cHit] == 0) { cReadoutChipShorts->getChannelContainer<int>()->at(cHit) += 1; }
                             }
                             cNhits += cHits.size();
                         }
@@ -2161,10 +2099,7 @@ std::pair<uint16_t, float> ExtraChecks::ReadAmux(uint8_t pFeId, uint8_t pChipId,
     // }
     // read voltage using ADC [ either ADC on GBT-SCA .. or on plug-in card]
     std::pair<uint16_t, float> cReading;
-    if(pOptical)
-    {
-        cReading = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->readADC(((pFeId == 0) ? "AMUX_R" : "AMUX_L"), false);
-    }
+    if(pOptical) { cReading = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->readADC(((pFeId == 0) ? "AMUX_R" : "AMUX_L"), false); }
     else
     {
         // To Add : plug-in card/UIB

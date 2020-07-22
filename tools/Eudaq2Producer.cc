@@ -152,8 +152,7 @@ void Eudaq2Producer::DoStartRun()
     uint32_t    cNEventSize32 = 80; // this->computeEventSize32 (cBoard);
     std::string cBoardTypeString;
     BoardType   cBoardType = theFirstBoard->getBoardType();
-    for(const auto cHybrid: *theFirstBoard)
-        cNChip += cHybrid->size();
+    for(const auto cHybrid: *theFirstBoard) cNChip += cHybrid->size();
     if(cBoardType == BoardType::D19C)
         cBoardTypeString = "D19C";
     else if(cBoardType != BoardType::RD53)
@@ -200,10 +199,7 @@ void Eudaq2Producer::DoStopRun()
     LOG(INFO) << "Run Stopped, number of triggers received so far: " << +this->fBeBoardInterface->ReadBoardReg(theFirstBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
 
     fStarted = false, fStopped = true;
-    if(fThreadRun.joinable())
-    {
-        fThreadRun.join();
-    }
+    if(fThreadRun.joinable()) { fThreadRun.join(); }
     // check if file handler is open
     if(fPh2FileHandler->isFileOpen())
     {
@@ -224,17 +220,11 @@ void Eudaq2Producer::DoStopRun()
 void Eudaq2Producer::DoReset()
 {
     // just in case close the shutter
-    for(auto cBoard: *fDetectorContainer)
-    {
-        this->fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard));
-    }
+    for(auto cBoard: *fDetectorContainer) { this->fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard)); }
 
     // finish data processing
     fStarted = false, fStopped = true, fConfigured = false;
-    if(fThreadRun.joinable())
-    {
-        fThreadRun.join();
-    }
+    if(fThreadRun.joinable()) { fThreadRun.join(); }
 
     // configure the board again
     this->DoConfigure();
@@ -244,10 +234,7 @@ void Eudaq2Producer::DoReset()
 void Eudaq2Producer::DoTerminate()
 {
     fInitialised = false, fConfigured = false, fStarted = false, fStopped = true, fTerminated = true;
-    if(fThreadRun.joinable())
-    {
-        fThreadRun.join();
-    }
+    if(fThreadRun.joinable()) { fThreadRun.join(); }
     LOG(INFO) << "Terminating ...";
     // this->Destroy();
 }
@@ -260,10 +247,7 @@ void Eudaq2Producer::ReadoutLoop()
     std::vector<Event*> cPh2Events; // Ph2ACF Event vector to store newly read data and previously remaining one
     while(!fStopped)
     {
-        if(!EventsPending())
-        {
-            continue;
-        }
+        if(!EventsPending()) { continue; }
         for(auto cBoard: *fDetectorContainer)
         {
             BeBoard*              theBoard = static_cast<BeBoard*>(cBoard);
@@ -353,8 +337,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 // get the current iterator
                 std::vector<Module*>::const_iterator cFeIterCurrent = cFeIter + i;
                 // check that we are still not at the end
-                if(cFeIterCurrent >= cOpticalReadout->end())
-                    continue;
+                if(cFeIterCurrent >= cOpticalReadout->end()) continue;
                 // get the fe id
                 uint32_t cFeIdCurrent = (*cFeIterCurrent)->getId();
 
@@ -376,8 +359,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                         if(hit % 2 == 1)
                         {
                             uint32_t hit_pos = (cChipId * NCHANNELS / 2) + (hit - 1) / 2;
-                            if(cFeIdCurrent % 2 == 0)
-                                hit_pos = 1015 - hit_pos;
+                            if(cFeIdCurrent % 2 == 0) hit_pos = 1015 - hit_pos;
                             // top sensor
                             top_channel_data.resize(top_offset + 6);
                             // row
@@ -395,8 +377,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                         else
                         {
                             uint32_t hit_pos = (cChipId * NCHANNELS / 2) + hit / 2;
-                            if(cFeIdCurrent % 2 == 0)
-                                hit_pos = 1015 - hit_pos;
+                            if(cFeIdCurrent % 2 == 0) hit_pos = 1015 - hit_pos;
                             // bottom sensor
                             bottom_channel_data.resize(bottom_offset + 6);
                             // row
@@ -506,12 +487,9 @@ bool Eudaq2Producer::EventsPending()
                 BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
                 if(theBoard->getBoardType() == BoardType::D19C)
                 {
-                    if(this->fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.readout_block.general.readout_req") > 0)
-                    {
-                        return true;
-                    } // end of if ReadBoardReg
-                }     // end of if BoardType
-            }         // end of theBoard loop
+                    if(this->fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.readout_block.general.readout_req") > 0) { return true; } // end of if ReadBoardReg
+                }                                                                                                                              // end of if BoardType
+            }                                                                                                                                  // end of theBoard loop
         }
         else
         {

@@ -88,11 +88,9 @@ int main(int argc, char* argv[])
     // now query the parsing results
     std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/HWDescription_2CBC.xml";
 
-    if(cmd.foundOption("save"))
-        cSaveToFile = true;
+    if(cmd.foundOption("save")) cSaveToFile = true;
 
-    if(cmd.foundOption("read"))
-        cReadFromFile = true;
+    if(cmd.foundOption("read")) cReadFromFile = true;
 
     if(cSaveToFile)
     {
@@ -129,8 +127,7 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     outp.str("");
 
-    if(!cmd.foundOption("read"))
-        cSystemController.ConfigureHw(cmd.foundOption("ignoreI2c"));
+    if(!cmd.foundOption("read")) cSystemController.ConfigureHw(cmd.foundOption("ignoreI2c"));
 
     t.stop();
     t.show("Time to Initialize/configure the system: ");
@@ -189,8 +186,7 @@ int main(int argc, char* argv[])
         {
             uint32_t cPacketSize = cSystemController.ReadData(pBoard);
 
-            if(cN + cPacketSize > pEventsperVcth)
-                cSystemController.fBeBoardInterface->Stop(pBoard);
+            if(cN + cPacketSize > pEventsperVcth) cSystemController.fBeBoardInterface->Stop(pBoard);
 
             pEvents = &cSystemController.GetEvents(pBoard);
         }
@@ -220,8 +216,7 @@ int main(int argc, char* argv[])
     t.stop();
     t.show("Time to take data:");
 
-    if(cDAQFile)
-        delete cDAQFileHandler;
+    if(cDAQFile) delete cDAQFileHandler;
 
     cSystemController.Destroy();
 }

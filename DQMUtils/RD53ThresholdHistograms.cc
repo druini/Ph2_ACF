@@ -44,8 +44,7 @@ void ThresholdHistograms::fill(const DetectorDataContainer& DataContainer)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr)
-                        continue;
+                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
                     auto* hThrehsold =
                         Threhsold.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;

@@ -74,18 +74,12 @@ int main(int argc, char** argv)
     PowerSupply::PS_settings ps_settings = PowerSupply::readSettings(docPath, docSettings);
     PowerSupply::PS_map      ps_map      = PowerSupply::Initialize(ps_settings);
 
-    if(ps_map.size() == 0)
-    {
-        std::cout << "No configurable power supply has been found" << std::endl;
-    }
+    if(ps_map.size() == 0) { std::cout << "No configurable power supply has been found" << std::endl; }
     else
     {
         std::cout << "Number of power supplies: " << ps_map.size() << std::endl;
         std::cout << "ps_map content:" << std::endl;
-        for(auto it = ps_map.begin(); it != ps_map.end(); ++it)
-        {
-            std::cout << it->first << std::endl;
-        }
+        for(auto it = ps_map.begin(); it != ps_map.end(); ++it) { std::cout << it->first << std::endl; }
     }
 
     if(ps_map[cPowerSupply]->isOpen())
@@ -97,14 +91,8 @@ int main(int argc, char** argv)
         }
         else
         {
-            if(cmd.foundOption("v_max"))
-            {
-                ps_map[cPowerSupply]->setVoltsLimit(cVoltsLimit);
-            }
-            if(cmd.foundOption("i_max"))
-            {
-                ps_map[cPowerSupply]->setAmpsLimit(cAmpsLimit);
-            }
+            if(cmd.foundOption("v_max")) { ps_map[cPowerSupply]->setVoltsLimit(cVoltsLimit); }
+            if(cmd.foundOption("i_max")) { ps_map[cPowerSupply]->setAmpsLimit(cAmpsLimit); }
             if(cmd.foundOption("v"))
             {
                 ps_map[cPowerSupply]->setVolts(cVolts);

@@ -264,30 +264,21 @@ int main(int argc, char* argv[])
         while(cArgsSS >> i)
         {
             cArgs.push_back(i);
-            if(cArgsSS.peek() == ',')
-                cArgsSS.ignore();
+            if(cArgsSS.peek() == ',') cArgsSS.ignore();
         };
 
         t.start();
         DataChecker cDataChecker;
         cDataChecker.Inherit(&cTool);
         cDataChecker.Initialise();
-        if(cmd.foundOption("checkClusters"))
-            cDataChecker.ClusterCheck(cArgs);
-        if(cmd.foundOption("checkSLink"))
-            cDataChecker.WriteSlinkTest(cmd.optionValue("checkSLink"));
-        if(cmd.foundOption("checkStubs"))
-            cDataChecker.StubCheck(cArgs);
-        if(cmd.foundOption("noiseInjection"))
-            cDataChecker.StubCheckWNoise(cArgs);
-        if(cmd.foundOption("checkReadData"))
-            cDataChecker.ReadDataTest();
-        if(cmd.foundOption("checkAsync"))
-            cDataChecker.AsyncTest();
-        if(cmd.foundOption("checkReadNEvents"))
-            cDataChecker.ReadNeventsTest();
-        if(cSaveToFile)
-            cDataChecker.CollectEvents();
+        if(cmd.foundOption("checkClusters")) cDataChecker.ClusterCheck(cArgs);
+        if(cmd.foundOption("checkSLink")) cDataChecker.WriteSlinkTest(cmd.optionValue("checkSLink"));
+        if(cmd.foundOption("checkStubs")) cDataChecker.StubCheck(cArgs);
+        if(cmd.foundOption("noiseInjection")) cDataChecker.StubCheckWNoise(cArgs);
+        if(cmd.foundOption("checkReadData")) cDataChecker.ReadDataTest();
+        if(cmd.foundOption("checkAsync")) cDataChecker.AsyncTest();
+        if(cmd.foundOption("checkReadNEvents")) cDataChecker.ReadNeventsTest();
+        if(cSaveToFile) cDataChecker.CollectEvents();
 
         // cDataChecker.ReadNeventsTest();
         // cDataChecker.DataCheck(cFEsToCheck,0,0);
@@ -360,8 +351,7 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     cTool.Destroy();
 
-    if(!batchMode)
-        cApp.Run();
+    if(!batchMode) cApp.Run();
     cGlobalTimer.stop();
     cGlobalTimer.show("Total execution time: ");
 

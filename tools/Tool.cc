@@ -136,8 +136,7 @@ void Tool::SoftDestroy()
 #ifdef __USE_ROOT__
     if(fResultFile != nullptr)
     {
-        if(fResultFile->IsOpen())
-            fResultFile->Close();
+        if(fResultFile->IsOpen()) fResultFile->Close();
 
         if(fResultFile)
         {
@@ -188,8 +187,7 @@ void Tool::SoftDestroy()
 void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject)
 {
     TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
-    if(tmpHistogramPointer != nullptr)
-        tmpHistogramPointer->SetDirectory(0);
+    if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
 
     // find or create map<string,TOBject> for specific CBC
     auto cChipHistMap = fChipHistMap.find(pChip);
@@ -207,22 +205,19 @@ void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObje
     // find histogram with given name: if it exists, delete the object, if not create
     auto cHisto = cChipHistMap->second.find(pName);
 
-    if(cHisto != std::end(cChipHistMap->second))
-        cChipHistMap->second.erase(cHisto);
+    if(cHisto != std::end(cChipHistMap->second)) cChipHistMap->second.erase(cHisto);
 
     cChipHistMap->second[pName] = pObject;
 
 #ifdef __HTTP__
-    if(fHttpServer)
-        fHttpServer->Register("/Histograms", pObject);
+    if(fHttpServer) fHttpServer->Register("/Histograms", pObject);
 #endif
 }
 
 void Tool::bookHistogram(ModuleContainer* pModule, std::string pName, TObject* pObject)
 {
     TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
-    if(tmpHistogramPointer != nullptr)
-        tmpHistogramPointer->SetDirectory(0);
+    if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
 
     // find or create map<string,TOBject> for specific CBC
     auto cModuleHistMap = fModuleHistMap.find(pModule);
@@ -239,21 +234,18 @@ void Tool::bookHistogram(ModuleContainer* pModule, std::string pName, TObject* p
     // find histogram with given name: if it exists, delete the object, if not create
     auto cHisto = cModuleHistMap->second.find(pName);
 
-    if(cHisto != std::end(cModuleHistMap->second))
-        cModuleHistMap->second.erase(cHisto);
+    if(cHisto != std::end(cModuleHistMap->second)) cModuleHistMap->second.erase(cHisto);
 
     cModuleHistMap->second[pName] = pObject;
 #ifdef __HTTP__
-    if(fHttpServer)
-        fHttpServer->Register("/Histograms", pObject);
+    if(fHttpServer) fHttpServer->Register("/Histograms", pObject);
 #endif
 }
 
 void Tool::bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* pObject)
 {
     TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
-    if(tmpHistogramPointer != nullptr)
-        tmpHistogramPointer->SetDirectory(0);
+    if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
 
     // find or create map<string,TOBject> for specific CBC
     auto cBeBoardHistMap = fBeBoardHistMap.find(pBeBoard);
@@ -270,13 +262,11 @@ void Tool::bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* p
     // find histogram with given name: if it exists, delete the object, if not create
     auto cHisto = cBeBoardHistMap->second.find(pName);
 
-    if(cHisto != std::end(cBeBoardHistMap->second))
-        cBeBoardHistMap->second.erase(cHisto);
+    if(cHisto != std::end(cBeBoardHistMap->second)) cBeBoardHistMap->second.erase(cHisto);
 
     cBeBoardHistMap->second[pName] = pObject;
 #ifdef __HTTP__
-    if(fHttpServer)
-        fHttpServer->Register("/Histograms", pObject);
+    if(fHttpServer) fHttpServer->Register("/Histograms", pObject);
 #endif
 }
 
@@ -360,8 +350,7 @@ void Tool::SaveResults()
     {
         fResultFile->cd();
 
-        for(const auto& cHist: cBeBoard.second)
-            cHist.second->Write(cHist.second->GetName(), TObject::kOverwrite);
+        for(const auto& cHist: cBeBoard.second) cHist.second->Write(cHist.second->GetName(), TObject::kOverwrite);
 
         fResultFile->cd();
     }
@@ -374,13 +363,11 @@ void Tool::SaveResults()
 
         // if ( cObj ) delete cObj;
 
-        if(!cObj)
-            fResultFile->mkdir(cDirName);
+        if(!cObj) fResultFile->mkdir(cDirName);
 
         fResultFile->cd(cDirName);
 
-        for(const auto& cHist: cHybrid.second)
-            cHist.second->Write(cHist.second->GetName(), TObject::kOverwrite);
+        for(const auto& cHist: cHybrid.second) cHist.second->Write(cHist.second->GetName(), TObject::kOverwrite);
 
         fResultFile->cd();
     }
@@ -393,13 +380,11 @@ void Tool::SaveResults()
 
         // if ( cObj ) delete cObj;
 
-        if(!cObj)
-            fResultFile->mkdir(cDirName);
+        if(!cObj) fResultFile->mkdir(cDirName);
 
         fResultFile->cd(cDirName);
 
-        for(const auto& cHist: cChip.second)
-            cHist.second->Write(cHist.second->GetName(), TObject::kOverwrite);
+        for(const auto& cHist: cChip.second) cHist.second->Write(cHist.second->GetName(), TObject::kOverwrite);
 
         fResultFile->cd();
     }
@@ -445,11 +430,9 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
 
     std::string nDirname = pDirname;
 
-    if(cCheck && pMode)
-        nDirname += cMode;
+    if(cCheck && pMode) nDirname += cMode;
 
-    if(pDate)
-        nDirname += currentDateTime();
+    if(pDate) nDirname += currentDateTime();
 
     LOG(INFO) << GREEN << "Creating directory: " << BOLDYELLOW << nDirname << RESET;
     std::string cCommand = "mkdir -p " + nDirname;
@@ -647,10 +630,7 @@ void Tool::enableTestPulse(bool enableTP)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cChip: *cHybrid)
-                {
-                    fReadoutChipInterface->enableInjection(cChip, enableTP);
-                }
+                for(auto cChip: *cHybrid) { fReadoutChipInterface->enableInjection(cChip, enableTP); }
             }
         }
     }
@@ -799,10 +779,7 @@ void Tool::unmaskPair(Chip* cChip, std::pair<uint8_t, uint8_t> pPair)
     cRegisterIndex = pPair.second >> 3;
     cMaskRegName   = fChannelMaskMapCBC3[cRegisterIndex];
     auto it        = cMaskedList.find(cMaskRegName.c_str());
-    if(it != cMaskedList.end())
-    {
-        (it->second).push_back(pPair.second);
-    }
+    if(it != cMaskedList.end()) { (it->second).push_back(pPair.second); }
     else
     {
         cMaskedChannels.clear();
@@ -841,9 +818,7 @@ void Tool::scanDacDac(const std::string&                               dac1Name,
                       int32_t                                          numberOfEventsPerBurst)
 {
     for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
-    {
-        scanBeBoardDacDac(boardIndex, dac1Name, dac1List, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector, numberOfEventsPerBurst);
-    }
+    { scanBeBoardDacDac(boardIndex, dac1Name, dac1List, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector, numberOfEventsPerBurst); }
 
     return;
 }
@@ -867,8 +842,7 @@ void Tool::scanBeBoardDacDac(uint16_t                                         bo
     for(size_t dacIt = 0; dacIt < dac1List.size(); ++dacIt)
     {
         // el::LoggingFlag::NewLineForContainer (0);
-        if(boardIndex == 0)
-            LOG(INFO) << BOLDBLUE << " Scanning dac1 " << dac1Name << ", value = " << dac1List[dacIt] << " vs " << dac2Name << RESET;
+        if(boardIndex == 0) LOG(INFO) << BOLDBLUE << " Scanning dac1 " << dac1Name << ", value = " << dac1List[dacIt] << " vs " << dac2Name << RESET;
         // el::LoggingFlag::NewLineForContainer (1);
         setSameDacBeBoard(fDetectorContainer->at(boardIndex), dac1Name, dac1List[dacIt]);
         scanBeBoardDac(boardIndex, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector[dacIt], numberOfEventsPerBurst);
@@ -885,9 +859,7 @@ void Tool::scanDac(const std::string&                  dacName,
                    int32_t                             numberOfEventsPerBurst)
 {
     for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
-    {
-        scanBeBoardDac(boardIndex, dacName, dacList, numberOfEvents, detectorContainerVector, numberOfEventsPerBurst);
-    }
+    { scanBeBoardDac(boardIndex, dacName, dacList, numberOfEvents, detectorContainerVector, numberOfEventsPerBurst); }
 
     return;
 }
@@ -895,10 +867,7 @@ void Tool::scanDac(const std::string&                  dacName,
 // bit wise scan
 void Tool::bitWiseScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst)
 {
-    for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
-    {
-        bitWiseScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst);
-    }
+    for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++) { bitWiseScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst); }
     return;
 }
 
@@ -1087,10 +1056,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
         }
     }
 
-    if(localDAC)
-    {
-        setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList);
-    }
+    if(localDAC) { setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList); }
     else
         setAllGlobalDacBeBoard(boardIndex, dacName, *previousDacList);
 
@@ -1108,10 +1074,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
 // set dac and measure occupancy
 void Tool::setDacAndMeasureData(const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
-    for(uint16_t boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
-    {
-        setDacAndMeasureBeBoardData(boardIndex, dacName, dacValue, numberOfEvents, numberOfEventsPerBurst);
-    }
+    for(uint16_t boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++) { setDacAndMeasureBeBoardData(boardIndex, dacName, dacValue, numberOfEvents, numberOfEventsPerBurst); }
 
     return;
 }
@@ -1127,8 +1090,7 @@ void Tool::setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string& d
 // measure occupancy
 void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
-    for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
-        measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+    for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++) measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 }
 
 class ScanBase
@@ -1177,10 +1139,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
                 {
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        for(auto cChip: *cHybrid)
-                        {
-                            fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, group, fMaskChannelsFromOtherGroups, fTestPulse);
-                        }
+                        for(auto cChip: *cHybrid) { fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, group, fMaskChannelsFromOtherGroups, fTestPulse); }
                     }
                 }
             }
@@ -1195,10 +1154,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    for(auto cChip: *cHybrid)
-                    {
-                        fReadoutChipInterface->ConfigureChipOriginalMask(cChip);
-                    }
+                    for(auto cChip: *cHybrid) { fReadoutChipInterface->ConfigureChipOriginalMask(cChip); }
                 }
             }
         }
@@ -1242,14 +1198,12 @@ class MeasureBeBoardDataPerGroup : public ScanBase
         while(burstNumbers > 0)
         {
             uint32_t currentNumberOfEvents = uint32_t(fNumberOfEventsPerBurst);
-            if(burstNumbers == 1)
-                currentNumberOfEvents = lastBurstNumberOfEvents;
+            if(burstNumbers == 1) currentNumberOfEvents = lastBurstNumberOfEvents;
 
             fTool->ReadNEvents(fDetectorContainer->at(fBoardIndex), currentNumberOfEvents);
             // Loop over Events from this Acquisition
             const std::vector<Event*>& events = fTool->GetEvents(fDetectorContainer->at(fBoardIndex));
-            for(auto& event: events)
-                event->fillDataContainer((fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
+            for(auto& event: events) event->fillDataContainer((fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
             --burstNumbers;
         }
     }
@@ -1269,9 +1223,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     // if in async mode normalization is a little different ..
     // normalize by the number of triggers to accept
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS || fDetectorContainer->at(boardIndex)->getEventType() == EventType::MPAAS)
-    {
-        numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.triggers_to_accept");
-    }
+    { numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.triggers_to_accept"); }
     fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
 }
 
@@ -1325,8 +1277,7 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
 
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
 
-    for(auto container: detectorContainerVector)
-        container->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+    for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
 
     return;
 }
@@ -1394,8 +1345,7 @@ void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string& dacName
 // Set same global DAC for all chips
 void Tool::setSameGlobalDac(const std::string& dacName, const uint16_t dacValue)
 {
-    for(auto cBoard: *fDetectorContainer)
-        setSameGlobalDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue);
+    for(auto cBoard: *fDetectorContainer) setSameGlobalDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue);
 }
 
 // Set same global DAC for all chips in the BeBoard
@@ -1408,8 +1358,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
             for(auto cHybrid: *cOpticalGroup)
             {
                 if(fDoModuleBroadcast == false)
-                    for(auto cChip: *cHybrid)
-                        fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
+                    for(auto cChip: *cHybrid) fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
                 else
                     fReadoutChipInterface->WriteModuleBroadcastChipReg(static_cast<Module*>(cHybrid), dacName, dacValue);
             }
@@ -1422,10 +1371,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
 // set same local dac for all BeBoard
 void Tool::setSameLocalDac(const std::string& dacName, const uint16_t dacValue)
 {
-    for(auto cBoard: *fDetectorContainer)
-    {
-        setSameLocalDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue);
-    }
+    for(auto cBoard: *fDetectorContainer) { setSameLocalDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue); }
 
     return;
 }
@@ -1453,10 +1399,7 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string& dacName, c
 void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string& dacName, const uint16_t dacValue)
 {
     // Assumption: 1 BeBoard has only 1 chip flavor:
-    if(static_cast<ReadoutChip*>(pBoard->at(0)->at(0)->at(0))->isDACLocal(dacName))
-    {
-        setSameLocalDacBeBoard(pBoard, dacName, dacValue);
-    }
+    if(static_cast<ReadoutChip*>(pBoard->at(0)->at(0)->at(0))->isDACLocal(dacName)) { setSameLocalDacBeBoard(pBoard, dacName, dacValue); }
     else
     {
         setSameGlobalDacBeBoard(pBoard, dacName, dacValue);
@@ -1465,10 +1408,7 @@ void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string& dacName, const 
 
 void Tool::setSameDac(const std::string& dacName, const uint16_t dacValue)
 {
-    for(auto cBoard: *fDetectorContainer)
-    {
-        setSameDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue);
-    }
+    for(auto cBoard: *fDetectorContainer) { setSameDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue); }
 
     return;
 }

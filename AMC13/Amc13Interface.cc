@@ -82,11 +82,9 @@ void Amc13Interface::ConfigureAmc13()
     }
 
     // now need to iterate the two maps of Registers and write them
-    for(auto& cReg: fDescription->fT1map)
-        fAMC13->write(amc13::AMC13Simple::T1, cReg.first, cReg.second);
+    for(auto& cReg: fDescription->fT1map) fAMC13->write(amc13::AMC13Simple::T1, cReg.first, cReg.second);
 
-    for(auto& cReg: fDescription->fT2map)
-        fAMC13->write(amc13::AMC13Simple::T2, cReg.first, cReg.second);
+    for(auto& cReg: fDescription->fT2map) fAMC13->write(amc13::AMC13Simple::T2, cReg.first, cReg.second);
 
     LOG(INFO) << GREEN << "AMC13 successfully configured!" << RESET;
 }
@@ -109,8 +107,7 @@ void Amc13Interface::ConfigureTTCHistory(std::vector<std::pair<int, uint32_t>> p
 {
     // n = int in the pair  ... history item
     // filterVal = uint32_t ... filter Value
-    for(auto& cPair: pFilterConfig)
-        fAMC13->setTTCHistoryFilter(cPair.first, cPair.second);
+    for(auto& cPair: pFilterConfig) fAMC13->setTTCHistoryFilter(cPair.first, cPair.second);
 }
 
 void Amc13Interface::DumpHistory(int pNlastEntries)
@@ -135,8 +132,7 @@ void Amc13Interface::DumpHistory(int pNlastEntries)
 
 void Amc13Interface::DumpTriggers(int pNlastEntries)
 {
-    if(pNlastEntries > 127)
-        std::cerr << "Only last 128 Events available in L1A history buffer!";
+    if(pNlastEntries > 127) std::cerr << "Only last 128 Events available in L1A history buffer!";
 
     std::vector<uint32_t> cVec = fAMC13->getL1AHistory(pNlastEntries);
 

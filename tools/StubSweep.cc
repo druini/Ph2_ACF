@@ -23,8 +23,7 @@ void StubSweep::Initialize()
     TString  cName = "c_StubSweep";
     TObject* cObj  = gROOT->FindObject(cName);
 
-    if(cObj)
-        delete cObj;
+    if(cObj) delete cObj;
 
     fSweepCanvas = new TCanvas(cName, "Stub Sweep", 10, 0, 500, 350);
     fSweepCanvas->SetGrid();
@@ -51,14 +50,12 @@ void StubSweep::Initialize()
                     uint32_t cCbcId = cCbc->getId();
                     cCbcCount++;
 
-                    if(cCbcId > cCbcIdMax)
-                        cCbcIdMax = cCbcId;
+                    if(cCbcId > cCbcIdMax) cCbcIdMax = cCbcId;
 
                     cName = Form("StubSweep_Fe%d_Cbc%d", cFe->getId(), cCbc->getId());
                     cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     // stub sweep
                     TProfile* cStubSweepHist = new TProfile(cName, Form("Stub Sweep FE%d CBC%d ; Test Pulse Channel [1-254]; Stub Address", cFeId, cCbcId), 254, -0.5, 254.5);
@@ -78,8 +75,7 @@ void StubSweep::Initialize()
                     cName = Form("StubBends_Fe%d_Cbc%d", cFe->getId(), cCbc->getId());
                     cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     TProfile* cStubBendHist = new TProfile(cName, Form("Bend Information FE%d CBC%d ; Test Pulse Channel [1-254]; Stub Bend", cFeId, cCbcId), 254, -0.5, 254.5);
                     cStubBendHist->SetMarkerStyle(20);
@@ -164,8 +160,7 @@ void StubSweep::SweepStubs(uint32_t pNEvents)
                             cChannelPair.clear();
                             cChannelPair.push_back(cChannelVector[2 * i]);
 
-                            if(!(!isEven && i == cNumberOfPairs - 1))
-                                cChannelPair.push_back(cChannelVector[2 * i + 1]);
+                            if(!(!isEven && i == cNumberOfPairs - 1)) cChannelPair.push_back(cChannelVector[2 * i + 1]);
 
                             // if( cChannelPair.size() == 2 ) LOG (DEBUG) << "\t\t (" << +i << ") " << +cChannelPair[0]
                             // << " and " << +cChannelPair[1] ; else LOG (DEBUG) << "\t\t (" << +i << ") " <<
@@ -178,8 +173,7 @@ void StubSweep::SweepStubs(uint32_t pNEvents)
                             {
                                 uint8_t cBitShift = (cChannelVector[j] - 1) % 8;
 
-                                if(std::find(cChannelPair.begin(), cChannelPair.end(), cChannelVector[j]) != cChannelPair.end())
-                                    cMaskRegValue |= (1 << cBitShift);
+                                if(std::find(cChannelPair.begin(), cChannelPair.end(), cChannelVector[j]) != cChannelPair.end()) cMaskRegValue |= (1 << cBitShift);
                             }
 
                             // write the CBC mask registers
@@ -188,9 +182,7 @@ void StubSweep::SweepStubs(uint32_t pNEvents)
 
                             // LOG (DEBUG) << BLUE << "Un-masking channels " <<  +cChannelPair[0] << " and " <<
                             // +cChannelPair[1] << RESET ;
-                            if(fType == FrontEndType::CBC3)
-
-                                cRegName = fChannelMaskMapCBC3[cRegisterIndex];
+                            if(fType == FrontEndType::CBC3) cRegName = fChannelMaskMapCBC3[cRegisterIndex];
 
                             // get value that is already in the register
                             cRegValue = theCbc->getReg(cRegName);
@@ -378,11 +370,9 @@ std::vector<uint8_t> StubSweep::findChannelsInTestGroup(uint8_t pTestGroup)
         int ctemp2 = ctemp1 + 1;
 
         // added less than or equal to here
-        if(ctemp1 <= 254)
-            cChannelVector.push_back(ctemp1);
+        if(ctemp1 <= 254) cChannelVector.push_back(ctemp1);
 
-        if(ctemp2 <= 254)
-            cChannelVector.push_back(ctemp2);
+        if(ctemp2 <= 254) cChannelVector.push_back(ctemp2);
     }
 
     return cChannelVector;

@@ -75,8 +75,7 @@ void GainOptimization::sendData()
     auto theKrumStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>();
 
     if(fStreamerEnabled == true)
-        for(const auto cBoard: theKrumCurrContainer)
-            theKrumStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theKrumCurrContainer) theKrumStream.streamAndSendBoard(cBoard, fNetworkStreamer);
 }
 
 void GainOptimization::Stop()
@@ -145,8 +144,7 @@ void GainOptimization::draw(int currentRun)
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true)
-        myApp = new TApplication("myApp", nullptr, nullptr);
+    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     this->InitResultFile(fileRes);
     LOG(INFO) << BOLDBLUE << "\t--> GainOptimization saving histograms..." << RESET;
@@ -160,8 +158,7 @@ void GainOptimization::draw(int currentRun)
     this->WriteRootFile();
     this->CloseResultFile();
 
-    if(doDisplay == true)
-        myApp->Run(true);
+    if(doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -204,8 +201,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
     for(const auto cBoard: bestContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
-                    cChip->getSummary<OccupancyAndPh>().fPh = 0;
+                for(const auto cChip: *cModule) cChip->getSummary<OccupancyAndPh>().fPh = 0;
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -342,8 +338,7 @@ void GainOptimization::saveChipRegisters(int currentRun)
                 for(const auto cChip: *cModule)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true)
-                        static_cast<RD53*>(cChip)->saveRegMap("");
+                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());

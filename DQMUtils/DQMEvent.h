@@ -37,8 +37,7 @@ class ReadoutStatus
 
     void print(bool printHeader = true, std::ostream& os = std::cout) const
     {
-        if(printHeader)
-            os << "Error1 Error2 plAdd l1ACounter" << std::endl;
+        if(printHeader) os << "Error1 Error2 plAdd l1ACounter" << std::endl;
         os << std::setw(6) << error1_ << std::setw(7) << error2_ << std::setw(6) << plAdd_ << std::setw(11) << l1ACounter_ << std::endl;
     }
 
@@ -58,8 +57,7 @@ class StubInfo
     float   channel() const { return (chipId_ * 127 + 0.5 * address_); }
     void    print(bool printHeader = true, std::ostream& os = std::cout) const
     {
-        if(printHeader)
-            os << " chipId address channel bend" << std::endl;
+        if(printHeader) os << " chipId address channel bend" << std::endl;
         os << std::setw(7) << +chipId_ << std::setw(8) << +address_ << std::setiosflags(std::ios::fixed) << std::setprecision(1) << std::setw(8) << channel() << std::resetiosflags(std::ios::fixed)
            << std::setw(5) << +bend_ << std::endl;
     }
@@ -101,16 +99,14 @@ class DQMEvent
     {
         size_t retval = 0;
         int    i      = 0;
-        for(std::vector<bool>::const_iterator it = v.begin() + ishift; it != v.begin() + ishift + len; ++it, ++i)
-            retval |= ((*it) ? 1 : 0) << (len - 1 - i);
+        for(std::vector<bool>::const_iterator it = v.begin() + ishift; it != v.begin() + ishift + len; ++it, ++i) retval |= ((*it) ? 1 : 0) << (len - 1 - i);
         return retval;
     }
     static std::vector<bool> getChannelData(const std::vector<bool>& v, size_t ishift, size_t len = STRIPS_PER_READOUT_PADDED)
     {
         std::vector<bool> retval;
         int               i = 0;
-        for(std::vector<bool>::const_iterator it = v.begin() + ishift; it != v.begin() + ishift + len; ++it, ++i)
-            retval.push_back((*it));
+        for(std::vector<bool>::const_iterator it = v.begin() + ishift; it != v.begin() + ishift + len; ++it, ++i) retval.push_back((*it));
         return retval;
     }
     static uint16_t encodeId(const uint8_t& pFeId, const uint8_t& pCbcId) { return (pFeId << 8 | pCbcId); }
@@ -133,8 +129,7 @@ class DQMEvent
     {
         v.clear();
         for(size_t i = 0; i < bs.size(); ++i)
-            if(bs.test(i))
-                v.push_back(i);
+            if(bs.test(i)) v.push_back(i);
 
         return v.size();
     }
@@ -142,8 +137,7 @@ class DQMEvent
     {
         v.clear();
         for(size_t i = 0; i < bs.size(); ++i)
-            if(bs.test(i))
-                v.push_back(i);
+            if(bs.test(i)) v.push_back(i);
 
         return v.size();
     }
@@ -227,10 +221,8 @@ class DQMEvent
             std::bitset<64> b(w2);
 
             // Fill the 72 bit word
-            for(size_t i = 0; i < b.size(); ++i)
-                feStatus_.set(i, b[i]);
-            for(size_t i = 0; i < a.size(); ++i)
-                feStatus_.set(64 + i, a[i]);
+            for(size_t i = 0; i < b.size(); ++i) feStatus_.set(i, b[i]);
+            for(size_t i = 0; i < a.size(); ++i) feStatus_.set(64 + i, a[i]);
 
             // Readout Status, collect information
             size_t            nbits  = nRO * READOUT_STATUS_WORD_WIDTH;
@@ -239,8 +231,7 @@ class DQMEvent
             for(size_t i = 0; i < nwords; ++i)
             {
                 uint64_t w = wordList.at(3 + i);
-                for(size_t j = 0; j < wbit; ++j)
-                    data.push_back((w >> (wbit - 1 - j)) & 0x1);
+                for(size_t j = 0; j < wbit; ++j) data.push_back((w >> (wbit - 1 - j)) & 0x1);
             }
             // Now fill information
             for(size_t i = 0; i < nRO; ++i)
@@ -276,14 +267,12 @@ class DQMEvent
             std::vector<uint8_t> feList;
             attachedFE(feStatus_, feList);
             os << "FE position: <";
-            for(size_t i = 0; i < feList.size(); ++i)
-                os << i << " ";
+            for(size_t i = 0; i < feList.size(); ++i) os << i << " ";
 
             os << ">" << std::endl;
 
             // Readout Status
-            for(size_t i = 0; i < roList_.size(); ++i)
-                roList_[i].print((i == 0 ? true : false), os);
+            for(size_t i = 0; i < roList_.size(); ++i) roList_[i].print((i == 0 ? true : false), os);
         }
 
       private:
@@ -312,8 +301,7 @@ class DQMEvent
             for(size_t i = 0; i < nwords; ++i)
             {
                 uint64_t w = wordList.at(ishift + i);
-                for(size_t j = 0; j < wbit; ++j)
-                    data.push_back((w >> (wbit - 1 - j)) & 0x1);
+                for(size_t j = 0; j < wbit; ++j) data.push_back((w >> (wbit - 1 - j)) & 0x1);
             }
             // now the complicated part
             size_t ipos = nFE * MAX_READOUT_PER_FE;
@@ -389,8 +377,7 @@ class DQMEvent
                 os << "Channels hit: <";
                 for(size_t i = 0; i < cdata.size(); ++i)
                 {
-                    if(cdata.at(i))
-                        os << i << " ";
+                    if(cdata.at(i)) os << i << " ";
                 }
                 os << ">" << std::endl;
             }
@@ -416,10 +403,8 @@ class DQMEvent
                 // std::cout << "stub word: " << std::bitset<64>(w) << std::endl;
                 // if (nwords > 0 && !(w >> 32)) break;  // using the first condition data information (Condition Data
                 // size)
-                if(nwords > 0 && (w > 0 && w < 10) && !(w >> 32))
-                    break; // using the first condition data information (Condition Data size)
-                for(size_t j = 0; j < wbit; ++j)
-                    data.push_back((w >> (wbit - 1 - j)) & 0x1);
+                if(nwords > 0 && (w > 0 && w < 10) && !(w >> 32)) break; // using the first condition data information (Condition Data size)
+                for(size_t j = 0; j < wbit; ++j) data.push_back((w >> (wbit - 1 - j)) & 0x1);
                 ++nwords;
             }
             // Now store the results properly
@@ -450,8 +435,7 @@ class DQMEvent
             {
                 os << "feId: <" << +v.first << ">" << std::endl;
                 const std::vector<StubInfo>& stubList = v.second;
-                for(size_t i = 0; i < stubList.size(); ++i)
-                    stubList.at(i).print((i == 0 ? true : false));
+                for(size_t i = 0; i < stubList.size(); ++i) stubList.at(i).print((i == 0 ? true : false));
             }
         }
         const std::map<uint8_t, std::vector<StubInfo>>& getMap() const { return dMap_; }

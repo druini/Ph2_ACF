@@ -51,6 +51,5 @@ void OccupancyAndPh::normalize(const uint32_t numberOfEvents, bool doOnlyPh)
     fPh /= (fOccupancy > 0 ? fOccupancy : 1);
     fPhError = (fOccupancy > 1 ? sqrt((fPhError / fOccupancy - fPh * fPh) * fOccupancy / (fOccupancy - 1)) : 0);
 
-    if(doOnlyPh == false)
-        fOccupancy /= numberOfEvents;
+    if(doOnlyPh == false) fOccupancy /= numberOfEvents;
 }

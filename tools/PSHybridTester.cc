@@ -20,10 +20,7 @@ void PSHybridTester::Initialise()
 }
 void PSHybridTester::MPATest(uint32_t pPattern)
 {
-    for(auto cBoard: *fDetectorContainer)
-    {
-        this->MPATest(cBoard, pPattern);
-    }
+    for(auto cBoard: *fDetectorContainer) { this->MPATest(cBoard, pPattern); }
 }
 void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 {
@@ -44,8 +41,7 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
             for(uint8_t cLineId = 1; cLineId < 8; cLineId++)
             {
                 cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, 0, cPairId, cLineId, cAlignmentPattern, 8);
-                if(!cAligned)
-                    LOG(INFO) << BOLDRED << "Alignment failed on line " << +cLineId << RESET;
+                if(!cAligned) LOG(INFO) << BOLDRED << "Alignment failed on line " << +cLineId << RESET;
             }
             // if aligned then try and scope
             LOG(INFO) << "SLVS debug [stub lines] : Chip " << +cPairId << RESET;
@@ -80,8 +76,7 @@ void PSHybridTester::SSAOutputsPogoDebug(BeBoard* pBoard, bool pTrigger)
     uint8_t cTriggerCounter = 0;
     do
     {
-        if(pTrigger)
-            fBeBoardInterface->ChipTrigger(pBoard);
+        if(pTrigger) fBeBoardInterface->ChipTrigger(pBoard);
         // fBeBoardInterface->ChipTestPulse(pBoard);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cTriggerCounter++;
@@ -143,17 +138,11 @@ void PSHybridTester::SSAPairSelect(BeBoard* pBoard, const std::string& SSAPairSe
 }
 void PSHybridTester::SSATestStubOutput(const std::string& cSSAPairSel)
 {
-    for(auto cBoard: *fDetectorContainer)
-    {
-        this->SSATestStubOutput(cBoard, cSSAPairSel);
-    }
+    for(auto cBoard: *fDetectorContainer) { this->SSATestStubOutput(cBoard, cSSAPairSel); }
 }
 void PSHybridTester::SSATestL1Output(const std::string& cSSAPairSel)
 {
-    for(auto cBoard: *fDetectorContainer)
-    {
-        this->SSATestL1Output(cBoard, cSSAPairSel);
-    }
+    for(auto cBoard: *fDetectorContainer) { this->SSATestL1Output(cBoard, cSSAPairSel); }
 }
 void PSHybridTester::SelectCIC(bool pSelect)
 {
@@ -198,8 +187,7 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
             for(auto cReadoutChip: *cHybrid)
             {
                 // add check for SSA
-                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA)
-                    continue;
+                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
 
                 uint8_t cPattern = (cReadoutChip->getId() % 2 == 0) ? 0x01 : 0x05;
 
@@ -235,8 +223,7 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
             for(auto cReadoutChip: *cHybrid)
             {
                 // add check for SSA
-                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA)
-                    continue;
+                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
                 /*
                // make sure SSA is configured to inject digital hits in one strip
                // first make sure all strips are set to output exactly 0
@@ -358,10 +345,7 @@ void PSHybridTester::CheckHybridVoltages()
 
     ReadHybridVoltage("Hybrid1V25");
     LOG(INFO) << BOLDBLUE << "Hybrid 1V25 : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
-    if(fVoltageMeasurement.first * 1e-3 >= PSHYBRIDMAXV)
-    {
-        throw std::runtime_error(std::string("Exceeded maximum voltage of 1V25 of PS FEH"));
-    }
+    if(fVoltageMeasurement.first * 1e-3 >= PSHYBRIDMAXV) { throw std::runtime_error(std::string("Exceeded maximum voltage of 1V25 of PS FEH")); }
 }
 void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
 {
@@ -374,8 +358,7 @@ void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
             for(auto cReadoutChip: *cHybrid)
             {
                 // add check for SSA
-                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA)
-                    continue;
+                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
 
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "AmuxHigh", 1);
             }
@@ -387,8 +370,7 @@ void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
             for(auto cReadoutChip: *cHybrid)
             {
                 // add check for SSA
-                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA)
-                    continue;
+                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
 
                 LOG(INFO) << BOLDBLUE << "Selecting TestBias on SSA" << +cReadoutChip->getId() << RESET;
                 // select bias
@@ -407,10 +389,7 @@ void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
 void PSHybridTester::CheckFastCommands(BeBoard* pBoard, const std::string& pFastCommand, uint8_t pDuration)
 {
     LOG(DEBUG) << BOLDBLUE << "Sending " << pFastCommand << RESET;
-    if(pFastCommand == "ReSync")
-    {
-        this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 16) | (pDuration << 28));
-    }
+    if(pFastCommand == "ReSync") { this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 16) | (pDuration << 28)); }
     else if(pFastCommand == "Trigger" || pFastCommand == "OpenShutter")
     {
         this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 18) | (pDuration << 28));
@@ -473,10 +452,7 @@ void PSHybridTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string>
 }
 void PSHybridTester::CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
-    for(auto cBoard: *fDetectorContainer)
-    {
-        this->CheckHybridInputs(cBoard, pInputs, pCounters);
-    }
+    for(auto cBoard: *fDetectorContainer) { this->CheckHybridInputs(cBoard, pInputs, pCounters); }
 }
 void PSHybridTester::SelectAntennaPosition(const std::string& pPosition, uint16_t pPotentiometer)
 {
@@ -535,10 +511,7 @@ void PSHybridTester::ReadSSABias(const std::string& pBiasName)
 {
 #ifdef __TCUSB__
     LOG(INFO) << BOLDBLUE << "TC USB built." << RESET;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        this->ReadSSABias(cBoard, pBiasName);
-    }
+    for(auto cBoard: *fDetectorContainer) { this->ReadSSABias(cBoard, pBiasName); }
 #else
     LOG(INFO) << BOLDRED << "TC USB not built .. check that you have the lib installed!" << RESET;
 #endif
@@ -546,17 +519,11 @@ void PSHybridTester::ReadSSABias(const std::string& pBiasName)
 
 void PSHybridTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
-    for(auto cBoard: *fDetectorContainer)
-    {
-        this->CheckHybridOutputs(cBoard, pInputs, pCounters);
-    }
+    for(auto cBoard: *fDetectorContainer) { this->CheckHybridOutputs(cBoard, pInputs, pCounters); }
 }
 void PSHybridTester::CheckFastCommands(const std::string& pFastCommand, uint8_t pDuartion)
 {
-    for(auto cBoard: *fDetectorContainer)
-    {
-        this->CheckFastCommands(cBoard, pFastCommand, pDuartion);
-    }
+    for(auto cBoard: *fDetectorContainer) { this->CheckFastCommands(cBoard, pFastCommand, pDuartion); }
 }
 // State machine control functions
 void PSHybridTester::Start(int currentRun)

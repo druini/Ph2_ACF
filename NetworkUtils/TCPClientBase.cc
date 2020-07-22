@@ -15,8 +15,7 @@ TCPClientBase::TCPClientBase(const std::string& serverIP, int serverPort) : fSer
 TCPClientBase::~TCPClientBase(void)
 {
     std::cout << __PRETTY_FUNCTION__ << "Closing TCPSocket #" << getSocketId() << std::endl;
-    if(fConnected)
-        close();
+    if(fConnected) close();
     std::cout << __PRETTY_FUNCTION__ << "TCPSocket #" << getSocketId() << " closed." << std::endl;
 }
 

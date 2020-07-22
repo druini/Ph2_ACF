@@ -89,10 +89,7 @@ class CheckStream
   private:
     void setPacketSize(uint32_t packetSize)
     {
-        if(packetSize >= 0xFFFFFF)
-        {
-            abort();
-        }
+        if(packetSize >= 0xFFFFFF) { abort(); }
         fPacketNumberAndSize = (packetSize) | (fPacketNumberAndSize & 0xFF000000);
     }
 

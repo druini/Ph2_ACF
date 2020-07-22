@@ -76,8 +76,7 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
                 {
                     size_t chipIndex = chip->getIndex();
                     // Retreive the corresponging chip histogram:
-                    if(chip->getSummaryContainer<ThresholdAndNoise, ThresholdAndNoise>() == nullptr)
-                        continue;
+                    if(chip->getSummaryContainer<ThresholdAndNoise, ThresholdAndNoise>() == nullptr) continue;
                     TH1F* chipPulseShapeHistogram =
                         fDetectorChipPulseShapeHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     int currentBin = chipPulseShapeHistogram->FindBin(binCenterValue);

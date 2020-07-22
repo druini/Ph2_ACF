@@ -137,8 +137,7 @@ class DataStreamChannelContainer : public DataStreamBase
     DataStreamChannelContainer() : fChannelContainer(nullptr) {}
     ~DataStreamChannelContainer()
     {
-        if(fChannelContainer != nullptr)
-            delete fChannelContainer;
+        if(fChannelContainer != nullptr) delete fChannelContainer;
         fChannelContainer = nullptr;
     }
 
@@ -243,26 +242,18 @@ class DataStreamChipContainer : public DataStreamBase
     DataStreamChipContainer() : fChannelContainer(nullptr), fChipSummaryContainer(nullptr) { check_if_retrivable<C>(); }
     ~DataStreamChipContainer()
     {
-        if(fChannelContainer != nullptr)
-            delete fChannelContainer;
+        if(fChannelContainer != nullptr) delete fChannelContainer;
         fChannelContainer = nullptr;
 
-        if(fChipSummaryContainer != nullptr)
-            delete fChipSummaryContainer;
+        if(fChipSummaryContainer != nullptr) delete fChipSummaryContainer;
         fChipSummaryContainer = nullptr;
     }
 
     uint32_t size(void) override
     {
         fDataSize = sizeof(fDataSize) + sizeof(fContainerCarried);
-        if(fChipSummaryContainer != nullptr)
-        {
-            fDataSize += sizeof(C);
-        }
-        if(fChannelContainer != nullptr)
-        {
-            fDataSize += fChannelContainer->size() * sizeof(T);
-        }
+        if(fChipSummaryContainer != nullptr) { fDataSize += sizeof(C); }
+        if(fChannelContainer != nullptr) { fDataSize += fChannelContainer->size() * sizeof(T); }
         return fDataSize;
     }
 
@@ -442,10 +433,7 @@ class DataStreamModuleContainer : public DataStreamBase
     uint32_t size(void) override
     {
         fDataSize = sizeof(fDataSize) + sizeof(fContainerCarried) + sizeof(fNumberOfChips);
-        if(fModuleSummaryContainer != nullptr)
-        {
-            fDataSize += sizeof(M);
-        }
+        if(fModuleSummaryContainer != nullptr) { fDataSize += sizeof(M); }
         fDataSize += sizeOfChipContainer();
         fDataSize += sizeOfChannelContainer();
 
@@ -543,18 +531,15 @@ class DataStreamModuleContainer : public DataStreamBase
   private:
     uint32_t sizeOfChannelContainer()
     {
-        if(fChannelContainerVector.size() == 0)
-            return 0;
+        if(fChannelContainerVector.size() == 0) return 0;
         uint32_t size = 0;
-        for(auto element: fChannelContainerVector)
-            size += (sizeof(T) * element->size());
+        for(auto element: fChannelContainerVector) size += (sizeof(T) * element->size());
         std::cout << __PRETTY_FUNCTION__ << +size << std::endl;
         return size;
     }
     uint32_t sizeOfChipContainer()
     {
-        if(fChipSummaryContainerVector.size() == 0)
-            return 0;
+        if(fChipSummaryContainerVector.size() == 0) return 0;
         std::cout << __PRETTY_FUNCTION__ << " Chip vector size = " << +fChipSummaryContainerVector.size() << std::endl;
         std::cout << __PRETTY_FUNCTION__ << " Chip summary size = " << +sizeof(C) << std::endl;
         std::cout << __PRETTY_FUNCTION__ << " Total size = " << +fChipSummaryContainerVector.size() * sizeof(C) << std::endl;

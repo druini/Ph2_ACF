@@ -86,8 +86,7 @@ bool Event::Bit(uint8_t pFeId, uint8_t pCbcId, uint32_t pPosition) const
 
     if(cData != std::end(fEventDataMap))
     {
-        if(cWordP >= cData->second.size())
-            return false;
+        if(cWordP >= cData->second.size()) return false;
 
         return ((cData->second.at(cWordP) >> (31 - cBitP)) & 0x1);
     }
@@ -113,8 +112,7 @@ std::string Event::BitString(uint8_t pFeId, uint8_t pCbcId, uint32_t pOffset, ui
             uint32_t cWordP = pos / 32;
             uint32_t cBitP  = pos % 32;
 
-            if(cWordP >= cData->second.size())
-                break;
+            if(cWordP >= cData->second.size()) break;
 
             // os << ((cbcData[cByteP] & ( 1 << ( 7 - cBitP ) ))?"1":"0");
             os << ((cData->second[cWordP] >> (31 - cBitP)) & 0x1);
@@ -145,8 +143,7 @@ std::vector<bool> Event::BitVector(uint8_t pFeId, uint8_t pCbcId, uint32_t pOffs
             uint32_t cWordP = pos / 32;
             uint32_t cBitP  = pos % 32;
 
-            if(cWordP >= cData->second.size())
-                break;
+            if(cWordP >= cData->second.size()) break;
 
             blist.push_back((cData->second[cWordP] >> (31 - cBitP)) & 0x1);
         }

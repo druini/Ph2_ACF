@@ -41,10 +41,8 @@ void readSLinkFromFile(std::ifstream& fh, int maxevt, bool skipHeader, std::vect
         {
             char buffer[8];
             fh.read(buffer, sizeof(uint64_t));
-            if(!fh)
-                std::cerr << "Error reading data from the SLink file!" << std::endl;
-            if(++nlskip == 6)
-                break;
+            if(!fh) std::cerr << "Error reading data from the SLink file!" << std::endl;
+            if(++nlskip == 6) break;
         }
 #if 0
            std::cout << "After reading the SLink Header words tellg() returns " 
@@ -94,10 +92,8 @@ void readSLinkFromFile(std::ifstream& fh, int maxevt, bool skipHeader, std::vect
             try
             {
                 DQMEvent* ev = new DQMEvent(new SLinkEvent(cData));
-                if(ev->trkPayload().feReadoutMapping().size() > 0)
-                    evList.push_back(std::move(ev));
-                if(static_cast<int>(evList.size()) == maxevt)
-                    return;
+                if(ev->trkPayload().feReadoutMapping().size() > 0) evList.push_back(std::move(ev));
+                if(static_cast<int>(evList.size()) == maxevt) return;
             }
             catch(...)
             {
@@ -109,8 +105,7 @@ void readSLinkFromFile(std::ifstream& fh, int maxevt, bool skipHeader, std::vect
             }
         }
 
-        if(fh.eof())
-            break;
+        if(fh.eof()) break;
     }
 }
 int main(int argc, char* argv[])
@@ -216,8 +211,7 @@ int main(int argc, char* argv[])
         long ntotevt = evList.size();
         while(1)
         {
-            for(DQMEvent* p: evList)
-                delete p;
+            for(DQMEvent* p: evList) delete p;
             evList.clear();
 
             readSLinkFromFile(fh, readevt, false, evList);
@@ -233,10 +227,8 @@ int main(int argc, char* argv[])
             ntotevt += evList.size();
             LOG(INFO) << "-> eventsRead = " << evList.size() << ", totalEventsRead = " << ntotevt;
 
-            if(fh.eof())
-                break;
-            if(!fh.is_open())
-                break;
+            if(fh.eof()) break;
+            if(!fh.is_open()) break;
         }
         // save and publish
         // Create the DQM plots and generate the root file
@@ -277,8 +269,7 @@ int main(int argc, char* argv[])
     }
 
     // time to close the file
-    if(fh.is_open())
-        fh.close();
+    if(fh.is_open()) fh.close();
 
     return 0;
 }

@@ -75,17 +75,13 @@ class Container
 
     T* getObject(uint16_t id)
     {
-        if(idObjectMap_.find(id) == idObjectMap_.end())
-            throw Exception("T* getObject(uint16_t id) : Object Id not found");
+        if(idObjectMap_.find(id) == idObjectMap_.end()) throw Exception("T* getObject(uint16_t id) : Object Id not found");
         return idObjectMap_[id];
     }
 
     void cleanDataStored() override
     {
-        for(auto container: *this)
-        {
-            container->cleanDataStored();
-        }
+        for(auto container: *this) { container->cleanDataStored(); }
     }
 
     BaseContainer* getElement(uint16_t index) const override { return this->at(index); }
@@ -123,8 +119,7 @@ class ChannelContainer
 
     friend std::ostream& operator<<(std::ostream& os, const ChannelContainer& channelContainer)
     {
-        for(auto& channel: channelContainer)
-            os << channel;
+        for(auto& channel: channelContainer) os << channel;
         return os;
     }
 };
@@ -213,10 +208,7 @@ class ChipContainer : public BaseContainer
     bool isChannelContainerType()
     {
         ChannelContainer<T>* tmpChannelContainer = dynamic_cast<ChannelContainer<T>*>(container_);
-        if(tmpChannelContainer == nullptr)
-        {
-            return false;
-        }
+        if(tmpChannelContainer == nullptr) { return false; }
         else
             return true;
 

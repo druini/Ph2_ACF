@@ -50,18 +50,15 @@ void Amc13Controller::parseAmc13xml(const std::string& pFilename, std::ostream& 
 
     os << "\n";
 
-    for(i = 0; i < 80; i++)
-        os << "*";
+    for(i = 0; i < 80; i++) os << "*";
 
     os << "\n";
 
-    for(j = 0; j < 40; j++)
-        os << " ";
+    for(j = 0; j < 40; j++) os << " ";
 
     os << BOLDRED << "AMC13 Settings " << RESET << std::endl;
 
-    for(i = 0; i < 80; i++)
-        os << "*";
+    for(i = 0; i < 80; i++) os << "*";
 
     os << "\n";
 
@@ -71,8 +68,7 @@ void Amc13Controller::parseAmc13xml(const std::string& pFilename, std::ostream& 
         os << BOLDCYAN << cAmc13node.name() << RESET << std::endl;
 
         // now create a new AMC13 Description Object
-        if(fAmc13 != nullptr)
-            delete fAmc13;
+        if(fAmc13 != nullptr) delete fAmc13;
 
         fAmc13 = new Amc13Description();
 
@@ -118,8 +114,7 @@ void Amc13Controller::parseAmc13xml(const std::string& pFilename, std::ostream& 
         fAmc13->setAMCMask(parseAMCMask(cAmc13node.child("AMCmask"), os));
         fAmc13->setTrigger(parseTrigger(cAmc13node.child("Trigger"), os));
 
-        for(pugi::xml_node cBGOnode = cAmc13node.child("BGO"); cBGOnode; cBGOnode = cBGOnode.next_sibling("BGO"))
-            fAmc13->addBGO(parseBGO(cBGOnode, os));
+        for(pugi::xml_node cBGOnode = cAmc13node.child("BGO"); cBGOnode; cBGOnode = cBGOnode.next_sibling("BGO")) fAmc13->addBGO(parseBGO(cBGOnode, os));
 
         // now just parse the TTC Simulator Node!
         for(pugi::xml_node cBGOnode = cAmc13node.child("TTCSimulator"); cBGOnode; cBGOnode = cBGOnode.next_sibling("TTCSimulator"))
@@ -138,8 +133,7 @@ void Amc13Controller::parseAmc13xml(const std::string& pFilename, std::ostream& 
 
             // now instantiate the AMC13Interface & provide it with the correct HWDescription object so I don't need to
             // pass it around all the time!
-            if(fAmc13Interface != nullptr)
-                delete fAmc13Interface;
+            if(fAmc13Interface != nullptr) delete fAmc13Interface;
 
             fAmc13Interface = new Amc13Interface(cUri1, cAddressT1, cUri2, cAddressT2);
             fAmc13Interface->setAmc13Description(fAmc13);

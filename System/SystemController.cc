@@ -86,8 +86,7 @@ void SystemController::closeFileHandler()
 {
     if(fFileHandler != nullptr)
     {
-        if(fFileHandler->isFileOpen() == true)
-            fFileHandler->closeFile();
+        if(fFileHandler->isFileOpen() == true) fFileHandler->closeFile();
         delete fFileHandler;
         fFileHandler = nullptr;
     }
@@ -104,8 +103,7 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
 void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData)
 {
     fStreamerEnabled = streamData;
-    if(streamData == true)
-        fNetworkStreamer = new TCPPublishServer(6000, 1);
+    if(streamData == true) fNetworkStreamer = new TCPPublishServer(6000, 1);
 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
@@ -128,8 +126,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     for(auto cROC: *cFirstHybrid)
                     {
                         auto cChipType = cROC->getFrontEndType();
-                        if(cROC->getIndex() > 0)
-                            continue;
+                        if(cROC->getIndex() > 0) continue;
 
                         LOG(INFO) << BOLDBLUE << "\t\t\t...Assuming ROC#" << +cROC->getId() << " represents all ROCs on this hybrid" << RESET;
                         if(cChipType == FrontEndType::CBC3)
@@ -187,8 +184,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         }
     }
 
-    if(fWriteHandlerEnabled == true)
-        this->initializeWriteFileHandler();
+    if(fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os, bool pIsFile) { this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile); }
@@ -217,8 +213,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // CIC start-up
             for(auto cOpticalGroup: *cBoard)
             {
-                if(cOpticalGroup->flpGBT != nullptr)
-                    flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
+                if(cOpticalGroup->flpGBT != nullptr) flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                 uint8_t cLinkId = cOpticalGroup->getId();
                 LOG(INFO) << BOLDMAGENTA << "CIC start-up seqeunce for hybrids on link " << +cLinkId << RESET;
                 for(auto cHybrid: *cOpticalGroup)
@@ -266,10 +261,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         }
                         // if SSA + ASYNC
                         // make sure ROCs are configured for that
-                        if(theReadoutChip->getFrontEndType() == FrontEndType::SSA)
-                        {
-                            fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync);
-                        }
+                        if(theReadoutChip->getFrontEndType() == FrontEndType::SSA) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync); }
                     }
                 }
             }
@@ -303,8 +295,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ###################
             for(auto cOpticalGroup: *cBoard)
             {
-                if(cOpticalGroup->flpGBT != nullptr)
-                    flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
+                if(cOpticalGroup->flpGBT != nullptr) flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     LOG(INFO) << GREEN << "Initializing communication to Module: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
@@ -334,8 +325,7 @@ void SystemController::initializeWriteFileHandler()
         BoardType   cBoardType = cBoard->getBoardType();
 
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                cNChip += cHybrid->size();
+            for(const auto cHybrid: *cOpticalGroup) cNChip += cHybrid->size();
 
         if(cBoardType == BoardType::D19C)
             cBoardTypeString = "D19C";
@@ -351,8 +341,7 @@ void SystemController::initializeWriteFileHandler()
         std::stringstream cBeBoardString;
         cBeBoardString << "_Board" << std::setw(3) << std::setfill('0') << cBeId;
         std::string cFilename = fRawFileName;
-        if(fRawFileName.find(".raw") != std::string::npos)
-            cFilename.insert(fRawFileName.find(".raw"), cBeBoardString.str());
+        if(fRawFileName.find(".raw") != std::string::npos) cFilename.insert(fRawFileName.find(".raw"), cBeBoardString.str());
 
         fFileHandler = new FileHandler(cFilename, 'w', cHeader);
 
@@ -367,37 +356,31 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     uint32_t cNChip        = 0;
 
     for(const auto cOpticalGroup: *pBoard)
-        for(const auto cHybrid: *cOpticalGroup)
-            cNChip += cHybrid->size();
+        for(const auto cHybrid: *cOpticalGroup) cNChip += cHybrid->size();
 
-    if(pBoard->getBoardType() == BoardType::D19C)
-        cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNChip * D19C_EVENT_SIZE_32_CBC3;
+    if(pBoard->getBoardType() == BoardType::D19C) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNChip * D19C_EVENT_SIZE_32_CBC3;
 
     return cNEventSize32;
 }
 
 void SystemController::Start(int currentRun)
 {
-    for(auto cBoard: *fDetectorContainer)
-        fBeBoardInterface->Start(cBoard);
+    for(auto cBoard: *fDetectorContainer) fBeBoardInterface->Start(cBoard);
 }
 
 void SystemController::Stop()
 {
-    for(auto cBoard: *fDetectorContainer)
-        fBeBoardInterface->Stop(cBoard);
+    for(auto cBoard: *fDetectorContainer) fBeBoardInterface->Stop(cBoard);
 }
 
 void SystemController::Pause()
 {
-    for(auto cBoard: *fDetectorContainer)
-        fBeBoardInterface->Pause(cBoard);
+    for(auto cBoard: *fDetectorContainer) fBeBoardInterface->Pause(cBoard);
 }
 
 void SystemController::Resume()
 {
-    for(auto cBoard: *fDetectorContainer)
-        fBeBoardInterface->Resume(cBoard);
+    for(auto cBoard: *fDetectorContainer) fBeBoardInterface->Resume(cBoard);
 }
 
 void SystemController::ConfigureHardware(std::string cHWFile, bool enableStream)
@@ -433,8 +416,7 @@ uint32_t SystemController::ReadData(BeBoard* pBoard, bool pWait)
 
 void SystemController::ReadData(bool pWait)
 {
-    for(auto cBoard: *fDetectorContainer)
-        this->ReadData(cBoard, pWait);
+    for(auto cBoard: *fDetectorContainer) this->ReadData(cBoard, pWait);
 }
 
 uint32_t SystemController::ReadData(BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
@@ -452,8 +434,7 @@ void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents)
 
 void SystemController::ReadNEvents(uint32_t pNEvents)
 {
-    for(auto cBoard: *fDetectorContainer)
-        this->ReadNEvents(cBoard, pNEvents);
+    for(auto cBoard: *fDetectorContainer) this->ReadNEvents(cBoard, pNEvents);
 }
 
 void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
@@ -461,8 +442,7 @@ void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vect
     fBeBoardInterface->ReadNEvents(pBoard, pNEvents, pData, pWait);
 
     uint32_t cMultiplicity = 0;
-    if(fBeBoardInterface->getBoardType(pBoard) == BoardType::D19C)
-        cMultiplicity = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    if(fBeBoardInterface->getBoardType(pBoard) == BoardType::D19C) cMultiplicity = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     pNEvents = pNEvents * (cMultiplicity + 1);
 
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
@@ -483,17 +463,11 @@ void SystemController::ReadASEvent(BeBoard* pBoard, uint32_t pNMsec, uint32_t pu
 
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(0);
         std::this_thread::sleep_for(std::chrono::microseconds(pNMsec));
-        for(uint32_t i = 0; i < pulses; i++)
-        {
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ChipTestPulse();
-        }
+        for(uint32_t i = 0; i < pulses; i++) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ChipTestPulse(); }
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);
     }
 
-    if(fast)
-    {
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadASEvent(pBoard, cData);
-    }
+    if(fast) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadASEvent(pBoard, cData); }
     else
     {
         for(auto cOpticalGroup: *pBoard)
@@ -502,10 +476,8 @@ void SystemController::ReadASEvent(BeBoard* pBoard, uint32_t pNMsec, uint32_t pu
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(pBoard->getFrontEndType() == FrontEndType::MPA)
-                        static_cast<MPAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
-                    if(pBoard->getFrontEndType() == FrontEndType::SSA)
-                        static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+                    if(pBoard->getFrontEndType() == FrontEndType::MPA) static_cast<MPAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+                    if(pBoard->getFrontEndType() == FrontEndType::SSA) static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
                 }
             }
         }
@@ -525,8 +497,7 @@ double SystemController::findValueInSettings(const std::string name, double defa
 // #################
 void SystemController::SetFuture(const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
 {
-    if(pData.size() != 0)
-        fFuture = std::async(&SystemController::DecodeData, this, pBoard, pData, pNevents, pType);
+    if(pData.size() != 0) fFuture = std::async(&SystemController::DecodeData, this, pBoard, pData, pNevents, pType);
 }
 
 void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
@@ -534,23 +505,17 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     if(pType == BoardType::RD53)
     {
         fEventList.clear();
-        if(RD53FWInterface::decodedEvents.size() == 0)
-            RD53FWInterface::DecodeEventsMultiThreads(pData, RD53FWInterface::decodedEvents);
+        if(RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEventsMultiThreads(pData, RD53FWInterface::decodedEvents);
         RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
-        for(auto i = 0u; i < RD53FWInterface::decodedEvents.size(); i++)
-            fEventList.push_back(&RD53FWInterface::decodedEvents[i]);
+        for(auto i = 0u; i < RD53FWInterface::decodedEvents.size(); i++) fEventList.push_back(&RD53FWInterface::decodedEvents[i]);
     }
     else if(pType == BoardType::D19C)
     {
-        for(auto& pevt: fEventList)
-            delete pevt;
+        for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();
         fCurrentEvent = 0;
 
-        if(pNevents == 0)
-        {
-            LOG(INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET;
-        }
+        if(pNevents == 0) { LOG(INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET; }
         else
         {
             EventType fEventType = pBoard->getEventType();
@@ -563,8 +528,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             if(pBoard->getFrontEndType() == FrontEndType::SSA)
             {
                 uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-                if(fEventType == EventType::SSAAS)
-                    nSSA = pData.size() / 120;
+                if(fEventType == EventType::SSAAS) nSSA = pData.size() / 120;
 
                 for(auto opticalGroup: *pBoard)
                 {
@@ -580,10 +544,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 // LOG (INFO) << BOLDBLUE << "maxind " << maxind << RESET;
             }
 
-            if(fEventType == EventType::SSAAS)
-            {
-                fEventList.push_back(new D19cSSAEventAS(pBoard, pData));
-            }
+            if(fEventType == EventType::SSAAS) { fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
             else if(fEventType == EventType::MPAAS)
             {
                 fEventList.push_back(new D19cMPAEventAS(pBoard, pData));
@@ -603,10 +564,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                         // some useful debug information
                         LOG(DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of "
                                    << +cEventSize << " 32 bit words..." << RESET;
-                        if(pBoard->getFrontEndType() == FrontEndType::CBC3)
-                        {
-                            fEventList.push_back(new D19cCbc3Event(pBoard, cEvent));
-                        }
+                        if(pBoard->getFrontEndType() == FrontEndType::CBC3) { fEventList.push_back(new D19cCbc3Event(pBoard, cEvent)); }
                         else if(pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2)
                         {
                             fEventList.push_back(new D19cCic2Event(pBoard, cEvent));

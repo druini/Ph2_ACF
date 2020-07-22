@@ -137,8 +137,7 @@ class Tool : public Ph2_System::SystemController
     void ProcessRequests()
     {
 #ifdef __HTTP__
-        if(fHttpServer)
-            fHttpServer->ProcessRequests();
+        if(fHttpServer) fHttpServer->ProcessRequests();
 #endif
     }
 

@@ -127,8 +127,7 @@ int main(int argc, char* argv[])
     std::string cResultfile = "Cbc3RadiationCycle";
     gResultDirectory += "Cbc3RadiationCycle";
 
-    if(cFull)
-        gResultDirectory += "_FULL";
+    if(cFull) gResultDirectory += "_FULL";
 
     gResultDirectory += currentDateTime();
 
@@ -222,8 +221,7 @@ int main(int argc, char* argv[])
         cTool.CreateResultDirectory(gResultDirectory, false, false);
         cTool.InitResultFile(cResultfile);
 
-        if(cWebMon)
-            cTool.StartHttpServer(cHttpPort);
+        if(cWebMon) cTool.StartHttpServer(cHttpPort);
 
         cTool.ConfigureHw();
 
@@ -391,8 +389,7 @@ int main(int argc, char* argv[])
                         }
                     }
 
-                    if(count % cAcqSize == 0)
-                        LOG(INFO) << ">>> Recorded Event #" << count;
+                    if(count % cAcqSize == 0) LOG(INFO) << ">>> Recorded Event #" << count;
                 }
 
                 cNthAcq++;
@@ -423,16 +420,13 @@ int main(int argc, char* argv[])
 
     cDog.Stop();
 
-    if(!batchMode)
-        cApp.Run();
+    if(!batchMode) cApp.Run();
 
 #ifdef __USBINST__
 
-    if(cLVClient)
-        delete cLVClient;
+    if(cLVClient) delete cLVClient;
 
-    if(cKeController)
-        delete cKeController;
+    if(cKeController) delete cKeController;
 
 #endif
 

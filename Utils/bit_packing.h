@@ -258,10 +258,7 @@ struct RangePacker
     static CONSTEXPR_ void unpack(T value, It begin, It end)
     {
         size_t total_size = std::distance(begin, end) * Size;
-        for(auto it = begin; it != end; it++)
-        {
-            *it = (value >> (total_size -= Size)) & bit_mask(Size);
-        }
+        for(auto it = begin; it != end; it++) { *it = (value >> (total_size -= Size)) & bit_mask(Size); }
     }
 
     // unpack value into reversed range
@@ -305,10 +302,7 @@ struct RangePacker
     {
         T      result     = 0;
         size_t total_size = std::distance(begin, end) * Size;
-        for(auto it = begin; it != end; it++)
-        {
-            result |= (*it & bit_mask(Size)) << (total_size -= Size);
-        }
+        for(auto it = begin; it != end; it++) { result |= (*it & bit_mask(Size)) << (total_size -= Size); }
         return result;
     }
 

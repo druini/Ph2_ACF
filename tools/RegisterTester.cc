@@ -113,8 +113,7 @@ void RegisterTester::PrintTestResults(std::ostream& os)
     {
         os << "Malfunctioning Registers on Chip " << cCbc.first << " : " << std::endl;
 
-        for(const auto& cReg: cCbc.second)
-            os << cReg << std::endl;
+        for(const auto& cReg: cCbc.second) os << cReg << std::endl;
     }
 
     LOG(INFO) << BOLDBLUE << "Channels diagnosis report written to: " + fDirectoryName + "/registers_test.txt" << RESET;

@@ -163,14 +163,12 @@ int main(int argc, char* argv[])
         if(networkServerPidStatus == 0 && (networkServerPidStatus = waitpid(networkServerPid, &networkServerStatus, WNOHANG)) != 0)
         {
             std::cout << __PRETTY_FUNCTION__ << "networkServerStatus: " << networkServerStatus << std::endl;
-            if(!checkExitStatus(networkServerStatus, "network_server"))
-                exit(EXIT_FAILURE);
+            if(!checkExitStatus(networkServerStatus, "network_server")) exit(EXIT_FAILURE);
         }
         else if(networkClientPidStatus == 0 && (networkClientPidStatus = waitpid(networkClientPid, &networkClientStatus, WNOHANG)) != 0)
         {
             std::cout << __PRETTY_FUNCTION__ << "networkClientStatus: " << networkClientStatus << std::endl;
-            if(!checkExitStatus(networkClientStatus, "network_client"))
-                exit(EXIT_FAILURE);
+            if(!checkExitStatus(networkClientStatus, "network_client")) exit(EXIT_FAILURE);
         }
         else
         {

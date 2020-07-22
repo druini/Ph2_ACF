@@ -124,8 +124,7 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << lstNames.size() << " firmware images on SD card:";
 
-        for(auto& name: lstNames)
-            LOG(INFO) << " - " << name;
+        for(auto& name: lstNames) LOG(INFO) << " - " << name;
 
         exit(0);
     }

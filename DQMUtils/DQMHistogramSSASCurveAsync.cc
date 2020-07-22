@@ -38,9 +38,7 @@ void DQMHistogramSSASCurveAsync::book(TFile* theOutputFile, const DetectorContai
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
                 for(auto chip: *hybrid) // for on chip - begin
-                {
-                    chans = chip->size();
-                }
+                { chans = chip->size(); }
             }
         }
     }
@@ -72,8 +70,7 @@ void DQMHistogramSSASCurveAsync::fillSSASCurveAsyncPlots(DetectorDataContainer& 
                     uint  channelBin       = 1;
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)
-                    if(chip->getChannelContainer<std::pair<std::array<uint32_t, 2>, float>>() == nullptr)
-                        continue;
+                    if(chip->getChannelContainer<std::pair<std::array<uint32_t, 2>, float>>() == nullptr) continue;
                     // Get channel data and fill the histogram
                     for(auto channel: *chip->getChannelContainer<std::pair<std::array<uint32_t, 2>, float>>()) // for on channel -
                                                                                                                // begin

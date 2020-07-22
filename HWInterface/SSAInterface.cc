@@ -37,24 +37,15 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
     // takes forever
     std::map<uint16_t, ChipRegItem> cMap;
     cMap.clear();
-    for(auto& cRegInMap: cSSARegMap)
-    {
-        cMap[cRegInMap.second.fAddress] = cRegInMap.second;
-    }
-    for(auto& cRegItem: cMap)
-    {
-        fBoardFW->EncodeReg(cRegItem.second, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, cWrite);
-    } // loop over map
+    for(auto& cRegInMap: cSSARegMap) { cMap[cRegInMap.second.fAddress] = cRegInMap.second; }
+    for(auto& cRegItem: cMap) { fBoardFW->EncodeReg(cRegItem.second, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, cWrite); } // loop over map
     uint8_t cWriteAttempts = 0;
     cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
     if(pVerifLoop && cSuccess)
     {
         cWrite = false;
         cVec.clear();
-        for(auto& cRegInMap: cSSARegMap)
-        {
-            fBoardFW->EncodeReg(cRegInMap.second, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, cWrite);
-        } // loop over map
+        for(auto& cRegInMap: cSSARegMap) { fBoardFW->EncodeReg(cRegInMap.second, pSSA->getFeId(), pSSA->getChipId(), cVec, pVerifLoop, cWrite); } // loop over map
         fBoardFW->ReadChipBlockReg(cVec);
         uint16_t cIndx = 0;
         for(auto& cRegInMap: cSSARegMap)
@@ -400,8 +391,7 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
 
 void SSAInterface::ReadASEvent(ReadoutChip* pSSA, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange)
 {
-    if(pSRange == std::pair<uint32_t, uint32_t>{0, 0})
-        pSRange = std::pair<uint32_t, uint32_t>{1, pSSA->getNumberOfChannels()};
+    if(pSRange == std::pair<uint32_t, uint32_t>{0, 0}) pSRange = std::pair<uint32_t, uint32_t>{1, pSSA->getNumberOfChannels()};
     for(uint32_t i = pSRange.first; i <= pSRange.second; i++)
     {
         char cRegName[100];
@@ -479,8 +469,7 @@ uint16_t SSAInterface::ReadChipReg(Chip* pSSA, const std::string& pRegNode)
 
         fBoardFW->DecodeReg(cRegItem, cSSAId, cVecReq[0], cRead, cFailed);
 
-        if(!cFailed)
-            pSSA->setReg(pRegNode, cRegItem.fValue);
+        if(!cFailed) pSSA->setReg(pRegNode, cRegItem.fValue);
         return cRegItem.fValue & 0xFF;
     }
 }

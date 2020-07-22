@@ -34,8 +34,7 @@ void Physics::ConfigureCalibration()
     customChannelGroup.disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)
-        for(auto col = colStart; col <= colStop; col++)
-            customChannelGroup.enableChannel(row, col);
+        for(auto col = colStart; col <= colStop; col++) customChannelGroup.enableChannel(row, col);
 
     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, RD53GroupType::AllPixels);
     theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
@@ -71,11 +70,9 @@ void Physics::Start(int currentRun)
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
-                    fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, theChnGroupHandler->allChannelGroup(), true, false);
+                for(const auto cChip: *cModule) fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, theChnGroupHandler->allChannelGroup(), true, false);
 
-    for(const auto cBoard: *fDetectorContainer)
-        static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->ChipReSync();
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->ChipReSync();
     SystemController::Start(currentRun);
 
     theCurrentRun        = currentRun;
@@ -107,10 +104,8 @@ void Physics::Stop()
     LOG(INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
     keepRunning = false;
     SystemController::Stop();
-    if(thrRun.joinable() == true)
-        thrRun.join();
-    if(thrMonitor.joinable() == true)
-        thrMonitor.join();
+    if(thrRun.joinable() == true) thrRun.join();
+    if(thrMonitor.joinable() == true) thrMonitor.join();
 
     // ################
     // # Error report #
@@ -167,8 +162,7 @@ void Physics::draw()
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true)
-        myApp = new TApplication("myApp", nullptr, nullptr);
+    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     this->InitResultFile(fileRes);
     LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
@@ -180,8 +174,7 @@ void Physics::draw()
     this->WriteRootFile();
     this->CloseResultFile();
 
-    if(doDisplay == true)
-        myApp->Run(true);
+    if(doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -249,8 +242,7 @@ void Physics::fillDataContainer(BeBoard* cBoard)
     // # Fill containers #
     // ###################
     const std::vector<Event*>& events = SystemController::GetEvents(cBoard);
-    for(const auto& event: events)
-        event->fillDataContainer(theOccContainer.at(cBoard->getIndex()), theChnGroupHandler->allChannelGroup());
+    for(const auto& event: events) event->fillDataContainer(theOccContainer.at(cBoard->getIndex()), theChnGroupHandler->allChannelGroup());
 
     // ######################################
     // # Copy register values for streaming #
@@ -301,8 +293,7 @@ void Physics::fillDataContainer(BeBoard* cBoard)
             for(const auto cModule: *cOpticalGroup)
                 for(const auto cChip: *cModule)
                     for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
-                            cChip->getChannel<OccupancyAndPh>(row, col).normalize(events.size(), true);
+                        for(auto col = 0u; col < RD53::nCols; col++) cChip->getChannel<OccupancyAndPh>(row, col).normalize(events.size(), true);
 }
 
 void Physics::chipErrorReport()
@@ -343,8 +334,7 @@ void Physics::saveChipRegisters(int currentRun)
                 for(const auto cChip: *cModule)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true)
-                        static_cast<RD53*>(cChip)->saveRegMap("");
+                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());

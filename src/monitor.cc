@@ -126,8 +126,7 @@ void StopMonitoring()
     {
         gMonitoringRun = false;
 
-        if(gThread.joinable())
-            gThread.join();
+        if(gThread.joinable()) gThread.join();
 
         LOG(INFO) << "Stopping Monitoring workloop!";
     }

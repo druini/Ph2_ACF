@@ -156,8 +156,7 @@ int main(int argc, char* argv[])
     cTester.Initialize();
     cTester.SetTotalNoise(cNoiseV);
 
-    if(cScan)
-        cTester.ScanNoiseChannels();
+    if(cScan) cTester.ScanNoiseChannels();
 
     cTester.TakeData();
     cTester.FinishRun();
@@ -166,8 +165,7 @@ int main(int argc, char* argv[])
     cTester.Destroy();
 #endif
 
-    if(!batchMode)
-        cApp.Run();
+    if(!batchMode) cApp.Run();
 
     return 0;
 }

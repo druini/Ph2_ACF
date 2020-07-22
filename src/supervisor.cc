@@ -202,8 +202,7 @@ int main(int argc, char* argv[])
     char* tAppArgv[2];
     tAppArgv[0] = argv[0];
     tAppArgv[1] = (char*)"-b";
-    if(batchMode)
-        tAppArgc = 2;
+    if(batchMode) tAppArgc = 2;
     TApplication theApp("App", &tAppArgc, tAppArgv);
 
     DQMInterface theDQMInterface;
@@ -229,8 +228,7 @@ int main(int argc, char* argv[])
         if(runControllerPidStatus == 0 && (runControllerPidStatus = waitpid(runControllerPid, &runControllerStatus, WNOHANG)) != 0)
         {
             std::cout << __PRETTY_FUNCTION__ << "1Run Controller status: " << runControllerStatus << std::endl;
-            if(!checkExitStatus(runControllerStatus, "RunController"))
-                exit(EXIT_FAILURE);
+            if(!checkExitStatus(runControllerStatus, "RunController")) exit(EXIT_FAILURE);
         }
         //		if(dqmControllerPidStatus == 0 && (dqmControllerPidStatus = waitpid(dqmControllerPid,
         //&dqmControllerStatus, WNOHANG)) != 0)

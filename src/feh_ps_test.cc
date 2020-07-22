@@ -160,10 +160,7 @@ int main(int argc, char* argv[])
         uint8_t cPhaseAlignmentPattern = 0x55;
         cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
         cDPInterfacer.Start(cInterface);
-        if(cDPInterfacer.IsRunning(cInterface))
-        {
-            LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
-        }
+        if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
         else
             LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
@@ -323,7 +320,6 @@ int main(int argc, char* argv[])
     cHybridTester.CloseResultFile();
     cHybridTester.Destroy();
 
-    if(!batchMode)
-        cApp.Run();
+    if(!batchMode) cApp.Run();
     return 0;
 }

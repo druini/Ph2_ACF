@@ -87,8 +87,7 @@ uint32_t convertAnyInt(const char* pRegValue)
         baseType = 10;
     else if(myRegValue.find("0b") != std::string::npos)
         baseType = 2;
-    if(baseType != 0)
-        myRegValue.erase(0, 2);
+    if(baseType != 0) myRegValue.erase(0, 2);
     return static_cast<uint32_t>(strtoul(myRegValue.c_str(), 0, (baseType != 0 ? baseType : 10)));
 }
 
@@ -102,8 +101,7 @@ double convertAnyDouble(const char* pRegValue)
         baseType = 10;
     else if(myRegValue.find("0b") != std::string::npos)
         baseType = 2;
-    if(baseType != 0)
-        myRegValue.erase(0, 2);
+    if(baseType != 0) myRegValue.erase(0, 2);
     return strtod(myRegValue.c_str(), 0);
 }
 
@@ -179,22 +177,19 @@ void getRunNumber(const std::string& pPath, int& pRunNumber, bool pIncrement)
 
 std::string expandEnvironmentVariables(std::string s)
 {
-    if(s.find("${") == std::string::npos)
-        return s;
+    if(s.find("${") == std::string::npos) return s;
 
     std::string pre  = s.substr(0, s.find("${"));
     std::string post = s.substr(s.find("${") + 2);
 
-    if(post.find('}') == std::string::npos)
-        return s;
+    if(post.find('}') == std::string::npos) return s;
 
     std::string variable = post.substr(0, post.find('}'));
     std::string value    = "";
 
     post = post.substr(post.find('}') + 1);
 
-    if(getenv(variable.c_str()) != NULL)
-        value = std::string(getenv(variable.c_str()));
+    if(getenv(variable.c_str()) != NULL) value = std::string(getenv(variable.c_str()));
 
     return expandEnvironmentVariables(pre + value + post);
 }

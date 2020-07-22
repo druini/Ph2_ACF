@@ -42,10 +42,7 @@ void MmcPipeInterface::Send(const uint32_t& aHeader, const uint32_t& aSizeInWord
     lVector.push_back(aHeader);
     lVector.push_back(aSizeInWords);
 
-    for(uint32_t i = 0; i != aSizeInWords; ++i)
-    {
-        lVector.push_back(*aPayload++);
-    }
+    for(uint32_t i = 0; i != aSizeInWords; ++i) { lVector.push_back(*aPayload++); }
 
     UpdateCounters();
 
@@ -67,10 +64,7 @@ void MmcPipeInterface::Send(const uint32_t& aHeader, const uint32_t& aSizeInByte
     lVector.push_back(lSize);
     uint32_t* lPayload((uint32_t*)aPayload);
 
-    for(uint32_t i = 0; i != lSize; ++i)
-    {
-        lVector.push_back(htonl(*lPayload++));
-    }
+    for(uint32_t i = 0; i != lSize; ++i) { lVector.push_back(htonl(*lPayload++)); }
 
     UpdateCounters();
 
@@ -134,10 +128,7 @@ std::string MmcPipeInterface::ConvertString(std::vector<uint32_t>::const_iterato
 
         for(int i = 0; i != 4; ++i, ++lPtr)
         {
-            if(!*lPtr)
-            {
-                break;
-            }
+            if(!*lPtr) { break; }
 
             lRet.push_back(*lPtr);
         }
@@ -151,10 +142,7 @@ std::string MmcPipeInterface::ConvertString(std::vector<uint32_t>::const_iterato
 
 void MmcPipeInterface::EnterSecureMode(const std::string& aPassword)
 {
-    if(aPassword.size() > 31)
-    {
-        throw uhal::exception::TextExceedsSpaceAvailable();
-    }
+    if(aPassword.size() > 31) { throw uhal::exception::TextExceedsSpaceAvailable(); }
 
     if(aPassword.size())
     {
@@ -171,10 +159,7 @@ void MmcPipeInterface::EnterSecureMode(const std::string& aPassword)
 
 void MmcPipeInterface::SetTextSpace(const std::string& aStr)
 {
-    if(aStr.size() > 31)
-    {
-        throw uhal::exception::TextExceedsSpaceAvailable();
-    }
+    if(aStr.size() > 31) { throw uhal::exception::TextExceedsSpaceAvailable(); }
 
     if(aStr.size())
     {
@@ -228,41 +213,28 @@ void MmcPipeInterface::FileToSD(const std::string& aFilename, Firmware& aFirmwar
     this->getClient().dispatch();
 
     // Firmware needs to be bitswapped on the SD card
-    if(!aFirmware.isBitSwapped())
-    {
-        aFirmware.BitSwap();
-    }
+    if(!aFirmware.isBitSwapped()) { aFirmware.BitSwap(); }
 
     // Cast the data to 32bit form
     std::vector<uint32_t>                lSrcData(lTotalSize, 0xFFFFFFFF);
     std::vector<uint32_t>::iterator      lWriteIt(lSrcData.begin());
     std::vector<uint8_t>::const_iterator lIt(aFirmware.Bitstream().begin());
 
-    for(; lIt != aFirmware.Bitstream().end(); lIt += 4, ++lWriteIt)
-    {
-        *lWriteIt = htonl(*(uint32_t*)(&(*lIt)));
-    }
+    for(; lIt != aFirmware.Bitstream().end(); lIt += 4, ++lWriteIt) { *lWriteIt = htonl(*(uint32_t*)(&(*lIt))); }
 
     // Send the data in chunks
-    if(pProgressStr)
-        pProgressStr->assign("Loading firmware image");
+    if(pProgressStr) pProgressStr->assign("Loading firmware image");
     uint32_t i(0);
 
     for(std::vector<uint32_t>::iterator lBegin(lSrcData.begin()), lEnd(lSrcData.begin()); lEnd != lSrcData.end(); lBegin = lEnd)
     {
         UpdateCounters();
 
-        if(MMCtoFPGADataAvailable())
-        {
-            break;
-        }
+        if(MMCtoFPGADataAvailable()) { break; }
 
         if(FPGAtoMMCSpaceAvailable())
         {
-            if(lBegin + FPGAtoMMCSpaceAvailable() < lSrcData.end())
-            {
-                lEnd = lBegin + FPGAtoMMCSpaceAvailable();
-            }
+            if(lBegin + FPGAtoMMCSpaceAvailable() < lSrcData.end()) { lEnd = lBegin + FPGAtoMMCSpaceAvailable(); }
             else
             {
                 lEnd = lSrcData.end();
@@ -274,18 +246,14 @@ void MmcPipeInterface::FileToSD(const std::string& aFilename, Firmware& aFirmwar
             this->getNode("FIFO").writeBlock(lVector);
             this->getClient().dispatch();
 
-            if(!(i++ % 500) && pProgress)
-            {
-                *pProgress = 100 - (lSrcData.end() - lEnd) * 100 / lTotalSize;
-            }
+            if(!(i++ % 500) && pProgress) { *pProgress = 100 - (lSrcData.end() - lEnd) * 100 / lTotalSize; }
         }
         //       else{
         //         usleep ( 1000 ); //Otherwise we get serious bus contention
         //       }
     }
 
-    if(pProgressStr)
-        pProgressStr->assign("Done loading firmware image");
+    if(pProgressStr) pProgressStr->assign("Done loading firmware image");
     Receive();
     // std::cout<<"Out of Receive()"<<std::endl;
 }
@@ -388,10 +356,7 @@ void MmcPipeInterface::RebootFPGA(const std::string& aFilename, const std::strin
         }
     }
 
-    if(GetTextSpace() != aFilename)
-    {
-        uhal::log(uhal::Error, "Failed to configure FPGA with image - defaulted to GoldenImage.bin");
-    }
+    if(GetTextSpace() != aFilename) { uhal::log(uhal::Error, "Failed to configure FPGA with image - defaulted to GoldenImage.bin"); }
 }
 
 void MmcPipeInterface::BoardHardReset(const std::string& aPassword)

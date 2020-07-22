@@ -60,8 +60,7 @@ std::vector<std::string> tokenize_input(std::string& cInput, const char* cSepera
     boost::char_separator<char>                   sep(cSeperator);
     boost::tokenizer<boost::char_separator<char>> tokens(cInput, sep);
 
-    for(const auto& t: tokens)
-        cOutput.push_back(t);
+    for(const auto& t: tokens) cOutput.push_back(t);
 
     return cOutput;
 }
@@ -131,8 +130,7 @@ int launch_HMP4040server(std::string pHostname, int& pZmqPortNumber, int& pHttpP
         LOG(INFO) << "Retreived the following parameters from the info file: " << cInfo;
         LOG(INFO) << "HMP4040 server already running .... so do nothing!";
 
-        if(cLock)
-            delete cLock;
+        if(cLock) delete cLock;
 
         // tokenize the cInfo string to recover the port numbers so the client can be smart enough to connect to the
         // correct port!
@@ -142,8 +140,7 @@ int launch_HMP4040server(std::string pHostname, int& pZmqPortNumber, int& pHttpP
 
         for(auto token: cTokens)
         {
-            if(is_numeric(token))
-                cPorts.push_back(boost::lexical_cast<int>(token));
+            if(is_numeric(token)) cPorts.push_back(boost::lexical_cast<int>(token));
         }
 
         // ports passed as reference so they can be passed on in main()
@@ -154,8 +151,7 @@ int launch_HMP4040server(std::string pHostname, int& pZmqPortNumber, int& pHttpP
     else
     {
         // have to do this here because actually lvSupervisor attempts to access the LOCK file as well...
-        if(cLock)
-            delete cLock;
+        if(cLock) delete cLock;
 
         LOG(INFO) << "HMP4040 server not running .... so try and launch it.";
         // launch the server in the background with nohup... probably not the smartest way of doing this but the only
@@ -173,8 +169,7 @@ int launch_HMP4040server(std::string pHostname, int& pZmqPortNumber, int& pHttpP
         cClient->StartMonitoring();
         std::this_thread::sleep_for(std::chrono::seconds(pMeasureInterval_s * 2));
 
-        if(cClient)
-            delete cClient;
+        if(cClient) delete cClient;
     }
 
 #endif
@@ -200,14 +195,12 @@ HMP4040_measurement get_HMP4040currents(std::string pHostname = "localhost", int
     {
         auto search = cVoltages.find(cValues.fVoltages.at(i));
 
-        if(search != cVoltages.end())
-            cCurrents.insert(std::pair<std::string, double>(search->second, cValues.fCurrents.at(i) * 1e3));
+        if(search != cVoltages.end()) cCurrents.insert(std::pair<std::string, double>(search->second, cValues.fCurrents.at(i) * 1e3));
     }
 
     cMeasurement.second = cCurrents;
 
-    if(cClient)
-        delete cClient;
+    if(cClient) delete cClient;
 
 #endif
     return cMeasurement;
@@ -263,8 +256,7 @@ bool check_CurrentConsumption(Tool pTool, int pNCBCs = 2, std::string pHostname 
         cMeasurement      = get_HMP4040currents(pHostname, pZmqPortNumber, pHttpPortNumber);
         cCurrentsMeasured = cMeasurement.second;
 
-        if(cTimeStamp < cMeasurement.first)
-            iterations++;
+        if(cTimeStamp < cMeasurement.first) iterations++;
 
         cTimeStamp = cMeasurement.first;
 
@@ -741,8 +733,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    if(!batchMode)
-        cApp.Run();
+    if(!batchMode) cApp.Run();
 
     return 0;
 }

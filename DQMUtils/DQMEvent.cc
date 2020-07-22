@@ -59,7 +59,6 @@ void DQMEvent::parseEvent(bool printData)
     // DAQ trailer
     daqTrailer().set(list.back());
 
-    if(printData)
-        print();
+    if(printData) print();
 }
 void DQMEvent::printRaw(std::ostream& os) const { ptr_->print(); }

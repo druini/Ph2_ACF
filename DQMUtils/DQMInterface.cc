@@ -42,12 +42,10 @@ void DQMInterface::destroy(void)
 {
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
 
-    if(fListener != nullptr)
-        delete fListener;
+    if(fListener != nullptr) delete fListener;
     destroyHistogram();
     fListener = nullptr;
-    for(auto dqmHistogrammer: fDQMHistogrammerVector)
-        delete dqmHistogrammer;
+    for(auto dqmHistogrammer: fDQMHistogrammerVector) delete dqmHistogrammer;
     fDQMHistogrammerVector.clear();
     delete fOutputFile;
     fOutputFile = nullptr;
@@ -58,8 +56,7 @@ void DQMInterface::destroy(void)
 //========================================================================================================================
 void DQMInterface::destroyHistogram(void)
 {
-    for(auto dqmHistogrammer: fDQMHistogrammerVector)
-        delete dqmHistogrammer;
+    for(auto dqmHistogrammer: fDQMHistogrammerVector) delete dqmHistogrammer;
     fDQMHistogrammerVector.clear();
 
     LOG(INFO) << __PRETTY_FUNCTION__ << " DONE" << RESET;
@@ -129,8 +126,7 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
         fDQMHistogrammerVector.push_back(new SSAPhysicsHistograms());
 
     fOutputFile = new TFile("tmp.root", "RECREATE");
-    for(auto dqmHistogrammer: fDQMHistogrammerVector)
-        dqmHistogrammer->book(fOutputFile, fDetectorStructure, pSettingsMap);
+    for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->book(fOutputFile, fDetectorStructure, pSettingsMap);
 }
 
 //========================================================================================================================
@@ -149,9 +145,7 @@ void DQMInterface::stopProcessingData(void)
 
     fListener->close();
     while(fRunningFuture.wait_for(span) == std::future_status::timeout && timeout >= 0)
-    {
-        LOG(INFO) << __PRETTY_FUNCTION__ << " Process still running! Waiting " << timeout-- << " more seconds!" << RESET;
-    }
+    { LOG(INFO) << __PRETTY_FUNCTION__ << " Process still running! Waiting " << timeout-- << " more seconds!" << RESET; }
 
     LOG(INFO) << __PRETTY_FUNCTION__ << " Thread done running" << RESET;
 
@@ -161,8 +155,7 @@ void DQMInterface::stopProcessingData(void)
         abort();
     }
 
-    for(auto dqmHistogrammer: fDQMHistogrammerVector)
-        dqmHistogrammer->process();
+    for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->process();
     fOutputFile->Write();
 }
 
@@ -227,11 +220,9 @@ bool DQMInterface::running()
                 fDataBuffer.erase(fDataBuffer.begin(), fDataBuffer.begin() + theCurrentStream->getPacketSize());
 
                 for(auto dqmHistogrammer: fDQMHistogrammerVector)
-                    if(dqmHistogrammer->fill(streamDataBuffer))
-                        break;
+                    if(dqmHistogrammer->fill(streamDataBuffer)) break;
 
-                if(++packetNumber >= 256)
-                    packetNumber = 0;
+                if(++packetNumber >= 256) packetNumber = 0;
             }
         }
     }

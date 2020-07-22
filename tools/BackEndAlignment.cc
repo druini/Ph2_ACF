@@ -21,8 +21,7 @@ void BackEndAlignment::Reset()
         auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap)
-            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
+        for(auto cReg: cBeRegMap) cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
         auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
@@ -39,8 +38,7 @@ void BackEndAlignment::Reset()
                     auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     cVecRegisters.clear();
-                    for(auto cReg: cRegMapThisChip)
-                        cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+                    for(auto cReg: cRegMapThisChip) cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
                     fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
                 }
             }
@@ -67,10 +65,7 @@ void BackEndAlignment::Initialise()
             for(auto cHybrid: *cOpticalReadout)
             {
                 auto& cRegMapThisHybrid = cRegMapThisBoard->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex());
-                for(auto cChip: *cHybrid)
-                {
-                    cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap();
-                }
+                for(auto cChip: *cHybrid) { cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap(); }
             }
         }
     }
@@ -99,14 +94,9 @@ bool BackEndAlignment::MPAAlignment(BeBoard* pBoard)
                 }
 
                 for(uint8_t cLineId = 0; cLineId < 6; cLineId++)
-                {
-                    cTuned = cTuned && static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybrid->getId(), cChip->getId(), cLineId, cAlignmentPattern, 8);
-                }
+                { cTuned = cTuned && static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybrid->getId(), cChip->getId(), cLineId, cAlignmentPattern, 8); }
 
-                for(size_t cIndex = 0; cIndex < 3; cIndex++)
-                {
-                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]);
-                };
+                for(size_t cIndex = 0; cIndex < 3; cIndex++) { fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]); };
             }
         }
     }
@@ -163,10 +153,7 @@ bool BackEndAlignment::SSAAlignment(BeBoard* pBoard)
                 // fc7.write("ctrl_phy_phase_tune_again", 1)
 
                 // back to original modes
-                for(size_t cIndex = 0; cIndex < 2; cIndex++)
-                {
-                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]);
-                }
+                for(size_t cIndex = 0; cIndex < 2; cIndex++) { fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]); }
             }
         }
     }
@@ -187,8 +174,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         {
             auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
             // only produce L1A header .. so disable all FEs .. for CIC2 only
-            if(!cSparsified && cCic->getFrontEndType() == FrontEndType::CIC2)
-                fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 1);
+            if(!cSparsified && cCic->getFrontEndType() == FrontEndType::CIC2) fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 1);
 
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
             if(cCic->getFrontEndType() == FrontEndType::CIC)
@@ -199,8 +185,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         }
     }
     bool cAligned = true;
-    if(!pBoard->ifOptical())
-        cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning(pBoard, fL1Debug);
+    if(!pBoard->ifOptical()) cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning(pBoard, fL1Debug);
     if(!cAligned)
     {
         LOG(INFO) << BOLDBLUE << "L1A phase alignment in the back-end " << BOLDRED << " FAILED ..." << RESET;
@@ -242,8 +227,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         {
             auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
             fCicInterface->SelectOutput(cCic, false);
-            if(!cSparsified && cCic->getFrontEndType() == FrontEndType::CIC2)
-                fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 0);
+            if(!cSparsified && cCic->getFrontEndType() == FrontEndType::CIC2) fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 0);
         }
     }
 
@@ -286,8 +270,7 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
                 std::vector<uint8_t> cBendLUT          = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT(theReadoutChip);
                 auto                 cIterator         = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
                 // if bend code isn't there ... quit
-                if(cIterator == cBendLUT.end())
-                    continue;
+                if(cIterator == cBendLUT.end()) continue;
 
                 int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
                 double cBend_strips = -7. + 0.5 * cPosition;
@@ -368,10 +351,7 @@ bool BackEndAlignment::Align()
             bool         cWithCBC            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
             bool         cWithSSA            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
             bool         cWithMPA            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
-            if(cWithCBC)
-            {
-                this->CBCAlignment(theBoard);
-            }
+            if(cWithCBC) { this->CBCAlignment(theBoard); }
             else if(cWithSSA)
             {
                 this->SSAAlignment(theBoard);

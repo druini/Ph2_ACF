@@ -25,10 +25,7 @@ void D19cSSAEvent::fillDataContainer(BoardDataContainer* boardContainer, const C
                 unsigned int i = 0;
                 for(ChannelDataContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {
-                    if(cTestChannelGroup->isChannelEnabled(i))
-                    {
-                        channel->fOccupancy += (float)privateDataBit(hybrid->getId(), chip->getId(), i);
-                    }
+                    if(cTestChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += (float)privateDataBit(hybrid->getId(), chip->getId(), i); }
                 }
             }
         }
@@ -106,19 +103,13 @@ uint32_t D19cSSAEvent::PipelineAddress(uint8_t pFeId, uint8_t pCbcId) const
 std::string D19cSSAEvent::DataBitString(uint8_t pFeId, uint8_t pSSAId) const
 {
     std::ostringstream os;
-    for(uint32_t i = 0; i < NSSACHANNELS; ++i)
-    {
-        os << privateDataBit(pFeId, pSSAId, i);
-    }
+    for(uint32_t i = 0; i < NSSACHANNELS; ++i) { os << privateDataBit(pFeId, pSSAId, i); }
     return os.str();
 }
 std::vector<bool> D19cSSAEvent::DataBitVector(uint8_t pFeId, uint8_t pSSAId) const
 {
     std::vector<bool> blist;
-    for(uint32_t i = 0; i < NSSACHANNELS; ++i)
-    {
-        blist.push_back(privateDataBit(pFeId, pSSAId, i));
-    }
+    for(uint32_t i = 0; i < NSSACHANNELS; ++i) { blist.push_back(privateDataBit(pFeId, pSSAId, i)); }
 
     return blist;
 }
@@ -126,10 +117,7 @@ std::vector<bool> D19cSSAEvent::DataBitVector(uint8_t pFeId, uint8_t pSSAId, con
 {
     std::vector<bool> blist;
 
-    for(auto i: channelList)
-    {
-        blist.push_back(privateDataBit(pFeId, pSSAId, i));
-    }
+    for(auto i: channelList) { blist.push_back(privateDataBit(pFeId, pSSAId, i)); }
     return blist;
 }
 std::string D19cSSAEvent::GlibFlagString(uint8_t pFeId, uint8_t pSSAId) const { return ""; }
@@ -200,10 +188,7 @@ std::vector<uint32_t> D19cSSAEvent::GetHits(uint8_t pFeId, uint8_t pSSAId) const
     {
         // LOG(INFO) << BOLDBLUE <<ca<< RESET;
 
-        if(ca != 0)
-        {
-            stubs.push_back(ca);
-        }
+        if(ca != 0) { stubs.push_back(ca); }
     }
     return stubs;
     // std::vector<uint32_t> cHits;

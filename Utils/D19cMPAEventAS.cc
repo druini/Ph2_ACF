@@ -97,10 +97,7 @@ void D19cMPAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const
 
                 for(ChannelContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {
-                    if(cTestChannelGroup->isChannelEnabled(i))
-                    {
-                        channel->fOccupancy += hVec[i];
-                    }
+                    if(cTestChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += hVec[i]; }
                 }
             }
         }

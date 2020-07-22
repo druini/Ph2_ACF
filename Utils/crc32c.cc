@@ -126,8 +126,7 @@ static inline uint32_t gf2_matrix_times(uint32_t* mat, uint32_t vec)
 
     while(vec)
     {
-        if(vec & 1)
-            sum ^= *mat;
+        if(vec & 1) sum ^= *mat;
 
         vec >>= 1;
         mat++;
@@ -142,8 +141,7 @@ static inline void gf2_matrix_square(uint32_t* square, uint32_t* mat)
 {
     int n;
 
-    for(n = 0; n < 32; n++)
-        square[n] = gf2_matrix_times(mat, mat[n]);
+    for(n = 0; n < 32; n++) square[n] = gf2_matrix_times(mat, mat[n]);
 }
 
 /* Construct an operator to apply len zeros to a crc.  len must be a power of
@@ -181,16 +179,14 @@ static void crc32c_zeros_op(uint32_t* even, size_t len)
         gf2_matrix_square(even, odd);
         len >>= 1;
 
-        if(len == 0)
-            return;
+        if(len == 0) return;
 
         gf2_matrix_square(odd, even);
         len >>= 1;
     } while(len);
 
     /* answer ended up in odd -- copy to even */
-    for(n = 0; n < 32; n++)
-        even[n] = odd[n];
+    for(n = 0; n < 32; n++) even[n] = odd[n];
 }
 
 /* Take a length and build four lookup tables for applying the zeros operator

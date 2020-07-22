@@ -58,10 +58,7 @@ void D19cCbc3Event::fillDataContainer(BoardDataContainer* boardContainer, const 
                 unsigned int i = 0;
                 for(ChannelDataContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {
-                    if(cTestChannelGroup->isChannelEnabled(i))
-                    {
-                        channel->fOccupancy += (float)privateDataBit(hybrid->getId(), chip->getId(), i);
-                    }
+                    if(cTestChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += (float)privateDataBit(hybrid->getId(), chip->getId(), i); }
                 }
             }
         }
@@ -112,8 +109,7 @@ void D19cCbc3Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         cStatusWord             = static_cast<uint8_t>(cGoodHitInfo == VALID_L1_HEADER);
                         LOG(DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize << " words in hit packet..."
                                    << "... status word " << std::bitset<2>(cStatusWord) << RESET;
-                        if(cStatusWord != 0x01)
-                            throw std::runtime_error(std::string("Incorrect L1 header found when decoding data ... stopping"));
+                        if(cStatusWord != 0x01) throw std::runtime_error(std::string("Incorrect L1 header found when decoding data ... stopping"));
 
                         // stub info
                         uint32_t cStubInfoHeader = *(cIterator + cHitInfoSize);
@@ -122,8 +118,7 @@ void D19cCbc3Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         cStatusWord              = cStatusWord | (static_cast<uint8_t>(cGoodStubInfo == VALID_STUB_HEADER) << 1);
                         LOG(DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in stub packet."
                                    << "... status word " << std::bitset<2>(cStatusWord) << RESET;
-                        if(cStatusWord != 0x03)
-                            throw std::runtime_error(std::string("Incorrect Stub header found when decoding data ... stopping"));
+                        if(cStatusWord != 0x03) throw std::runtime_error(std::string("Incorrect Stub header found when decoding data ... stopping"));
 
                         std::vector<uint32_t> cDataWords(cIterator, cIterator + cHitInfoSize + cStubInfoSize);
                         fEventDataVector[cVectorIndex].clear();
@@ -150,13 +145,9 @@ void D19cCbc3Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
     fEventSize *= 4; // block size is in 128 bit words
 
     // check header
-    if(((list.at(0) >> 16) & 0xFFFF) != 0xFFFF)
-    {
-        LOG(ERROR) << "Event header does not contain 0xFFFF start sequence - please, check the firmware";
-    }
+    if(((list.at(0) >> 16) & 0xFFFF) != 0xFFFF) { LOG(ERROR) << "Event header does not contain 0xFFFF start sequence - please, check the firmware"; }
 
-    if(fEventSize != list.size())
-        LOG(ERROR) << "Vector size doesnt match the BLOCK_SIZE in Header1";
+    if(fEventSize != list.size()) LOG(ERROR) << "Vector size doesnt match the BLOCK_SIZE in Header1";
 
     // dummy size
     uint8_t fDummySize = (0xFF & list.at(1)) >> 0;
@@ -214,8 +205,7 @@ void D19cCbc3Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
             size_t cHybridIndex = 0;
             for(auto cFe: *pBoard->at(0))
             {
-                if(cFe->getId() == cFeId)
-                    cHybridIndex = cFe->getIndex();
+                if(cFe->getId() == cFeId) cHybridIndex = cFe->getIndex();
             }
             auto                  cReadoutChips = pBoard->at(0)->at(cHybridIndex);
             std::vector<uint32_t> cCbcData(cIterator, cIterator + cDataSize);
@@ -342,10 +332,7 @@ uint32_t D19cCbc3Event::L1Id(uint8_t pFeId, uint8_t pCbcId) const
         LOG(DEBUG) << BOLDBLUE << "L1 header " << std::bitset<32>(hitVector.at(2)) << RESET;
         std::bitset<32> cWord = hitVector.at(2);
         std::bitset<9>  cL1counter(0);
-        for(size_t cIndex = 16; cIndex < (16 + 9); cIndex++)
-        {
-            cL1counter[cIndex - 16] = cWord[cIndex];
-        }
+        for(size_t cIndex = 16; cIndex < (16 + 9); cIndex++) { cL1counter[cIndex - 16] = cWord[cIndex]; }
         return (uint32_t)(cL1counter.to_ulong());
     }
     catch(const std::out_of_range& outOfRange)
@@ -390,10 +377,7 @@ uint32_t D19cCbc3Event::PipelineAddress(uint8_t pFeId, uint8_t pCbcId) const
 std::string D19cCbc3Event::DataBitString(uint8_t pFeId, uint8_t pCbcId) const
 {
     std::ostringstream os;
-    for(uint32_t i = 0; i < NCHANNELS; ++i)
-    {
-        os << privateDataBit(pFeId, pCbcId, i);
-    }
+    for(uint32_t i = 0; i < NCHANNELS; ++i) { os << privateDataBit(pFeId, pCbcId, i); }
     return os.str();
 }
 std::vector<uint32_t> getL1data(uint8_t pFeId, uint8_t pCbcId)
@@ -405,10 +389,7 @@ std::vector<bool> D19cCbc3Event::DataBitVector(uint8_t pFeId, uint8_t pCbcId) co
 {
     std::vector<bool> blist;
 
-    for(uint32_t i = 0; i < NCHANNELS; ++i)
-    {
-        blist.push_back(privateDataBit(pFeId, pCbcId, i));
-    }
+    for(uint32_t i = 0; i < NCHANNELS; ++i) { blist.push_back(privateDataBit(pFeId, pCbcId, i)); }
 
     return blist;
 }
@@ -417,10 +398,7 @@ std::vector<bool> D19cCbc3Event::DataBitVector(uint8_t pFeId, uint8_t pCbcId, co
 {
     std::vector<bool> blist;
 
-    for(auto i: channelList)
-    {
-        blist.push_back(privateDataBit(pFeId, pCbcId, i));
-    }
+    for(auto i: channelList) { blist.push_back(privateDataBit(pFeId, pCbcId, i)); }
 
     return blist;
 }
@@ -433,8 +411,7 @@ std::string D19cCbc3Event::StubBitString(uint8_t pFeId, uint8_t pCbcId) const
 
     std::vector<Stub> cStubVector = this->StubVector(pFeId, pCbcId);
 
-    for(auto cStub: cStubVector)
-        os << std::bitset<8>(cStub.getPosition()) << " " << std::bitset<4>(cStub.getBend()) << " ";
+    for(auto cStub: cStubVector) os << std::bitset<8>(cStub.getPosition()) << " " << std::bitset<4>(cStub.getBend()) << " ";
 
     return os.str();
 
@@ -511,8 +488,7 @@ std::vector<uint32_t> D19cCbc3Event::GetHits(uint8_t pFeId, uint8_t pCbcId) cons
 
     for(uint32_t i = 0; i < NCHANNELS; ++i)
     {
-        if(privateDataBit(pFeId, pCbcId, i) == 1)
-            cHits.push_back(i);
+        if(privateDataBit(pFeId, pCbcId, i) == 1) cHits.push_back(i);
     }
 
     return cHits;
@@ -574,8 +550,7 @@ void D19cCbc3Event::print(std::ostream& os) const
             LOG(INFO) << BOLDBLUE << "AAAH! FE" << +cFeId << " CBC" << +cCbcId << " not here!" << RESET;
             continue;
         }
-        if(fEventDataVector.at(encodeVectorIndex(cFeId, cCbcId, fNCbc)).size() == 0)
-            continue;
+        if(fEventDataVector.at(encodeVectorIndex(cFeId, cCbcId, fNCbc)).size() == 0) continue;
 
         os << YELLOW << "PipelineAddress: " << this->PipelineAddress(cFeId, cCbcId) << RESET << " L1 Counter [from CBC] " << +this->L1Id(cFeId, cCbcId) << RESET << std::endl;
         os << RED << "Error: " << static_cast<std::bitset<2>>(this->Error(cFeId, cCbcId)) << RESET << std::endl;
@@ -623,8 +598,7 @@ void D19cCbc3Event::print(std::ostream& os) const
 
         os << "Ch. Data:      ";
 
-        for(int i = 0; i < FIRST_LINE_WIDTH; i += 2)
-            os << data.substr(i, 2) << " ";
+        for(int i = 0; i < FIRST_LINE_WIDTH; i += 2) os << data.substr(i, 2) << " ";
 
         os << std::endl;
 
@@ -637,8 +611,7 @@ void D19cCbc3Event::print(std::ostream& os) const
             os << std::endl;
         }
 
-        for(int i = 0; i < LAST_LINE_WIDTH; i += 2)
-            os << data.substr(FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i, 2) << " ";
+        for(int i = 0; i < LAST_LINE_WIDTH; i += 2) os << data.substr(FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i, 2) << " ";
 
         os << std::endl;
         os << BLUE << "Stubs: " << this->StubBitString(cFeId, cCbcId).c_str() << RESET << std::endl;
@@ -691,8 +664,7 @@ std::vector<Cluster> D19cCbc3Event::getClusters(uint8_t pFeId, uint8_t pCbcId) c
         }
 
         // Fix clusters at the end of the sensor
-        if(inCluster)
-            result.push_back(aCluster);
+        if(inCluster) result.push_back(aCluster);
     }
 
     return result;
@@ -713,8 +685,7 @@ SLinkEvent D19cCbc3Event::GetSLinkEvent(BeBoard* pBoard) const
         uint8_t cFeId = cFe->getId();
 
         // firt get the list of enabled front ends
-        if(cEnabledFe.find(cFeId) == std::end(cEnabledFe))
-            cEnabledFe.insert(cFeId);
+        if(cEnabledFe.find(cFeId) == std::end(cEnabledFe)) cEnabledFe.insert(cFeId);
 
         // now on to the payload
         uint16_t cCbcPresenceWord   = 0;

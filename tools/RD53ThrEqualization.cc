@@ -56,8 +56,7 @@ void ThrEqualization::ConfigureCalibration()
     customChannelGroup.disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)
-        for(auto col = colStart; col <= colStop; col++)
-            customChannelGroup.enableChannel(row, col);
+        for(auto col = colStart; col <= colStop; col++) customChannelGroup.enableChannel(row, col);
 
     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol);
     theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
@@ -92,10 +91,8 @@ void ThrEqualization::sendData()
 
     if(fStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer)
-            theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTDACcontainer)
-            theTDACStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theOccContainer) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theTDACcontainer) theTDACStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
 
@@ -189,8 +186,7 @@ void ThrEqualization::draw(int currentRun)
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true)
-        myApp = new TApplication("myApp", nullptr, nullptr);
+    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     this->InitResultFile(fileRes);
     LOG(INFO) << BOLDBLUE << "\t--> ThrEqualization saving histograms..." << RESET;
@@ -204,8 +200,7 @@ void ThrEqualization::draw(int currentRun)
     this->WriteRootFile();
     this->CloseResultFile();
 
-    if(doDisplay == true)
-        myApp->Run(true);
+    if(doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -258,8 +253,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
     for(const auto cBoard: bestContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
-                    cChip->getSummary<OccupancyAndPh>().fPh = 0;
+                for(const auto cChip: *cModule) cChip->getSummary<OccupancyAndPh>().fPh = 0;
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -372,8 +366,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
             for(const auto cModule: *cOpticalGroup)
                 for(const auto cChip: *cModule)
                     for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
-                            cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
+                        for(auto col = 0u; col < RD53::nCols; col++) cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
 
     // ############################
     // # Read DAC starting values #
@@ -509,8 +502,7 @@ void ThrEqualization::saveChipRegisters(int currentRun)
             for(const auto cModule: *cOpticalGroup)
                 for(const auto cChip: *cModule)
                 {
-                    if(doUpdateChip == true)
-                        static_cast<RD53*>(cChip)->saveRegMap("");
+                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());

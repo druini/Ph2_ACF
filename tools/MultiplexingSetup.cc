@@ -78,8 +78,7 @@ void MultiplexingSetup::ConfigureAll()
         {
             int         cBackPlaneId = el.first;
             const auto& cCardIds     = el.second;
-            for(auto cCardId: cCardIds)
-                this->ConfigureSingleCard(cBackPlaneId, cCardId);
+            for(auto cCardId: cCardIds) this->ConfigureSingleCard(cBackPlaneId, cCardId);
         }
     }
 }
@@ -101,8 +100,7 @@ void MultiplexingSetup::printAvailableCards()
         if(itBPCard.second.empty())
             sstr << "No cards";
         else
-            for(auto const& itCard: itBPCard.second)
-                sstr << itCard << " ";
+            for(auto const& itCard: itBPCard.second) sstr << itCard << " ";
         LOG(INFO) << BLUE << "Available cards for bp " << itBPCard.first << ":"
                   << "[ " << sstr.str() << "]" << RESET;
     }

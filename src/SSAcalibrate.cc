@@ -123,8 +123,7 @@ int main(int argc, char* argv[])
     // second parameter disables stub logic on CBC3
     // cPedestalEqualization.Initialise ( false, true );
     cPedestalEqualization.Initialise(cAllChan, false);
-    if(cVplus)
-        cPedestalEqualization.FindVplus();
+    if(cVplus) cPedestalEqualization.FindVplus();
     cPedestalEqualization.FindOffsets();
     cPedestalEqualization.writeObjects();
     cPedestalEqualization.dumpConfigFiles();
@@ -158,7 +157,6 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     cTool.Destroy();
 
-    if(!batchMode)
-        cApp.Run();
+    if(!batchMode) cApp.Run();
     return 0;
 }

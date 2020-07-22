@@ -22,8 +22,7 @@ PedeNoise::~PedeNoise() { cleanContainerMap(); }
 
 void PedeNoise::cleanContainerMap()
 {
-    for(auto container: fSCurveOccupancyMap)
-        fRecycleBin.free(container.second);
+    for(auto container: fSCurveOccupancyMap) fRecycleBin.free(container.second);
     fSCurveOccupancyMap.clear();
 }
 
@@ -36,10 +35,8 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
     cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
 
-    if(cWithCBC)
-        fChannelGroupHandler = new CBCChannelGroupHandler();
-    if(cWithSSA)
-        fChannelGroupHandler = new SSAChannelGroupHandler();
+    if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
+    if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
 
     initializeRecycleBin();
 
@@ -58,8 +55,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
 
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
-    if(fFitSCurves)
-        fPlotSCurves = true;
+    if(fFitSCurves) fPlotSCurves = true;
 
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -155,14 +151,12 @@ void PedeNoise::sweepSCurves()
         cStartValue = this->findPedestal(true);
     }
 
-    if(fDisableStubLogic)
-        disableStubLogic();
+    if(fDisableStubLogic) disableStubLogic();
     // LOG (INFO) << BLUE <<  "SV " <<cStartValue<< RESET ;
 
     measureSCurves(cStartValue);
 
-    if(fDisableStubLogic)
-        reloadStubLogic();
+    if(fDisableStubLogic) reloadStubLogic();
 
     this->SetTestAllChannels(originalAllChannelFlag);
     if(fPulseAmplitude != 0)
@@ -221,8 +215,7 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
     for(auto board: theOccupancyContainer)
     {
-        if(fStreamerEnabled)
-            theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
     }
 #endif
 
@@ -240,8 +233,7 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                 {
                     RegisterVector cRegVec;
                     uint32_t       NCH = NCHANNELS;
-                    if(cWithSSA)
-                        NCH = NSSACHANNELS;
+                    if(cWithSSA) NCH = NSSACHANNELS;
                     for(uint32_t iChan = 0; iChan < NCH; iChan++)
                     {
                         // LOG (INFO) << RED << "Ch " << iChan << RESET ;
@@ -277,20 +269,16 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
 uint16_t PedeNoise::findPedestal(bool forceAllChannels)
 {
     bool originalAllChannelFlag = this->fAllChan;
-    if(forceAllChannels)
-        this->SetTestAllChannels(true);
+    if(forceAllChannels) this->SetTestAllChannels(true);
 
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
-    if(cWithCBC)
-        this->bitWiseScan("VCth", fEventsPerPoint, 0.56, fNEventsPerBurst);
-    if(cWithSSA)
-        this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56, fNEventsPerBurst);
+    if(cWithCBC) this->bitWiseScan("VCth", fEventsPerPoint, 0.56, fNEventsPerBurst);
+    if(cWithSSA) this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56, fNEventsPerBurst);
 
-    if(forceAllChannels)
-        this->SetTestAllChannels(originalAllChannelFlag);
+    if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
 
     float    cMean = 0.;
     uint32_t nCbc  = 0;
@@ -304,10 +292,8 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
                 for(auto cROC: *cFe)
                 {
                     uint16_t tmpVthr = 0;
-                    if(cWithCBC)
-                        tmpVthr = (static_cast<ReadoutChip*>(cROC)->getReg("VCth1") + (static_cast<ReadoutChip*>(cROC)->getReg("VCth2") << 8));
-                    if(cWithSSA)
-                        tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("Bias_THDAC");
+                    if(cWithCBC) tmpVthr = (static_cast<ReadoutChip*>(cROC)->getReg("VCth1") + (static_cast<ReadoutChip*>(cROC)->getReg("VCth2") << 8));
+                    if(cWithSSA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("Bias_THDAC");
 
                     cMean += tmpVthr;
                     ++nCbc;
@@ -329,8 +315,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
     int      cMinBreakCount = 5;
     uint16_t cValue         = pStartValue;
     uint16_t cMaxValue      = (1 << 10) - 1;
-    if(cWithSSA)
-        cMaxValue = (1 << 8) - 1;
+    if(cWithSSA) cMaxValue = (1 << 8) - 1;
 
     float              cFirstLimit = (cWithCBC) ? 0 : 1;
     std::vector<int>   cSigns{-1, 1};
@@ -349,17 +334,14 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             fDetectorDataContainer                       = theOccupancyContainer;
             fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
 
-            if(cWithCBC)
-                this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint, fNEventsPerBurst);
-            if(cWithSSA)
-                this->setDacAndMeasureData("Bias_THDAC", cValue, fEventsPerPoint, fNEventsPerBurst);
+            if(cWithCBC) this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint, fNEventsPerBurst);
+            if(cWithSSA) this->setDacAndMeasureData("Bias_THDAC", cValue, fEventsPerPoint, fNEventsPerBurst);
             // this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
 
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
 
 #ifdef __USE_ROOT__
-            if(fPlotSCurves)
-                fDQMHistogramPedeNoise.fillSCurvePlots(cValue, *theOccupancyContainer);
+            if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue, *theOccupancyContainer);
 #else
             if(fPlotSCurves)
             {
@@ -367,8 +349,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
                 theSCurveStreamer.setHeaderElement(cValue);
                 for(auto board: *theOccupancyContainer)
                 {
-                    if(fStreamerEnabled)
-                        theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
+                    if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
                 }
             }
 #endif
@@ -386,10 +367,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
 
             cValue += cSign;
             cLimitFound = (cValue == 0 || cValue == cMaxValue) || (cLimitCounter >= cMinBreakCount);
-            if(cLimitFound)
-            {
-                LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET;
-            }
+            if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET; }
 
         } while(!cLimitFound);
         cCounter++;
@@ -411,8 +389,7 @@ void PedeNoise::extractPedeNoise()
             previousIterator = mIt;
             continue;
         }
-        if(fSCurveOccupancyMap.size() - 1 == counter)
-            break;
+        if(fSCurveOccupancyMap.size() - 1 == counter) break;
 
         for(auto board: *fDetectorContainer)
         {
@@ -424,8 +401,7 @@ void PedeNoise::extractPedeNoise()
                     {
                         for(uint8_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                         {
-                            if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel))
-                                continue;
+                            if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
                             float previousOccupancy = (previousIterator)
                                                           ->second->at(board->getIndex())
                                                           ->at(opticalGroup->getIndex())
@@ -479,8 +455,7 @@ void PedeNoise::extractPedeNoise()
                 {
                     for(uint8_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                     {
-                        if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel))
-                            continue;
+                        if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise - (chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold *
@@ -498,14 +473,12 @@ void PedeNoise::extractPedeNoise()
 void PedeNoise::producePedeNoisePlots()
 {
 #ifdef __USE_ROOT__
-    if(!fFitSCurves)
-        fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
+    if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
 #else
     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
     for(auto board: fThresholdAndNoiseContainer)
     {
-        if(fStreamerEnabled)
-            theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
     }
 #endif
 }

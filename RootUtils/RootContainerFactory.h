@@ -27,8 +27,7 @@ namespace details
 {
 inline void createAndOpenRootFileFolder(TFile* theOutputFile, std::string& folderName)
 {
-    if(theOutputFile->GetDirectory(folderName.data()) == nullptr)
-        theOutputFile->mkdir(folderName.data());
+    if(theOutputFile->GetDirectory(folderName.data()) == nullptr) theOutputFile->mkdir(folderName.data());
     theOutputFile->cd(folderName.data());
 }
 

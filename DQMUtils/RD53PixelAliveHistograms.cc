@@ -85,8 +85,7 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr)
-                        continue;
+                    if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
 
                     auto* Occupancy1DHist =
                         Occupancy1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
@@ -105,8 +104,7 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                                 Occupancy2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
                                 ToTHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                             }
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true)
-                                ErrorReadOut2DHist->Fill(col + 1, row + 1);
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
                         }
                 }
 }
@@ -120,13 +118,11 @@ void PixelAliveHistograms::fillBCID(const DetectorDataContainer& DataContainer)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<BCIDsize>>() == nullptr)
-                        continue;
+                    if(cChip->getSummaryContainer<GenericDataArray<BCIDsize>>() == nullptr) continue;
 
                     auto* BCIDHist = BCID.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0u; i < BCIDsize; i++)
-                        BCIDHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
+                    for(auto i = 0u; i < BCIDsize; i++) BCIDHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
                 }
 }
 
@@ -139,14 +135,12 @@ void PixelAliveHistograms::fillTrgID(const DetectorDataContainer& DataContainer)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<TrgIDsize>>() == nullptr)
-                        continue;
+                    if(cChip->getSummaryContainer<GenericDataArray<TrgIDsize>>() == nullptr) continue;
 
                     auto* TriggerIDHist =
                         TriggerID.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0u; i < TrgIDsize; i++)
-                        TriggerIDHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
+                    for(auto i = 0u; i < TrgIDsize; i++) TriggerIDHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
                 }
 }
 

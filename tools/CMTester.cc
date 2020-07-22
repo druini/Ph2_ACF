@@ -40,8 +40,7 @@ void CMTester::Initialize()
                     TString  cName = Form("h_nhits_Fe%dCbc%d", cHybridId, cCbcId);
                     TObject* cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     TH1F* cHist = new TH1F(cName, Form("Number of Hits FE%d CBC%d; Hits; Count", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5);
                     cHist->SetLineColor(9);
@@ -52,8 +51,7 @@ void CMTester::Initialize()
                     cName = Form("p_combinedoccupancy_Fe%dCbc%d", cHybridId, cCbcId);
                     cObj  = (TProfile2D*)gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     //  no clue why i can not call it cName but when I do, it produces a segfault!!
                     TProfile2D* c2DOccProfile = new TProfile2D(
@@ -66,8 +64,7 @@ void CMTester::Initialize()
                     cName = Form("p_correlation_Fe%dCbc%d", cHybridId, cCbcId);
                     cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     TH2F* c2DHist = new TH2F(
                         cName, Form("Correlation FE%d CBC%d; Strip; Strip; Correlation coefficient", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5, NCHANNELS + 1, -.5, NCHANNELS + 0.5);
@@ -77,8 +74,7 @@ void CMTester::Initialize()
                     cName = Form("p_occupancyprojection_Fe%dCbc%d", cHybridId, cCbcId);
                     cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     TProfile* cProfile = new TProfile(cName, Form("Projection of combined Occupancy FE%d CBC%d;  NNeighbors; Probability", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5);
                     cProfile->SetLineColor(9);
@@ -89,8 +85,7 @@ void CMTester::Initialize()
                     cName = Form("p_occupancyprojectionsymmetric_Fe%dCbc%d", cHybridId, cCbcId);
                     cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     cProfile =
                         new TProfile(cName, Form("Projection of combined Occupancy (+ and -) FE%d CBC%d;  NNeighbors (+-N); Probability", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5);
@@ -102,8 +97,7 @@ void CMTester::Initialize()
                     cName = Form("p_uncorr_occupancyprojection_Fe%dCbc%d", cHybridId, cCbcId);
                     cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     cProfile = new TProfile(cName, Form("Projection of uncorrelated Occupancy FE%d CBC%d;  NNeighbors; Probability", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5);
                     cProfile->SetLineColor(2);
@@ -114,8 +108,7 @@ void CMTester::Initialize()
                     cName = Form("p_correlationprojection_Fe%dCbc%d", cHybridId, cCbcId);
                     cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     cProfile = new TProfile(cName, Form("Projection of Correlation FE%d CBC%d;  NNeighbors; Correlation", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5);
                     cProfile->SetLineColor(9);
@@ -126,8 +119,7 @@ void CMTester::Initialize()
                     cName = Form("p_hitprob_Fe%dCbc%d", cHybridId, cCbcId);
                     cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     cProfile = new TProfile(cName, Form("Hit Probability FE%d CBC%d;  Strip; Probability", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5);
                     cProfile->SetLineColor(9);
@@ -138,8 +130,7 @@ void CMTester::Initialize()
                     cName = Form("f_nhitsfit_Fe%dCbc%d", cHybridId, cCbcId);
                     cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     TF1* cCmFit = new TF1(cName, hitProbFunction, 0, 255, 4);
                     bookHistogram(cCbc, "nhitsfit", cCmFit);
@@ -147,8 +138,7 @@ void CMTester::Initialize()
                     cName = Form("h_nocm_Fe%dCbc%d", cHybridId, cCbcId);
                     cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     TH1F* cNoCM = new TH1F(cName, "Noise hit distributtion", NCHANNELS + 1, -0.5, NCHANNELS + 0.5);
                     cNoCM->SetLineColor(16);
@@ -162,8 +152,7 @@ void CMTester::Initialize()
                 TString  cName = Form("p_module_combinedoccupancy_Fe%d", cHybridId);
                 TObject* cObj  = gROOT->FindObject(cName);
 
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
 
                 TProfile2D* c2DProfile = new TProfile2D(cName,
                                                         Form("Combined Occupancy FE%d; Strip; Strip; Occupancy", cHybridId),
@@ -179,8 +168,7 @@ void CMTester::Initialize()
                 cName = Form("p_module_correlation_Fe%d", cHybridId);
                 cObj  = gROOT->FindObject(cName);
 
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
 
                 TH2F* c2DHist = new TH2F(cName,
                                          Form("Correlation FE%d; Strip; Strip; Correlation coefficient", cHybridId),
@@ -196,8 +184,7 @@ void CMTester::Initialize()
                 cName = Form("p_module_occupancyprojection_Fe%d", cHybridId);
                 cObj  = gROOT->FindObject(cName);
 
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
 
                 TProfile* cProfile = new TProfile(cName, Form("Projection of combined Occupancy FE%d;  NNeighbors; Probability", cHybridId), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5);
                 cProfile->SetLineColor(9);
@@ -208,8 +195,7 @@ void CMTester::Initialize()
                 cName = Form("p_module_uncorr_occupancyprojection_Fe%d", cHybridId);
                 cObj  = gROOT->FindObject(cName);
 
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
 
                 cProfile = new TProfile(cName, Form("Projection of uncorrelated Occupancy FE%d;  NNeighbors; Probability", cHybridId), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5);
                 cProfile->SetLineColor(2);
@@ -220,8 +206,7 @@ void CMTester::Initialize()
                 cName = Form("p_module_correlationprojection_Fe%d", cHybridId);
                 cObj  = gROOT->FindObject(cName);
 
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
 
                 cProfile = new TProfile(cName, Form("Projection of Correlation FE%d;  NNeighbors; Correlation", cHybridId), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5);
                 cProfile->SetLineColor(9);
@@ -363,8 +348,7 @@ void CMTester::TakeData()
         {
             // LOG (INFO) << cN << " "<< *cEvent;
 
-            if(cN > fNevents)
-                continue; // Needed when using ReadData on CBC3
+            if(cN > fNevents) continue; // Needed when using ReadData on CBC3
 
             analyze(theBoard, cEvent);
 
@@ -439,14 +423,12 @@ void CMTester::FinishRun()
                 // frac(Oxy-OxOy)(sqrt(Ox-Ox^2)*sqrt(Oy-Oy^2))
                 cCorrelation2D->SetBinContent(cIdx, cIdy, (xy - xx * yy) / (sqrt(xx - pow(xx, 2)) * sqrt(yy - pow(yy, 2))));
 
-                if(xx != 0 && yy != 0)
-                    cUncorrHitProb->Fill(cIdx - cIdy, xx * yy);
+                if(xx != 0 && yy != 0) cUncorrHitProb->Fill(cIdx - cIdy, xx * yy);
 
                 // and finally project the correlation
                 xy = cCorrelation2D->GetBinContent(cIdx, cIdy);
 
-                if(xy == xy)
-                    cCorrProjection->Fill(cIdx - cIdy, xy);
+                if(xy == xy) cCorrProjection->Fill(cIdx - cIdy, xy);
             }
         }
         iCbc++;
@@ -478,14 +460,12 @@ void CMTester::FinishRun()
                 // frac(Oxy-OxOy)(sqrt(Ox-Ox^2)*sqrt(Oy-Oy^2))
                 cCorrelation2D->SetBinContent(cIdx, cIdy, (xy - xx * yy) / (sqrt(xx - pow(xx, 2)) * sqrt(yy - pow(yy, 2))));
 
-                if(xx != 0 && yy != 0)
-                    cUncorrHitProb->Fill(cIdx - cIdy, xx * yy);
+                if(xx != 0 && yy != 0) cUncorrHitProb->Fill(cIdx - cIdy, xx * yy);
 
                 // and finally project the correlation
                 xy = cCorrelation2D->GetBinContent(cIdx, cIdy);
 
-                if(xy == xy)
-                    cCorrProjection->Fill(cIdx - cIdy, xy);
+                if(xy == xy) cCorrProjection->Fill(cIdx - cIdy, xy);
             }
         }
     }
@@ -521,8 +501,7 @@ void CMTester::analyze(BeBoard* pBoard, const Event* pEvent)
                 int cNHits     = 0;
                 int cEventHits = pEvent->GetNHits(cHybrid->getId(), cCbc->getId());
 
-                if(cEventHits > 250)
-                    LOG(INFO) << " Found an event with " << cEventHits << " hits on a CBC! Is this expected?";
+                if(cEventHits > 250) LOG(INFO) << " Found an event with " << cEventHits << " hits on a CBC! Is this expected?";
 
                 // here add a check if the strip is masked and if I am simulating or not!
                 std::vector<bool> cSimResult;
@@ -549,12 +528,10 @@ void CMTester::analyze(BeBoard* pBoard, const Event* pEvent)
                     cModuleData.push_back(chit);
 
                     //  count hits/event
-                    if(chit && !isMasked(static_cast<ReadoutChip*>(cCbc), cChan))
-                        cNHits++;
+                    if(chit && !isMasked(static_cast<ReadoutChip*>(cCbc), cChan)) cNHits++;
 
                     // Fill Single Strip Efficiency
-                    if(!isMasked(static_cast<ReadoutChip*>(cCbc), cChan))
-                        cTmpHitProb->Fill(cChan, int(chit));
+                    if(!isMasked(static_cast<ReadoutChip*>(cCbc), cChan)) cTmpHitProb->Fill(cChan, int(chit));
 
                     // For combined occupancy 1D projection & 2D profile
                     for(int cChan2 = 0; cChan2 < 254; cChan2++)
@@ -568,8 +545,7 @@ void CMTester::analyze(BeBoard* pBoard, const Event* pEvent)
 
                         int cfillValue = 0;
 
-                        if(chit && chit2)
-                            cfillValue = 1;
+                        if(chit && chit2) cfillValue = 1;
 
                         if(!isMasked(static_cast<ReadoutChip*>(cCbc), cChan) && !isMasked(static_cast<ReadoutChip*>(cCbc), cChan2))
                         {
@@ -577,8 +553,7 @@ void CMTester::analyze(BeBoard* pBoard, const Event* pEvent)
                             cTmpOccProfile->Fill(cChan, cChan2, cfillValue);
 
                             // Fill projection: this could be done in FinishRun() but then no live updates
-                            if(cChan - cChan2 >= 0)
-                                cTmpCombinedOcc->Fill(cChan - cChan2, cfillValue);
+                            if(cChan - cChan2 >= 0) cTmpCombinedOcc->Fill(cChan - cChan2, cfillValue);
 
                             // Cross-check: what if we also consider the -N neighbors, not just +N ones? Should get the
                             // same result...
@@ -607,8 +582,7 @@ void CMTester::analyze(BeBoard* pBoard, const Event* pEvent)
                 {
                     int fillvalue = 0;
 
-                    if(cChan1 && cChan2)
-                        fillvalue = 1;
+                    if(cChan1 && cChan2) fillvalue = 1;
 
                     if(!isMasked(cChanCt1) && !isMasked(cChanCt2))
                     {
@@ -661,17 +635,14 @@ void CMTester::updateHists(bool pFinal)
             {
                 cNoCM->Draw();
                 cTmpNHits->Draw("same");
-                if(cCorrProjection != nullptr)
-                    cCMFit->Draw("same");
+                if(cCorrProjection != nullptr) cCMFit->Draw("same");
                 TLegend* cLegend = new TLegend(0.13, 0.66, 0.38, 0.88, "");
                 cLegend->SetBorderSize(0);
                 cLegend->SetFillColor(kWhite);
                 cLegend->AddEntry(cTmpNHits, "Data", "f");
                 cLegend->AddEntry(cCMFit, Form("Fit (CM %4.2f+-%4.2f, THR %4.2f). ", fabs(cCMFit->GetParameter(1)), cCMFit->GetParError(1), cCMFit->GetParameter(0)), "l");
-                if(cNoCM != nullptr)
-                    cLegend->AddEntry(cNoCM, "CM = 0", "l");
-                if(fTotalNoise[iCbc] > 0)
-                    cLegend->AddEntry((TObject*)0, Form("Noise: %4.2f (total), %4.2f (CM)", fTotalNoise[iCbc], fabs(cCMFit->GetParameter(1)) * fTotalNoise[iCbc]), "");
+                if(cNoCM != nullptr) cLegend->AddEntry(cNoCM, "CM = 0", "l");
+                if(fTotalNoise[iCbc] > 0) cLegend->AddEntry((TObject*)0, Form("Noise: %4.2f (total), %4.2f (CM)", fTotalNoise[iCbc], fabs(cCMFit->GetParameter(1)) * fTotalNoise[iCbc]), "");
                 cLegend->SetTextSize(0.05);
                 cLegend->Draw("same");
             }
@@ -687,8 +658,7 @@ void CMTester::updateHists(bool pFinal)
 
             if(pFinal)
             {
-                if(cUncorrHitProb != nullptr)
-                    cUncorrHitProb->Draw("hist same");
+                if(cUncorrHitProb != nullptr) cUncorrHitProb->Draw("hist same");
                 TLegend* cLegend = new TLegend(0.13, 0.66, 0.38, 0.88, "");
                 cLegend->SetBorderSize(0);
                 cLegend->SetFillColor(kWhite);
@@ -699,8 +669,7 @@ void CMTester::updateHists(bool pFinal)
 
                 // 4. Correlation projection
                 cCanvas->second->cd(4);
-                if(cCorrProjection != nullptr)
-                    cCorrProjection->Draw();
+                if(cCorrProjection != nullptr) cCorrProjection->Draw();
             }
 
             cCanvas->second->Update();

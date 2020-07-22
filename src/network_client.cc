@@ -112,10 +112,8 @@ class MiddlewareInterface : public TCPClient
         std::cout << __PRETTY_FUNCTION__ << "DONE WITH Stop-" << readBuffer << "-" << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(5));
         fAccept = false;
-        while(fAcceptFuture.wait_for(std::chrono::milliseconds(1000)) != std::future_status::ready)
-            std::cout << __PRETTY_FUNCTION__ << "Still running" << std::endl;
-        if(fListener != nullptr)
-            delete fListener;
+        while(fAcceptFuture.wait_for(std::chrono::milliseconds(1000)) != std::future_status::ready) std::cout << __PRETTY_FUNCTION__ << "Still running" << std::endl;
+        if(fListener != nullptr) delete fListener;
         fRunning = false;
     }
 

@@ -84,8 +84,7 @@ void HybridTester::InitializeHists()
     TString  cFrontName("fHistTop");
     fHistTop = (TH1F*)(gROOT->FindObject(cFrontName));
 
-    if(fHistTop)
-        delete fHistTop;
+    if(fHistTop) delete fHistTop;
 
     fHistTop = new TH1F(cFrontName, "Front Pad Channels; Pad Number; Occupancy [%]", cNBinsX, -0.5, cNBinsX - 0.5);
     fHistTop->SetFillColor(4);
@@ -94,8 +93,7 @@ void HybridTester::InitializeHists()
     TString cBackName("fHistBottom");
     fHistBottom = (TH1F*)(gROOT->FindObject(cBackName));
 
-    if(fHistBottom)
-        delete fHistBottom;
+    if(fHistBottom) delete fHistBottom;
 
     fHistBottom = new TH1F(cBackName, "Back Pad Channels; Pad Number; Occupancy [%]", cNBinsX, -0.5, cNBinsX - 0.5);
     fHistBottom->SetFillColor(4);
@@ -104,8 +102,7 @@ void HybridTester::InitializeHists()
     TString cFrontNameMerged("fHistTopMerged");
     fHistTopMerged = (TH1F*)(gROOT->FindObject(cFrontNameMerged));
 
-    if(fHistTopMerged)
-        delete fHistTopMerged;
+    if(fHistTopMerged) delete fHistTopMerged;
 
     fHistTopMerged = new TH1F(cFrontNameMerged, "Front Pad Channels; Pad Number; Occupancy [%]", cNBinsX, -0.5, cNBinsX - 0.5);
     fHistTopMerged->SetFillColor(4);
@@ -114,8 +111,7 @@ void HybridTester::InitializeHists()
     TString cBackNameMerged("fHistBottomMerged");
     fHistBottomMerged = (TH1F*)(gROOT->FindObject(cBackNameMerged));
 
-    if(fHistBottomMerged)
-        delete fHistBottomMerged;
+    if(fHistBottomMerged) delete fHistBottomMerged;
 
     fHistBottomMerged = new TH1F(cBackNameMerged, "Back Pad Channels; Pad Number; Occupancy [%]", cNBinsX, -0.5, cNBinsX - 0.5);
     fHistBottomMerged->SetFillColor(4);
@@ -124,8 +120,7 @@ void HybridTester::InitializeHists()
     TString cOccupancyBottom("fHistOccupancyBottom");
     fHistOccupancyBottom = (TH1F*)(gROOT->FindObject(cOccupancyBottom));
 
-    if(fHistOccupancyBottom)
-        delete fHistOccupancyBottom;
+    if(fHistOccupancyBottom) delete fHistOccupancyBottom;
 
     fHistOccupancyBottom = new TH1F(cOccupancyBottom, "Back Pad Channels.", (int)(110 / 1.0), -0.5, 110.0 - 0.5);
     fHistOccupancyBottom->SetStats(1);
@@ -139,8 +134,7 @@ void HybridTester::InitializeHists()
     TString cOccupancyTop("fHistOccupancyTop");
     fHistOccupancyTop = (TH1F*)(gROOT->FindObject(cOccupancyTop));
 
-    if(fHistOccupancyTop)
-        delete fHistOccupancyTop;
+    if(fHistOccupancyTop) delete fHistOccupancyTop;
 
     fHistOccupancyTop = new TH1F(cOccupancyTop, "Top Pad Channels.", (int)(110 / 1.0), -0.5, 110.0 - 0.5);
     fHistOccupancyTop->SetStats(1);
@@ -169,8 +163,7 @@ void HybridTester::InitializeHists()
                     TString  cName   = Form("SCurve_Fe%d_Cbc%d", cFeId, cCbcId);
                     TObject* cObject = static_cast<TObject*>(gROOT->FindObject(cName));
 
-                    if(cObject)
-                        delete cObject;
+                    if(cObject) delete cObject;
 
                     TH1F* cTmpScurve = new TH1F(cName, Form("Noise Occupancy Chip%d; VCth; Counts", cCbcId), cMaxRange, 0, cMaxRange);
                     cTmpScurve->SetMarkerStyle(8);
@@ -180,8 +173,7 @@ void HybridTester::InitializeHists()
                     cName   = Form("SCurveFit_Fe%d_Cbc%d", cFeId, cCbcId);
                     cObject = static_cast<TObject*>(gROOT->FindObject(cName));
 
-                    if(cObject)
-                        delete cObject;
+                    if(cObject) delete cObject;
 
                     TF1* cTmpFit = new TF1(cName, MyErf, 0, cMaxRange, 2);
                     bookHistogram(cCbc, "ScurveFit", cTmpFit);
@@ -291,8 +283,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_
                     std::vector<uint32_t> cHits = pEvent->GetHits(cFe->getId(), cCbc->getId());
                     cHitCounter += cHits.size();
 
-                    for(__attribute__((unused)) auto cHit: cHits)
-                        cScurve->second->Fill(pValue);
+                    for(__attribute__((unused)) auto cHit: cHits) cScurve->second->Fill(pValue);
                 }
             }
         }
@@ -420,8 +411,7 @@ void HybridTester::ScanThreshold()
 
     while(0x00 == cVcth && cVcth <= cMaxValue)
     {
-        if(cAllOne)
-            break;
+        if(cAllOne) break;
 
         if(cVcth == cDoubleVcth)
         {
@@ -437,8 +427,7 @@ void HybridTester::ScanThreshold()
         uint32_t cHitCounter = 0;
 
         // maybe restrict to pBoard? instead of looping?
-        if(cAllOne)
-            break;
+        if(cAllOne) break;
 
         for(auto pBoard: *fDetectorContainer)
         {
@@ -482,14 +471,12 @@ void HybridTester::ScanThreshold()
             if(cNonZero && (cHitCounter != 0))
             {
                 // check if all Cbcs have reached full occupancy
-                if(cHitCounter > 0.95 * cEventsperVcth * fNCbc * NCHANNELS)
-                    cAllOneCounter++;
+                if(cHitCounter > 0.95 * cEventsperVcth * fNCbc * NCHANNELS) cAllOneCounter++;
 
                 // add a second check if the global SCurve slope is 0 for 10 consecutive Vcth values
             }
 
-            if(cAllOneCounter >= 10)
-                cAllOne = true;
+            if(cAllOneCounter >= 10) cAllOne = true;
 
             // if ( cSlopeZeroCounter >= 10 ) cSlopeZero = true;
 
@@ -538,8 +525,7 @@ void HybridTester::processSCurves(uint32_t pEventsperVcth)
 
                 if(!cFirstNon0)
                 {
-                    if(cContent)
-                        cFirstNon0 = cScurve.second->GetBinCenter(cBin);
+                    if(cContent) cFirstNon0 = cScurve.second->GetBinCenter(cBin);
                 }
                 else if(cContent == 1)
                 {
@@ -557,8 +543,7 @@ void HybridTester::processSCurves(uint32_t pEventsperVcth)
 
                 if(!cFirstNon0)
                 {
-                    if(cContent)
-                        cFirstNon0 = cScurve.second->GetBinCenter(cBin);
+                    if(cContent) cFirstNon0 = cScurve.second->GetBinCenter(cBin);
                 }
                 else if(cContent == 1)
                 {
@@ -671,8 +656,7 @@ void HybridTester::TestRegisters()
             std::set<std::string> tempset;
             uint32_t              cCbcIterator = 0;
 
-            for(cCbcIterator = 0; cCbcIterator < pNCbc; cCbcIterator++)
-                fBadRegisters[cCbcIterator] = tempset;
+            for(cCbcIterator = 0; cCbcIterator < pNCbc; cCbcIterator++) fBadRegisters[cCbcIterator] = tempset;
         }
 
         void visit(ChipContainer* pCbc)
@@ -686,11 +670,9 @@ void HybridTester::TestRegisters()
 
             for(const auto& cReg: cMap)
             {
-                if(!fInterface->WriteChipReg(theCbc, cReg.first, cFirstBitPattern, true))
-                    fBadRegisters[pCbc->getId()].insert(cReg.first);
+                if(!fInterface->WriteChipReg(theCbc, cReg.first, cFirstBitPattern, true)) fBadRegisters[pCbc->getId()].insert(cReg.first);
 
-                if(!fInterface->WriteChipReg(theCbc, cReg.first, cSecondBitPattern, true))
-                    fBadRegisters[pCbc->getId()].insert(cReg.first);
+                if(!fInterface->WriteChipReg(theCbc, cReg.first, cSecondBitPattern, true)) fBadRegisters[pCbc->getId()].insert(cReg.first);
             }
         }
 
@@ -703,8 +685,7 @@ void HybridTester::TestRegisters()
             {
                 report << "Malfunctioning Registers on Chip " << cCbc.first << " : " << std::endl;
 
-                for(const auto& cReg: cCbc.second)
-                    report << cReg << std::endl;
+                for(const auto& cReg: cCbc.second) report << cReg << std::endl;
             }
 
             report.close();
@@ -737,8 +718,7 @@ void HybridTester::DisplayGroupsContent(std::array<std::vector<std::array<int, 5
 
         for(auto cShortsVector: pShortedGroupsArray[i])
         {
-            for(auto i: cShortsVector)
-                ss << i << ' ';
+            for(auto i: cShortsVector) ss << i << ' ';
 
             ss << std::endl;
         }
@@ -755,14 +735,12 @@ std::vector<std::array<int, 2>> HybridTester::MergeShorts(std::vector<std::array
 
     for(auto cChannel: pShortA)
     {
-        if(!CheckChannelInShortPresence(cChannel, pShortB))
-            pShortB.push_back(cChannel);
+        if(!CheckChannelInShortPresence(cChannel, pShortB)) pShortB.push_back(cChannel);
     }
 
     for(auto cMemberChannel: pShortB)
     {
-        for(auto i: cMemberChannel)
-            ss << i << ' ';
+        for(auto i: cMemberChannel) ss << i << ' ';
     }
 
     ss << std::endl;
@@ -775,8 +753,7 @@ bool HybridTester::CheckShortsConnection(std::vector<std::array<int, 2>> pShortA
 {
     for(auto cChannel: pShortA)
     {
-        if(CheckChannelInShortPresence(cChannel, pShortB))
-            return true;
+        if(CheckChannelInShortPresence(cChannel, pShortB)) return true;
     }
 
     return false;
@@ -786,8 +763,7 @@ bool HybridTester::CheckChannelInShortPresence(std::array<int, 2> pShortedChanne
 {
     for(auto cChannel: pShort)
     {
-        if(cChannel[0] == pShortedChannel[0] && cChannel[1] == pShortedChannel[1])
-            return true;
+        if(cChannel[0] == pShortedChannel[0] && cChannel[1] == pShortedChannel[1]) return true;
     }
 
     return false;
@@ -857,8 +833,7 @@ void HybridTester::ReconstructShorts(std::array<std::vector<std::array<int, 5>>,
 
                 for(auto cMemberChannel: cShort)
                 {
-                    for(auto i: cMemberChannel)
-                        ss << i << ' ';
+                    for(auto i: cMemberChannel) ss << i << ' ';
                 }
 
                 ss << "smallest distance: " << smallest_distance << std::endl;
@@ -902,8 +877,7 @@ void HybridTester::ReconstructShorts(std::array<std::vector<std::array<int, 5>>,
     {
         for(auto cMemberChannel: someShort)
         {
-            for(auto i: cMemberChannel)
-                ss << i << ' ';
+            for(auto i: cMemberChannel) ss << i << ' ';
         }
 
         ss << std::endl;
@@ -914,8 +888,7 @@ void HybridTester::ReconstructShorts(std::array<std::vector<std::array<int, 5>>,
 
 void HybridTester::SetBeBoardForShortsFinding(BeBoard* pBoard)
 {
-    if(pBoard->getBoardType() == BoardType::D19C)
-        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 1);
+    if(pBoard->getBoardType() == BoardType::D19C) fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 1);
     setFWTestPulse();
 
     // (potential, group, enable test pulse, hole mode)
@@ -1008,8 +981,7 @@ void HybridTester::FindShorts()
                     HistogramFiller cFiller(fHistBottom, fHistTop, cEvent);
                     theBoard->accept(cFiller);
 
-                    if(cN % 100 == 0)
-                        UpdateHists();
+                    if(cN % 100 == 0) UpdateHists();
 
                     cN++;
                 }
@@ -1104,8 +1076,7 @@ void HybridTester::Measure()
                 HistogramFiller cFiller(fHistBottom, fHistTop, cEvent);
                 theBoard->accept(cFiller);
 
-                if(cN % 100 == 0)
-                    UpdateHists();
+                if(cN % 100 == 0) UpdateHists();
 
                 cN++;
             }
@@ -1138,17 +1109,13 @@ void HybridTester::ClassifyChannels(double pNoiseLevel, double pDeadLevel)
 {
     for(uint8_t i = 1; i < (fNCbc * 254u) / 2u; i++)
     {
-        if(fHistBottom->GetBinContent(i) >= pNoiseLevel)
-            fNoisyChannelsBottom.push_back(i);
+        if(fHistBottom->GetBinContent(i) >= pNoiseLevel) fNoisyChannelsBottom.push_back(i);
 
-        if(fHistTop->GetBinContent(i) >= pNoiseLevel)
-            fNoisyChannelsTop.push_back(i);
+        if(fHistTop->GetBinContent(i) >= pNoiseLevel) fNoisyChannelsTop.push_back(i);
 
-        if(fHistBottom->GetBinContent(i) <= pDeadLevel)
-            fDeadChannelsBottom.push_back(i);
+        if(fHistBottom->GetBinContent(i) <= pDeadLevel) fDeadChannelsBottom.push_back(i);
 
-        if(fHistTop->GetBinContent(i) <= pDeadLevel)
-            fDeadChannelsTop.push_back(i);
+        if(fHistTop->GetBinContent(i) <= pDeadLevel) fDeadChannelsTop.push_back(i);
     }
 }
 void HybridTester::DisplayNoisyChannels(std::ostream& os)
@@ -1241,8 +1208,7 @@ void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
         cAntenna.TurnOnAnalogSwitchChannel(channel_position);
         LOG(INFO) << "Turning analogue switch chanel " << +channel_position;
 
-        if(channel_position == 9)
-            break;
+        if(channel_position == 9) break;
 
         for(auto pBoard: *fDetectorContainer)
         {
@@ -1265,8 +1231,7 @@ void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
                     HistogramFiller cFiller(fHistBottom, fHistTop, cEvent);
                     theBoard->accept(cFiller);
 
-                    if(cN % 100 == 0)
-                        UpdateHists();
+                    if(cN % 100 == 0) UpdateHists();
 
                     cN++;
                 }
@@ -1279,11 +1244,9 @@ void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
             /*Here the reconstruction of histograms happens*/
             for(uint16_t channel_id = 1; channel_id < fNCbc * 127 + 1; channel_id++)
             {
-                if(fHistTopMerged->GetBinContent(channel_id) < fHistTop->GetBinContent(channel_id))
-                    fHistTopMerged->SetBinContent(channel_id, fHistTop->GetBinContent(channel_id));
+                if(fHistTopMerged->GetBinContent(channel_id) < fHistTop->GetBinContent(channel_id)) fHistTopMerged->SetBinContent(channel_id, fHistTop->GetBinContent(channel_id));
 
-                if(fHistBottomMerged->GetBinContent(channel_id) < fHistBottom->GetBinContent(channel_id))
-                    fHistBottomMerged->SetBinContent(channel_id, fHistBottom->GetBinContent(channel_id));
+                if(fHistBottomMerged->GetBinContent(channel_id) < fHistBottom->GetBinContent(channel_id)) fHistBottomMerged->SetBinContent(channel_id, fHistBottom->GetBinContent(channel_id));
             }
 
             /*Here clearing histograms after each event*/
@@ -1322,11 +1285,9 @@ void HybridTester::SaveTestingResults(std::string pHybridId)
 
     infile.open(fDirectoryName + "/registers_test.txt");
 
-    while(getline(infile, line_buffer))
-        content_buffer += line_buffer + "\r\n"; // To get all the lines.
+    while(getline(infile, line_buffer)) content_buffer += line_buffer + "\r\n"; // To get all the lines.
 
-    if(content_buffer == "")
-        myfile << "Test not performed!" << std::endl;
+    if(content_buffer == "") myfile << "Test not performed!" << std::endl;
 
     infile.close();
     myfile << content_buffer << std::endl;
@@ -1335,11 +1296,9 @@ void HybridTester::SaveTestingResults(std::string pHybridId)
     myfile << "---------------------------" << std::endl;
     infile.open(fDirectoryName + "/channels_test2.txt");
 
-    while(getline(infile, line_buffer))
-        content_buffer += line_buffer + "\r\n"; // To get all the lines.
+    while(getline(infile, line_buffer)) content_buffer += line_buffer + "\r\n"; // To get all the lines.
 
-    if(content_buffer == "")
-        myfile << "Test not performed!" << std::endl;
+    if(content_buffer == "") myfile << "Test not performed!" << std::endl;
 
     infile.close();
     myfile << content_buffer << std::endl;

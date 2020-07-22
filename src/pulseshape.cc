@@ -96,8 +96,7 @@ int main(int argc, char* argv[])
     cPulseShape.Destroy();
 #endif
 
-    if(!batchMode)
-        cApp.Run();
+    if(!batchMode) cApp.Run();
 
     return 0;
 }

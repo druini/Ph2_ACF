@@ -40,8 +40,7 @@ class CanvasContainer : public PlotContainer
         if(fHasToBeDeletedManually == true)
         {
             delete fTheHistogram;
-            if(fCanvas != nullptr)
-                delete fCanvas;
+            if(fCanvas != nullptr) delete fCanvas;
         }
 
         fTheHistogram = nullptr;

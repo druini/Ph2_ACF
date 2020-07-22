@@ -36,8 +36,7 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
     uint8_t cMPAId;
     fBoardFW->DecodeReg(cRegItem, cMPAId, cVecReq[0], cRead, cFailed);
     // std::cout<<"ritemread "<<cRegItem.fValue<<std::endl;
-    if(!cFailed)
-        pMPA->setReg(pRegNode, cRegItem.fValue);
+    if(!cFailed) pMPA->setReg(pRegNode, cRegItem.fValue);
 
     return cRegItem.fValue & 0xFF;
 }
@@ -53,8 +52,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegNode, uint16_
     uint8_t cWriteAttempts = 0;
     bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
 
-    if(cSuccess)
-        pMPA->setReg(pRegNode, pValue);
+    if(cSuccess) pMPA->setReg(pRegNode, pValue);
 
 #ifdef COUNT_FLAG
     fRegisterCount++;
@@ -160,10 +158,7 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
         }
     }
 
-    if(isMask)
-    {
-        return maskChannelsGroup(pMPA, &channelToEnable, pVerifLoop);
-    }
+    if(isMask) { return maskChannelsGroup(pMPA, &channelToEnable, pVerifLoop); }
     else
     {
         // uint8_t cWriteAttempts = 0 ;
@@ -211,8 +206,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
         }
         // LOG (INFO) << BOLDRED << "READ "<<ReadChipReg( pMPA, cRegItem.first )<< RESET;
         // LOG (INFO) << BOLDBLUE << cRegItem.first << "  <   " << BOLDRED << cSuccess << RESET;
-        if(not cSuccess)
-            return false;
+        if(not cSuccess) return false;
         cVec.clear();
     }
 
@@ -339,8 +333,7 @@ L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1, bool verbose)
                             strip_data.push_back(curdata);
                         else
                             pixel_data.push_back(curdata);
-                        if(strip_counter == strip_data.size())
-                            wordl = 14;
+                        if(strip_counter == strip_data.size()) wordl = 14;
                         curdata = 0;
                         counter = 0;
                     }
@@ -369,11 +362,9 @@ L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1, bool verbose)
             formL1data.width_strip.push_back((sdata & 0xE) >> 1);
             formL1data.MIP.push_back((sdata & 0x1));
 
-            if(verbose)
-                std::cout << "\tPosition: " << formL1data.pos_strip.back() << "\n\tWidth: " << formL1data.width_strip.back() << "\n\tMIP: " << formL1data.MIP.back() << std::endl;
+            if(verbose) std::cout << "\tPosition: " << formL1data.pos_strip.back() << "\n\tWidth: " << formL1data.width_strip.back() << "\n\tMIP: " << formL1data.MIP.back() << std::endl;
         }
-        if(verbose)
-            std::cout << "Pixel data:" << std::endl;
+        if(verbose) std::cout << "Pixel data:" << std::endl;
 
         for(auto& pdata: pixel_data)
         {
@@ -381,8 +372,7 @@ L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1, bool verbose)
             formL1data.width_pixel.push_back((pdata & 0x70) >> 4);
             formL1data.Z.push_back((pdata & 0xF) + 1);
 
-            if(verbose)
-                std::cout << "\tPosition: " << formL1data.pos_pixel.back() << "\n\tWidth: " << formL1data.width_pixel.back() << "\n\tRow Number: " << formL1data.Z.back() << std::endl;
+            if(verbose) std::cout << "\tPosition: " << formL1data.pos_pixel.back() << "\n\tWidth: " << formL1data.width_pixel.back() << "\n\tRow Number: " << formL1data.Z.back() << std::endl;
         }
 
         return formL1data;
@@ -406,14 +396,10 @@ void MPAInterface::Activate_ps(Chip* pMPA) { this->WriteChipReg(pMPA, "ECM", 0x8
 void MPAInterface::Pix_Smode(ReadoutChip* pMPA, uint32_t p, std::string smode = "edge")
 {
     uint32_t smodewrite = 0x0;
-    if(smode == "edge")
-        smodewrite = 0x0;
-    if(smode == "level")
-        smodewrite = 0x1;
-    if(smode == "or")
-        smodewrite = 0x2;
-    if(smode == "xor")
-        smodewrite = 0x3;
+    if(smode == "edge") smodewrite = 0x0;
+    if(smode == "level") smodewrite = 0x1;
+    if(smode == "or") smodewrite = 0x2;
+    if(smode == "xor") smodewrite = 0x3;
     this->WriteChipReg(pMPA, "ModeSel_P" + std::to_string(p + 1), smodewrite);
 }
 
@@ -512,8 +498,7 @@ void MPAInterface::Set_threshold(Chip* pMPA, uint32_t th)
 
 void MPAInterface::ReadASEvent(ReadoutChip* pMPA, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange)
 {
-    if(pSRange == std::pair<uint32_t, uint32_t>{0, 0})
-        pSRange = std::pair<uint32_t, uint32_t>{1, pMPA->getNumberOfChannels()};
+    if(pSRange == std::pair<uint32_t, uint32_t>{0, 0}) pSRange = std::pair<uint32_t, uint32_t>{1, pMPA->getNumberOfChannels()};
     for(uint32_t i = pSRange.first; i <= pSRange.second; i++)
     {
         uint8_t cRP1 = this->ReadChipReg(pMPA, "ReadCounter_LSB_P" + std::to_string(i));
@@ -533,12 +518,10 @@ bool MPAInterface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerifL
     // if(inject) enwrite=17;
 
     uint32_t enwrite = 0x17;
-    if(inject)
-        enwrite = 0x47;
+    if(inject) enwrite = 0x47;
 
     // std::cout<<"enwrite "<<enwrite<<std::endl;
-    for(uint32_t i = 1; i <= pChip->getNumberOfChannels(); i++)
-        this->WriteChipReg(pChip, "ENFLAGS_P" + std::to_string(i), enwrite);
+    for(uint32_t i = 1; i <= pChip->getNumberOfChannels(); i++) this->WriteChipReg(pChip, "ENFLAGS_P" + std::to_string(i), enwrite);
     return true;
 }
 

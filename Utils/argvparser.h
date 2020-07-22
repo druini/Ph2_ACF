@@ -268,8 +268,7 @@ void splitString(Container& _container, const std::string& _in, const char* cons
     {
         // eat leading whitespace
         i = _in.find_first_not_of(_delimiters, i);
-        if(i == std::string::npos)
-            return; // nothing left but white space
+        if(i == std::string::npos) return; // nothing left but white space
 
         // find the end of the token
         std::string::size_type j = _in.find_first_of(_delimiters, i);

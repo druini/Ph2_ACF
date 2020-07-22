@@ -45,9 +45,8 @@ inline double hitProbFunction(double* xStrips, Double_t* par)
     double hitProb;
     double sampleProbability, x;
 
-    int iStrips = int(ceil(*xStrips - 0.5)); // round to nearest integer
-    if((iStrips < 0) || (iStrips > nActiveStrips))
-        return 0; // only defined in range
+    int iStrips = int(ceil(*xStrips - 0.5));                 // round to nearest integer
+    if((iStrips < 0) || (iStrips > nActiveStrips)) return 0; // only defined in range
 
     for(int j = 0; j < NSAMPLINGSCMN; ++j)
     {

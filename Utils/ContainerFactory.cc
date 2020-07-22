@@ -29,10 +29,7 @@ void ContainerFactory::copyStructure(const DetectorContainer& original, Detector
             for(const auto hybrid: *opticalGroup)
             {
                 ModuleDataContainer* copyModule = copyOpticalGroup->addModuleDataContainer(hybrid->getId());
-                for(const auto chip: *hybrid)
-                {
-                    copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
-                }
+                for(const auto chip: *hybrid) { copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols()); }
             }
         }
     }

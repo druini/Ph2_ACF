@@ -75,38 +75,33 @@ void DataChecker::Initialise()
                     // matched hits
                     TString  cName = Form("h_Hits_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     TObject* cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     TH2D* cHist2D = new TH2D(cName, Form("Number of hits - CBC%d; Trigger Number; Pipeline Address", (int)cChip->getId()), 40, 0 - 0.5, 40 - 0.5, 520, 0 - 0.5, 520 - 0.5);
                     bookHistogram(cChip, "Hits_perFe", cHist2D);
 
                     cName = Form("h_MatchedHits_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     cHist2D = new TH2D(cName, Form("Number of matched hits - CBC%d; Trigger Number; Pipeline Address", (int)cChip->getId()), 40, 0 - 0.5, 40 - 0.5, 520, 0 - 0.5, 520 - 0.5);
                     bookHistogram(cChip, "MatchedHits_perFe", cHist2D);
 
                     cName = Form("h_EyeL1_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     TProfile2D* cProfile2D =
                         new TProfile2D(cName, Form("Number of matched hits - CBC%d; Phase Tap; Trigger Number", (int)cChip->getId()), 20, 0 - 0.5, 20 - 0.5, 40, 0 - 0.5, 40 - 0.5);
                     bookHistogram(cChip, "MatchedHits_eye", cProfile2D);
 
                     cName = Form("h_TestPulse_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     cProfile2D =
                         new TProfile2D(cName, Form("Number of matched hits - CBC%d; Time [ns]; Test Pulse Amplitude [DAC units]", (int)cChip->getId()), 500, -250, 250, cSteps, cInitialTh, cFinalTh);
                     bookHistogram(cChip, "MatchedHits_TestPulse", cProfile2D);
 
                     cName = Form("h_StubLatency_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     cProfile2D = new TProfile2D(cName,
                                                 Form("Number of matched stubs - CBC%d; Latency [40 MHz clock cycles]; "
                                                      "Test Pulse Amplitude [DAC units]",
@@ -121,8 +116,7 @@ void DataChecker::Initialise()
 
                     cName = Form("h_HitLatency_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     cProfile2D = new TProfile2D(cName,
                                                 Form("Number of matched hits - CBC%d; Latency [40 MHz clock cycles]; "
                                                      "Test Pulse Amplitude [DAC units]",
@@ -137,22 +131,19 @@ void DataChecker::Initialise()
 
                     cName = Form("h_NoiseHits_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     TProfile* cHist = new TProfile(cName, Form("Number of noise hits - CBC%d; Channelr", (int)cChip->getId()), NCHANNELS, 0 - 0.5, NCHANNELS - 0.5);
                     bookHistogram(cChip, "NoiseHits", cHist);
 
                     cName = Form("h_MissedHits_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     TH1D* cHist1D = new TH1D(cName, Form("Events between missed hits - CBC%d; Channelr", (int)cChip->getId()), 1000, 0 - 0.5, 1000 - 0.5);
                     bookHistogram(cChip, "FlaggedEvents", cHist1D);
 
                     cName = Form("h_ptCut_Fe%dCbc%d", cHybrid->getId(), cChip->getId());
                     cObj  = gROOT->FindObject(cName);
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                     cHist = new TProfile(cName, Form("Fraction of stubs matched to hits - CBC%d; Window Offset [half-strips]", (int)cChip->getId()), 14, -7 - 0.5, 7 - 0.5);
                     bookHistogram(cChip, "PtCut", cHist);
                 }
@@ -160,22 +151,19 @@ void DataChecker::Initialise()
                 // matched stubs
                 TString  cName = Form("h_Stubs_Cic%d", cHybrid->getId());
                 TObject* cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 TH2D* cHist2D = new TH2D(cName, Form("Number of stubs - CIC%d; Trigger Number; Bunch Crossing Id", (int)cHybrid->getId()), 40, 0 - 0.5, 40 - 0.5, 4000, 0 - 0.5, 4000 - 0.5);
                 bookHistogram(cHybrid, "Stubs", cHist2D);
 
                 cName = Form("h_MatchedStubs_Cic%d", cHybrid->getId());
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 cHist2D = new TH2D(cName, Form("Number of matched stubs - CIC%d; Trigger Number; Bunch Crossing Id", (int)cHybrid->getId()), 40, 0 - 0.5, 40 - 0.5, 4000, 0 - 0.5, 4000 - 0.5);
                 bookHistogram(cHybrid, "MatchedStubs", cHist2D);
 
                 cName = Form("h_MissedHits_Cic%d", cHybrid->getId());
                 cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 cHist2D = new TH2D(cName, Form("Number of missed hits - CIC%d; Iteration number; CBC Id", (int)cHybrid->getId()), 100, 0 - 0.5, 100 - 0.5, 8, 0 - 0.5, 8 - 0.5);
                 bookHistogram(cHybrid, "MissedHits", cHist2D);
 
@@ -265,8 +253,7 @@ void DataChecker::print(std::vector<uint8_t> pChipIds)
                 for(auto cChip: *cHybrid)
                 {
                     auto cChipId = cChip->getId();
-                    if(std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end())
-                        continue;
+                    if(std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end()) continue;
                     auto cHitCheck  = cChip->getSummary<uint16_t>();
                     auto cStubCheck = fStubCheckContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                     LOG(INFO) << BOLDBLUE << "\t\t...Found " << +cHitCheck << " matched hits and " << +cStubCheck << " matched stubs in readout chip" << +cChipId << RESET;
@@ -317,8 +304,7 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
             {
                 ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
                 auto         cChipId = cChip->getId();
-                if(std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end())
-                    continue;
+                if(std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end()) continue;
 
                 TH2D*       cAllHits        = static_cast<TH2D*>(getHist(cChip, "Hits_perFe"));
                 TH2D*       cMatchedHits    = static_cast<TH2D*>(getHist(cChip, "MatchedHits_perFe"));
@@ -335,8 +321,7 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
                 uint8_t              cBendCode     = cBendLUT[(cBend / 2. - (-7.0)) / 0.5];
                 std::vector<uint8_t> cExpectedHits = static_cast<CbcInterface*>(fReadoutChipInterface)->stubInjectionPattern(theChip, cSeed, cBend);
                 LOG(INFO) << BOLDMAGENTA << "Injected a stub with seed " << +cSeed << " with bend " << +cBend << RESET;
-                for(auto cHitExpected: cExpectedHits)
-                    LOG(INFO) << BOLDMAGENTA << "\t.. expect a hit in channel " << +cHitExpected << RESET;
+                for(auto cHitExpected: cExpectedHits) LOG(INFO) << BOLDMAGENTA << "\t.. expect a hit in channel " << +cHitExpected << RESET;
                 auto cEventIterator = cEvents.begin();
                 LOG(DEBUG) << BOLDMAGENTA << "CBC" << +cChip->getId() << RESET;
                 for(size_t cEventIndex = 0; cEventIndex < cEventsPerPoint; cEventIndex++) // for each event
@@ -357,10 +342,7 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
                         // hits
                         auto cHits = cEvent->GetHits(cHybridId, cChipId);
                         cAllHits->Fill(cTriggerIndex, cPipeline, cHits.size());
-                        for(auto cHit: cHits)
-                        {
-                            LOG(INFO) << BOLDMAGENTA << "\t... hit found in channel " << +cHit << " of readout chip" << +cChipId << RESET;
-                        }
+                        for(auto cHit: cHits) { LOG(INFO) << BOLDMAGENTA << "\t... hit found in channel " << +cHit << " of readout chip" << +cChipId << RESET; }
                         size_t cMatched = 0;
                         for(auto cExpectedHit: cExpectedHits)
                         {
@@ -511,10 +493,7 @@ void DataChecker::AsyncTest()
                         for(auto cEvent: cEvents)
                         {
                             auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                            for(uint8_t cChnl = 0; cChnl < 5; cChnl++)
-                            {
-                                LOG(INFO) << BOLDBLUE << "Counter value Strip#" << +cChnl << " is " << cHits[cChnl] << RESET;
-                            }
+                            for(uint8_t cChnl = 0; cChnl < 5; cChnl++) { LOG(INFO) << BOLDBLUE << "Counter value Strip#" << +cChnl << " is " << cHits[cChnl] << RESET; }
                         }
                     }
                 }
@@ -627,8 +606,7 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
             {
                 LOG(INFO) << ">>> Event #" << cN++;
                 LOG(INFO) << outp.str();
-                for(auto cWord: cPayload)
-                    LOG(INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
+                for(auto cWord: cPayload) LOG(INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
             }
         }
     }
@@ -878,8 +856,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            if(std::find(pChipIds.begin(), pChipIds.end(), cChip->getId()) == pChipIds.end())
-                                continue;
+                            if(std::find(pChipIds.begin(), pChipIds.end(), cChip->getId()) == pChipIds.end()) continue;
                             fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "VCth", cThreshold);
                         }
                     }
@@ -909,8 +886,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                             auto         cOffset    = 0;
                             auto         cThreshold = fReadoutChipInterface->ReadChipReg(theChip, "VCth");
                             auto         cChipId    = cChip->getId();
-                            if(std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end())
-                                continue;
+                            if(std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end()) continue;
 
                             std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT(theChip);
                             // each bend code is stored in this vector - bend encoding start at -7 strips, increments by
@@ -919,8 +895,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
 
                             std::vector<uint8_t> cExpectedHits = static_cast<CbcInterface*>(fReadoutChipInterface)->stubInjectionPattern(theChip, cStub.first, cStub.second);
                             LOG(DEBUG) << BOLDMAGENTA << "Injected a stub with seed " << +cStub.first << " with bend " << +cStub.second << RESET;
-                            for(auto cHitExpected: cExpectedHits)
-                                LOG(DEBUG) << BOLDMAGENTA << "\t.. expect a hit in channel " << +cHitExpected << RESET;
+                            for(auto cHitExpected: cExpectedHits) LOG(DEBUG) << BOLDMAGENTA << "\t.. expect a hit in channel " << +cHitExpected << RESET;
 
                             auto cEventIterator = cEvents.begin();
                             LOG(DEBUG) << BOLDMAGENTA << "CBC" << +cChip->getId() << RESET;
@@ -932,8 +907,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                                 uint32_t cPipeline_first = 0;
                                 uint32_t cBxId_first     = 0;
 
-                                if(cEventIndex == 0)
-                                    LOG(DEBUG) << BOLDMAGENTA << "'\tEvent " << +cEventIndex << RESET;
+                                if(cEventIndex == 0) LOG(DEBUG) << BOLDMAGENTA << "'\tEvent " << +cEventIndex << RESET;
                                 bool cIncorrectPipeline = false;
                                 for(size_t cTriggerIndex = 0; cTriggerIndex <= cTriggerMult; cTriggerIndex++) // cTriggerMult consecutive triggers were sent
                                 {
@@ -970,10 +944,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                                             bool cMatchFound = (cHybridStub.getPosition() == cStub.first && cHybridStub.getBend() == cBendCode);
                                             cNmatchedStubs += static_cast<int>(cMatchFound);
                                         }
-                                        if(cNmatchedStubs == 1)
-                                        {
-                                            cMatchedStubs++;
-                                        }
+                                        if(cNmatchedStubs == 1) { cMatchedStubs++; }
 
                                         if(cEventIndex == 0)
                                             LOG(DEBUG) << BOLDMAGENTA << "\t\t.. Threshold of " << +cThreshold << " [Trigger " << +cTriggerIndex << " Pipeline is " << +cPipeline << "] Delay of "
@@ -1384,8 +1355,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         //         // }
         //     }
         // }
-        if(cConfigureTriggerMult)
-            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cBoardTriggerMult);
+        if(cConfigureTriggerMult) fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cBoardTriggerMult);
     }
 
     // if TP was used - disable it
@@ -1448,8 +1418,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
     // use xml to figure out whether to use noise or charge injection
     bool pWithNoise = true; // default is to use noise
     auto cSetting   = fSettingsMap.find("UseNoise");
-    if(cSetting != std::end(fSettingsMap))
-        pWithNoise = (cSetting->second == 1);
+    if(cSetting != std::end(fSettingsMap)) pWithNoise = (cSetting->second == 1);
 
     // get number of events from xml
     cSetting                 = fSettingsMap.find("Nevents");
@@ -1601,8 +1570,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
                         fReadoutChipInterface->WriteChipReg ( cChip, "CoincWind&Offset12", cOffetReg );
                         fReadoutChipInterface->WriteChipReg ( cChip, "CoincWind&Offset34", cOffetReg );
                         */
-                        if(!pWithNoise)
-                            fReadoutChipInterface->enableInjection(theChip, true);
+                        if(!pWithNoise) fReadoutChipInterface->enableInjection(theChip, true);
                     }
                     else if(!pWithNoise)
                         static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "VCth", cTargetThreshold);
@@ -1660,18 +1628,15 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
             fAttempt = cAttempt;
             LOG(INFO) << BOLDBLUE << "Iteration# " << +fAttempt << RESET;
             // send a resync
-            if(cResync)
-                fBeBoardInterface->ChipReSync(theBoard);
+            if(cResync) fBeBoardInterface->ChipReSync(theBoard);
             this->ReadNEvents(theBoard, cEventsPerPoint);
             this->matchEvents(theBoard, pChipIds, cStub);
             this->print(pChipIds);
         }
 
         // and set it back to what it was
-        if(cConfigureTrigger)
-            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cBoardTriggerRate);
-        if(cConfigureTriggerMult)
-            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cBoardTriggerMult);
+        if(cConfigureTrigger) fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cBoardTriggerRate);
+        if(cConfigureTriggerMult) fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cBoardTriggerMult);
     }
     //}
 
@@ -1925,8 +1890,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
                 }     // latency loop
                 fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
             } // package delay loop
-            if(cWithCIC)
-                fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cOriginalDelay);
+            if(cWithCIC) fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cOriginalDelay);
         } // attempt loop
     }     // board loop
     LOG(INFO) << BOLDBLUE << "Done!" << RESET;
@@ -2078,8 +2042,7 @@ void DataChecker::MaskForStubs(BeBoard* pBoard, uint16_t pSeed, bool pSeedLayer)
                 auto& cInjThisHybrid = cInjThisModule->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getId() != cChipId)
-                        continue;
+                    if(cChip->getId() != cChipId) continue;
 
                     auto& cInjThisChip   = cInjThisHybrid->at(cChip->getIndex());
                     auto& cInjectedSeeds = cInjThisChip->getSummary<ChannelList>();
@@ -2120,8 +2083,7 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
     std::generate(cSeeds.begin(), cSeeds.end(), cRandomGen);
     for(int cInjection = 0; cInjection < cNinjections; cInjection++)
     {
-        if(cInjection % (cNinjections / 10) == 0)
-            LOG(INFO) << BOLDMAGENTA << "Injection " << +cInjection << RESET;
+        if(cInjection % (cNinjections / 10) == 0) LOG(INFO) << BOLDMAGENTA << "Injection " << +cInjection << RESET;
         auto             cStart = cSeeds.begin() + cInjection * cNSeedsPerInjection;
         auto             cEnd   = cStart + cNSeedsPerInjection;
         std::vector<int> cStubSeeds(cStart, cEnd);
@@ -2140,10 +2102,8 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
                     cGoodSeeds.push_back(cSeed);
             }
         }
-        if(cGoodSeeds.size() != cStubSeeds.size())
-            LOG(DEBUG) << BOLDRED << "Threw away a seed" << RESET;
-        if(cGoodSeeds.size() == 0)
-            continue;
+        if(cGoodSeeds.size() != cStubSeeds.size()) LOG(DEBUG) << BOLDRED << "Threw away a seed" << RESET;
+        if(cGoodSeeds.size() == 0) continue;
 
         for(auto cSeed: cGoodSeeds)
         {
@@ -2168,8 +2128,7 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
                         // channel mask
                         ChannelGroup<NCHNLS, 1> cChannelMask;
                         cChannelMask.disableAllChannels();
-                        for(auto cChannel: cChannels)
-                            cChannelMask.enableChannel(cChannel);
+                        for(auto cChannel: cChannels) cChannelMask.enableChannel(cChannel);
 
                         std::bitset<NCHNLS> cBitset = std::bitset<NCHNLS>(cChannelMask.getBitset());
                         LOG(DEBUG) << BOLDBLUE << "Injecting stubs in chip " << +cChip->getId() << " channel mask is " << cBitset << RESET;
@@ -2202,8 +2161,7 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
                     auto& cMismatchesThisChip = cMismatchesThisHybrid->at(cChip->getIndex());
                     auto& cChannels           = cInjThisChip->getSummary<ChannelList>();
                     auto& cMismatched         = cMismatchesThisChip->getSummary<uint32_t>();
-                    if(cChannels.size() == 0)
-                        continue;
+                    if(cChannels.size() == 0) continue;
 
                     for(auto& cEvent: cEvents)
                     {
@@ -2229,8 +2187,7 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
                         // check hits
                         auto cHits        = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                         bool cHitMismatch = (cChannels.size() != cHits.size());
-                        for(auto cHit: cHits)
-                            cHitMismatch = cHitMismatch || std::find(cChannels.begin(), cChannels.end(), cHit) == cChannels.end();
+                        for(auto cHit: cHits) cHitMismatch = cHitMismatch || std::find(cChannels.begin(), cChannels.end(), cHit) == cChannels.end();
 
                         if(cHitMismatch)
                         {
@@ -2328,8 +2285,7 @@ void DataChecker::HitCheck()
         //     cAligned = this->CICAlignment(theBoard);
         ReadoutChip* theFirstReadoutChip = static_cast<ReadoutChip*>(cFirstHybrid->at(0));
         bool         cWithCBC            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-        if(cWithCBC)
-            this->HitCheck2S(cBeBoard);
+        if(cWithCBC) this->HitCheck2S(cBeBoard);
     }
 }
 
@@ -2338,8 +2294,7 @@ void DataChecker::ClusterCheck(std::vector<uint8_t> pChannels)
     // prepare mask
     // just for CBCs for now
     fCBCMask.disableAllChannels();
-    for(auto cChannel: pChannels)
-        fCBCMask.enableChannel(cChannel);
+    for(auto cChannel: pChannels) fCBCMask.enableChannel(cChannel);
 
     auto     cSetting = fSettingsMap.find("Nevents");
     uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
@@ -2368,10 +2323,7 @@ void DataChecker::ClusterCheck(std::vector<uint8_t> pChannels)
                     for(auto cEvent: cEvents)
                     {
                         auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                        for(auto cHit: cHits)
-                        {
-                            cAllFound = cAllFound && (std::find(pChannels.begin(), pChannels.end(), cHit) != pChannels.end());
-                        }
+                        for(auto cHit: cHits) { cAllFound = cAllFound && (std::find(pChannels.begin(), pChannels.end(), cHit) != pChannels.end()); }
                     }
                     if(cAllFound)
                         LOG(INFO) << BOLDBLUE << "Readback all injected hits in chip " << +cChip->getId() << RESET;

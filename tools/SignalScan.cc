@@ -24,8 +24,7 @@ void SignalScan::Initialize()
                 TString  cName = Form("h_module_thresholdScan_Fe%d", cFeId);
                 TObject* cObj  = gROOT->FindObject(cName);
 
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
 
                 TH2F* cSignalHist =
                     new TH2F(cName, Form("Signal threshold vs channel FE%d; Channel # ; Threshold; # of Hits", cFeId), fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, 255, -.5, 255 - .5);
@@ -152,10 +151,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                                 {
                                     cClusterWidth->Fill(cCluster.fClusterWidth, cVcth);
                                     // cClustersHisto->Fill(cCluster.fFirstStrip, cCluster.fClusterWidth);
-                                    if(cCluster.fClusterWidth <= 2)
-                                    {
-                                        cClusterCounter++;
-                                    }
+                                    if(cCluster.fClusterWidth <= 2) { cClusterCounter++; }
                                 }
 
                                 cHistName         = Form("Fe%dCbc%d_SignalScan", +cFe->getId(), +cCbc->getId());
@@ -212,8 +208,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                     }
 
                     // stop if it takes more than 20 s to record the data point ...
-                    if(cTimeElapsed > 20)
-                        break;
+                    if(cTimeElapsed > 20) break;
                 }
             }
         }

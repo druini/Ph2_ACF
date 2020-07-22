@@ -48,14 +48,10 @@ void StubQuickCheck::Initialise()
 
     // default LUT for CBCs
     std::vector<double> cBinsBend_Default(0);
-    for(int cBin = 0; cBin < 7; cBin++)
-        cBinsBend_Default.push_back(-7.0 + cBin);
+    for(int cBin = 0; cBin < 7; cBin++) cBinsBend_Default.push_back(-7.0 + cBin);
 
     cBinsBend_Default.push_back(0);
-    for(int cBin = 7; cBin < 15; cBin++)
-    {
-        cBinsBend_Default.push_back(-7.0 + cBin + 0.5);
-    }
+    for(int cBin = 7; cBin < 15; cBin++) { cBinsBend_Default.push_back(-7.0 + cBin + 0.5); }
 
     for(auto cBoard: *fDetectorContainer)
     {
@@ -65,8 +61,7 @@ void StubQuickCheck::Initialise()
             {
                 TString  cName = Form("h_StubBend");
                 TObject* cObj  = gROOT->FindObject(cName);
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
                 TH1D* cBend = new TH1D(cName, Form("Stub Bend - CIC%d; Bend", (int)cFe->getId()), cBinsBend_Default.size() - 1, cBinsBend_Default.data());
                 bookHistogram(cFe, "StubBend", cBend);
 
@@ -85,18 +80,15 @@ void StubQuickCheck::Initialise()
                 // now want to loop over all other FEs
                 for(auto cOtherOpticalGroup: *cBoard)
                 {
-                    if(cOpticalGroup->getId() == cOtherOpticalGroup->getId())
-                        continue;
+                    if(cOpticalGroup->getId() == cOtherOpticalGroup->getId()) continue;
 
                     for(auto cOtherFe: *cOtherOpticalGroup)
                     {
-                        if(cFe->getId() == cOtherFe->getId())
-                            continue;
+                        if(cFe->getId() == cOtherFe->getId()) continue;
 
                         cName = Form("h_BxId_Cic%d_Cic%d", cFe->getId(), cOtherFe->getId());
                         cObj  = gROOT->FindObject(cName);
-                        if(cObj)
-                            delete cObj;
+                        if(cObj) delete cObj;
                         TString cTitle  = Form("BxId from 2 CICs [%d and %d] on links [%d and %d]; Bx Id [CIC %d]; BxId [CIC%d]",
                                               cFe->getId(),
                                               cOtherFe->getId(),
@@ -114,15 +106,13 @@ void StubQuickCheck::Initialise()
         // matched stubs
         TString  cName = Form("h_NcandidateEvents");
         TObject* cObj  = gROOT->FindObject(cName);
-        if(cObj)
-            delete cObj;
+        if(cObj) delete cObj;
         TH1D* cEvents = new TH1D(cName, Form("Candidate events; TDC"), 8, 0 - 0.5, 8 - 0.5);
         bookHistogram(cBoard, "CandidateEvents", cEvents);
 
         cName = Form("h_MatchedEvents");
         cObj  = gROOT->FindObject(cName);
-        if(cObj)
-            delete cObj;
+        if(cObj) delete cObj;
         TH1D* cMatchedEvents = new TH1D(cName, Form("Matched events; TDC"), 8, 0 - 0.5, 8 - 0.5);
         bookHistogram(cBoard, "MatchedEvents", cMatchedEvents);
 
@@ -133,8 +123,7 @@ void StubQuickCheck::Initialise()
         // matched stubs
         cName = Form("h_BxId_Difference");
         cObj  = gROOT->FindObject(cName);
-        if(cObj)
-            delete cObj;
+        if(cObj) delete cObj;
         TH1D* cProfile = new TH1D(cName, Form("#Delta{BxId}; Difference in BxId from all links"), 20, -10 - 0.5, 10 - 0.5);
         bookHistogram(cBoard, "BxIdDifference", cProfile);
     }
@@ -180,19 +169,16 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
 
                 auto cBxId = cEvent->BxId(cFe->getId());
                 LOG(DEBUG) << BOLDBLUE << "FE" << +cFe->getId() << " BxId " << +cBxId << RESET;
-                if(std::find(cBxIds.begin(), cBxIds.end(), cBxId) == cBxIds.end())
-                    cBxIds.push_back(cBxId);
+                if(std::find(cBxIds.begin(), cBxIds.end(), cBxId) == cBxIds.end()) cBxIds.push_back(cBxId);
 
                 // correlation plot for BxIds
                 for(auto cOtherOpticalGroup: *pBoard)
                 {
-                    if(cOpticalGroup->getId() == cOtherOpticalGroup->getId())
-                        continue;
+                    if(cOpticalGroup->getId() == cOtherOpticalGroup->getId()) continue;
 
                     for(auto cOtherFe: *cOtherOpticalGroup)
                     {
-                        if(cFe->getId() == cOtherFe->getId())
-                            continue;
+                        if(cFe->getId() == cOtherFe->getId()) continue;
 
                         TH2D* cBxCorrelation = static_cast<TH2D*>(getHist(cFe, Form("BxId_CIC%d", cOtherFe->getId())));
                         cBxCorrelation->Fill(cBxId, cEvent->BxId(cOtherFe->getId()));
@@ -205,21 +191,17 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                     auto cStubs = cEvent->StubVector(cFe->getId(), cChip->getId());
 
                     // quick cut on exactly one hit in each layer
-                    if(cHits.size() > 2)
-                        continue;
+                    if(cHits.size() > 2) continue;
 
                     bool cBottomSensor = false;
                     bool cTopSensor    = false;
                     for(auto cHit: cHits)
                     {
-                        if(cHit % 2 == 0)
-                            cBottomSensor = true;
+                        if(cHit % 2 == 0) cBottomSensor = true;
 
-                        if(cHit % 2 != 0)
-                            cTopSensor = true;
+                        if(cHit % 2 != 0) cTopSensor = true;
                     }
-                    if(!(cBottomSensor && cTopSensor))
-                        continue;
+                    if(!(cBottomSensor && cTopSensor)) continue;
 
                     for(auto cHit: cHits)
                     {
@@ -233,8 +215,7 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                                 auto cSeedModuleStrip = (cFe->getId() % 2 == 0) ? cStripSeed : (8 * 127 - 1 - cStripSeed);
                                 cStubHitCorrelation->Fill(cModuleStrip, cSeedModuleStrip);
                             }
-                            if(cStubs.size() == 0)
-                                cStubHitCorrelation->Fill(cModuleStrip, -1); // fill underflow bin if no stubs are present in the event
+                            if(cStubs.size() == 0) cStubHitCorrelation->Fill(cModuleStrip, -1); // fill underflow bin if no stubs are present in the event
                         }
                     }
 
@@ -249,10 +230,7 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                         for(auto cExpectedHit: cExpectedHits)
                         {
                             auto cLookForMatch = std::find(cHits.begin(), cHits.end(), cExpectedHit);
-                            if(cLookForMatch != cHits.end())
-                            {
-                                cMatchFound = true;
-                            }
+                            if(cLookForMatch != cHits.end()) { cMatchFound = true; }
                         }
                         if(cMatchFound)
                         {
@@ -280,10 +258,7 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
         {
             for(size_t cIndex = 0; cIndex < cBxIds.size(); cIndex++)
             {
-                for(size_t cIndex2 = cIndex + 1; cIndex2 < cBxIds.size(); cIndex2++)
-                {
-                    cBxHisto->Fill(cBxIds[cIndex] - cBxIds[cIndex2]);
-                }
+                for(size_t cIndex2 = cIndex + 1; cIndex2 < cBxIds.size(); cIndex2++) { cBxHisto->Fill(cBxIds[cIndex] - cBxIds[cIndex2]); }
             }
             cSyncLoss += 1;
             LOG(INFO) << BOLDRED << "Sync loss in event " << +cEventCount << RESET;

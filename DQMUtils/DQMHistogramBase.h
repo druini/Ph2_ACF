@@ -82,10 +82,8 @@ class DQMHistogramBase
                          const char*                  XTitle = nullptr,
                          const char*                  YTitle = nullptr)
     {
-        if(XTitle != nullptr)
-            histContainer.fTheHistogram->SetXTitle(XTitle);
-        if(YTitle != nullptr)
-            histContainer.fTheHistogram->SetYTitle(YTitle);
+        if(XTitle != nullptr) histContainer.fTheHistogram->SetXTitle(XTitle);
+        if(YTitle != nullptr) histContainer.fTheHistogram->SetYTitle(YTitle);
 
         RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, histContainer);
     }

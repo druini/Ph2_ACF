@@ -44,8 +44,7 @@ void SSAPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContai
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<Occupancy>() == nullptr)
-                        continue;
+                    if(cChip->getChannelContainer<Occupancy>() == nullptr) continue;
 
                     auto* chipOccupancy =
                         fOccupancy.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
@@ -53,9 +52,7 @@ void SSAPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContai
 
                     // Get channel data and fill the histogram
                     for(auto channel: *cChip->getChannelContainer<Occupancy>()) // for on channel - begin
-                    {
-                        chipOccupancy->Fill(channelBin++, channel.fOccupancy);
-                    }
+                    { chipOccupancy->Fill(channelBin++, channel.fOccupancy); }
                 }
 }
 

@@ -128,8 +128,7 @@ int main(int argc, char* argv[])
                 ith -= 1;
                 nrep += 1;
                 std::cout << "Repeat " << nrep << std::endl;
-                if(nrep < 5)
-                    continue;
+                if(nrep < 5) continue;
                 totaleventsprev = 0;
             }
 

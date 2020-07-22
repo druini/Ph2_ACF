@@ -143,8 +143,7 @@ int main(int argc, char** argv)
     int           runNumber = RUNNUMBER;
     std::ifstream fileRunNumberIn;
     fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
-    if(fileRunNumberIn.is_open() == true)
-        fileRunNumberIn >> runNumber;
+    if(fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
     fileRunNumberIn.close();
     system(std::string("mkdir " + std::string(RD53Shared::RESULTDIR)).c_str());
 
@@ -299,8 +298,7 @@ int main(int argc, char** argv)
                 static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getBeBoardId()])->ResetSequence();
                 exit(EXIT_SUCCESS);
             }
-            if(binaryFile != "")
-                readBinaryData(binaryFile, mySysCntr, RD53FWInterface::decodedEvents);
+            if(binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53FWInterface::decodedEvents);
         }
         else if(binaryFile == "")
         {
@@ -532,8 +530,7 @@ int main(int argc, char** argv)
                 exit(EXIT_FAILURE);
             }
             LOG(INFO) << BOLDBLUE << "\t--> Connected" << RESET;
-            while(theEUDAQproducer.IsConnected() == true)
-                std::this_thread::sleep_for(std::chrono::seconds(1));
+            while(theEUDAQproducer.IsConnected() == true) std::this_thread::sleep_for(std::chrono::seconds(1));
             exit(EXIT_SUCCESS);
 #else
             LOG(WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
@@ -560,8 +557,7 @@ int main(int argc, char** argv)
         std::ofstream fileRunNumberOut;
         runNumber++;
         fileRunNumberOut.open(FILERUNNUMBER, std::ios::out);
-        if(fileRunNumberOut.is_open() == true)
-            fileRunNumberOut << RD53Shared::fromInt2Str(runNumber) << std::endl;
+        if(fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(runNumber) << std::endl;
         fileRunNumberOut.close();
 
         LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;

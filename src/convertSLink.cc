@@ -147,8 +147,7 @@ void decodeHits(std::vector<uint64_t>::iterator& pIterator, SLinkEventHeader pEv
             LOG(INFO) << BOLDYELLOW << "Readout chip " << +cChipIndex << " : " << cBitStream << RESET;
             for(size_t cBitIndex = 0; cBitIndex < cBitStream.size(); cBitIndex++)
             {
-                if(cBitStream[cBitIndex] > 0)
-                    LOG(INFO) << BOLDYELLOW << "Readout chip " << +cChipIndex << " hit in channel " << +(cBitStream.size() - 1 - cBitIndex) << RESET;
+                if(cBitStream[cBitIndex] > 0) LOG(INFO) << BOLDYELLOW << "Readout chip " << +cChipIndex << " hit in channel " << +(cBitStream.size() - 1 - cBitIndex) << RESET;
             }
             // if( cBitStream[cBitStream.size()-(1+cBitIndex)] == 1 )
             // {
@@ -338,8 +337,7 @@ int main(int argc, char* argv[])
         size_t cEventCount = 0;
         while(cIterator < cSlinkData.end())
         {
-            if(cEventCount % 100 == 0)
-                LOG(INFO) << BOLDBLUE << "Decoding event " << +cEventCount << RESET;
+            if(cEventCount % 100 == 0) LOG(INFO) << BOLDBLUE << "Decoding event " << +cEventCount << RESET;
             // first - decode event header
             SLinkEventHeader cEventHeader;
             auto&            cDAQHeader      = *cIterator;

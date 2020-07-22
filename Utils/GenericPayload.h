@@ -56,8 +56,7 @@ class GenericPayload
 
     size_t Words() const
     {
-        if(fWordIndex + 1 != fData.size())
-            LOG(ERROR) << "Error, there is a problem with the size";
+        if(fWordIndex + 1 != fData.size()) LOG(ERROR) << "Error, there is a problem with the size";
 
         return fWordIndex + 1;
     }
@@ -76,17 +75,13 @@ class GenericPayload
 
         for(auto cWord: cVec)
         {
-            if(sizeof(T) == 1)
-                std::cout << std::bitset<8>(cWord) << std::endl;
+            if(sizeof(T) == 1) std::cout << std::bitset<8>(cWord) << std::endl;
 
-            if(sizeof(T) == 2)
-                std::cout << std::bitset<16>(cWord) << std::endl;
+            if(sizeof(T) == 2) std::cout << std::bitset<16>(cWord) << std::endl;
 
-            if(sizeof(T) == 4)
-                std::cout << std::bitset<32>(cWord) << std::endl;
+            if(sizeof(T) == 4) std::cout << std::bitset<32>(cWord) << std::endl;
 
-            if(sizeof(T) == 8)
-                std::cout << std::bitset<64>(cWord) << std::endl;
+            if(sizeof(T) == 8) std::cout << std::bitset<64>(cWord) << std::endl;
         }
     }
 
@@ -246,8 +241,7 @@ class GenericPayload
 
         fWriteBitIndex = (fWriteBitIndex + 1) % WORDSIZE;
 
-        if(pWord)
-            fData.at(fWordIndex) |= (uint64_t)1 << (WORDSIZE - fWriteBitIndex);
+        if(pWord) fData.at(fWordIndex) |= (uint64_t)1 << (WORDSIZE - fWriteBitIndex);
 
         fBitCount++;
     }

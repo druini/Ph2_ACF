@@ -59,8 +59,7 @@ void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::ve
     while(index < list.size())
     {
         uint16_t cSPLeading = ((0xF0000000 & list.at(index)) >> 28);
-        if(cSPLeading != 0x5 and cSPLeading != 0xA)
-            break;
+        if(cSPLeading != 0x5 and cSPLeading != 0xA) break;
         uint16_t fHID = ((0x00FF0000 & list.at(index)) >> 16);
         if(HybridIds.find(fHID) == HybridIds.end())
         {
@@ -74,12 +73,10 @@ void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::ve
     // fEventSize = 4*((0x0000FFFF & list.at (0)) - (0x000000FF & list.at (1)));
     fEventSize = 4 * (0x0000FFFF & list.at(0));
     // std::cout<<fEventSize<<","<<list.size()<<std::endl;
-    if(fEventSize != list.size())
-        LOG(ERROR) << "Incorrect event size";
+    if(fEventSize != list.size()) LOG(ERROR) << "Incorrect event size";
 
     uint16_t cLeading = ((0xFFFF0000 & list.at(0)) >> 16);
-    if(cLeading != 0xFFFF)
-        LOG(ERROR) << "Incorrect leading bits";
+    if(cLeading != 0xFFFF) LOG(ERROR) << "Incorrect leading bits";
 
     // not iterate through modules
     uint32_t address_offset = D19C_EVENT_HEADER1_SIZE_32_MPA;
@@ -108,16 +105,11 @@ void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::ve
             uint8_t cSyncBit1 = ((0x00008000 & list.at(data_offset + cL1size_32_MPA + 1)) >> 15);
             uint8_t cSyncBit2 = ((0x00004000 & list.at(data_offset + cL1size_32_MPA + 1)) >> 14);
 
-            if(cPLeadingMPA != 0xA)
-                LOG(ERROR) << "Incorrect L1A header for MPA " << unsigned(pMPAId);
-            if(cSLeadingMPA != 0x5)
-                LOG(ERROR) << "Incorrect stub header for MPA " << unsigned(pMPAId);
-            if(cErrorMPA != 0)
-                LOG(INFO) << BOLDRED << "Error code " << unsigned(cErrorMPA) << " for MPA " << unsigned(pMPAId);
-            if(cSyncBit1 != 1)
-                LOG(INFO) << BOLDRED << "Warning, sync bit 1 not 1, data frame probably misaligned!" << RESET;
-            if(cSyncBit2 != 0)
-                LOG(INFO) << BOLDRED << "Warning, sync bit 2 not 0, data frame probably misaligned!" << RESET;
+            if(cPLeadingMPA != 0xA) LOG(ERROR) << "Incorrect L1A header for MPA " << unsigned(pMPAId);
+            if(cSLeadingMPA != 0x5) LOG(ERROR) << "Incorrect stub header for MPA " << unsigned(pMPAId);
+            if(cErrorMPA != 0) LOG(INFO) << BOLDRED << "Error code " << unsigned(cErrorMPA) << " for MPA " << unsigned(pMPAId);
+            if(cSyncBit1 != 1) LOG(INFO) << BOLDRED << "Warning, sync bit 1 not 1, data frame probably misaligned!" << RESET;
+            if(cSyncBit2 != 0) LOG(INFO) << BOLDRED << "Warning, sync bit 2 not 0, data frame probably misaligned!" << RESET;
 
             uint16_t cKey = encodeVectorIndex(cFeId, pMPAId, pNMPA);
 
@@ -324,8 +316,7 @@ std::vector<SCluster> D19cMPAEvent::GetStripClusters(uint8_t pFeId, uint8_t pMPA
     std::vector<SCluster> result;
 
     uint8_t cNstrip = GetNStripClusters(pFeId, pMPAId);
-    if(cNstrip == 0)
-        return result;
+    if(cNstrip == 0) return result;
 
     SCluster aSCluster;
 
@@ -352,8 +343,7 @@ std::vector<PCluster> D19cMPAEvent::GetPixelClusters(uint8_t pFeId, uint8_t pMPA
 {
     std::vector<PCluster> result;
     uint8_t               cNpix = GetNPixelClusters(pFeId, pMPAId);
-    if(cNpix == 0)
-        return result;
+    if(cNpix == 0) return result;
     PCluster aPCluster;
     uint8_t  cNstrip       = GetNStripClusters(pFeId, pMPAId);
     uint8_t  cSClusterSize = D19C_SCluster_SIZE_32_MPA;
@@ -441,16 +431,11 @@ std::vector<Stub> D19cMPAEvent::StubVector(uint8_t pFeId, uint8_t pMPAId) const
         uint8_t row4 = (lvec.at(cL1size_32_MPA + 3) & 0x00000F00) >> 8;
         uint8_t row5 = (lvec.at(cL1size_32_MPA + 3) & 0x0F000000) >> 24;
 
-        if(pos1 != 0)
-            cStubVec.emplace_back(pos1, bend1, row1);
-        if(pos2 != 0)
-            cStubVec.emplace_back(pos2, bend2, row2);
-        if(pos3 != 0)
-            cStubVec.emplace_back(pos3, bend3, row3);
-        if(pos4 != 0)
-            cStubVec.emplace_back(pos4, bend4, row4);
-        if(pos5 != 0)
-            cStubVec.emplace_back(pos5, bend5, row5);
+        if(pos1 != 0) cStubVec.emplace_back(pos1, bend1, row1);
+        if(pos2 != 0) cStubVec.emplace_back(pos2, bend2, row2);
+        if(pos3 != 0) cStubVec.emplace_back(pos3, bend3, row3);
+        if(pos4 != 0) cStubVec.emplace_back(pos4, bend4, row4);
+        if(pos5 != 0) cStubVec.emplace_back(pos5, bend5, row5);
     }
     else
         LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
@@ -470,11 +455,9 @@ void D19cMPAEvent::print(std::ostream& os) const
         os << "\t L1 Counter: " << GetMPAL1Counter(cFeId, cMpaId) << std::endl;
         os << "\t Error: " << Error(cFeId, cMpaId) << std::endl;
         os << "\t N Pixel Clusters: " << GetNPixelClusters(cFeId, cMpaId) << std::endl;
-        for(auto pcluster: GetPixelClusters(cFeId, cMpaId))
-            os << "\t\t Cluster Address: " << +pcluster.fAddress << ", Width: " << +pcluster.fWidth << ", ZPos: " << +pcluster.fZpos << std::endl;
+        for(auto pcluster: GetPixelClusters(cFeId, cMpaId)) os << "\t\t Cluster Address: " << +pcluster.fAddress << ", Width: " << +pcluster.fWidth << ", ZPos: " << +pcluster.fZpos << std::endl;
         os << "\t N Strip Clusters: " << GetNStripClusters(cFeId, cMpaId) << std::endl;
-        for(auto scluster: GetStripClusters(cFeId, cMpaId))
-            os << "\t\t Cluster Address: " << +scluster.fAddress << ", Width: " << +scluster.fWidth << ", MIP: " << +scluster.fMip << std::endl;
+        for(auto scluster: GetStripClusters(cFeId, cMpaId)) os << "\t\t Cluster Address: " << +scluster.fAddress << ", Width: " << +scluster.fWidth << ", MIP: " << +scluster.fMip << std::endl;
         os << std::endl;
     }
 }
@@ -487,8 +470,7 @@ std::string D19cMPAEvent::StubBitString(uint8_t pFeId, uint8_t pCbcId) const
 
     std::vector<Stub> cStubVector = this->StubVector(pFeId, pCbcId);
 
-    for(auto cStub: cStubVector)
-        os << std::bitset<8>(cStub.getPosition()) << " " << std::bitset<4>(cStub.getBend()) << " ";
+    for(auto cStub: cStubVector) os << std::bitset<8>(cStub.getPosition()) << " " << std::bitset<4>(cStub.getBend()) << " ";
 
     return os.str();
 }

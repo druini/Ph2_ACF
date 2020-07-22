@@ -117,13 +117,11 @@ void SSASCurve::run(void)
 
             bool runpulse = false;
 
-            if(NMpulse > 0)
-                runpulse = true;
+            if(NMpulse > 0) runpulse = true;
             if(cWithSSA)
             {
                 LOG(INFO) << BOLDBLUE << "withSSA" << RESET;
-                if(runpulse)
-                    setSameDacBeBoard(theBeBoard, "Bias_CALDAC", TestPulsePotentiometer);
+                if(runpulse) setSameDacBeBoard(theBeBoard, "Bias_CALDAC", TestPulsePotentiometer);
             }
             if(cWithMPA)
             {
@@ -153,10 +151,7 @@ void SSASCurve::run(void)
                         for(auto cChip: *cHybrid)
                         {
                             ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
-                            if(cWithSSA)
-                            {
-                                this->fReadoutChipInterface->WriteChipReg(theChip, "Bias_THDAC", thd);
-                            }
+                            if(cWithSSA) { this->fReadoutChipInterface->WriteChipReg(theChip, "Bias_THDAC", thd); }
                             if(cWithMPA)
                             {
                                 this->fReadoutChipInterface->WriteChipReg(theChip, "ThDAC0", thd);
@@ -253,10 +248,8 @@ void SSASCurve::run(void)
             mean /= Nmeans;
 
             std::string prestr = "";
-            if(cWithSSA)
-                prestr = "THTRIMMING_S";
-            if(cWithMPA)
-                prestr = "TrimDAC_P";
+            if(cWithSSA) prestr = "THTRIMMING_S";
+            if(cWithMPA) prestr = "TrimDAC_P";
 
             float writeave = 0.0;
             for(auto opticalGroup: *cBoard)
@@ -274,19 +267,15 @@ void SSASCurve::run(void)
 
                             int32_t cr      = fReadoutChipInterface->ReadChipReg(theChip, prestr + std::to_string(istrip));
                             float   floatTh = cr;
-                            if(channel.second > 1.0)
-                                floatTh = float(cr) - vfac * (float(channel.second) - mean) + wroffset;
+                            if(channel.second > 1.0) floatTh = float(cr) - vfac * (float(channel.second) - mean) + wroffset;
 
                             uint32_t THtowrite = uint32_t(std::roundf(floatTh));
                             THtowrite          = std::min(THtowrite, uint32_t(31));
                             THtowrite          = std::max(THtowrite, uint32_t(0));
                             writeave += THtowrite;
-                            if(THtowrite == 0 || THtowrite == 31)
-                                LOG(INFO) << BOLDRED << "Warning, thdac at limit. Chip " << theChip->getId() << ",Strip " << istrip << ",TH " << THtowrite << RESET;
-                            if(THtowrite == 0)
-                                Nunt += 1.0;
-                            if(THtowrite == 31)
-                                Nunt -= 1.0;
+                            if(THtowrite == 0 || THtowrite == 31) LOG(INFO) << BOLDRED << "Warning, thdac at limit. Chip " << theChip->getId() << ",Strip " << istrip << ",TH " << THtowrite << RESET;
+                            if(THtowrite == 0) Nunt += 1.0;
+                            if(THtowrite == 31) Nunt -= 1.0;
 
                             fReadoutChipInterface->WriteChipReg(theChip, prestr + std::to_string(istrip), THtowrite);
                             istrip += 1;

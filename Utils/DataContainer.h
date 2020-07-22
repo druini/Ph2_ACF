@@ -208,10 +208,7 @@ struct SummarySummarizer<S, C, true>
     {
         const SummaryContainer<SummaryBase>* tmpSummaryContainer = static_cast<const SummaryContainer<SummaryBase>*>(theSummaryList);
         std::vector<C>                       tmpSummaryVector;
-        for(auto summary: *tmpSummaryContainer)
-        {
-            tmpSummaryVector.emplace_back(std::move(*static_cast<C*>(summary->getSummaryPointer())));
-        }
+        for(auto summary: *tmpSummaryContainer) { tmpSummaryVector.emplace_back(std::move(*static_cast<C*>(summary->getSummaryPointer()))); }
         theSummary.theSummary_.makeSummaryAverage(&tmpSummaryVector, theNumberOfEnabledChannelsList, numberOfEvents);
         delete theSummaryList;
     }
@@ -245,10 +242,7 @@ class BaseDataContainer
     bool isSummaryContainerType()
     {
         T* tmpSummaryContainer = dynamic_cast<T*>(summary_);
-        if(tmpSummaryContainer == nullptr)
-        {
-            return false;
-        }
+        if(tmpSummaryContainer == nullptr) { return false; }
         else
             return true;
 
@@ -297,34 +291,29 @@ class DataContainer
     template <typename S, typename V>
     void initialize()
     {
-        if(!std::is_same<S, EmptyContainer>::value)
-            summary_ = new Summary<S, V>();
+        if(!std::is_same<S, EmptyContainer>::value) summary_ = new Summary<S, V>();
     }
     template <typename S, typename V>
     void initialize(S& theSummary)
     {
-        if(!std::is_same<S, EmptyContainer>::value)
-            summary_ = new Summary<S, V>(theSummary);
+        if(!std::is_same<S, EmptyContainer>::value) summary_ = new Summary<S, V>(theSummary);
     }
 
     template <typename S, typename V>
     void resetSummary()
     {
-        if(!std::is_same<S, EmptyContainer>::value)
-            static_cast<Summary<S, V>*>(summary_)->theSummary_ = S();
+        if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S, V>*>(summary_)->theSummary_ = S();
     }
     template <typename S, typename V>
     void resetSummary(S& theSummary)
     {
-        if(!std::is_same<S, EmptyContainer>::value)
-            static_cast<Summary<S, V>*>(summary_)->theSummary_ = theSummary;
+        if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S, V>*>(summary_)->theSummary_ = theSummary;
     }
 
     SummaryContainerBase* getAllObjectSummaryContainers() const
     {
         SummaryContainerBase* SummaryContainerList = new SummaryContainer<SummaryBase>;
-        for(auto container: *this)
-            SummaryContainerList->emplace_back(container->summary_);
+        for(auto container: *this) SummaryContainerList->emplace_back(container->summary_);
         return SummaryContainerList;
     }
 
@@ -336,14 +325,12 @@ class DataContainer
         for(auto container: *this)
         {
             uint32_t numberOfContainerEnabledChannels = 0;
-            if(container != nullptr)
-                numberOfContainerEnabledChannels = container->normalizeAndAverageContainers(theContainer->getElement(index++), cTestChannelGroup, numberOfEvents);
+            if(container != nullptr) numberOfContainerEnabledChannels = container->normalizeAndAverageContainers(theContainer->getElement(index++), cTestChannelGroup, numberOfEvents);
             theNumberOfEnabledChannelsList.emplace_back(numberOfContainerEnabledChannels);
             numberOfEnabledChannels_ += numberOfContainerEnabledChannels;
         }
-        if(summary_ != nullptr)
-            summary_->makeSummaryOfSummary(getAllObjectSummaryContainers(), theNumberOfEnabledChannelsList,
-                                           numberOfEvents); // sum of chip container needed!!!
+        if(summary_ != nullptr) summary_->makeSummaryOfSummary(getAllObjectSummaryContainers(), theNumberOfEnabledChannelsList,
+                                                               numberOfEvents); // sum of chip container needed!!!
         return numberOfEnabledChannels_;
     }
 
@@ -351,10 +338,7 @@ class DataContainer
     {
         delete summary_;
         summary_ = nullptr;
-        for(auto container: *this)
-        {
-            container->cleanDataStored();
-        }
+        for(auto container: *this) { container->cleanDataStored(); }
     }
 };
 
@@ -393,8 +377,7 @@ struct ChannelNormalizer<T, true>
 {
     void operator()(ChannelDataContainer<T>& theChannelDataContainer, const uint32_t numberOfEvents)
     {
-        for(auto& channel: theChannelDataContainer)
-            channel.normalize(numberOfEvents);
+        for(auto& channel: theChannelDataContainer) channel.normalize(numberOfEvents);
     }
 };
 
@@ -415,54 +398,44 @@ class ChipDataContainer
     template <typename S, typename V>
     void initialize()
     {
-        if(!std::is_same<S, EmptyContainer>::value)
-            summary_ = new Summary<S, V>();
-        if(!std::is_same<V, EmptyContainer>::value)
-            container_ = new ChannelDataContainer<V>(nOfRows_ * nOfCols_);
+        if(!std::is_same<S, EmptyContainer>::value) summary_ = new Summary<S, V>();
+        if(!std::is_same<V, EmptyContainer>::value) container_ = new ChannelDataContainer<V>(nOfRows_ * nOfCols_);
     }
     template <typename S, typename V>
     void initialize(S& theSummary, V& initialValue)
     {
-        if(!std::is_same<S, EmptyContainer>::value)
-            summary_ = new Summary<S, V>(theSummary);
-        if(!std::is_same<V, EmptyContainer>::value)
-            container_ = new ChannelDataContainer<V>(nOfRows_ * nOfCols_, initialValue);
+        if(!std::is_same<S, EmptyContainer>::value) summary_ = new Summary<S, V>(theSummary);
+        if(!std::is_same<V, EmptyContainer>::value) container_ = new ChannelDataContainer<V>(nOfRows_ * nOfCols_, initialValue);
     }
 
     template <typename S, typename V>
     void resetSummary()
     {
-        if(!std::is_same<S, EmptyContainer>::value)
-            static_cast<Summary<S, V>*>(summary_)->theSummary_ = S();
+        if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S, V>*>(summary_)->theSummary_ = S();
     }
     template <typename S, typename V>
     void resetSummary(S& theSummary)
     {
-        if(!std::is_same<S, EmptyContainer>::value)
-            static_cast<Summary<S, V>*>(summary_)->theSummary_ = theSummary;
+        if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S, V>*>(summary_)->theSummary_ = theSummary;
     }
 
     template <typename V>
     void resetChannels()
     {
         if(!std::is_same<V, EmptyContainer>::value)
-            for(auto& channel: *this->getChannelContainer<V>())
-                channel = V();
+            for(auto& channel: *this->getChannelContainer<V>()) channel = V();
     }
     template <typename V>
     void resetChannels(V& initialValue)
     {
         if(!std::is_same<V, EmptyContainer>::value)
-            for(auto& channel: *this->getChannelContainer<V>())
-                channel = initialValue;
+            for(auto& channel: *this->getChannelContainer<V>()) channel = initialValue;
     }
 
     uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents)
     {
-        if(container_ != nullptr)
-            container_->normalize(numberOfEvents);
-        if(summary_ != nullptr)
-            summary_->makeSummaryOfChannels(this, static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask(), cTestChannelGroup, numberOfEvents);
+        if(container_ != nullptr) container_->normalize(numberOfEvents);
+        if(summary_ != nullptr) summary_->makeSummaryOfChannels(this, static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask(), cTestChannelGroup, numberOfEvents);
         return cTestChannelGroup->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask());
     }
 

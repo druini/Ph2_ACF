@@ -29,10 +29,7 @@ void D19cCbc3EventZS::fillDataContainer(BoardDataContainer* boardContainer, cons
                 unsigned int i = 0;
                 for(ChannelContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {
-                    if(cTestChannelGroup->isChannelEnabled(i))
-                    {
-                        channel->fOccupancy += (float)DataBit(hybrid->getId(), chip->getId(), i);
-                    }
+                    if(cTestChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += (float)DataBit(hybrid->getId(), chip->getId(), i); }
                 }
             }
         }
@@ -53,13 +50,11 @@ void D19cCbc3EventZS::SetEvent(const BeBoard* pBoard, uint32_t pZSEventSize, con
     fEventSize *= 4; // block size is in 128 bit words
     // LOG (INFO) << "Block size: " << fEventSize;
 
-    if(fEventSize != list.size() || fEventSize != pZSEventSize)
-        LOG(ERROR) << "Vector size doesnt match the BLOCK_SIZE in Header1";
+    if(fEventSize != list.size() || fEventSize != pZSEventSize) LOG(ERROR) << "Vector size doesnt match the BLOCK_SIZE in Header1";
 
     uint8_t header1_size = (0xFF000000 & list.at(0)) >> 24;
 
-    if(header1_size != D19C_EVENT_HEADER1_SIZE_32_CBC3)
-        LOG(ERROR) << "Misaligned data: Header1 size doesnt correspond to the one sent from firmware";
+    if(header1_size != D19C_EVENT_HEADER1_SIZE_32_CBC3) LOG(ERROR) << "Misaligned data: Header1 size doesnt correspond to the one sent from firmware";
 
     fNFe_software    = static_cast<uint8_t>(pBoard->getNFe());
     fNFe_event       = 0;
@@ -68,8 +63,7 @@ void D19cCbc3EventZS::SetEvent(const BeBoard* pBoard, uint32_t pZSEventSize, con
 
     for(uint8_t bit = 0; bit < fMaxHybrids; bit++)
     {
-        if((fFeMask_event >> bit) & 1)
-            fNFe_event++;
+        if((fFeMask_event >> bit) & 1) fNFe_event++;
     }
 
     for(uint8_t cFe = 0; cFe < fNFe_software; cFe++)
@@ -128,11 +122,9 @@ void D19cCbc3EventZS::SetEvent(const BeBoard* pBoard, uint32_t pZSEventSize, con
 
                     // check the data for sync and cluster overflow
                     uint8_t cSyncBit = (0x00000008 & cCbcDataZS.at(cCbcDataZS.size() - 1)) >> 3;
-                    if(!cSyncBit)
-                        LOG(INFO) << BOLDRED << "Warning, sync bit not 1, data frame probably misaligned!" << RESET;
+                    if(!cSyncBit) LOG(INFO) << BOLDRED << "Warning, sync bit not 1, data frame probably misaligned!" << RESET;
                     int8_t cClusterOverflow = (0x00000004 & cCbcDataZS.at(0)) >> 2;
-                    if(cClusterOverflow)
-                        LOG(INFO) << BOLDRED << "Warning, cluster overflow happened!" << RESET;
+                    if(cClusterOverflow) LOG(INFO) << BOLDRED << "Warning, cluster overflow happened!" << RESET;
 
                     // now update the chip id
                     cChipIDPrev = cChipID;
@@ -166,8 +158,7 @@ std::string D19cCbc3EventZS::DataHexString(uint8_t pFeId, uint8_t pCbcId) const
     // trigdata
     os << std::endl;
 
-    for(auto word: cbcData)
-        os << std::setw(8) << word << std::endl;
+    for(auto word: cbcData) os << std::setw(8) << word << std::endl;
 
     os.copyfmt(oldState);
 
@@ -185,10 +176,8 @@ bool D19cCbc3EventZS::Error(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const
         uint32_t word = cData->second.at(0);
 
         // buf overflow and lat error
-        if(i == 0)
-            return ((0x00000001 & word) >> 0); // lat err
-        if(i == 1)
-            return ((0x00000002 & word) >> 1); // buf ovf
+        if(i == 0) return ((0x00000001 & word) >> 0); // lat err
+        if(i == 1) return ((0x00000002 & word) >> 1); // buf ovf
 
         return true;
     }
@@ -267,8 +256,7 @@ bool D19cCbc3EventZS::DataBit(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const
                     if((cClusterAddress - i) % 2 == 0)
                     {
                         // check if it's in cluster
-                        if((i >= cClusterAddress) && (i < (cClusterAddress + 2u * cClusterWidth)))
-                            return 1;
+                        if((i >= cClusterAddress) && (i < (cClusterAddress + 2u * cClusterWidth))) return 1;
                     }
 
                     // increment got clusters
@@ -285,8 +273,7 @@ bool D19cCbc3EventZS::DataBit(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const
                     if((cClusterAddress - i) % 2 == 0)
                     {
                         // check if it's in cluster
-                        if((i >= cClusterAddress) && (i < (cClusterAddress + 2u * cClusterWidth)))
-                            return 1;
+                        if((i >= cClusterAddress) && (i < (cClusterAddress + 2u * cClusterWidth))) return 1;
                     }
 
                     // increment got clusters
@@ -294,8 +281,7 @@ bool D19cCbc3EventZS::DataBit(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const
                 }
 
                 // break if got all clusters
-                if(cGotClusters >= cNclusters)
-                    break;
+                if(cGotClusters >= cNclusters) break;
             }
         }
         // not found
@@ -318,8 +304,7 @@ std::string D19cCbc3EventZS::DataBitString(uint8_t pFeId, uint8_t pCbcId) const
         // i didn't find way better than this one, because of the fact that clusters separated for sensors, and also
         // randomly stored in the event
         bool* hit_bits = new bool[NCHANNELS];
-        for(uint32_t i = 0; i < NCHANNELS; i++)
-            hit_bits[i] = false;
+        for(uint32_t i = 0; i < NCHANNELS; i++) hit_bits[i] = false;
 
         // data vector
         std::vector<uint32_t> cDataVector = cData->second;
@@ -338,8 +323,7 @@ std::string D19cCbc3EventZS::DataBitString(uint8_t pFeId, uint8_t pCbcId) const
                     uint8_t cClusterAddress = (0x000007f8 & word) >> 3;
                     uint8_t cClusterWidth   = ((0x00000007 & word) >> 0) + 1;
 
-                    for(uint8_t i = 0; i < cClusterWidth; i++)
-                        hit_bits[cClusterAddress + 2 * i] = true;
+                    for(uint8_t i = 0; i < cClusterWidth; i++) hit_bits[cClusterAddress + 2 * i] = true;
 
                     // increment got clusters
                     cGotClusters++;
@@ -351,22 +335,19 @@ std::string D19cCbc3EventZS::DataBitString(uint8_t pFeId, uint8_t pCbcId) const
                     uint8_t cClusterAddress = (0x07f80000 & word) >> 19;
                     uint8_t cClusterWidth   = ((0x00070000 & word) >> 16) + 1;
 
-                    for(uint8_t i = 0; i < cClusterWidth; i++)
-                        hit_bits[cClusterAddress + 2 * i] = true;
+                    for(uint8_t i = 0; i < cClusterWidth; i++) hit_bits[cClusterAddress + 2 * i] = true;
 
                     // increment got clusters
                     cGotClusters++;
                 }
 
                 // break if got all clusters
-                if(cGotClusters >= cNclusters)
-                    break;
+                if(cGotClusters >= cNclusters) break;
             }
         }
 
         std::ostringstream os;
-        for(uint32_t i = 0; i < NCHANNELS; i++)
-            os << hit_bits[i];
+        for(uint32_t i = 0; i < NCHANNELS; i++) os << hit_bits[i];
         delete hit_bits;
 
         return os.str();
@@ -389,8 +370,7 @@ std::vector<bool> D19cCbc3EventZS::DataBitVector(uint8_t pFeId, uint8_t pCbcId) 
         // i didn't find way better than this one, because of the fact that clusters separated for sensors, and also
         // randomly stored in the event
         bool* hit_bits = new bool[NCHANNELS];
-        for(uint32_t i = 0; i < NCHANNELS; i++)
-            hit_bits[i] = false;
+        for(uint32_t i = 0; i < NCHANNELS; i++) hit_bits[i] = false;
 
         // data vector
         std::vector<uint32_t> cDataVector = cData->second;
@@ -409,8 +389,7 @@ std::vector<bool> D19cCbc3EventZS::DataBitVector(uint8_t pFeId, uint8_t pCbcId) 
                     uint8_t cClusterAddress = (0x000007f8 & word) >> 3;
                     uint8_t cClusterWidth   = ((0x00000007 & word) >> 0) + 1;
 
-                    for(uint8_t i = 0; i < cClusterWidth; i++)
-                        hit_bits[cClusterAddress + 2 * i] = true;
+                    for(uint8_t i = 0; i < cClusterWidth; i++) hit_bits[cClusterAddress + 2 * i] = true;
 
                     // increment got clusters
                     cGotClusters++;
@@ -422,21 +401,18 @@ std::vector<bool> D19cCbc3EventZS::DataBitVector(uint8_t pFeId, uint8_t pCbcId) 
                     uint8_t cClusterAddress = (0x07f80000 & word) >> 19;
                     uint8_t cClusterWidth   = ((0x00070000 & word) >> 16) + 1;
 
-                    for(uint8_t i = 0; i < cClusterWidth; i++)
-                        hit_bits[cClusterAddress + 2 * i] = true;
+                    for(uint8_t i = 0; i < cClusterWidth; i++) hit_bits[cClusterAddress + 2 * i] = true;
 
                     // increment got clusters
                     cGotClusters++;
                 }
 
                 // break if got all clusters
-                if(cGotClusters >= cNclusters)
-                    break;
+                if(cGotClusters >= cNclusters) break;
             }
         }
 
-        for(uint32_t i = 0; i < NCHANNELS; i++)
-            blist.push_back(hit_bits[i]);
+        for(uint32_t i = 0; i < NCHANNELS; i++) blist.push_back(hit_bits[i]);
         delete hit_bits;
     }
     else
@@ -472,8 +448,7 @@ std::vector<bool> D19cCbc3EventZS::DataBitVector(uint8_t pFeId, uint8_t pCbcId, 
                     uint8_t cClusterAddress = (0x000007f8 & word) >> 3;
                     uint8_t cClusterWidth   = ((0x00000007 & word) >> 0) + 1;
 
-                    for(uint8_t i = 0; i < cClusterWidth; i++)
-                        cHitsVector.push_back(cClusterAddress + 2 * i);
+                    for(uint8_t i = 0; i < cClusterWidth; i++) cHitsVector.push_back(cClusterAddress + 2 * i);
 
                     // increment got clusters
                     cGotClusters++;
@@ -485,22 +460,19 @@ std::vector<bool> D19cCbc3EventZS::DataBitVector(uint8_t pFeId, uint8_t pCbcId, 
                     uint8_t cClusterAddress = (0x07f80000 & word) >> 19;
                     uint8_t cClusterWidth   = ((0x00070000 & word) >> 16) + 1;
 
-                    for(uint8_t i = 0; i < cClusterWidth; i++)
-                        cHitsVector.push_back(cClusterAddress + 2 * i);
+                    for(uint8_t i = 0; i < cClusterWidth; i++) cHitsVector.push_back(cClusterAddress + 2 * i);
 
                     // increment got clusters
                     cGotClusters++;
                 }
 
                 // break if got all clusters
-                if(cGotClusters >= cNclusters)
-                    break;
+                if(cGotClusters >= cNclusters) break;
             }
         }
 
         // checks if channel is in the hits vector.
-        for(auto cChannel: channelList)
-            blist.push_back(std::find(cHitsVector.begin(), cHitsVector.end(), cChannel) != cHitsVector.end());
+        for(auto cChannel: channelList) blist.push_back(std::find(cHitsVector.begin(), cHitsVector.end(), cChannel) != cHitsVector.end());
     }
     else
         LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
@@ -516,8 +488,7 @@ std::string D19cCbc3EventZS::StubBitString(uint8_t pFeId, uint8_t pCbcId) const
 
     std::vector<Stub> cStubVector = this->StubVector(pFeId, pCbcId);
 
-    for(auto cStub: cStubVector)
-        os << std::bitset<8>(cStub.getPosition()) << " " << std::bitset<4>(cStub.getBend()) << " ";
+    for(auto cStub: cStubVector) os << std::bitset<8>(cStub.getPosition()) << " " << std::bitset<4>(cStub.getBend()) << " ";
 
     return os.str();
 
@@ -549,12 +520,9 @@ std::vector<Stub> D19cCbc3EventZS::StubVector(uint8_t pFeId, uint8_t pCbcId) con
         uint8_t bend2 = (cData->second.at(cData->second.size() - 1) & 0x000F0000) >> 16;
         uint8_t bend3 = (cData->second.at(cData->second.size() - 1) & 0x0F000000) >> 24;
 
-        if(pos1 != 0)
-            cStubVec.emplace_back(pos1, bend1);
-        if(pos2 != 0)
-            cStubVec.emplace_back(pos2, bend2);
-        if(pos3 != 0)
-            cStubVec.emplace_back(pos3, bend3);
+        if(pos1 != 0) cStubVec.emplace_back(pos1, bend1);
+        if(pos2 != 0) cStubVec.emplace_back(pos2, bend2);
+        if(pos3 != 0) cStubVec.emplace_back(pos3, bend3);
     }
     else
         LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
@@ -606,8 +574,7 @@ uint32_t D19cCbc3EventZS::GetNHits(uint8_t pFeId, uint8_t pCbcId) const
                 }
 
                 // break if got all clusters
-                if(cGotClusters >= cNclusters)
-                    break;
+                if(cGotClusters >= cNclusters) break;
             }
         }
     }
@@ -642,8 +609,7 @@ std::vector<uint32_t> D19cCbc3EventZS::GetHits(uint8_t pFeId, uint8_t pCbcId) co
                     uint8_t cClusterAddress = (0x000007f8 & word) >> 3;
                     uint8_t cClusterWidth   = ((0x00000007 & word) >> 0) + 1;
 
-                    for(uint8_t i = 0; i < cClusterWidth; i++)
-                        cHits.push_back(cClusterAddress + 2 * i);
+                    for(uint8_t i = 0; i < cClusterWidth; i++) cHits.push_back(cClusterAddress + 2 * i);
 
                     // increment got clusters
                     cGotClusters++;
@@ -655,16 +621,14 @@ std::vector<uint32_t> D19cCbc3EventZS::GetHits(uint8_t pFeId, uint8_t pCbcId) co
                     uint8_t cClusterAddress = (0x07f80000 & word) >> 19;
                     uint8_t cClusterWidth   = ((0x00070000 & word) >> 16) + 1;
 
-                    for(uint8_t i = 0; i < cClusterWidth; i++)
-                        cHits.push_back(cClusterAddress + 2 * i);
+                    for(uint8_t i = 0; i < cClusterWidth; i++) cHits.push_back(cClusterAddress + 2 * i);
 
                     // increment got clusters
                     cGotClusters++;
                 }
 
                 // break if got all clusters
-                if(cGotClusters >= cNclusters)
-                    break;
+                if(cGotClusters >= cNclusters) break;
             }
         }
     }
@@ -768,8 +732,7 @@ void D19cCbc3EventZS::print(std::ostream& os) const
 
         os << "Ch. Data:      ";
 
-        for(int i = 0; i < FIRST_LINE_WIDTH; i += 2)
-            os << data.substr(i, 2) << " ";
+        for(int i = 0; i < FIRST_LINE_WIDTH; i += 2) os << data.substr(i, 2) << " ";
 
         os << std::endl;
 
@@ -782,8 +745,7 @@ void D19cCbc3EventZS::print(std::ostream& os) const
             os << std::endl;
         }
 
-        for(int i = 0; i < LAST_LINE_WIDTH; i += 2)
-            os << data.substr(FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i, 2) << " ";
+        for(int i = 0; i < LAST_LINE_WIDTH; i += 2) os << data.substr(FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i, 2) << " ";
 
         os << std::endl;
 
@@ -845,8 +807,7 @@ std::vector<Cluster> D19cCbc3EventZS::getClusters(uint8_t pFeId, uint8_t pCbcId)
                 }
 
                 // break if got all clusters
-                if(cGotClusters >= cNclusters)
-                    break;
+                if(cGotClusters >= cNclusters) break;
             }
         }
     }
@@ -872,8 +833,7 @@ SLinkEvent D19cCbc3EventZS::GetSLinkEvent(BeBoard* pBoard) const
         uint8_t cFeId = cFe->getId();
 
         // firt get the list of enabled front ends
-        if(cEnabledFe.find(cFeId) == std::end(cEnabledFe))
-            cEnabledFe.insert(cFeId);
+        if(cEnabledFe.find(cFeId) == std::end(cEnabledFe)) cEnabledFe.insert(cFeId);
 
         // now on to the payload
         int cFirstBitFePayload = cPayload.get_current_write_position();
@@ -942,8 +902,7 @@ SLinkEvent D19cCbc3EventZS::GetSLinkEvent(BeBoard* pBoard) const
                         }
 
                         // break if got all clusters
-                        if(cGotClusters >= cNclusters)
-                            break;
+                        if(cGotClusters >= cNclusters) break;
                     }
                 }
 

@@ -79,8 +79,7 @@ void PhysicsHistograms::fill(const DetectorDataContainer& DataContainer)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr)
-                        continue;
+                    if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
 
                     auto* ToT1DHist = ToT1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
                     auto* ToT2DHist = ToT2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
@@ -99,8 +98,7 @@ void PhysicsHistograms::fill(const DetectorDataContainer& DataContainer)
                                 Occupancy2DHist->SetBinContent(col + 1, row + 1, Occupancy2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
                             }
 
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true)
-                                ErrorReadOut2DHist->Fill(col + 1, row + 1);
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
                         }
                 }
 }
@@ -114,13 +112,11 @@ void PhysicsHistograms::fillBCID(const DetectorDataContainer& DataContainer)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<BCIDsize>>() == nullptr)
-                        continue;
+                    if(cChip->getSummaryContainer<GenericDataArray<BCIDsize>>() == nullptr) continue;
 
                     auto* BCIDHist = BCID.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0u; i < BCIDsize; i++)
-                        BCIDHist->SetBinContent(i + 1, BCIDHist->GetBinContent(i + 1) + cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
+                    for(auto i = 0u; i < BCIDsize; i++) BCIDHist->SetBinContent(i + 1, BCIDHist->GetBinContent(i + 1) + cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
                 }
 }
 
@@ -133,14 +129,12 @@ void PhysicsHistograms::fillTrgID(const DetectorDataContainer& DataContainer)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<TrgIDsize>>() == nullptr)
-                        continue;
+                    if(cChip->getSummaryContainer<GenericDataArray<TrgIDsize>>() == nullptr) continue;
 
                     auto* TriggerIDHist =
                         TriggerID.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0u; i < TrgIDsize; i++)
-                        TriggerIDHist->SetBinContent(i + 1, TriggerIDHist->GetBinContent(i + 1) + cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
+                    for(auto i = 0u; i < TrgIDsize; i++) TriggerIDHist->SetBinContent(i + 1, TriggerIDHist->GetBinContent(i + 1) + cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
                 }
 }
 

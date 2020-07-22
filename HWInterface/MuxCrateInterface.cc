@@ -94,8 +94,7 @@ void MuxCrateInterface::DisconnectMultiplexingSetup(BeBoard* pBoard)
 
         while(!CardsDisconnected)
         {
-            if(c == false)
-                LOG(INFO) << "Disconnecting cards";
+            if(c == false) LOG(INFO) << "Disconnecting cards";
             c = true;
             std::this_thread::sleep_for(std::chrono::milliseconds(fWait_ms));
             CardsDisconnected = (ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.multiplexing_bp.cards_disconnected") == 1);
@@ -103,8 +102,7 @@ void MuxCrateInterface::DisconnectMultiplexingSetup(BeBoard* pBoard)
 
         while(!BackplanesDisconnected)
         {
-            if(b == false)
-                LOG(INFO) << "Disconnecting backplanes";
+            if(b == false) LOG(INFO) << "Disconnecting backplanes";
             b = true;
             std::this_thread::sleep_for(std::chrono::milliseconds(fWait_ms));
             BackplanesDisconnected = (ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.multiplexing_bp.backplanes_disconnected") == 1);
@@ -142,8 +140,7 @@ uint32_t MuxCrateInterface::ScanMultiplexingSetup(BeBoard* pBoard)
         LOG(INFO) << BOLDGREEN << "Scan setup" << RESET;
         while(!SetupScanned)
         {
-            if(s == false)
-                LOG(INFO) << "Scanning setup";
+            if(s == false) LOG(INFO) << "Scanning setup";
             s = true;
             std::this_thread::sleep_for(std::chrono::milliseconds(fWait_ms));
             SetupScanned = (ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
@@ -184,8 +181,7 @@ uint32_t MuxCrateInterface::ConfigureMultiplexingSetup(BeBoard* pBoard)
         LOG(INFO) << BOLDGREEN << "Scan setup" << RESET;
         while(!SetupScanned)
         {
-            if(s == false)
-                LOG(INFO) << "Scanning setup";
+            if(s == false) LOG(INFO) << "Scanning setup";
             s = true;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             SetupScanned = (ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
@@ -197,19 +193,13 @@ uint32_t MuxCrateInterface::ConfigureMultiplexingSetup(BeBoard* pBoard)
         {
             LOG(INFO) << GREEN << "============================" << RESET;
             LOG(INFO) << BOLDGREEN << "Setup is scanned" << RESET;
-            if(BackplaneValid)
-            {
-                LOG(INFO) << BLUE << "Backplane configuration VALID" << RESET;
-            }
+            if(BackplaneValid) { LOG(INFO) << BLUE << "Backplane configuration VALID" << RESET; }
             else
             {
                 LOG(ERROR) << RED << "Backplane configuration is NOT VALID" << RESET;
                 exit(0);
             }
-            if(CardValid)
-            {
-                LOG(INFO) << BLUE << "Card configuration VALID" << RESET;
-            }
+            if(CardValid) { LOG(INFO) << BLUE << "Card configuration VALID" << RESET; }
             else
             {
                 LOG(ERROR) << RED << "Card configuration is NOT VALID" << RESET;
@@ -227,8 +217,7 @@ uint32_t MuxCrateInterface::ConfigureMultiplexingSetup(BeBoard* pBoard)
             LOG(INFO) << BOLDGREEN << "Configure setup" << RESET;
             while(!SetupConfigured)
             {
-                if(c == false)
-                    LOG(INFO) << "Configuring setup";
+                if(c == false) LOG(INFO) << "Configuring setup";
                 c = true;
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 SetupConfigured = (ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_configured") == 1);
@@ -301,8 +290,7 @@ void MuxCrateInterface::printAvailableCards()
         if(itBPCard.second.empty())
             sstr << "No cards";
         else
-            for(auto const& itCard: itBPCard.second)
-                sstr << itCard << " ";
+            for(auto const& itCard: itBPCard.second) sstr << itCard << " ";
         LOG(INFO) << BLUE << "Available cards for bp " << itBPCard.first << ":"
                   << "[ " << sstr.str() << "]" << RESET;
     }

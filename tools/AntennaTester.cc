@@ -78,8 +78,7 @@ void AntennaTester::EnableAntenna(bool pAntennaEnable, uint8_t pDigiPotentiomete
         cAntenna.TurnOnAnalogSwitchChannel(9); // configure communication with analogue switch
     }
     else
-        for(int i = 1; i < 5; i++)
-            cAntenna.TurnOnAnalogSwitchChannel(i);
+        for(int i = 1; i < 5; i++) cAntenna.TurnOnAnalogSwitchChannel(i);
 #endif
     // sleep ( 0.1 );
 }
@@ -118,8 +117,7 @@ void AntennaTester::InitializeHists()
     TString cFrontName("fAntennaHistTop");
     fHistTop = (TH1F*)(gROOT->FindObject(cFrontName));
 
-    if(fHistTop)
-        delete fHistTop;
+    if(fHistTop) delete fHistTop;
 
     fHistTop = new TH1F(cFrontName, "Front Pad Channels; Pad Number; Occupancy measured w/ Antenna [%]", (fNCbc / 2 * 254), -0.5, (fNCbc / 2 * 254) - 0.5);
     fHistTop->SetFillColor(4);
@@ -128,8 +126,7 @@ void AntennaTester::InitializeHists()
     TString cBackName("fAntennaHistBottom");
     fHistBottom = (TH1F*)(gROOT->FindObject(cBackName));
 
-    if(fHistBottom)
-        delete fHistBottom;
+    if(fHistBottom) delete fHistBottom;
 
     fHistBottom = new TH1F(cBackName, "Back Pad Channels; Pad Number; Occupancy measured w/ Antenna [%]", (fNCbc / 2 * 254), -0.5, (fNCbc / 2 * 254) - 0.5);
     fHistBottom->SetFillColor(4);
@@ -138,8 +135,7 @@ void AntennaTester::InitializeHists()
     TString cFrontNameMerged("fAntennaHistTopMerged");
     fHistTopMerged = (TH1F*)(gROOT->FindObject(cFrontNameMerged));
 
-    if(fHistTopMerged)
-        delete fHistTopMerged;
+    if(fHistTopMerged) delete fHistTopMerged;
 
     fHistTopMerged = new TH1F(cFrontNameMerged, "Front Pad Channels; Pad Number; Occupancy measured w/ Antenna [%]", (fNCbc / 2 * 254), -0.5, (fNCbc / 2 * 254) - 0.5);
     fHistTopMerged->SetFillColor(4);
@@ -148,8 +144,7 @@ void AntennaTester::InitializeHists()
     TString cBackNameMerged("fAntennaHistBottomMerged");
     fHistBottomMerged = (TH1F*)(gROOT->FindObject(cBackNameMerged));
 
-    if(fHistBottomMerged)
-        delete fHistBottomMerged;
+    if(fHistBottomMerged) delete fHistBottomMerged;
 
     fHistBottomMerged = new TH1F(cBackNameMerged, "Back Pad Channels; Pad Number; Occupancy measured w/ Antenna [%]", (fNCbc / 2 * 254), -0.5, (fNCbc / 2 * 254) - 0.5);
     fHistBottomMerged->SetFillColor(4);
@@ -255,8 +250,7 @@ void AntennaTester::Measure(uint8_t pDigiPotentiometer)
     for(uint8_t channel_position = 1; channel_position < 5; channel_position++)
     {
         cAntenna.TurnOnAnalogSwitchChannel(channel_position);
-        if(channel_position == 9)
-            break;
+        if(channel_position == 9) break;
 
         for(auto pBoard: *fDetectorContainer)
         {
@@ -277,8 +271,7 @@ void AntennaTester::Measure(uint8_t pDigiPotentiometer)
                     HistogramFiller cFiller(fHistBottom, fHistTop, cEvent);
                     pBoard->accept(cFiller);
 
-                    if(cN % 100 == 0)
-                        UpdateHists();
+                    if(cN % 100 == 0) UpdateHists();
 
                     cN++;
                 }
@@ -291,11 +284,9 @@ void AntennaTester::Measure(uint8_t pDigiPotentiometer)
             /*Here the reconstruction of histograms happens*/
             for(uint16_t channel_id = 1; channel_id < fNCbc * 127 + 1; channel_id++)
             {
-                if(fHistTopMerged->GetBinContent(channel_id) < fHistTop->GetBinContent(channel_id))
-                    fHistTopMerged->SetBinContent(channel_id, fHistTop->GetBinContent(channel_id));
+                if(fHistTopMerged->GetBinContent(channel_id) < fHistTop->GetBinContent(channel_id)) fHistTopMerged->SetBinContent(channel_id, fHistTop->GetBinContent(channel_id));
 
-                if(fHistBottomMerged->GetBinContent(channel_id) < fHistBottom->GetBinContent(channel_id))
-                    fHistBottomMerged->SetBinContent(channel_id, fHistBottom->GetBinContent(channel_id));
+                if(fHistBottomMerged->GetBinContent(channel_id) < fHistBottom->GetBinContent(channel_id)) fHistBottomMerged->SetBinContent(channel_id, fHistBottom->GetBinContent(channel_id));
             }
 
             /*Here clearing histograms after each event*/

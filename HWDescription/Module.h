@@ -57,8 +57,7 @@ class Module
     {
         pVisitor.visitModule(*this);
 
-        for(auto cChip: *this)
-            static_cast<ReadoutChip*>(cChip)->accept(pVisitor);
+        for(auto cChip: *this) static_cast<ReadoutChip*>(cChip)->accept(pVisitor);
     }
     /*!
      * \brief Get the number of Chip connected to the Module

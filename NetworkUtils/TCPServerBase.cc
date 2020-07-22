@@ -47,8 +47,7 @@ TCPServerBase::~TCPServerBase(void)
 {
     std::cout << __PRETTY_FUNCTION__ << "Shutting down accept for socket: " << getSocketId() << std::endl;
     shutdownAccept();
-    while(fAcceptFuture.wait_for(std::chrono::milliseconds(100)) != std::future_status::ready)
-        std::cout << __PRETTY_FUNCTION__ << "Server accept still running" << std::endl;
+    while(fAcceptFuture.wait_for(std::chrono::milliseconds(100)) != std::future_status::ready) std::cout << __PRETTY_FUNCTION__ << "Server accept still running" << std::endl;
     std::cout << __PRETTY_FUNCTION__ << "Closing connected client sockets for socket: " << getSocketId() << std::endl;
     closeClientSockets();
     std::cout << __PRETTY_FUNCTION__ << "Closed all sockets connected to server: " << getSocketId() << std::endl;
@@ -66,10 +65,7 @@ void TCPServerBase::startAccept(void)
 int TCPServerBase::accept()
 {
     std::cout << __PRETTY_FUNCTION__ << "Now server accept connections on socket: " << getSocketId() << std::endl;
-    if(TCPSocket::getSocketId() == invalidSocketId)
-    {
-        throw std::logic_error("Accept called on a bad socket object (this object was moved)");
-    }
+    if(TCPSocket::getSocketId() == invalidSocketId) { throw std::logic_error("Accept called on a bad socket object (this object was moved)"); }
 
     struct sockaddr_storage serverStorage;
     socklen_t               addr_size    = sizeof serverStorage;

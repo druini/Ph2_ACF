@@ -41,8 +41,7 @@ void LatencyScan::Initialize(uint32_t pStartLatency, uint32_t pLatencyRange)
                 TString  cName = Form("h_module_latency_Fe%d", cFeId);
                 TObject* cObj  = gROOT->FindObject(cName);
 
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
 
                 TH1F* cLatHist = nullptr;
 
@@ -56,8 +55,7 @@ void LatencyScan::Initialize(uint32_t pStartLatency, uint32_t pLatencyRange)
                 cName = Form("h_module_stub_latency_Fe%d", cFeId);
                 cObj  = gROOT->FindObject(cName);
 
-                if(cObj)
-                    delete cObj;
+                if(cObj) delete cObj;
 
                 TH1F* cStubHist = new TH1F(cName, Form("Stub Lateny FE%d; Stub Lateny; # of Stubs", cFeId), pLatencyRange, pStartLatency, pStartLatency + pLatencyRange);
                 cStubHist->SetMarkerStyle(2);
@@ -125,10 +123,7 @@ void LatencyScan::MeasureTriggerTDC()
     for(auto pBoard: *fDetectorContainer)
     {
         TH1F* cTmpHist = dynamic_cast<TH1F*>(getHist(pBoard, "triggerTDC"));
-        for(size_t tdcValue = 0; tdcValue < fTDCBins; ++tdcValue)
-        {
-            cTmpHist->SetBinContent(tdcValue + 1, BeBoardTriggerTDCMap[pBoard->getId()][tdcValue]);
-        }
+        for(size_t tdcValue = 0; tdcValue < fTDCBins; ++tdcValue) { cTmpHist->SetBinContent(tdcValue + 1, BeBoardTriggerTDCMap[pBoard->getId()][tdcValue]); }
     }
 
     return;
@@ -234,8 +229,7 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
             auto&    cMatchesThisBoard = cMatchedEvents->at(cBoard->getIndex());
             // Take Data for all Modules
             // here set the stub latency
-            for(auto cReg: getStubLatencyName(cBeBoard->getBoardType()))
-                fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
+            for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
 
             this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
             const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
@@ -368,8 +362,7 @@ std::map<ModuleContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
             int cNStubs = 0;
             // Take Data for all Modules
             // here set the stub latency
-            for(auto cReg: getStubLatencyName(cBeBoard->getBoardType()))
-                fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
+            for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
 
             this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
             const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
@@ -378,10 +371,7 @@ std::map<ModuleContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
             {
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    for(auto cHybrid: *cOpticalGroup)
-                    {
-                        cNStubs += countStubs(cHybrid, cEvent, "module_stub_latency", cLat);
-                    }
+                    for(auto cHybrid: *cOpticalGroup) { cNStubs += countStubs(cHybrid, cEvent, "module_stub_latency", cLat); }
                 }
             }
             LOG(INFO) << "Stub Latency " << +cLat << " Stubs " << cNStubs << " Events " << cEvents.size();
@@ -433,8 +423,7 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
             {
                 BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
                 // set a stub latency value on all FEs
-                for(auto cReg: getStubLatencyName(theBoard->getBoardType()))
-                    fBeBoardInterface->WriteBoardReg(theBoard, cReg, cStubLatency);
+                for(auto cReg: getStubLatencyName(theBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(theBoard, cReg, cStubLatency);
 
                 // I need this to normalize the TDC values I get from the Strasbourg FW
                 uint32_t cNevents       = 0;
@@ -468,15 +457,11 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
                                     std::vector<Stub> cStubs       = cEvent->StubVector(cFe->getId(), cCbc->getId());
                                     int               cStubCounter = cStubs.size();
 
-                                    if(cHitCounter == 0)
-                                    {
-                                    }
+                                    if(cHitCounter == 0) {}
 
-                                    if(cHitCounter > 0)
-                                        cHitFound = true;
+                                    if(cHitCounter > 0) cHitFound = true;
 
-                                    if(cStubCounter > 0)
-                                        cStubFound = true;
+                                    if(cStubCounter > 0) cStubFound = true;
                                 }
                                 cNEvents_wHit += cHitFound ? 1 : 0;
                                 cNEvents_wStub += cStubFound ? 1 : 0;
@@ -600,8 +585,7 @@ int LatencyScan::countStubs(Module* pFe, const Event* pEvent, std::string pHistN
 
     for(auto cCbc: *pFe)
     {
-        if(pEvent->StubBit(pFe->getId(), cCbc->getId()))
-            cStubCounter += pEvent->StubVector(pFe->getId(), cCbc->getId()).size();
+        if(pEvent->StubBit(pFe->getId(), cCbc->getId())) cStubCounter += pEvent->StubVector(pFe->getId(), cCbc->getId()).size();
     }
 
     int   cBin        = cTmpHist->FindBin(pParameter);
@@ -667,8 +651,7 @@ void LatencyScan::parseSettings()
         fHoleMode = 1;
 
     cSetting = fSettingsMap.find("TriggerSource");
-    if(cSetting != std::end(fSettingsMap))
-        trigSource = cSetting->second;
+    if(cSetting != std::end(fSettingsMap)) trigSource = cSetting->second;
     LOG(INFO) << int(trigSource);
 
     // cSetting = fSettingsMap.find ( "TestPulsePotentiometer" );

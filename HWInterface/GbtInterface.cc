@@ -167,8 +167,7 @@ void GbtInterface::scaConfigure(BeBoardFWInterface* pInterface)
     icWrite(pInterface, 231, 0x00dd);
     icWrite(pInterface, 232, 0x000d);
     icWrite(pInterface, 233, 0x0070);
-    for(uint16_t cRegister = 237; cRegister < 246; cRegister += 4)
-        icWrite(pInterface, cRegister, 0x0000);
+    for(uint16_t cRegister = 237; cRegister < 246; cRegister += 4) icWrite(pInterface, cRegister, 0x0000);
     icWrite(pInterface, 248, 0x0007);
     icWrite(pInterface, 251, 0x0000);
     icWrite(pInterface, 254, 0x0070);
@@ -203,8 +202,7 @@ void GbtInterface::scaConfigureGPIO(BeBoardFWInterface* pInterface)
     uint8_t  cMaster    = 0x02;
     uint32_t cData      = (0 << 31) | (1 << 30) | (0 << 3) | (1 << 2);
     uint32_t cErrorCode = ecWrite(pInterface, cMaster, 0x10, 0x40000004);
-    if(cErrorCode != 0)
-        exit(0);
+    if(cErrorCode != 0) exit(0);
     //
     uint32_t cValue = ecRead(pInterface, cMaster, 0x21);
     cData           = ((1 << 31) | (1 << 30) | (1 << 3) | (1 << 2));
@@ -227,8 +225,7 @@ uint16_t GbtInterface::readAdcChn(BeBoardFWInterface* pInterface, std::string pV
     if(pValueToRead == "EXT_TEMP") // turn on current source for external temperature sensor
     {
         cErrorMux = ecWrite(pInterface, cMaster, 0x60, (1 << 25));
-        if(cErrorMux != 0)
-            LOG(INFO) << BOLDYELLOW << "Error setting SCA AdcMuxSelect" << RESET;
+        if(cErrorMux != 0) LOG(INFO) << BOLDYELLOW << "Error setting SCA AdcMuxSelect" << RESET;
     }
     // Write gain correction factor (if needed)
     // TODO: we have to move it out from here in order not to have it hardcoded
@@ -236,12 +233,10 @@ uint16_t GbtInterface::readAdcChn(BeBoardFWInterface* pInterface, std::string pV
     // cErrorMux = ecWrite(pInterface, cMaster, 0x10, cCorrection);
     // Choose channel to perform next measurement
     cErrorMux = ecWrite(pInterface, cMaster, 0x50, cADCslave);
-    if(cErrorMux != 0)
-        LOG(INFO) << BOLDYELLOW << "Error setting SCA AdcMuxSelect" << RESET;
+    if(cErrorMux != 0) LOG(INFO) << BOLDYELLOW << "Error setting SCA AdcMuxSelect" << RESET;
     // Measure in chosen channel
     cErrorGo = ecWrite(pInterface, cMaster, 0x02, 0x00000001);
-    if(cErrorGo != 0)
-        LOG(INFO) << BOLDYELLOW << "Error asking SCA AdcGo for starting conversion" << RESET;
+    if(cErrorGo != 0) LOG(INFO) << BOLDYELLOW << "Error asking SCA AdcGo for starting conversion" << RESET;
     // Read back measurement result (converted or unconverted)
     uint32_t cAdcValue = ecRead(pInterface, cMaster, ((pConvertRawReading) ? 0x21 : 0x31), 0x0);
     LOG(DEBUG) << BLUE << "SCA ADC chn: " << cADCslave << " reads" << cAdcValue << " for pConvertRawReading=" << pConvertRawReading << RESET;
@@ -249,8 +244,7 @@ uint16_t GbtInterface::readAdcChn(BeBoardFWInterface* pInterface, std::string pV
     if(pValueToRead == "EXT_TEMP") // turn off current source for external temperature sensor
     {
         cErrorMux = ecWrite(pInterface, cMaster, 0x60, 0x00);
-        if(cErrorMux != 0)
-            LOG(INFO) << BOLDYELLOW << "Error setting SCA AdcMuxSelect" << RESET;
+        if(cErrorMux != 0) LOG(INFO) << BOLDYELLOW << "Error setting SCA AdcMuxSelect" << RESET;
     }
     return (uint16_t)(cAdcValue);
 }
@@ -291,10 +285,7 @@ void GbtInterface::gbtxSelectEdge(BeBoardFWInterface* pInterface, bool pRising)
 {
     uint32_t cReadBack = icRead(pInterface, 244, 1);
     uint32_t cRegValue = (cReadBack & 0xC0);
-    for(size_t cIndex = 0; cIndex < 6; cIndex++)
-    {
-        cRegValue = cRegValue | ((uint8_t)pRising << cIndex);
-    }
+    for(size_t cIndex = 0; cIndex < 6; cIndex++) { cRegValue = cRegValue | ((uint8_t)pRising << cIndex); }
     LOG(INFO) << BOLDBLUE << "GBTx default configuration " << std::bitset<8>(cReadBack) << " -- will be set to " << std::bitset<8>(cRegValue) << RESET;
     // icWrite(pInterface, 244 , cRegValue ) ;
 }
@@ -326,19 +317,13 @@ void GbtInterface::gbtxSetPhase(BeBoardFWInterface* pInterface, uint8_t pPhase)
     std::vector<uint16_t> cRegisters = {66, 90, 114, 138, 162, 186, 210};
     for(auto cChannelReg: cRegisters)
     {
-        for(size_t cIndex = 0; cIndex < 12; cIndex++)
-        {
-            icWrite(pInterface, cChannelReg + cIndex, (pPhase << 4) | (pPhase << 0));
-        }
+        for(size_t cIndex = 0; cIndex < 12; cIndex++) { icWrite(pInterface, cChannelReg + cIndex, (pPhase << 4) | (pPhase << 0)); }
     }
 }
 void GbtInterface::gbtxSetDriveStrength(BeBoardFWInterface* pInterface, uint8_t pStrength)
 {
     std::vector<uint16_t> cRegs{327, 328, 329, 330, 331};
-    for(auto cReg: cRegs)
-    {
-        icWrite(pInterface, cReg, (pStrength << 4) || pStrength);
-    }
+    for(auto cReg: cRegs) { icWrite(pInterface, cReg, (pStrength << 4) || pStrength); }
 }
 void GbtInterface::gbtxConfigureChargePumps(BeBoardFWInterface* pInterface, uint8_t pStrength)
 {
@@ -401,10 +386,7 @@ void GbtInterface::gbtxSetClocks(BeBoardFWInterface* pInterface, uint8_t pFreque
         icWrite(pInterface, cRegister, (cCoarsePhase) | (cReadBack & 0xE0));
     }
     // fine phase
-    for(uint16_t cRegister = 4; cRegister < 8; cRegister++)
-    {
-        icWrite(pInterface, cRegister, (cFinePhase << 4) | (cFinePhase << 0));
-    }
+    for(uint16_t cRegister = 4; cRegister < 8; cRegister++) { icWrite(pInterface, cRegister, (cFinePhase << 4) | (cFinePhase << 0)); }
 }
 // read clocks
 void GbtInterface::gbtxReadClocks(BeBoardFWInterface* pInterface)
@@ -677,8 +659,7 @@ uint32_t GbtInterface::cbcRead(BeBoardFWInterface* pInterface, uint8_t pFeId, ui
         return cErrorCode;
     }
     cErrorCode = writeI2C(pInterface, fSCAMaster + pFeId, 0x40 | (1 + pChipId), pRegisterAddress, 1);
-    if(cErrorCode != 0)
-        return cErrorCode;
+    if(cErrorCode != 0) return cErrorCode;
     uint32_t cValue   = readI2C(pInterface, fSCAMaster + pFeId, 0x40 | (1 + pChipId), 1);
     uint8_t  cStatus  = this->scaStatus(pInterface, fSCAMaster + pFeId);
     bool     cSuccess = (((cStatus & 0x4) >> 2) == 1);
@@ -694,10 +675,7 @@ uint32_t GbtInterface::cbcRead(BeBoardFWInterface* pInterface, uint8_t pFeId, ui
 bool GbtInterface::cbcWrite(BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack, bool pSetPage)
 {
     uint8_t cErrorCode = 0;
-    if(pSetPage)
-    {
-        cErrorCode = cbcSetPage(pInterface, pFeId, pChipId, pPage);
-    }
+    if(pSetPage) { cErrorCode = cbcSetPage(pInterface, pFeId, pChipId, pPage); }
     cErrorCode = writeI2C(pInterface, fSCAMaster + pFeId, 0x40 | (1 + pChipId), (pRegisterAddress << 8 * 3) | (pRegisterValue << 8 * 2), 2);
     if(pReadBack && cErrorCode == 0)
     {

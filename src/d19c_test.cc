@@ -75,8 +75,7 @@ int main(int argc, char** argv)
     bool        cSaveToFile = false;
     std::string cOutputFile;
 
-    if(cmd.foundOption("save"))
-        cSaveToFile = true;
+    if(cmd.foundOption("save")) cSaveToFile = true;
 
     // now query the parsing results
     std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19CHWDescription.xml";
@@ -91,8 +90,7 @@ int main(int argc, char** argv)
         cOutputFile = cmd.optionValue("save");
         cTool.InitResultFile(cOutputFile);
     }
-    if(!cHardReset)
-        cTool.ConfigureHw();
+    if(!cHardReset) cTool.ConfigureHw();
 
 // now try and look at the temperature and current on the hybrid
 #ifdef __ANTENNA__
@@ -117,10 +115,7 @@ int main(int argc, char** argv)
     bool cIPB_Rate  = (cmd.foundOption("ipb_rate")) ? true : false;
     bool cOccupancy = (cmd.foundOption("occupancy")) ? true : false;
 
-    if(cHardReset)
-    {
-        cTool.fBeBoardInterface->RebootBoard(pBoard);
-    }
+    if(cHardReset) { cTool.fBeBoardInterface->RebootBoard(pBoard); }
     else if(cDDR3SelfTest)
     {
         cTool.fBeBoardInterface->setBoard(pBoard->getBeBoardId());
@@ -187,8 +182,7 @@ int main(int argc, char** argv)
                     cN++;
 
                     double cAvgOccupancyHyb0 = 0;
-                    for(auto cCbc: *cCbcVector)
-                        cAvgOccupancyHyb0 += ev->GetNHits(0, cCbc->getId());
+                    for(auto cCbc: *cCbcVector) cAvgOccupancyHyb0 += ev->GetNHits(0, cCbc->getId());
                     cAvgOccupancy += (cAvgOccupancyHyb0 / cNCbc);
 
                     if(cmd.foundOption("dqm"))
@@ -202,8 +196,7 @@ int main(int argc, char** argv)
                         }
                     }
 
-                    if(count % 10000 == 0)
-                        LOG(INFO) << ">>> Recorded Event #" << count;
+                    if(count % 10000 == 0) LOG(INFO) << ">>> Recorded Event #" << count;
                 }
             }
             cTool.Stop(pBoard);
@@ -297,10 +290,7 @@ int main(int argc, char** argv)
                     }
 
                     // measure (equvuvalient tasks)
-                    if(useCounters)
-                    {
-                        d19cfw->Measure2SOccupancy(cNEventsToCollect, cErrorCounters, cChannelCounters);
-                    }
+                    if(useCounters) { d19cfw->Measure2SOccupancy(cNEventsToCollect, cErrorCounters, cChannelCounters); }
                     else
                     {
                         cTool.ReadNEvents(pBoard, cNEventsToCollect);
@@ -315,8 +305,7 @@ int main(int argc, char** argv)
                                     {
                                         for(uint8_t ch = 0; ch < NCHANNELS; ch++)
                                         {
-                                            if(ev->DataBit(cFe->getId(), cCbc->getId(), ch))
-                                                cChannelCounters[cFe->getId()][cCbc->getId()][ch]++;
+                                            if(ev->DataBit(cFe->getId(), cCbc->getId(), ch)) cChannelCounters[cFe->getId()][cCbc->getId()][ch]++;
                                         }
                                     }
                                 }
@@ -326,8 +315,7 @@ int main(int argc, char** argv)
 
                     // debug output
                     std::cout << "th" << cThreshold << ":\t";
-                    for(uint8_t ch = 0; ch < 16; ch++)
-                        std::cout << +cChannelCounters[0][0][ch] << "\t";
+                    for(uint8_t ch = 0; ch < 16; ch++) std::cout << +cChannelCounters[0][0][ch] << "\t";
                     std::cout << std::endl;
 
                     // reset the counters
@@ -337,10 +325,7 @@ int main(int argc, char** argv)
                         {
                             for(auto cCbc: *cFe)
                             {
-                                for(uint8_t ch = 0; ch < NCHANNELS; ch++)
-                                {
-                                    cChannelCounters[cFe->getId()][cCbc->getId()][ch] = 0;
-                                }
+                                for(uint8_t ch = 0; ch < NCHANNELS; ch++) { cChannelCounters[cFe->getId()][cCbc->getId()][ch] = 0; }
                             }
                         }
                     }

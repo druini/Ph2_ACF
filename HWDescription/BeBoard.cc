@@ -119,8 +119,7 @@ void BeBoard::updateCondData(uint32_t& pTDCVal)
                 {
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        if(cCondItem.fFeId != cHybrid->getId())
-                            continue;
+                        if(cCondItem.fFeId != cHybrid->getId()) continue;
 
                         for(auto cCbc: *cHybrid)
                         {
@@ -155,14 +154,11 @@ void BeBoard::loadConfigFile(const std::string& filename)
 
         while(!(getline(cFile, cLine).eof()))
         {
-            if(cLine.find_first_not_of(" \t") == std::string::npos)
-                continue;
+            if(cLine.find_first_not_of(" \t") == std::string::npos) continue;
 
-            if(cLine.at(0) == '#' || cLine.at(0) == '*')
-                continue;
+            if(cLine.at(0) == '#' || cLine.at(0) == '*') continue;
 
-            if(cLine.find(":") == std::string::npos)
-                continue;
+            if(cLine.find(":") == std::string::npos) continue;
 
             std::istringstream input(cLine);
             input >> cName >> cFound >> cValue;

@@ -82,8 +82,7 @@ void CRCCalculator::compute(uint16_t& crc, const uint8_t* buffer, size_t bufSize
 {
     assert(0 == bufSize % 8);
 
-    if(bufSize == 0)
-        return;
+    if(bufSize == 0) return;
 
     if(bufSize % 16 == 8)
     {

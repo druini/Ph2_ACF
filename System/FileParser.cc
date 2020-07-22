@@ -12,10 +12,7 @@ namespace Ph2_System
 {
 void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
 {
-    if(pIsFile && pFilename.find(".xml") != std::string::npos)
-    {
-        parseHWxml(pFilename, pBeBoardFWMap, pDetectorContainer, os, pIsFile);
-    }
+    if(pIsFile && pFilename.find(".xml") != std::string::npos) { parseHWxml(pFilename, pBeBoardFWMap, pDetectorContainer, os, pIsFile); }
     else if(!pIsFile)
     {
         parseHWxml(pFilename, pBeBoardFWMap, pDetectorContainer, os, pIsFile);
@@ -53,8 +50,7 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
         os << BOLDRED << "ERROR :\n Unable to open the file : " << RESET << pFilename << std::endl;
         os << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
 
-        if(!pIsFile)
-            os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]\n" << std::endl;
+        if(!pIsFile) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]\n" << std::endl;
 
         throw Exception("Unable to parse XML source!");
         return;
@@ -62,16 +58,13 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
 
     os << RESET << "\n\n";
 
-    for(i = 0; i < 80; i++)
-        os << "*";
+    for(i = 0; i < 80; i++) os << "*";
     os << "\n";
 
-    for(j = 0; j < 40; j++)
-        os << " ";
+    for(j = 0; j < 40; j++) os << " ";
     os << BOLDRED << "HW SUMMARY" << RESET << std::endl;
 
-    for(i = 0; i < 80; i++)
-        os << "*";
+    for(i = 0; i < 80; i++) os << "*";
     os << "\n";
 
     const std::string strUhalConfig = expandEnvironmentVariables(doc.child("HwDescription").child("Connections").attribute("name").value());
@@ -79,24 +72,18 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
     // Iterate over the BeBoard Nodes
     for(pugi::xml_node cBeBoardNode = doc.child("HwDescription").child("BeBoard"); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
     {
-        if(static_cast<std::string>(cBeBoardNode.name()) == "BeBoard")
-        {
-            this->parseBeBoard(cBeBoardNode, pBeBoardFWMap, pDetectorContainer, os);
-        }
+        if(static_cast<std::string>(cBeBoardNode.name()) == "BeBoard") { this->parseBeBoard(cBeBoardNode, pBeBoardFWMap, pDetectorContainer, os); }
     }
 
-    for(i = 0; i < 80; i++)
-        os << "*";
+    for(i = 0; i < 80; i++) os << "*";
 
     os << "\n";
 
-    for(j = 0; j < 40; j++)
-        os << " ";
+    for(j = 0; j < 40; j++) os << " ";
 
     os << BOLDRED << "END OF HW SUMMARY" << RESET << std::endl;
 
-    for(i = 0; i < 80; i++)
-        os << "*";
+    for(i = 0; i < 80; i++) os << "*";
 }
 
 void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
@@ -120,10 +107,8 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     {
         for(pugi::xml_attribute cAttribute: cChild.attributes())
         {
-            if(std::string(cAttribute.name()) == "configure")
-                cConfigureCDCE = cConfigureCDCE | (convertAnyInt(cAttribute.value()) == 1);
-            if(std::string(cAttribute.name()) == "clockRate")
-                cClockRateCDCE = convertAnyInt(cAttribute.value());
+            if(std::string(cAttribute.name()) == "configure") cConfigureCDCE = cConfigureCDCE | (convertAnyInt(cAttribute.value()) == 1);
+            if(std::string(cAttribute.name()) == "clockRate") cClockRateCDCE = convertAnyInt(cAttribute.value());
         }
     }
     cBeBoard->setCDCEconfiguration(cConfigureCDCE, cClockRateCDCE);
@@ -169,10 +154,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     std::string cUri          = cBeBoardConnectionNode.attribute("uri").value();
     std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute("address_table").value());
 
-    if(cBeBoard->getBoardType() == BoardType::D19C)
-    {
-        pBeBoardFWMap[cBeBoard->getBeBoardId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
-    }
+    if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getBeBoardId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str()); }
     else if(cBeBoard->getBoardType() == BoardType::RD53)
         pBeBoardFWMap[cBeBoard->getBeBoardId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
 
@@ -220,8 +202,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
                 uint8_t cGBTId = 0;
                 for(pugi::xml_attribute cAttribute: cChild.attributes())
                 {
-                    if(std::string(cAttribute.name()) == "enable")
-                        cWithOptical = cWithOptical | (convertAnyInt(cAttribute.value()) == true);
+                    if(std::string(cAttribute.name()) == "enable") cWithOptical = cWithOptical | (convertAnyInt(cAttribute.value()) == true);
 
                     if(std::string(cAttribute.name()) == "Id") // T.B.D store this somewhere...but where
                     {
@@ -294,8 +275,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         else if(static_cast<std::string>(theChild.name()) == "lpGBT_Files")
         {
             cFilePath = expandEnvironmentVariables(theChild.attribute("path").value());
-            if((cFilePath.empty() == false) && (cFilePath.at(cFilePath.length() - 1) != '/'))
-                cFilePath.append("/");
+            if((cFilePath.empty() == false) && (cFilePath.at(cFilePath.length() - 1) != '/')) cFilePath.append("/");
         }
         else if(static_cast<std::string>(theChild.name()) == "lpGBT")
         {
@@ -327,8 +307,7 @@ void FileParser::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttri
     {
         if(std::string(pRegisterNode.first_child().value()).empty())
         {
-            if(!pAttributeString.empty())
-                pAttributeString += ".";
+            if(!pAttributeString.empty()) pAttributeString += ".";
 
             pAttributeString += pRegisterNode.attribute("name").value();
 
@@ -340,8 +319,7 @@ void FileParser::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttri
         }
         else
         {
-            if(!pAttributeString.empty())
-                pAttributeString += ".";
+            if(!pAttributeString.empty()) pAttributeString += ".";
 
             pAttributeString += pRegisterNode.attribute("name").value();
             pValue = convertAnyInt(pRegisterNode.first_child().value());
@@ -447,8 +425,7 @@ void FileParser::parseSLink(pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ost
                     for(auto cOpticalGroup: *pBoard)
                         for(auto cHybrid: *cOpticalGroup)
                         {
-                            if(cHybrid->getId() != cFeId)
-                                continue;
+                            if(cHybrid->getId() != cFeId) continue;
 
                             for(auto cCbc: *cHybrid)
                             {
@@ -498,8 +475,7 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Module* pModule, std
     std::string cFileName;
     if(!cFilePrefix.empty())
     {
-        if(cFilePrefix.at(cFilePrefix.length() - 1) != '/')
-            cFilePrefix.append("/");
+        if(cFilePrefix.at(cFilePrefix.length() - 1) != '/') cFilePrefix.append("/");
 
         cFileName = cFilePrefix + expandEnvironmentVariables(pSSAnode.attribute("configfile").value());
     }
@@ -521,8 +497,7 @@ void FileParser::parseMPA(pugi::xml_node pModuleNode, Module* pModule, std::stri
     std::string cFileName;
     if(!cFilePrefix.empty())
     {
-        if(cFilePrefix.at(cFilePrefix.length() - 1) != '/')
-            cFilePrefix.append("/");
+        if(cFilePrefix.at(cFilePrefix.length() - 1) != '/') cFilePrefix.append("/");
 
         cFileName = cFilePrefix + expandEnvironmentVariables(pModuleNode.attribute("configfile").value());
     }
@@ -579,10 +554,7 @@ void FileParser::parseModuleContainer(pugi::xml_node pModuleNode, OpticalGroup* 
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53") != std::string::npos;
             if(cIsTrackerASIC)
             {
-                if(cName.find("_Files") != std::string::npos)
-                {
-                    cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute("path").value()));
-                }
+                if(cName.find("_Files") != std::string::npos) { cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute("path").value())); }
                 else
                 {
                     int         cChipId   = cChild.attribute("Id").as_int();
@@ -591,8 +563,7 @@ void FileParser::parseModuleContainer(pugi::xml_node pModuleNode, OpticalGroup* 
                     if(cName.find("RD53") != std::string::npos)
                     {
                         this->parseRD53(cChild, cModule, cConfigFileDirectory, os);
-                        if(cNextName.empty() || cNextName != cName)
-                            this->parseGlobalRD53Settings(pModuleNode, cModule, os);
+                        if(cNextName.empty() || cNextName != cName) this->parseGlobalRD53Settings(pModuleNode, cModule, os);
                     }
                     else if(cName.find("CBC") != std::string::npos)
                     {
@@ -613,8 +584,7 @@ void FileParser::parseModuleContainer(pugi::xml_node pModuleNode, OpticalGroup* 
                         pBoard->setFrontEndType(cType);
                         if(!cConfigFileDirectory.empty())
                         {
-                            if(cConfigFileDirectory.at(cConfigFileDirectory.length() - 1) != '/')
-                                cConfigFileDirectory.append("/");
+                            if(cConfigFileDirectory.at(cConfigFileDirectory.length() - 1) != '/') cConfigFileDirectory.append("/");
 
                             cFileName = cConfigFileDirectory + cFileName;
                         }
@@ -656,12 +626,9 @@ void FileParser::parseModuleContainer(pugi::xml_node pModuleNode, OpticalGroup* 
                                     uint16_t cMask        = (~(1 << cBitPosition)) & 0xFF;
 
                                     uint16_t cValueFromFile = cChildGlobal.attribute(cAttribute.c_str()).as_int();
-                                    if(cAttribute == "clockFrequency")
-                                        cValueFromFile = (cValueFromFile == 320) ? 0 : 1;
-                                    if(cAttribute == "clockFrequency" && cCIC1)
-                                        continue;
-                                    if(cAttribute == "enableSparsification")
-                                        pBoard->setSparsification(bool(cValueFromFile));
+                                    if(cAttribute == "clockFrequency") cValueFromFile = (cValueFromFile == 320) ? 0 : 1;
+                                    if(cAttribute == "clockFrequency" && cCIC1) continue;
+                                    if(cAttribute == "enableSparsification") pBoard->setSparsification(bool(cValueFromFile));
 
                                     os << GREEN << "|\t|\t|\t|---- Setting " << cAttribute << " to  " << cValueFromFile << "\n" << RESET;
                                     LOG(DEBUG) << BOLDBLUE << " Global settings " << cAttribute << " [ " << *it << " ]-- set to " << cValueFromFile << RESET;
@@ -707,8 +674,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Module* cModule, std
 
     if(!cFilePrefix.empty())
     {
-        if(cFilePrefix.at(cFilePrefix.length() - 1) != '/')
-            cFilePrefix.append("/");
+        if(cFilePrefix.at(cFilePrefix.length() - 1) != '/') cFilePrefix.append("/");
 
         cFileName = cFilePrefix + expandEnvironmentVariables(pCbcNode.attribute("configfile").value());
     }
@@ -769,8 +735,7 @@ void FileParser::parseGlobalCbcSettings(pugi::xml_node pModuleNode, Module* pMod
             std::string regname  = std::string(cCbcGlobalNode.attribute("name").value());
             uint32_t    regvalue = convertAnyInt(cCbcGlobalNode.first_child().value());
 
-            for(auto cCbc: *pModule)
-                static_cast<ReadoutChip*>(cCbc)->setReg(regname, uint8_t(regvalue));
+            for(auto cCbc: *pModule) static_cast<ReadoutChip*>(cCbc)->setReg(regname, uint8_t(regvalue));
 
             os << BOLDGREEN << "|"
                << " "
@@ -791,8 +756,7 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
     os << GREEN << "|\t|\t|\t|----FrontEndType: ";
     os << GREEN << "|\t|\t|\t|----FrontEndType: ";
 
-    if(cType == FrontEndType::CBC3)
-        os << RED << "CBC3";
+    if(cType == FrontEndType::CBC3) os << RED << "CBC3";
 
     os << RESET << std::endl;
 
@@ -820,8 +784,7 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
         }
 
         os << GREEN << "|\t|\t|\t|----VCth: " << RED << std::hex << "0x" << cThreshold << std::dec << " (" << cThreshold << ")" << RESET << std::endl;
-        if(cSetLatency)
-            os << GREEN << "|\t|\t|\t|----TriggerLatency: " << RED << std::hex << "0x" << cLatency << std::dec << " (" << cLatency << ")" << RESET << std::endl;
+        if(cSetLatency) os << GREEN << "|\t|\t|\t|----TriggerLatency: " << RED << std::hex << "0x" << cLatency << std::dec << " (" << cLatency << ")" << RESET << std::endl;
     }
 
     // TEST PULSE
@@ -936,8 +899,7 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
 
         while(std::getline(cStr, ctoken, ','))
         {
-            if(cIndex != 0)
-                os << GREEN << ", ";
+            if(cIndex != 0) os << GREEN << ", ";
 
             uint8_t cChannel = convertAnyInt(ctoken.c_str());
             // cDisableVec.push_back (cChannel);
@@ -989,8 +951,7 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
         os << BOLDRED << "ERROR : Unable to open the file " << RESET << pFilename << std::endl;
         os << BOLDRED << "Error description: " << RED << result.description() << RESET << std::endl;
 
-        if(pIsFile == false)
-            os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]" << std::endl;
+        if(pIsFile == false) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]" << std::endl;
 
         throw Exception("Unable to parse XML source!");
         return;
@@ -1021,8 +982,7 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Module* cModule, std::str
 
     if(cFilePrefix.empty() == false)
     {
-        if(cFilePrefix.at(cFilePrefix.length() - 1) != '/')
-            cFilePrefix.append("/");
+        if(cFilePrefix.at(cFilePrefix.length() - 1) != '/') cFilePrefix.append("/");
         cFileName = cFilePrefix + expandEnvironmentVariables(theChipNode.attribute("configfile").value());
     }
     else
@@ -1049,8 +1009,7 @@ void FileParser::parseGlobalRD53Settings(pugi::xml_node pModuleNode, Module* pMo
             uint16_t    regvalue = convertAnyInt(attr.value());
             os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
 
-            for(auto theChip: *pModule)
-                static_cast<ReadoutChip*>(theChip)->setReg(regname, regvalue, true);
+            for(auto theChip: *pModule) static_cast<ReadoutChip*>(theChip)->setReg(regname, regvalue, true);
         }
     }
 }

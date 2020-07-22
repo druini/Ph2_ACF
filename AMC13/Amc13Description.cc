@@ -13,8 +13,7 @@ Amc13Description::~Amc13Description()
 {
     delete fTrigger;
 
-    for(auto& cBGO: fBGOs)
-        delete cBGO;
+    for(auto& cBGO: fBGOs) delete cBGO;
 
     fBGOs.clear();
     fAMCMask.clear();

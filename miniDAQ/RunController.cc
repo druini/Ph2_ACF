@@ -20,9 +20,7 @@ int main(int argc, char** argv)
 
     MiddlewareController theMiddlewareController(PORT);
 
-    while(1)
-    {
-    }
+    while(1) {}
 
     return EXIT_SUCCESS;
 }

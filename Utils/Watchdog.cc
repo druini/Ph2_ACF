@@ -20,8 +20,7 @@ void Watchdog::Stop()
         fStopCondition.notify_all();
         cLock.unlock();
 
-        if(fThread.joinable())
-            fThread.join();
+        if(fThread.joinable()) fThread.join();
     }
 }
 

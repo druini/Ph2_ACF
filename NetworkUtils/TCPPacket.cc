@@ -39,8 +39,7 @@ void TCPPacket::reset(void) { fBuffer.clear(); }
 //========================================================================================================================
 bool TCPPacket::decode(std::string& message)
 {
-    if(fBuffer.length() < headerLength)
-        return false;
+    if(fBuffer.length() < headerLength) return false;
     uint32_t length = ntohl(reinterpret_cast<uint32_t&>(fBuffer.at(0))); // THE HEADER IS FIXED TO SIZE 4 = SIZEOF(uint32_t)
     // std::cout << __PRETTY_FUNCTION__ << "Receiving-";
     // or (auto l = 0; l < fBuffer.length(); l++)

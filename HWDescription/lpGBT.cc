@@ -98,8 +98,7 @@ void lpGBT::saveRegMap(const std::string& fileName)
     if(file)
     {
         std::set<ChipRegPair, RegItemComparer> fSetRegItem;
-        for(const auto& it: fRegMap)
-            fSetRegItem.insert({it.first, it.second});
+        for(const auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
 
         int cLineCounter = 0;
         for(const auto& v: fSetRegItem)
@@ -113,8 +112,7 @@ void lpGBT::saveRegMap(const std::string& fileName)
             }
 
             file << v.first;
-            for(auto j = 0; j < Nspaces; j++)
-                file << " ";
+            for(auto j = 0; j < Nspaces; j++) file << " ";
             file.seekp(-v.first.size(), std::ios_base::cur);
             file << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fAddress) << "          0x" << std::setfill('0') << std::setw(4) << std::hex
                  << std::uppercase << int(v.second.fDefValue) << "                  0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue)

@@ -88,10 +88,7 @@ void Cic::loadfRegMap(const std::string& filename)
         exit(1);
     }
 
-    for(auto& cRegItem: fRegMap)
-    {
-        LOG(DEBUG) << BOLDBLUE << "CIC register : " << cRegItem.first << " --- " << +cRegItem.second.fValue << RESET;
-    }
+    for(auto& cRegItem: fRegMap) { LOG(DEBUG) << BOLDBLUE << "CIC register : " << cRegItem.first << " --- " << +cRegItem.second.fValue << RESET; }
 }
 // Write RegValues in a file
 void Cic::saveRegMap(const std::string& filename)
@@ -100,8 +97,7 @@ void Cic::saveRegMap(const std::string& filename)
     if(file)
     {
         std::set<CicRegPair, RegItemComparer> fSetRegItem;
-        for(auto& it: fRegMap)
-            fSetRegItem.insert({it.first, it.second});
+        for(auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
 
         int cLineCounter = 0;
 
@@ -117,8 +113,7 @@ void Cic::saveRegMap(const std::string& filename)
 
             file << v.first;
 
-            for(int j = 0; j < 48; j++)
-                file << " ";
+            for(int j = 0; j < 48; j++) file << " ";
 
             file.seekp(-v.first.size(), std::ios_base::cur);
 

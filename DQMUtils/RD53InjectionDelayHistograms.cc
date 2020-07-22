@@ -63,8 +63,7 @@ void InjectionDelayHistograms::fillOccupancy(const DetectorDataContainer& Occupa
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<InjDelaySize>>() == nullptr)
-                        continue;
+                    if(cChip->getSummaryContainer<GenericDataArray<InjDelaySize>>() == nullptr) continue;
 
                     auto* Occupancy1DHist =
                         Occupancy1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
@@ -81,8 +80,7 @@ void InjectionDelayHistograms::fillInjectionDelay(const DetectorDataContainer& I
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr)
-                        continue;
+                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
                     auto* InjectionDelayHist =
                         InjectionDelay.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;

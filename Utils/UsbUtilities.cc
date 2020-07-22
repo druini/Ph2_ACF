@@ -41,8 +41,7 @@ bool InitializeMonitoring(std::string pHostname, std::string pInstrumentName, Po
                 {
                     LOG(INFO) << BOLDBLUE << "Trying to launch server to monitor currents on the HMP4040" << RESET;
 
-                    if(launch_HMPServer("HMP4040.xml", pHostname, pPortsInfo, pMonitorInterval, pLogFile) == 1)
-                        exit(0);
+                    if(launch_HMPServer("HMP4040.xml", pHostname, pPortsInfo, pMonitorInterval, pLogFile) == 1) exit(0);
                 }
                 else if(pInstrumentName.compare("Ke2110") == 0)
                 {
@@ -150,8 +149,7 @@ std::string return_InstDriverHomeDirectory()
 
     std::string homeDir = "";
 
-    for(unsigned int i = 0; i < directories.size() - 1; i++)
-        homeDir += "/" + directories[i];
+    for(unsigned int i = 0; i < directories.size() - 1; i++) homeDir += "/" + directories[i];
 
     return homeDir;
 }
@@ -213,8 +211,7 @@ void query_Server(std::string pConfigFile, std::string pInstrumentName, std::str
 
             pPortsInfo = parse_ServerInfo(cInfo);
 
-            if(cLock)
-                delete cLock;
+            if(cLock) delete cLock;
         }
         else
         {
@@ -233,8 +230,7 @@ void query_Server(std::string pConfigFile, std::string pInstrumentName, std::str
                 sprintf(cmd, ". %s/%s", baseDirectory.c_str(), (cLaunchScript->second).c_str());
                 LOG(INFO) << BOLDBLUE << "Launching server using set-up script : " << cLaunchScript->second << " ." << RESET;
 
-                if(cLock)
-                    delete cLock;
+                if(cLock) delete cLock;
 
                 system(cmd);
             }

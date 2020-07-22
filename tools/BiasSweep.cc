@@ -53,8 +53,7 @@ BiasSweep::~BiasSweep()
 
     // if (fHMPClient) delete fHMPClient;
 
-    if(fArdNanoController)
-        delete fArdNanoController;
+    if(fArdNanoController) delete fArdNanoController;
 
 #endif
 }
@@ -80,15 +79,12 @@ void BiasSweep::Initialize()
 #ifdef __USBINST__
 
     // create a controller
-    if(fKeController == nullptr)
-        fKeController = new Ke2110Controller();
+    if(fKeController == nullptr) fKeController = new Ke2110Controller();
 
-    if(!fKeController->ClientInitialized())
-        fKeController->InitializeClient("localhost", fKePort);
+    if(!fKeController->ClientInitialized()) fKeController->InitializeClient("localhost", fKePort);
 
     // initialize the HMP4040Client to connect to the server
-    if(fHMPClient == nullptr)
-        fHMPClient = new HMP4040Client("localhost", fHMPPort);
+    if(fHMPClient == nullptr) fHMPClient = new HMP4040Client("localhost", fHMPPort);
 
     // first is async, second is multex??
     LOG(INFO) << YELLOW << "Attempting to connect to arduino nano!" << RESET;
@@ -102,16 +98,14 @@ void BiasSweep::Initialize()
     TString  cName = "c_BiasSweep";
     TObject* cObj  = gROOT->FindObject(cName);
 
-    if(cObj)
-        delete cObj;
+    if(cObj) delete cObj;
 
     fSweepCanvas = new TCanvas(cName, "Bias Sweep", 10, 0, 500, 500);
     fSweepCanvas->SetGrid();
     fSweepCanvas->cd();
 #ifdef __HTTP__
 
-    if(fHttpServer)
-        fHttpServer->Register("/", fSweepCanvas);
+    if(fHttpServer) fHttpServer->Register("/", fSweepCanvas);
 
 #endif
     LOG(INFO) << "Created Canvas for Bias sweeps";
@@ -133,8 +127,7 @@ void BiasSweep::Initialize()
                     cName = Form("BiasSweep_Fe%d_Cbc%d", cHybrid->getId(), cCbc->getId());
                     cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     TTree* cTmpTree = new TTree(cName, cName);
                     // cTmpTree->Branch (Form ("BiasSweepData_Fe%d_Cbc%d", cHybrid->getId(), cCbc->getId() ),
@@ -172,8 +165,7 @@ void BiasSweep::MeasureMinPower(BeBoard* pBoard, ReadoutChip* pCbc)
     std::vector<uint8_t>     cRegSettings{0x1F, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     std::vector<uint8_t>     cOriginalRegSettings;
 
-    for(auto cReg: cRegisters)
-        cOriginalRegSettings.push_back(pCbc->getReg(cReg));
+    for(auto cReg: cRegisters) cOriginalRegSettings.push_back(pCbc->getReg(cReg));
 
     std::time_t cTime     = std::time(nullptr);
     TTree*      cTmpTree  = static_cast<TTree*>(getHist(pCbc, "DataTree"));
@@ -250,8 +242,7 @@ void BiasSweep::MeasureMinPower(BeBoard* pBoard, ReadoutChip* pCbc)
     // re-configure the CBC but befoere set the original register settings
     cRegVec.clear();
 
-    for(size_t cIndex = 0; cIndex < cRegisters.size(); cIndex++)
-        pCbc->setReg(cRegisters.at(cIndex), cOriginalRegSettings.at(cIndex));
+    for(size_t cIndex = 0; cIndex < cRegisters.size(); cIndex++) pCbc->setReg(cRegisters.at(cIndex), cOriginalRegSettings.at(cIndex));
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
     this->ConfigureHw();
@@ -281,8 +272,7 @@ void BiasSweep::SweepBias(std::string pBias, ReadoutChip* pCbc)
         // boolean variable to find out if current or not
         bool cCurrent = (pBias.find("I") != std::string::npos) ? true : false;
 
-        if(pBias == "CAL_I")
-            cCurrent = false;
+        if(pBias == "CAL_I") cCurrent = false;
 
         // since I want to have a simple class to just sweep a bias on 1 CBC, I create the Graph inside the method
         // just create objects, sweep and fill and forget about them again!
@@ -292,8 +282,7 @@ void BiasSweep::SweepBias(std::string pBias, ReadoutChip* pCbc)
 
         TObject* cObj = gROOT->FindObject(cName);
 
-        if(cObj)
-            delete cObj;
+        if(cObj) delete cObj;
 
         TGraph* cGraph = new TGraph();
         cGraph->SetName(cName);
@@ -370,8 +359,7 @@ void BiasSweep::SweepBias(std::string pBias, ReadoutChip* pCbc)
         // in order to do this, read the current value and store it for later
         uint8_t cOriginalAmuxValue = this->configureAmux(cAmuxValue, pCbc, fSweepTimeout);
 
-        if(cAmuxValue->first == "VCth")
-            this->sweepVCth(cGraph, pCbc);
+        if(cAmuxValue->first == "VCth") this->sweepVCth(cGraph, pCbc);
         // the bias is not VCth
         else
         {
@@ -462,8 +450,7 @@ uint8_t BiasSweep::configureAmux(std::map<std::string, AmuxSetting>::iterator pA
         fReadoutChipInterface->WriteChipReg(pCbc, "MiscTestPulseCtrl&AnalogMux", cNewValue);
         LOG(INFO) << "Analog MUX setting modified to connect " << pAmuxValue->first << " (setting to 0x" << std::hex << +cNewValue << std::dec << ")";
 
-        for(unsigned int i = 0; i < pSettlingTime_s; i++)
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        for(unsigned int i = 0; i < pSettlingTime_s; i++) std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
         return cOriginalAmuxValue;
     }
@@ -477,8 +464,7 @@ void BiasSweep::resetAmux(uint8_t pAmuxValue, Chip* pCbc, double pSettlingTime_s
     LOG(INFO) << "Reseting Amux settings back to original value of 0x" << std::hex << +pAmuxValue << std::dec;
     fReadoutChipInterface->WriteChipReg(pCbc, "MiscTestPulseCtrl&AnalogMux", pAmuxValue);
 
-    for(unsigned int i = 0; i < pSettlingTime_s; i++)
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    for(unsigned int i = 0; i < pSettlingTime_s; i++) std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
 void BiasSweep::sweep8Bit(std::map<std::string, AmuxSetting>::iterator pAmuxValue, TGraph* pGraph, Chip* pCbc, bool pCurrent)
@@ -516,8 +502,7 @@ void BiasSweep::sweep8Bit(std::map<std::string, AmuxSetting>::iterator pAmuxValu
     uint8_t  cBits = __builtin_popcount(pAmuxValue->second.fBitMask);
     uint16_t cRange;
 
-    if(cBits == 4)
-        cRange = 16;
+    if(cBits == 4) cRange = 16;
     // VBG_bias
     else if(cBits == 6)
         cRange = 64;
@@ -532,8 +517,7 @@ void BiasSweep::sweep8Bit(std::map<std::string, AmuxSetting>::iterator pAmuxValu
         uint8_t cRegValue = (cBias) << pAmuxValue->second.fBitShift;
 
         // VBG_bias
-        if(cBits == 6)
-            cRegValue |= (0x2 << 6);
+        if(cBits == 6) cRegValue |= (0x2 << 6);
 
         fReadoutChipInterface->WriteChipReg(pCbc, pAmuxValue->second.fRegName, cRegValue);
 
@@ -548,8 +532,7 @@ void BiasSweep::sweep8Bit(std::map<std::string, AmuxSetting>::iterator pAmuxValu
                 cReading = fKeController->GetLatestReadValue();
             }
 
-            if(cBias % 10 == 0)
-                LOG(INFO) << "Set bias to " << +cBias << " (0x" << std::hex << +cBias << std::dec << ") DAC units and read " << cReading << " V on the DMM";
+            if(cBias % 10 == 0) LOG(INFO) << "Set bias to " << +cBias << " (0x" << std::hex << +cBias << std::dec << ") DAC units and read " << cReading << " V on the DMM";
         }
         else if(pCurrent)
         {
@@ -563,8 +546,7 @@ void BiasSweep::sweep8Bit(std::map<std::string, AmuxSetting>::iterator pAmuxValu
                 // request was successfull, so proceed
                 cReading = fHMPClient->fValues.fCurrents.at(2);
 
-                if(cBias % 10 == 0)
-                    LOG(INFO) << "Set bias to " << +cBias << " (0x" << std::hex << +cBias << std::dec << ") DAC units and read " << cReading << " A on the HMP4040";
+                if(cBias % 10 == 0) LOG(INFO) << "Set bias to " << +cBias << " (0x" << std::hex << +cBias << std::dec << ") DAC units and read " << cReading << " A on the HMP4040";
             }
             else
                 LOG(ERROR) << RED << "Could not retreive the measurement values from the HMP4040!" << RESET;
@@ -589,8 +571,7 @@ void BiasSweep::sweep8Bit(std::map<std::string, AmuxSetting>::iterator pAmuxValu
         fData->fXValues.push_back(cBias);
         fData->fYValues.push_back(cReading);
 
-        if(static_cast<uint16_t>(cBias) + fStepSize > 255)
-            break;
+        if(static_cast<uint16_t>(cBias) + fStepSize > 255) break;
     }
 
     // set the bias back to the original value
@@ -713,8 +694,7 @@ void BiasSweep::cleanup()
         delete fHMPClient;
     }
 
-    if(fArdNanoController)
-        delete fArdNanoController;
+    if(fArdNanoController) delete fArdNanoController;
 
 #endif
 }

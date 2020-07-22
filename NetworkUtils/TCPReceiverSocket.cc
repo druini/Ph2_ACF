@@ -17,8 +17,7 @@ std::string TCPReceiverSocket::receivePacket(void)
     while(true)
     {
         std::string retVal = "";
-        if(fPacket.decode(retVal))
-            return retVal;
+        if(fPacket.decode(retVal)) return retVal;
         fPacket += receive<std::string>();
     }
 }
@@ -27,10 +26,7 @@ std::string TCPReceiverSocket::receivePacket(void)
 std::size_t TCPReceiverSocket::receive(char* buffer, std::size_t bufferSize, int timeoutMicroSeconds)
 {
     // std::cout << __PRETTY_FUNCTION__ << "Receiving Message for socket: " << getSocketId() << std::endl;
-    if(getSocketId() == 0)
-    {
-        throw std::logic_error("Bad socket object (this object was moved)");
-    }
+    if(getSocketId() == 0) { throw std::logic_error("Bad socket object (this object was moved)"); }
     std::size_t dataRead;
     // dataRead = ::recv(getSocketId(), buffer, bufferSize, MSG_DONTWAIT);
     dataRead = ::read(getSocketId(), buffer, bufferSize);
@@ -39,12 +35,8 @@ std::size_t TCPReceiverSocket::receive(char* buffer, std::size_t bufferSize, int
         std::stringstream error;
         switch(errno)
         {
-        case EBADF:
-            error << "Socket file descriptor " << getSocketId() << " is not a valid file descriptor or is not open for reading...Errno: " << errno;
-            break;
-        case EFAULT:
-            error << "Buffer is outside your accessible address space...Errno: " << errno;
-            break;
+        case EBADF: error << "Socket file descriptor " << getSocketId() << " is not a valid file descriptor or is not open for reading...Errno: " << errno; break;
+        case EFAULT: error << "Buffer is outside your accessible address space...Errno: " << errno; break;
         case ENXIO:
         {
             // Fatal error. Programming bug

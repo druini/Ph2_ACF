@@ -38,8 +38,7 @@ void InjectionDelay::ConfigureCalibration()
     // ##############################
     const size_t nSteps = (stopValue - startValue + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
     const float  step   = (stopValue - startValue + 1) / nSteps;
-    for(auto i = 0u; i < nSteps; i++)
-        dacList.push_back(startValue + step * i);
+    for(auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
     // ######################
     // # Initialize Latency #
@@ -87,10 +86,8 @@ void InjectionDelay::sendData()
 
     if(fStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer)
-            theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theInjectionDelayContainer)
-            theInjectionDelayStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theInjectionDelayContainer) theInjectionDelayStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
 
@@ -197,8 +194,7 @@ void InjectionDelay::draw(int currentRun)
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true)
-        myApp = new TApplication("myApp", nullptr, nullptr);
+    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     this->InitResultFile(fileRes);
     LOG(INFO) << BOLDBLUE << "\t--> InjectionDelay saving histograms..." << RESET;
@@ -210,8 +206,7 @@ void InjectionDelay::draw(int currentRun)
     this->WriteRootFile();
     this->CloseResultFile();
 
-    if(doDisplay == true)
-        myApp->Run(true);
+    if(doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -253,8 +248,7 @@ void InjectionDelay::analyze()
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", (val & saveInjection) | (regVal & maxDelay), true);
 
                     auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG");
-                    if(regVal / (maxDelay + 1) == 0)
-                        latency--;
+                    if(regVal / (maxDelay + 1) == 0) latency--;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency, true);
                     LOG(INFO) << GREEN << "New latency dac value for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId()
                               << "/" << cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << latency << RESET;
@@ -352,8 +346,7 @@ void InjectionDelay::saveChipRegisters(int currentRun)
                 for(const auto cChip: *cModule)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true)
-                        static_cast<RD53*>(cChip)->saveRegMap("");
+                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());

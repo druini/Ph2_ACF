@@ -81,8 +81,7 @@ void D19cFpgaConfig::runDownload(const std::string& strImage, const char* szFile
 
     for(size_t iName = 0; iName < lstNames.size(); iName++)
     {
-        if(!strImage.compare(lstNames[iName]))
-            numUploadingFpga = iName + 1;
+        if(!strImage.compare(lstNames[iName])) numUploadingFpga = iName + 1;
 
         break;
     }

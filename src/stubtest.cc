@@ -93,18 +93,12 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     outp.str("");
     std::string cDirectory = "Results/StubScan";
-    if(offset)
-        cDirectory = "Results/StubScan_correlation_offset";
-    if(noise)
-        cDirectory = "Results/StubScan_noises";
-    if(ptwidth)
-        cDirectory = "Results/StubScan_ptWidth";
-    if(clustwidth)
-        cDirectory = "Results/StubScan_clustwidth";
-    if(sof)
-        cDirectory = "Results/StubScan_sof";
-    if(swap)
-        cDirectory = "Results/StubScan_swap";
+    if(offset) cDirectory = "Results/StubScan_correlation_offset";
+    if(noise) cDirectory = "Results/StubScan_noises";
+    if(ptwidth) cDirectory = "Results/StubScan_ptWidth";
+    if(clustwidth) cDirectory = "Results/StubScan_clustwidth";
+    if(sof) cDirectory = "Results/StubScan_sof";
+    if(swap) cDirectory = "Results/StubScan_swap";
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile("mytestfile");
     cTool.ConfigureHw();
@@ -113,18 +107,12 @@ int main(int argc, char* argv[])
     StubTool cStubTool;
     cStubTool.Inherit(&cTool);
     cStubTool.Initialize();
-    if(offset)
-        cStubTool.scanStubs();
-    if(noise)
-        cStubTool.scanStubs_wNoise();
-    if(ptwidth)
-        cStubTool.scanStubs_ptWidth();
-    if(clustwidth)
-        cStubTool.scanStubs_clusterWidth(strip_cw);
-    if(sof)
-        cStubTool.scanStubs_SoF(strip_sof);
-    if(swap)
-        cStubTool.scanStubs_swap();
+    if(offset) cStubTool.scanStubs();
+    if(noise) cStubTool.scanStubs_wNoise();
+    if(ptwidth) cStubTool.scanStubs_ptWidth();
+    if(clustwidth) cStubTool.scanStubs_clusterWidth(strip_cw);
+    if(sof) cStubTool.scanStubs_SoF(strip_sof);
+    if(swap) cStubTool.scanStubs_swap();
 #endif
 
     t.stop();
@@ -135,8 +123,7 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     //    cTool.Destroy();
 
-    if(!batchMode)
-        cApp.Run();
+    if(!batchMode) cApp.Run();
 
     return 0;
 }

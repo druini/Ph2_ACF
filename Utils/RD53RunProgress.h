@@ -39,8 +39,7 @@ class RD53RunProgress
             LOG(INFO) << BOLDMAGENTA << ">>>> Progress : " << std::setw(5) << std::setprecision(1) << std::fixed << fraction * 100 << "% <<<<" << std::setprecision(-1) << RESET;
             LOG(INFO) << CYAN << "---------------------------" << RESET;
             if(fraction != 1)
-                for(int i = 0; i < 5; i++)
-                    std::cout << "\x1b[A";
+                for(int i = 0; i < 5; i++) std::cout << "\x1b[A";
         }
     }
 };

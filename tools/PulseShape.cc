@@ -59,8 +59,7 @@ void PulseShape::Initialize()
                     TString  cName = Form("g_cbc_pulseshape_MultiGraph_Fe%dCbc%d", cFeId, cCbcId);
                     TObject* cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
 
                     TMultiGraph* cMultiGraph = new TMultiGraph();
                     cMultiGraph->SetName(cName);
@@ -68,8 +67,7 @@ void PulseShape::Initialize()
                     cName = Form("f_cbc_pulse_Fe%dCbc%d", cFeId, cCbcId);
                     cObj  = gROOT->FindObject(cName);
 
-                    if(cObj)
-                        delete cObj;
+                    if(cObj) delete cObj;
                 }
             }
         }
@@ -109,8 +107,7 @@ void PulseShape::ScanTestPulseDelay(uint8_t fStepSize)
 void PulseShape::ScanVcth(uint32_t pDelay, int cLow)
 {
     for(auto& cChannelVector: fChannelMap)
-        for(auto& cChannel: cChannelVector.second)
-            cChannel->initializeHist(pDelay, "Delay");
+        for(auto& cChannel: cChannelVector.second) cChannel->initializeHist(pDelay, "Delay");
 
     uint16_t cMaxValue      = 0x003FF;
     uint16_t cVcth          = (fHoleMode) ? cMaxValue : 0x00;
@@ -127,8 +124,7 @@ void PulseShape::ScanVcth(uint32_t pDelay, int cLow)
     while(0x00 == cVcth && cVcth <= cMaxValue)
     {
         // LOG (INFO) << "   "<< cVcth ;
-        if(cAllOne)
-            break;
+        if(cAllOne) break;
 
         if(cVcth == cDoubleVcth)
         {
@@ -157,8 +153,7 @@ void PulseShape::ScanVcth(uint32_t pDelay, int cLow)
             ReadNEvents(theBoard, fNevents);
             // LOG(INFO) << "End Reading N Events";
             const std::vector<Event*>& events = GetEvents(theBoard);
-            if(events.empty())
-                LOG(INFO) << " EMPTY EVENT VECTOR !!!";
+            if(events.empty()) LOG(INFO) << " EMPTY EVENT VECTOR !!!";
             // LOG (INFO) <<"events size, VCTH value " << events.size()<< "  "<< (uint16_t) cVcth;
             // int iii=0;
             for(auto& cEvent: events)
@@ -186,14 +181,11 @@ void PulseShape::ScanVcth(uint32_t pDelay, int cLow)
                 continue;
             }
 
-            if(cNHits > 0.95 * fNCbc * fNevents * findChannelsInTestGroup(fTestGroup).size())
-                cAllOneCounter++;
+            if(cNHits > 0.95 * fNCbc * fNevents * findChannelsInTestGroup(fTestGroup).size()) cAllOneCounter++;
             // if ( cAllOneCounter > 6 ) cAllOne = true;
-            if(cAllOneCounter > 30)
-                cAllOne = true; // increase fine scan steps
+            if(cAllOneCounter > 30) cAllOne = true; // increase fine scan steps
 
-            if(cAllOne)
-                break; // by BB, suspect this is the bug for zero entries
+            if(cAllOne) break; // by BB, suspect this is the bug for zero entries
 
             cVcth += cStep;
             updateHists("", false);
@@ -254,8 +246,7 @@ void PulseShape::fitGraph(int pLow)
             TString  cName = Form("f_cbc_pulse_Fe%dCbc%d_Channel%d", static_cast<ReadoutChip*>(cCbc.first)->getFeId(), static_cast<ReadoutChip*>(cCbc.first)->getChipId(), cChannel->fChannelId);
             TObject* cObj  = gROOT->FindObject(cName);
 
-            if(cObj)
-                delete cObj;
+            if(cObj) delete cObj;
 
             bool UsePulseShape2 = true;
             // TF1* cPulseFit = new TF1( cName, pulseshape, ( fDelayAfterPulse - 1 ) * 25, ( fDelayAfterPulse + 6 ) *
@@ -306,8 +297,7 @@ void PulseShape::fitGraph(int pLow)
             TString     cDirName = "PulseshapeFits";
             TDirectory* cDir     = dynamic_cast<TDirectory*>(gROOT->FindObject(cDirName));
 
-            if(!cDir)
-                cDir = fResultFile->mkdir(cDirName);
+            if(!cDir) cDir = fResultFile->mkdir(cDirName);
 
             fResultFile->cd(cDirName);
             cChannel->fPulse->Write(cChannel->fPulse->GetName(), TObject::kOverwrite);
@@ -327,11 +317,9 @@ std::vector<uint32_t> PulseShape::findChannelsInTestGroup(uint32_t pTestGroup)
         int ctemp1 = idx + 1;
         int ctemp2 = ctemp1 + 1;
 
-        if(ctemp1 < 254)
-            cChannelVector.push_back(ctemp1);
+        if(ctemp1 < 254) cChannelVector.push_back(ctemp1);
 
-        if(ctemp2 < 254)
-            cChannelVector.push_back(ctemp2);
+        if(ctemp2 < 254) cChannelVector.push_back(ctemp2);
         idx++;
     }
 
@@ -693,11 +681,9 @@ double pulseshape(double* x, double* par)
     double xx  = x[0];
     double val = par[3];
 
-    if(xx > par[1])
-        val += par[0] * (xx - par[1]) / par[2] * exp(-((xx - par[1]) / par[2]));
+    if(xx > par[1]) val += par[0] * (xx - par[1]) / par[2] * exp(-((xx - par[1]) / par[2]));
 
-    if(xx > par[1] + par[5])
-        val -= par[0] * par[4] * (xx - par[1] - par[5]) / par[2] * exp(-((xx - par[1] - par[5]) / par[2]));
+    if(xx > par[1] + par[5]) val -= par[0] * par[4] * (xx - par[1] - par[5]) / par[2] * exp(-((xx - par[1] - par[5]) / par[2]));
 
     return val;
 }

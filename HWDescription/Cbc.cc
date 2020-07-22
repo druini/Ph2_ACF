@@ -90,10 +90,7 @@ void Cbc::loadfRegMap(const std::string& filename)
                         for(uint8_t channel = 0; channel < 8; ++channel)
                         {
                             uint8_t chn = 1 << channel;
-                            if((fRegItem.fValue && chn) == 0)
-                            {
-                                fChipOriginalMask->disableChannel((fRegItem.fAddress - 0x20) * 8 + channel);
-                            }
+                            if((fRegItem.fValue && chn) == 0) { fChipOriginalMask->disableChannel((fRegItem.fAddress - 0x20) * 8 + channel); }
                         }
                     }
                 }
@@ -121,8 +118,7 @@ void Cbc::saveRegMap(const std::string& filename)
     {
         std::set<CbcRegPair, RegItemComparer> fSetRegItem;
 
-        for(auto& it: fRegMap)
-            fSetRegItem.insert({it.first, it.second});
+        for(auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
 
         int cLineCounter = 0;
 
@@ -138,8 +134,7 @@ void Cbc::saveRegMap(const std::string& filename)
 
             file << v.first;
 
-            for(int j = 0; j < 48; j++)
-                file << " ";
+            for(int j = 0; j < 48; j++) file << " ";
 
             file.seekp(-v.first.size(), std::ios_base::cur);
 

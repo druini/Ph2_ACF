@@ -74,10 +74,7 @@ void StubTool::scanStubs()
                 uint32_t         cFeId      = cFe->getId();
                 ModuleContainer& cCbcVector = *cFe;
                 const uint8_t    nCBC       = cCbcVector.size();
-                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
-                {
-                    configureTestPulse(static_cast<ReadoutChip*>(static_cast<ReadoutChip*>(cCbcVector.at(iCBC))), 1);
-                }
+                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++) { configureTestPulse(static_cast<ReadoutChip*>(static_cast<ReadoutChip*>(cCbcVector.at(iCBC))), 1); }
                 // Uncoment for Bend uncoding 2
                 // hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nChan,0,nChan,16,0,8);
                 // hSTUB_SCAN_bend = new
@@ -124,10 +121,7 @@ void StubTool::scanStubs()
                         fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), "VCth1", cVcth1);
                         fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), "VCth2", cVcth2);
                         fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), "Pipe&StubInpSel&Ptwidth", Pipe_StubSel_Ptwidth);
-                        for(int ireg = 0; ireg < 15; ireg++)
-                        {
-                            fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), "Bend" + std::to_string(ireg), BendReg[ireg]);
-                        }
+                        for(int ireg = 0; ireg < 15; ireg++) { fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), "Bend" + std::to_string(ireg), BendReg[ireg]); }
                     }
 
                     uint8_t     cRegValue;
@@ -136,16 +130,12 @@ void StubTool::scanStubs()
                     for(double offset = (actualbend); offset >= -(actualbend); offset -= 0.5)
                     {
                         // LOG(DEBUG) << GREEN << " !!!  Offset: " << offset << RESET;
-                        for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
-                        {
-                            setCorrelationWinodwOffsets(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), offset, offset, offset, offset);
-                        }
+                        for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++) { setCorrelationWinodwOffsets(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), offset, offset, offset, offset); }
 
                         // Unmasking desired channels
                         for(unsigned int iChan = 0; iChan < nChan; iChan++)
                         {
-                            if(iChan % 48 != 0)
-                                continue;
+                            if(iChan % 48 != 0) continue;
                             // LOG(DEBUG) << "Looking at Channel " << iChan;
                             for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
                             {
@@ -164,8 +154,7 @@ void StubTool::scanStubs()
                                     // if ( (mg+smg) >= 32) continue;
                                     for(int i = 1; i <= 2; i++)
                                     {
-                                        if((iChan + (smg * 16) + (tg * 2) + i) > nChan)
-                                            continue;
+                                        if((iChan + (smg * 16) + (tg * 2) + i) > nChan) continue;
                                         maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), (iChan + (smg * 16) + (tg * 2) + i), false);
                                         LOG(DEBUG) << "Unmasking : " << +(iChan + (smg * 16) + (tg * 2) + i) << " = " << +iChan << " + (" << +smg << ")*16 +" << +((tg * 2) + i);
                                     }
@@ -195,8 +184,7 @@ void StubTool::scanStubs()
                                             double HIT   = cHit + 1;
                                             double STRIP = (HIT / 2);
                                             LOG(DEBUG) << BLUE << std::dec << cHit << " : " << HIT << " , " << STRIP << RESET;
-                                            if(offset == 0 && (int)HIT % 2 != 0)
-                                                hSTUB_SCAN_tg->Fill(STRIP + (iCBC * 127), tg + 0.5, 0.5);
+                                            if(offset == 0 && (int)HIT % 2 != 0) hSTUB_SCAN_tg->Fill(STRIP + (iCBC * 127), tg + 0.5, 0.5);
                                         }
                                     }
                                     if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
@@ -222,8 +210,7 @@ void StubTool::scanStubs()
                                             hSTUB_SCAN_bend->SetStats(0);
                                             fCanvas6->Update();
 
-                                            if(offset != 0)
-                                                continue;
+                                            if(offset != 0) continue;
                                             hSTUB_SCAN_tg->Fill(stub_strip + (iCBC * 127), tg);
                                             fCanvas5->cd();
                                             hSTUB_SCAN_tg->Draw("COLZ");
@@ -241,14 +228,8 @@ void StubTool::scanStubs()
 
                 hSTUB_SCAN_tg->Write();
                 hSTUB_SCAN_bend->Write();
-                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
-                {
-                    hSTUB_SCAN_bend_off[iCBC]->Write();
-                }
-                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
-                {
-                    configureTestPulse(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), 0);
-                }
+                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++) { hSTUB_SCAN_bend_off[iCBC]->Write(); }
+                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++) { configureTestPulse(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), 0); }
             }
         }
     }
@@ -308,10 +289,7 @@ void StubTool::scanStubs_wNoise()
                     for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
                     {
                         cRegVec.push_back(std::make_pair("Pipe&StubInpSel&Ptwidth", Pipe_StubSel_Ptwidth));
-                        for(int ireg = 0; ireg < 15; ireg++)
-                        {
-                            cRegVec.push_back(std::make_pair("Bend" + std::to_string(ireg), BendReg[ireg]));
-                        }
+                        for(int ireg = 0; ireg < 15; ireg++) { cRegVec.push_back(std::make_pair("Bend" + std::to_string(ireg), BendReg[ireg])); }
                         fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), cRegVec);
                         cRegVec.clear();
                     }
@@ -323,8 +301,7 @@ void StubTool::scanStubs_wNoise()
                         // Unmasking desired channels
                         for(unsigned int iChan = 0; iChan < nChan; iChan++)
                         {
-                            if(iChan % 96 != 0)
-                                continue;
+                            if(iChan % 96 != 0) continue;
                             {
                                 for(uint8_t step = 0; step <= 1; step++)
                                 {
@@ -350,20 +327,16 @@ void StubTool::scanStubs_wNoise()
                                     for(unsigned int smg = 0; smg < 3; smg++)
                                     {
                                         seedChan[smg] = (iChan + (smg * 32) + (step * 16) + (tg * 2) + 1);
-                                        if(seedChan[smg] < 0 || seedChan[smg] > nChan)
-                                            continue;
+                                        if(seedChan[smg] < 0 || seedChan[smg] > nChan) continue;
                                         for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
                                         {
                                             if((seedChan[smg] + bend - 1) < 0)
                                             {
-                                                if(iCBC == 0)
-                                                    continue;
+                                                if(iCBC == 0) continue;
                                                 LOG(DEBUG) << "Channel (CBC" << +(iCBC) << "): " << +seedChan[smg];
                                                 int corrChan = nChan + (seedChan[smg] + bend + 1);
-                                                if((int)bend % 2 != 0)
-                                                    corrChan = nChan + (seedChan[smg] + bend);
-                                                if(corrChan % 2 != 0 || corrChan <= 0)
-                                                    continue;
+                                                if((int)bend % 2 != 0) corrChan = nChan + (seedChan[smg] + bend);
+                                                if(corrChan % 2 != 0 || corrChan <= 0) continue;
                                                 maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC - 1)), corrChan, false);
                                                 maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), seedChan[smg], false);
                                                 LOG(DEBUG) << "Cond 1: Corr Chan (CBC" << +(iCBC - 1) << "): " << +corrChan << " (" << +(seedChan[smg] + bend - 1) << ")";
@@ -375,14 +348,11 @@ void StubTool::scanStubs_wNoise()
                                             }
                                             else if((seedChan[smg] + bend + 1) > nChan)
                                             {
-                                                if(iCBC == nCBC - 1)
-                                                    continue;
+                                                if(iCBC == nCBC - 1) continue;
                                                 LOG(DEBUG) << "Channel (CBC" << +iCBC << "): " << seedChan[smg];
                                                 int corrChan = (seedChan[smg] + bend + 1) - nChan;
-                                                if((int)bend % 2 != 0)
-                                                    corrChan = (seedChan[smg] + bend) - nChan;
-                                                if(corrChan % 2 != 0)
-                                                    continue;
+                                                if((int)bend % 2 != 0) corrChan = (seedChan[smg] + bend) - nChan;
+                                                if(corrChan % 2 != 0) continue;
                                                 maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), seedChan[smg], false);
                                                 if(corrChan > 0)
                                                     maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC + 1)), corrChan, false);
@@ -408,10 +378,8 @@ void StubTool::scanStubs_wNoise()
                                             {
                                                 LOG(DEBUG) << "Channel (CBC" << +iCBC << "): " << seedChan[smg];
                                                 int corrChan = (seedChan[smg] + bend + 1);
-                                                if((int)bend % 2 != 0)
-                                                    corrChan = (seedChan[smg] + bend);
-                                                if(corrChan % 2 != 0 || corrChan <= 0)
-                                                    continue;
+                                                if((int)bend % 2 != 0) corrChan = (seedChan[smg] + bend);
+                                                if(corrChan % 2 != 0 || corrChan <= 0) continue;
                                                 maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), seedChan[smg], false);
                                                 maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), corrChan, false);
                                                 LOG(DEBUG) << "Cond 3: Corr Chan (CBC" << +(iCBC) << "): " << corrChan << " (" << seedChan[smg] + bend + 1 << ")";
@@ -457,16 +425,13 @@ void StubTool::scanStubs_wNoise()
                                                     double HIT   = cHit + 1;
                                                     double STRIP = floor((HIT - 1) / 2);
                                                     LOG(DEBUG) << BLUE << std::dec << cHit << " : " << HIT << " , " << STRIP << RESET;
-                                                    if(bend == 0 && (int)HIT % 2 != 0)
-                                                        hSTUB_SCAN_tg->Fill(STRIP + (iCBC * 127), tg + 0.5, 0.5);
+                                                    if(bend == 0 && (int)HIT % 2 != 0) hSTUB_SCAN_tg->Fill(STRIP + (iCBC * 127), tg + 0.5, 0.5);
                                                 }
                                             }
                                             for(uint8_t smg = 0; smg < 3; smg++)
                                             {
-                                                if(seedChan[smg] < 0 || seedChan[smg] > nChan)
-                                                    continue;
-                                                if(((seedChan[smg] - 1) / 2) + (iCBC * 127) + (bend / 2) < 0 || ((seedChan[smg - 1]) / 2) + (iCBC * 127) + (bend / 2) >= nChan)
-                                                    continue;
+                                                if(seedChan[smg] < 0 || seedChan[smg] > nChan) continue;
+                                                if(((seedChan[smg] - 1) / 2) + (iCBC * 127) + (bend / 2) < 0 || ((seedChan[smg - 1]) / 2) + (iCBC * 127) + (bend / 2) >= nChan) continue;
                                                 if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
                                                 {
                                                     bool stubfinder = false;
@@ -517,8 +482,7 @@ void StubTool::scanStubs_wNoise()
                                                     hSTUB_SCAN_bend->SetStats(0);
                                                     fCanvas6->Update();
 
-                                                    if(bend != 0)
-                                                        continue;
+                                                    if(bend != 0) continue;
                                                     hSTUB_SCAN_tg->Fill(stub_strip + (iCBC * 127), tg);
                                                     fCanvas5->cd();
                                                     hSTUB_SCAN_tg->Draw("COLZ");
@@ -538,10 +502,7 @@ void StubTool::scanStubs_wNoise()
                 hSTUB_SCAN_tg->Write();
                 hSTUB_SCAN_bend->Write();
                 hSTUB_SCAN_error->Write();
-                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
-                {
-                    hSTUB_SCAN_bend_off[iCBC]->Write();
-                }
+                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++) { hSTUB_SCAN_bend_off[iCBC]->Write(); }
             }
         }
     }
@@ -604,10 +565,7 @@ void StubTool::scanStubs_swap()
                     {
                         cRegVec.push_back(std::make_pair("Pipe&StubInpSel&Ptwidth", Pipe_StubSel_Ptwidth));
                         cRegVec.push_back(std::make_pair("LayerSwap&CluWidth", LayerSwap_CluWidth));
-                        for(int ireg = 0; ireg < 15; ireg++)
-                        {
-                            cRegVec.push_back(std::make_pair("Bend" + std::to_string(ireg), BendReg[ireg]));
-                        }
+                        for(int ireg = 0; ireg < 15; ireg++) { cRegVec.push_back(std::make_pair("Bend" + std::to_string(ireg), BendReg[ireg])); }
                         fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), cRegVec);
                         cRegVec.clear();
                     }
@@ -620,8 +578,7 @@ void StubTool::scanStubs_swap()
                         // Unmasking desired channels
                         for(unsigned int iChan = 0; iChan < nChan; iChan++)
                         {
-                            if(iChan % 96 != 0)
-                                continue;
+                            if(iChan % 96 != 0) continue;
                             {
                                 for(uint8_t step = 0; step <= 1; step++)
                                 {
@@ -645,22 +602,18 @@ void StubTool::scanStubs_swap()
                                     for(unsigned int smg = 0; smg < 3; smg++)
                                     {
                                         seedChan[smg] = (iChan + (smg * 32) + (step * 16) + (tg * 2) + 2);
-                                        if(seedChan[smg] < 0 || seedChan[smg] > nChan)
-                                            continue;
+                                        if(seedChan[smg] < 0 || seedChan[smg] > nChan) continue;
                                         for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
                                         {
                                             // LOG (DEBUG) << "CBC " << +(iCBC) << " , Seed = " << +seedChan[smg] << " ,
                                             // bend = " << +bend;
                                             if((seedChan[smg] + bend - 2) < 0)
                                             {
-                                                if(iCBC == 0)
-                                                    continue;
+                                                if(iCBC == 0) continue;
                                                 LOG(DEBUG) << "Channel (CBC" << +(iCBC) << "): " << +seedChan[smg];
                                                 int corrChan = nChan + (seedChan[smg] + bend - 1);
-                                                if((int)bend % 2 != 0)
-                                                    corrChan = nChan + (seedChan[smg] + bend);
-                                                if(corrChan % 2 == 0 || corrChan <= 0)
-                                                    continue;
+                                                if((int)bend % 2 != 0) corrChan = nChan + (seedChan[smg] + bend);
+                                                if(corrChan % 2 == 0 || corrChan <= 0) continue;
                                                 maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC - 1)), corrChan, false);
                                                 maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), seedChan[smg], false);
                                                 LOG(DEBUG) << "Cond 1: Corr Chan (CBC" << +(iCBC - 1) << "): " << +corrChan;
@@ -672,14 +625,11 @@ void StubTool::scanStubs_swap()
                                             }
                                             else if((seedChan[smg] + bend) > nChan)
                                             {
-                                                if(iCBC == nCBC - 1)
-                                                    continue;
+                                                if(iCBC == nCBC - 1) continue;
                                                 LOG(DEBUG) << "Channel (CBC" << +iCBC << "): " << seedChan[smg];
                                                 int corrChan = (seedChan[smg] + bend - 1) - nChan;
-                                                if((int)bend % 2 != 0)
-                                                    corrChan = (seedChan[smg] + bend) - nChan;
-                                                if(corrChan % 2 == 0)
-                                                    continue;
+                                                if((int)bend % 2 != 0) corrChan = (seedChan[smg] + bend) - nChan;
+                                                if(corrChan % 2 == 0) continue;
                                                 maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), seedChan[smg], false);
                                                 if(corrChan > 0)
                                                 {
@@ -705,10 +655,8 @@ void StubTool::scanStubs_swap()
                                             {
                                                 LOG(DEBUG) << "Channel (CBC" << +iCBC << "): " << seedChan[smg];
                                                 int corrChan = (seedChan[smg] + bend - 1);
-                                                if((int)bend % 2 != 0)
-                                                    corrChan = (seedChan[smg] + bend);
-                                                if(corrChan % 2 == 0 || corrChan <= 0)
-                                                    continue;
+                                                if((int)bend % 2 != 0) corrChan = (seedChan[smg] + bend);
+                                                if(corrChan % 2 == 0 || corrChan <= 0) continue;
                                                 maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), seedChan[smg], false);
                                                 maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), corrChan, false);
                                                 LOG(DEBUG) << "Cond 3: Corr Chan (CBC" << +(iCBC) << "): " << corrChan;
@@ -754,16 +702,13 @@ void StubTool::scanStubs_swap()
                                                     double HIT   = cHit + 1;
                                                     double STRIP = floor((HIT - 1) / 2);
                                                     LOG(DEBUG) << BLUE << std::dec << cHit << " : " << HIT << " , " << STRIP << RESET;
-                                                    if(bend == 0 && (int)HIT % 2 != 0)
-                                                        hSTUB_SCAN_tg->Fill(STRIP + (iCBC * 127), tg + 0.5, 0.5);
+                                                    if(bend == 0 && (int)HIT % 2 != 0) hSTUB_SCAN_tg->Fill(STRIP + (iCBC * 127), tg + 0.5, 0.5);
                                                 }
                                             }
                                             for(uint8_t smg = 0; smg < 3; smg++)
                                             {
-                                                if(seedChan[smg] < 0 || seedChan[smg] > nChan)
-                                                    continue;
-                                                if(((seedChan[smg] - 1) / 2) + (iCBC * 127) + (bend / 2) < 0 || ((seedChan[smg - 1]) / 2) + (iCBC * 127) + (bend / 2) >= nChan)
-                                                    continue;
+                                                if(seedChan[smg] < 0 || seedChan[smg] > nChan) continue;
+                                                if(((seedChan[smg] - 1) / 2) + (iCBC * 127) + (bend / 2) < 0 || ((seedChan[smg - 1]) / 2) + (iCBC * 127) + (bend / 2) >= nChan) continue;
                                                 if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
                                                 {
                                                     bool stubfinder = false;
@@ -814,8 +759,7 @@ void StubTool::scanStubs_swap()
                                                     hSTUB_SCAN_bend->SetStats(0);
                                                     fCanvas6->Update();
 
-                                                    if(bend != 0)
-                                                        continue;
+                                                    if(bend != 0) continue;
                                                     hSTUB_SCAN_tg->Fill(stub_strip + (iCBC * 127), tg);
                                                     fCanvas5->cd();
                                                     hSTUB_SCAN_tg->Draw("COLZ");
@@ -835,10 +779,7 @@ void StubTool::scanStubs_swap()
                 hSTUB_SCAN_tg->Write();
                 hSTUB_SCAN_bend->Write();
                 hSTUB_SCAN_error->Write();
-                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
-                {
-                    hSTUB_SCAN_bend_off[iCBC]->Write();
-                }
+                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++) { hSTUB_SCAN_bend_off[iCBC]->Write(); }
             }
         }
     }
@@ -904,10 +845,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
                         {
                             cRegVec.push_back(std::make_pair("Pipe&StubInpSel&Ptwidth", Pipe_StubSel_Ptwidth));
                             cRegVec.push_back(std::make_pair("LayerSwap&CluWidth", regClusterWidth));
-                            for(int ireg = 0; ireg < 15; ireg++)
-                            {
-                                cRegVec.push_back(std::make_pair("Bend" + std::to_string(ireg), BendReg[ireg]));
-                            }
+                            for(int ireg = 0; ireg < 15; ireg++) { cRegVec.push_back(std::make_pair("Bend" + std::to_string(ireg), BendReg[ireg])); }
                             // fReadoutChipInterface->WriteChipMultReg (static_cast<ReadoutChip*>(cCbcVector.at(iCBC)),
                             // cRegVec ); cRegVec.clear(); MASKING ALL CHANNELS
                             for(unsigned int i = 0; i < fChannelMaskMapCBC3.size(); i++)
@@ -1000,10 +938,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
                 }             // end cluster width register loop
                 hSTUB_SCAN_cw->Write();
                 hSTUB_SCAN_cbc->Write();
-                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
-                {
-                    hSTUB_SCAN_cw_cbc[iCBC]->Write();
-                }
+                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++) { hSTUB_SCAN_cw_cbc[iCBC]->Write(); }
             }
         }
     }
@@ -1068,10 +1003,7 @@ void StubTool::scanStubs_ptWidth()
                         for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
                         {
                             cRegVec.push_back(std::make_pair("Pipe&StubInpSel&Ptwidth", Pipe_StubSel_Ptwidth));
-                            for(int ireg = 0; ireg < 15; ireg++)
-                            {
-                                cRegVec.push_back(std::make_pair("Bend" + std::to_string(ireg), BendReg[ireg]));
-                            }
+                            for(int ireg = 0; ireg < 15; ireg++) { cRegVec.push_back(std::make_pair("Bend" + std::to_string(ireg), BendReg[ireg])); }
                             fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), cRegVec);
                             cRegVec.clear();
                         }
@@ -1083,8 +1015,7 @@ void StubTool::scanStubs_ptWidth()
                             // Unmasking desired channels
                             for(unsigned int iChan = 0; iChan < nChan; iChan++)
                             {
-                                if(iChan % 96 != 0)
-                                    continue;
+                                if(iChan % 96 != 0) continue;
                                 {
                                     for(uint8_t step = 0; step <= 1; step++)
                                     {
@@ -1110,20 +1041,16 @@ void StubTool::scanStubs_ptWidth()
                                         for(unsigned int smg = 0; smg < 3; smg++)
                                         {
                                             seedChan[smg] = (iChan + (smg * 32) + (step * 16) + (tg * 2) + 1);
-                                            if(seedChan[smg] < 0 || seedChan[smg] > nChan)
-                                                continue;
+                                            if(seedChan[smg] < 0 || seedChan[smg] > nChan) continue;
                                             for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
                                             {
                                                 if((seedChan[smg] + bend - 1) < 0)
                                                 {
-                                                    if(iCBC == 0)
-                                                        continue;
+                                                    if(iCBC == 0) continue;
                                                     LOG(DEBUG) << "Channel (CBC" << +(iCBC) << "): " << +seedChan[smg];
                                                     int corrChan = nChan + (seedChan[smg] + bend + 1);
-                                                    if((int)bend % 2 != 0)
-                                                        corrChan = nChan + (seedChan[smg] + bend);
-                                                    if(corrChan % 2 != 0 || corrChan <= 0)
-                                                        continue;
+                                                    if((int)bend % 2 != 0) corrChan = nChan + (seedChan[smg] + bend);
+                                                    if(corrChan % 2 != 0 || corrChan <= 0) continue;
                                                     maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC - 1)), corrChan, false);
                                                     maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), seedChan[smg], false);
                                                     LOG(DEBUG) << "Cond 1: Corr Chan (CBC" << +(iCBC - 1) << "): " << +corrChan << " (" << +(seedChan[smg] + bend - 1) << ")";
@@ -1135,14 +1062,11 @@ void StubTool::scanStubs_ptWidth()
                                                 }
                                                 else if((seedChan[smg] + bend + 1) > nChan)
                                                 {
-                                                    if(iCBC == nCBC - 1)
-                                                        continue;
+                                                    if(iCBC == nCBC - 1) continue;
                                                     LOG(DEBUG) << "Channel (CBC" << +iCBC << "): " << seedChan[smg];
                                                     int corrChan = (seedChan[smg] + bend + 1) - nChan;
-                                                    if((int)bend % 2 != 0)
-                                                        corrChan = (seedChan[smg] + bend) - nChan;
-                                                    if(corrChan % 2 != 0)
-                                                        continue;
+                                                    if((int)bend % 2 != 0) corrChan = (seedChan[smg] + bend) - nChan;
+                                                    if(corrChan % 2 != 0) continue;
                                                     maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), seedChan[smg], false);
                                                     if(corrChan > 0)
                                                         maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC + 1)), corrChan, false);
@@ -1168,10 +1092,8 @@ void StubTool::scanStubs_ptWidth()
                                                 {
                                                     LOG(DEBUG) << "Channel (CBC" << +iCBC << "): " << seedChan[smg];
                                                     int corrChan = (seedChan[smg] + bend + 1);
-                                                    if((int)bend % 2 != 0)
-                                                        corrChan = (seedChan[smg] + bend);
-                                                    if(corrChan % 2 != 0 || corrChan <= 0)
-                                                        continue;
+                                                    if((int)bend % 2 != 0) corrChan = (seedChan[smg] + bend);
+                                                    if(corrChan % 2 != 0 || corrChan <= 0) continue;
                                                     maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), seedChan[smg], false);
                                                     maskChannel(static_cast<ReadoutChip*>(cCbcVector.at(iCBC)), corrChan, false);
                                                     LOG(DEBUG) << "Cond 3: Corr Chan (CBC" << +(iCBC) << "): " << corrChan << " (" << seedChan[smg] + bend + 1 << ")";
@@ -1218,17 +1140,14 @@ void StubTool::scanStubs_ptWidth()
                                                         double HIT   = cHit + 1;
                                                         double STRIP = floor((HIT - 1) / 2);
                                                         LOG(DEBUG) << BLUE << std::dec << cHit << " : " << HIT << " , " << STRIP << RESET;
-                                                        if(bend == 0 && iptWidth == 6 && (int)HIT % 2 != 0)
-                                                            hSTUB_SCAN_tg->Fill(STRIP + (iCBC * 127), tg + 0.5, 0.5);
+                                                        if(bend == 0 && iptWidth == 6 && (int)HIT % 2 != 0) hSTUB_SCAN_tg->Fill(STRIP + (iCBC * 127), tg + 0.5, 0.5);
                                                     }
                                                 }
                                                 if(iptWidth == 6)
                                                     for(uint8_t smg = 0; smg < 3; smg++)
                                                     {
-                                                        if(seedChan[smg] < 0 || seedChan[smg] > nChan)
-                                                            continue;
-                                                        if(((seedChan[smg] - 1) / 2) + (iCBC * 127) + (bend / 2) < 0 || ((seedChan[smg] + 1) / 2) + (iCBC * 127) + (bend / 2) > nCBC * 127)
-                                                            continue;
+                                                        if(seedChan[smg] < 0 || seedChan[smg] > nChan) continue;
+                                                        if(((seedChan[smg] - 1) / 2) + (iCBC * 127) + (bend / 2) < 0 || ((seedChan[smg] + 1) / 2) + (iCBC * 127) + (bend / 2) > nCBC * 127) continue;
                                                         if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
                                                         {
                                                             bool stubfinder = false;
@@ -1273,8 +1192,7 @@ void StubTool::scanStubs_ptWidth()
                                                                    << " , Filling STRIP: " << +(stub_strip + (iCBC * 127));
                                                         stubCounter++;
                                                         hSTUB_SCAN_bend_pt[iCBC]->Fill(iptWidth + 1, stub_bend);
-                                                        if(iptWidth != 6)
-                                                            continue;
+                                                        if(iptWidth != 6) continue;
                                                         hSTUB_SCAN_bend_off[iCBC]->Fill(bend / 2, stub_bend);
                                                         hSTUB_SCAN_bend->Fill(stub_strip + (iCBC * 127), stub_bend);
                                                         fCanvas6->cd();
@@ -1282,8 +1200,7 @@ void StubTool::scanStubs_ptWidth()
                                                         hSTUB_SCAN_bend->SetStats(0);
                                                         fCanvas6->Update();
 
-                                                        if(bend != 0)
-                                                            continue;
+                                                        if(bend != 0) continue;
                                                         hSTUB_SCAN_tg->Fill(stub_strip + (iCBC * 127), tg);
                                                         fCanvas5->cd();
                                                         hSTUB_SCAN_tg->Draw("COLZ");
@@ -1370,10 +1287,7 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
                     for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
                     {
                         cRegVec.push_back(std::make_pair("Pipe&StubInpSel&Ptwidth", Pipe_StubSel_Ptwidth));
-                        for(int ireg = 0; ireg < 15; ireg++)
-                        {
-                            cRegVec.push_back(std::make_pair("Bend" + std::to_string(ireg), BendReg[ireg]));
-                        }
+                        for(int ireg = 0; ireg < 15; ireg++) { cRegVec.push_back(std::make_pair("Bend" + std::to_string(ireg), BendReg[ireg])); }
 
                         // MASKING ALL CHANNELS
                         for(unsigned int i = 0; i < fChannelMaskMapCBC3.size(); i++)
@@ -1493,10 +1407,7 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
                 }         // end cluster width register loop
                 hSTUB_SCAN_sof->Write();
                 hSTUB_SCAN_SOF->Write();
-                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
-                {
-                    hSTUB_SCAN_sof_cbc[iCBC]->Write();
-                }
+                for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++) { hSTUB_SCAN_sof_cbc[iCBC]->Write(); }
             }
         }
     }
@@ -1611,11 +1522,9 @@ std::vector<uint8_t> StubTool::findChannelsInTestGroup(uint8_t pTestGroup)
         int ctemp2 = ctemp1 + 1;
 
         // added less than or equal to here
-        if(ctemp1 <= nChan)
-            cChannelVector.push_back(ctemp1);
+        if(ctemp1 <= nChan) cChannelVector.push_back(ctemp1);
 
-        if(ctemp2 <= nChan)
-            cChannelVector.push_back(ctemp2);
+        if(ctemp2 <= nChan) cChannelVector.push_back(ctemp2);
     }
 
     return cChannelVector;

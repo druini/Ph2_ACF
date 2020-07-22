@@ -47,10 +47,7 @@ const bool& Firmware::isBitSwapped() const { return mBitSwapped; }
 
 void Firmware::BitSwap()
 {
-    for(std::vector<uint8_t>::iterator lIt = mBitStream.begin(); lIt != mBitStream.end(); ++lIt)
-    {
-        *lIt = mLUT[*lIt];
-    }
+    for(std::vector<uint8_t>::iterator lIt = mBitStream.begin(); lIt != mBitStream.end(); ++lIt) { *lIt = mLUT[*lIt]; }
 
     mBitSwapped = !mBitSwapped;
 }
@@ -75,10 +72,7 @@ void XilinxBitStream::BigEndianAppend(std::vector<uint32_t>::const_iterator aSta
         uint32_t lTemp(ntohl(*aStart));
         uint8_t* lPtr = (uint8_t*)(&lTemp);
 
-        for(int i = 0; i != 4; ++i, ++lPtr)
-        {
-            mBitStream.push_back(*lPtr);
-        }
+        for(int i = 0; i != 4; ++i, ++lPtr) { mBitStream.push_back(*lPtr); }
     }
 }
 
@@ -126,10 +120,7 @@ XilinxBinFile::XilinxBinFile(const std::string& aFileName) : Firmware(aFileName)
         lUint = (lUint << 8) | (*lIt);
         // std::cout << std::hex << std::setfill('0') << std::setw(8) << lUint << std::endl;
 
-        if((lUint == 0xaa995566) || (lUint == 0x5599aa66))
-        {
-            break;
-        }
+        if((lUint == 0xaa995566) || (lUint == 0x5599aa66)) { break; }
     }
 
     if(lIt == lFileMemory.end())
@@ -140,10 +131,7 @@ XilinxBinFile::XilinxBinFile(const std::string& aFileName) : Firmware(aFileName)
 
     mBitStream = lFileMemory;
 
-    if(lUint == 0x5599aa66)
-    {
-        mBitSwapped = true;
-    }
+    if(lUint == 0x5599aa66) { mBitSwapped = true; }
     else
     {
         mBitSwapped = false;

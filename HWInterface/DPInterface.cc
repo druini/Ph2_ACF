@@ -31,10 +31,7 @@ void DPInterface::Start(BeBoardFWInterface* pInterface, uint8_t pType)
     pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.fe_data_player.start_data_player", 0x01);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
     bool cIsRunning = this->IsRunning(pInterface, pType);
-    if(cIsRunning)
-    {
-        LOG(INFO) << BOLDGREEN << " Data Player [STARTED]" << RESET;
-    }
+    if(cIsRunning) { LOG(INFO) << BOLDGREEN << " Data Player [STARTED]" << RESET; }
     else
     {
         LOG(INFO) << BOLDRED << " Data Player [START ERROR]" << RESET;

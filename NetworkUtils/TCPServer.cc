@@ -84,8 +84,7 @@ void TCPServer::acceptConnections()
         catch(int e)
         {
             std::cout << __PRETTY_FUNCTION__ << "Shutting down socket!" << std::endl;
-            if(e == E_SHUTDOWN)
-                break;
+            if(e == E_SHUTDOWN) break;
         }
     }
     fAcceptPromise.set_value(true);

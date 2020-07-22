@@ -29,20 +29,15 @@ void SLinkEvent::print(std::ostream& out) const
 {
     std::string cDebugMode, cReadoutMode;
 
-    if(fDebugMode == SLinkDebugMode::ERROR)
-        cDebugMode = "SLinkDebugMode::ERROR";
+    if(fDebugMode == SLinkDebugMode::ERROR) cDebugMode = "SLinkDebugMode::ERROR";
 
-    if(fDebugMode == SLinkDebugMode::FULL)
-        cDebugMode = "SLinkDebugMode::FULL";
+    if(fDebugMode == SLinkDebugMode::FULL) cDebugMode = "SLinkDebugMode::FULL";
 
-    if(fDebugMode == SLinkDebugMode::SUMMARY)
-        cDebugMode = "SLinkDebugMode::SUMMARY";
+    if(fDebugMode == SLinkDebugMode::SUMMARY) cDebugMode = "SLinkDebugMode::SUMMARY";
 
-    if(fEventType == EventType::VR)
-        cReadoutMode = "EventType::VR";
+    if(fEventType == EventType::VR) cReadoutMode = "EventType::VR";
 
-    if(fEventType == EventType::ZS)
-        cReadoutMode = "EventType::ZS";
+    if(fEventType == EventType::ZS) cReadoutMode = "EventType::ZS";
 
     out << BOLDYELLOW << "SLINK EVENT: Type " << RED << cReadoutMode << BOLDYELLOW << " - Debug Mode " << RED << cDebugMode << RESET << std::endl;
     int cCounter = 0;

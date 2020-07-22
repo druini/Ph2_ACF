@@ -39,8 +39,7 @@ void Gain::ConfigureCalibration()
     customChannelGroup.disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)
-        for(auto col = colStart; col <= colStop; col++)
-            customChannelGroup.enableChannel(row, col);
+        for(auto col = colStart; col <= colStop; col++) customChannelGroup.enableChannel(row, col);
 
     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol);
     theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
@@ -49,8 +48,7 @@ void Gain::ConfigureCalibration()
     // # Initialize dac scan values #
     // ##############################
     const float step = (stopValue - startValue) / nSteps;
-    for(auto i = 0u; i < nSteps; i++)
-        dacList.push_back(startValue + step * i);
+    for(auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
     // #################################
     // # Initialize container recycler #
@@ -96,14 +94,12 @@ void Gain::sendData()
         {
             theOccStream.setHeaderElement(dacList[index] - offset);
 
-            for(const auto cBoard: *theOccContainer)
-                theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+            for(const auto cBoard: *theOccContainer) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
 
             index++;
         }
 
-        for(const auto cBoard: *theGainAndInterceptContainer.get())
-            theGainAndInterceptStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: *theGainAndInterceptContainer.get()) theGainAndInterceptStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
 
@@ -147,14 +143,11 @@ void Gain::run()
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
+                for(const auto cChip: *cModule) this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
 
-    for(auto container: detectorContainerVector)
-        theRecyclingBin.free(container);
+    for(auto container: detectorContainerVector) theRecyclingBin.free(container);
     detectorContainerVector.clear();
-    for(auto i = 0u; i < dacList.size(); i++)
-        detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
+    for(auto i = 0u; i < dacList.size(); i++) detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
 
     this->fChannelGroupHandler = theChnGroupHandler.get();
     this->SetBoardBroadcast(true);
@@ -189,14 +182,12 @@ void Gain::run()
 
 void Gain::draw(int currentRun)
 {
-    if(currentRun >= 0)
-        Gain::saveChipRegisters(currentRun);
+    if(currentRun >= 0) Gain::saveChipRegisters(currentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true)
-        myApp = new TApplication("myApp", nullptr, nullptr);
+    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     if(currentRun >= 0)
     {
@@ -214,8 +205,7 @@ void Gain::draw(int currentRun)
         this->CloseResultFile();
     }
 
-    if(doDisplay == true)
-        myApp->Run(true);
+    if(doDisplay == true) myApp->Run(true);
 #endif
 
     // #####################
@@ -372,8 +362,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
 void Gain::fillHisto()
 {
 #ifdef __USE_ROOT__
-    for(auto i = 0u; i < dacList.size(); i++)
-        histos->fillOccupancy(*detectorContainerVector[i], dacList[i] - offset);
+    for(auto i = 0u; i < dacList.size(); i++) histos->fillOccupancy(*detectorContainerVector[i], dacList[i] - offset);
     histos->fillGainAndIntercept(*theGainAndInterceptContainer);
 #endif
 }
@@ -482,8 +471,7 @@ void Gain::saveChipRegisters(int currentRun)
                 for(const auto cChip: *cModule)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true)
-                        static_cast<RD53*>(cChip)->saveRegMap("");
+                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());

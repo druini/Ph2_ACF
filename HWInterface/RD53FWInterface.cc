@@ -151,8 +151,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
     cVecReg.push_back({"user.ctrl_regs.Hybrids_en", enabledHybrids});
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
-    if(cVecReg.size() != 0)
-        RegManager::WriteStackReg(cVecReg);
+    if(cVecReg.size() != 0) RegManager::WriteStackReg(cVecReg);
 
     // ###########################
     // # Print clock measurement #
@@ -165,8 +164,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ##############################
     // # AURORA lock on data stream #
     // ##############################
-    while(RD53FWInterface::CheckChipCommunication() == false)
-        RD53FWInterface::InitHybridByHybrid(pBoard);
+    while(RD53FWInterface::CheckChipCommunication() == false) RD53FWInterface::InitHybridByHybrid(pBoard);
 }
 
 void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
@@ -205,11 +203,9 @@ void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hy
     // #####################
     // # Check if all good #
     // #####################
-    if(ReadReg("user.stat_regs.slow_cmd.error_flag") == true)
-        LOG(ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
+    if(ReadReg("user.stat_regs.slow_cmd.error_flag") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
 
-    if(ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false)
-        LOG(ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
+    if(ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false) LOG(ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
 
     // #######################
     // # Load command vector #
@@ -221,12 +217,10 @@ void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hy
     stackRegisters.emplace_back(bits::pack<6, 10, 4, 12>(HEADEAR_WRTCMD, (hybridId < 0 ? enabledHybrids : 1 << hybridId), 0, n32bitWords));
 
     // Commands
-    for(auto i = 1u; i < data.size(); i += 2)
-        stackRegisters.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
+    for(auto i = 1u; i < data.size(); i += 2) stackRegisters.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
 
     // If data.size() is not even, add a sync command
-    if(data.size() % 2 != 0)
-        stackRegisters.emplace_back(bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
+    if(data.size() % 2 != 0) stackRegisters.emplace_back(bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
 
     // ###############################
     // # Send command(s) to the chip #
@@ -242,8 +236,7 @@ void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hy
         nAttempts++;
         usleep(READOUTSLEEP);
     }
-    if(retry == true)
-        LOG(ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ")" << RESET;
+    if(retry == true) LOG(ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ")" << RESET;
 }
 
 std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Chip* pChip)
@@ -259,8 +252,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Ch
     // #####################
     // # Read the register #
     // #####################
-    if(ReadReg("user.stat_regs.Register_Rdback.fifo_full") == true)
-        LOG(ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
+    if(ReadReg("user.stat_regs.Register_Rdback.fifo_full") == true) LOG(ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
 
     while(ReadReg("user.stat_regs.Register_Rdback.fifo_empty") == false)
     {
@@ -269,12 +261,10 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Ch
         uint16_t lane, address, value;
         std::tie(lane, address, value) = bits::unpack<6, 10, 16>(readBackData);
 
-        if(lane == chipLane)
-            regReadback.emplace_back(address, value);
+        if(lane == chipLane) regReadback.emplace_back(address, value);
     }
 
-    if(regReadback.size() == 0)
-        LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
+    if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
 
     return regReadback;
 }
@@ -303,8 +293,7 @@ void RD53FWInterface::PrintFWstatus()
         LOG(ERROR) << BOLDRED << "\t--> I2C initialization status: " << BOLDYELLOW << status << RESET;
     }
 
-    if(ReadReg("user.stat_regs.global_reg.i2c_acq_err") == 1)
-        LOG(INFO) << GREEN << "I2C ack error during analog readout (for KSU FMC only)" << RESET;
+    if(ReadReg("user.stat_regs.global_reg.i2c_acq_err") == 1) LOG(INFO) << GREEN << "I2C ack error during analog readout (for KSU FMC only)" << RESET;
 
     // ############################################################
     // # Check status registers associated wih fast command block #
@@ -434,12 +423,10 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
                     }
                 }
 
-                if(lanes_up == true)
-                    break;
+                if(lanes_up == true) break;
             }
 
-            if(lanes_up == false)
-                LOG(ERROR) << BOLDRED << "Not all data lanes are up for hybrid: " << BOLDYELLOW << hybrid_id << RESET;
+            if(lanes_up == false) LOG(ERROR) << BOLDRED << "Not all data lanes are up for hybrid: " << BOLDYELLOW << hybrid_id << RESET;
         }
 }
 
@@ -449,40 +436,30 @@ std::vector<uint16_t> RD53FWInterface::GetInitSequence(const unsigned int type)
 
     switch(type)
     {
-    case 0: // Okay for all (3 TBPX, 1 TEPX hybridss so far)
-        for(unsigned int i = 0; i < 500; i++)
-            initSequence.push_back(0x0000); // 0000 0000
-        for(unsigned int i = 0; i < 2000; i++)
-            initSequence.push_back(0xCCCC); // 1100 1100
+    case 0:                                                                    // Okay for all (3 TBPX, 1 TEPX hybridss so far)
+        for(unsigned int i = 0; i < 500; i++) initSequence.push_back(0x0000);  // 0000 0000
+        for(unsigned int i = 0; i < 2000; i++) initSequence.push_back(0xCCCC); // 1100 1100
         break;
-    case 1: // Seen to be good for some TBPX hybrids
-        for(unsigned int i = 0; i < 1000; i++)
-            initSequence.push_back(0xFFFF); // 1111 1111
-        for(unsigned int i = 0; i < 500; i++)
-            initSequence.push_back(0x3333); // 0011 0011
+    case 1:                                                                    // Seen to be good for some TBPX hybrids
+        for(unsigned int i = 0; i < 1000; i++) initSequence.push_back(0xFFFF); // 1111 1111
+        for(unsigned int i = 0; i < 500; i++) initSequence.push_back(0x3333);  // 0011 0011
         break;
 
-    case 2: // Seen to be good for TEPX hybrid
-        for(unsigned int i = 0; i < 500; i++)
-            initSequence.push_back(0x0000); // 0000 0000
-        for(unsigned int i = 0; i < 1000; i++)
-            initSequence.push_back(0x3333); // 0011 0011
+    case 2:                                                                    // Seen to be good for TEPX hybrid
+        for(unsigned int i = 0; i < 500; i++) initSequence.push_back(0x0000);  // 0000 0000
+        for(unsigned int i = 0; i < 1000; i++) initSequence.push_back(0x3333); // 0011 0011
         break;
 
-    case 3: // Seen to be good for TEPX hybrid
-        for(unsigned int i = 0; i < 1000; i++)
-            initSequence.push_back(0x0F0F); // 0011 0011
+    case 3:                                                                    // Seen to be good for TEPX hybrid
+        for(unsigned int i = 0; i < 1000; i++) initSequence.push_back(0x0F0F); // 0011 0011
         break;
 
-    case 4: // Default for single chips (Doesn't work well with hybrids)
-        for(unsigned int i = 0; i < 1000; i++)
-            initSequence.push_back(0x0000); // 0000 0000
+    case 4:                                                                    // Default for single chips (Doesn't work well with hybrids)
+        for(unsigned int i = 0; i < 1000; i++) initSequence.push_back(0x0000); // 0000 0000
 
-    default: // Case 0 -> seems to be work with all
-        for(unsigned int i = 0; i < 500; i++)
-            initSequence.push_back(0x0000); // 0000 0000
-        for(unsigned int i = 0; i < 2000; i++)
-            initSequence.push_back(0xCCCC); // 1100 1100
+    default:                                                                   // Case 0 -> seems to be work with all
+        for(unsigned int i = 0; i < 500; i++) initSequence.push_back(0x0000);  // 0000 0000
+        for(unsigned int i = 0; i < 2000; i++) initSequence.push_back(0xCCCC); // 1100 1100
         break;
     }
 
@@ -544,8 +521,7 @@ void RD53FWInterface::ResetBoard()
     // # DDR3 #
     // ########
     LOG(INFO) << YELLOW << "Waiting for DDR3 calibration..." << RESET;
-    while(ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done") == false)
-        usleep(DEEPSLEEP);
+    while(ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done") == false) usleep(DEEPSLEEP);
 
     LOG(INFO) << BOLDBLUE << "\t--> DDR3 calibration done" << RESET;
 }
@@ -585,11 +561,9 @@ void RD53FWInterface::PrintEvents(const std::vector<RD53FWInterface::Event>& eve
     if(pData.size() != 0)
         for(auto j = 0u; j < pData.size(); j++)
         {
-            if(j % NWORDS_DDR3 == 0)
-                std::cout << std::dec << j << ":\t";
+            if(j % NWORDS_DDR3 == 0) std::cout << std::dec << j << ":\t";
             std::cout << std::hex << std::setfill('0') << std::setw(8) << pData[j] << "\t";
-            if(j % NWORDS_DDR3 == NWORDS_DDR3 - 1)
-                std::cout << std::endl;
+            if(j % NWORDS_DDR3 == NWORDS_DDR3 - 1) std::cout << std::endl;
         }
 
     // ######################
@@ -737,8 +711,7 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     ddr3Offset += nWordsInMemory;
     pData.insert(pData.end(), values.begin(), values.end());
 
-    if((this->fSaveToFile == true) && (pData.size() != 0))
-        this->fFileHandler->setData(pData);
+    if((this->fSaveToFile == true) && (pData.size() != 0)) this->fFileHandler->setData(pData);
     return pData.size();
 }
 
@@ -760,8 +733,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // # Readout sequence #
         // ####################
         RD53FWInterface::Start();
-        while(ReadReg("user.stat_regs.trigger_cntr") < pNEvents * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
-            usleep(READOUTSLEEP);
+        while(ReadReg("user.stat_regs.trigger_cntr") < pNEvents * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration)) usleep(READOUTSLEEP);
         RD53FWInterface::ReadData(pBoard, false, pData, pWait);
         RD53FWInterface::Stop();
 
@@ -859,8 +831,7 @@ uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& 
     // ######################
     // # Consistency checks #
     // ######################
-    if(data.size() == 0)
-        return RD53FWEvtEncoder::EMPTY;
+    if(data.size() == 0) return RD53FWEvtEncoder::EMPTY;
 
     std::atomic<uint16_t> evtStatus;
     evtStatus.store(RD53FWEvtEncoder::GOOD);
@@ -871,10 +842,8 @@ uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& 
 
     std::vector<size_t> eventStart;
     for(auto i = 0u; i < data.size(); i++)
-        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
-            eventStart.push_back(i);
-    if(eventStart.size() == 0)
-        return RD53FWEvtEncoder::NOHEADER;
+        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) eventStart.push_back(i);
+    if(eventStart.size() == 0) return RD53FWEvtEncoder::NOHEADER;
     const auto nEvents = ceil(static_cast<double>(eventStart.size()) / RD53Shared::NTHREADS);
     eventStart.push_back(data.size());
 
@@ -885,8 +854,7 @@ uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& 
     for(; i < RD53Shared::NTHREADS - 1; i++)
     {
         auto firstEvent = eventStart.begin() + nEvents * i;
-        if(firstEvent + nEvents + 1 > eventStart.end() - 1)
-            break;
+        if(firstEvent + nEvents + 1 > eventStart.end() - 1) break;
         auto lastEvent = firstEvent + nEvents + 1;
         std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart[i]));
 
@@ -903,14 +871,12 @@ uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& 
     // # Join threads #
     // ################
     for(auto& thr: vecThrDecoders)
-        if(thr.joinable() == true)
-            thr.join();
+        if(thr.joinable() == true) thr.join();
 
     // #####################
     // # Pack event vector #
     // #####################
-    for(auto i = 0u; i < RD53Shared::NTHREADS; i++)
-        std::move(vecEvents[i].begin(), vecEvents[i].end(), std::back_inserter(events));
+    for(auto i = 0u; i < RD53Shared::NTHREADS; i++) std::move(vecEvents[i].begin(), vecEvents[i].end(), std::back_inserter(events));
 
     return evtStatus;
 }
@@ -930,16 +896,13 @@ uint16_t RD53FWInterface::DecodeEvents(const std::vector<uint32_t>& data, std::v
     // ######################
     // # Consistency checks #
     // ######################
-    if(data.size() == 0)
-        return RD53FWEvtEncoder::EMPTY;
+    if(data.size() == 0) return RD53FWEvtEncoder::EMPTY;
 
     if(eventStartExt.size() == 0)
     {
         for(auto i = 0u; i < data.size(); i++)
-            if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
-                eventStartLocal.push_back(i);
-        if(eventStartLocal.size() == 0)
-            return RD53FWEvtEncoder::NOHEADER;
+            if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) eventStartLocal.push_back(i);
+        if(eventStartLocal.size() == 0) return RD53FWEvtEncoder::NOHEADER;
         eventStartLocal.push_back(data.size());
         refEventStart = eventStartLocal;
     }
@@ -957,8 +920,7 @@ uint16_t RD53FWInterface::DecodeEvents(const std::vector<uint32_t>& data, std::v
         else
         {
             for(auto j = 0u; j < events.back().chip_events.size(); j++)
-                if(events.back().l1a_counter % maxL1Counter != events.back().chip_events[j].trigger_id)
-                    evtStatus |= RD53FWEvtEncoder::L1A;
+                if(events.back().l1a_counter % maxL1Counter != events.back().chip_events[j].trigger_id) evtStatus |= RD53FWEvtEncoder::L1A;
         }
     }
 
@@ -974,8 +936,7 @@ void RD53FWInterface::Event::addBoardInfo2Events(const BeBoard* pBoard, std::vec
         for(auto& chip_frame: evt.chip_frames)
         {
             int chip_id = RD53FWInterface::Event::lane2chipId(pBoard, 0, chip_frame.hybrid_id, chip_frame.chip_lane);
-            if(chip_id != -1)
-                chip_frame.chip_id = chip_id;
+            if(chip_id != -1) chip_frame.chip_id = chip_id;
         }
 }
 
@@ -1000,8 +961,7 @@ void RD53FWInterface::Event::fillDataContainer(BoardDataContainer* boardContaine
                         cChip->getChannel<OccupancyAndPh>(hit.row + Ph2_HwDescription::RD53::nRows * (hit.col)).fOccupancy++;
                         cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPh += float(hit.tot);
                         cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPhError += float(hit.tot * hit.tot);
-                        if(cTestChannelGroup->isChannelEnabled(hit.row, hit.col) == false)
-                            cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).readoutError = true;
+                        if(cTestChannelGroup->isChannelEnabled(hit.row, hit.col) == false) cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).readoutError = true;
                     }
                 }
 }
@@ -1012,8 +972,7 @@ bool RD53FWInterface::Event::isHittedChip(uint8_t hybrid_id, uint8_t chip_id, si
     it      = std::find_if(
         it, chip_frames.end(), [&](const ChipFrame& frame) { return ((frame.hybrid_id == hybrid_id) && (frame.chip_id == chip_id) && (chip_events[it - chip_frames.begin()].hit_data.size() != 0)); });
 
-    if(it == chip_frames.end())
-        return false;
+    if(it == chip_frames.end()) return false;
     chipIndx = it - chip_frames.begin();
     return true;
 }
@@ -1032,8 +991,7 @@ int RD53FWInterface::Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup
             if(hybrid != (*opticalGroup)->end())
             {
                 auto it = std::find_if((*hybrid)->begin(), (*hybrid)->end(), [&](ChipContainer* pChip) { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
-                if(it != (*hybrid)->end())
-                    return (*it)->getId();
+                if(it != (*hybrid)->end()) return (*it)->getId();
             }
         }
     }
@@ -1111,8 +1069,7 @@ RD53FWInterface::Event::Event(const uint32_t* data, size_t n)
 
         chip_events.emplace_back(&data[index + 2], size - 2);
 
-        if(chip_events.back().evtStatus != RD53EvtEncoder::CHIPGOOD)
-            evtStatus |= chip_events.back().evtStatus;
+        if(chip_events.back().evtStatus != RD53EvtEncoder::CHIPGOOD) evtStatus |= chip_events.back().evtStatus;
 
         index += size;
     }
@@ -1133,8 +1090,7 @@ void RD53FWInterface::SendBoardCommand(const std::string& cmd_reg)
 
 void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
 {
-    if(cfg == nullptr)
-        cfg = &(RD53FWInterface::localCfgFastCmd);
+    if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
     if(cfg->autozero_source == AutozeroSource::FastCMDFSM)
         WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 44, 1 << 14).getFrames(),
@@ -1302,11 +1258,9 @@ void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
 {
     const uint8_t fiftyOhmEnable = 0x12;
 
-    if(ReadReg("user.stat_regs.stat_dio5.dio5_not_ready") == true)
-        LOG(ERROR) << BOLDRED << "DIO5 not ready" << RESET;
+    if(ReadReg("user.stat_regs.stat_dio5.dio5_not_ready") == true) LOG(ERROR) << BOLDRED << "DIO5 not ready" << RESET;
 
-    if(ReadReg("user.stat_regs.stat_dio5.dio5_error") == true)
-        LOG(ERROR) << BOLDRED << "DIO5 is in error" << RESET;
+    if(ReadReg("user.stat_regs.stat_dio5.dio5_error") == true) LOG(ERROR) << BOLDRED << "DIO5 is in error" << RESET;
 
     RegManager::WriteStackReg({{"user.ctrl_regs.ext_tlu_reg1.dio5_en", (uint32_t)cfg->enable},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en", (uint32_t)cfg->ch_out_en},
@@ -1433,17 +1387,14 @@ void RD53FWInterface::DeleteFpgaConfig(const std::string& strId)
 
 void RD53FWInterface::CheckIfUploading()
 {
-    if(fpgaConfig && fpgaConfig->getUploadingFpga() > 0)
-        throw Exception("This board is uploading an FPGA configuration");
+    if(fpgaConfig && fpgaConfig->getUploadingFpga() > 0) throw Exception("This board is uploading an FPGA configuration");
 
-    if(!fpgaConfig)
-        fpgaConfig = new D19cFpgaConfig(this);
+    if(!fpgaConfig) fpgaConfig = new D19cFpgaConfig(this);
 }
 
 void RD53FWInterface::RebootBoard()
 {
-    if(!fpgaConfig)
-        fpgaConfig = new D19cFpgaConfig(this);
+    if(!fpgaConfig) fpgaConfig = new D19cFpgaConfig(this);
     fpgaConfig->resetBoard();
 }
 
@@ -1549,8 +1500,7 @@ bool RD53FWInterface::I2cCmdAckWait(unsigned int nAttempts)
     while(++cLoop < nAttempts)
     {
         status = ReadReg("user.stat_regs.global_reg.i2c_acq_err");
-        if(status == I2CcmdAckGOOD)
-            return true;
+        if(status == I2CcmdAckGOOD) return true;
         usleep(DEEPSLEEP);
     }
 
@@ -1575,8 +1525,7 @@ void RD53FWInterface::WriteI2C(std::vector<uint32_t>& data)
     /* bool outcome = */ RegManager::WriteBlockReg("ctrl.board.i2c_fifo_tx", data);
     usleep(DEEPSLEEP);
 
-    if(I2cCmdAckWait(20) == false)
-        throw Exception("[RD53FWInterface::WriteI2C] I2C transaction error");
+    if(I2cCmdAckWait(20) == false) throw Exception("[RD53FWInterface::WriteI2C] I2C transaction error");
 
     WriteReg("ctrl.board.i2c_req", 0); // Disable
     usleep(DEEPSLEEP);
@@ -1612,8 +1561,7 @@ void RD53FWInterface::ReadI2C(std::vector<uint32_t>& data)
     data = RegManager::ReadBlockReg("ctrl.board.i2c_fifo_rx", size2read);
     usleep(DEEPSLEEP);
 
-    if(RD53FWInterface::I2cCmdAckWait(20) == false)
-        throw Exception("[RD53FWInterface::ReadI2C] I2C transaction error");
+    if(RD53FWInterface::I2cCmdAckWait(20) == false) throw Exception("[RD53FWInterface::ReadI2C] I2C transaction error");
 
     WriteReg("ctrl.board.i2c_req", 0); // Disable
 }

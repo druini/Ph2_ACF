@@ -13,8 +13,7 @@ FileHandler::FileHandler(const std::string& pBinaryFileName, char pOption) : fHe
 {
     FileHandler::openFile();
 
-    if(fOption == 'w')
-        fThread = std::thread(&FileHandler::writeFile, this);
+    if(fOption == 'w') fThread = std::thread(&FileHandler::writeFile, this);
 }
 
 FileHandler::FileHandler(const std::string& pBinaryFileName, char pOption, FileHeader pHeader)
@@ -22,14 +21,12 @@ FileHandler::FileHandler(const std::string& pBinaryFileName, char pOption, FileH
 {
     FileHandler::openFile();
 
-    if(fOption == 'w')
-        fThread = std::thread(&FileHandler::writeFile, this);
+    if(fOption == 'w') fThread = std::thread(&FileHandler::writeFile, this);
 }
 
 FileHandler::~FileHandler()
 {
-    while(fQueue.empty() == false)
-        usleep(DESTROYSLEEP);
+    while(fQueue.empty() == false) usleep(DESTROYSLEEP);
     FileHandler::closeFile();
 }
 
@@ -125,8 +122,7 @@ void FileHandler::closeFile()
     if(fFileIsOpened == true)
     {
         fFileIsOpened = false;
-        if((fOption == 'w') && (fThread.joinable() == true))
-            fThread.join();
+        if((fOption == 'w') && (fThread.joinable() == true)) fThread.join();
         fBinaryFile.close();
         LOG(INFO) << GREEN << "Closing binary file: " << BOLDYELLOW << fBinaryFileName << RESET;
     }
@@ -140,8 +136,7 @@ std::vector<uint32_t> FileHandler::readFile()
     {
         uint32_t word;
         fBinaryFile.read((char*)&word, sizeof(uint32_t));
-        if(fBinaryFile.eof() == true)
-            break;
+        if(fBinaryFile.eof() == true) break;
         cVector.push_back(word);
     }
 

@@ -51,10 +51,7 @@ int main(int argc, char** argv)
     LOG(INFO) << outp.str();
     outp.str("");
 
-    if(cConfigure)
-    {
-        cSystemController.ConfigureHw();
-    }
+    if(cConfigure) { cSystemController.ConfigureHw(); }
 
     LOG(INFO) << "*** End of the System test ***";
     cSystemController.Destroy();

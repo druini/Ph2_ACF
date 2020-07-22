@@ -29,13 +29,9 @@ class MiddlewareController : public TCPServer
         // std::cout << __PRETTY_FUNCTION__ << "RECEIVED: " << buffer << std::endl;
 
         if(buffer == "Initialize") // changing the status changes the mode in threadMain (BBC) function.
-        {
-            return "InitializeDone";
-        }
+        { return "InitializeDone"; }
         if(buffer == "Configure") // changing the status changes the mode in threadMain (BBC) function.
-        {
-            return "ConfiguereDone";
-        }
+        { return "ConfiguereDone"; }
         if(buffer.substr(0, 5) == "Start") // changing the status changes the mode in threadMain (BBC) function.
         {
             fRunning         = true;
@@ -51,10 +47,8 @@ class MiddlewareController : public TCPServer
             // We need to think :)
             std::cout << __PRETTY_FUNCTION__ << "Closing the network publisher socket: " << getSocketId() << std::endl;
             fAccept = false;
-            while(fAcceptFuture.wait_for(std::chrono::milliseconds(100)) != std::future_status::ready)
-                std::cout << __PRETTY_FUNCTION__ << "Still running" << std::endl;
-            if(fNetworkStreamer != nullptr)
-                delete fNetworkStreamer;
+            while(fAcceptFuture.wait_for(std::chrono::milliseconds(100)) != std::future_status::ready) std::cout << __PRETTY_FUNCTION__ << "Still running" << std::endl;
+            if(fNetworkStreamer != nullptr) delete fNetworkStreamer;
             std::cout << "Run " << currentRun_ << " fRunning!" << std::endl;
             fRunning = false;
             return "StopDone";
@@ -100,8 +94,7 @@ class MiddlewareController : public TCPServer
     {
         size_t begin = buffer.find(variable) + variable.size() + 1;
         size_t end   = buffer.find(',', begin);
-        if(end == std::string::npos)
-            end = buffer.size();
+        if(end == std::string::npos) end = buffer.size();
         return buffer.substr(begin, end - begin);
     }
     TCPPublishServer*  fNetworkStreamer;

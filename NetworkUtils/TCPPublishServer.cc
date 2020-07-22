@@ -25,8 +25,7 @@ void TCPPublishServer::acceptConnections()
             std::cout << __PRETTY_FUNCTION__ << "SHUTTING DOWN SOCKET" << std::endl;
             std::cout << __PRETTY_FUNCTION__ << "SHUTTING DOWN SOCKET" << std::endl;
 
-            if(e == E_SHUTDOWN)
-                break;
+            if(e == E_SHUTDOWN) break;
         }
     }
     fAcceptPromise.set_value(true);
