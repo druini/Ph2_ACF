@@ -136,9 +136,9 @@ void DQMHistogramPedestalEqualization::fillVplusPlots(DetectorDataContainer &the
         {
             for(auto hybrid: *opticalGroup)
             {
-                if(hybrid == nullptr) continue;
                 for(auto chip: *hybrid)
                 {
+                    if(!chip->hasSummary()) continue;
                     TH1I *chipVplusHistogram = fDetectorVplusHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1I>>().fTheHistogram;
                     chipVplusHistogram->SetBinContent(1, chip->getSummary<uint16_t>());
                 }

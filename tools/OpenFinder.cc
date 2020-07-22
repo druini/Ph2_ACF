@@ -310,6 +310,7 @@ void OpenFinder::CountOpens(BeBoard* pBoard)
   }
 }
 
+#ifdef __USE_ROOT__
 void OpenFinder::Print()
 {
 
@@ -386,6 +387,8 @@ void OpenFinder::Print()
     }
   }
 }
+#endif
+
 void OpenFinder::FindOpens2S()
 {
   #ifdef __ANTENNA__
