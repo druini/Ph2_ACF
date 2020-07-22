@@ -63,9 +63,7 @@ std::size_t TCPReceiverSocket::receive(char* buffer, std::size_t bufferSize, int
             // as if the connection was closed correctly.
             return dataRead;
         }
-        default:
-        {
-            error << "Read: returned -1...Errno: " << errno;
+        default: { error << "Read: returned -1...Errno: " << errno;
         }
         }
         throw std::runtime_error(error.str());
