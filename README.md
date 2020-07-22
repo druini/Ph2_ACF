@@ -191,9 +191,13 @@ For more information on the firmware, please check the doc directory of https://
 
 ### clang-format (required to submit merge requests!!!)
 1. install 7.0 llvm toolset:
+
         $> yum install llvm-toolset-7.0
+
 2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):
+
         $> formatAll
+
 
 ### Setup on CC7 (Scroll down for instructions on setting up on SLC6)
 
