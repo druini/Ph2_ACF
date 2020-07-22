@@ -103,4 +103,7 @@ export CompileForShep=false
 # Compile with EUDAQ libraries
 export CompileWithEUDAQ=false
 
+# clang-format command
+alias formatAll="find ${BASE_DIR} -iname *.h -o -iname *.cc | xargs clang-format -i"
+
 echo "=== DONE ==="
