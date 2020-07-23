@@ -555,4 +555,5 @@ float RD53Interface::ReadHybridVoltage(Chip* pChip)
     auto hybridId = static_cast<RD53*>(pChip)->getFeId(); // @TMP@
     return static_cast<RD53FWInterface*>(fBoardFW)->ReadHybridVoltage(hybridId);
 }
+
 } // namespace Ph2_HwInterface

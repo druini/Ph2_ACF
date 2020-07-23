@@ -298,6 +298,7 @@ class RD53FWInterface : public BeBoardFWInterface
     uint16_t           enabledHybrids;
     bool               singleChip;
 };
+
 } // namespace Ph2_HwInterface
 
 #endif

@@ -1754,4 +1754,5 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 
     return voltage;
 }
+
 } // namespace Ph2_HwInterface
