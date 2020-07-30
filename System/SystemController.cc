@@ -119,11 +119,12 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             {
                 auto cFirstOpticalGroup = cFirstBoard->at(0);
                 LOG(INFO) << BOLDBLUE << "\t...Initializing HwInterfaces for OpticalGroups.." << +cFirstBoard->size() << " optical group(s) found ..." << RESET;
+
+                LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
+                flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap);
+
                 if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
                 {
-                    LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
-                    flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap);
-
                     LOG(INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for FrontEnd Hybrids.." << +cFirstOpticalGroup->size() << " hybrid(s) found ..." << RESET;
                     auto cFirstHybrid = cFirstOpticalGroup->at(0);
                     for(auto cROC: *cFirstHybrid)
