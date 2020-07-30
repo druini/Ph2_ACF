@@ -660,6 +660,12 @@ void PSROHHybridTester::TestULInternalPattern (uint32_t pPattern)
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
       clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern);
       std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+
+      D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+      LOG (INFO) << BOLDBLUE << "Stub lines " << RESET;
+      cFWInterface->StubDebug(true,6);
+      LOG (INFO) << BOLDBLUE << "L1 data " << RESET;
+      cFWInterface->L1ADebug();
     }
   }
 }
