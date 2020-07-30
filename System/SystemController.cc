@@ -222,9 +222,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     D19clpGBTInterface *clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                     if(clpGBTInterface->IslpGBTReady(cOpticalGroup->flpGBT))
-                        LOG(INFO) << BOLDRED << "lpGBT NOT READY" << RESET;
-                    else 
-                        LOG(INFO) << BOLDMAGENTA << "lpGBT Configured" << RESET;
+                        LOG(INFO) << BOLDRED << "lpGBT Configured" << RESET;
+                    else{ 
+                        LOG(INFO) << BOLDMAGENTA << "lpGBT NOT READY" << RESET;
+                        exit(0);
+                    }
                 }
                 uint8_t cLinkId = cOpticalGroup->getId();
                 LOG(INFO) << BOLDMAGENTA << "CIC start-up seqeunce for hybrids on link " << +cLinkId << RESET;
