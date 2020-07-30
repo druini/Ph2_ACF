@@ -759,7 +759,7 @@ bool PSROHHybridTester::TestResetLines(uint8_t pValue)
       auto cMapIterator = fResetLines.begin();
       do
       {
-        clpGBTInterface.fTC_PSROH.adc_get(cMapIterator->second,cMeasurement);
+        clpGBTInterface->fTC_PSROH.adc_get(cMapIterator->second,cMeasurement);
         float cDifference_mV = std::fabs( (pValue/0xFF)*1200 - cMeasurement);
         //cValid = cValid && (cDifference_mV <= 100 );
         if( cDifference_mV > 100 )
@@ -811,7 +811,7 @@ void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t 
         for(uint32_t cDACValue = cMinDAC; cDACValue<=cMaxDAC; cDACValue+=cStep)
         {
           #ifdef __TCUSB__       
-            clpGBTInterface.fTC_PSROH.dac_output(cDACValue);  
+            clpGBTInterface->fTC_PSROH.dac_output(cDACValue);  
           #endif
           uint16_t cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
           LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- ADC value = " << +cADCValue << RESET; 

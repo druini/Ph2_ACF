@@ -165,8 +165,8 @@ int main ( int argc, char* argv[] )
     cControlTool.InitializeSettings ( cControlHWFile, outp );
     LOG (INFO) << outp.str();
     outp.str ("");
-    cControlTool.CreateResultDirectory ( cDirectory );
-    cControlTool.InitResultFile ( cResultfile );
+    //cControlTool.CreateResultDirectory ( cDirectory );
+    //cControlTool.InitResultFile ( cResultfile );
     LOG(INFO) << BOLDYELLOW << "Configuring Control (Electrical) FC7" << RESET; 
     cControlTool.ConfigureHw ();
   }
@@ -186,7 +186,7 @@ int main ( int argc, char* argv[] )
 
     else if(cmd.foundOption("external-pattern") && cmd.foundOption("control-file"))
     {
-       cControlROHHybridTester.InjectExternalPattern(cExternalPattern);
+      cControlROHHybridTester.InjectExternalPattern(cExternalPattern);
       cBackEndROHHybridTester.TestULExternalPattern();
     }
   }
@@ -290,10 +290,11 @@ int main ( int argc, char* argv[] )
     cControlROHHybridTester.ClearBRAM(std::string("test"));
   }
 
-  cControlTool.SaveResults();
-  cControlTool.WriteRootFile();
-  cControlTool.CloseResultFile();
+  //cControlTool.SaveResults();
+  //cControlTool.WriteRootFile();
+  //cControlTool.CloseResultFile();
   cControlTool.Destroy();
+  cBackEndTool.Destroy();
 
   if ( !batchMode ) cApp.Run();
   return 0;  
