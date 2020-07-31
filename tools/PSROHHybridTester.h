@@ -14,7 +14,12 @@
 #include "../HWInterface/DPInterface.h"
 
 #ifdef __USE_ROOT__
+  #include "TGraph.h"
+  #include "TMultiGraph.h"
+  #include "TString.h"
+  #include "TObject.h"
   #include "TTree.h"
+  #include "TAxis.h"
 #endif
 
 #ifdef __TCUSB__

@@ -810,36 +810,57 @@ void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t 
     for(auto cOpticalGroup : *cBoard)
     {
       //Create TTree for DAC to ADC conversion in lpGBT
-      auto cDACtoADCTree = new TTree("DACtoADC", "DAC to ADC conversion in lpGBT");
+      auto cDACtoADCTree = new TTree("tDACtoADC", "DAC to ADC conversion in lpGBT");
       //Create variables for TTree branches
       int cADCId = -1;
-      std::vector<uint32_t> cDACValVect;
-      std::vector<uint16_t> cADCValVect;
+      std::vector<int> cDACValVect;
+      std::vector<int> cADCValVect;
       //Create TTree Branches
       cDACtoADCTree->Branch("Id", &cADCId);
       cDACtoADCTree->Branch("DAC", &cDACValVect);
       cDACtoADCTree->Branch("ADC", &cADCValVect);
 
+      //Create TCanvas & TMultiGraph
+      auto cDACtoADCCanvas = new TCanvas("cDACtoADC", "DAC to ADC conversion", 500, 500);
+      auto cObj = gROOT->FindObject("mgDACtoADC");
+      if(cObj) delete cObj;
+      auto cDACtoADCMultiGraph = new TMultiGraph();
+      cDACtoADCMultiGraph->SetName("mgDACtoADC");
+      cDACtoADCMultiGraph->SetTitle("lpGBT - DAC to ADC conversion");
+
       D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>( flpGBTInterface );
       LOG(INFO) << BOLDMAGENTA << "Testing ADC channels" << RESET;
       for(const auto& cADC : pADCs)
       {
+        cDACValVect.clear(), cADCValVect.clear();
         //uint32_t cNValues = (cMaxDAC-cMinDAC)/cStep;
         cADCId = cADC[3] - '0';
-        for(uint32_t cDACValue = cMinDACValue; cDACValue<=cMaxDACValue; cDACValue+=cStep)
+        for(int cDACValue = cMinDACValue; cDACValue<=(int)cMaxDACValue; cDACValue+=cStep)
         {
           #ifdef __TCUSB__       
             clpGBTInterface->fTC_PSROH.dac_output(cDACValue);  
           #endif
-          uint16_t cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
+          int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
           LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- ADC value = " << +cADCValue << RESET; 
           cDACValVect.push_back(cDACValue); 
           cADCValVect.push_back(cADCValue); 
         }
         cDACtoADCTree->Fill();
+        auto cDACtoADCGraph = new TGraph(cDACValVect.size(), cDACValVect.data(), cADCValVect.data());
+        cDACtoADCGraph->SetName(Form("gADC%i", cADCId));
+        cDACtoADCGraph->SetTitle(Form("ADC%i", cADCId));
+        cDACtoADCGraph->SetLineColor(cADCId+1);
+        cDACtoADCGraph->SetFillColor(0);
+        cDACtoADCGraph->SetLineWidth(3);
+        cDACtoADCMultiGraph->Add(cDACtoADCGraph);
       }
       fResultFile->cd();
       cDACtoADCTree->Write();
+      cDACtoADCMultiGraph->Draw("AL");
+      cDACtoADCMultiGraph->GetXaxis()->SetTitle("DAC");
+      cDACtoADCMultiGraph->GetYaxis()->SetTitle("ADC");
+      cDACtoADCCanvas->BuildLegend(0, .2, .8, .9);
+      cDACtoADCMultiGraph->Write();
     }
   }
 }
