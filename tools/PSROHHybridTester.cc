@@ -805,6 +805,7 @@ bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
 
 void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t cMinDACValue, uint32_t cMaxDACValue, uint32_t cStep)
 {
+  #ifdef __USE_ROOT__
   for(auto cBoard : *fDetectorContainer)
   {
     for(auto cOpticalGroup : *cBoard)
@@ -863,5 +864,6 @@ void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t 
       cDACtoADCMultiGraph->Write();
     }
   }
+  #endif
 }
 
