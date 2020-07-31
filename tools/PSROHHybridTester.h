@@ -12,6 +12,11 @@
 
 #include "Tool.h" 
 #include "../HWInterface/DPInterface.h"
+
+#ifdef __USE_ROOT__
+  #include "TTree.h"
+#endif
+
 #ifdef __TCUSB__
   #include "USB_a.h"
 #endif

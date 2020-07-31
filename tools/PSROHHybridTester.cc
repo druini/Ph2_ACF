@@ -803,26 +803,43 @@ bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
   return cTestSuccess;
 }
 
-void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t cMinDAC, uint32_t cMaxDAC, uint32_t cStep)
+void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t cMinDACValue, uint32_t cMaxDACValue, uint32_t cStep)
 {
   for(auto cBoard : *fDetectorContainer)
   {
     for(auto cOpticalGroup : *cBoard)
     {
+      //Create TTree for DAC to ADC conversion in lpGBT
+      auto cDACtoADCTree = new TTree("DACtoADC", "DAC to ADC conversion in lpGBT");
+      //Create variables for TTree branches
+      int cADCId = -1;
+      std::vector<uint32_t> cDACValVect;
+      std::vector<uint16_t> cADCValVect;
+      //Create TTree Branches
+      cDACtoADCTree->Branch("Id", &cADCId);
+      cDACtoADCTree->Branch("DAC", &cDACValVect);
+      cDACtoADCTree->Branch("ADC", &cADCValVect);
+
       D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>( flpGBTInterface );
       LOG(INFO) << BOLDMAGENTA << "Testing ADC channels" << RESET;
       for(const auto& cADC : pADCs)
       {
         //uint32_t cNValues = (cMaxDAC-cMinDAC)/cStep;
-        for(uint32_t cDACValue = cMinDAC; cDACValue<=cMaxDAC; cDACValue+=cStep)
+        cADCId = int(cADC[3]);
+        for(uint32_t cDACValue = cMinDACValue; cDACValue<=cMaxDACValue; cDACValue+=cStep)
         {
           #ifdef __TCUSB__       
             clpGBTInterface->fTC_PSROH.dac_output(cDACValue);  
           #endif
           uint16_t cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
           LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- ADC value = " << +cADCValue << RESET; 
+          cDACValVect.push_back(cDACValue); 
+          cADCValVect.push_back(cADCValue); 
         }
+        cDACtoADCTree->Fill();
       }
+      fResultFile->cd();
+      cDACtoADCTree->Write();
     }
   }
 }

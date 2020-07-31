@@ -140,7 +140,7 @@ int main ( int argc, char* argv[] )
     TQObject::Connect ( "TCanvas", "Closed()", "TApplication", &cApp, "Terminate()" );
 
   std::string cResultfile = "Hybrid";
-  Timer t;
+  //Timer t;
 
   //Initialize and Configure Back-End (Optical) FC7
   Tool cBackEndTool;
@@ -150,6 +150,8 @@ int main ( int argc, char* argv[] )
   cBackEndTool.InitializeSettings ( cBackEndHWFile, outp );
   LOG (INFO) << outp.str();
   outp.str ("");
+  cBackEndTool.CreateResultDirectory ( cDirectory );
+  cBackEndTool.InitResultFile ( cResultfile );
   LOG(INFO) << BOLDYELLOW << "Configuring Back-End (Optical) FC7" << RESET; 
   cBackEndTool.ConfigureHw ();
   //Initialize BackEnd Hybrid Tester
@@ -165,8 +167,7 @@ int main ( int argc, char* argv[] )
     cControlTool.InitializeSettings ( cControlHWFile, outp );
     LOG (INFO) << outp.str();
     outp.str ("");
-    //cControlTool.CreateResultDirectory ( cDirectory );
-    //cControlTool.InitResultFile ( cResultfile );
+
     LOG(INFO) << BOLDYELLOW << "Configuring Control (Electrical) FC7" << RESET; 
     cControlTool.ConfigureHw ();
   }
@@ -290,9 +291,11 @@ int main ( int argc, char* argv[] )
     cControlROHHybridTester.ClearBRAM(std::string("test"));
   }
 
-  //cControlTool.SaveResults();
-  //cControlTool.WriteRootFile();
-  //cControlTool.CloseResultFile();
+  //Save Result File
+  cBackEndTool.SaveResults();
+  cBackEndTool.WriteRootFile();
+  cBackEndTool.CloseResultFile();
+  //Destroy Tools
   cControlTool.Destroy();
   cBackEndTool.Destroy();
 
