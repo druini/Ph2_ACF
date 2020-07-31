@@ -1,6 +1,6 @@
 /*!
-  \file                  lpGBTInterface.h
-  \brief                 The implementation follows the skeleton of the register map section of the lpGBT Manual
+  \file                  D19clpGBTInterface.h
+  \brief                 Interface to access and control the low-power Gigabit Transceiver chip 
   \author                Younes Otarid
   \version               1.0
   \date                  03/03/20
@@ -54,6 +54,7 @@ namespace Ph2_HwInterface
     void     PhaseAlignRx          (Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)                                                                                                      ;
 
     //LpGBT status functions
+    void     PrintChipMode         (Ph2_HwDescription::Chip* pChip)                                                                                                                                                                                  ;           
     uint8_t  GetRxDllStatus        (Ph2_HwDescription::Chip* pChip, uint8_t pGroup)                                                                                                                                                                  ;
     uint8_t  GetRxPhase            (Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel)                                                                                                                                                ;
     bool     IsRxLocked            (Ph2_HwDescription::Chip* pChip, uint8_t pGroup)                                                                                                                                                                  ;

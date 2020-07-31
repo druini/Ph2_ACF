@@ -1,6 +1,6 @@
 /*!
-  \file                  lpGBTInterface.cc
-  \brief                 The implementation follows the skeleton of the register map section of the lpGBT Manual
+  \file                  D19clpGBTInterface.cc
+  \brief                 Interface to access and control the low-power Gigabit Transceiver chip 
   \author                Younes Otarid
   \version               1.0
   \date                  03/03/20
@@ -22,7 +22,6 @@ namespace Ph2_HwInterface
   bool D19clpGBTInterface::ConfigureChip (Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
   {
     LOG(INFO) << BOLDBLUE << "Configuring lpGBT" << RESET;
-    LOG(INFO) << BOLDGREEN << "LpGBT MODE is " << this->ReadReg(pChip, 0x140) << RESET;
     //Load register map from configuration file
     ChipRegMap clpGBTRegMap = pChip->getRegMap();;
     for(const auto& cRegItem : clpGBTRegMap) 
@@ -421,6 +420,29 @@ namespace Ph2_HwInterface
   /*-------------------------------------------------------------------------*/
   /* lpGBT status functions                                                  */
   /*-------------------------------------------------------------------------*/
+
+  void D19clpGBTInterface::PrintChipMode(Ph2_HwDescription::Chip* pChip)
+  {
+    switch((this->ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 0x0F)
+    {
+      case 0: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Off" << RESET; break;
+      case 1: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex TX" << RESET; break;
+      case 2: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex RX" << RESET; break;
+      case 3: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Transceiver" << RESET; break;
+      case 4: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Off" << RESET; break;
+      case 5: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex TX" << RESET; break;
+      case 6: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex RX" << RESET; break;
+      case 7: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Transceiver" << RESET; break;
+      case 8: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Off" << RESET; break;
+      case 9: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex TX" << RESET; break;
+      case 10: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex RX" << RESET; break;
+      case 11: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Transceiver" << RESET; break;
+      case 12: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Off" << RESET; break;
+      case 13: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex TX" << RESET; break;
+      case 14: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex RX" << RESET; break;
+      case 15: LOG(INFO) << BOLDGREEN << "Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Transceiver" << RESET; break;
+    }
+  }
 
   bool D19clpGBTInterface::IslpGBTReady(Ph2_HwDescription::Chip* pChip)
   {
