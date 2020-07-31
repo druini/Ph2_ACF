@@ -825,7 +825,7 @@ void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t 
       for(const auto& cADC : pADCs)
       {
         //uint32_t cNValues = (cMaxDAC-cMinDAC)/cStep;
-        cADCId = int(cADC[3]);
+        cADCId = cADC[3] - '0';
         for(uint32_t cDACValue = cMinDACValue; cDACValue<=cMaxDACValue; cDACValue+=cStep)
         {
           #ifdef __TCUSB__       

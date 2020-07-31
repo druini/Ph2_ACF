@@ -130,6 +130,7 @@ int main ( int argc, char* argv[] )
   uint8_t cExternalPattern = ( cmd.foundOption ( "external-pattern" ) ) ? convertAnyInt ( cmd.optionValue ( "external-pattern" ).c_str() ) : 0;
   uint8_t cInternalPattern8 = ( cmd.foundOption ( "internal-pattern" ) ) ? convertAnyInt ( cmd.optionValue ( "internal-pattern" ).c_str() ) : 0;
   uint32_t cInternalPattern32 = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0 ;
+  //std::string cADCList = ( cmd.foundOption( "testADC" ) ) ? ( cmd.optionValue( "testADC" ) ) : "0,1,2,3,4,5,6,7";
 
   cDirectory += Form("PS_ROH_%s", cHybridId.c_str());
 
@@ -219,7 +220,16 @@ int main ( int argc, char* argv[] )
 
   if( cmd.foundOption("testADC") )
   {
-    std::vector<std::string> cADCs = {"ADC0"};
+    /*
+    std::vector<std::string> cADCs;
+    std::string cADC("ADC");
+    for(const char& cId : cADCList)
+    {
+      if(cId == ',') continue;
+      cADCs.push_back(cADC+cId);
+    }
+    */
+    std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
     cBackEndROHHybridTester.TestADC(cADCs, 0, 1000, 20);
   }
     
