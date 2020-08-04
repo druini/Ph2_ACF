@@ -223,9 +223,9 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                     if(clpGBTInterface->IslpGBTReady(cOpticalGroup->flpGBT))
-                        LOG(INFO) << BOLDMAGENTA << "lpGBT Configured" << RESET;
+                        LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
                     else{ 
-                        LOG(INFO) << BOLDRED << "lpGBT NOT READY" << RESET;
+                        LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY]" << RESET;
                         exit(0);
                     }
                 }
