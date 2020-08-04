@@ -274,6 +274,12 @@ class RD53FWInterface : public BeBoardFWInterface
     float calcTemperature(uint32_t sensor1, uint32_t sensor2, int beta = 3435);
     float calcVoltage(uint32_t senseVDD, uint32_t senseGND);
 
+
+    // ##############################
+    // # Pseudo Random Bit Sequence #
+    // ##############################
+    bool RunPRBStest (bool given_time, unsigned long long frames_or_time, uint16_t hybrid_id, uint16_t chip_id);
+
   private:
     void PrintFWstatus();
     void TurnOffFMC();
