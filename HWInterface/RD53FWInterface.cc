@@ -1755,100 +1755,95 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
     return voltage;
 }
 
-  
-  // ##############################
-  // # Pseudo Random Bit Sequence #
-  // ##############################
-
-  bool RD53FWInterface::RunPRBStest (bool given_time, unsigned long long frames_or_time, uint16_t hybrid_id, uint16_t chip_id)
-  {
-
-    // Initialize number of frames and time to run
+// ##############################
+// # Pseudo Random Bit Sequence #
+// ##############################
+bool RD53FWInterface::RunPRBStest(bool given_time, unsigned long long frames_or_time, uint16_t hybrid_id, uint16_t chip_id)
+{
+    const int          fps        = 3.5E7;
+    const int          n_prints   = 10; // Only an indication, the real number of printouts will be driven by the length of the time steps
     unsigned long long frames2run = 0;
     unsigned           time2run   = 0;
-    int                fps        = 3.5E7;
 
-    // if given a time to run, convert into an approximate number of frames assuming the above FPS
-    if(given_time){
-      time2run   = frames_or_time;
-      frames2run = (unsigned long long)time2run*fps;
-      LOG (INFO) << GREEN << "Running " << time2run << "s will send about " << frames2run << " frames" << RESET;
+    if(given_time == true)
+    {
+        time2run   = frames_or_time;
+        frames2run = (unsigned long long)time2run * fps;
+        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << time2run << RESET << GREEN << "s will send about " << BOLDYELLOW << frames2run << RESET << GREEN << " frames" << RESET;
+    }
+    else
+    {
+        frames2run = frames_or_time;
+        time2run   = (unsigned)frames2run / fps;
+        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << frames2run << RESET << GREEN << " frames will take about " << BOLDYELLOW << time2run << RESET << GREEN << "s" << RESET;
     }
 
-    // otherwise find the time it takes to run N frames with the given FPS
-    else{
-      frames2run = frames_or_time;
-      time2run   = (unsigned)frames2run/fps;
-      LOG (INFO) << GREEN << "Running " << frames2run << " frames will take about " << time2run << "s" << RESET;
-    }
-    
     // Configure number of printouts and calculate the frequency of printouts
-    int n_prints = 10; // Only an indication, the real number of printouts will be driven by the length of the time steps
-    unsigned time_per_step = std::min(std::max((unsigned)time2run/n_prints, (unsigned)1), (unsigned)3600); // length of a time step. The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s).
+    unsigned time_per_step =
+        std::min(std::max((unsigned)time2run / n_prints, (unsigned)1), (unsigned)3600); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
     // Reset counter
-    WriteStackReg({
-	{"user.ctrl_regs.PRBS_checker.reset_cntr",1},
-	{"user.ctrl_regs.PRBS_checker.reset_cntr",0}});
+    WriteStackReg({{"user.ctrl_regs.PRBS_checker.reset_cntr", 1}, {"user.ctrl_regs.PRBS_checker.reset_cntr", 0}});
 
     // Set PRBS frames to run
     uint32_t lowFrames, highFrames;
     std::tie(highFrames, lowFrames) = bits::unpack<32, 32>(frames2run);
-    WriteStackReg({
-        {"user.ctrl_regs.prbs_frames_to_run_low",  lowFrames},
-	{"user.ctrl_regs.prbs_frames_to_run_high", highFrames},
-        {"user.ctrl_regs.PRBS_checker.load_config",1},
-        {"user.ctrl_regs.PRBS_checker.load_config",0}});
-    LOG (INFO) << GREEN << "After conversion into 2x32 bits: low number: " << lowFrames << " -- high number: " << highFrames << RESET;
+    WriteStackReg({{"user.ctrl_regs.prbs_frames_to_run_low", lowFrames},
+                   {"user.ctrl_regs.prbs_frames_to_run_high", highFrames},
+                   {"user.ctrl_regs.PRBS_checker.load_config", 1},
+                   {"user.ctrl_regs.PRBS_checker.load_config", 0}});
 
     // Start PRBS
-    WriteStackReg({
-        {"user.ctrl_regs.PRBS_checker.start_checker",1},
-	{"user.ctrl_regs.PRBS_checker.start_checker",0}});
-    
+    WriteStackReg({{"user.ctrl_regs.PRBS_checker.start_checker", 1}, {"user.ctrl_regs.PRBS_checker.start_checker", 0}});
+
     bool run_done = false;
-    int idx = 0;
-    LOG (INFO) << BOLDGREEN << "===== PRBS run starting =====" << RESET;
-    while(!run_done)
-      {
-	// Sleep for a given time until the next printout
-	sleep(time_per_step);
-	
-	// Read frame counters to check progress
-	uint32_t cntr_lo = ReadReg("user.stat_regs.prbs_frame_cntr_low");
-	uint32_t cntr_hi = ReadReg("user.stat_regs.prbs_frame_cntr_high");
-	auto current_frame = bits::pack<32, 32>(cntr_hi, cntr_lo);
-	
-	// Print progress and intermediate BER information
-	float percent_done = (float)current_frame/frames2run*100;
-	LOG (INFO) << GREEN << "Now running for " << (unsigned)time_per_step*(idx+1) << "s (" << std::setprecision(3) << percent_done << "% done)" << RESET;      
-	LOG (INFO) << GREEN << "Current BER counter: " << ReadReg("user.stat_regs.prbs_ber_cntr") << RESET;
-	if(given_time) run_done = ((unsigned)time_per_step*(idx+1) >= time2run);
-	else           run_done = (current_frame >= frames2run);
-	idx++;
-      }
-    LOG (INFO) << BOLDGREEN << "===== Run finished =====" << RESET;
+    int  idx      = 0;
+    LOG(INFO) << BOLDGREEN << "===== PRBS run starting =====" << RESET;
+    while(run_done == false)
+    {
+        // Sleep for a given time until the next printout
+        sleep(time_per_step);
+
+        // Read frame counters to check progress
+        uint32_t cntr_lo       = ReadReg("user.stat_regs.prbs_frame_cntr_low");
+        uint32_t cntr_hi       = ReadReg("user.stat_regs.prbs_frame_cntr_high");
+        auto     current_frame = bits::pack<32, 32>(cntr_hi, cntr_lo);
+
+        // Print progress and intermediate BER information
+        float percent_done = (float)current_frame / frames2run * 100;
+        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << (unsigned)time_per_step * (idx + 1) << RESET << GREEN << "s (" << BOLDYELLOW << std::setprecision(0) << percent_done << RESET
+                  << GREEN << "% done)" << RESET;
+        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << ReadReg("user.stat_regs.prbs_ber_cntr") << RESET;
+        if(given_time == true)
+            run_done = ((unsigned)time_per_step * (idx + 1) >= time2run);
+        else
+            run_done = (current_frame >= frames2run);
+        idx++;
+    }
+    LOG(INFO) << BOLDGREEN << "===== Run finished =====" << RESET;
 
     WriteStackReg({
 
-	// Stop PRBS
-	{"user.ctrl_regs.PRBS_checker.stop_checker",1},
-	{"user.ctrl_regs.PRBS_checker.stop_checker",0},
+        // Stop PRBS
+        {"user.ctrl_regs.PRBS_checker.stop_checker", 1},
+        {"user.ctrl_regs.PRBS_checker.stop_checker", 0},
 
         // Select module and chip
-	{"user.ctrl_regs.PRBS_checker.module_addr",  hybrid_id},
-	{"user.ctrl_regs.PRBS_checker.chip_address", chip_id}});
+        {"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
+        {"user.ctrl_regs.PRBS_checker.chip_address", chip_id}});
 
     // Read PRBS frame counter
-    uint32_t PRBScntrLO = ReadReg("user.stat_regs.prbs_frame_cntr_low");
-    uint32_t PRBScntrHI = ReadReg("user.stat_regs.prbs_frame_cntr_high");
-    auto frameCounter = bits::pack<32, 32>(PRBScntrHI, PRBScntrLO);
-    LOG (INFO) << BOLDGREEN << "===== PRBS test summary =====" << RESET;
-    LOG (INFO) << GREEN << "Final number of PRBS frames sent: " << frameCounter << RESET;
-     
+    uint32_t PRBScntrLO   = ReadReg("user.stat_regs.prbs_frame_cntr_low");
+    uint32_t PRBScntrHI   = ReadReg("user.stat_regs.prbs_frame_cntr_high");
+    auto     frameCounter = bits::pack<32, 32>(PRBScntrHI, PRBScntrLO);
+    LOG(INFO) << BOLDGREEN << "===== PRBS test summary =====" << RESET;
+    LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
+
     // Read PRBS BER counter
-    LOG (INFO) << GREEN << "Final BER counter: " << ReadReg("user.stat_regs.prbs_ber_cntr") << RESET;
+    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << ReadReg("user.stat_regs.prbs_ber_cntr") << RESET;
+    LOG(INFO) << BOLDGREEN << "===== End of summary =====" << RESET;
+
     return !ReadReg("user.stat_regs.prbs_ber_cntr");
-  }
+}
 
 } // namespace Ph2_HwInterface

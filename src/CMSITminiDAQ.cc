@@ -108,15 +108,9 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clockdelay physics eudaq]. Default: pixelalive",
+                     "injdelay clockdelay physics eudaq prbstime prbsframes]. Default: pixelalive",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
-
-    cmd.defineOption ("prbstime", "Time to run the PRBS test in seconds. If given together with the 'prbsframes' option, 'prbstime' will be given preference. Default: 0", CommandLineProcessing::ArgvParser::OptionRequiresValue);
-    cmd.defineOptionAlternative ("prbstime", "t");
-
-    cmd.defineOption ("prbsframes", "Number of frames to run the PRBS test. If given together with 'prbstime' option, 'prbsframes' will be overridden. Default: 0", CommandLineProcessing::ArgvParser::OptionRequiresValue);
-    cmd.defineOptionAlternative ("prbsframes", "n");
 
     cmd.defineOption("binary", "Binary file to decode.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("binary", "b");
@@ -167,16 +161,6 @@ int main(int argc, char** argv)
     else if(cmd.foundOption("replay") == true)
         RegManager::enableReplay(cmd.optionValue("replay"));
     std::string eudaqRunCtr = cmd.foundOption("eudaqRunCtr") == true ? cmd.optionValue("eudaqRunCtr") : "tcp://localhost:44000";
-    unsigned prbs_time2run = 0;
-    unsigned long long prbs_frames2run = 0;
-    if(whichCalib == "prbs"){
-      if(cmd.foundOption("prbstime"))   std::stringstream(cmd.optionValue("prbstime")) >> prbs_time2run;
-      if(cmd.foundOption("prbsframes")) std::stringstream(cmd.optionValue("prbsframes")) >> prbs_frames2run;
-      if(!cmd.foundOption("prbstime") && !cmd.foundOption("prbsframes")){
-	LOG (ERROR) << BOLDRED << "Neither the time (to be given with -t <TIME IN SECONDS>) nor the number of frames (to be given with -n <NUMBER OF FRAMES>) was specified for the PRBS test. Abort." << RESET;
-	exit(EXIT_FAILURE);
-      }
-    }
 
     // ######################
     // # Supervisor section #
@@ -553,35 +537,40 @@ int main(int argc, char** argv)
             exit(EXIT_FAILURE);
 #endif
         }
-      else if (whichCalib == "prbs")
+        else if((whichCalib == "prbstime") || (whichCalib == "prbsframes"))
         {
-          // ################
-          // # Run PRBStest #
-          // ################
+            // #################
+            // # Run PRBS test #
+            // #################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Pseudo Random Bit Sequence test @@@" << RESET;
 
-          LOG (INFO) << BOLDMAGENTA << "@@@ Performing Pseudo Random Bit Sequence test @@@" << RESET;
+            if(cmd.argument(0) == "")
+            {
+                LOG(ERROR) << BOLDRED
+                           << "Neither the time (to be given with -t <TIME IN SECONDS>) nor the number of frames (to be given with -n <NUMBER OF FRAMES>) was specified for the PRBS test. Abort."
+                           << RESET;
+                exit(EXIT_FAILURE);
+            }
 
-	  // get command line options for the required time or number of frames to run. If both are given, the "time" mode will be given preference.
-	  bool given_time = false;
-	  unsigned long long frames_or_time = 0;
-	  if(prbs_time2run > 0){
-	    given_time = true;
-	    frames_or_time = prbs_time2run;
-	    if(prbs_frames2run > 0) LOG (WARNING) << BOLDYELLOW << "Both a time and a number of frames is given for the PRBS test. Neglecting the number of frames and only considering the time option." << RESET;
-	  }
-	  else{
-	    frames_or_time = prbs_frames2run;
-	  }
+            unsigned long long frames_or_time = strtoull(cmd.argument(0).c_str(), NULL, 0);
+            bool               given_time     = false;
+            if(whichCalib == "prbstime") given_time = true;
 
-          for (const auto cBoard : *mySysCntr.fDetectorContainer)
-            for (const auto cOpticalGroup : *cBoard)
-              for (const auto cModule : *cOpticalGroup)
-                for (const auto cChip : *cModule)
-                  {
-		    mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT",2, true);
-                    LOG (INFO) << GREEN << "PRBS test for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW << ((static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getBeBoardId()])->RunPRBStest(given_time, frames_or_time, cModule->getId(), cChip->getId()) == true) ? "PASSED" : "NOT PASSED") << RESET;
-		    LOG (INFO) << BOLDGREEN << "===== End of summary =====" << RESET;
-                  }
+            for(const auto cBoard: *mySysCntr.fDetectorContainer)
+                for(const auto cOpticalGroup: *cBoard)
+                    for(const auto cModule: *cOpticalGroup)
+                        for(const auto cChip: *cModule)
+                        {
+                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 2, true);
+                            LOG(INFO) << GREEN << "PRBS test for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/"
+                                      << cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
+                                      << ((static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getBeBoardId()])->RunPRBStest(given_time, frames_or_time, cModule->getId(), cChip->getId()) ==
+                                           true)
+                                              ? "PASSED"
+                                              : "NOT PASSED")
+                                      << RESET;
+                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 1, true);
+                        }
         }
         else
         {
