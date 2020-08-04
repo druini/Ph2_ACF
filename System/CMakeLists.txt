@@ -12,10 +12,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/NetworkUtils)
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
+    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     
     #library directories
     link_directories(${UHAL_UHAL_LIB_PREFIX})
+    link_directories(${UHAL_LOG_LIB_PREFIX})
+    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
 
     #find source files
     file(GLOB HEADERS *.h)

@@ -7,6 +7,8 @@ MESSAGE(STATUS " ")
 
 #includes
 include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
+include_directories(${UHAL_LOG_INCLUDE_PREFIX})
 include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
 include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
 include_directories(${PROJECT_SOURCE_DIR}/Utils)
