@@ -743,7 +743,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         decodedEvents.clear();
         uint16_t status = RD53FWInterface::DecodeEventsMultiThreads(pData, decodedEvents); // Decode events with multiple threads
         // uint16_t status = RD53FWInterface::DecodeEvents(pData, decodedEvents, {});         // Decode events with a
-        // single thread RD53FWInterface::PrintEvents(decodedEvents, pData); // @TMP@
+        // RD53FWInterface::PrintEvents(decodedEvents, pData); // @TMP@
         if(RD53FWInterface::EvtErrorHandler(status) == false)
         {
             retry = true;
@@ -1093,8 +1093,7 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
     if(cfg->autozero_source == AutozeroSource::FastCMDFSM)
-        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 44, 1 << 14).getFrames(),
-                         -1); // @TMP@ : GLOBAL_PULSE_RT = "Acquire Zero level in SYNC FE"
+        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 44, 1 << 14).getFrames(), -1); // @TMP@ : GLOBAL_PULSE_RT = "Acquire Zero level in SYNC FE"
 
     // ##################################
     // # Configuring fast command block #
@@ -1716,7 +1715,8 @@ float RD53FWInterface::calcTemperature(uint32_t sensor1, uint32_t sensor2, int b
     float voltage = (sensor1 - sensor2) * ADC_LSB;
     if((voltage > ((RD53Shared::setBits(numberOfBits) + 1.) * safetyMargin * ADC_LSB)) || (voltage >= Vdivider))
     {
-        LOG(WARNING) << BOLDRED << "\t--> Thermistor measurement in saturation: either very cold or floating (voltage = " << BOLDYELLOW << voltage << BOLDRED << ")" << RESET;
+        LOG(WARNING) << BOLDRED << "\t\t--> Thermistor measurement in saturation: either very cold or floating (voltage = " << BOLDYELLOW << std::setprecision(3) << voltage << std::setprecision(-1)
+                     << BOLDRED << ")" << RESET;
         return minimumTemperature;
     }
 
@@ -1750,7 +1750,10 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
     // #####################
     float voltage = (senseVDD - senseGND) * ADC_LSB * VdividerFactor;
     if(voltage < ADC_LSB * VdividerFactor)
-        LOG(WARNING) << BOLDRED << "\t--> Very low voltage: either floating VDD sense-line or FMC not powered (voltage = " << BOLDYELLOW << voltage << BOLDRED << ")" << RESET;
+        LOG(WARNING) << BOLDRED << "\t\t--> Very low voltage: either floating VDD sense-line or FMC not powered (voltage = " << BOLDYELLOW << std::setprecision(3) << voltage << std::setprecision(-1)
+                     << BOLDRED << ")" << RESET;
+    else if(voltage > VrefADC * VdividerFactor)
+        LOG(WARNING) << BOLDRED << "\t\t--> Measured voltage below reference: senseVDD = " << BOLDYELLOW << senseVDD << BOLDRED << "; senseGND = " << BOLDYELLOW << senseGND << RESET;
 
     return voltage;
 }

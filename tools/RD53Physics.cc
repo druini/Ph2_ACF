@@ -116,7 +116,7 @@ void Physics::Stop()
     this->closeFileHandler();
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded events: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << 1. * numberOfEventsPerRun / nTRIGxEvent << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
 }
 
 void Physics::localConfigure(const std::string fileRes_, int currentRun)

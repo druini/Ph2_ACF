@@ -442,13 +442,13 @@ float RD53Interface::ReadChipMonitor(Chip* pChip, const char* observableName)
     if(std::string(observableName).find("TEMPSENS") != std::string::npos)
     {
         value = RD53Interface::measureTemperature(pChip, observable);
-        LOG(INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << std::setprecision(1) << value * measError / 100 << BOLDBLUE << " C"
-                  << std::setprecision(-1) << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " C" << std::setprecision(-1)
+                  << RESET;
     }
     else
     {
         value = measureVoltageCurrent(pChip, observable, isCurrentNotVoltage);
-        LOG(INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << std::setprecision(1) << value * measError / 100 << BOLDBLUE
+        LOG(INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE
                   << (isCurrentNotVoltage == true ? " A" : " V") << std::setprecision(-1) << RESET;
     }
 
@@ -540,7 +540,6 @@ float RD53Interface::convertADC2VorI(Chip* pChip, uint32_t value, bool isCurrent
 
     const float ADCslope = (actualVrefADC - ADCoffset) / (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1); // [V/ADC]
     const float voltage  = ADCoffset + ADCslope * value;
-
     return voltage / (isCurrentNotVoltage == true ? resistorI2V : 1);
 }
 

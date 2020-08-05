@@ -302,6 +302,11 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
                         float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
                         theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<ClkDelaySize>>().data[i] = occ;
                     }
+
+        // ##############################################
+        // # Send periodic data to minitor the progress #
+        // ##############################################
+        ClockDelay::sendData();
     }
 }
 
