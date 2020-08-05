@@ -65,7 +65,7 @@ int main ( int argc, char* argv[] )
   cmd.defineOption("internal-pattern", "Internally Generated LpGBT Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
   cmd.defineOptionAlternative("internal-pattern", "ip");
   cmd.defineOption("external-pattern", "Externlly Generated LpGBT Pattern using the Data Player for Control FC7", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
-  cmd.defineOptionAlternative("internal-pattern", "ep");
+  cmd.defineOptionAlternative("external-pattern", "ep");
   //Test Reset lines
   cmd.defineOption("testReset", "Test Reset lines" );
   cmd.defineOptionAlternative("testReset", "r");
@@ -161,6 +161,7 @@ int main ( int argc, char* argv[] )
 
   //Initialize and Configure Control (Electrical) FC7
   Tool cControlTool;
+  PSROHHybridTester cControlROHHybridTester;
   if(cmd.foundOption ( "control-file" ))
   {
     LOG(INFO) << BOLDYELLOW << "Initializing Control (Electrical) FC7" << RESET; 
@@ -171,11 +172,9 @@ int main ( int argc, char* argv[] )
 
     LOG(INFO) << BOLDYELLOW << "Configuring Control (Electrical) FC7" << RESET; 
     cControlTool.ConfigureHw ();
+    //Initialize Control Hybrid Tester
+    cControlROHHybridTester.Inherit(&cControlTool);
   }
-  //Initialize Control Hybrid Tester
-  PSROHHybridTester cControlROHHybridTester;
-  cControlROHHybridTester.Inherit(&cControlTool);
-
 
   cBackEndROHHybridTester.PrepareFCMDTest();     
           

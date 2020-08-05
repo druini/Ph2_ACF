@@ -246,10 +246,10 @@ void PSROHHybridTester::CheckFastCommands(BeBoard* pBoard, const std::string & s
 	    fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.fe_for_ps_roh_fcmd_test.start_pattern", std::stoi(sFastCommand.c_str(),nullptr,2)); 
             fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.start_fe_for_ps_roh_fcmd_test", 0x01);     
 
-            bool cSSAlFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_fcmd_SSA_l_test_done") == 1);
-            bool cSSArFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_fcmd_SSA_r_test_done") == 1);
-            bool cCIClFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_fcmd_CIC_l_test_done") == 1);
-            bool cCICrFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_fcmd_CIC_r_test_done") == 1);
+            bool cSSAlFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_SSA_l_test_done") == 1);
+            bool cSSArFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_SSA_r_test_done") == 1);
+            bool cCIClFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_CIC_l_test_done") == 1);
+            bool cCICrFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_CIC_r_test_done") == 1);
 
             LOG (INFO) << GREEN << "============================" << RESET;
             LOG (INFO) << BOLDGREEN << "Fast commands test" << RESET;
@@ -259,11 +259,11 @@ void PSROHHybridTester::CheckFastCommands(BeBoard* pBoard, const std::string & s
 	    auto NTrials = 0;
             while(!cSSAlFCMDCheckDone && NTrials < MAXNRETRY) {
                 std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-                cSSAlFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_fcmd_SSA_l_test_done") == 1);
+                cSSAlFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_SSA_l_test_done") == 1);
                 NTrials++;
             }
             if(cSSAlFCMDCheckDone) {
-                bool SSAlFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_fcmd_SSA_l_stat");
+                bool SSAlFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_SSA_l_stat");
                 if(SSAlFCMDStat){
                     LOG(INFO) << "SSA l FCMD test ->" << BOLDGREEN << " PASSED" << RESET;
                 }
@@ -277,11 +277,11 @@ void PSROHHybridTester::CheckFastCommands(BeBoard* pBoard, const std::string & s
 	    NTrials = 0;
             while(!cSSArFCMDCheckDone && NTrials < MAXNRETRY) {
                 std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-                cSSArFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_fcmd_SSA_r_test_done") == 1);
+                cSSArFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_SSA_r_test_done") == 1);
                 NTrials++;
             }
             if(cSSArFCMDCheckDone) {
-                bool SSArFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_fcmd_SSA_r_stat");
+                bool SSArFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_SSA_r_stat");
                 if(SSArFCMDStat){
                     LOG(INFO) << "SSA r FCMD test ->" << BOLDGREEN << " PASSED" << RESET;
                 }
@@ -295,11 +295,11 @@ void PSROHHybridTester::CheckFastCommands(BeBoard* pBoard, const std::string & s
 	    NTrials = 0;
             while(!cCIClFCMDCheckDone && NTrials < MAXNRETRY) {
                 std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-                cCIClFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_fcmd_CIC_l_test_done") == 1);
+                cCIClFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_CIC_l_test_done") == 1);
                 NTrials++;
             }
             if(cCIClFCMDCheckDone) {
-                bool CIClFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_fcmd_CIC_l_stat");
+                bool CIClFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_CIC_l_stat");
                 if(CIClFCMDStat){
                     LOG(INFO) << "CIC l FCMD test ->" << BOLDGREEN << " PASSED" << RESET;
                 }
@@ -313,11 +313,11 @@ void PSROHHybridTester::CheckFastCommands(BeBoard* pBoard, const std::string & s
 	    NTrials = 0;
             while(!cCICrFCMDCheckDone && NTrials < MAXNRETRY) {
                 std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-                cCICrFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_fcmd_CIC_r_test_done") == 1);
+                cCICrFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_CIC_r_test_done") == 1);
                 NTrials++;
             }
             if(cCICrFCMDCheckDone) {
-                bool CICrFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_fcmd_CIC_r_stat");
+                bool CICrFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_CIC_r_stat");
                 if(CICrFCMDStat){
                     LOG(INFO) << "CIC r FCMD test ->" << BOLDGREEN << " PASSED" << RESET;
                 }
@@ -393,20 +393,20 @@ void PSROHHybridTester::CheckClocks(BeBoard* pBoard)
 {
             //clk test
             fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x01);
-            bool c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_clk_320_l_test_done") == 1);
-            bool c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_clk_320_r_test_done") == 1);
-            bool c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_clk_640_l_test_done") == 1);
-            bool c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_clk_640_r_test_done") == 1);
+            bool c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_test_done") == 1);
+            bool c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_test_done") == 1);
+            bool c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_test_done") == 1);
+            bool c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_test_done") == 1);
             LOG (INFO) << GREEN << "============================" << RESET;
             LOG (INFO) << BOLDGREEN << "Clock test" << RESET;
 
             LOG(INFO) << "Waiting for clock test";
             while(!c320lClkTestDone) {
                 std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-                c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_clk_320_l_test_done") == 1);
+                c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_test_done") == 1);
             }
             if(c320lClkTestDone) {
-                bool Clk320lStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_clk_320_l_stat");
+                bool Clk320lStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_stat");
 
                 if(Clk320lStat) LOG(INFO) << "320 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
                 else LOG(ERROR) << "320 l clock test ->" << BOLDRED << " FAILED" << RESET;
@@ -414,10 +414,10 @@ void PSROHHybridTester::CheckClocks(BeBoard* pBoard)
 
             while(!c320rClkTestDone) {
                 std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-                c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_clk_320_r_test_done") == 1);
+                c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_test_done") == 1);
             }
             if(c320rClkTestDone) {
-                bool Clk320rStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_clk_320_r_stat");
+                bool Clk320rStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_stat");
 
                 if(Clk320rStat) LOG(INFO) << "320 r clk test ->" << BOLDGREEN << " PASSED" << RESET;
                 else LOG(ERROR) << "320 r clock test ->" << BOLDRED << " FAILED" << RESET;
@@ -425,10 +425,10 @@ void PSROHHybridTester::CheckClocks(BeBoard* pBoard)
  
             while(!c640lClkTestDone) {
                 std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-                c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_clk_640_l_test_done") == 1);
+                c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_test_done") == 1);
             }
             if(c640lClkTestDone) {
-                bool Clk640lStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_clk_640_l_stat");
+                bool Clk640lStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_stat");
 
                 if(Clk640lStat) LOG(INFO) << "640 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
                 else LOG(ERROR) << "640 l clock test ->" << BOLDRED << " FAILED" << RESET;
@@ -436,10 +436,10 @@ void PSROHHybridTester::CheckClocks(BeBoard* pBoard)
 
             while(!c640rClkTestDone) {
                 std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-                c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_clk_640_r_test_done") == 1);
+                c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_test_done") == 1);
             }
            if(c640rClkTestDone) {
-                bool Clk640rStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_for_ps_roh.fe_for_ps_roh_clk_640_r_stat");
+                bool Clk640rStat = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_stat");
                 if(Clk640rStat) LOG(INFO) << "640 r clk test ->" << BOLDGREEN << " PASSED" << RESET;
                 else LOG(ERROR) << "640 r clock test ->" << BOLDRED << " FAILED" << RESET;
             }
@@ -676,7 +676,7 @@ void PSROHHybridTester::InjectExternalPattern(uint8_t pPattern)
   BeBoardFWInterface* pInterface = dynamic_cast<BeBoardFWInterface*>( fBeBoardFWMap.find(0)->second );
 
   //Check if Emulator is running
-  if (cDPInterfacer.IsRunning(pInterface))
+  if (cDPInterfacer.IsRunning(pInterface, 1))
   {
     LOG (INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
     cDPInterfacer.Stop(pInterface);
@@ -684,8 +684,8 @@ void PSROHHybridTester::InjectExternalPattern(uint8_t pPattern)
 
   //Configure and Start DataPlayer
   cDPInterfacer.Configure(pInterface, pPattern);
-  cDPInterfacer.Start(pInterface);
-  if( cDPInterfacer.IsRunning(pInterface) )
+  cDPInterfacer.Start(pInterface, 1);
+  if( cDPInterfacer.IsRunning(pInterface, 1) )
     LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
   else
     LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
