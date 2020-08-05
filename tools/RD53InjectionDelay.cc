@@ -305,6 +305,11 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
                             ->getSummary<GenericDataArray<InjDelaySize>>()
                             .data[dacList[i]] = occ;
                     }
+
+        // ##############################################
+        // # Send periodic data to minitor the progress #
+        // ##############################################
+        InjectionDelay::sendData();
     }
 }
 
