@@ -40,7 +40,7 @@ namespace Ph2_HwInterface
     //Phase Align Rx
     this->PhaseAlignRx(pChip, {0,1,2,3,4,5,6}, {0,2});
     //Reset I2C Masters
-    this->ResetI2CMasters(pChip, {0,1,2});
+    this->ResetI2C(pChip, {0,1,2});
    
     return true;
   }
@@ -64,37 +64,37 @@ namespace Ph2_HwInterface
   }
 
 
-  bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop)
+  bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop)
   {
     //Make sure the value is not > 8 bits
-    if( pRegisterValue > 0xFF ){
-      LOG (ERROR) << "LpGBT registers are 8 bits, impossible to write " << pRegisterValue << " to address " << pRegisterAddress ;
+    if( pValue > 0xFF ){
+      LOG (ERROR) << "LpGBT registers are 8 bits, impossible to write " << pValue << " to address " << pAddress ;
       return false;
     }
-    if(pRegisterAddress >= 0x13c)
+    if(pAddress >= 0x13c)
     {
-      LOG (ERROR) << "LpGBT read-write registers end at 0x13c ... impossible to write to " << +pRegisterAddress  ;
+      LOG (ERROR) << "LpGBT read-write registers end at 0x13c ... impossible to write to " << +pAddress  ;
       return false;
     }
     if(fUseOpticalLink)
-      return fBoardFW->WriteOptoLinkRegister(pChip, pRegisterAddress, pRegisterValue, pVerifLoop);
+      return fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
     else
     {
       //use PS-ROH test card USB interface
       uint32_t cReadBack = 0;
       #ifdef __TCUSB__
-        cReadBack = fTC_PSROH.write_i2c(pRegisterAddress, static_cast<char>(pRegisterValue));
+        cReadBack = fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
       #endif
         if(!pVerifLoop )
           return true;
-        if(cReadBack != pRegisterValue)
+        if(cReadBack != pValue)
         {
           LOG (INFO) << BOLDRED << "ConfigureChip : I2C WRITE MISMATCH" << RESET;
           return false;
         }
         else
         {
-          LOG (DEBUG) << BOLDBLUE << "\t\t.. read back 0x" << std::hex << +cReadBack << std::dec << " from register address 0x" << std::hex << pRegisterAddress << std::dec << RESET;
+          LOG (DEBUG) << BOLDBLUE << "\t\t.. read back 0x" << std::hex << +cReadBack << std::dec << " from register address 0x" << std::hex << pAddress << std::dec << RESET;
           return true;
         }
       return false;
@@ -102,17 +102,17 @@ namespace Ph2_HwInterface
   }
 
 
-  uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
+  uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress)
   {
     uint16_t cReadBack = 0;
     if(fUseOpticalLink)
     {
-      cReadBack = fBoardFW->ReadOptoLinkRegister(pChip, pRegisterAddress);
+      cReadBack = fBoardFW->ReadOptoLinkRegister(pChip, pAddress);
     }
     else{
       //use PS-ROH test card USB interface
       #ifdef __TCUSB__
-        cReadBack = fTC_PSROH.read_i2c( pRegisterAddress);
+        cReadBack = fTC_PSROH.read_i2c( pAddress);
       #endif
     }
     return cReadBack; 
@@ -501,7 +501,7 @@ namespace Ph2_HwInterface
   /* lpGBT I2C Master functions                                              */
   /*-------------------------------------------------------------------------*/
 
-  void D19clpGBTInterface::ResetI2CMasters(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters)
+  void D19clpGBTInterface::ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters)
   {
     //Resets I2C Masters
     for(const auto& cMaster : pMasters)  
@@ -513,7 +513,7 @@ namespace Ph2_HwInterface
     }
   }
 
-  void D19clpGBTInterface::ConfigureI2CMaster(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode)
+  void D19clpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode)
   {
     //Configures I2C Masters
     //First let's write configuration data into the I2C Master Data register
@@ -535,9 +535,9 @@ namespace Ph2_HwInterface
   { 
     //Write Data to Slave Address using I2C Master
     if(pNBytes > 1)
-      this->ConfigureI2CMaster(pChip, pMaster, 0, pNBytes, 0);
+      this->ConfigureI2C(pChip, pMaster, 0, pNBytes, 0);
     else
-      this->ConfigureI2CMaster(pChip, pMaster, 0, 0, 0);
+      this->ConfigureI2C(pChip, pMaster, 0, 0, 0);
       
     //Prepare Address Register
     char cBuffer2[12];
@@ -575,9 +575,9 @@ namespace Ph2_HwInterface
     bool cSuccess = false;
     do
     {
-      LOG(INFO) << BOLDBLUE << "Waiting for I2C transaction to finisih" << RESET;
+      LOG(DEBUG) << BOLDBLUE << "Waiting for I2C transaction to finisih" << RESET;
       uint8_t cStatus = this->GetI2CStatus(pChip, pMaster);
-      LOG(INFO) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << +cStatus << RESET;
+      LOG(DEBUG) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << +cStatus << RESET;
       cSuccess = (cStatus == 4); 
       cIter++;
     }while(cIter<cMaxIter && !cSuccess);
@@ -598,7 +598,7 @@ namespace Ph2_HwInterface
   uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes)
   {
     //Read Data from Slave Address using I2C Master
-    this->ConfigureI2CMaster(pChip, pMaster, 0, pNBytes, 0);
+    this->ConfigureI2C(pChip, pMaster, 0, pNBytes, 0);
     //Prepare Address Register
     char cBuffer1[12];
     sprintf(cBuffer1, "I2CM%iAddress", pMaster);
@@ -641,7 +641,7 @@ namespace Ph2_HwInterface
   /* lpGBT ADC-DAC functions                                                 */
   /*-------------------------------------------------------------------------*/
 
-  uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, std::string pADCInput)
+  uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInput)
   {
     //Read (converted) data from ADC Input with VREF/2 as negative Input
     uint8_t cADCInput = fADCInputMap[pADCInput];
@@ -675,7 +675,7 @@ namespace Ph2_HwInterface
   }
 
 
-  uint16_t D19clpGBTInterface::ReadADCDiff(Ph2_HwDescription::Chip* pChip, std::string pADCInputP, std::string pADCInputN)
+  uint16_t D19clpGBTInterface::ReadADCDiff(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN)
   {
     //Read differential (converted) data on two ADC inputs 
     uint8_t cADCInputP = fADCInputMap[pADCInputP];
