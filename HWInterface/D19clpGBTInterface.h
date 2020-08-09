@@ -26,7 +26,7 @@ namespace Ph2_HwInterface
       TC_PSROH fTC_PSROH;
     #endif
 
-    //LpGBT Configure/Read/Write functions
+    //LpGBT register access functions 
     bool     ConfigureChip   (Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                                      override;
     bool     WriteChipReg    (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true)                   override;
     uint16_t ReadChipReg     (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode)                                                            override;
@@ -35,7 +35,7 @@ namespace Ph2_HwInterface
     uint16_t ReadReg         (Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
 
 
-    //LpGBT Configuration functions
+    //LpGBT block configuration functions
     void     ConfigureRxGroups     (Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate=0, uint8_t pTrackMode=0); 
     void     ConfigureRxChannels   (Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pEqual=0, uint8_t pTerm=1, uint8_t pAcBias=0, uint8_t pInvert=0, uint8_t pPhase=12);
     void     ConfigureTxGroups     (Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate=0);
@@ -53,7 +53,7 @@ namespace Ph2_HwInterface
     void     PhaseTrainRx          (Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
     void     PhaseAlignRx          (Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
 
-    //LpGBT status functions
+    //LpGBT block status functions
     void     PrintChipMode         (Ph2_HwDescription::Chip* pChip);           
     uint8_t  GetRxDllStatus        (Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
     uint8_t  GetRxPhase            (Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
@@ -75,7 +75,11 @@ namespace Ph2_HwInterface
     void     SetConfigMode         (const std::string& pMode);
  
   private:
-    
+
+    std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0}, {"ADC1", 1}, {"ADC2", 2}, {"ADC3", 3},
+                                                   {"ADC4", 4}, {"ADC5", 5}, {"ADC6", 6}, {"ADC7", 7},
+                                                   {"EOM_DAC", 8}, {"VDDIO", 9}, {"VDDTX", 10}, {"VDDRX", 11},
+                                                   {"VDD", 12}, {"VDDA", 13}, {"TEMP", 14}, {"VREF/2", 15}};
     //OT specific objects
     bool fUseOpticalLink = false;
     #ifdef __TCUSB__
@@ -89,10 +93,7 @@ namespace Ph2_HwInterface
         {"R_SSA", TC_PSROH::measurement::R_SSA_RST}
       };
     #endif
-    std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0}, {"ADC1", 1}, {"ADC2", 2}, {"ADC3", 3},
-                                                   {"ADC4", 4}, {"ADC5", 5}, {"ADC6", 6}, {"ADC7", 7},
-                                                   {"EOM_DAC", 8}, {"VDDIO", 9}, {"VDDTX", 10}, {"VDDRX", 11},
-                                                   {"VDD", 12}, {"VDDA", 13}, {"TEMP", 14}, {"VREF/2", 15}};
+    
   };
 }
 #endif

@@ -85,18 +85,18 @@ namespace Ph2_HwInterface
       #ifdef __TCUSB__
         cReadBack = fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
       #endif
-        if(!pVerifLoop )
-          return true;
-        if(cReadBack != pValue)
-        {
-          LOG (INFO) << BOLDRED << "ConfigureChip : I2C WRITE MISMATCH" << RESET;
-          return false;
-        }
-        else
-        {
-          LOG (DEBUG) << BOLDBLUE << "\t\t.. read back 0x" << std::hex << +cReadBack << std::dec << " from register address 0x" << std::hex << pAddress << std::dec << RESET;
-          return true;
-        }
+      if(!pVerifLoop )
+        return true;
+      if(cReadBack != pValue)
+      {
+        LOG (INFO) << BOLDRED << "ConfigureChip : I2C WRITE MISMATCH" << RESET;
+        return false;
+      }
+      else
+      {
+        LOG (DEBUG) << BOLDBLUE << "\t\t.. read back 0x" << std::hex << +cReadBack << std::dec << " from register address 0x" << std::hex << pAddress << std::dec << RESET;
+        return true;
+      }
       return false;
     } 
   }
@@ -365,6 +365,7 @@ namespace Ph2_HwInterface
 
   void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
   {   
+    //FIXME the Rx configuration before the training is OT specific. Needs to be moved out
     //Phase Align Rx Channels
     //Configure Rx Groups
     uint8_t cDataRate = 2, cTrackMode = 1;
