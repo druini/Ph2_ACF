@@ -374,7 +374,12 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
                 uint16_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
                 mod_chips_en |= 1 << chip_lane;
             }
-            uint16_t chips_en_to_check = mod_chips_en << (NLANE_HYBRID * hybrid_id);
+
+            uint16_t chips_en_to_check;
+            if(this->singleChip == true)
+                chips_en_to_check = mod_chips_en << hybrid_id;
+            else
+                chips_en_to_check = mod_chips_en << (NLANE_HYBRID * hybrid_id);
 
             // #############################
             // # Check if all lanes are up #
