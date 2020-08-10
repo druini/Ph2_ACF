@@ -449,7 +449,7 @@ float RD53Interface::ReadChipMonitor(Chip* pChip, const char* observableName)
     {
         value = measureVoltageCurrent(pChip, observable, isCurrentNotVoltage);
         LOG(INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE
-                  << (isCurrentNotVoltage == true ? " A" : " V") << std::setprecision(-1) << RESET;
+                  << (isCurrentNotVoltage == true ? " uA" : " V") << std::setprecision(-1) << RESET;
     }
 
     return value;
@@ -534,7 +534,7 @@ float RD53Interface::convertADC2VorI(Chip* pChip, uint32_t value, bool isCurrent
     // # ADCoffset     =  63 [1/10mV] Offset due to ground shift           #
     // # actualVrefADC = 839 [mV]     Lower than VrefADC due to parasitics #
     // #####################################################################
-    const float resistorI2V   = 10000; // [Ohm]
+    const float resistorI2V   = 0.01; // [MOhm]
     const float ADCoffset     = pChip->getRegItem("ADC_OFFSET_VOLT").fValue / 1e4;
     const float actualVrefADC = pChip->getRegItem("ADC_MAXIMUM_VOLT").fValue / 1e3;
 

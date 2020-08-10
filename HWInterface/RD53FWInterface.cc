@@ -369,13 +369,12 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
             // ########################
             const uint16_t hybrid_id    = cHybrid->getId();
             uint16_t       mod_chips_en = 0;
+            uint16_t       chips_en_to_check;
             for(const auto cChip: *cHybrid)
             {
                 uint16_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
                 mod_chips_en |= 1 << chip_lane;
             }
-
-            uint16_t chips_en_to_check;
             if(this->singleChip == true)
                 chips_en_to_check = mod_chips_en << hybrid_id;
             else
