@@ -402,7 +402,7 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
                 LOG(INFO) << BOLDBLUE << "\t--> Number of required data lanes for [board/opticalGroup/hybrid = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << hybrid_id
                           << BOLDBLUE << "]: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en_to_check) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<12>(chips_en_to_check) << RESET;
 
-                std::vector<uint16_t> initSequence = RD53FWInterface::GetInitSequence(this->singleChip == true ? seq : 4);
+                std::vector<uint16_t> initSequence = RD53FWInterface::GetInitSequence(this->singleChip == true ? 4 : seq);
 
                 for(unsigned int i = 0; i < MAXATTEMPTS; i++)
                 {
