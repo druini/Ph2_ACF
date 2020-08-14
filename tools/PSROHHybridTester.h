@@ -64,7 +64,7 @@ class PSROHHybridTester : public Tool
     void InjectExternalPattern (uint8_t pPattern);
     void TestULExternalPattern ();
     bool TestResetLines (uint8_t pValue=0x00);
-    void PrepareFCMDTest ();
+    void PrepareFCMDTest (uint8_t pSource=0, uint8_t pPattern=0xCA);
     bool TestI2CMaster (const std::vector<uint8_t>& pMasters);
     void TestADC (const std::vector<std::string>& pADCs, uint32_t cMinDAC, uint32_t cMaxDAC, uint32_t cStep);
     

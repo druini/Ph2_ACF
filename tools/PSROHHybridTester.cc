@@ -654,12 +654,12 @@ void PSROHHybridTester::TestULInternalPattern (uint32_t pPattern)
     for(auto cOpticalGroup : *cBoard)
     {
       D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>( flpGBTInterface );
-      clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0,1,2,3,4,5,6}, {0,1,2,3}, false);
+      clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0,1,2,3,4,5,6}, {0,2}, false);
       LOG(INFO) << BOLDGREEN << "Internal LpGBT pattern generation" << RESET;
       clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0,1,2,3,4,5,6}, 4);
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
       clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern);
-      std::this_thread::sleep_for (std::chrono::milliseconds (500) );
+      std::this_thread::sleep_for (std::chrono::milliseconds (4000) );
 
       D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
       LOG (INFO) << BOLDBLUE << "Stub lines " << RESET;
@@ -703,7 +703,7 @@ void PSROHHybridTester::TestULExternalPattern ()
       D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>( flpGBTInterface );
       clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0,1,2,3,4,5,6}, {0,1,2,3}, false);
       clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0,1,2,3,4,5,6}, 0);
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+      std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
       D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
       LOG (INFO) << BOLDBLUE << "Stub lines " << RESET;
@@ -714,7 +714,7 @@ void PSROHHybridTester::TestULExternalPattern ()
   }
 }
 
-void PSROHHybridTester::PrepareFCMDTest()
+void PSROHHybridTester::PrepareFCMDTest(uint8_t pSource, uint8_t pPattern)
 {
   for(auto cBoard : *fDetectorContainer)
   {
@@ -725,13 +725,13 @@ void PSROHHybridTester::PrepareFCMDTest()
       uint8_t cFreq=4, cDriveStr=7, cInvert=0;
       uint8_t cPreEmphWidth=0, cPreEmphMode=1, cPreEmphStr=3;
       clpGBTInterface->ConfigureClocks(cOpticalGroup->flpGBT, cClocks, cFreq, cDriveStr, cInvert, cPreEmphWidth, cPreEmphMode, cPreEmphStr);
-      //this->ConfigureDPPattern(pChip, 0xC1C1C1C1);
+      if(pSource == 3)
+        clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern );
       std::vector<uint8_t> cGroups = {0,1,2,3}, cChannels = {0};
-      uint8_t cSource=0; //0 --> link data, 3 --> constant pattern
       uint8_t cDataRate=3;
       cDriveStr=7, cPreEmphMode=1, cPreEmphStr=4;  
       cPreEmphWidth=0, cInvert=1;
-      clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, cGroups, cSource);
+      clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, cGroups, pSource); //0 --> link data, 3 --> constant pattern
       clpGBTInterface->ConfigureTxGroups(cOpticalGroup->flpGBT, cGroups, cChannels, cDataRate);
       for(const auto& cGroup : cGroups)
       {

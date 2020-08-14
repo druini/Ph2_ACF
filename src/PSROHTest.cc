@@ -78,6 +78,9 @@ int main ( int argc, char* argv[] )
   // clock test 
   cmd.defineOption ( "clock-test", "Run clock tests", ArgvParser::NoOptionAttribute );
   // fast command test 
+  cmd.defineOption("fcmd-pattern", "Injected pattern (simulates FCMD) on the DownLink", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+  cmd.defineOptionAlternative("fcmd-pattern", "fp");
+  //
   cmd.defineOption ( "fcmd-test", "Run fast command tests", ArgvParser::NoOptionAttribute );
   cmd.defineOption ( "fcmd-test-start-pattern", "Fast command FSM test start pattern", ArgvParser::OptionRequiresValue );
   cmd.defineOption ( "fcmd-test-userfile", "User file with fastcommands for testing", ArgvParser::OptionRequiresValue );
@@ -130,6 +133,7 @@ int main ( int argc, char* argv[] )
   uint8_t cExternalPattern = ( cmd.foundOption ( "external-pattern" ) ) ? convertAnyInt ( cmd.optionValue ( "external-pattern" ).c_str() ) : 0;
   uint8_t cInternalPattern8 = ( cmd.foundOption ( "internal-pattern" ) ) ? convertAnyInt ( cmd.optionValue ( "internal-pattern" ).c_str() ) : 0;
   uint32_t cInternalPattern32 = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0 ;
+  uint8_t cFCMDPattern = ( cmd.foundOption ( "fcmd-pattern" ) ) ? convertAnyInt ( cmd.optionValue ( "fcmd-pattern" ).c_str() ) : 0;
   //std::string cADCList = ( cmd.foundOption( "testADC" ) ) ? ( cmd.optionValue( "testADC" ) ) : "0,1,2,3,4,5,6,7";
 
   cDirectory += Form("PS_ROH_%s", cHybridId.c_str());
@@ -176,7 +180,6 @@ int main ( int argc, char* argv[] )
     cControlROHHybridTester.Inherit(&cControlTool);
   }
 
-  cBackEndROHHybridTester.PrepareFCMDTest();     
           
   if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
   {
@@ -247,6 +250,10 @@ int main ( int argc, char* argv[] )
 
   if( cmd.foundOption("scopeFastCommand") )
   {
+    if ( cmd.foundOption("fcmd-pattern") )
+      cBackEndROHHybridTester.PrepareFCMDTest(3, cFCMDPattern);     
+    else 
+      cBackEndROHHybridTester.PrepareFCMDTest(0);     
     cControlROHHybridTester.FastCommandScope();
   }
 
