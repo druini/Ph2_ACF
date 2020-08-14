@@ -73,7 +73,7 @@ void D19cCbc3Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     auto           cEventIterator      = pData.begin();
     // counters from event header
     fExternalTriggerID = (*(cEventIterator + 1) >> 16) & 0x7FFF;
-    fTDC               = (*(cEventIterator + 1) >> 24) & 0xFF;
+    fTDC               = (*(cEventIterator + 2) >> 24) & 0xFF;
     fEventCount        = 0x00FFFFFF & *(cEventIterator + 2);
     fBunch             = 0xFFFFFFFF & *(cEventIterator + 3);
 
