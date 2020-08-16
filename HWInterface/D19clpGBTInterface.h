@@ -80,6 +80,9 @@ namespace Ph2_HwInterface
                                                    {"ADC4", 4}, {"ADC5", 5}, {"ADC6", 6}, {"ADC7", 7},
                                                    {"EOM_DAC", 8}, {"VDDIO", 9}, {"VDDTX", 10}, {"VDDRX", 11},
                                                    {"VDD", 12}, {"VDDA", 13}, {"TEMP", 14}, {"VREF/2", 15}};
+
+    std::map<uint8_t, std::string> fI2CStatusMap = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
+
     //OT specific objects
     bool fUseOpticalLink = false;
     #ifdef __TCUSB__

@@ -578,7 +578,7 @@ namespace Ph2_HwInterface
     {
       LOG(DEBUG) << BOLDBLUE << "Waiting for I2C transaction to finisih" << RESET;
       uint8_t cStatus = this->GetI2CStatus(pChip, pMaster);
-      LOG(DEBUG) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << +cStatus << RESET;
+      LOG(INFO) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << fI2CStatusMap[cStatus] << RESET;
       cSuccess = (cStatus == 4); 
       cIter++;
     }while(cIter<cMaxIter && !cSuccess);
