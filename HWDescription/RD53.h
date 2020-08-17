@@ -201,6 +201,7 @@ class RD53 : public ReadoutChip
     std::string                     configFileName;
     uint8_t                         myChipLane;
 };
+
 } // namespace Ph2_HwDescription
 
 // ###############################
@@ -311,6 +312,7 @@ struct RdReg : public Command<RD53CmdEncoder::READ, 4>
 {
     RdReg(uint8_t chip_id, uint16_t address);
 };
+
 } // namespace RD53Cmd
 
 #endif

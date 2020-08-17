@@ -98,10 +98,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("config", "Hw Description File . Default value: settings/HWDescription_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("config", "c");
 
-    cmd.defineOption("image",
-                     "Without -f: load image from SD card to FPGA\nWith -f: name of image written to SD card (-f "
-                     "specified the source filename)",
-                     ArgvParser::OptionRequiresValue);
+    cmd.defineOption("image", "Without -f: load image from SD card to FPGA\nWith    -f: name of image written to SD card\n-f specifies the source filename", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("image", "i");
 
     int result = cmd.parse(argc, argv);
