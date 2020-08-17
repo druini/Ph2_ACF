@@ -219,14 +219,15 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53Interface::ReadRD53Reg(Chip* pChi
 
 // @TMP@
 uint16_t getPixelConfig(const std::vector<perColumnPixelData>& mask, uint16_t row, uint16_t col, bool highGain)
-// #################################################################################################################################################
-// # Encodes the configuration for a pixel pair # # In the LIN FE tdac is unsigned and increasing it reduces the local
-// threshold                                                                  # # In the DIFF FE tdac is signed and
-// increasing it reduces the local threshold                                                                   # # To
-// prevent having to deal with that in the rest of the code, we map the tdac range of the DIFF FE like so: # # -15 ->
-// 30, -14 -> 29, ... 0 -> 15, ... 15 -> 0 # # So for the rest of the code the tdac range of the DIFF FE is [0, 30] and
-// the only difference with the LIN FE is the number of possible values #
-// #################################################################################################################################################
+// ##############################################################################################################
+// # Encodes the configuration for a pixel pair                                                                 #
+// # In the LIN FE TDAC is unsigned and increasing it reduces the local threshold                               #
+// # In the DIFF FE TDAC is signed and increasing it reduces the local threshold                                #
+// # To prevent having to deal with that in the rest of the code, we map the TDAC range of the DIFF FE like so: #
+// # -15 -> 30, -14 -> 29, ... 0 -> 15, ... 15 -> 0                                                             #
+// # So for the rest of the code the TDAC range of the DIFF FE is [0, 30] and                                   #
+// # the only difference with the LIN FE is the number of possible values                                       #
+// ##############################################################################################################
 {
     if(col <= RD53::SYNC.colStop)
         return bits::pack<8, 8>(bits::pack<1, 1, 1>(mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
@@ -271,21 +272,23 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, bo
 
     if(doSparse == true)
     {
-        RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x27, pVerifLoop);
+        RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
         RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x00, pVerifLoop);
-        RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x00, pVerifLoop);
+        RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x00, pVerifLoop);
 
         uint16_t data;
 
         for(auto col = 0u; col < RD53::nCols; col += 2)
         {
-            if(std::find(mask[col].Enable.begin(), mask[col].Enable.end(), 1) == mask[col].Enable.end()) continue;
+            if((std::find(mask[col].Enable.begin(),     mask[col].Enable.end(), true) == mask[col].Enable.end()) &&
+               (std::find(mask[col + 1].Enable.begin(), mask[col].Enable.end(), true) == mask[col + 1].Enable.end()))
+                continue;
 
             RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
 
             for(auto row = 0u; row < RD53::nRows; row++)
             {
-                if((mask[col].Enable[row] == 1) || (mask[col + 1].Enable[row] == 1))
+                if((mask[col].Enable[row] == true) || (mask[col + 1].Enable[row] == true))
                 {
                     data = getPixelConfig(mask, row, col, highGain);
 
@@ -364,8 +367,8 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
     for(auto row = 0u; row < RD53::nRows; row++)
         for(auto col = 0u; col < RD53::nCols; col++)
         {
-            if(mask == true) pRD53->enablePixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
-            if(inject == true) pRD53->injectPixel(row, col, group->isChannelEnabled(row, col));
+          if(mask == true)   pRD53->enablePixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
+          if(inject == true) pRD53->injectPixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
         }
 
     RD53Interface::WriteRD53Mask(pRD53, true, false, pVerifLoop);
