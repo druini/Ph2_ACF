@@ -498,4 +498,5 @@ RdReg::RdReg(uint8_t chip_id, uint16_t address)
     fields[2] = packAndEncode<4, 1>(address, 0);
     fields[3] = packAndEncode<5>(0);
 }
+
 } // namespace RD53Cmd

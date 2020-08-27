@@ -108,7 +108,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clockdelay physics eudaq]. Default: pixelalive",
+                     "injdelay clockdelay physics eudaq prbstime prbsframes]. Default: pixelalive",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -536,6 +536,41 @@ int main(int argc, char** argv)
             LOG(WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
             exit(EXIT_FAILURE);
 #endif
+        }
+        else if((whichCalib == "prbstime") || (whichCalib == "prbsframes"))
+        {
+            // #################
+            // # Run PRBS test #
+            // #################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Pseudo Random Bit Sequence test @@@" << RESET;
+
+            if(cmd.argument(0) == "")
+            {
+                LOG(ERROR) << BOLDRED
+                           << "Neither the time (to be given with -t <TIME IN SECONDS>) nor the number of frames (to be given with -n <NUMBER OF FRAMES>) was specified for the PRBS test. Abort."
+                           << RESET;
+                exit(EXIT_FAILURE);
+            }
+
+            unsigned long long frames_or_time = strtoull(cmd.argument(0).c_str(), NULL, 0);
+            bool               given_time     = false;
+            if(whichCalib == "prbstime") given_time = true;
+
+            for(const auto cBoard: *mySysCntr.fDetectorContainer)
+                for(const auto cOpticalGroup: *cBoard)
+                    for(const auto cModule: *cOpticalGroup)
+                        for(const auto cChip: *cModule)
+                        {
+                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 2, true);
+                            LOG(INFO) << GREEN << "PRBS test for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/"
+                                      << cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
+                                      << ((static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getBeBoardId()])->RunPRBStest(given_time, frames_or_time, cModule->getId(), cChip->getId()) ==
+                                           true)
+                                              ? "PASSED"
+                                              : "NOT PASSED")
+                                      << RESET;
+                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 1, true);
+                        }
         }
         else
         {

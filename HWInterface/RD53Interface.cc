@@ -442,14 +442,14 @@ float RD53Interface::ReadChipMonitor(Chip* pChip, const char* observableName)
     if(std::string(observableName).find("TEMPSENS") != std::string::npos)
     {
         value = RD53Interface::measureTemperature(pChip, observable);
-        LOG(INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << std::setprecision(1) << value * measError / 100 << BOLDBLUE << " C"
-                  << std::setprecision(-1) << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " C" << std::setprecision(-1)
+                  << RESET;
     }
     else
     {
         value = measureVoltageCurrent(pChip, observable, isCurrentNotVoltage);
-        LOG(INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << std::setprecision(1) << value * measError / 100 << BOLDBLUE
-                  << (isCurrentNotVoltage == true ? " A" : " V") << std::setprecision(-1) << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE
+                  << (isCurrentNotVoltage == true ? " uA" : " V") << std::setprecision(-1) << RESET;
     }
 
     return value;
@@ -534,13 +534,12 @@ float RD53Interface::convertADC2VorI(Chip* pChip, uint32_t value, bool isCurrent
     // # ADCoffset     =  63 [1/10mV] Offset due to ground shift           #
     // # actualVrefADC = 839 [mV]     Lower than VrefADC due to parasitics #
     // #####################################################################
-    const float resistorI2V   = 10000; // [Ohm]
+    const float resistorI2V   = 0.01; // [MOhm]
     const float ADCoffset     = pChip->getRegItem("ADC_OFFSET_VOLT").fValue / 1e4;
     const float actualVrefADC = pChip->getRegItem("ADC_MAXIMUM_VOLT").fValue / 1e3;
 
     const float ADCslope = (actualVrefADC - ADCoffset) / (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1); // [V/ADC]
     const float voltage  = ADCoffset + ADCslope * value;
-
     return voltage / (isCurrentNotVoltage == true ? resistorI2V : 1);
 }
 
@@ -555,4 +554,5 @@ float RD53Interface::ReadHybridVoltage(Chip* pChip)
     auto hybridId = static_cast<RD53*>(pChip)->getFeId(); // @TMP@
     return static_cast<RD53FWInterface*>(fBoardFW)->ReadHybridVoltage(hybridId);
 }
+
 } // namespace Ph2_HwInterface
