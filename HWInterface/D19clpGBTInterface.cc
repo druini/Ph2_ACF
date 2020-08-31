@@ -27,7 +27,7 @@ namespace Ph2_HwInterface
     for(const auto& cRegItem : clpGBTRegMap) 
     {
       if( cRegItem.second.fAddress < 0x13c ){ 
-        LOG (DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first <<  " [0x" << std::hex << +cRegItem.second.fAddress << std::dec << "]"<< RESET;
+        LOG (INFO) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first <<  " [0x" << std::hex << +cRegItem.second.fAddress << std::dec << "]"<< RESET;
         this->WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
       }
     }
@@ -45,7 +45,7 @@ namespace Ph2_HwInterface
     this->PhaseAlignRx(pChip, {0,1,2,3,4,5,6}, {0,2});
     //Reset I2C Masters
     this->ResetI2C(pChip, {0,1,2});
-   
+
     return true;
   }
 
@@ -55,7 +55,7 @@ namespace Ph2_HwInterface
 
   bool D19clpGBTInterface::WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
   {
-    LOG (DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode <<  " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
+    LOG (INFO) << BOLDBLUE << "Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode <<  " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
     this->setBoard( pChip->getBeBoardId() );
     return this->WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop );
   }
@@ -81,7 +81,12 @@ namespace Ph2_HwInterface
       return false;
     }
     if(fUseOpticalLink)
-      return fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+    {
+      bool cSucess = fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+      uint16_t cReadBack = this->ReadReg(pChip, pAddress);
+      LOG (DEBUG) << BOLDBLUE << "\t\t.. read back 0x" << std::hex << +cReadBack << std::dec << " from register address 0x" << std::hex << pAddress << std::dec << RESET;
+      return cSucess;
+    }
     else
     {
       //use PS-ROH test card USB interface
@@ -93,7 +98,7 @@ namespace Ph2_HwInterface
         return true;
       if(cReadBack != pValue)
       {
-        LOG (INFO) << BOLDRED << "ConfigureChip : I2C WRITE MISMATCH" << RESET;
+        LOG (INFO) << BOLDRED << "I2C WRITE MISMATCH" << RESET;
         return false;
       }
       else
@@ -116,7 +121,7 @@ namespace Ph2_HwInterface
     else{
       //use PS-ROH test card USB interface
       #ifdef __TCUSB__
-        cReadBack = fTC_PSROH.read_i2c( pAddress);
+        cReadBack = fTC_PSROH.read_i2c(pAddress);
       #endif
     }
     return cReadBack; 
@@ -715,16 +720,17 @@ namespace Ph2_HwInterface
 
   void D19clpGBTInterface::SetConfigMode(const std::string& pMode)
   {
-    if(pMode == "optical"){
-      LOG(INFO) << "LpGBT in optical configuration mode" << RESET;
+    if(pMode == "serial"){
+      LOG(INFO) << "LpGBT in Serial Interface configuration mode" << RESET;
       fUseOpticalLink = true;
     }
     else if(pMode == "i2c"){
-      LOG(INFO) << "LpGBT in I2C configuration mode" << RESET;
+      LOG(INFO) << "LpGBT in I2C Slave Interface configuration mode" << RESET;
       fUseOpticalLink = false;
     }
     else{
       LOG(ERROR) << "Wrong configuration mode : choose [optical] or [i2c]" << RESET;
+      exit(0);
     }
   }
 }
