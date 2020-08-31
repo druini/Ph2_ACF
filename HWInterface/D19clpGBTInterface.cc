@@ -724,7 +724,7 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, const std
     }
     else
     {
-        LOG(ERROR) << "Wrong configuration mode : choose [optical] or [i2c]" << RESET;
+        LOG(ERROR) << "Wrong configuration mode : choose [serial] or [i2c]" << RESET;
         exit(0);
     }
 }
