@@ -12,19 +12,18 @@
 
 #include "lpGBTInterface.h"
 
-
 namespace Ph2_HwInterface
 {
-  class RD53lpGBTInterface : public lpGBTInterface
-  {
+class RD53lpGBTInterface : public lpGBTInterface
+{
   public:
-    RD53lpGBTInterface (const BeBoardFWMap& pBoardMap) : lpGBTInterface(pBoardMap) {}
+    RD53lpGBTInterface(const BeBoardFWMap& pBoardMap) : lpGBTInterface(pBoardMap) {}
 
-    bool     ConfigureChip    (Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310)                                      override;
-    bool     WriteChipReg     (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true)                   override;
-    bool     WriteChipMultReg (Ph2_HwDescription::Chip* pChip, const std::vector< std::pair<std::string, uint16_t> >& RegVec, bool pVerifLoop = true)  override;
-    uint16_t ReadChipReg      (Ph2_HwDescription::Chip* pChip, const std::string& pRegNode)                                                            override;
-  };
-}
+    bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
+    bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
+    bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
+    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
+};
+} // namespace Ph2_HwInterface
 
 #endif

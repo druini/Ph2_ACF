@@ -122,8 +122,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
                 if(cFirstOpticalGroup->flpGBT != nullptr)
                 {
-                  LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
-                  flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap);
+                    LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
+                    flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap);
                 }
 
                 if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
@@ -222,12 +222,13 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             {
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
-                    D19clpGBTInterface *clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+                    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                     if(clpGBTInterface->IslpGBTReady(cOpticalGroup->flpGBT))
                         LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
-                    else{ 
+                    else
+                    {
                         LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY]" << RESET;
                         exit(0);
                     }
@@ -315,11 +316,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             {
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
-                    //RD53lpGBTInterface *clpGBTInterface = static_cast<RD53lpGBTInterface*>(flpGBTInterface);
-                    //clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
-                    //if(clpGBTInterface->IslpGBTReady(cOpticalGroup->flpGBT))
+                    // RD53lpGBTInterface *clpGBTInterface = static_cast<RD53lpGBTInterface*>(flpGBTInterface);
+                    // clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
+                    // if(clpGBTInterface->IslpGBTReady(cOpticalGroup->flpGBT))
                     //    LOG(INFO) << BOLDRED << "lpGBT NOT READY" << RESET;
-                    //else 
+                    // else
                     //    LOG(INFO) << BOLDMAGENTA << "lpGBT Configured" << RESET;
                 }
                 for(auto cHybrid: *cOpticalGroup)
