@@ -1,6 +1,6 @@
 /*!
   \file                  lpGBTInterface.h
-  \brief                 The implementation follows the skeleton of the register map section of the lpGBT Manual
+  \brief                 Interface to access and control the low-power Gigabit Transceiver chip 
   \author                Younes Otarid
   \version               1.0
   \date                  03/03/20
