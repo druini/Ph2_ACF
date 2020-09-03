@@ -189,11 +189,12 @@ class RD53FWInterface : public BeBoardFWInterface
         uint32_t first_cal_data  = 0;
         uint32_t second_cal_data = 0;
 
-        uint32_t delay_after_ecr        = 0;
-        uint32_t delay_after_autozero   = 0; // @TMP@
-        uint32_t delay_after_first_cal  = 0;
-        uint32_t delay_after_second_cal = 0;
-        uint16_t delay_loop             = 0;
+        uint32_t delay_after_first_prime = 0;
+        uint32_t delay_after_ecr         = 0;
+        uint32_t delay_after_autozero    = 0; // @TMP@
+        uint32_t delay_after_inject      = 0;
+        uint16_t delay_after_trigger     = 0;
+        uint32_t delay_after_prime       = 0;
     };
 
     struct FastCommandsConfig

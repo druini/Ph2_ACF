@@ -337,7 +337,7 @@ void RD53::resetMask()
         fPixelsMask[col].Enable.fill(0);
         fPixelsMask[col].HitBus.fill(0);
         fPixelsMask[col].InjEn.fill(0);
-        fPixelsMask[col].TDAC.fill(RD53Shared::setBits(RD53EvtEncoder::NBIT_TDAC) / 2);
+        fPixelsMask[col].TDAC.fill(RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
     }
 }
 
