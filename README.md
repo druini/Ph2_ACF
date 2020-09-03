@@ -155,6 +155,7 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
+Step 4 and 5 are meant to measure the so called <in-time threhsold>, to be compared to the threhold measured at step 3 where we measure the so called <absoulte threshold>
 ### ~=-=~ End of Inner-Tracker section ~=-=~
 <hr>
 
