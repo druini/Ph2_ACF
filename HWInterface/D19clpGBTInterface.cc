@@ -37,13 +37,27 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     this->WriteReg(pChip, 0x0ef, 0x6);
 
     // Additional configurations (could eventually be moved to configuration file)
-    std::vector<uint8_t> cClocks = {1, 6, 11, 26};
+    // Configure Tx Rx Polarity
+    this->ConfigureTxRxPolarity(pChip, 1, 0);
+    // Clocks
+    std::vector<uint8_t> cClocks         = {1, 6, 11, 26};
     uint8_t              cFreq = 4, cDriveStr = 7, cInvert = 0;
     uint8_t              cPreEmphWidth = 0, cPreEmphMode = 1, cPreEmphStr = 3;
     this->ConfigureClocks(pChip, cClocks, cFreq, cDriveStr, cInvert, cPreEmphWidth, cPreEmphMode, cPreEmphStr);
-    // Configure Tx Rx Polarity
-    this->ConfigureTxRxPolarity(pChip, 1, 0);
-    // Phase Align Rx
+    //Tx Groups and Channels
+    std::vector<uint8_t> cGroups = {0, 1, 2, 3}, cChannels = {0};
+    uint8_t              cDataRate = 3;
+    cDriveStr = 7, cPreEmphMode = 1, cPreEmphStr = 4;
+    cPreEmphWidth = 0, cInvert = 1;
+    this->ConfigureTxSource(pChip, cGroups, 0); // 0 --> link data, 3 --> constant pattern
+    this->ConfigureTxGroups(pChip, cGroups, cChannels, cDataRate);
+    for(const auto& cGroup: cGroups)
+    {
+      cInvert = (cGroup % 2 == 0) ? 1 : 0;
+      for(const auto& cChannel: cChannels)
+       this->ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cDriveStr, cPreEmphMode, cPreEmphStr, cPreEmphWidth, cInvert);
+    }
+    // Rx configuration and Phase Align 
     this->PhaseAlignRx(pChip, {0, 1, 2, 3, 4, 5, 6}, {0, 2});
     // Reset I2C Masters
     this->ResetI2C(pChip, {0, 1, 2});
@@ -373,7 +387,6 @@ void D19clpGBTInterface::PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std:
 
 void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
-    // FIXME the Rx configuration before the training is OT specific. Needs to be moved out
     // Phase Align Rx Channels
     // Configure Rx Groups
     uint8_t cDataRate = 2, cTrackMode = 1;
@@ -540,10 +553,7 @@ void D19clpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pM
 bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes)
 {
     // Write Data to Slave Address using I2C Master
-    if(pNBytes > 1)
-        this->ConfigureI2C(pChip, pMaster, 0, pNBytes, 0);
-    else
-        this->ConfigureI2C(pChip, pMaster, 0, 0, 0);
+    this->ConfigureI2C(pChip, pMaster, 0, ( pNBytes > 1 ) ? pNBytes : 0, 0);
 
     // Prepare Address Register
     char cBuffer2[12];
@@ -706,8 +716,10 @@ uint16_t D19clpGBTInterface::ReadADCDiff(Ph2_HwDescription::Chip* pChip, const s
     return (cADCvalue1 << 8 | cADCvalue2);
 }
 
+
+
 /*-------------------------------------------------------------------------*/
-/* OT specific test functions                                              */
+/* OT specific functions                                                   */
 /*-------------------------------------------------------------------------*/
 
 void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, const std::string& pMode)
@@ -727,5 +739,78 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, const std
         LOG(ERROR) << "Wrong configuration mode : choose [serial] or [i2c]" << RESET;
         exit(0);
     }
+}
+
+bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack)
+{
+    bool cWriteStatus = this->WriteI2C(pChip, (pFeId = 1) ? 2 : 0, 0x60, (pRegisterAddress << 8) | pRegisterValue, 2);
+    if(pReadBack && cWriteStatus)
+    {
+        bool cWriteSuccess = ( this->cicRead(pChip, (pFeId = 1) ? 2 : 0, pRegisterAddress) == pRegisterValue );
+        if(!cWriteSuccess)
+        {
+            LOG(INFO) << BOLDRED << "CIC I2C ReadBack Mismatch for hybrid " << +pFeId << " register 0x" << std::hex << + pRegisterAddress << std::dec << RESET;
+            throw std::runtime_error(std::string("I2C ReadBack Mismatch"));
+        }
+        return cWriteSuccess;
+    }
+    else
+        return cWriteStatus;
+}
+
+uint32_t D19clpGBTInterface::cicRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pRegisterAddress)
+{
+    this->WriteI2C(pChip, ( pFeId = 1) ? 2 : 0, 0x60, pRegisterAddress, 1);
+    uint32_t cReadBack  = this->ReadI2C(pChip, (pFeId = 1) ? 2 : 0, 0x60, 1);
+    LOG(INFO) << BOLDBLUE << "Readback 0x" << std::hex << +cReadBack << std::dec << " from register 0x" << std::hex << +pRegisterAddress << RESET;
+    return cReadBack;
+}
+
+bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack)
+{
+    bool cWriteStatus = this->WriteI2C(pChip, (pFeId = 1) ? 2 : 0, 0x20 | (1 + pChipId), pRegisterAddress << 8 | pRegisterValue, 2);
+    if(pReadBack && cWriteStatus)
+    { 
+        bool cWriteSuccess = ( this->ssaRead(pChip, (pFeId = 1) ? 2 : 0, 0x20 | (1 + pChipId), pRegisterAddress) == pRegisterValue );
+        if(!cWriteSuccess)
+        {
+            LOG(INFO) << BOLDRED << "SSA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
+            throw std::runtime_error(std::string("I2C readback mismatch"));
+        }
+        return cWriteSuccess;
+    }
+    return cWriteStatus;
+}
+
+uint32_t D19clpGBTInterface::ssaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pRegisterAddress)
+{
+    this->WriteI2C(pChip, (pFeId = 1) ? 2 : 0, 0x20 | (1 + pChipId), pRegisterAddress, 1);
+    uint32_t cReadBack = this->ReadI2C(pChip, (pFeId = 1) ? 2 : 0, 0x20 | (1 + pChipId), 1);
+    LOG(INFO) << BOLDBLUE << "Readback 0x" << std::hex << +cReadBack << std::dec << " from register 0x" << std::hex << +pRegisterAddress << RESET;
+    return cReadBack;
+}
+
+bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack)
+{
+    bool cWriteStatus = this->WriteI2C(pChip, (pFeId = 1) ? 2 : 0, 0x00 | (1 + pChipId), pRegisterAddress << 8 | pRegisterValue, 2);
+    if(pReadBack && cWriteStatus)
+    { 
+        bool cWriteSuccess = ( this->ssaRead(pChip, (pFeId = 1) ? 2 : 0, 0x00 | (1 + pChipId), pRegisterAddress) == pRegisterValue );
+        if(!cWriteSuccess)
+        {
+            LOG(INFO) << BOLDRED << "SSA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
+            throw std::runtime_error(std::string("I2C readback mismatch"));
+        }
+        return cWriteSuccess;
+    }
+    return cWriteStatus;
+}
+
+uint32_t D19clpGBTInterface::mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pRegisterAddress)
+{
+    this->WriteI2C(pChip, (pFeId = 1) ? 2 : 0, 0x00 | (1 + pChipId), pRegisterAddress, 1);
+    uint32_t cReadBack = this->ReadI2C(pChip, (pFeId = 1) ? 2 : 0, 0x00 | (1 + pChipId), 1);
+    LOG(INFO) << BOLDBLUE << "Readback 0x" << std::hex << +cReadBack << std::dec << " from register 0x" << std::hex << +pRegisterAddress << RESET;
+    return cReadBack;
 }
 } // namespace Ph2_HwInterface
