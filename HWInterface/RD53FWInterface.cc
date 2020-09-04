@@ -1165,7 +1165,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
     enum INJdelay
     {
         AfterFirstPrime = 255,
-        BeforePrimeCal  = 300,
+        BeforePrimeCal  = 8,
         AfterInjectCal  = 32,
         Loop            = 460
     };
