@@ -288,6 +288,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // ###########################
     // # LpGBT ADC-DAC functions #
     // ###########################
+    void ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect = 0, uint8_t pADCCoreDiffEnable = 0);
     /*!
      * \brief Read lpGBT ADC
      * \param pChip     : pointer to Chip object

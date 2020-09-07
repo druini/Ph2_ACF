@@ -655,6 +655,11 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
 /* lpGBT ADC-DAC functions                                                 */
 /*-------------------------------------------------------------------------*/
 
+void D19clpGBTInterface::ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, uint8_t pADCEnable)
+{
+    this->WriteChipReg(pChip, "ADCConfig", pADCEnable << 2 | pGainSelect);
+}
+
 uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInput)
 {
     // Read (converted) data from ADC Input with VREF/2 as negative Input
