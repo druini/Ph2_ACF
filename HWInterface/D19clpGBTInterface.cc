@@ -563,12 +563,12 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     this->WriteChipReg(pChip, cI2CAddressReg, pSlaveAddress);
 
     // Write Data to Data Register
-    for(uint8_t cNByte = 0; cNByte < pNBytes; cNByte++)
+    for(uint8_t cByte = 0; cByte < pNBytes; cByte++)
     {
         char cBuffer1[10];
-        sprintf(cBuffer1, "I2CM%iData%i", pMaster, cNByte);
+        sprintf(cBuffer1, "I2CM%iData%i", pMaster, cByte);
         std::string cI2CDataReg(cBuffer1, sizeof(cBuffer1));
-        this->WriteChipReg(pChip, cI2CDataReg, pData);
+        this->WriteChipReg(pChip, cI2CDataReg, (pData >> 8*cByte) & 0xFF);
     }
 
     // Prepare Command Register
@@ -577,12 +577,14 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     std::string cI2CCmdReg(cBuffer3, sizeof(cBuffer3));
     // If Multi-Byte, write command to save data locally before transfer to slave
     // FIXME for now this only provides a maximum of 32 bits (4 Bytes) write
-    if(pNBytes > 1) this->WriteChipReg(pChip, cI2CCmdReg, 0x8);
     // Write Command to launch I2C transaction
     if(pNBytes == 1)
         this->WriteChipReg(pChip, cI2CCmdReg, 0x2);
     else
+    {
+        this->WriteChipReg(pChip, cI2CCmdReg, 0x8);
         this->WriteChipReg(pChip, cI2CCmdReg, 0xC);
+    }
 
     // wait until the transaction is done
     uint8_t cMaxIter = 10, cIter = 0;
@@ -638,12 +640,12 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     {
         this->WriteChipReg(pChip, cI2CCmdReg, 0xD);
         uint32_t cReadData = 0;
-        for(uint8_t cNByte = 0; cNByte < pNBytes; cNByte++)
+        for(uint8_t cByte = 0; cByte < pNBytes; cByte++)
         {
             char cBuffer1[10];
-            sprintf(cBuffer1, "I2CM%dRead%i", pMaster, cNByte);
+            sprintf(cBuffer1, "I2CM%dRead%i", pMaster, cByte);
             std::string cI2CDataReg(cBuffer1, sizeof(cBuffer1));
-            cReadData |= ((uint32_t)this->ReadChipReg(pChip, cI2CDataReg) << cNByte);
+            cReadData |= ((uint32_t)this->ReadChipReg(pChip, cI2CDataReg) << cByte);
         }
         return cReadData;
     }
