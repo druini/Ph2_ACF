@@ -132,7 +132,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(PH2_POWERSUPPLY_FOUND)
 
     # Ph2_TCUSB [USB control of hybrids]
-    find_package(PH2_TCUSB)  
+    find_package(PH2_TCUSB)
     if(PH2_TCUSB_FOUND)
         message(STATUS "    Building the TestCards USB components")
     endif(PH2_TCUSB_FOUND)
@@ -146,11 +146,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     else($ENV{CompileWithEUDAQ})
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})
-
-    
-
-
-
 
     # ZeroMQ optional
     find_package(ZMQ)         #========================================================
@@ -243,8 +238,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         endif(PH2_USBINSTLIB_FOUND)
     endif(ZMQ_FOUND)
 
-
-   # EUDAQ
+    # EUDAQ
     if ($ENV{CompileWithEUDAQ})
         set(USE_EUDAQ ON)
         include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
@@ -259,9 +253,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     #all the subdirs
     if(${CACTUS_AMC13_FOUND})
         add_subdirectory(AMC13)
-    endif()
-
-
+   endif()
 
     add_subdirectory(tools)
 ##    add_subdirectory(RootWeb)
