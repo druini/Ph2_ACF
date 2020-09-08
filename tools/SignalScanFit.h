@@ -52,7 +52,7 @@ class SignalScanFit : public Tool
     double fVCthMax;
     double fVCthNbins;
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void Pause() override;

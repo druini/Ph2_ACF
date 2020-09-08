@@ -48,19 +48,19 @@ void ThrMinimization::ConfigureCalibration()
     RD53RunProgress::total() += ThrMinimization::getNumberIterations();
 }
 
-void ThrMinimization::Start(int currentRun)
+void ThrMinimization::Running()
 {
     LOG(INFO) << GREEN << "[ThrMinimization::Start] Starting" << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrMinimization.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_ThrMinimization.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     ThrMinimization::run();
     ThrMinimization::analyze();
-    ThrMinimization::saveChipRegisters(currentRun);
+    ThrMinimization::saveChipRegisters(fRunNumber);
     ThrMinimization::sendData();
 
     PixelAlive::sendData();

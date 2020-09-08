@@ -27,7 +27,7 @@
 class ThrAdjustment : public PixelAlive
 {
   public:
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
 

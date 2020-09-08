@@ -16,7 +16,7 @@ class MiddlewareController : public TCPServer
     // void send(const std::string& message){broadcast(message);}
 
     std::string interpretMessage(const std::string& buffer) override;
-
+    
   protected:
     std::string getVariableValue(std::string variable, std::string buffer)
     {

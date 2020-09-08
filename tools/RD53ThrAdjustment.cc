@@ -50,19 +50,19 @@ void ThrAdjustment::ConfigureCalibration()
     RD53RunProgress::total() += ThrAdjustment::getNumberIterations();
 }
 
-void ThrAdjustment::Start(int currentRun)
+void ThrAdjustment::Running()
 {
     LOG(INFO) << GREEN << "[ThrAdjustment::Start] Starting" << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrAdjustment.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_ThrAdjustment.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     ThrAdjustment::run();
     ThrAdjustment::analyze();
-    ThrAdjustment::saveChipRegisters(currentRun);
+    ThrAdjustment::saveChipRegisters(fRunNumber);
     ThrAdjustment::sendData();
 
     PixelAlive::sendData();

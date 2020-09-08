@@ -2006,7 +2006,7 @@ void DataChecker::writeObjects()
     fResultFile->Flush();
 }
 // State machine control functions
-void DataChecker::Start(int currentRun) { Initialise(); }
+void DataChecker::Running() { Initialise(); }
 
 void DataChecker::Stop()
 {

@@ -723,7 +723,7 @@ void BiasSweep::StartDAQ()
 {
     // 1st method
     this->fBeBoardInterface->WriteBoardReg(static_cast<BeBoard*>(fDetectorContainer->at(0)), "cbc_system_cnfg.global.misc.trigger_master_external", 0x1);
-    this->Start(static_cast<BeBoard*>(fDetectorContainer->at(0)));
+    SystemController::Start(static_cast<BeBoard*>(fDetectorContainer->at(0)));
 
     // 2nd method
     // if (!fDAQrunning.load() )

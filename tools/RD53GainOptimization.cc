@@ -52,19 +52,19 @@ void GainOptimization::ConfigureCalibration()
     RD53RunProgress::total() += GainOptimization::getNumberIterations();
 }
 
-void GainOptimization::Start(int currentRun)
+void GainOptimization::Running()
 {
     LOG(INFO) << GREEN << "[GainOptimization::Start] Starting" << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_GainOptimization.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     GainOptimization::run();
     GainOptimization::analyze();
-    GainOptimization::saveChipRegisters(currentRun);
+    GainOptimization::saveChipRegisters(fRunNumber);
     GainOptimization::sendData();
 
     Gain::sendData();

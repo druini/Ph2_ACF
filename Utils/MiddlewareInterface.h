@@ -16,6 +16,7 @@ class MiddlewareInterface : public TCPClient
     void resume(void);
     void start(std::string runNumber);
     void stop(void);
+    std::string status(void);
 
   protected:
     std::string currentRun_ = "0";

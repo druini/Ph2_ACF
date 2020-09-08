@@ -526,7 +526,7 @@ void PSHybridTester::CheckFastCommands(const std::string& pFastCommand, uint8_t 
     for(auto cBoard: *fDetectorContainer) { this->CheckFastCommands(cBoard, pFastCommand, pDuartion); }
 }
 // State machine control functions
-void PSHybridTester::Start(int currentRun)
+void PSHybridTester::Running()
 {
     LOG(INFO) << BOLDBLUE << "Starting PS Hybrid tester" << RESET;
     Initialise();

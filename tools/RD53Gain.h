@@ -34,7 +34,7 @@ class Gain : public Tool
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
     }
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
 

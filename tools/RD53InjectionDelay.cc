@@ -59,13 +59,13 @@ void InjectionDelay::ConfigureCalibration()
     RD53RunProgress::total() += InjectionDelay::getNumberIterations();
 }
 
-void InjectionDelay::Start(int currentRun)
+void InjectionDelay::Running()
 {
     LOG(INFO) << GREEN << "[InjectionDelay::Start] Starting" << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_InjectionDelay.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_InjectionDelay.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
@@ -73,7 +73,7 @@ void InjectionDelay::Start(int currentRun)
     InjectionDelay::analyze();
     InjectionDelay::sendData();
 
-    la.draw(currentRun);
+    la.draw(fRunNumber);
     la.sendData();
 }
 

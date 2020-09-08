@@ -529,7 +529,7 @@ void PedeNoise::writeObjects()
 
 void PedeNoise::ConfigureCalibration() { CreateResultDirectory("Results/Run_PedeNoise"); }
 
-void PedeNoise::Start(int currentRun)
+void PedeNoise::Running()
 {
     LOG(INFO) << "Starting noise measurement";
     Initialise(true, true);

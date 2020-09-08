@@ -42,7 +42,7 @@ class CicFEAlignment : public Tool
     bool                              WordAlignmentMPA(uint16_t pWait_ms);
     std::vector<std::vector<uint8_t>> SortOptimalTaps(std::vector<std::vector<uint8_t>> pOptimalTaps);
     std::vector<std::vector<uint8_t>> SortWordAlignmentValues(std::vector<std::vector<uint8_t>> pWordAlignmentValue);
-    void                              Start(int currentRun) override;
+    void                              Running() override;
     void                              Stop() override;
     void                              Pause() override;
     void                              Resume() override;

@@ -61,13 +61,13 @@ void ClockDelay::ConfigureCalibration()
     RD53RunProgress::total() += ClockDelay::getNumberIterations();
 }
 
-void ClockDelay::Start(int currentRun)
+void ClockDelay::Running()
 {
     LOG(INFO) << GREEN << "[ClockDelay::Start] Starting" << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ClockDelay.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_ClockDelay.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
@@ -75,7 +75,7 @@ void ClockDelay::Start(int currentRun)
     ClockDelay::analyze();
     ClockDelay::sendData();
 
-    la.draw(currentRun);
+    la.draw(fRunNumber);
     la.sendData();
 }
 
