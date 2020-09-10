@@ -197,7 +197,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
         return;
     }
 
-    LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from .xml file @@@" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from xml file @@@" << RESET;
 
     for(const auto cBoard: *fDetectorContainer)
     {
