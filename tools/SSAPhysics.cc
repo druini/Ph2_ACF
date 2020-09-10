@@ -51,7 +51,7 @@ void SSAPhysics::Start(int currentRun)
     thrRun      = std::thread(&SSAPhysics::run, this);
 }
 
-void SSAPhysics::sendData(BoardContainer* const& cBoard)
+void SSAPhysics::sendBoardData(BoardContainer* const& cBoard)
 {
     auto theOccStream = prepareChannelContainerStreamer<Occupancy>("Occ");
 
@@ -106,7 +106,7 @@ void SSAPhysics::run()
             if(dataSize != 0)
             {
                 SSAPhysics::fillDataContainer(cBoard);
-                SSAPhysics::sendData(cBoard);
+                SSAPhysics::sendBoardData(cBoard);
             }
             totalDataSize += dataSize;
         }

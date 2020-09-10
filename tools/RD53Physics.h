@@ -37,7 +37,7 @@ class Physics : public Tool
     void Stop() override;
     void ConfigureCalibration() override;
 
-    void sendData(const BoardContainer* cBoard);
+    void sendBoardData(const BoardContainer* cBoard);
     void localConfigure(const std::string fileRes_, int currentRun);
     void initializeFiles(const std::string fileRes_, int currentRun);
     void run();

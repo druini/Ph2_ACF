@@ -25,8 +25,8 @@ class ClockDelay : public PixelAlive
     void Start(int currentRun) override;
     void Stop() override;
     void ConfigureCalibration() override;
+    void sendData() override;
 
-    void   sendData();
     void   localConfigure(const std::string fileRes_, int currentRun);
     void   initializeFiles(const std::string fileRes_, int currentRun);
     void   run();

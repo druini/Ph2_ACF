@@ -67,9 +67,9 @@
     </node>
 
     <node id="fast_cmd_reg_6"       address="0x00000006"      permission="rw"      description="Config registers associated with fast cmds block (Test Pulse FSM)">
-      <node id="delay_after_autozero"     mask="0x00000FFF"   permission="rw"      description="Delay after autozero (when trigger source = 2)." />
-      <node id="delay_before_next_pulse"  mask="0x00FFF000"   permission="rw"      description="Delay before next pulse (when trigger source = 2)." />
-      <node id="delay_after_init_prime"   mask="0xFF000000"   permission="rw"      description="Delay after initial prime pulse - executed only once at the begining of FSM loop (when trigger source = 2)." />
+      <node id="delay_after_autozero"     mask="0x000003FF"   permission="rw"      description="Delay after autozero (when trigger source = 2)." />
+      <node id="delay_before_next_pulse"  mask="0x003FFC00"   permission="rw"      description="Delay before next pulse (when trigger source = 2)." />
+      <node id="delay_after_init_prime"   mask="0xFFC00000"   permission="rw"      description="Delay after initial prime pulse - executed only once at the begining of FSM loop (when trigger source = 2)." />
     </node>
 
     <node id="fast_cmd_reg_7"       address="0x00000007"      permission="rw"      description="Config registers associated with fast cmds block (Auto-Zero process).">
