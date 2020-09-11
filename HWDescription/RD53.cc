@@ -337,7 +337,7 @@ void RD53::resetMask()
         fPixelsMask[col].Enable.fill(0);
         fPixelsMask[col].HitBus.fill(0);
         fPixelsMask[col].InjEn.fill(0);
-        fPixelsMask[col].TDAC.fill(RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) / 2);
+        fPixelsMask[col].TDAC.fill(RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
     }
 }
 
@@ -498,4 +498,5 @@ RdReg::RdReg(uint8_t chip_id, uint16_t address)
     fields[2] = packAndEncode<4, 1>(address, 0);
     fields[3] = packAndEncode<5>(0);
 }
+
 } // namespace RD53Cmd

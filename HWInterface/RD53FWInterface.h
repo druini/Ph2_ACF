@@ -189,11 +189,12 @@ class RD53FWInterface : public BeBoardFWInterface
         uint32_t first_cal_data  = 0;
         uint32_t second_cal_data = 0;
 
-        uint32_t delay_after_ecr        = 0;
-        uint32_t delay_after_autozero   = 0; // @TMP@
-        uint32_t delay_after_first_cal  = 0;
-        uint32_t delay_after_second_cal = 0;
-        uint16_t delay_loop             = 0;
+        uint32_t delay_after_first_prime = 0;
+        uint32_t delay_after_ecr         = 0;
+        uint32_t delay_after_autozero    = 0; // @TMP@
+        uint32_t delay_after_inject      = 0;
+        uint16_t delay_after_trigger     = 0;
+        uint32_t delay_after_prime       = 0;
     };
 
     struct FastCommandsConfig
@@ -274,6 +275,11 @@ class RD53FWInterface : public BeBoardFWInterface
     float calcTemperature(uint32_t sensor1, uint32_t sensor2, int beta = 3435);
     float calcVoltage(uint32_t senseVDD, uint32_t senseGND);
 
+    // ##############################
+    // # Pseudo Random Bit Sequence #
+    // ##############################
+    bool RunPRBStest(bool given_time, unsigned long long frames_or_time, uint16_t hybrid_id, uint16_t chip_id);
+
   private:
     void PrintFWstatus();
     void TurnOffFMC();
@@ -298,6 +304,7 @@ class RD53FWInterface : public BeBoardFWInterface
     uint16_t           enabledHybrids;
     bool               singleChip;
 };
+
 } // namespace Ph2_HwInterface
 
 #endif

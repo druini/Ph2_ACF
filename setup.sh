@@ -103,7 +103,7 @@ export CompileForShep=false
 # Compile with EUDAQ libraries
 export CompileWithEUDAQ=false
 
-# clang-format command
+# Clang-format command
 alias formatAll="find ${BASE_DIR} -iname *.h -o -iname *.cc | xargs /opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format -i"
 
 echo "=== DONE ==="

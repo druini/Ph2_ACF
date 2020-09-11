@@ -82,7 +82,7 @@ void Physics::Start(int currentRun)
     thrMonitor           = std::thread(&Physics::monitor, this);
 }
 
-void Physics::sendData(const BoardContainer* cBoard)
+void Physics::sendBoardData(const BoardContainer* cBoard)
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
@@ -116,7 +116,7 @@ void Physics::Stop()
     this->closeFileHandler();
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded events: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << 1. * numberOfEventsPerRun / nTRIGxEvent << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
 }
 
 void Physics::localConfigure(const std::string fileRes_, int currentRun)
@@ -196,7 +196,7 @@ void Physics::analyze(bool doReadBinary)
         if(dataSize != 0)
         {
             Physics::fillDataContainer(cBoard);
-            Physics::sendData(cBoard);
+            Physics::sendBoardData(cBoard);
         }
     }
 }
@@ -347,8 +347,7 @@ void Physics::monitor()
 {
     while(keepRunning == true)
     {
-        for(const auto cBoard: *fDetectorContainer)
-            SystemController::ReadSystemMonitor(cBoard, "VOUT_ana_ShuLDO", "VOUT_dig_ShuLDO", "ADCbandgap", "VREF_VDAC", "VOUT_BG", "Iref", "TEMPSENS_1", "TEMPSENS_4");
+        for(const auto cBoard: *fDetectorContainer) SystemController::ReadSystemMonitor(cBoard, "VOUT_ana_ShuLDO", "VOUT_dig_ShuLDO", "ADCbandgap", "VREF_VDAC", "Iref", "TEMPSENS_1", "TEMPSENS_4");
         std::this_thread::sleep_for(std::chrono::seconds(MONITORSLEEP));
     }
 }

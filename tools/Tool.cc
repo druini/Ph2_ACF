@@ -1149,6 +1149,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 
             groupScan->setGroup(group);
             (*groupScan)();
+            // this->sendData();
         }
 
         if(fMaskChannelsFromOtherGroups) // re-enable all the channels and evaluate
@@ -1302,9 +1303,9 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
 
     for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
     {
-        // if(boardIndex==0) LOG(INFO) << " Scanning dac " << dacName << ", value = " << dacList[dacIt]  << RESET ;
         fDetectorDataContainer = detectorContainerVector[dacIt];
         setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents, numberOfEventsPerBurst);
+        this->sendData();
     }
 
     return;

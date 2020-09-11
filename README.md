@@ -6,14 +6,29 @@
 - A middleware API layer, implemented in C++, which wraps the firmware calls and handshakes into abstracted functions
 - A C++ object-based library describing the system components (CBCs, RD53, Hybrids, Boards) and their properties (values, status)
 
+###  A short guide to write the GoldenImage to the SD card
+
+1. Connect the SD card
+2. Download the golden firmware from https://indico.cern.ch/event/842824/attachments/1920624/3178547/sdgoldenimage.img
+3. `sudo fdisk -l` - find the name of the SD card (for example, /dev/mmcblk0)
+4. `sudo chmod 744 /dev/sd_card_name` - to be able to play with it
+5. `./imgtool /dev/sd_card_name format Firmware` - to format the SD card
+6. Go to the folder were you saved the sdgoldenimage.img file
+7. `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512` - to write the image to the SD card
+8. Once the previous command is done, you can list the SD card: `./imgtool /dev/sd_card_name list` - there should be a GoldenImage.bin, with 20MB block size
+9. Insert the SD card into the FC7
+
+Use the guide (https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/IPAddress_Tutorial.md) to find the MAC address of the FC7 (Wireshark option) and to set the proper IP.
+
+More informations can be found at https://indico.cern.ch/event/842824/attachments/1920624/3177632/PreparingFC7.pdf
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 22/06/2020
++ Last change made to this section: 17/08/2020
 ```
 
 Suggested software and firmware versions:
-- Software git branch / tag : `master` / `IT-v3.8`
+- Software git branch / tag : `master` / `IT-v3.9.2`
 - Firmware tag: `3.3`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
@@ -32,7 +47,7 @@ Firmware setup:
 3. Upload a golden firmware* on the microSD card (read FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
 4. Download the proper IT firmware version from https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/-/releases
 5. Plug the microSD card in the FC7
-6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware (see instructions: `Setup and run the IT-DAQ` before running this command)
+6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware (see instructions: `IT-DAQ setup and run` before running this command)
 
 *A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`) <br />
 A golden firmware can be downloaded from here: https://cernbox.cern.ch/index.php/s/5tUCio08PEfTf0a <br />
@@ -155,6 +170,7 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
+Steps 4 and 5 are meant to measure the so called "in-time threhsold", to be compared to the threshold measured at step 3 which is the so called "absoulte threshold"
 ### ~=-=~ End of Inner-Tracker section ~=-=~
 <hr>
 

@@ -225,6 +225,11 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
                         float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
                         theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i] = occ;
                     }
+
+        // ##############################################
+        // # Send periodic data to minitor the progress #
+        // ##############################################
+        Latency::sendData();
     }
 }
 

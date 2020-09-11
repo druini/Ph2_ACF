@@ -76,6 +76,7 @@ class RD53Interface : public ReadoutChipInterface
     float    measureTemperature(Ph2_HwDescription::Chip* pChip, uint32_t data);
     float    convertADC2VorI(Ph2_HwDescription::Chip* pChip, uint32_t value, bool isCurrentNotVoltage = false);
 };
+
 } // namespace Ph2_HwInterface
 
 #endif

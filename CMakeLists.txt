@@ -74,7 +74,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # If it's a recent gcc compiler, then let's add some
     # compiler options to avoid warnings promoted to errors
 
-    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result -Wno-error=deprecated-declarations")
+    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result    -Wno-error=deprecated-declarations")
     set (GCC_6_NOERROR_FLAGS "-Wno-error=misleading-indentation")
     set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow")
     set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
@@ -132,7 +132,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(PH2_POWERSUPPLY_FOUND)
 
     # Ph2_TCUSB [USB control of hybrids]
-    find_package(PH2_TCUSB)  
+    find_package(PH2_TCUSB)
     if(PH2_TCUSB_FOUND)
         message(STATUS "    Building the TestCards USB components")
     endif(PH2_TCUSB_FOUND)
@@ -147,11 +147,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})
 
-    
-
-
-
-
     # ZeroMQ optional
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
@@ -161,6 +156,24 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(ZMQ_FOUND)
 
     # Boost
+    file(GLOB_RECURSE uhal_boost /opt/cactus/*version.hpp)
+    if(uhal_boost)
+        MESSAGE(STATUS "    Found boost installation that comes with uHAL, using this version") 
+            set(Boost_NO_SYSTEM_PATHS TRUE)
+            if(Boost_NO_SYSTEM_PATHS)
+                if(${CACTUS_FOUND})
+                    set(BOOST_ROOT ${CACTUS_ROOT})
+                else(${CACTUS_FOUND})
+                    set(BOOST_ROOT /opt/cactus)
+                endif(${CACTUS_FOUND})
+                set(BOOST_INCLUDE_DIRS ${BOOST_ROOT}/include)
+                set(BOOST_LIBRARY_DIRS ${BOOST_ROOT}/lib)
+            endif(Boost_NO_SYSTEM_PATHS)
+    else(uhal_boost)
+        MESSAGE(STATUS "    No boost headers found with uHAL (you are most likely using CC7) - make sure to install boost 1.53 (default version on CC7)")
+    endif(uhal_boost)
+
+
     find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
@@ -243,8 +256,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         endif(PH2_USBINSTLIB_FOUND)
     endif(ZMQ_FOUND)
 
-
-   # EUDAQ
+    # EUDAQ
     if ($ENV{CompileWithEUDAQ})
         set(USE_EUDAQ ON)
         include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
@@ -259,9 +271,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     #all the subdirs
     if(${CACTUS_AMC13_FOUND})
         add_subdirectory(AMC13)
-    endif()
-
-
+   endif()
 
     add_subdirectory(tools)
 ##    add_subdirectory(RootWeb)

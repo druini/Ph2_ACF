@@ -63,6 +63,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
     endif()
 
+    #check for TestCard USBDriver
+    if(${PH2_TCUSB_FOUND})
+      include_directories(${PH2_TCUSB_INCLUDE_DIRS})
+      link_directories(${PH2_TCUSB_LIBRARY_DIRS})
+      set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
+    endif()
+
     #boost also needs to be linked
     if(Boost_FOUND)
         set(LIBS ${LIBS} ${Boost_LIBRARIES})
@@ -104,7 +112,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #to remove binaries
     if(CompileForShep AND CompileForHerd)
         list(REMOVE_ITEM BINARIES *.cc)
-        file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc CMSITminiDAQ.cc, fpgaconfig.cc)
+        file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc CMSITminiDAQ.cc fpgaconfig.cc)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     else()
         list(REMOVE_ITEM BINARIES supervisor.cc)

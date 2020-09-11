@@ -39,7 +39,7 @@ class SSAPhysics : public Tool
     void Stop() override;
     void ConfigureCalibration() override;
 
-    void sendData(BoardContainer* const& cBoard);
+    void sendBoardData(BoardContainer* const& cBoard);
     void initialize(const std::string fileRes_, const std::string fileReg_);
     void run();
     void draw();

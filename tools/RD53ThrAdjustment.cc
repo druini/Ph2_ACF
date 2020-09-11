@@ -341,6 +341,11 @@ std::shared_ptr<DetectorDataContainer> ThrAdjustment::bitWiseScanGlobal_MeasureT
         auto output = PixelAlive::analyze();
         output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
+        // ##############################################
+        // # Send periodic data to minitor the progress #
+        // ##############################################
+        PixelAlive::sendData();
+
         // #####################
         // # Compute next step #
         // #####################
