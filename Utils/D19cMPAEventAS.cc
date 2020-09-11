@@ -4,6 +4,7 @@
 #include "../Utils/DataContainer.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/Occupancy.h"
+#include <numeric>
 
 using namespace Ph2_HwDescription;
 

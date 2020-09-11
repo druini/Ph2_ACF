@@ -1122,13 +1122,14 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
                                {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_inject_pulse_en", (uint32_t)cfg->fast_cmd_fsm.second_cal_en},
                                {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en", (uint32_t)(cfg->enable_hitor != 0 ? 0 : cfg->fast_cmd_fsm.trigger_en)},
 
+                               {"user.ctrl_regs.fast_cmd_reg_6.delay_after_init_prime", (uint32_t)cfg->fast_cmd_fsm.delay_after_first_prime},
                                {"user.ctrl_regs.fast_cmd_reg_7.delay_after_ecr", (uint32_t)cfg->fast_cmd_fsm.delay_after_ecr},
-                               {"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime", (uint32_t)cfg->fast_cmd_fsm.first_cal_data},
-                               {"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_first_cal},
-                               {"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject", (uint32_t)cfg->fast_cmd_fsm.second_cal_data},
-                               {"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_second_cal},
                                {"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero", (uint32_t)cfg->fast_cmd_fsm.delay_after_autozero}, // @TMP@
-                               {"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_loop},
+                               {"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime", (uint32_t)cfg->fast_cmd_fsm.first_cal_data},
+                               {"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_prime},
+                               {"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject", (uint32_t)cfg->fast_cmd_fsm.second_cal_data},
+                               {"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_inject},
+                               {"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_trigger},
 
                                // ################################
                                // # @TMP@ Autozero configuration #
@@ -1154,7 +1155,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
 // # injType == 2 --> Digital #
 // ############################
 {
-    const double FSMperiod = 100e-9; // Referred to 10 MHz clock [us]
+    const double FSMperiod = 1. / 10e6; // Referred to 10 MHz clock
     enum INJtype
     {
         None,
@@ -1163,9 +1164,10 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
     };
     enum INJdelay
     {
-        FirstCal  = 32,
-        SecondCal = 32,
-        Loop      = 40
+        AfterFirstPrime = 460,
+        AfterInjectCal  = 32,
+        BeforePrimeCal  = 8,
+        Loop            = 460
     };
 
     uint8_t chipId = RD53Constants::BROADCAST_CHIPID;
@@ -1186,10 +1188,11 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
         RD53::CalCmd calcmd_second(0, 0, 0, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = 0;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr        = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = INJdelay::AfterFirstPrime;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = INJdelay::BeforePrimeCal;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en = false;
@@ -1206,10 +1209,11 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
         RD53::CalCmd calcmd_second(0, 0, 2, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal  = INJdelay::FirstCal;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal = INJdelay::SecondCal;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop             = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr        = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = INJdelay::AfterFirstPrime;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = INJdelay::AfterInjectCal;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = INJdelay::BeforePrimeCal;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en = true;
@@ -1229,25 +1233,31 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
     {
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = 0;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = 0;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop      = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr = 0;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en      = true;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en          = false;
+
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+
+
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en     = false;
 
         // @TMP@
         if(enableAutozero == true)
         {
             RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
-            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop;
-            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop           = 0;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime    = 0;
         }
     }
     else
         LOG(ERROR) << BOLDRED << "Option not recognized " << injType << RESET;
 
     LOG(INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
-              << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_cal + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_second_cal +
-                                    RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_loop + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr))
+              << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject +
+                                    RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime))
               << std::setprecision(-1) << RESET << GREEN << " Hz" << RESET;
 
     // ##############################

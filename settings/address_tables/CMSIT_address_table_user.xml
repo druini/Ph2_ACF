@@ -47,36 +47,35 @@
       <node id="tp_fsm_ecr_en"        mask="0x00040000"       permission="rw"      description="Enables ECR command for the Test-Pulse FSM (Trigger Source = 2) " />
       <node id="tp_fsm_test_pulse_en" mask="0x00080000"       permission="rw"      description="Enables Cal command (prime) for the Test-Pulse FSM (Trigger Source = 2) " />
       <node id="tp_fsm_inject_pulse_en" mask="0x00100000"     permission="rw"      description="Enables Cal command (inject) for the Test-Pulse FSM (Trigger Source = 2) " />
-      <node id="tp_fsm_trigger_en"    mask="0x00200000"       permission="rw"      description="Enables trigger command for the Test-Pulse FSM (Trigger Source=2)" />
+      <node id="tp_fsm_trigger_en"    mask="0x00200000"       permission="rw"      description="Enables trigger command for the Test-Pulse FSM (Trigger Source= 2)" />
       <node id="trigger_duration"     mask="0x07C00000"       permission="rw"      description="Duration of Trigger command" />
       <node id="HitOr_enable_l12"     mask="0x78000000"       permission="rw"      description="Enable HitOr signals" />
     </node>
 
     <node id="fast_cmd_reg_3"       address="0x00000003"      permission="rw"      description="Configuration registers associated with fast commands block">
       <node id="triggers_to_accept"   mask="0xFFFFFFFF"       permission="rw"      description="Number of triggers to accept, #0 = unlimited." />
-      <!-- <node id="delay_after_ecr"      mask="0xFFF00000"       permission="rw"      description="Delay after ECR (when trigger source =2)." /> -->
     </node>
 
     <node id="fast_cmd_reg_4"       address="0x00000004"      permission="rw"      description="Config registers associated with fast cmds block (Test Pulse FSM)">
       <node id="cal_data_prime"          mask="0x000FFFFF"    permission="rw"      description="Data for Cal command (prime when trigger soure = 2)." />
-      <node id="delay_after_prime_pulse" mask="0xFFF00000"    permission="rw"      description="Delay after prime (when trigger source =2)." />
+      <node id="delay_after_prime_pulse" mask="0xFFF00000"    permission="rw"      description="Delay after prime (when trigger source = 2)." />
     </node>
 
     <node id="fast_cmd_reg_5"       address="0x00000005"      permission="rw"      description="Config registers associated with fast cmds block (Test Pulse FSM)">
       <node id="cal_data_inject"          mask="0x000FFFFF"   permission="rw"      description="Data for Cal command (inject when trigger soure = 2)." />
-      <node id="delay_after_inject_pulse" mask="0xFFF00000"   permission="rw"      description="Delay after inject (when trigger source =2)." />
+      <node id="delay_after_inject_pulse" mask="0xFFF00000"   permission="rw"      description="Delay after inject (when trigger source = 2)." />
     </node>
 
     <node id="fast_cmd_reg_6"       address="0x00000006"      permission="rw"      description="Config registers associated with fast cmds block (Test Pulse FSM)">
-      <node id="delay_after_autozero"     mask="0x00000FFF"   permission="rw"      description="Delay after autozero (when trigger source = 2)." />
-      <node id="delay_before_next_pulse"  mask="0x00FFF000"   permission="rw"      description="Delay before next pulse (when trigger source =2)." />
+      <node id="delay_after_autozero"     mask="0x000003FF"   permission="rw"      description="Delay after autozero (when trigger source = 2)." />
+      <node id="delay_before_next_pulse"  mask="0x003FFC00"   permission="rw"      description="Delay before next pulse (when trigger source = 2)." />
+      <node id="delay_after_init_prime"   mask="0xFFC00000"   permission="rw"      description="Delay after initial prime pulse - executed only once at the begining of FSM loop (when trigger source = 2)." />
     </node>
 
     <node id="fast_cmd_reg_7"       address="0x00000007"      permission="rw"      description="Config registers associated with fast cmds block (Auto-Zero process).">
       <node id="glb_pulse_data"       mask="0x000003FF"       permission="rw"      description="Relevant data for Global Pulse command." />
       <node id="autozero_freq"        mask="0x000FFC00"       permission="rw"      description="Frequency of the Auto-Zero process (in 10MHz clk cyles)." />
-      <!-- <node id="veto_after_autozero"  mask="0x07C00000"       permission="rw"      description="Veto duration after auto zero has finished (in 40MHz clk cycles)." /> -->
-      <node id="delay_after_ecr"      mask="0xFFF00000"       permission="rw"      description="Delay after ECR (when trigger source =2)." />
+      <node id="delay_after_ecr"      mask="0xFFF00000"       permission="rw"      description="Delay after ECR (when trigger source = 2)." />
     </node>
 
     <!-- Ext TLU and DIO5 -->
