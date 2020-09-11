@@ -26,6 +26,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_NetworkUtils)
     TARGET_LINK_LIBRARIES(Ph2_System ${LIBS})
 
+    #check for TestCard USBDriver
+    if(${PH2_TCUSB_FOUND})
+      include_directories(${PH2_TCUSB_INCLUDE_DIRS})
+      link_directories(${PH2_TCUSB_LIBRARY_DIRS})
+      set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
+    endif()
+
     ####################################
     ## EXECUTABLES
     ####################################
