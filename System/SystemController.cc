@@ -443,13 +443,12 @@ void SystemController::Configure(std::string cHWFile, bool enableStream)
 
 bool SystemController::GetRunningStatus() 
 {
-    // std::cout<<__PRETTY_FUNCTION__<< __LINE__<<std::cout;
-    return fRunningFuture.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready;
+    return (fRunningFuture.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready);
 }
 
 void SystemController::waitForRunToBeCompeted()
 {
-    while(GetRunningStatus()) std::this_thread::sleep_for(std::chrono::microseconds(250));
+    while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
 }
 
 void SystemController::Start(BeBoard* pBoard) { fBeBoardInterface->Start(pBoard); }
