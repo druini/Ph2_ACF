@@ -82,7 +82,7 @@ void Physics::Start(int currentRun)
     thrMonitor           = std::thread(&Physics::monitor, this);
 }
 
-void Physics::sendData(const BoardContainer* cBoard)
+void Physics::sendBoardData(const BoardContainer* cBoard)
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
@@ -196,7 +196,7 @@ void Physics::analyze(bool doReadBinary)
         if(dataSize != 0)
         {
             Physics::fillDataContainer(cBoard);
-            Physics::sendData(cBoard);
+            Physics::sendBoardData(cBoard);
         }
     }
 }

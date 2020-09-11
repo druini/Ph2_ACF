@@ -93,13 +93,12 @@ void Gain::sendData()
         for(const auto theOccContainer: detectorContainerVector)
         {
             theOccStream.setHeaderElement(dacList[index] - offset);
-
             for(const auto cBoard: *theOccContainer) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-
             index++;
         }
 
-        for(const auto cBoard: *theGainAndInterceptContainer.get()) theGainAndInterceptStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        if(theGainAndInterceptContainer != nullptr)
+            for(const auto cBoard: *theGainAndInterceptContainer.get()) theGainAndInterceptStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
 
