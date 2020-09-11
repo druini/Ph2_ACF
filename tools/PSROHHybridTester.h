@@ -4,6 +4,7 @@
  * \brief PSROHHybridTester_h__ class, PSROHHybridTester_h__ of the hardware
  *
  * \Support : inna.makarenko@cern.ch
+ * \Support : younes.otarid@cern.ch
  *
  */
 
@@ -64,7 +65,7 @@ class PSROHHybridTester : public Tool
     bool TestResetLines(uint8_t pValue = 0x00);
     void PrepareFCMDTest(uint8_t pSource = 0, uint8_t pPattern = 0xCA);
     bool TestI2CMaster(const std::vector<uint8_t>& pMasters);
-    void TestADC(const std::vector<std::string>& pADCs, uint32_t cMinDAC, uint32_t cMaxDAC, uint32_t cStep);
+    void TestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep);
 
   private:
     void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);

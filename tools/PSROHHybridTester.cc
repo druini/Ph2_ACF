@@ -804,7 +804,7 @@ bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
     return cTestSuccess;
 }
 
-void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t cMinDACValue, uint32_t cMaxDACValue, uint32_t cStep)
+void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t pMinDACValue, uint32_t pMaxDACValue, uint32_t pStep)
 {
 #ifdef __USE_ROOT__
     for(auto cBoard: *fDetectorContainer)
@@ -837,7 +837,7 @@ void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t 
                 cDACValVect.clear(), cADCValVect.clear();
                 // uint32_t cNValues = (cMaxDAC-cMinDAC)/cStep;
                 cADCId = cADC[3] - '0';
-                for(int cDACValue = cMinDACValue; cDACValue <= (int)cMaxDACValue; cDACValue += cStep)
+                for(int cDACValue = pMinDACValue; cDACValue <= (int)pMaxDACValue; cDACValue += pStep)
                 {
 #ifdef __TCUSB__
                     clpGBTInterface->fTC_PSROH.dac_output(cDACValue);
