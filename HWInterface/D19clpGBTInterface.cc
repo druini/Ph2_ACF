@@ -97,9 +97,9 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     }
     if(fUseOpticalLink)
     {
+        LOG(INFO) << BOLDBLUE << "Optical write" << RESET;
         bool     cSucess   = fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
         uint16_t cReadBack = this->ReadReg(pChip, pAddress);
-        LOG(DEBUG) << BOLDBLUE << "\t\t.. read back 0x" << std::hex << +cReadBack << std::dec << " from register address 0x" << std::hex << pAddress << std::dec << RESET;
         return cSucess;
     }
     else
@@ -127,7 +127,11 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
 uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress)
 {
     uint16_t cReadBack = 0;
-    if(fUseOpticalLink) { cReadBack = fBoardFW->ReadOptoLinkRegister(pChip, pAddress); }
+    if(fUseOpticalLink) { 
+        LOG(INFO) << BOLDBLUE << "Optical read" << RESET;
+        cReadBack = fBoardFW->ReadOptoLinkRegister(pChip, pAddress); 
+        LOG(INFO) << BOLDBLUE << "\t\t.. read back 0x" << std::hex << +cReadBack << std::dec << " from register address 0x" << std::hex << pAddress << std::dec << RESET;
+    }
     else
     {
 // use PS-ROH test card USB interface
@@ -524,13 +528,13 @@ uint8_t D19clpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t
 
 void D19clpGBTInterface::ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters)
 {
-    // Resets I2C Masters
+    std::vector<uint8_t> cBitPosition = {2,1,0};
     for(const auto& cMaster: pMasters)
     {
         // generating reset pulse on dedicated register bit
-        this->WriteChipReg(pChip, "RST0", 0 << cMaster);
-        this->WriteChipReg(pChip, "RST0", 1 << cMaster);
-        this->WriteChipReg(pChip, "RST0", 0 << cMaster);
+        this->WriteChipReg(pChip, "RST0", 0 << cBitPosition.at(cMaster));
+        this->WriteChipReg(pChip, "RST0", 1 << cBitPosition.at(cMaster));
+        this->WriteChipReg(pChip, "RST0", 0 << cBitPosition.at(cMaster));
     }
 }
 
@@ -734,17 +738,29 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, const std
 {
     if(pMode == "serial")
     {
-        LOG(INFO) << "LpGBT in Serial Interface configuration mode" << RESET;
+#ifdef __TCUSB__
+        fTC_PSROH.toggle_SCI2C();
+#endif
+        LOG(INFO) << BOLDGREEN << "Switched software flag to Serial Interface configuration mode" << RESET;
         fUseOpticalLink = true;
     }
     else if(pMode == "i2c")
     {
-        LOG(INFO) << "LpGBT in I2C Slave Interface configuration mode" << RESET;
-        fUseOpticalLink = false;
+#ifdef __TCUSB__
+        LOG(INFO) << BOLDBLUE << "i2c Before toggle" << RESET;
+        fTC_PSROH.toggle_SCI2C();
+#endif
+        if( ((this->ReadChipReg(pChip, "ConfigPins") & 0x8) >> 3) == 1)
+        {
+            LOG(INFO) << BOLDGREEN << "LpGBT in I2C Slave Interface configuration mode" << RESET;
+            fUseOpticalLink = false;
+        }
+        else
+            LOG(INFO) << BOLDRED << "lpGBT still in Serial Interface configuration mode : SC_I2C pin is not '1'" << RESET;
     }
     else
     {
-        LOG(ERROR) << "Wrong configuration mode : choose [serial] or [i2c]" << RESET;
+        LOG(INFO) << BOLDRED <<  "Wrong configuration mode : choose [serial] or [i2c]" << RESET;
         exit(0);
     }
 }
