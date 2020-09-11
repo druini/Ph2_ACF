@@ -12,10 +12,10 @@
 2. Download the golden firmware from https://indico.cern.ch/event/842824/attachments/1920624/3178547/sdgoldenimage.img
 3. `sudo fdisk -l` - find the name of the SD card (for example, /dev/mmcblk0)
 4. `sudo chmod 744 /dev/sd_card_name` - to be able to play with it
-5. `./imgtool /dev/sd_card_name format Firmware` - formatting of the SD card
-6. Go to the folder, were you saved the sdgoldenimage.img file
+5. `./imgtool /dev/sd_card_name format Firmware` - to format the SD card
+6. Go to the folder were you saved the sdgoldenimage.img file
 7. `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512` - to write the image to the SD card
-8. Once the previous command is done, you can list the sd card: `./imgtool /dev/sd_card_name list` - there should be a GoldenImage.bin, with 20MB block size
+8. Once the previous command is done, you can list the SD card: `./imgtool /dev/sd_card_name list` - there should be a GoldenImage.bin, with 20MB block size
 9. Insert the SD card into the FC7
 
 Use the guide (https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/IPAddress_Tutorial.md) to find the MAC address of the FC7 (Wireshark option) and to set the proper IP.
