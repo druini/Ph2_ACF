@@ -238,7 +238,13 @@ int main(int argc, char* argv[])
         cPedeNoise.Inherit(&cTool);
         // second parameter disables stub logic on CBC3
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
+        auto myFunction = [](const Ph2_HwDescription::ReadoutChip *theChip){
+            std::cout<<"Using it"<<std::endl;
+            return (theChip->getId()==0);
+        };
+        ModuleContainer::SetQueryFunction(myFunction);
         cPedeNoise.measureNoise();
+        ModuleContainer::ResetQueryFunction();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         t.stop();

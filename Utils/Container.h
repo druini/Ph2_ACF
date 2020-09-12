@@ -18,6 +18,7 @@
 #include <map>
 #include <typeinfo>
 #include <vector>
+#include <functional>
 
 class ChannelContainerBase;
 template <typename T>
@@ -258,24 +259,56 @@ template <typename T, typename HW>
 class HWDescriptionContainer : public Container<T>
 {
   public:
-    HWDescriptionContainer(uint16_t id) : Container<T>(id) { ; }
+    HWDescriptionContainer(uint16_t id) : Container<T>(id) {}
     ~HWDescriptionContainer() { ; }
 
     class myIterator : public std::vector<T*>::iterator
     {
       public:
-        myIterator(typename std::vector<T*>::iterator theIterator) : std::vector<T*>::iterator(theIterator){};
+        myIterator(typename std::vector<T*>::iterator theIterator, size_t theVectorSize=0) 
+        : std::vector<T*>::iterator(theIterator)
+        , fVectorSize(theVectorSize){};
         HW* operator*() { return static_cast<HW*>(std::vector<T*>::iterator::operator*()); }
+        myIterator& operator++() 
+        { 
+          do
+          {
+            std::vector<T*>::iterator::operator++();
+            ++fCurrentPosition;
+            // std::cout<<__PRETTY_FUNCTION__<<" at position "<<fCurrentPosition<< " out of " << fVectorSize << std::endl;
+            if(fCurrentPosition>=fVectorSize) break;
+          } while(!fQueryFunction(**this));
+          return *this;
+        }
+      private:
+        size_t fVectorSize;
+        size_t fCurrentPosition = 0;
     };
 
     class myConstIterator : public std::vector<T*>::const_iterator
     {
       public:
-        myConstIterator(typename std::vector<T*>::const_iterator theIterator) : std::vector<T*>::const_iterator(theIterator){};
+        myConstIterator(typename std::vector<T*>::const_iterator theIterator, size_t theVectorSize=0) 
+        : std::vector<T*>::const_iterator(theIterator)
+        , fVectorSize(theVectorSize){};
         HW* const operator*() const { return static_cast<HW* const>(std::vector<T*>::const_iterator::operator*()); }
+        myConstIterator& operator++() 
+        { 
+          do
+          {
+            std::vector<T*>::const_iterator::operator++();
+            ++fCurrentPosition;
+            // std::cout<<__PRETTY_FUNCTION__<<" at position "<<fCurrentPosition<< " out of " << fVectorSize << std::endl;
+            if(fCurrentPosition>=fVectorSize) break;
+          } while(!fQueryFunction(**this));
+          return *this;
+        }
+      private:
+        size_t fVectorSize;
+        size_t fCurrentPosition = 0;
     };
 
-    virtual myIterator begin() { return myIterator(std::vector<T*>::begin()); }
+    virtual myIterator begin() { return myIterator(std::vector<T*>::begin(), std::vector<T*>::size()); }
 
     virtual myIterator end() { return myIterator(std::vector<T*>::end()); }
 
@@ -296,7 +329,30 @@ class HWDescriptionContainer : public Container<T>
     {
         return static_cast<theHW*>(this->std::vector<T*>::at(index));
     }
+
+    static void ResetQueryFunction(); 
+    static void SetQueryFunction(std::function<bool(const HW*)> theQueryFunction);
+
+    static std::function<bool(const HW*)> fQueryFunction;
 };
+
+
+template <typename T, typename HW>
+void HWDescriptionContainer<T,HW>::ResetQueryFunction() 
+{
+  fQueryFunction = [](const HW*){return true;};
+  std::cout<<__PRETTY_FUNCTION__<<std::endl;
+} 
+
+template <typename T, typename HW>
+void HWDescriptionContainer<T,HW>::SetQueryFunction(std::function<bool(const HW*)> theQueryFunction) 
+{
+  fQueryFunction = theQueryFunction;
+  std::cout<<__PRETTY_FUNCTION__<<std::endl;
+} 
+
+template <typename T, typename HW>
+std::function<bool(const HW*)> HWDescriptionContainer<T,HW>::fQueryFunction = [](const HW*){return true;};
 
 class ModuleContainer : public HWDescriptionContainer<ChipContainer, Ph2_HwDescription::ReadoutChip>
 {
