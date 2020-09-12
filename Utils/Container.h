@@ -19,6 +19,7 @@
 #include <typeinfo>
 #include <vector>
 #include <functional>
+#include <boost/iterator/filter_iterator.hpp>
 
 class ChannelContainerBase;
 template <typename T>
@@ -262,59 +263,45 @@ class HWDescriptionContainer : public Container<T>
     HWDescriptionContainer(uint16_t id) : Container<T>(id) {}
     ~HWDescriptionContainer() { ; }
 
-    class myIterator : public std::vector<T*>::iterator
+    struct QueryFunction
     {
-      public:
-        myIterator(typename std::vector<T*>::iterator theIterator, size_t theVectorSize=0) 
-        : std::vector<T*>::iterator(theIterator)
-        , fVectorSize(theVectorSize){};
-        HW* operator*() { return static_cast<HW*>(std::vector<T*>::iterator::operator*()); }
-        myIterator& operator++() 
-        { 
-          do
-          {
-            std::vector<T*>::iterator::operator++();
-            ++fCurrentPosition;
-            // std::cout<<__PRETTY_FUNCTION__<<" at position "<<fCurrentPosition<< " out of " << fVectorSize << std::endl;
-            if(fCurrentPosition>=fVectorSize) break;
-          } while(!fQueryFunction(**this));
-          return *this;
+        bool operator()(const T* x)
+        {
+            if(!fQueryFunction) return true;
+            return fQueryFunction(x); 
         }
-      private:
-        size_t fVectorSize;
-        size_t fCurrentPosition = 0;
+        static std::function<bool(const T*)> fQueryFunction;
     };
 
-    class myConstIterator : public std::vector<T*>::const_iterator
+    typedef boost::filter_iterator<QueryFunction, typename std::vector<T*>::iterator> FilterIter;
+
+    class MyIterator : public FilterIter
     {
       public:
-        myConstIterator(typename std::vector<T*>::const_iterator theIterator, size_t theVectorSize=0) 
-        : std::vector<T*>::const_iterator(theIterator)
-        , fVectorSize(theVectorSize){};
-        HW* const operator*() const { return static_cast<HW* const>(std::vector<T*>::const_iterator::operator*()); }
-        myConstIterator& operator++() 
-        { 
-          do
-          {
-            std::vector<T*>::const_iterator::operator++();
-            ++fCurrentPosition;
-            // std::cout<<__PRETTY_FUNCTION__<<" at position "<<fCurrentPosition<< " out of " << fVectorSize << std::endl;
-            if(fCurrentPosition>=fVectorSize) break;
-          } while(!fQueryFunction(**this));
-          return *this;
-        }
-      private:
-        size_t fVectorSize;
-        size_t fCurrentPosition = 0;
+        MyIterator(typename std::vector<T*>::iterator theIterator, typename std::vector<T*>::iterator theIteratorEnd) 
+        : FilterIter(QueryFunction(), theIterator, theIteratorEnd)
+        {}
+        HW* operator*() { return static_cast<HW*>(FilterIter::operator*()); }
     };
 
-    virtual myIterator begin() { return myIterator(std::vector<T*>::begin(), std::vector<T*>::size()); }
+    typedef boost::filter_iterator<QueryFunction, typename std::vector<T*>::const_iterator> ConstFilterIter;
 
-    virtual myIterator end() { return myIterator(std::vector<T*>::end()); }
+    class MyConstIterator : public ConstFilterIter
+    {
+      public:
+        MyConstIterator(typename std::vector<T*>::const_iterator theIterator, typename std::vector<T*>::const_iterator theIteratorEnd) 
+        : ConstFilterIter(QueryFunction(), theIterator, theIteratorEnd)
+        {}
+        HW* const operator*() const { return static_cast<HW* const>(ConstFilterIter::operator*()); }
+    };
 
-    virtual myConstIterator begin() const { return myConstIterator(std::vector<T*>::begin()); }
+    virtual MyIterator begin() { return MyIterator(std::vector<T*>::begin(), std::vector<T*>::end()); }
 
-    virtual myConstIterator end() const { return myConstIterator(std::vector<T*>::end()); }
+    virtual MyIterator end() { return MyIterator(std::vector<T*>::end(), std::vector<T*>::end()); }
+
+    virtual MyConstIterator begin() const { return MyConstIterator(std::vector<T*>::begin(), std::vector<T*>::end());; }
+
+    virtual MyConstIterator end() const { return MyConstIterator(std::vector<T*>::begin(), std::vector<T*>::end());; }
 
     template <typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration
                                    // is defined
@@ -331,28 +318,27 @@ class HWDescriptionContainer : public Container<T>
     }
 
     static void ResetQueryFunction(); 
-    static void SetQueryFunction(std::function<bool(const HW*)> theQueryFunction);
+    static void SetQueryFunction(std::function<bool(const T*)> theQueryFunction);
 
-    static std::function<bool(const HW*)> fQueryFunction;
 };
 
 
 template <typename T, typename HW>
 void HWDescriptionContainer<T,HW>::ResetQueryFunction() 
 {
-  fQueryFunction = [](const HW*){return true;};
+  QueryFunction::fQueryFunction = 0;
   std::cout<<__PRETTY_FUNCTION__<<std::endl;
 } 
 
 template <typename T, typename HW>
-void HWDescriptionContainer<T,HW>::SetQueryFunction(std::function<bool(const HW*)> theQueryFunction) 
+void HWDescriptionContainer<T,HW>::SetQueryFunction(std::function<bool(const T*)> theQueryFunction) 
 {
-  fQueryFunction = theQueryFunction;
+  QueryFunction::fQueryFunction = theQueryFunction;
   std::cout<<__PRETTY_FUNCTION__<<std::endl;
 } 
 
 template <typename T, typename HW>
-std::function<bool(const HW*)> HWDescriptionContainer<T,HW>::fQueryFunction = [](const HW*){return true;};
+std::function<bool(const T*)> HWDescriptionContainer<T,HW>::QueryFunction::fQueryFunction = 0;
 
 class ModuleContainer : public HWDescriptionContainer<ChipContainer, Ph2_HwDescription::ReadoutChip>
 {
