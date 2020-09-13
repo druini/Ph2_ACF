@@ -28,7 +28,7 @@ D19cMPAEventAS::D19cMPAEventAS(const BeBoard* pBoard, const std::vector<uint32_t
         for(auto cFe: *cModule)
         {
             fFeIds.push_back(cFe->getId());
-            fNSSA += cFe->size();
+            fNSSA += cFe->fullSize();
             HybridCounterData cHybridCounterData;
             cHybridCounterData.clear();
             std::vector<uint8_t> cROCIds(0);

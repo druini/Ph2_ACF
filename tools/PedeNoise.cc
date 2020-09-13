@@ -291,7 +291,6 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
             {
                 for(auto cROC: *cFe)
                 {
-                    std::cout<<__PRETTY_FUNCTION__<<std::endl;
                     uint16_t tmpVthr = 0;
                     if(cWithCBC) tmpVthr = (static_cast<ReadoutChip*>(cROC)->getReg("VCth1") + (static_cast<ReadoutChip*>(cROC)->getReg("VCth2") << 8));
                     if(cWithSSA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("Bias_THDAC");
@@ -381,9 +380,6 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
 void PedeNoise::extractPedeNoise()
 {
     ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, fThresholdAndNoiseContainer);
-
-    std::cout<<__PRETTY_FUNCTION__<<" threshold container size = " << fThresholdAndNoiseContainer.at(0)->at(0)->at(0)->size()<<std::endl;
-
     uint16_t                                                     counter          = 0;
     std::map<uint16_t, DetectorDataContainer*>::reverse_iterator previousIterator = fSCurveOccupancyMap.rend();
     for(std::map<uint16_t, DetectorDataContainer*>::reverse_iterator mIt = fSCurveOccupancyMap.rbegin(); mIt != fSCurveOccupancyMap.rend(); ++mIt)

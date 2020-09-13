@@ -38,7 +38,7 @@ void print(const DetectorDataContainer& detector)
         for(const auto opticalGroup: *board)
         {
             std::cout << "OpticalGroup" << std::endl;
-            for(const ModuleDataContainer* hybrid: *opticalGroup)
+            for(const auto hybrid: *opticalGroup)
             {
                 std::cout << "Module" << std::endl;
                 for(const auto chip: *hybrid)
@@ -76,7 +76,6 @@ void copyAndInitStructure(const DetectorContainer& original, DetectorDataContain
                 copyOpticalGroup->back()->initialize<SM, SC>();
                 for(const auto chip: *hybrid)
                 {
-                    std::cout<<__PRETTY_FUNCTION__<<__LINE__<<std::endl;
                     copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
                     copyModule->back()->initialize<SC, T>();
                 }
