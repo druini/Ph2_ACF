@@ -30,8 +30,12 @@ build:
     - mkdir -p build; cd build
     - cmake ..
     - make -j4
+  after_script:
+    - printf $USER_PASS | base64 -d | kinit $USER_NAME
+    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
   artifacts:
     paths:
+      - ci_tools
       - ci_setup.sh
       - bin/feh_2s_test
       - bin/commission
@@ -43,13 +47,12 @@ run_on_IT:
   stage: run
   dependencies:
     - build    
-  extends: .ci_tools
+  #extends: .ci_tools
   script:
-    - source ./asetup.sh
+    - source ./ci_setup.sh
     - cd ci_tools
     - CMSITminiDAQ -f CMSIT.xml -c pixelalive
     - CMSITminiDAQ -f CMSIT.xml -c threqu
-    - cd; pwd
   after_script:
     - cp ci_tools/Results/Run000000_PixelAlive.root .
     - cp ci_tools/Results/Run000001_ThrEqualization.root .      
@@ -77,8 +80,8 @@ run_on_2S:
   dependencies:
     - build
   before_script:
-    - printf $USER_PASS | base64 -d | kinit $USER_NAME
-    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
+          #- printf $USER_PASS | base64 -d | kinit $USER_NAME
+          #- xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
     - python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
   script:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 1
