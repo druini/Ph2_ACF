@@ -1,20 +1,14 @@
-# YAML script for CI of Ph2_ACF Software/Middleware
-# Author: Emery Nibigira (IPHC-Strasbourg)
-#         emery.nibigira@cern.ch
+## YAML script for CI of Ph2_ACF Software/Middleware
+## Author: Emery Nibigira (IPHC-Strasbourg)
+##         emery.nibigira@cern.ch
 
-# The pipeline starts when a merge request is created
+## The pipeline starts when a merge request is created
 
 #workflow:
 #  rules:
 #    - if: $CI_MERGE_REQUEST_ID
 
 image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
-
-.ci_tools:
-  before_script:
-    - printf $USER_PASS | base64 -d | kinit $USER_NAME
-    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
-
 
 stages:
   - compile
@@ -30,12 +24,8 @@ build:
     - mkdir -p build; cd build
     - cmake ..
     - make -j4
-  after_script:
-    - printf $USER_PASS | base64 -d | kinit $USER_NAME
-    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
   artifacts:
     paths:
-      - ci_tools
       - ci_setup.sh
       - bin/feh_2s_test
       - bin/commission
@@ -43,11 +33,13 @@ build:
     expire_in: 1 week
 
 ## IT module
-run_on_IT:
+.run_on_IT:
   stage: run
   dependencies:
     - build    
-  #extends: .ci_tools
+  before_script:
+    - printf $USER_PASS | base64 -d | kinit $USER_NAME
+    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
   script:
     - source ./ci_setup.sh
     - cd ci_tools
@@ -63,7 +55,7 @@ run_on_IT:
       - ci_tools/plot_canvas.py
     expire_in: 1 week
 
-check_run_on_IT:
+.check_run_on_IT:
   stage: check
   needs: [run_on_IT]
   script:
@@ -80,8 +72,8 @@ run_on_2S:
   dependencies:
     - build
   before_script:
-          #- printf $USER_PASS | base64 -d | kinit $USER_NAME
-          #- xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
+    - printf $USER_PASS | base64 -d | kinit $USER_NAME
+    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
     - python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
   script:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 1
@@ -93,7 +85,7 @@ run_on_2S:
   artifacts:
     paths:
       - Hybrid.root  
-      - ci_tools
+      - ci_tools/plot_hist.py
     expire_in: 1 week
 
 check_run_on_2S:
