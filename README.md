@@ -27,12 +27,12 @@ More informations can be found at https://indico.cern.ch/event/842824/attachment
 + Last change made to this section: 13/09/2020
 ```
 
-Suggested software and firmware versions:
+**Suggested software and firmware versions:**
 - Software git branch / tag : `master` / `IT-v3.9.3`
 - Firmware tag: `3.4`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
-FC7 setup:
+**FC7 setup:**
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
 2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
 3. Restart the network: `sudo /etc/init.d/network restart`
@@ -41,7 +41,7 @@ FC7 setup:
 
 More details on the hardware needed to setup the system can be bound here: https://espace.cern.ch/Tracker-Upgrade/DAQ/SitePages/Home.aspx
 
-Firmware setup:
+**Firmware setup:**
 1. Check whether the DIP switches on FC7 board are setup for the use of a microSD card (`out-in-in-in-out-in-in-in`)
 2. Insert a microSD card in the PC and run `/sbin/fdisk -l` to understand to which dev it's attached to (`/dev/sd_card_name`)
 3. Upload a golden firmware* on the microSD card (read FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
