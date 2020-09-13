@@ -24,12 +24,12 @@ More informations can be found at https://indico.cern.ch/event/842824/attachment
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 17/08/2020
++ Last change made to this section: 13/09/2020
 ```
 
 Suggested software and firmware versions:
-- Software git branch / tag : `master` / `IT-v3.9.2`
-- Firmware tag: `3.3`
+- Software git branch / tag : `master` / `IT-v3.9.3`
+- Firmware tag: `3.4`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 FC7 setup:
