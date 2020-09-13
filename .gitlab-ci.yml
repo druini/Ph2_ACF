@@ -33,7 +33,7 @@ build:
     expire_in: 1 week
 
 ## IT module
-.run_on_IT:
+run_on_IT:
   stage: run
   dependencies:
     - build    
@@ -55,7 +55,7 @@ build:
       - ci_tools/plot_canvas.py
     expire_in: 1 week
 
-.check_run_on_IT:
+check_run_on_IT:
   stage: check
   needs: [run_on_IT]
   script:
@@ -74,13 +74,13 @@ run_on_2S:
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
-    - python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
+    #- python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
   script:
-    - python ci_tools/status_manager.py 2s_status.txt --set_status 1
+    #- python ci_tools/status_manager.py 2s_status.txt --set_status 1
     - source ./ci_setup.sh
     - feh_2s_test -f ci_tools/CMS2S.xml -t -m -a --findShorts -b
   after_script:
-    - python ci_tools/status_manager.py 2s_status.txt --set_status 0
+    #- python ci_tools/status_manager.py 2s_status.txt --set_status 0
     - cp Results/*/Hybrid.root .
   artifacts:
     paths:
