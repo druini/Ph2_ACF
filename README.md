@@ -172,7 +172,7 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
-Steps **4** and **5** are meant to measure the so called "in-time threhsold", to be compared with the threshold measured at step **3**, which is the so called "absoulte threshold"
+**N.B.:** steps **4** and **5** are meant to measure the so called "in-time threhsold", to be compared with the threshold measured at step **3**, which is the so called "absoulte threshold"
 ### ~=-=~ End of Inner-Tracker section ~=-=~
 <hr>
 
