@@ -45,13 +45,16 @@ run_on_IT:
     - cd ci_tools
     - CMSITminiDAQ -f CMSIT.xml -c pixelalive
     - CMSITminiDAQ -f CMSIT.xml -c threqu
+    - CMSITminiDAQ -f CMSIT.xml -c scurve
   after_script:
     - cp ci_tools/Results/Run000000_PixelAlive.root .
-    - cp ci_tools/Results/Run000001_ThrEqualization.root .      
+    - cp ci_tools/Results/Run000001_ThrEqualization.root .
+    - cp ci_tools/Results/Run000002_SCurve.root .      
   artifacts:
     paths: 
       - Run000000_PixelAlive.root
       - Run000001_ThrEqualization.root
+      - Run000002_SCurve.root
       - ci_tools/plot_canvas.py
     expire_in: 1 week
 
@@ -61,6 +64,7 @@ check_run_on_IT:
   script:
     - python ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Module_0/Chip_0/D_B(0)_O(0)_M(0)_PixelAlive_Chip(0)" -o plots
     - python ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Module_0/Chip_0/D_B(0)_O(0)_M(0)_ThrEqualization_Chip(0)" -o plots
+    - python ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Module_0/Chip_0/D_B(0)_O(0)_M(0)_SCurves_Chip(0)" -o plots
   artifacts:
     paths:
       - plots
@@ -74,13 +78,13 @@ run_on_2S:
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
-    #- python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
+    - python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
   script:
-    #- python ci_tools/status_manager.py 2s_status.txt --set_status 1
+    - python ci_tools/status_manager.py 2s_status.txt --set_status 1
     - source ./ci_setup.sh
     - feh_2s_test -f ci_tools/CMS2S.xml -t -m -a --findShorts -b
   after_script:
-    #- python ci_tools/status_manager.py 2s_status.txt --set_status 0
+    - python ci_tools/status_manager.py 2s_status.txt --set_status 0
     - cp Results/*/Hybrid.root .
   artifacts:
     paths:
