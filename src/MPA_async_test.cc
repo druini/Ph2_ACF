@@ -116,9 +116,10 @@ int main(int argc, char* argv[])
             // curpnum = 0;
             scurvecsv << ith << ",";
 
-            // FIFO readout
-            countersfifo = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ReadoutCounters_MPA(0);
-
+            // FIFO readout 
+            //TURNED OFF
+            //countersfifo = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ReadoutCounters_MPA(0);
+            //countersfifo = [0];
             // Randomly the counters fail
             // this fixes the issue but this needs to be looked at further
             totalevents = std::accumulate(countersfifo.begin() + 1, countersfifo.end(), 0);

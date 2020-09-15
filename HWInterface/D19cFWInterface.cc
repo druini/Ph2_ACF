@@ -1679,7 +1679,7 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
     } while(cEventIterator < pData.end());
     return cNEvents;
 }
-void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pData)
+void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pData, bool cFast=true)
 {
     // get event type
     EventType cEventType = pBoard->getEventType();
@@ -1692,71 +1692,148 @@ void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
             {
                 for(auto cChip: *cFe)
                 {
-                    LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from SSA" << +cChip->getId() << RESET;
-                    bool                  cWrite = false;
-                    std::vector<uint32_t> cVec;
-                    cVec.clear();
-                    std::vector<uint32_t> cReplies;
-                    cReplies.clear();
-                    // I think it would also work to loop over rows
-                    // then columns
-                    // 16 columns , 120 rows?
-                    for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+
+                    if (cFast)
                     {
-                        // address
-                        uint32_t cBaseRegisterLSB = ((12 + 8 * (cChnl / 120)) << 8) + 0x81;
-                        uint32_t cBaseRegisterMSB = cBaseRegisterLSB + 128;
-                        // MSB
-                        ChipRegItem cReg_Counters_MSB;
-                        cReg_Counters_MSB.fPage    = 0x00;
-                        cReg_Counters_MSB.fAddress = cBaseRegisterMSB + cChnl;
-                        cReg_Counters_MSB.fValue   = 0x00;
-                        this->EncodeReg(cReg_Counters_MSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
-                        // LSB
-                        ChipRegItem cReg_Counters_LSB;
-                        cReg_Counters_LSB.fPage    = 0x00;
-                        cReg_Counters_LSB.fAddress = cBaseRegisterLSB + cChnl;
-                        cReg_Counters_LSB.fValue   = 0x00;
-                        this->EncodeReg(cReg_Counters_LSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
+                         //for now hardcode, can be option, can be taken out
+                         bool raw_mode_en = 0;
+                         //std::cout<<"FAST"<<std::endl;
+                         WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", raw_mode_en);
+
+                         uint32_t              ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+                         std::vector<uint16_t> count(2040, 0);
+                         PS_Start_counters_read();
+                         uint32_t timeout = 0;
+                         //std::cout<<"xx "<<ps_counters_ready<<std::endl;
+                         std::chrono::milliseconds cWait(10);
+                         std::this_thread::sleep_for(cWait);
+                         //std::cout<<"ps_counters_ready"<<ps_counters_ready<<std::endl;
+                         while((ps_counters_ready == 0) & (timeout < 100))
+                         {
+                             std::this_thread::sleep_for(cWait);
+                             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+                             ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+                             //std::cout<<timeout<<" "<<ps_counters_ready<<std::endl;
+                             timeout += 1;
+                         }
+                         if(timeout >= 100)
+                         {
+                             LOG(ERROR) << BOLDRED << "Fast MPA counter readout failed..." << RESET;
+                             //this->ReadMPACounters( pBoard,pData,  cFast);
+                             return;
+                         }
+
+                         if(raw_mode_en == 1)
+                         {
+                             uint32_t cycle = 0;
+                             for(int i = 0; i < 20000; i++)
+                             {
+                                  //uint32_t fifo1_word = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo1_data");
+                                  //uint32_t fifo2_word = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo2_data");
+                                  uint32_t fifo1_word = ReadReg("fc7_daq_ctrl.physical_interface_block.fifo1_data");
+                                  uint32_t fifo2_word = ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data");
+
+                                  uint32_t line1 = (fifo1_word & 0x0000FF) >> 0;  // to_number(fifo1_word,8,0)
+                                  uint32_t line2 = (fifo1_word & 0x00FF00) >> 8;  // to_number(fifo1_word,16,8)
+                                  uint32_t line3 = (fifo1_word & 0xFF0000) >> 16; //  to_number(fifo1_word,24,16)
+
+                                  uint32_t line4 = (fifo2_word & 0x0000FF) >> 0; // to_number(fifo2_word,8,0)
+                                  uint32_t line5 = (fifo2_word & 0x00FF00) >> 8; // to_number(fifo2_word,16,8)
+
+                                  if(((line1 & 0x80) == 128) && ((line4 & 0x80) == 128))
+                                  {
+                                      uint32_t temp = ((line2 & 0x20) << 9) | ((line3 & 0x20) << 8) | ((line4 & 0x20) << 7) | ((line5 & 0x20) << 6) | ((line1 & 0x10) << 6) | ((line2 & 0x10) << 5) | ((line3 & 0x10) << 4) |
+						        ((line4 & 0x10) << 3) | ((line5 & 0x80) >> 1) | ((line1 & 0x40) >> 1) | ((line2 & 0x40) >> 2) | ((line3 & 0x40) >> 3) | ((line4 & 0x40) >> 4) | ((line5 & 0x40) >> 5) |
+						        ((line1 & 0x20) >> 5);
+                                      if(temp != 0)
+                                      {
+                                          count[cycle] = temp - 1;
+                                          cycle += 1;
+                                      }
+                                  }
+                             }
+                         }
+                         else
+                         {
+                             ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data");
+                             //uint32_t all=0;           
+                             for(int i = 0; i < 2040; i++) 
+                             { 
+                                 pData.push_back(ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data") - 1); 
+                                 //all+=pData[i];
+                             } 
+                             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+                             ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+                         }
                     }
-                    // read back
-                    this->ReadChipBlockReg(cVec);
-                    // set in data vector
-                    uint32_t cDataWord    = 0x0000;
-                    uint32_t cWordCounter = 0;
-                    uint16_t cIndx        = 0;
-                    for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                    else
                     {
-                        uint8_t cMPAId;
-                        bool    cFailed = false;
-                        bool    cRead;
-                        // address
-                        uint32_t    cBaseRegisterLSB = ((12 + 8 * (cChnl / 120)) << 8) + 0x81;
-                        uint32_t    cBaseRegisterMSB = cBaseRegisterLSB + 128;
-                        ChipRegItem cReg_Counters_MSB;
-                        cReg_Counters_MSB.fPage    = 0x00;
-                        cReg_Counters_MSB.fAddress = cBaseRegisterMSB + cChnl;
-                        cReg_Counters_MSB.fValue   = 0x00;
-                        ChipRegItem cReg_Counters_LSB;
-                        cReg_Counters_LSB.fPage    = 0x00;
-                        cReg_Counters_LSB.fAddress = cBaseRegisterLSB + cChnl;
-                        cReg_Counters_LSB.fValue   = 0x00;
-                        this->DecodeReg(cReg_Counters_MSB, cMPAId, cVec[cIndx], cRead, cFailed);
-                        this->DecodeReg(cReg_Counters_LSB, cMPAId, cVec[cIndx + 1], cRead, cFailed);
-                        cIndx += 2;
-                        uint16_t cCounterValue = ((cReg_Counters_MSB.fValue & 0xFF) << 8) | (cReg_Counters_LSB.fValue & 0xFF);
-                        if(cChnl < 10)
+                        LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from SSA" << +cChip->getId() << RESET;
+                        bool                  cWrite = false;
+                        std::vector<uint32_t> cVec;
+                        cVec.clear();
+                        std::vector<uint32_t> cReplies;
+                        cReplies.clear();
+                        // I think it would also work to loop over rows
+                        // then columns
+                        // 16 columns , 120 rows?
+                        for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                         {
-                            LOG(DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
-                                       << " LSB " << +(cReg_Counters_LSB.fValue & 0xFF) << " MSB " << +(cReg_Counters_MSB.fValue & 0xFF) << RESET;
+                            // address
+                            uint32_t cBaseRegisterLSB = ((12 + 8 * (cChnl / 120)) << 8) + 0x81;
+                            uint32_t cBaseRegisterMSB = cBaseRegisterLSB + 128;
+                            // MSB
+                            ChipRegItem cReg_Counters_MSB;
+                            cReg_Counters_MSB.fPage    = 0x00;
+                            cReg_Counters_MSB.fAddress = cBaseRegisterMSB + cChnl;
+                            cReg_Counters_MSB.fValue   = 0x00;
+                            this->EncodeReg(cReg_Counters_MSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
+                            // LSB
+                            ChipRegItem cReg_Counters_LSB;
+                            cReg_Counters_LSB.fPage    = 0x00;
+                            cReg_Counters_LSB.fAddress = cBaseRegisterLSB + cChnl;
+                            cReg_Counters_LSB.fValue   = 0x00;
+                            this->EncodeReg(cReg_Counters_LSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
                         }
-                        cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
-                        if((cWordCounter & 0x1) == 1)
+                        // read back
+                        this->ReadChipBlockReg(cVec);
+                        // set in data vector
+                        uint32_t cDataWord    = 0x0000;
+                        uint32_t cWordCounter = 0;
+                        uint16_t cIndx        = 0;
+                        for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                         {
-                            pData.push_back(cDataWord);
-                            cDataWord = 0x0000;
+                            uint8_t cMPAId;
+                            bool    cFailed = false;
+                            bool    cRead;
+                            // address
+                            uint32_t    cBaseRegisterLSB = ((12 + 8 * (cChnl / 120)) << 8) + 0x81;
+                            uint32_t    cBaseRegisterMSB = cBaseRegisterLSB + 128;
+                            ChipRegItem cReg_Counters_MSB;
+                            cReg_Counters_MSB.fPage    = 0x00;
+                            cReg_Counters_MSB.fAddress = cBaseRegisterMSB + cChnl;
+                            cReg_Counters_MSB.fValue   = 0x00;
+                            ChipRegItem cReg_Counters_LSB;
+                            cReg_Counters_LSB.fPage    = 0x00;
+                            cReg_Counters_LSB.fAddress = cBaseRegisterLSB + cChnl;
+                            cReg_Counters_LSB.fValue   = 0x00;
+                            this->DecodeReg(cReg_Counters_MSB, cMPAId, cVec[cIndx], cRead, cFailed);
+                            this->DecodeReg(cReg_Counters_LSB, cMPAId, cVec[cIndx + 1], cRead, cFailed);
+                            cIndx += 2;
+                            uint16_t cCounterValue = ((cReg_Counters_MSB.fValue & 0xFF) << 8) | (cReg_Counters_LSB.fValue & 0xFF);
+                            if(cChnl < 10)
+                            {
+                                LOG(DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
+                                           << " LSB " << +(cReg_Counters_LSB.fValue & 0xFF) << " MSB " << +(cReg_Counters_MSB.fValue & 0xFF) << RESET;
+                            }
+                            cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
+                            if((cWordCounter & 0x1) == 1)
+                            {
+                                pData.push_back(cDataWord);
+                                cDataWord = 0x0000;
+                            }
+                            cWordCounter++;
                         }
-                        cWordCounter++;
                     }
                 } // chip loop
             }     // hybrid loop
@@ -1890,11 +1967,18 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     }
     else if(cAsync)
     {
-        if(cWithSSA)
-            this->ReadSSACounters(pBoard, pData);
-        else
-            this->ReadMPACounters(pBoard, pData);
+        uint32_t its=0;
+        while (pData.size()==0 or its>5)
+        {
+            if (its>0)LOG(WARNING) << "Retrying..." << RESET;
+            if(cWithSSA)
+                this->ReadSSACounters(pBoard, pData);
+            else
+                this->ReadMPACounters(pBoard, pData);
+            its+=1;
+        }
         cNEvents = 1;
+
     }
     else
     {
@@ -3957,63 +4041,6 @@ uint32_t D19cFWInterface::Pix_read_MPA(Chip* cMPA, ChipRegItem cRegItem, uint32_
     return rep;
 }
 
-std::vector<uint16_t> D19cFWInterface::ReadoutCounters_MPA(uint32_t raw_mode_en)
-{
-    WriteReg("fc7_daq_cnfg.physical_interface_block.raw_mode_en", raw_mode_en);
-    uint32_t              ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-    std::vector<uint16_t> count(2040, 0);
-    PS_Start_counters_read();
-    uint32_t timeout = 0;
-    while((ps_counters_ready == 0) & (timeout < 50))
-    {
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-        ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-        timeout += 1;
-    }
-    if(timeout >= 50)
-    {
-        std::cout << "fail" << std::endl;
-        return count;
-    }
-
-    if(raw_mode_en == 1)
-    {
-        uint32_t cycle = 0;
-        for(int i = 0; i < 20000; i++)
-        {
-            uint32_t fifo1_word = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo1_data");
-            uint32_t fifo2_word = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo2_data");
-
-            uint32_t line1 = (fifo1_word & 0x0000FF) >> 0;  // to_number(fifo1_word,8,0)
-            uint32_t line2 = (fifo1_word & 0x00FF00) >> 8;  // to_number(fifo1_word,16,8)
-            uint32_t line3 = (fifo1_word & 0xFF0000) >> 16; //  to_number(fifo1_word,24,16)
-
-            uint32_t line4 = (fifo2_word & 0x0000FF) >> 0; // to_number(fifo2_word,8,0)
-            uint32_t line5 = (fifo2_word & 0x00FF00) >> 8; // to_number(fifo2_word,16,8)
-
-            if(((line1 & 0x80) == 128) && ((line4 & 0x80) == 128))
-            {
-                uint32_t temp = ((line2 & 0x20) << 9) | ((line3 & 0x20) << 8) | ((line4 & 0x20) << 7) | ((line5 & 0x20) << 6) | ((line1 & 0x10) << 6) | ((line2 & 0x10) << 5) | ((line3 & 0x10) << 4) |
-                                ((line4 & 0x10) << 3) | ((line5 & 0x80) >> 1) | ((line1 & 0x40) >> 1) | ((line2 & 0x40) >> 2) | ((line3 & 0x40) >> 3) | ((line4 & 0x40) >> 4) | ((line5 & 0x40) >> 5) |
-                                ((line1 & 0x20) >> 5);
-                if(temp != 0)
-                {
-                    count[cycle] = temp - 1;
-                    cycle += 1;
-                }
-            }
-        }
-    }
-    else
-    {
-        ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo2_data");
-        for(int i = 0; i < 2040; i++) { count[i] = ReadReg("fc7_daq_ctrl.physical_interface_block.slvs_debug.fifo2_data") - 1; }
-    }
-
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-    ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-    return count;
-}
 
 void D19cFWInterface::Align_out()
 {

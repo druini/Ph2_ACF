@@ -92,6 +92,7 @@ void SSASCurve::run(void)
         // 	,cEnableFastReset,cEnableTP,1cEnableL1A);
         std::vector<std::pair<std::string, uint32_t>> cVecReg;
         // configure trigger
+        cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
         cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", NMpulse});
         cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", cDelayAfterFastReset});
         cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cDelayAfterTP});
