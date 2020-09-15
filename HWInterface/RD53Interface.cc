@@ -272,15 +272,15 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, bo
 
     if(doSparse == true)
     {
-        RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x27, pVerifLoop);
+        RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x27, pVerifLoop);
         RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x00, pVerifLoop);
-        RD53Interface::WriteChipReg(pRD53, "PIX_MODE",   0x00, pVerifLoop);
+        RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x00, pVerifLoop);
 
         uint16_t data;
 
         for(auto col = 0u; col < RD53::nCols; col += 2)
         {
-            if((std::find(mask[col].Enable.begin(),     mask[col].Enable.end(), true) == mask[col].Enable.end()) &&
+            if((std::find(mask[col].Enable.begin(), mask[col].Enable.end(), true) == mask[col].Enable.end()) &&
                (std::find(mask[col + 1].Enable.begin(), mask[col].Enable.end(), true) == mask[col + 1].Enable.end()))
                 continue;
 
@@ -367,8 +367,8 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
     for(auto row = 0u; row < RD53::nRows; row++)
         for(auto col = 0u; col < RD53::nCols; col++)
         {
-          if(mask == true)   pRD53->enablePixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
-          if(inject == true) pRD53->injectPixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
+            if(mask == true) pRD53->enablePixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
+            if(inject == true) pRD53->injectPixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
         }
 
     RD53Interface::WriteRD53Mask(pRD53, true, false, pVerifLoop);

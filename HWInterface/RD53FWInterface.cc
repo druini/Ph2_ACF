@@ -1240,7 +1240,6 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = 0;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
 
-
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en     = false;
 

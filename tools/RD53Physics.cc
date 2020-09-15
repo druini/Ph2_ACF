@@ -347,8 +347,7 @@ void Physics::monitor()
 {
     while(keepRunning == true)
     {
-        for(const auto cBoard: *fDetectorContainer)
-            SystemController::ReadSystemMonitor(cBoard, "VOUT_ana_ShuLDO", "VOUT_dig_ShuLDO", "ADCbandgap", "VREF_VDAC", "Iref", "TEMPSENS_1", "TEMPSENS_4");
+        for(const auto cBoard: *fDetectorContainer) SystemController::ReadSystemMonitor(cBoard, "VOUT_ana_ShuLDO", "VOUT_dig_ShuLDO", "ADCbandgap", "VREF_VDAC", "Iref", "TEMPSENS_1", "TEMPSENS_4");
         std::this_thread::sleep_for(std::chrono::seconds(MONITORSLEEP));
     }
 }
