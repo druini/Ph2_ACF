@@ -143,7 +143,7 @@ void SSASCurve::run(void)
             {
                 Nstrip = 0.0;
 
-                LOG(INFO) << BOLDRED << "THDAC " << thd << RESET;
+                LOG(INFO) << BOLDBLUE << "THDAC " << thd << RESET;
 
                 for(auto cOpticalGroup: *cBoard)
                 {

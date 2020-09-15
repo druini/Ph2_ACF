@@ -1968,9 +1968,9 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     else if(cAsync)
     {
         uint32_t its=0;
-        while (pData.size()==0 or its>5)
+        while (pData.size()==0 and its<5)
         {
-            if (its>0)LOG(WARNING) << "Retrying..." << RESET;
+            if (its>0)LOG(INFO) <<BOLDRED<< "Retrying..." << RESET;
             if(cWithSSA)
                 this->ReadSSACounters(pBoard, pData);
             else
