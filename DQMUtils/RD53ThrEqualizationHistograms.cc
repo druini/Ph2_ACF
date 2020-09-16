@@ -24,7 +24,7 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, const DetectorContain
 
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
 
-    auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "ThrEqualization", nEvents * VCalHnsteps + 1, 0, 1 + 1. / (nEvents * VCalHnsteps));
+    auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "ThrEqualization", nEvents + 1, 0, 1 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, ThrEqualization, hThrEqualization, "Efficiency", "Entries");
 
     auto hTDAC = CanvasContainer<TH1F>("TDAC", "TDAC", TDACsize, 0, TDACsize);
