@@ -23,7 +23,6 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     LOG(INFO) << BOLDBLUE << "Configuring lpGBT" << RESET;
     // Load register map from configuration file
     ChipRegMap clpGBTRegMap = pChip->getRegMap();
-    ;
     for(const auto& cRegItem: clpGBTRegMap)
     {
         if(cRegItem.second.fAddress < 0x13c)
@@ -35,7 +34,6 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     // Set dllConfigDone and pllConfigDone to finalize powerup
     this->WriteReg(pChip, 0x0ef, 0x6);
-
     // Additional configurations (could eventually be moved to configuration file)
     // Configure Tx Rx Polarity
     this->ConfigureTxRxPolarity(pChip, 1, 0);
@@ -61,7 +59,6 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     this->PhaseAlignRx(pChip, {0, 1, 2, 3, 4, 5, 6}, {0, 2});
     // Reset I2C Masters
     this->ResetI2C(pChip, {0, 1, 2});
-
     return true;
 }
 
@@ -72,18 +69,17 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 bool D19clpGBTInterface::WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
     LOG(INFO) << BOLDBLUE << "Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
-    this->setBoard(pChip->getBeBoardId());
     return this->WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
 }
 
 uint16_t D19clpGBTInterface::ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode)
 {
-    this->setBoard(pChip->getBeBoardId());
     return this->ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress);
 }
 
 bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop)
 {
+    this->setBoard(pChip->getBeBoardId());
     // Make sure the value is not > 8 bits
     if(pValue > 0xFF)
     {
@@ -98,9 +94,20 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     if(fUseOpticalLink)
     {
         LOG(INFO) << BOLDBLUE << "Optical write" << RESET;
-        bool     cSucess   = fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+        bool     cSuccess   = fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+        if(!pVerifLoop) return cSuccess;
         uint16_t cReadBack = this->ReadReg(pChip, pAddress);
-        return cSucess;
+        if(cReadBack != pValue)
+        {
+            LOG(INFO) << BOLDRED << "I2C WRITE MISMATCH" << RESET;
+            return false;
+        }
+        else
+        {
+            LOG(DEBUG) << BOLDBLUE << "\t\t.. read back 0x" << std::hex << +cReadBack << std::dec << " from register address 0x" << std::hex << pAddress << std::dec << RESET;
+            return true;
+        }
+        return cSuccess;
     }
     else
     {
@@ -126,6 +133,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
 
 uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress)
 {
+    this->setBoard(pChip->getBeBoardId());
     uint16_t cReadBack = 0;
     if(fUseOpticalLink) { 
         LOG(INFO) << BOLDBLUE << "Optical read" << RESET;
@@ -434,7 +442,7 @@ void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std:
         do
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        } while(!this->IsRxLocked(pChip, cGroup));
+        } while(!this->IsRxLocked(pChip, cGroup, pChannels));
         LOG(INFO) << BOLDBLUE << "    Group " << +cGroup << BOLDGREEN << " LOCKED" << RESET;
         // Set new phase to channels 0,2
         for(const auto cChannel: pChannels)
@@ -494,14 +502,18 @@ uint8_t D19clpGBTInterface::GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t p
     return ((cRxPhaseRegValue & (0x0F << 4 * (pChannel % 2))) >> 4 * (pChannel % 2));
 }
 
-bool D19clpGBTInterface::IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup)
+bool D19clpGBTInterface::IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels)
 {
     // Cheks if Rx channels are locked #FIXME needs to check depending on the
     // enabled channels not on all (0x0F)
     char cBuffer[11];
     sprintf(cBuffer, "EPRX%iLocked", pGroup);
     std::string cRXLockedReg(cBuffer, sizeof(cBuffer));
-    return (((this->ReadChipReg(pChip, cRXLockedReg) & 0xF0) >> 4) == 0x0F);
+    uint8_t cChannelMask = 0x00; 
+    for(auto cChannel : pChannels)
+        cChannelMask += (1 << cChannel); 
+    //return (((this->ReadChipReg(pChip, cRXLockedReg) & (cChannelMask << 4)) >> 4) == cChannelMask);
+    return (((this->ReadChipReg(pChip, cRXLockedReg) & (0xF << 4)) >> 4) == 0xF);
 }
 
 uint8_t D19clpGBTInterface::GetRxDllStatus(Ph2_HwDescription::Chip* pChip, uint8_t pGroup)
@@ -734,29 +746,22 @@ uint16_t D19clpGBTInterface::ReadADCDiff(Ph2_HwDescription::Chip* pChip, const s
 /* OT specific functions                                                   */
 /*-------------------------------------------------------------------------*/
 
-void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, const std::string& pMode)
+void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, const std::string& pMode, bool pToggle)
 {
     if(pMode == "serial")
     {
 #ifdef __TCUSB__
-        fTC_PSROH.toggle_SCI2C();
+        LOG(INFO) << BOLDBLUE << "serial before toggle" << RESET;
+        if(pToggle)
+          fTC_PSROH.toggle_SCI2C();
 #endif
         LOG(INFO) << BOLDGREEN << "Switched software flag to Serial Interface configuration mode" << RESET;
         fUseOpticalLink = true;
     }
     else if(pMode == "i2c")
     {
-#ifdef __TCUSB__
-        LOG(INFO) << BOLDBLUE << "i2c Before toggle" << RESET;
-        fTC_PSROH.toggle_SCI2C();
-#endif
-        if( ((this->ReadChipReg(pChip, "ConfigPins") & 0x8) >> 3) == 1)
-        {
-            LOG(INFO) << BOLDGREEN << "LpGBT in I2C Slave Interface configuration mode" << RESET;
-            fUseOpticalLink = false;
-        }
-        else
-            LOG(INFO) << BOLDRED << "lpGBT still in Serial Interface configuration mode : SC_I2C pin is not '1'" << RESET;
+        LOG(INFO) << BOLDGREEN << "Switched software flag to I2C Slave Interface configuration mode" << RESET;
+        fUseOpticalLink = false;
     }
     else
     {

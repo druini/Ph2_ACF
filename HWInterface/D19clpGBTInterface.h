@@ -44,7 +44,7 @@ class D19clpGBTInterface : public lpGBTInterface
      * \param pChip : pointer to Chip object
      * \param pMode : configuration interface ["serial" / "i2c"]
      */
-    void SetConfigMode(Ph2_HwDescription::Chip* pChip, const std::string& pMode);
+    void SetConfigMode(Ph2_HwDescription::Chip* pChip, const std::string& pMode, bool pToggle);
 
     /*!
      * \brief Configures the lpGBT Rx Groups
@@ -232,7 +232,7 @@ class D19clpGBTInterface : public lpGBTInterface
      * \param pChip  : pointer to Chip object
      * \param pGroup : Rx Groups vector
      */
-    bool IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
+    bool IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels);
 
     /*!
      * \brief Get lpGBT Power Up State Machine status

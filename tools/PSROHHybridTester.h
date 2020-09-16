@@ -66,6 +66,7 @@ class PSROHHybridTester : public Tool
     void PrepareFCMDTest(uint8_t pSource = 0, uint8_t pPattern = 0xCA);
     bool TestI2CMaster(const std::vector<uint8_t>& pMasters);
     void TestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep);
+    void TestOpticalRW(uint32_t pNTries = 1000);
 
   private:
     void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);

@@ -867,3 +867,22 @@ void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t 
     }
 #endif
 }
+
+void PSROHHybridTester::TestOpticalRW(uint32_t pNTries)
+{
+    this->PrepareFCMDTest(0);
+    for(auto cBoard : *fDetectorContainer)
+    {
+        for(auto cOpticalGroup : *cBoard)
+        {
+            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+            uint8_t cValue = 0x01;
+            for(uint32_t cTry = 0; cTry < pNTries; cTry++)
+            {
+                cValue++;
+                if(cValue == 254) cValue = 0x01;
+                clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "I2CM0Data0", cValue);
+            }
+        }
+    }
+}

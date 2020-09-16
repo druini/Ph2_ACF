@@ -220,11 +220,14 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // CIC start-up
             for(auto cOpticalGroup: *cBoard)
             {
+                uint8_t cLinkId = cOpticalGroup->getId();
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                    clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
+                    clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
+                    clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
                     if(clpGBTInterface->IslpGBTReady(cOpticalGroup->flpGBT))
                         LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
                     else
@@ -232,15 +235,14 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY]" << RESET;
                         exit(0);
                     }
+                    //clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", true);
                 }
-                uint8_t cLinkId = cOpticalGroup->getId();
                 LOG(INFO) << BOLDMAGENTA << "CIC start-up seqeunce for hybrids on link " << +cLinkId << RESET;
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>(cHybrid);
                     if(theOuterTrackerModule->fCic != NULL)
                     {
-                        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
                         auto& cCic = theOuterTrackerModule->fCic;
 
                         // read CIC sparsification setting
