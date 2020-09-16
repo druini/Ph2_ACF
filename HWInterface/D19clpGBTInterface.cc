@@ -512,8 +512,7 @@ bool D19clpGBTInterface::IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGro
     uint8_t cChannelMask = 0x00; 
     for(auto cChannel : pChannels)
         cChannelMask += (1 << cChannel); 
-    //return (((this->ReadChipReg(pChip, cRXLockedReg) & (cChannelMask << 4)) >> 4) == cChannelMask);
-    return (((this->ReadChipReg(pChip, cRXLockedReg) & (0xF << 4)) >> 4) == 0xF);
+    return (((this->ReadChipReg(pChip, cRXLockedReg) & (cChannelMask << 4)) >> 4) == cChannelMask);
 }
 
 uint8_t D19clpGBTInterface::GetRxDllStatus(Ph2_HwDescription::Chip* pChip, uint8_t pGroup)
