@@ -43,19 +43,21 @@ run_on_IT:
   script:
     - source ./ci_setup.sh
     - cd ci_tools
+    - cp CMSIT_RD53.txt CMSIT_RD53_default.txt
     - CMSITminiDAQ -f CMSIT.xml -c pixelalive
     - CMSITminiDAQ -f CMSIT.xml -c threqu
     - CMSITminiDAQ -f CMSIT.xml -c scurve
   after_script:
     - cp ci_tools/Results/Run000000_PixelAlive.root .
     - cp ci_tools/Results/Run000001_ThrEqualization.root .
-    - cp ci_tools/Results/Run000002_SCurve.root .      
+    - cp ci_tools/Results/Run000002_SCurve.root .
   artifacts:
     paths: 
       - Run000000_PixelAlive.root
       - Run000001_ThrEqualization.root
       - Run000002_SCurve.root
       - ci_tools/plot_canvas.py
+      - ci_tools/CMSIT*
     expire_in: 1 week
 
 check_run_on_IT:
