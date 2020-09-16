@@ -4,9 +4,9 @@
 
 ## The pipeline starts when a merge request is created
 
-#workflow:
-#  rules:
-#    - if: $CI_MERGE_REQUEST_ID
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
 
 image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
 
