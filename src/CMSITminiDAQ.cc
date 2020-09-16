@@ -347,9 +347,16 @@ int main(int argc, char** argv)
             PixelAlive  pa;
             pa.Inherit(&mySysCntr);
             pa.localConfigure(fileName, runNumber);
+
+            // Address a subseet of the detector (only even chip IDs)
+            // auto detectorSubset = [](const ChipContainer *theChip){ return (theChip->getId() % 2); };
+            // pa.fDetectorContainer->setReadoutChipQueryFunction(detectorSubset);
+
             pa.run();
             pa.analyze();
             pa.draw(runNumber);
+
+            // pa.fDetectorContainer->resetReadoutChipQueryFunction();
         }
         else if(whichCalib == "noise")
         {

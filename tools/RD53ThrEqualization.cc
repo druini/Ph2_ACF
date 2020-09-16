@@ -451,6 +451,11 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                                     (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) +
                                      maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col)) /
                                     2;
+
+                                // ###################
+                                // # Reset container #
+                                // ###################
+                                cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
                             }
     }
 
