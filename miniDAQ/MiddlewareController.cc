@@ -83,31 +83,29 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
             theSystemController_ = new CombinedCalibration<BackEndAlignment, CalibrationExample>;
         else if(getVariableValue("Calibration", buffer) == "cbcPulseShape")
             theSystemController_ = new CombinedCalibration<BackEndAlignment, CBCPulseShape>;
-        //      else if (getVariableValue("Calibration",buffer) == "ssaphysics")              theSystemController_ = new
-        //      SSAPhysics;
 
         else if(getVariableValue("Calibration", buffer) == "pixelalive")
-            theSystemController_ = new CombinedCalibration<PixelAlive>;
+            theSystemController_ = new PixelAlive;
         else if(getVariableValue("Calibration", buffer) == "noise")
-            theSystemController_ = new CombinedCalibration<PixelAlive>;
+            theSystemController_ = new PixelAlive;
         else if(getVariableValue("Calibration", buffer) == "scurve")
-            theSystemController_ = new CombinedCalibration<SCurve>;
+            theSystemController_ = new SCurve;
         else if(getVariableValue("Calibration", buffer) == "gain")
-            theSystemController_ = new CombinedCalibration<Gain>;
+            theSystemController_ = new Gain;
         else if(getVariableValue("Calibration", buffer) == "gainopt")
-            theSystemController_ = new CombinedCalibration<GainOptimization>;
+            theSystemController_ = new GainOptimization;
         else if(getVariableValue("Calibration", buffer) == "threqu")
-            theSystemController_ = new CombinedCalibration<ThrEqualization>;
+            theSystemController_ = new ThrEqualization;
         else if(getVariableValue("Calibration", buffer) == "thrmin")
-            theSystemController_ = new CombinedCalibration<ThrMinimization>;
+            theSystemController_ = new ThrMinimization;
         else if(getVariableValue("Calibration", buffer) == "thradj")
-            theSystemController_ = new CombinedCalibration<ThrAdjustment>;
+            theSystemController_ = new ThrAdjustment;
         else if(getVariableValue("Calibration", buffer) == "latency")
-            theSystemController_ = new CombinedCalibration<Latency>;
+            theSystemController_ = new Latency;
         else if(getVariableValue("Calibration", buffer) == "injdelay")
-            theSystemController_ = new CombinedCalibration<InjectionDelay>;
+            theSystemController_ = new InjectionDelay;
         else if(getVariableValue("Calibration", buffer) == "clockdelay")
-            theSystemController_ = new CombinedCalibration<ClockDelay>;
+            theSystemController_ = new ClockDelay;
         else if(getVariableValue("Calibration", buffer) == "physics")
             theSystemController_ = new Physics;
 
