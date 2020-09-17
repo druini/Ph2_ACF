@@ -43,6 +43,7 @@ class Physics : public Tool
     void run();
     void draw();
     void analyze(bool doReadBinary = false);
+    void saveChipRegisters(int currentRun);
     void fillDataContainer(Ph2_HwDescription::BeBoard* cBoard);
     void monitor();
 
@@ -67,7 +68,6 @@ class Physics : public Tool
 
     void fillHisto();
     void chipErrorReport();
-    void saveChipRegisters(int currentRun);
 
   protected:
     struct RD53dummyEvtConverter

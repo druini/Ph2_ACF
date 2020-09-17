@@ -36,13 +36,14 @@ class GainOptimization : public Gain
     void   initializeFiles(const std::string fileRes_, int currentRun);
     void   run();
     void   analyze();
-    void   draw(int currentRun);
+    void   draw();
     size_t getNumberIterations()
     {
         uint16_t nBitKrumCurr   = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 1);
         uint16_t moreIterations = 1;
         return Gain::getNumberIterations() * (nBitKrumCurr + moreIterations);
     }
+    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     GainOptimizationHistograms* histos;
@@ -68,10 +69,10 @@ class GainOptimization : public Gain
     void fillHisto();
     void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
     void chipErrorReport();
-    void saveChipRegisters(int currentRun);
 
   protected:
     std::string fileRes;
+    int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;

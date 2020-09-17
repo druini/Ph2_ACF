@@ -112,7 +112,7 @@ void Physics::Stop()
     // ################
     Physics::chipErrorReport();
 
-    Physics::saveChipRegisters(theCurrentRun);
+    Physics::draw();
     this->closeFileHandler();
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded events: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
@@ -125,6 +125,7 @@ void Physics::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
+    if(currentRun >= 0) theCurrentRun = currentRun;
     Physics::ConfigureCalibration();
     Physics::initializeFiles(fileRes_, currentRun);
 }
@@ -159,6 +160,8 @@ void Physics::run()
 
 void Physics::draw()
 {
+    Physics::saveChipRegisters(theCurrentRun);
+
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 

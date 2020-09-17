@@ -334,7 +334,7 @@ int main(int argc, char** argv)
             la.localConfigure(fileName, runNumber);
             la.run();
             la.analyze();
-            la.draw(runNumber);
+            la.draw();
         }
         else if(whichCalib == "pixelalive")
         {
@@ -358,7 +358,7 @@ int main(int argc, char** argv)
 
             pa.run();
             pa.analyze();
-            pa.draw(runNumber);
+            pa.draw();
 
             //       pa.fDetectorContainer->resetReadoutChipQueryFunction();
             //   }
@@ -376,7 +376,7 @@ int main(int argc, char** argv)
             pa.localConfigure(fileName, runNumber);
             pa.run();
             pa.analyze();
-            pa.draw(runNumber);
+            pa.draw();
         }
         else if(whichCalib == "scurve")
         {
@@ -391,7 +391,7 @@ int main(int argc, char** argv)
             sc.localConfigure(fileName, runNumber);
             sc.run();
             sc.analyze();
-            sc.draw(runNumber);
+            sc.draw();
         }
         else if(whichCalib == "gain")
         {
@@ -406,7 +406,7 @@ int main(int argc, char** argv)
             ga.localConfigure(fileName, runNumber);
             ga.run();
             ga.analyze();
-            ga.draw(runNumber);
+            ga.draw();
         }
         else if(whichCalib == "gainopt")
         {
@@ -421,7 +421,7 @@ int main(int argc, char** argv)
             go.localConfigure(fileName, runNumber);
             go.run();
             go.analyze();
-            go.draw(runNumber);
+            go.draw();
         }
         else if(whichCalib == "threqu")
         {
@@ -436,7 +436,7 @@ int main(int argc, char** argv)
             te.localConfigure(fileName, runNumber);
             te.run();
             te.analyze();
-            te.draw(runNumber);
+            te.draw();
         }
         else if(whichCalib == "thrmin")
         {
@@ -451,7 +451,7 @@ int main(int argc, char** argv)
             tm.localConfigure(fileName, runNumber);
             tm.run();
             tm.analyze();
-            tm.draw(runNumber);
+            tm.draw();
         }
         else if(whichCalib == "thradj")
         {
@@ -466,7 +466,7 @@ int main(int argc, char** argv)
             ta.localConfigure(fileName, runNumber);
             ta.run();
             ta.analyze();
-            ta.draw(runNumber);
+            ta.draw();
         }
         else if(whichCalib == "injdelay")
         {
@@ -481,7 +481,7 @@ int main(int argc, char** argv)
             id.localConfigure(fileName, runNumber);
             id.run();
             id.analyze();
-            id.draw(runNumber);
+            id.draw();
         }
         else if(whichCalib == "clockdelay")
         {
@@ -496,7 +496,7 @@ int main(int argc, char** argv)
             cd.localConfigure(fileName, runNumber);
             cd.run();
             cd.analyze();
-            cd.draw(runNumber);
+            cd.draw();
         }
         else if(whichCalib == "physics")
         {

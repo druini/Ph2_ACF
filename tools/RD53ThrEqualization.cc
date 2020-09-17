@@ -77,8 +77,10 @@ void ThrEqualization::Start(int currentRun)
         this->initializeWriteFileHandler();
     }
 
+    theCurrentRun = currentRun;
     ThrEqualization::run();
     ThrEqualization::analyze();
+    ThrEqualization::saveChipRegisters(currentRun);
     ThrEqualization::sendData();
 
     PixelAlive::sendData();
@@ -99,6 +101,8 @@ void ThrEqualization::sendData()
 void ThrEqualization::Stop()
 {
     LOG(INFO) << GREEN << "[ThrEqualization::Stop] Stopping" << RESET;
+
+    ThrEqualization::draw();
     this->closeFileHandler();
 }
 
@@ -109,6 +113,7 @@ void ThrEqualization::localConfigure(const std::string fileRes_, int currentRun)
     PixelAlive::histos = nullptr;
 #endif
 
+    if(currentRun >= 0) theCurrentRun = currentRun;
     ThrEqualization::ConfigureCalibration();
     ThrEqualization::initializeFiles(fileRes_, currentRun);
 }
@@ -122,7 +127,7 @@ void ThrEqualization::initializeFiles(const std::string fileRes_, int currentRun
 
     fileRes = fileRes_;
 
-    if(saveBinaryData == true)
+    if((currentRun >= 0) && (saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrEqualization.raw", 'w');
         this->initializeWriteFileHandler();
@@ -179,9 +184,9 @@ void ThrEqualization::run()
     ThrEqualization::chipErrorReport();
 }
 
-void ThrEqualization::draw(int currentRun)
+void ThrEqualization::draw()
 {
-    ThrEqualization::saveChipRegisters(currentRun);
+    ThrEqualization::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -195,7 +200,7 @@ void ThrEqualization::draw(int currentRun)
     ThrEqualization::fillHisto();
     histos->process();
 
-    PixelAlive::draw(-1);
+    PixelAlive::draw(false);
 
     this->WriteRootFile();
     this->CloseResultFile();
