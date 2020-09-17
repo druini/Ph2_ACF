@@ -348,15 +348,20 @@ int main(int argc, char** argv)
             pa.Inherit(&mySysCntr);
             pa.localConfigure(fileName, runNumber);
 
-            // Address a subseet of the detector (only even chip IDs)
-            // auto detectorSubset = [](const ChipContainer *theChip){ return (theChip->getId() % 2); };
-            // pa.fDetectorContainer->setReadoutChipQueryFunction(detectorSubset);
+            // #############################################
+            // # Address different subsets of the detector #
+            // #############################################
+            // for(int i = 0; i < 2; i++)
+            //   {
+            //       auto detectorSubset = [](const ChipContainer* theChip) { return (theChip->getId() % 2 == i); };
+            //       pa.fDetectorContainer->setReadoutChipQueryFunction(detectorSubset);
 
             pa.run();
             pa.analyze();
             pa.draw(runNumber);
 
-            // pa.fDetectorContainer->resetReadoutChipQueryFunction();
+            //       pa.fDetectorContainer->resetReadoutChipQueryFunction();
+            //   }
         }
         else if(whichCalib == "noise")
         {

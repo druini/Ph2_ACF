@@ -20,7 +20,6 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, const DetectorContain
     // # Retrieve parameters #
     // #######################
     nEvents     = this->findValueInSettings(settingsMap, "nEvents");
-    VCalHnsteps = this->findValueInSettings(settingsMap, "VCalHnsteps");
 
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
 
@@ -68,7 +67,8 @@ void ThrEqualizationHistograms::fillOccupancy(const DetectorDataContainer& Occup
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED) hThrEqualization->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED)
+                                hThrEqualization->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hThrEqualization->GetBinWidth(0) / 2);
                 }
 }
 
