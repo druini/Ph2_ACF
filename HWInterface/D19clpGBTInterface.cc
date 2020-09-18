@@ -8,6 +8,7 @@
 */
 
 #include "D19clpGBTInterface.h"
+#include "D19cFWInterface.h"
 #include <chrono>
 #include <cstring>
 #include <fstream>
@@ -22,6 +23,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 {
     LOG(INFO) << BOLDBLUE << "Configuring lpGBT" << RESET;
     // Load register map from configuration file
+    /* 
     ChipRegMap clpGBTRegMap = pChip->getRegMap();
     for(const auto& cRegItem: clpGBTRegMap)
     {
@@ -32,8 +34,42 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
             this->WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
         }
     }
-    // Set dllConfigDone and pllConfigDone to finalize powerup
-    this->WriteReg(pChip, 0x0ef, 0x6);
+    */ 
+/*
+    if(this->ReadChipReg(pChip, "PUSMStatus") != 18) 
+    {
+      //while(!(this->ReadChipReg(pChip, "PUSMStatus") == 15))
+      LOG(INFO) << BOLDBLUE << "PUSMStatus = " << this->ReadChipReg(pChip, "PUSMStatus") << RESET;
+      while(!(this->ReadChipReg(pChip, "PUSMStatus") == 0x12))
+      {
+        //this->WriteReg(pChip, 0x0ef, 0x6);
+        LOG(INFO) << BOLDBLUE << "PUSMStatus = " << this->ReadChipReg(pChip, "PUSMStatus") << RESET;
+      }
+    }
+*/
+
+    this->setBoard(pChip->getBeBoardId());
+    D19cFWInterface* cFWInterface = static_cast<D19cFWInterface*>(fBoardFW);
+    //this->WriteReg(pChip, "I2C");
+    while(!(this->ReadChipReg(pChip, "PUSMStatus") == 0x12))
+    {
+      //LOG(INFO) << BOLDBLUE << "ic rd_mem_ptr = " << cFWInterface->ReadReg("fc7_daq_stat.optical_block.ic.rd_mem_ptr") << RESET;
+      //LOG(INFO) << BOLDBLUE << "ic ready = " << cFWInterface->ReadReg("fc7_daq_stat.optical_block.ic.ready") << RESET;
+      //LOG(INFO) << BOLDBLUE << "ic empty = " << cFWInterface->ReadReg("fc7_daq_stat.optical_block.ic.empty") << RESET;
+      LOG(INFO) << BOLDBLUE << "PUSMStatus = " << this->ReadChipReg(pChip, "PUSMStatus") << RESET;
+      cFWInterface->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+    LOG(INFO) << BOLDBLUE << "PUSMActions = 0b" << std::bitset<8>(this->ReadChipReg(pChip, "PUSMActions")) << RESET;
+    LOG(INFO) << BOLDBLUE << "PSStatus = 0b" << std::bitset<8>(this->ReadChipReg(pChip, "PSStatus")) << RESET;
+    LOG(INFO) << BOLDBLUE << "EPRX0DllStatus = 0b" << std::bitset<8>(this->ReadChipReg(pChip, "EPRX0DllStatus")) << RESET;
+    LOG(INFO) << BOLDBLUE << "EPRX1DllStatus = 0b" << std::bitset<8>(this->ReadChipReg(pChip, "EPRX1DllStatus")) << RESET;
+    LOG(INFO) << BOLDBLUE << "EPRX2DllStatus = 0b" << std::bitset<8>(this->ReadChipReg(pChip, "EPRX2DllStatus")) << RESET;
+    LOG(INFO) << BOLDBLUE << "EPRX3DllStatus = 0b" << std::bitset<8>(this->ReadChipReg(pChip, "EPRX3DllStatus")) << RESET;
+    LOG(INFO) << BOLDBLUE << "EPRX4DllStatus = 0b" << std::bitset<8>(this->ReadChipReg(pChip, "EPRX4DllStatus")) << RESET;
+    LOG(INFO) << BOLDBLUE << "EPRX5DllStatus = 0b" << std::bitset<8>(this->ReadChipReg(pChip, "EPRX5DllStatus")) << RESET;
+    LOG(INFO) << BOLDBLUE << "EPRX6DllStatus = 0b" << std::bitset<8>(this->ReadChipReg(pChip, "EPRX6DllStatus")) << RESET;
+      
     // Additional configurations (could eventually be moved to configuration file)
     // Configure Tx Rx Polarity
     this->ConfigureTxRxPolarity(pChip, 1, 0);
@@ -41,6 +77,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     std::vector<uint8_t> cClocks         = {1, 6, 11, 26};
     uint8_t              cFreq = 4, cDriveStr = 7, cInvert = 0;
     uint8_t              cPreEmphWidth = 0, cPreEmphMode = 1, cPreEmphStr = 3;
+
     this->ConfigureClocks(pChip, cClocks, cFreq, cDriveStr, cInvert, cPreEmphWidth, cPreEmphMode, cPreEmphStr);
     //Tx Groups and Channels
     std::vector<uint8_t> cGroups = {0, 1, 2, 3}, cChannels = {0};
@@ -59,6 +96,15 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     this->PhaseAlignRx(pChip, {0, 1, 2, 3, 4, 5, 6}, {0, 2});
     // Reset I2C Masters
     this->ResetI2C(pChip, {0, 1, 2});
+    // Set dllConfigDone and pllConfigDone to finalize powerup
+    this->ConfigureRxPRBS(pChip, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
+
+    
+    this->WriteChipReg(pChip, "PIODirH", 0x12);
+    this->WriteChipReg(pChip, "PIODirL", 0x4B);
+    this->WriteChipReg(pChip, "PIOOutH", 0xFF);
+    this->WriteChipReg(pChip, "PIOOutL", 0xFF);
+
     return true;
 }
 
@@ -93,7 +139,6 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     }
     if(fUseOpticalLink)
     {
-        LOG(INFO) << BOLDBLUE << "Optical write" << RESET;
         bool     cSuccess   = fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
         if(!pVerifLoop) return cSuccess;
         uint16_t cReadBack = this->ReadReg(pChip, pAddress);
@@ -136,9 +181,8 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
     this->setBoard(pChip->getBeBoardId());
     uint16_t cReadBack = 0;
     if(fUseOpticalLink) { 
-        LOG(INFO) << BOLDBLUE << "Optical read" << RESET;
         cReadBack = fBoardFW->ReadOptoLinkRegister(pChip, pAddress); 
-        LOG(INFO) << BOLDBLUE << "\t\t.. read back 0x" << std::hex << +cReadBack << std::dec << " from register address 0x" << std::hex << pAddress << std::dec << RESET;
+        //LOG(INFO) << BOLDBLUE << "\t\t.. read back 0x" << std::hex << +cReadBack << std::dec << " from register address 0x" << std::hex << pAddress << std::dec << RESET;
     }
     else
     {
@@ -486,7 +530,7 @@ void D19clpGBTInterface::PrintChipMode(Ph2_HwDescription::Chip* pChip)
 bool D19clpGBTInterface::IslpGBTReady(Ph2_HwDescription::Chip* pChip)
 {
     // Gets success/failure of power-up FSM
-    return ((uint8_t)this->ReadChipReg(pChip, "PUSMStatus") == 0x12);
+    return (this->ReadChipReg(pChip, "PUSMStatus") == 0x12);
 }
 
 uint8_t D19clpGBTInterface::GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel)
