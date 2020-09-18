@@ -546,6 +546,8 @@ void Tool::dumpConfigFiles()
         // Fabio: CBC specific -> to be moved out from Tool
         for(auto board: *fDetectorContainer)
         {
+            if(board->getBoardType() == BoardType::RD53) break;
+
             for(auto opticalGroup: *board)
             {
                 for(auto module: *opticalGroup)

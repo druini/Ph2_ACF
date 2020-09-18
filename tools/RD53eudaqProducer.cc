@@ -45,16 +45,16 @@ void RD53eudaqProducer::DoConfigure()
 
 void RD53eudaqProducer::DoStartRun()
 {
-    currentRun = this->GetRunNumber();
+    theCurrentRun = this->GetRunNumber();
 
     // ###################################################
     // # Get configuration directly from EUDAQ framework #
     // ###################################################
     // auto eudaqConf = this->GetConfiguration();
-    // std::string fileName(eudaqConf->Get("Results", "Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics"));
-    std::string fileName("Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics");
+    // std::string fileName(eudaqConf->Get("Results", "Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Physics"));
+    std::string fileName("Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Physics");
     RD53sysCntrPhys.initializeFiles(fileName, -1);
-    RD53sysCntrPhys.Start(currentRun);
+    RD53sysCntrPhys.Start(theCurrentRun);
 
     this->SetStatus(eudaq::Status::STATE_RUNNING, "RD53eudaqProducer::Running");
 }
@@ -67,7 +67,7 @@ void RD53eudaqProducer::DoStopRun()
     // ###########################
     // # Copy configuration file #
     // ###########################
-    std::string fName2Add(std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+    std::string fName2Add(std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_");
     std::string output(RD53Shared::composeFileName(configFile, fName2Add));
     std::string command("cp " + configFile + " " + output);
     system(command.c_str());

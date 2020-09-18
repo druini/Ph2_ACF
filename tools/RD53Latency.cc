@@ -58,6 +58,7 @@ void Latency::Start(int currentRun)
         this->initializeWriteFileHandler();
     }
 
+    theCurrentRun = currentRun;
     Latency::run();
     Latency::analyze();
     Latency::saveChipRegisters(currentRun);
@@ -81,6 +82,8 @@ void Latency::sendData()
 void Latency::Stop()
 {
     LOG(INFO) << GREEN << "[Latency::Stop] Stopping" << RESET;
+
+    Latency::draw();
     this->closeFileHandler();
 }
 
@@ -90,6 +93,7 @@ void Latency::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
+    if(currentRun >= 0) theCurrentRun = currentRun;
     Latency::ConfigureCalibration();
     Latency::initializeFiles(fileRes_, currentRun);
 }
@@ -123,9 +127,9 @@ void Latency::run()
     Latency::chipErrorReport();
 }
 
-void Latency::draw(int currentRun)
+void Latency::draw(bool saveData)
 {
-    Latency::saveChipRegisters(currentRun);
+    if(saveData == true) Latency::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
