@@ -93,7 +93,7 @@ bool BackEndAlignment::MPAAlignment(BeBoard* pBoard)
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cRegValues[cIndex]);
                 }
 
-                for(uint8_t cLineId = 0; cLineId < 6; cLineId++)
+                for(uint8_t cLineId = 0; cLineId < 7; cLineId++)
                 { cTuned = cTuned && static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybrid->getId(), cChip->getId(), cLineId, cAlignmentPattern, 8); }
 
                 for(size_t cIndex = 0; cIndex < 3; cIndex++) { fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]); };
