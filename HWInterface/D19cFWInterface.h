@@ -290,6 +290,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // convert code of the chip from firmware
     std::string  getChipName(uint32_t pChipCode);
     FrontEndType getFrontEndType(uint32_t pChipCode);
+    void SetI2CAddressTable();
 
     // FMC Maps
     std::map<uint32_t, std::string> fFMCMap = {{0, "NONE"},
@@ -411,6 +412,7 @@ class D19cFWInterface : public BeBoardFWInterface
     void                       setGBTxPhase(uint32_t pPhase) { fGBTphase = pPhase; }
     void                       configureLink(const Ph2_HwDescription::BeBoard* pBoard);
     bool                       GBTLock(const Ph2_HwDescription::BeBoard* pBoard);
+    bool 		       LinkLock( const Ph2_HwDescription::BeBoard* pBoard );
     std::pair<uint16_t, float> readADC(std::string pValueToRead = "AMUX_L", bool pApplyCorrection = false);
     void                       setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
     void                       setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
