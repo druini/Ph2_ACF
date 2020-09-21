@@ -19,6 +19,7 @@ int main(int argc, char** argv)
     el::Loggers::reconfigureAllLoggers(conf);
 
     MiddlewareController theMiddlewareController(PORT);
+    theMiddlewareController.startAccept();
 
     while(1) {}
 

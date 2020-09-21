@@ -28,5 +28,5 @@ void TCPPublishServer::acceptConnections()
             if(e == E_SHUTDOWN) break;
         }
     }
-    fAcceptPromise.set_value(true);
+    // fAcceptPromise.set_value(true);
 }
