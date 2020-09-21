@@ -225,7 +225,13 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                    clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
+                    // To be uncommented if crate is used
+                    //clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
+                    //clpGBTInterface->WriteReg(cOpticalGroup->flpGBT, 0x0ef, 0x6, false);
+                    //clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", true);
+                    // To be commented if crate is used
+                    clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", false);
+                    //
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                     clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
                     if(clpGBTInterface->IslpGBTReady(cOpticalGroup->flpGBT))
