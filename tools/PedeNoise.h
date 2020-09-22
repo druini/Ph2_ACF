@@ -39,7 +39,7 @@ class PedeNoise : public Tool
     void Validate(uint32_t pNoiseStripThreshold = 1, uint32_t pMultiple = 100);
     void writeObjects();
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void Pause() override;

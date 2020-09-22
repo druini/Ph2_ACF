@@ -66,20 +66,20 @@ void SCurve::ConfigureCalibration()
     this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
 }
 
-void SCurve::Start(int currentRun)
+void SCurve::Running()
 {
     LOG(INFO) << GREEN << "[SCurve::Start] Starting" << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_SCurve.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     SCurve::run();
     SCurve::analyze();
-    SCurve::saveChipRegisters(currentRun);
+    SCurve::saveChipRegisters(fRunNumber);
     SCurve::sendData();
 }
 

@@ -12,6 +12,10 @@
 #ifndef __CONTAINERFACTORY_H__
 #define __CONTAINERFACTORY_H__
 
+#include "../HWDescription/BeBoard.h"
+#include "../HWDescription/Module.h"
+#include "../HWDescription/OpticalGroup.h"
+#include "../HWDescription/ReadoutChip.h"
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
 #include "../Utils/EmptyContainer.h"
@@ -28,16 +32,16 @@ void copyStructure(const DetectorContainer& original, DetectorDataContainer& cop
 template <typename T>
 void print(const DetectorDataContainer& detector)
 {
-    for(const BoardDataContainer* board: detector)
+    for(const auto board: detector)
     {
         std::cout << "Board" << std::endl;
-        for(const OpticalGroupDataContainer* opticalGroup: *board)
+        for(const auto opticalGroup: *board)
         {
             std::cout << "OpticalGroup" << std::endl;
-            for(const ModuleDataContainer* hybrid: *opticalGroup)
+            for(const auto hybrid: *opticalGroup)
             {
                 std::cout << "Module" << std::endl;
-                for(const ChipDataContainer* chip: *hybrid)
+                for(const auto chip: *hybrid)
                 {
                     std::cout << "Chip" << std::endl;
                     for(typename ChannelDataContainer<T>::iterator channel = chip->begin<T>(); channel != chip->end<T>(); channel++)
@@ -58,19 +62,19 @@ template <typename T, typename SC, typename SM, typename SO, typename SB, typena
 void copyAndInitStructure(const DetectorContainer& original, DetectorDataContainer& copy)
 {
     copy.initialize<SD, SB>();
-    for(const BoardContainer* board: original)
+    for(const auto board: original)
     {
         BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
         copy.back()->initialize<SB, SO>();
-        for(const OpticalGroupContainer* opticalGroup: *board)
+        for(const auto opticalGroup: *board)
         {
             OpticalGroupDataContainer* copyOpticalGroup = copyBoard->addOpticalGroupDataContainer(opticalGroup->getId());
             copyBoard->back()->initialize<SO, SM>();
-            for(const ModuleContainer* hybrid: *opticalGroup)
+            for(const auto hybrid: *opticalGroup)
             {
                 ModuleDataContainer* copyModule = copyOpticalGroup->addModuleDataContainer(hybrid->getId());
                 copyOpticalGroup->back()->initialize<SM, SC>();
-                for(const ChipContainer* chip: *hybrid)
+                for(const auto chip: *hybrid)
                 {
                     copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
                     copyModule->back()->initialize<SC, T>();

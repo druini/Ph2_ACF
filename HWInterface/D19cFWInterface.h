@@ -268,7 +268,7 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     // read back SSA counters directly
     void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData,bool cFast);
+    void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool cFast);
 
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
     // I2C command sending implementation
@@ -666,8 +666,8 @@ class D19cFWInterface : public BeBoardFWInterface
     void KillI2C();
     ///
 
-    void                  Pix_write_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
-    uint32_t              Pix_read_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
+    void     Pix_write_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
+    uint32_t Pix_read_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
 
     void Compose_fast_command(uint32_t duration = 0, uint32_t resync_en = 0, uint32_t l1a_en = 0, uint32_t cal_pulse_en = 0, uint32_t bc0_en = 0);
     void PS_Open_shutter(uint32_t duration = 0);

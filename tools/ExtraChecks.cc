@@ -303,7 +303,7 @@ void ExtraChecks::writeObjects()
     fResultFile->Flush();
 }
 // State machine control functions
-void ExtraChecks::Start(int currentRun) { Initialise(); }
+void ExtraChecks::Running() { Initialise(); }
 void ExtraChecks::FindOpens()
 {
     auto     cSetting = fSettingsMap.find("Nevents");

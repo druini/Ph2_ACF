@@ -78,9 +78,9 @@ int main(int argc, char* argv[])
             }
         }
         IB->PS_Clear_counters();
-        cTool.Start(0);
+        cTool.SystemController::Start(0);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        cTool.Stop();
+        cTool.SystemController::Stop();
         for(auto cSSA: *ChipVec)
         {
             ReadoutChip* theSSA  = static_cast<ReadoutChip*>(cSSA);

@@ -516,7 +516,7 @@ void ShortFinder::FindShorts()
             LOG(INFO) << BOLDRED << "\t....Short finding for this hybrid type not yet implemented." << RESET;
     }
 }
-void ShortFinder::Start(int currentRun)
+void ShortFinder::Running()
 {
     Initialise();
     this->FindShorts();

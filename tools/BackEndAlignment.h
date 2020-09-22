@@ -41,7 +41,7 @@ class BackEndAlignment : public Tool
     bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool SSAAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool MPAAlignment(Ph2_HwDescription::BeBoard* pBoard);
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void Pause() override;
     void Resume() override;

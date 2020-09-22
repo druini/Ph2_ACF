@@ -48,20 +48,20 @@ void Latency::ConfigureCalibration()
     RD53RunProgress::total() += Latency::getNumberIterations();
 }
 
-void Latency::Start(int currentRun)
+void Latency::Running()
 {
     LOG(INFO) << GREEN << "[Latency::Start] Starting" << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Latency.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_Latency.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     Latency::run();
     Latency::analyze();
-    Latency::saveChipRegisters(currentRun);
+    Latency::saveChipRegisters(fRunNumber);
     Latency::sendData();
 }
 

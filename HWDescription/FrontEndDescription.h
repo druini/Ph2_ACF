@@ -89,7 +89,7 @@ class FrontEndDescription
 
     void setFrontEndType(FrontEndType pType) { fType = pType; }
 
-    FrontEndType getFrontEndType() { return fType; }
+    FrontEndType getFrontEndType() const { return fType; }
 
   protected:
     // BIO Board Id that the FE is connected to

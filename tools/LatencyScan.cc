@@ -684,7 +684,7 @@ void LatencyScan::ConfigureCalibration()
     InitResultFile("LatencyScanResults");
 }
 
-void LatencyScan::Start(int currentRun) {}
+void LatencyScan::Running() {}
 
 void LatencyScan::Stop() {}
 

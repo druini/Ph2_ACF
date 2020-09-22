@@ -271,6 +271,7 @@ int main(int argc, char* argv[])
             }
             case RUNNING:
             {
+                while(theMiddlewareInterface.status() != "Done") usleep(5e5);
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
                 usleep(2e6);
                 theMiddlewareInterface.stop();

@@ -105,7 +105,7 @@ void CBCPulseShape::writeObjects()
 }
 
 // For system on chip compatibility
-void CBCPulseShape::Start(int currentRun)
+void CBCPulseShape::Running()
 {
     LOG(INFO) << "Starting calibration example measurement.";
     Initialise();

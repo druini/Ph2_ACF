@@ -71,20 +71,20 @@ void PixelAlive::ConfigureCalibration()
     this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
 }
 
-void PixelAlive::Start(int currentRun)
+void PixelAlive::Running()
 {
     LOG(INFO) << GREEN << "[PixelAlive::Start] Starting" << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_PixelAlive.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_PixelAlive.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     PixelAlive::run();
     PixelAlive::analyze();
-    PixelAlive::saveChipRegisters(currentRun);
+    PixelAlive::saveChipRegisters(fRunNumber);
     PixelAlive::sendData();
 }
 

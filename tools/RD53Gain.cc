@@ -66,20 +66,20 @@ void Gain::ConfigureCalibration()
     this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
 }
 
-void Gain::Start(int currentRun)
+void Gain::Running()
 {
     LOG(INFO) << GREEN << "[Gain::Start] Starting" << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Gain.raw", 'w');
+        this->addFileHandler(std::string(fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_Gain.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     Gain::run();
     Gain::analyze();
-    Gain::saveChipRegisters(currentRun);
+    Gain::saveChipRegisters(fRunNumber);
     Gain::sendData();
 }
 

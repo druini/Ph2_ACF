@@ -53,7 +53,7 @@ class LatencyScan : public Tool
     void                                StubLatencyScan(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
     void                                writeObjects();
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void Pause() override;

@@ -41,7 +41,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
         {
             auto  cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
             auto& cCic                = cOuterTrackerModule->fCic;
-            fNCbc += (cCic == NULL) ? cFe->size() : 1;
+            fNCbc += (cCic == NULL) ? cFe->fullSize() : 1;
             FeData cFeData;
             fEventStubList.push_back(cFeData);
             fFeIds.push_back(cFe->getId());
@@ -97,7 +97,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                 {
                     auto   cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
                     auto&  cCic                = cOuterTrackerModule->fCic;
-                    size_t cNReadoutChips      = (cCic == NULL) ? cFe->size() : 1;
+                    size_t cNReadoutChips      = (cCic == NULL) ? cFe->fullSize() : 1;
                     for(size_t cIndex = 0; cIndex < cNReadoutChips; cIndex++)
                     {
                         uint8_t  cStatusWord    = 0x00;
@@ -134,18 +134,18 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 fEventRawList[cFe->getIndex()].second.clear();
                                 if(cWithCIC2)
                                 {
-                                    const size_t                            cNblocks = RAW_L1_CBC * cFe->size() / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
+                                    const size_t                            cNblocks = RAW_L1_CBC * cFe->fullSize() / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
                                     std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks, 0);
                                     this->splitStream(pData, cL1Words, cL1Offset,
                                                       cNblocks); // split 32 bit words in  blocks of 11 bits
                                     // now try and arrange them by CBC again ...
-                                    for(size_t cChipIndex = 0; cChipIndex < cFe->size(); cChipIndex++)
+                                    for(size_t cChipIndex = 0; cChipIndex < cFe->fullSize(); cChipIndex++)
                                     {
                                         std::bitset<RAW_L1_CBC> cBitset(0);
                                         size_t                  cPosition = 0;
                                         for(size_t cBlockIndex = 0; cBlockIndex < RAW_L1_CBC / L1_BLOCK_SIZE; cBlockIndex++) // RAW_L1_CBC/L1_BLOCK_SIZE blocks per chip
                                         {
-                                            auto  cIndex   = cChipIndex + cFe->size() * cBlockIndex;
+                                            auto  cIndex   = cChipIndex + cFe->fullSize() * cBlockIndex;
                                             auto& cL1block = cL1Words[cIndex];
                                             LOG(DEBUG) << BOLDBLUE << "\t\t... L1 block " << +cIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
                                             for(size_t cNbit = 0; cNbit < cL1block.size(); cNbit++)
@@ -160,12 +160,12 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 }
                                 else
                                 {
-                                    const size_t                     cNblocks = cFe->size(); // 274 bits per chip ..
+                                    const size_t                     cNblocks = cFe->fullSize(); // 274 bits per chip ..
                                     const size_t                     cRawL1   = RAW_L1_CBC - 1;
                                     std::vector<std::bitset<cRawL1>> cL1Words(cNblocks, 0);
                                     this->splitStream(pData, cL1Words, cL1Offset,
                                                       cNblocks); // split 32 bit words in  blocks of 274 bits
-                                    for(int cIndex = 0; cIndex < (int)(cFe->size()); cIndex++)
+                                    for(int cIndex = 0; cIndex < (int)(cFe->fullSize()); cIndex++)
                                     {
                                         LOG(DEBUG) << BOLDBLUE << "\t...  chip " << +cIndex << "\t -- " << cL1Words[cIndex] << RESET;
                                         fEventRawList[cFe->getIndex()].second.push_back(std::bitset<RAW_L1_CBC>((cL1Words[cIndex]).to_string() + "0"));
@@ -360,18 +360,18 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
             size_t cL1Offset     = cOffset + 2 + cWithCIC2;
             if(cWithCIC2)
             {
-                const size_t                            cNblocks = RAW_L1_CBC * cReadoutChips->size() / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
+                const size_t                            cNblocks = RAW_L1_CBC * cReadoutChips->fullSize() / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
                 std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks, 0);
                 this->splitStream(list, cL1Words, cL1Offset, cNblocks); // split 32 bit words in  blocks of 11 bits
 
                 // now try and arrange them by CBC again ...
-                for(size_t cChipIndex = 0; cChipIndex < cReadoutChips->size(); cChipIndex++)
+                for(size_t cChipIndex = 0; cChipIndex < cReadoutChips->fullSize(); cChipIndex++)
                 {
                     std::bitset<RAW_L1_CBC> cBitset(0);
                     size_t                  cPosition = 0;
                     for(size_t cBlockIndex = 0; cBlockIndex < RAW_L1_CBC / L1_BLOCK_SIZE; cBlockIndex++) // RAW_L1_CBC/L1_BLOCK_SIZE blocks per chip
                     {
-                        auto  cIndex   = cChipIndex + cReadoutChips->size() * cBlockIndex;
+                        auto  cIndex   = cChipIndex + cReadoutChips->fullSize() * cBlockIndex;
                         auto& cL1block = cL1Words[cIndex];
                         LOG(DEBUG) << BOLDBLUE << "\t\t... L1 block " << +cIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
                         for(size_t cNbit = 0; cNbit < cL1block.size(); cNbit++)
@@ -389,11 +389,11 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
                 // std::vector<uint32_t> cData(list.begin()+cOffset, list.begin()+cOffset+cL1DataSize);
                 // for(auto cWord : cData )
                 //     LOG (INFO) << BOLDMAGENTA << "L1 data : " << std::bitset<32>(cWord) << RESET;
-                const size_t                     cNblocks = cReadoutChips->size(); // 274 bits per chip
+                const size_t                     cNblocks = cReadoutChips->fullSize(); // 274 bits per chip
                 const size_t                     cRawL1   = RAW_L1_CBC - 1;
                 std::vector<std::bitset<cRawL1>> cL1Words(cNblocks, 0);
                 this->splitStream(list, cL1Words, cL1Offset, cNblocks); // split 32 bit words in  blocks of 274 bits
-                for(int cIndex = 0; cIndex < (int)(cReadoutChips->size()); cIndex++)
+                for(int cIndex = 0; cIndex < (int)(cReadoutChips->fullSize()); cIndex++)
                 {
                     LOG(DEBUG) << BOLDMAGENTA << "L1 data : " << cL1Words[cIndex] << RESET;
                     fEventRawList[cFeId].second.push_back(std::bitset<RAW_L1_CBC>((cL1Words[cIndex]).to_string() + "0"));

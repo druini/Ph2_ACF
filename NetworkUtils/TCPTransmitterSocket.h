@@ -18,6 +18,7 @@ class TCPTransmitterSocket : public virtual TCPSocket
     void send(char const* buffer, std::size_t size);
     void send(const std::string& buffer);
     void send(const std::vector<char>& buffer);
+    void send(const std::vector<uint16_t>& buffer);
 
     template <typename T>
     void send(const std::vector<T>& buffer)
@@ -30,6 +31,7 @@ class TCPTransmitterSocket : public virtual TCPSocket
         send(reinterpret_cast<const char*>(&buffer.at(0)), buffer.size() * sizeof(T));
     }
 
+    void sendPacket(char const* buffer, std::size_t size);
     void sendPacket(const std::string& buffer);
     void setSendTimeout(unsigned int timeoutSeconds, unsigned int timeoutMicroSeconds);
 };

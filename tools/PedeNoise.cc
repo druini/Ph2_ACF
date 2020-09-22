@@ -379,7 +379,6 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
 void PedeNoise::extractPedeNoise()
 {
     ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, fThresholdAndNoiseContainer);
-
     uint16_t                                                     counter          = 0;
     std::map<uint16_t, DetectorDataContainer*>::reverse_iterator previousIterator = fSCurveOccupancyMap.rend();
     for(std::map<uint16_t, DetectorDataContainer*>::reverse_iterator mIt = fSCurveOccupancyMap.rbegin(); mIt != fSCurveOccupancyMap.rend(); ++mIt)
@@ -529,11 +528,17 @@ void PedeNoise::writeObjects()
 
 void PedeNoise::ConfigureCalibration() { CreateResultDirectory("Results/Run_PedeNoise"); }
 
-void PedeNoise::Start(int currentRun)
+void PedeNoise::Running()
 {
     LOG(INFO) << "Starting noise measurement";
     Initialise(true, true);
+    // auto myFunction = [](const Ph2_HwDescription::ReadoutChip *theChip){
+    //     std::cout<<"Using it"<<std::endl;
+    //     return (theChip->getId()==0);
+    //     };
+    // ModuleContainer::SetQueryFunction(myFunction);
     measureNoise();
+    // ModuleContainer::ResetQueryFunction();
     Validate();
     LOG(INFO) << "Done with noise";
 }
