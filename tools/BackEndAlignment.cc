@@ -367,7 +367,7 @@ bool BackEndAlignment::Align()
         // re-load configuration of fast command block from register map loaded from xml file
         LOG(INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFastCommandBlock(theBoard);
-        
+
         // now send a fast reset
         fBeBoardInterface->ChipReSync(theBoard);
     }

@@ -375,15 +375,9 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Abort()
-{
-    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__<< " Abort not implemented" << RESET;
-}
+void SystemController::Abort() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Abort not implemented" << RESET; }
 
-void SystemController::Running()
-{
-    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__<< " Running not implemented" << RESET;
-}
+void SystemController::Running() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Running not implemented" << RESET; }
 
 void SystemController::Start(int currentRun)
 {
@@ -424,10 +418,7 @@ void SystemController::Configure(std::string cHWFile, bool enableStream)
     ConfigureCalibration();
 }
 
-bool SystemController::GetRunningStatus() 
-{
-    return (fRunningFuture.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready);
-}
+bool SystemController::GetRunningStatus() { return (fRunningFuture.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready); }
 
 void SystemController::waitForRunToBeCompeted()
 {

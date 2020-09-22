@@ -33,10 +33,10 @@ struct CombinedCalibration : public Tool
 
     CombinedCalibration() : current_tool(this) {}
 
-    void Start(int run) 
-    { 
+    void Start(int run)
+    {
         runningCompleted = false;
-        start_impl(run, std::make_index_sequence<size>()); 
+        start_impl(run, std::make_index_sequence<size>());
         runningCompleted = true;
     }
 
@@ -46,7 +46,7 @@ struct CombinedCalibration : public Tool
         Tool::CreateResultDirectory("Results", false, false);
     }
 
-    bool GetRunningStatus() override {return runningCompleted;} 
+    bool GetRunningStatus() override { return runningCompleted; }
 
     void Stop() override
     {
@@ -54,8 +54,6 @@ struct CombinedCalibration : public Tool
         Tool::SaveResults();
         Tool::Destroy();
     }
-
-
 
   private:
     bool runningCompleted;
@@ -68,22 +66,22 @@ struct CombinedCalibration : public Tool
     template <class T>
     void start_single(int run, T& tool)
     {
-        std::cout<<__PRETTY_FUNCTION__<< " Starting calibration"<<std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " Starting calibration" << std::endl;
         tool.Inherit(current_tool);
-        std::cout<<__PRETTY_FUNCTION__<<fRunningFuture.valid()<<std::endl;
+        std::cout << __PRETTY_FUNCTION__ << fRunningFuture.valid() << std::endl;
         tool.ConfigureCalibration();
-        std::cout<<__PRETTY_FUNCTION__<<fRunningFuture.valid()<<std::endl;
+        std::cout << __PRETTY_FUNCTION__ << fRunningFuture.valid() << std::endl;
         tool.Start(run);
-        std::cout<<__PRETTY_FUNCTION__<<fRunningFuture.valid()<<std::endl;
+        std::cout << __PRETTY_FUNCTION__ << fRunningFuture.valid() << std::endl;
         while(!tool.GetRunningStatus())
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            std::cout<<__PRETTY_FUNCTION__<< " waiting..."<<std::endl;
+            std::cout << __PRETTY_FUNCTION__ << " waiting..." << std::endl;
         }
-        std::cout<<__PRETTY_FUNCTION__<<fRunningFuture.valid()<<std::endl;
+        std::cout << __PRETTY_FUNCTION__ << fRunningFuture.valid() << std::endl;
         tool.resetPointers();
         current_tool = &tool;
-        std::cout<<__PRETTY_FUNCTION__<< " Calibration done"<<std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " Calibration done" << std::endl;
     }
 
     Tool*                current_tool;

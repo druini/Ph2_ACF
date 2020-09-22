@@ -262,6 +262,7 @@ template <typename T, typename HW>
 class HWDescriptionContainer : public Container<T>
 {
     friend DetectorContainer;
+
   public:
     HWDescriptionContainer(uint16_t id) : Container<T>(id) {}
     ~HWDescriptionContainer() { ; }
@@ -309,9 +310,9 @@ class HWDescriptionContainer : public Container<T>
     theHW* at(size_t index)
     {
         if(!QueryFunction::fQueryFunction) return static_cast<theHW*>(this->std::vector<T*>::at(index));
-        for(auto element : *this)
+        for(auto element: *this)
         {
-            if(element->getIndex()== index) return static_cast<theHW*>(element);
+            if(element->getIndex() == index) return static_cast<theHW*>(element);
         }
         throw std::runtime_error("out of range");
     }
@@ -321,9 +322,9 @@ class HWDescriptionContainer : public Container<T>
     theHW* at(size_t index) const
     {
         if(!QueryFunction::fQueryFunction) return static_cast<theHW*>(this->std::vector<T*>::at(index));
-        for(const auto element : *this)
+        for(const auto element: *this)
         {
-            if(element->getIndex()== index) return static_cast<theHW*>(element);
+            if(element->getIndex() == index) return static_cast<theHW*>(element);
         }
         throw std::runtime_error("out of range");
     }
@@ -336,16 +337,16 @@ class HWDescriptionContainer : public Container<T>
         return size_;
     }
 
-    uint16_t fullSize() const {return std::vector<T*>::size();}
+    uint16_t fullSize() const { return std::vector<T*>::size(); }
 
   protected:
     static void resetQueryFunction();
     static void setQueryFunction(std::function<bool(const T*)> theQueryFunction);
-  
+
   private:
     uint16_t size_;
-    T*& operator[](size_t pos) {return this->std::vector<T*>::operator[](pos);}
-    const T& operator[](size_t pos) const {return this->std::vector<T*>::operator[](pos);}
+    T*&      operator[](size_t pos) { return this->std::vector<T*>::operator[](pos); }
+    const T& operator[](size_t pos) const { return this->std::vector<T*>::operator[](pos); }
 };
 
 template <typename T, typename HW>
@@ -414,22 +415,24 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
 
     void updateChipIndex()
     {
-        for(uint16_t boardIndex = 0; boardIndex<this->std::vector<BoardContainer*>::size(); ++ boardIndex)
+        for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
         {
             auto theBoard = (*this)[boardIndex];
-            for(uint16_t opticalGroupIndex = 0; opticalGroupIndex<theBoard->std::vector<OpticalGroupContainer*>::size(); ++opticalGroupIndex)
+            for(uint16_t opticalGroupIndex = 0; opticalGroupIndex < theBoard->std::vector<OpticalGroupContainer*>::size(); ++opticalGroupIndex)
             {
                 auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
-                for(uint16_t hybridIndex = 0; hybridIndex<theOpticalGroup->std::vector<ModuleContainer*>::size(); ++hybridIndex)
+                for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<ModuleContainer*>::size(); ++hybridIndex)
                 {
-                    auto theHybrid = (*theOpticalGroup)[hybridIndex];
+                    auto     theHybrid       = (*theOpticalGroup)[hybridIndex];
                     uint16_t theNewChipIndex = 0;
-                    for(uint16_t chipIndex = 0; chipIndex<theHybrid->std::vector<ChipContainer*>::size(); ++chipIndex)
+                    for(uint16_t chipIndex = 0; chipIndex < theHybrid->std::vector<ChipContainer*>::size(); ++chipIndex)
                     {
-                        auto theChip = (*theHybrid)[chipIndex];
+                        auto                           theChip = (*theHybrid)[chipIndex];
                         ModuleContainer::QueryFunction theQueryFunctor;
-                        if(theQueryFunctor(theChip)) theChip->setIndex(theNewChipIndex++);
-                        else theChip->setIndex(0xFFFF);
+                        if(theQueryFunctor(theChip))
+                            theChip->setIndex(theNewChipIndex++);
+                        else
+                            theChip->setIndex(0xFFFF);
                     }
                     theHybrid->size_ = theNewChipIndex;
                 }
@@ -439,38 +442,41 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
 
     void updateHybridIndex()
     {
-        for(uint16_t boardIndex = 0; boardIndex<this->std::vector<BoardContainer*>::size(); ++ boardIndex)
+        for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
         {
             auto theBoard = (*this)[boardIndex];
-            for(uint16_t opticalGroupIndex = 0; opticalGroupIndex<theBoard->std::vector<OpticalGroupContainer*>::size(); ++opticalGroupIndex)
+            for(uint16_t opticalGroupIndex = 0; opticalGroupIndex < theBoard->std::vector<OpticalGroupContainer*>::size(); ++opticalGroupIndex)
             {
-                auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
+                auto     theOpticalGroup   = (*theBoard)[opticalGroupIndex];
                 uint16_t theNewHybridIndex = 0;
-                for(uint16_t hybridIndex = 0; hybridIndex<theOpticalGroup->std::vector<ModuleContainer*>::size(); ++hybridIndex)
+                for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<ModuleContainer*>::size(); ++hybridIndex)
                 {
-                    auto theHybrid = (*theOpticalGroup)[hybridIndex];
+                    auto                                 theHybrid = (*theOpticalGroup)[hybridIndex];
                     OpticalGroupContainer::QueryFunction theQueryFunctor;
-                    if(theQueryFunctor(theHybrid)) theHybrid->setIndex(theNewHybridIndex++);
-                    else theHybrid->setIndex(0xFFFF);
+                    if(theQueryFunctor(theHybrid))
+                        theHybrid->setIndex(theNewHybridIndex++);
+                    else
+                        theHybrid->setIndex(0xFFFF);
                 }
                 theOpticalGroup->size_ = theNewHybridIndex;
             }
         }
     }
 
-
     void updateOpticalGroupIndex()
     {
-        for(uint16_t boardIndex = 0; boardIndex<this->std::vector<BoardContainer*>::size(); ++ boardIndex)
+        for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
         {
-            auto theBoard = (*this)[boardIndex];
+            auto     theBoard                = (*this)[boardIndex];
             uint16_t theNewOpticalGroupIndex = 0;
-            for(uint16_t opticalGroupIndex = 0; opticalGroupIndex<theBoard->std::vector<OpticalGroupContainer*>::size(); ++opticalGroupIndex)
+            for(uint16_t opticalGroupIndex = 0; opticalGroupIndex < theBoard->std::vector<OpticalGroupContainer*>::size(); ++opticalGroupIndex)
             {
-                auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
+                auto                          theOpticalGroup = (*theBoard)[opticalGroupIndex];
                 BoardContainer::QueryFunction theQueryFunctor;
-                if(theQueryFunctor(theOpticalGroup)) theOpticalGroup->setIndex(theNewOpticalGroupIndex++);
-                else theOpticalGroup->setIndex(0xFFFF);
+                if(theQueryFunctor(theOpticalGroup))
+                    theOpticalGroup->setIndex(theNewOpticalGroupIndex++);
+                else
+                    theOpticalGroup->setIndex(0xFFFF);
             }
             theBoard->size_ = theNewOpticalGroupIndex;
         }
@@ -479,32 +485,34 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
     void updateBoardIndex()
     {
         uint16_t theNewBoardGroupIndex = 0;
-        for(uint16_t boardIndex = 0; boardIndex<this->std::vector<BoardContainer*>::size(); ++ boardIndex)
+        for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
         {
-            auto theBoard = (*this)[boardIndex];
+            auto                             theBoard = (*this)[boardIndex];
             DetectorContainer::QueryFunction theQueryFunctor;
-            if(theQueryFunctor(theBoard)) theBoard->setIndex(theNewBoardGroupIndex++);
-            else theBoard->setIndex(0xFFFF);
+            if(theQueryFunctor(theBoard))
+                theBoard->setIndex(theNewBoardGroupIndex++);
+            else
+                theBoard->setIndex(0xFFFF);
         }
         this->size_ = theNewBoardGroupIndex;
     }
 
-    void resetBoardQueryFunction() 
+    void resetBoardQueryFunction()
     {
         DetectorContainer ::resetQueryFunction();
         updateBoardIndex();
     }
-    void resetOpticalGroupQueryFunction() 
+    void resetOpticalGroupQueryFunction()
     {
         BoardContainer ::resetQueryFunction();
         updateOpticalGroupIndex();
     }
-    void resetHybridQueryFunction() 
+    void resetHybridQueryFunction()
     {
         OpticalGroupContainer::resetQueryFunction();
         updateHybridIndex();
     }
-    void resetReadoutChipQueryFunction() 
+    void resetReadoutChipQueryFunction()
     {
         ModuleContainer ::resetQueryFunction();
         updateChipIndex();

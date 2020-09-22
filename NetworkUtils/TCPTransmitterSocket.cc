@@ -54,9 +54,7 @@ void TCPTransmitterSocket::send(char const* buffer, std::size_t size)
             // Temporary error.
             throw std::runtime_error(std::string("Write: temporary error: ") + strerror(errno));
         }
-        default:
-        {
-            throw std::runtime_error(std::string("Write: returned -1: ") + strerror(errno));
+        default: { throw std::runtime_error(std::string("Write: returned -1: ") + strerror(errno));
         }
         }
     }

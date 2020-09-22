@@ -195,8 +195,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
             auto cReadBack = ReadChipReg(pMPA, cRegItem.first);
             if(cReadBack != cRegItem.second.fValue)
             {
-
-              std::size_t found = (cRegItem.first).find("ReadCounter");
+                std::size_t found  = (cRegItem.first).find("ReadCounter");
                 std::size_t found1 = (cRegItem.first).find("_ALL");
                 if((found == std::string::npos) and (found1 == std::string::npos))
                 {
@@ -204,7 +203,6 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
                               << " not equal to write value of " << std::hex << +cRegItem.second.fValue << std::dec << RESET;
                     // return false;
                 }
-
             }
         }
         // LOG (INFO) << BOLDRED << "READ "<<ReadChipReg( pMPA, cRegItem.first )<< RESET;
