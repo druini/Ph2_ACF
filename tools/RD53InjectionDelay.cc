@@ -69,11 +69,12 @@ void InjectionDelay::Start(int currentRun)
         this->initializeWriteFileHandler();
     }
 
+    theCurrentRun = currentRun;
     InjectionDelay::run();
     InjectionDelay::analyze();
+    InjectionDelay::saveChipRegisters(currentRun);
     InjectionDelay::sendData();
 
-    la.draw(currentRun);
     la.sendData();
 }
 
@@ -94,6 +95,8 @@ void InjectionDelay::sendData()
 void InjectionDelay::Stop()
 {
     LOG(INFO) << GREEN << "[InjectionDelay::Stop] Stopping" << RESET;
+
+    InjectionDelay::draw();
     this->closeFileHandler();
 }
 
@@ -103,6 +106,7 @@ void InjectionDelay::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
+    if(currentRun >= 0) theCurrentRun = currentRun;
     InjectionDelay::ConfigureCalibration();
     InjectionDelay::initializeFiles(fileRes_, currentRun);
 }
@@ -111,7 +115,7 @@ void InjectionDelay::initializeFiles(const std::string fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
-    if(saveBinaryData == true)
+    if((currentRun >= 0) && (saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_InjectionDelay.raw", 'w');
         this->initializeWriteFileHandler();
@@ -187,9 +191,10 @@ void InjectionDelay::run()
     InjectionDelay::chipErrorReport();
 }
 
-void InjectionDelay::draw(int currentRun)
+void InjectionDelay::draw()
 {
-    la.draw(currentRun);
+    InjectionDelay::saveChipRegisters(theCurrentRun);
+    la.draw(false);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;

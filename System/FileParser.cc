@@ -562,6 +562,7 @@ void FileParser::parseModuleContainer(pugi::xml_node pModuleNode, OpticalGroup* 
 
                     if(cName.find("RD53") != std::string::npos)
                     {
+                        pBoard->setFrontEndType(FrontEndType::RD53);
                         this->parseRD53(cChild, cModule, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) this->parseGlobalRD53Settings(pModuleNode, cModule, os);
                     }
@@ -569,13 +570,7 @@ void FileParser::parseModuleContainer(pugi::xml_node pModuleNode, OpticalGroup* 
                     {
                         pBoard->setFrontEndType(FrontEndType::CBC3);
                         this->parseCbcContainer(cChild, cModule, cConfigFileDirectory, os);
-                        // check if this is the last node with this name
-                        if(cNextName.empty() || cNextName != cName)
-                        {
-                            // Parse the GlobalSettings so that Global regisers take precedence over Global settings
-                            // which take precedence over specific settings
-                            this->parseGlobalCbcSettings(pModuleNode, cModule, os);
-                        }
+                        if(cNextName.empty() || cNextName != cName) this->parseGlobalCbcSettings(pModuleNode, cModule, os);
                     }
                     else if(cName.find("CIC") != std::string::npos)
                     {

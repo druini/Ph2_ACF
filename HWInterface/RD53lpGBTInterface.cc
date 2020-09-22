@@ -31,9 +31,6 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     return writeGood;
 }
 
-/*-------------------------------------------------------------------------*/
-/* Read/Write lpGBT chip registers                                         */
-/*-------------------------------------------------------------------------*/
 bool RD53lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
     if(pValue > 0xFF)
@@ -57,7 +54,7 @@ bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pa
 {
     bool writeGood = true;
 
-    for(const auto& cReg: pRegVec) writeGood = RD53lpGBTInterface::WriteChipReg(pChip, cReg.first, cReg.second);
+    for(const auto& cReg: pRegVec) writeGood &= RD53lpGBTInterface::WriteChipReg(pChip, cReg.first, cReg.second);
 
     return writeGood;
 }

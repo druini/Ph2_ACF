@@ -76,6 +76,7 @@ void SCurve::Start(int currentRun)
         this->initializeWriteFileHandler();
     }
 
+    theCurrentRun = currentRun;
     SCurve::run();
     SCurve::analyze();
     SCurve::saveChipRegisters(currentRun);
@@ -105,6 +106,8 @@ void SCurve::sendData()
 void SCurve::Stop()
 {
     LOG(INFO) << GREEN << "[SCurve::Stop] Stopping" << RESET;
+
+    SCurve::draw();
     this->closeFileHandler();
 }
 
@@ -114,6 +117,7 @@ void SCurve::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
+    if(currentRun >= 0) theCurrentRun = currentRun;
     SCurve::ConfigureCalibration();
     SCurve::initializeFiles(fileRes_, currentRun);
 }
@@ -122,7 +126,7 @@ void SCurve::initializeFiles(const std::string fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
-    if(saveBinaryData == true)
+    if((currentRun >= 0) && (saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
         this->initializeWriteFileHandler();
@@ -179,9 +183,9 @@ void SCurve::run()
     SCurve::chipErrorReport();
 }
 
-void SCurve::draw(int currentRun)
+void SCurve::draw()
 {
-    SCurve::saveChipRegisters(currentRun);
+    SCurve::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -214,7 +218,7 @@ void SCurve::draw(int currentRun)
                         std::stringstream myString;
                         myString.clear();
                         myString.str("");
-                        myString << this->fDirectoryName + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve_"
+                        myString << this->fDirectoryName + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_SCurve_"
                                  << "B" << std::setfill('0') << std::setw(2) << cBoard->getId() << "_"
                                  << "O" << std::setfill('0') << std::setw(2) << cOpticalGroup->getId() << "_"
                                  << "M" << std::setfill('0') << std::setw(2) << cModule->getId() << "_"

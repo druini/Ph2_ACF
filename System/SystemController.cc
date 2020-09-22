@@ -19,6 +19,7 @@ SystemController::SystemController()
     , fReadoutChipInterface(nullptr)
     , fChipInterface(nullptr)
     , flpGBTInterface(nullptr)
+    , fCicInterface(nullptr)
     , fDetectorContainer(nullptr)
     , fSettingsMap()
     , fFileHandler(nullptr)
@@ -112,6 +113,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(fDetectorContainer->size() > 0)
     {
         const BeBoard* cFirstBoard = fDetectorContainer->at(0);
+
         if(cFirstBoard->getBoardType() != BoardType::RD53)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
@@ -154,33 +156,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     }
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
                     fCicInterface = new CicInterface(fBeBoardFWMap);
-                    // OuterTrackerModule* cFirstHybrid = static_cast<OuterTrackerModule*>(cFirstOpticalGroup->at(0));
-                    // if( cFirstHybrid->size() > 0 )//# of ROCs connected to Hybrid0
-                    // {
-                    //   LOG (INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for ROCs .."
-                    //     << +cFirstHybrid->size()
-                    //     << " ROCs found ..."
-                    //     << RESET;
-                    //   auto cFirstROC = cFirstHybrid->at(0);
-                    //   auto cChipType = cFirstROC->getFrontEndType();
-                    //   if (cChipType == FrontEndType::CBC3)
-                    //   {
-                    //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
-                    //     fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
-                    //   }
-                    //   else if(cChipType == FrontEndType::SSA)
-                    //   {
-                    //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
-                    //     fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
-                    //   }
-                    //   else if(cChipType == FrontEndType::MPA)
-                    //   {
-                    //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
-                    //     fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
-                    //   }
-                    //   LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
-                    //   fCicInterface = new CicInterface(fBeBoardFWMap);
-                    // }
                 }
             }
         }
@@ -314,15 +289,23 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ###################
             for(auto cOpticalGroup: *cBoard)
             {
+                // ########################
+                // # Configure lpGBT chip #
+                // ########################
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
+                    // @TMP@
                     // RD53lpGBTInterface *clpGBTInterface = static_cast<RD53lpGBTInterface*>(flpGBTInterface);
                     // clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                     // if(clpGBTInterface->IslpGBTReady(cOpticalGroup->flpGBT))
-                    //    LOG(INFO) << BOLDRED << "lpGBT NOT READY" << RESET;
+                    //    LOG(ERROR) << BOLDRED << "lpGBT chip NOT configured" << RESET;
                     // else
-                    //    LOG(INFO) << BOLDMAGENTA << "lpGBT Configured" << RESET;
+                    //    LOG(INFO) << GREEN << "lpGBT chip configured" << RESET;
                 }
+
+                // ############################
+                // # Configure frontend chips #
+                // ############################
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     LOG(INFO) << GREEN << "Initializing communication to Module: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;

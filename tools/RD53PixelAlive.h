@@ -36,13 +36,14 @@ class PixelAlive : public Tool
     void                                   localConfigure(const std::string fileRes_, int currentRun);
     void                                   initializeFiles(const std::string fileRes_, int currentRun);
     void                                   run();
-    void                                   draw(int currentRun);
+    void                                   draw(bool saveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t                                 getNumberIterations()
     {
         return RD53ChannelGroupHandler::getNumberOfGroups(injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol) *
                nEvents / nEvtsBurst;
     }
+    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     PixelAliveHistograms* histos;
@@ -72,10 +73,10 @@ class PixelAlive : public Tool
 
     void fillHisto();
     void chipErrorReport();
-    void saveChipRegisters(int currentRun);
 
   protected:
     std::string fileRes;
+    int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        doFast;

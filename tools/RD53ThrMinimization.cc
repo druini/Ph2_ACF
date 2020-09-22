@@ -58,6 +58,7 @@ void ThrMinimization::Start(int currentRun)
         this->initializeWriteFileHandler();
     }
 
+    theCurrentRun = currentRun;
     ThrMinimization::run();
     ThrMinimization::analyze();
     ThrMinimization::saveChipRegisters(currentRun);
@@ -77,6 +78,8 @@ void ThrMinimization::sendData()
 void ThrMinimization::Stop()
 {
     LOG(INFO) << GREEN << "[ThrMinimization::Stop] Stopping" << RESET;
+
+    ThrMinimization::draw();
     this->closeFileHandler();
 }
 
@@ -87,6 +90,7 @@ void ThrMinimization::localConfigure(const std::string fileRes_, int currentRun)
     PixelAlive::histos = nullptr;
 #endif
 
+    if(currentRun >= 0) theCurrentRun = currentRun;
     ThrMinimization::ConfigureCalibration();
     ThrMinimization::initializeFiles(fileRes_, currentRun);
 }
@@ -100,9 +104,9 @@ void ThrMinimization::initializeFiles(const std::string fileRes_, int currentRun
 
     fileRes = fileRes_;
 
-    if(saveBinaryData == true)
+    if((currentRun >= 0) && (saveBinaryData == true))
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrMinimization.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrMinimization.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
@@ -133,9 +137,9 @@ void ThrMinimization::run()
     ThrMinimization::chipErrorReport();
 }
 
-void ThrMinimization::draw(int currentRun)
+void ThrMinimization::draw()
 {
-    ThrMinimization::saveChipRegisters(currentRun);
+    ThrMinimization::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -149,7 +153,7 @@ void ThrMinimization::draw(int currentRun)
     ThrMinimization::fillHisto();
     histos->process();
 
-    PixelAlive::draw(-1);
+    PixelAlive::draw(false);
 
     this->WriteRootFile();
     this->CloseResultFile();
