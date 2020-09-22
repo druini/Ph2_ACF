@@ -237,10 +237,14 @@ int main(int argc, char* argv[])
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit(&cTool);
         // second parameter disables stub logic on CBC3
+        // auto myFunction = [](const ChipContainer *theChip){return (theChip->getId()==0);};
+        // auto myFunction = [](const ChipContainer *theChip){return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA);};
+        // cTool.fDetectorContainer->setReadoutChipQueryFunction(myFunction);
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
+        // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }

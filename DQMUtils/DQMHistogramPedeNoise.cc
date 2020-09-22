@@ -33,6 +33,7 @@ DQMHistogramPedeNoise::~DQMHistogramPedeNoise() {}
 //========================================================================================================================
 void DQMHistogramPedeNoise::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
+    std::cout<<__PRETTY_FUNCTION__<<" " << theDetectorStructure.at(0)->at(0)->at(0)->size() << std::endl;
     uint32_t NCH = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
     // if
     // (static_cast<Ph2_HwDescription::ReadoutChip*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getFrontEndType()
