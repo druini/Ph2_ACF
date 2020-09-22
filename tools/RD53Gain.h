@@ -42,9 +42,10 @@ class Gain : public Tool
     void                                   localConfigure(const std::string fileRes_, int currentRun);
     void                                   initializeFiles(const std::string fileRes_, int currentRun);
     void                                   run();
-    void                                   draw(int currentRun);
+    void                                   draw(bool saveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * nSteps; }
+    void                                   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     GainHistograms* histos;
@@ -73,10 +74,10 @@ class Gain : public Tool
     void fillHisto();
     void computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, float& gain, float& gainErr, float& intercept, float& interceptErr);
     void chipErrorReport();
-    void saveChipRegisters(int currentRun);
 
   protected:
     std::string fileRes;
+    int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;

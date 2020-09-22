@@ -76,6 +76,7 @@ void Gain::Running()
         this->initializeWriteFileHandler();
     }
 
+    theCurrentRun = currentRun;
     Gain::run();
     Gain::analyze();
     Gain::saveChipRegisters(fRunNumber);
@@ -105,6 +106,8 @@ void Gain::sendData()
 void Gain::Stop()
 {
     LOG(INFO) << GREEN << "[Gain::Stop] Stopping" << RESET;
+
+    Gain::draw();
     this->closeFileHandler();
 }
 
@@ -114,6 +117,7 @@ void Gain::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
+    if(currentRun >= 0) theCurrentRun = currentRun;
     Gain::ConfigureCalibration();
     Gain::initializeFiles(fileRes_, currentRun);
 }
@@ -179,16 +183,16 @@ void Gain::run()
     Gain::chipErrorReport();
 }
 
-void Gain::draw(int currentRun)
+void Gain::draw(bool saveData)
 {
-    if(currentRun >= 0) Gain::saveChipRegisters(currentRun);
+    if(saveData == true) Gain::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if(currentRun >= 0)
+    if(saveData == true)
     {
         this->InitResultFile(fileRes);
         LOG(INFO) << BOLDBLUE << "\t--> Gain saving histograms..." << RESET;
@@ -198,7 +202,7 @@ void Gain::draw(int currentRun)
     Gain::fillHisto();
     histos->process();
 
-    if(currentRun >= 0)
+    if(saveData == true)
     {
         this->WriteRootFile();
         this->CloseResultFile();
@@ -220,7 +224,7 @@ void Gain::draw(int currentRun)
                         std::stringstream myString;
                         myString.clear();
                         myString.str("");
-                        myString << this->fDirectoryName + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Gain_"
+                        myString << this->fDirectoryName + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Gain_"
                                  << "B" << std::setfill('0') << std::setw(2) << cBoard->getId() << "_"
                                  << "O" << std::setfill('0') << std::setw(2) << cOpticalGroup->getId() << "_"
                                  << "M" << std::setfill('0') << std::setw(2) << cModule->getId() << "_"

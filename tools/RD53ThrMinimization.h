@@ -30,7 +30,7 @@ class ThrMinimization : public PixelAlive
     void   localConfigure(const std::string fileRes_, int currentRun);
     void   initializeFiles(const std::string fileRes_, int currentRun);
     void   run();
-    void   draw(int currentRun);
+    void   draw();
     void   analyze();
     size_t getNumberIterations()
     {
@@ -38,6 +38,7 @@ class ThrMinimization : public PixelAlive
         uint16_t moreIterations = 1;
         return PixelAlive::getNumberIterations() * (nBitThr + moreIterations);
     }
+    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     ThresholdHistograms* histos;
@@ -60,10 +61,10 @@ class ThrMinimization : public PixelAlive
     void fillHisto();
     void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
     void chipErrorReport();
-    void saveChipRegisters(int currentRun);
 
   protected:
     std::string fileRes;
+    int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;

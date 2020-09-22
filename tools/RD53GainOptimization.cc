@@ -62,6 +62,7 @@ void GainOptimization::Running()
         this->initializeWriteFileHandler();
     }
 
+    theCurrentRun = currentRun;
     GainOptimization::run();
     GainOptimization::analyze();
     GainOptimization::saveChipRegisters(fRunNumber);
@@ -81,6 +82,8 @@ void GainOptimization::sendData()
 void GainOptimization::Stop()
 {
     LOG(INFO) << GREEN << "[GainOptimization::Stop] Stopping" << RESET;
+
+    GainOptimization::draw();
     this->closeFileHandler();
 }
 
@@ -91,6 +94,7 @@ void GainOptimization::localConfigure(const std::string fileRes_, int currentRun
     Gain::histos = nullptr;
 #endif
 
+    if(currentRun >= 0) theCurrentRun = currentRun;
     GainOptimization::ConfigureCalibration();
     GainOptimization::initializeFiles(fileRes_, currentRun);
 }
@@ -104,7 +108,7 @@ void GainOptimization::initializeFiles(const std::string fileRes_, int currentRu
 
     fileRes = fileRes_;
 
-    if(saveBinaryData == true)
+    if((currentRun >= 0) && (saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
         this->initializeWriteFileHandler();
@@ -137,9 +141,9 @@ void GainOptimization::run()
     GainOptimization::chipErrorReport();
 }
 
-void GainOptimization::draw(int currentRun)
+void GainOptimization::draw()
 {
-    GainOptimization::saveChipRegisters(currentRun);
+    GainOptimization::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -149,7 +153,7 @@ void GainOptimization::draw(int currentRun)
     this->InitResultFile(fileRes);
     LOG(INFO) << BOLDBLUE << "\t--> GainOptimization saving histograms..." << RESET;
 
-    Gain::draw(-1);
+    Gain::draw(false);
 
     histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
     GainOptimization::fillHisto();

@@ -71,11 +71,12 @@ void ClockDelay::Running()
         this->initializeWriteFileHandler();
     }
 
+    theCurrentRun = currentRun;
     ClockDelay::run();
     ClockDelay::analyze();
+    ClockDelay::saveChipRegisters(currentRun);
     ClockDelay::sendData();
 
-    la.draw(fRunNumber);
     la.sendData();
 }
 
@@ -96,6 +97,8 @@ void ClockDelay::sendData()
 void ClockDelay::Stop()
 {
     LOG(INFO) << GREEN << "[ClockDelay::Stop] Stopping" << RESET;
+
+    ClockDelay::draw();
     this->closeFileHandler();
 }
 
@@ -105,6 +108,7 @@ void ClockDelay::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
+    if(currentRun >= 0) theCurrentRun = currentRun;
     ClockDelay::ConfigureCalibration();
     ClockDelay::initializeFiles(fileRes_, currentRun);
 }
@@ -113,7 +117,7 @@ void ClockDelay::initializeFiles(const std::string fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
-    if(saveBinaryData == true)
+    if((currentRun >= 0) && (saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ClockDelay.raw", 'w');
         this->initializeWriteFileHandler();
@@ -189,9 +193,10 @@ void ClockDelay::run()
     ClockDelay::chipErrorReport();
 }
 
-void ClockDelay::draw(int currentRun)
+void ClockDelay::draw()
 {
-    la.draw(currentRun);
+    ClockDelay::saveChipRegisters(theCurrentRun);
+    la.draw(false);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;

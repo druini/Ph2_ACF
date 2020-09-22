@@ -60,6 +60,7 @@ void ThrAdjustment::Running()
         this->initializeWriteFileHandler();
     }
 
+    theCurrentRun = currentRun;
     ThrAdjustment::run();
     ThrAdjustment::analyze();
     ThrAdjustment::saveChipRegisters(fRunNumber);
@@ -79,6 +80,8 @@ void ThrAdjustment::sendData()
 void ThrAdjustment::Stop()
 {
     LOG(INFO) << GREEN << "[ThrAdjustment::Stop] Stopping" << RESET;
+
+    ThrAdjustment::draw();
     this->closeFileHandler();
 }
 
@@ -89,6 +92,7 @@ void ThrAdjustment::localConfigure(const std::string fileRes_, int currentRun)
     PixelAlive::histos = nullptr;
 #endif
 
+    if(currentRun >= 0) theCurrentRun = currentRun;
     ThrAdjustment::ConfigureCalibration();
     ThrAdjustment::initializeFiles(fileRes_, currentRun);
 }
@@ -102,7 +106,7 @@ void ThrAdjustment::initializeFiles(const std::string fileRes_, int currentRun)
 
     fileRes = fileRes_;
 
-    if(saveBinaryData == true)
+    if((currentRun >= 0) && (saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrAdjustment.raw", 'w');
         this->initializeWriteFileHandler();
@@ -135,9 +139,9 @@ void ThrAdjustment::run()
     ThrAdjustment::chipErrorReport();
 }
 
-void ThrAdjustment::draw(int currentRun)
+void ThrAdjustment::draw()
 {
-    ThrAdjustment::saveChipRegisters(currentRun);
+    ThrAdjustment::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -151,7 +155,7 @@ void ThrAdjustment::draw(int currentRun)
     ThrAdjustment::fillHisto();
     histos->process();
 
-    PixelAlive::draw(-1);
+    PixelAlive::draw(false);
 
     this->WriteRootFile();
     this->CloseResultFile();

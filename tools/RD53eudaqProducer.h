@@ -38,7 +38,7 @@ class RD53eudaqProducer : public eudaq::Producer
   private:
     std::string configFile;
     Physics     RD53sysCntrPhys;
-    int         currentRun;
+    int         theCurrentRun;
 };
 
 // ##################################

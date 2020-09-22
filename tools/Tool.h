@@ -97,8 +97,8 @@ class Tool : public Ph2_System::SystemController
     void WriteRootFile();
 #endif
 
-    virtual void sendData() {};
-    void SaveResults();
+    virtual void sendData(){};
+    void         SaveResults();
 
     /*!
      * \brief Create a result directory at the specified path + ChargeMode + Timestamp

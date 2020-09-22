@@ -81,6 +81,7 @@ void PixelAlive::Running()
         this->initializeWriteFileHandler();
     }
 
+    theCurrentRun = currentRun;
     PixelAlive::run();
     PixelAlive::analyze();
     PixelAlive::saveChipRegisters(fRunNumber);
@@ -107,6 +108,8 @@ void PixelAlive::sendData()
 void PixelAlive::Stop()
 {
     LOG(INFO) << GREEN << "[PixelAlive::Stop] Stopping" << RESET;
+
+    PixelAlive::draw();
     this->closeFileHandler();
 }
 
@@ -116,6 +119,7 @@ void PixelAlive::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
+    if(currentRun >= 0) theCurrentRun = currentRun;
     PixelAlive::ConfigureCalibration();
     PixelAlive::initializeFiles(fileRes_, currentRun);
 }
@@ -153,16 +157,16 @@ void PixelAlive::run()
     PixelAlive::chipErrorReport();
 }
 
-void PixelAlive::draw(int currentRun)
+void PixelAlive::draw(bool saveData)
 {
-    if(currentRun >= 0) PixelAlive::saveChipRegisters(currentRun);
+    if(saveData == true) PixelAlive::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if(currentRun >= 0)
+    if(saveData == true)
     {
         this->InitResultFile(fileRes);
         LOG(INFO) << BOLDBLUE << "\t--> PixelAlive saving histograms..." << RESET;
@@ -172,7 +176,7 @@ void PixelAlive::draw(int currentRun)
     PixelAlive::fillHisto();
     histos->process();
 
-    if(currentRun >= 0)
+    if(saveData == true)
     {
         this->WriteRootFile();
         this->CloseResultFile();
