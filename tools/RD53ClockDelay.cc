@@ -71,10 +71,10 @@ void ClockDelay::Running()
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     ClockDelay::run();
     ClockDelay::analyze();
-    ClockDelay::saveChipRegisters(currentRun);
+    ClockDelay::saveChipRegisters(fRunNumber);
     ClockDelay::sendData();
 
     la.sendData();

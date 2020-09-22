@@ -76,7 +76,7 @@ void Gain::Running()
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     Gain::run();
     Gain::analyze();
     Gain::saveChipRegisters(fRunNumber);

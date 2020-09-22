@@ -77,10 +77,10 @@ void ThrEqualization::Running()
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     ThrEqualization::run();
     ThrEqualization::analyze();
-    ThrEqualization::saveChipRegisters(currentRun);
+    ThrEqualization::saveChipRegisters(fRunNumber);
     ThrEqualization::sendData();
 
     PixelAlive::sendData();

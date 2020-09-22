@@ -62,7 +62,7 @@ void GainOptimization::Running()
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     GainOptimization::run();
     GainOptimization::analyze();
     GainOptimization::saveChipRegisters(fRunNumber);

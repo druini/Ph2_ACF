@@ -58,7 +58,7 @@ void ThrMinimization::Running()
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     ThrMinimization::run();
     ThrMinimization::analyze();
     ThrMinimization::saveChipRegisters(fRunNumber);

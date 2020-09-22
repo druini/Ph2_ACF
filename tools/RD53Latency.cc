@@ -58,7 +58,7 @@ void Latency::Running()
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     Latency::run();
     Latency::analyze();
     Latency::saveChipRegisters(fRunNumber);

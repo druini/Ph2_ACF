@@ -69,10 +69,10 @@ void InjectionDelay::Running()
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     InjectionDelay::run();
     InjectionDelay::analyze();
-    InjectionDelay::saveChipRegisters(currentRun);
+    InjectionDelay::saveChipRegisters(fRunNumber);
     InjectionDelay::sendData();
 
     la.sendData();

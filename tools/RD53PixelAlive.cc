@@ -81,7 +81,7 @@ void PixelAlive::Running()
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     PixelAlive::run();
     PixelAlive::analyze();
     PixelAlive::saveChipRegisters(fRunNumber);

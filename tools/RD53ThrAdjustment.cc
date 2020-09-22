@@ -60,7 +60,7 @@ void ThrAdjustment::Running()
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     ThrAdjustment::run();
     ThrAdjustment::analyze();
     ThrAdjustment::saveChipRegisters(fRunNumber);

@@ -76,7 +76,7 @@ void SCurve::Running()
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     SCurve::run();
     SCurve::analyze();
     SCurve::saveChipRegisters(fRunNumber);
