@@ -68,9 +68,9 @@ int main(int argc, char* argv[])
             cTool.fReadoutChipInterface->WriteChipReg(theSSA, "L1-Latency_MSB", 0x0);
         }
 
-        cTool.Start(0);
+        cTool.SystemController::Start(0);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        cTool.Stop();
+        cTool.SystemController::Stop();
         for(auto cSSA: *ChipVec)
         {
             ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);

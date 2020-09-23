@@ -271,7 +271,7 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
     LOG(INFO) << BOLDBLUE << "Found " << cNstubs << " stubs in " << +cNevents << " events with a stub and a hit in the same CBC. " << cSyncLoss << " events with a sync loss between CICs." << RESET;
 }
 // State machine control functions
-void StubQuickCheck::Start(int currentRun) { Initialise(); }
+void StubQuickCheck::Running() { Initialise(); }
 
 void StubQuickCheck::Stop()
 {

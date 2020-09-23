@@ -67,20 +67,20 @@ void ThrEqualization::ConfigureCalibration()
     RD53RunProgress::total() += ThrEqualization::getNumberIterations();
 }
 
-void ThrEqualization::Start(int currentRun)
+void ThrEqualization::Running()
 {
     LOG(INFO) << GREEN << "[ThrEqualization::Start] Starting" << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrEqualization.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_ThrEqualization.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
+    theCurrentRun = fRunNumber;
     ThrEqualization::run();
     ThrEqualization::analyze();
-    ThrEqualization::saveChipRegisters(currentRun);
+    ThrEqualization::saveChipRegisters(fRunNumber);
     ThrEqualization::sendData();
 
     PixelAlive::sendData();

@@ -32,6 +32,8 @@ SystemController::SystemController()
 
 SystemController::~SystemController() {}
 
+// std::future<void> SystemController::fRunningFuture = std::future<void>();
+
 void SystemController::Inherit(const SystemController* pController)
 {
     fBeBoardInterface     = pController->fBeBoardInterface;
@@ -373,6 +375,10 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
+void SystemController::Abort() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Abort not implemented" << RESET; }
+
+void SystemController::Running() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Running not implemented" << RESET; }
+
 void SystemController::Start(int currentRun)
 {
     for(auto cBoard: *fDetectorContainer) fBeBoardInterface->Start(cBoard);
@@ -410,6 +416,13 @@ void SystemController::Configure(std::string cHWFile, bool enableStream)
 {
     ConfigureHardware(cHWFile, enableStream);
     ConfigureCalibration();
+}
+
+bool SystemController::GetRunningStatus() { return (fRunningFuture.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready); }
+
+void SystemController::waitForRunToBeCompeted()
+{
+    while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
 }
 
 void SystemController::Start(BeBoard* pBoard) { fBeBoardInterface->Start(pBoard); }

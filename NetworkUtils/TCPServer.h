@@ -24,6 +24,7 @@ class TCPServer : public TCPServerBase
     void           connectClient(TCPTransceiverSocket* clientSocket);
     struct timeval fReceiveTimeout;
     struct timeval fSendTimeout;
+    bool           fInDestructor;
 };
 
 //}

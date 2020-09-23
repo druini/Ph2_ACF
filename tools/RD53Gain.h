@@ -34,7 +34,7 @@ class Gain : public Tool
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
     }
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void sendData() override;
@@ -45,7 +45,7 @@ class Gain : public Tool
     void                                   draw(bool saveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * nSteps; }
-    void                                   saveChipRegisters(int currentRun);
+    void   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     GainHistograms* histos;

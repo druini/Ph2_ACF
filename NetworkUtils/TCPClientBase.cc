@@ -24,8 +24,9 @@ bool TCPClientBase::connect(int retry, unsigned int sleepMilliSeconds)
 {
     if(fConnected)
     {
-        std::cout << __PRETTY_FUNCTION__ << "I am already connected...what is going on?" << std::endl;
-        throw std::runtime_error(std::string("I am already connected...what is going on?"));
+        std::stringstream error;
+        error << "ERROR: This client is already connected. This must never happens. It probably means that the connect method is called multiple times before the TCPClient has been disconnected.";
+        throw std::runtime_error(error.str());
         abort();
     }
 
@@ -57,6 +58,7 @@ bool TCPClientBase::connect(int retry, unsigned int sleepMilliSeconds)
             else
             {
                 std::cout << __PRETTY_FUNCTION__ << "ERROR: Can't connect to " << serverName << " aborting!" << std::endl;
+                fConnected = false;
                 break;
             }
         }

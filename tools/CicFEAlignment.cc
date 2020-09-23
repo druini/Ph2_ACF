@@ -147,7 +147,7 @@ void CicFEAlignment::writeObjects()
     fResultFile->Flush();
 }
 // State machine control functions
-void CicFEAlignment::Start(int currentRun)
+void CicFEAlignment::Running()
 {
     Initialise();
     bool cPhaseAligned = this->PhaseAlignment();

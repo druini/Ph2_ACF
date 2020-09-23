@@ -41,13 +41,20 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
     { return "InitializeDone"; }
     else if(buffer.substr(0, 5) == "Start") // Changing the status changes the mode in threadMain (BBC) function
     {
-        currentRun_ = getVariableValue("RunNumber", buffer);
+        // currentRun_ = getVariableValue("RunNumber", buffer);
+        // running(stoi(currentRun_))
+        // runningFuture_ = std::async(std::launch::async, &MiddlewareController::running, this, stoi(currentRun_));
         theSystemController_->Start(stoi(currentRun_));
         return "StartDone";
+    }
+    else if(buffer.substr(0, 7) == "Status?") // Changing the status changes the mode in threadMain (BBC) function
+    {
+        return theSystemController_->GetRunningStatus() ? "Done" : "Running";
     }
     else if(buffer.substr(0, 4) == "Stop")
     {
         theSystemController_->Stop();
+        // while(runningFuture_.wait_for(std::chrono::milliseconds(500)) != std::future_status::ready) std::cout << _PRETTY_FUNCTION_ << "...still running" << std::endl;
         LOG(INFO) << "Run " << currentRun_ << " stopped" << RESET;
         return "StopDone";
     }

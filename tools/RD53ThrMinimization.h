@@ -22,7 +22,7 @@
 class ThrMinimization : public PixelAlive
 {
   public:
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void sendData() override;

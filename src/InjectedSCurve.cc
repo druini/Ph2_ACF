@@ -75,9 +75,9 @@ int main(int argc, char* argv[])
             { cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 15); }
         }
         IB->PS_Clear_counters();
-        cTool.Start(0);
+        cTool.SystemController::Start(0);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        cTool.Stop();
+        cTool.SystemController::Stop();
         for(auto cSSA: *ChipVec)
         {
             ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
@@ -97,9 +97,9 @@ int main(int argc, char* argv[])
             { cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 20); }
         }
         IB->PS_Clear_counters();
-        cTool.Start(0);
+        cTool.SystemController::Start(0);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        cTool.Stop();
+        cTool.SystemController::Stop();
         for(auto cSSA: *ChipVec)
         {
             ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
@@ -119,9 +119,9 @@ int main(int argc, char* argv[])
             { cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 25); }
         }
         IB->PS_Clear_counters();
-        cTool.Start(0);
+        cTool.SystemController::Start(0);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        cTool.Stop();
+        cTool.SystemController::Stop();
         for(auto cSSA: *ChipVec)
         {
             ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
@@ -141,9 +141,9 @@ int main(int argc, char* argv[])
             { cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 30); }
         }
         IB->PS_Clear_counters();
-        cTool.Start(0);
+        cTool.SystemController::Start(0);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        cTool.Stop();
+        cTool.SystemController::Stop();
         for(auto cSSA: *ChipVec)
         {
             ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);

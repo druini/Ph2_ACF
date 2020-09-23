@@ -12,6 +12,7 @@
 #include "../Utils/DataContainer.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/Occupancy.h"
+#include <future>
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
@@ -74,6 +75,12 @@ Tool::Tool(THttpServer* pHttpServer)
 Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
 
 Tool::~Tool() {}
+
+void Tool::Start(int runNumber)
+{
+    fRunNumber     = runNumber;
+    fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
+}
 
 void Tool::Inherit(const Tool* pTool)
 {

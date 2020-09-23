@@ -33,7 +33,6 @@ class TCPReceiverSocket : public virtual TCPSocket
     std::size_t                   receive(char* buffer, std::size_t bufferSize, int timeoutMicroSeconds = -1);
     static constexpr unsigned int maxSocketSize = 65536;
     TCPPacket                     fPacket;
-    struct timeval                fTimeOut;
 };
 
 #endif

@@ -6,7 +6,7 @@
 #include <iostream>
 
 //========================================================================================================================
-TCPServer::TCPServer(int serverPort, unsigned int maxNumberOfClients) : TCPServerBase(serverPort, maxNumberOfClients)
+TCPServer::TCPServer(int serverPort, unsigned int maxNumberOfClients) : TCPServerBase(serverPort, maxNumberOfClients), fInDestructor(false)
 {
     fReceiveTimeout.tv_sec  = 0;
     fReceiveTimeout.tv_usec = 0;
@@ -16,7 +16,7 @@ TCPServer::TCPServer(int serverPort, unsigned int maxNumberOfClients) : TCPServe
 }
 
 //========================================================================================================================
-TCPServer::~TCPServer(void) {}
+TCPServer::~TCPServer(void) { fInDestructor = true; }
 
 // void TCPServer::StartAcceptConnections()
 // {
@@ -27,7 +27,7 @@ TCPServer::~TCPServer(void) {}
 // void TCPServer::connectClient(int fdClientSocket)
 void TCPServer::connectClient(TCPTransceiverSocket* socket)
 {
-    while(1)
+    while(true)
     {
         std::cout << __PRETTY_FUNCTION__ << "Waiting for message for socket  #: " << socket->getSocketId() << std::endl;
         std::string message;
@@ -37,16 +37,17 @@ void TCPServer::connectClient(TCPTransceiverSocket* socket)
         }
         catch(const std::exception& e)
         {
-            std::cout << __PRETTY_FUNCTION__ << "Error: " << e.what() << std::endl; // Client connection must have
-                                                                                    // closed
-            std::cerr << __PRETTY_FUNCTION__ << e.what() << '\n';
-            TCPServerBase::closeClientSocket(socket->getSocketId());
-            interpretMessage("Error: " + std::string(e.what()));
+            if(!fInDestructor)
+            {
+                std::cout << __PRETTY_FUNCTION__ << "Error client socket #" << socket->getSocketId() << ": " << e.what() << std::endl; // Client connection must have closed
+                TCPServerBase::closeClientSocket(socket->getSocketId());
+                interpretMessage("Error: " + std::string(e.what()));
+            }
             return; // the pointer to socket has been deleted in closeClientSocket
         }
 
-        std::cout << __PRETTY_FUNCTION__ << "Received message:-" << message << "-"
-                  << "Message Length=" << message.length() << " From socket #: " << socket->getSocketId() << std::endl;
+        // std::cout << __PRETTY_FUNCTION__ << "Received message:-" << message << "-"
+        //           << "Message Length=" << message.length() << " From socket #: " << socket->getSocketId() << std::endl;
         std::string messageToClient = interpretMessage(message);
 
         // Send back something only if there is actually a message to be sent!
@@ -63,7 +64,8 @@ void TCPServer::connectClient(TCPTransceiverSocket* socket)
         // std::cout << __PRETTY_FUNCTION__ << "After message sent now checking for more... socket #: " <<
         // socket->getSocketId() << std::endl;
     }
-
+    // If the socket is removed then this line will crash.
+    // It is crucial then to have the return when the exception is caught and the socket is closed!
     std::cout << __PRETTY_FUNCTION__ << "Thread done for socket  #: " << socket->getSocketId() << std::endl;
 }
 
@@ -78,8 +80,8 @@ void TCPServer::acceptConnections()
             TCPTransceiverSocket* clientSocket = acceptClient<TCPTransceiverSocket>();
             clientSocket->setReceiveTimeout(fReceiveTimeout.tv_sec, fReceiveTimeout.tv_usec);
             clientSocket->setSendTimeout(fSendTimeout.tv_sec, fSendTimeout.tv_usec);
-            std::thread thread(&TCPServer::connectClient, this, clientSocket);
-            thread.detach();
+            if(fConnectedClientsFuture.find(clientSocket->getSocketId()) != fConnectedClientsFuture.end()) fConnectedClientsFuture.erase(fConnectedClientsFuture.find(clientSocket->getSocketId()));
+            fConnectedClientsFuture.emplace(clientSocket->getSocketId(), std::async(std::launch::async, &TCPServer::connectClient, this, clientSocket));
         }
         catch(int e)
         {
@@ -87,7 +89,7 @@ void TCPServer::acceptConnections()
             if(e == E_SHUTDOWN) break;
         }
     }
-    fAcceptPromise.set_value(true);
+    // fAcceptPromise.set_value(true);
 }
 
 //========================================================================================================================

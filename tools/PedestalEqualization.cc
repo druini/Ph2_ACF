@@ -275,7 +275,7 @@ void PedestalEqualization::writeObjects()
 
 void PedestalEqualization::ConfigureCalibration() { CreateResultDirectory("Results/Run_PedestalEqualization"); }
 
-void PedestalEqualization::Start(int currentRun)
+void PedestalEqualization::Running()
 {
     LOG(INFO) << "Starting Pedestal Equalization";
     Initialise(true, true);

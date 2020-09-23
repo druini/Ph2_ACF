@@ -171,7 +171,7 @@ int main(int argc, char** argv)
             Timer t;
             t.start();
 
-            cTool.Start(pBoard);
+            cTool.SystemController::Start(pBoard);
             while(cN < cNEventsToCollect)
             {
                 cTool.ReadData(pBoard);

@@ -79,6 +79,8 @@ class Tool : public Ph2_System::SystemController
     void Destroy();
     void SoftDestroy();
 
+    virtual void Start(int runNumber) override;
+
 #ifdef __USE_ROOT__
     void bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject);
 

@@ -191,12 +191,16 @@ class SystemController
     void ReadData(bool pWait = true);
 
     virtual void Start(int currentRun = -1);
+    virtual void Running();
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
+    virtual void Abort();
     virtual void ConfigureCalibration();
     virtual void ConfigureHardware(std::string cHWFile, bool enableStream = false);
     virtual void Configure(std::string cHWFile, bool enableStream = false);
+    virtual bool GetRunningStatus();
+    virtual void waitForRunToBeCompeted();
 
     void Start(Ph2_HwDescription::BeBoard* pBoard);
     void Stop(Ph2_HwDescription::BeBoard* pBoard);
@@ -254,6 +258,10 @@ class SystemController
 
     void   DecodeData(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
     double findValueInSettings(const std::string name, double defaultValue = 0.) const;
+
+  protected:
+    std::future<void> fRunningFuture;
+    int               fRunNumber;
 
   private:
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
