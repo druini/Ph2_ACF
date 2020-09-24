@@ -70,6 +70,11 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     this->ConfigureRxPRBS(pChip, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
     // Reset I2C Masters
     this->ResetI2C(pChip, {0, 1, 2});
+    // setting GPIO levels 
+    this->WriteChipReg(pChip, "PIODirH", 0x12);
+    this->WriteChipReg(pChip, "PIODirL", 0x4B);
+    this->WriteChipReg(pChip, "PIOOutH", 0xFF);
+    this->WriteChipReg(pChip, "PIOOutL", 0xFF);
 
     return true;
 }
@@ -611,7 +616,6 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     } while(cIter < cMaxIter && !cSuccess);
     return cSuccess;
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
     // Verify success of write #FIXME can be removed or put under condition
     if(this->ReadI2C(pChip, pMaster, pSlaveAddress, pNBytes) != pData)
     {
@@ -655,7 +659,7 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
         for(uint8_t cByte = 0; cByte < pNBytes; cByte++)
         {
             char cBuffer1[10];
-            sprintf(cBuffer1, "I2CM%dRead%i", pMaster, cByte);
+            sprintf(cBuffer1, "I2CM%dRead%i", pMaster, 15 - cByte);
             std::string cI2CDataReg(cBuffer1, sizeof(cBuffer1));
             cReadData |= ((uint32_t)this->ReadChipReg(pChip, cI2CDataReg) << cByte);
         }
@@ -767,7 +771,7 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, const std
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack)
 {
-    bool cWriteStatus = this->WriteI2C(pChip, (pFeId == 1) ? 2 : 0, 0x60, (pRegisterAddress << 8) | pRegisterValue, 2);
+    bool cWriteStatus = this->WriteI2C(pChip, (pFeId == 1) ? 2 : 0, 0x60, (pRegisterValue << 8) | pRegisterAddress, 2);
     if(pReadBack && cWriteStatus)
     {
         bool cWriteSuccess = ( this->cicRead(pChip, pFeId, pRegisterAddress) == pRegisterValue );
@@ -784,7 +788,7 @@ bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
 
 uint32_t D19clpGBTInterface::cicRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pRegisterAddress)
 {
-    this->WriteI2C(pChip, ( pFeId == 1) ? 2 : 0, 0x60, pRegisterAddress << 0, 2);
+    this->WriteI2C(pChip, ( pFeId == 1) ? 2 : 0, 0x60, pRegisterAddress << 8, 2);
     uint32_t cReadBack  = this->ReadI2C(pChip, (pFeId == 1) ? 2 : 0, 0x60, 1);
     LOG(INFO) << BOLDBLUE << "Readback 0x" << std::hex << +cReadBack << std::dec << " from register 0x" << std::hex << +pRegisterAddress << RESET;
     return cReadBack;
