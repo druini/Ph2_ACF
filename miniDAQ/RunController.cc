@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     MiddlewareController theMiddlewareController(PORT);
     theMiddlewareController.startAccept();
 
-    while(true) { std::this_thread::sleep_for(std::chrono::milliseconds(1e3)); }
+    while(true) { std::this_thread::sleep_for(std::chrono::milliseconds(1000)); }
 
     return EXIT_SUCCESS;
 }
