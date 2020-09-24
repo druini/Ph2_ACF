@@ -50,7 +50,7 @@ void ThrMinimization::ConfigureCalibration()
 
 void ThrMinimization::Running()
 {
-    LOG(INFO) << GREEN << "[ThrMinimization::Start] Starting" << RESET;
+    LOG(INFO) << GREEN << "[ThrMinimization::Running] Starting" << RESET;
 
     if(saveBinaryData == true)
     {

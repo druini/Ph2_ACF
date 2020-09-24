@@ -54,7 +54,7 @@ void GainOptimization::ConfigureCalibration()
 
 void GainOptimization::Running()
 {
-    LOG(INFO) << GREEN << "[GainOptimization::Start] Starting" << RESET;
+    LOG(INFO) << GREEN << "[GainOptimization::Running] Starting" << RESET;
 
     if(saveBinaryData == true)
     {

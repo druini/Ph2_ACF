@@ -69,7 +69,7 @@ void ThrEqualization::ConfigureCalibration()
 
 void ThrEqualization::Running()
 {
-    LOG(INFO) << GREEN << "[ThrEqualization::Start] Starting" << RESET;
+    LOG(INFO) << GREEN << "[ThrEqualization::Running] Starting" << RESET;
 
     if(saveBinaryData == true)
     {

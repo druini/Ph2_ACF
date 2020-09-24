@@ -68,7 +68,7 @@ void Gain::ConfigureCalibration()
 
 void Gain::Running()
 {
-    LOG(INFO) << GREEN << "[Gain::Start] Starting" << RESET;
+    LOG(INFO) << GREEN << "[Gain::Running] Starting" << RESET;
 
     if(saveBinaryData == true)
     {

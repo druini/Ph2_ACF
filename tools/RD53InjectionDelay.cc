@@ -61,7 +61,7 @@ void InjectionDelay::ConfigureCalibration()
 
 void InjectionDelay::Running()
 {
-    LOG(INFO) << GREEN << "[InjectionDelay::Start] Starting" << RESET;
+    LOG(INFO) << GREEN << "[InjectionDelay::Running] Starting" << RESET;
 
     if(saveBinaryData == true)
     {

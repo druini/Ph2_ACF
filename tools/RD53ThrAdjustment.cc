@@ -52,7 +52,7 @@ void ThrAdjustment::ConfigureCalibration()
 
 void ThrAdjustment::Running()
 {
-    LOG(INFO) << GREEN << "[ThrAdjustment::Start] Starting" << RESET;
+    LOG(INFO) << GREEN << "[ThrAdjustment::Running] Starting" << RESET;
 
     if(saveBinaryData == true)
     {

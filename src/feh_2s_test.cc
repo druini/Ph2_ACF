@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
     cBackEndAligner.Start(0);
-    cBackEndAligner.waitForRunToBeCompeted();
+    cBackEndAligner.waitForRunToBeCompleted();
     // reset all chip and board registers
     // to what they were before this tool was called
     cBackEndAligner.Reset();
@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
         cCicAligner.Start(0);
-        cCicAligner.waitForRunToBeCompeted();
+        cCicAligner.waitForRunToBeCompleted();
         // reset all chip and board registers
         // to what they were before this tool was called
         cCicAligner.Reset();
@@ -349,7 +349,7 @@ int main(int argc, char* argv[])
         cShortFinder.Inherit(&cTool);
         cShortFinder.Initialise();
         cShortFinder.Start(0);
-        cShortFinder.waitForRunToBeCompeted();
+        cShortFinder.waitForRunToBeCompleted();
         cShortFinder.Stop();
     }
 

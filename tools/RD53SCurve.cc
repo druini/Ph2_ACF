@@ -68,7 +68,7 @@ void SCurve::ConfigureCalibration()
 
 void SCurve::Running()
 {
-    LOG(INFO) << GREEN << "[SCurve::Start] Starting" << RESET;
+    LOG(INFO) << GREEN << "[SCurve::Running] Starting" << RESET;
 
     if(saveBinaryData == true)
     {

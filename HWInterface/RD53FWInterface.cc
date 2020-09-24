@@ -460,6 +460,7 @@ std::vector<uint16_t> RD53FWInterface::GetInitSequence(const unsigned int type)
 
     case 4:                                                                    // Default for single chips (Doesn't work well with hybrids)
         for(unsigned int i = 0; i < 1000; i++) initSequence.push_back(0x0000); // 0000 0000
+        break;
 
     default:                                                                   // Case 0 -> seems to be work with all
         for(unsigned int i = 0; i < 500; i++) initSequence.push_back(0x0000);  // 0000 0000

@@ -73,7 +73,7 @@ void PixelAlive::ConfigureCalibration()
 
 void PixelAlive::Running()
 {
-    LOG(INFO) << GREEN << "[PixelAlive::Start] Starting" << RESET;
+    LOG(INFO) << GREEN << "[PixelAlive::Running] Starting" << RESET;
 
     if(saveBinaryData == true)
     {

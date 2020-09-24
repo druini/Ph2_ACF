@@ -54,13 +54,13 @@ void Physics::ConfigureCalibration()
     this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
 }
 
-void Physics::Start(int currentRun)
+void Physics::Running()
 {
-    LOG(INFO) << GREEN << "[Physics::Start] Starting" << RESET;
+    LOG(INFO) << GREEN << "[Physics::Running] Starting" << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_Physics.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
@@ -73,9 +73,9 @@ void Physics::Start(int currentRun)
                 for(const auto cChip: *cModule) fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, theChnGroupHandler->allChannelGroup(), true, false);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->ChipReSync();
-    SystemController::Start(currentRun);
+    SystemController::Start(fRunNumber);
 
-    theCurrentRun        = currentRun;
+    theCurrentRun        = fRunNumber;
     numberOfEventsPerRun = 0;
     keepRunning          = true;
     thrRun               = std::thread(&Physics::run, this);

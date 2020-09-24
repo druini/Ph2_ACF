@@ -50,7 +50,7 @@ void Latency::ConfigureCalibration()
 
 void Latency::Running()
 {
-    LOG(INFO) << GREEN << "[Latency::Start] Starting" << RESET;
+    LOG(INFO) << GREEN << "[Latency::Running] Starting" << RESET;
 
     if(saveBinaryData == true)
     {

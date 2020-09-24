@@ -420,13 +420,12 @@ void SystemController::Configure(std::string cHWFile, bool enableStream)
 
 bool SystemController::GetRunningStatus() { return (fRunningFuture.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready); }
 
-void SystemController::waitForRunToBeCompeted()
+void SystemController::waitForRunToBeCompleted()
 {
     while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
 }
 
 void SystemController::Start(BeBoard* pBoard) { fBeBoardInterface->Start(pBoard); }
-
 void SystemController::Stop(BeBoard* pBoard) { fBeBoardInterface->Stop(pBoard); }
 void SystemController::Pause(BeBoard* pBoard) { fBeBoardInterface->Pause(pBoard); }
 void SystemController::Resume(BeBoard* pBoard) { fBeBoardInterface->Resume(pBoard); }

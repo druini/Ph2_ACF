@@ -200,7 +200,7 @@ class SystemController
     virtual void ConfigureHardware(std::string cHWFile, bool enableStream = false);
     virtual void Configure(std::string cHWFile, bool enableStream = false);
     virtual bool GetRunningStatus();
-    virtual void waitForRunToBeCompeted();
+    virtual void waitForRunToBeCompleted();
 
     void Start(Ph2_HwDescription::BeBoard* pBoard);
     void Stop(Ph2_HwDescription::BeBoard* pBoard);

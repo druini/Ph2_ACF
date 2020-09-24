@@ -63,7 +63,7 @@ void ClockDelay::ConfigureCalibration()
 
 void ClockDelay::Running()
 {
-    LOG(INFO) << GREEN << "[ClockDelay::Start] Starting" << RESET;
+    LOG(INFO) << GREEN << "[ClockDelay::Running] Starting" << RESET;
 
     if(saveBinaryData == true)
     {

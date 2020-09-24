@@ -514,6 +514,7 @@ int main(int argc, char** argv)
                 ph.Start(runNumber);
                 usleep(2e6);
                 ph.Stop();
+                ph.waitForRunToBeCompleted();
             }
             else
                 ph.analyze(true);
