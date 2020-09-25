@@ -17,7 +17,7 @@ void TCPPublishServer::acceptConnections()
         try
         {
             // if(fConnectedClients.size() < fMaxNumberOfClients)
-            __attribute__((unused)) TCPTransmitterSocket* clientSocket = acceptClient<TCPTransmitterSocket>();
+            acceptClient<TCPTransmitterSocket>();
         }
         catch(int e)
         {
