@@ -253,8 +253,9 @@ int main(int argc, char* argv[])
             case HALTED:
             {
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
-                theMiddlewareInterface.configure(cmd.optionValue("calibration"), baseDir + cmd.optionValue("file"));
-                std::string configurationFile = baseDir + cmd.optionValue("file");
+                theMiddlewareInterface.configure(cmd.optionValue("calibration"), cmd.optionValue("file"));
+                // std::string configurationFile = baseDir + cmd.optionValue("file");
+                std::string configurationFile = cmd.optionValue("file");
                 std::string calibrationName   = cmd.optionValue("calibration");
                 theDQMInterface.configure(calibrationName, configurationFile);
                 stateMachineStatus = CONFIGURED;
@@ -271,6 +272,7 @@ int main(int argc, char* argv[])
             }
             case RUNNING:
             {
+                while(theMiddlewareInterface.status() != "Done") usleep(5e5);
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
                 usleep(2e6);
                 theMiddlewareInterface.stop();

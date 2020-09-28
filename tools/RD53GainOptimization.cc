@@ -52,20 +52,20 @@ void GainOptimization::ConfigureCalibration()
     RD53RunProgress::total() += GainOptimization::getNumberIterations();
 }
 
-void GainOptimization::Start(int currentRun)
+void GainOptimization::Running()
 {
-    LOG(INFO) << GREEN << "[GainOptimization::Start] Starting" << RESET;
+    theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[GainOptimization::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_GainOptimization.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
     GainOptimization::run();
     GainOptimization::analyze();
-    GainOptimization::saveChipRegisters(currentRun);
+    GainOptimization::saveChipRegisters(theCurrentRun);
     GainOptimization::sendData();
 
     Gain::sendData();
@@ -83,6 +83,8 @@ void GainOptimization::Stop()
 {
     LOG(INFO) << GREEN << "[GainOptimization::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     GainOptimization::draw();
     this->closeFileHandler();
 }
@@ -94,7 +96,11 @@ void GainOptimization::localConfigure(const std::string fileRes_, int currentRun
     Gain::histos = nullptr;
 #endif
 
-    if(currentRun >= 0) theCurrentRun = currentRun;
+    if(currentRun >= 0)
+      {
+          theCurrentRun = currentRun;
+          LOG(INFO) << GREEN << "[GainOptimization::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+      }
     GainOptimization::ConfigureCalibration();
     GainOptimization::initializeFiles(fileRes_, currentRun);
 }

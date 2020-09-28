@@ -48,20 +48,20 @@ void Latency::ConfigureCalibration()
     RD53RunProgress::total() += Latency::getNumberIterations();
 }
 
-void Latency::Start(int currentRun)
+void Latency::Running()
 {
-    LOG(INFO) << GREEN << "[Latency::Start] Starting" << RESET;
+    theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[Latency::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Latency.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Latency.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
     Latency::run();
     Latency::analyze();
-    Latency::saveChipRegisters(currentRun);
+    Latency::saveChipRegisters(theCurrentRun);
     Latency::sendData();
 }
 
@@ -83,6 +83,8 @@ void Latency::Stop()
 {
     LOG(INFO) << GREEN << "[Latency::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     Latency::draw();
     this->closeFileHandler();
 }
@@ -93,7 +95,11 @@ void Latency::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
-    if(currentRun >= 0) theCurrentRun = currentRun;
+    if(currentRun >= 0)
+      {
+          theCurrentRun = currentRun;
+          LOG(INFO) << GREEN << "[Latency::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+      }
     Latency::ConfigureCalibration();
     Latency::initializeFiles(fileRes_, currentRun);
 }

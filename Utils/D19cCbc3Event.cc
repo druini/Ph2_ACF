@@ -33,7 +33,7 @@ D19cCbc3Event::D19cCbc3Event(const BeBoard* pBoard, const std::vector<uint32_t>&
         {
             auto   cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
             auto&  cCic                = cOuterTrackerModule->fCic;
-            size_t cNReadoutChips      = (cCic == NULL) ? cFe->size() : 1;
+            size_t cNReadoutChips      = (cCic == NULL) ? cFe->fullSize() : 1;
             for(size_t cIndex = 0; cIndex < cNReadoutChips; cIndex++)
             {
                 std::vector<uint32_t> cEmpty(0);
@@ -96,7 +96,7 @@ void D19cCbc3Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                 {
                     auto   cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
                     auto&  cCic                = cOuterTrackerModule->fCic;
-                    size_t cNReadoutChips      = (cCic == NULL) ? cFe->size() : 1;
+                    size_t cNReadoutChips      = (cCic == NULL) ? cFe->fullSize() : 1;
                     LOG(DEBUG) << BOLDBLUE << "Number of ROCs is " << +cNReadoutChips << RESET;
                     for(size_t cIndex = 0; cIndex < cNReadoutChips; cIndex++)
                     {
@@ -209,7 +209,7 @@ void D19cCbc3Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
             }
             auto                  cReadoutChips = pBoard->at(0)->at(cHybridIndex);
             std::vector<uint32_t> cCbcData(cIterator, cIterator + cDataSize);
-            fEventDataVector[encodeVectorIndex(cFeId, cCbcId, cReadoutChips->size())] = cCbcData;
+            fEventDataVector[encodeVectorIndex(cFeId, cCbcId, cReadoutChips->fullSize())] = cCbcData;
         }
         cIterator += cL1DataSize + cStubDataSize;
     } while(cIterator < list.end() - fDummySize);

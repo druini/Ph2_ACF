@@ -66,20 +66,20 @@ void SCurve::ConfigureCalibration()
     this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
 }
 
-void SCurve::Start(int currentRun)
+void SCurve::Running()
 {
-    LOG(INFO) << GREEN << "[SCurve::Start] Starting" << RESET;
+    theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[SCurve::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_SCurve.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
     SCurve::run();
     SCurve::analyze();
-    SCurve::saveChipRegisters(currentRun);
+    SCurve::saveChipRegisters(theCurrentRun);
     SCurve::sendData();
 }
 
@@ -107,6 +107,8 @@ void SCurve::Stop()
 {
     LOG(INFO) << GREEN << "[SCurve::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     SCurve::draw();
     this->closeFileHandler();
 }
@@ -117,7 +119,11 @@ void SCurve::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
-    if(currentRun >= 0) theCurrentRun = currentRun;
+    if(currentRun >= 0)
+      {
+          theCurrentRun = currentRun;
+          LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+      }
     SCurve::ConfigureCalibration();
     SCurve::initializeFiles(fileRes_, currentRun);
 }

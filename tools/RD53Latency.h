@@ -22,7 +22,7 @@
 class Latency : public PixelAlive
 {
   public:
-    void Start(int currentRun = -1) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void sendData() override;

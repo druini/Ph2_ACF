@@ -90,7 +90,7 @@ void CalibrationExample::writeObjects()
 }
 
 // For system on chip compatibility
-void CalibrationExample::Start(int currentRun)
+void CalibrationExample::Running()
 {
     LOG(INFO) << "Starting calibration example measurement.";
     Initialise();

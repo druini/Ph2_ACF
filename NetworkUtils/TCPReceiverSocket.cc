@@ -14,12 +14,14 @@ TCPReceiverSocket::~TCPReceiverSocket(void) {}
 //========================================================================================================================
 std::string TCPReceiverSocket::receivePacket(void)
 {
-    while(true)
+    std::string retVal = "";
+    do
     {
-        std::string retVal = "";
-        if(fPacket.decode(retVal)) return retVal;
+        // std::cout << __PRETTY_FUNCTION__ << "Receiving..." << fPacket.isEmpty() << std::endl;
         fPacket += receive<std::string>();
-    }
+        // std::cout << __PRETTY_FUNCTION__ << "Received!" << fPacket.isEmpty() << std::endl;
+    } while(!fPacket.isEmpty() && !fPacket.decode(retVal));
+    return retVal;
 }
 
 //========================================================================================================================

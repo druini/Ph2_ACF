@@ -17,7 +17,7 @@ void TCPPublishServer::acceptConnections()
         try
         {
             // if(fConnectedClients.size() < fMaxNumberOfClients)
-            __attribute__((unused)) TCPTransmitterSocket* clientSocket = acceptClient<TCPTransmitterSocket>();
+            acceptClient<TCPTransmitterSocket>();
         }
         catch(int e)
         {
@@ -28,5 +28,5 @@ void TCPPublishServer::acceptConnections()
             if(e == E_SHUTDOWN) break;
         }
     }
-    fAcceptPromise.set_value(true);
+    // fAcceptPromise.set_value(true);
 }

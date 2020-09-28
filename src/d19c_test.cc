@@ -171,7 +171,7 @@ int main(int argc, char** argv)
             Timer t;
             t.start();
 
-            cTool.Start(pBoard);
+            cTool.SystemController::StartBoard(pBoard);
             while(cN < cNEventsToCollect)
             {
                 cTool.ReadData(pBoard);
@@ -199,7 +199,7 @@ int main(int argc, char** argv)
                     if(count % 10000 == 0) LOG(INFO) << ">>> Recorded Event #" << count;
                 }
             }
-            cTool.Stop(pBoard);
+            cTool.StopBoard(pBoard);
 
             t.stop();
             LOG(INFO) << "Average Occupancy for Hybrid#0: " << (double)cAvgOccupancy / cN << " hits/(event*CBC)";
@@ -222,7 +222,7 @@ int main(int argc, char** argv)
                 cTool.fBeBoardInterface->ReadBlockBoardReg(pBoard, "fc7_daq_ctrl.readout_block.readout_fifo", cPackageSize * cEvtSize);
                 cN += cPackageSize;
             }
-            cTool.Stop(pBoard);
+            cTool.StopBoard(pBoard);
 
             t.stop();
             LOG(INFO) << "Measured maximal IPBus readout rate: " << (double)(cN / t.getElapsedTime()) / 1000 << "kHz (based on " << +cN << " events, avg package size: " << +cPackageSize

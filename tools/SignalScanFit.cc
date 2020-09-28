@@ -621,7 +621,7 @@ void SignalScanFit::ConfigureCalibration()
     InitResultFile("SignalScanFitResults");
 }
 
-void SignalScanFit::Start(int currentRun) {}
+void SignalScanFit::Running() {}
 
 void SignalScanFit::Stop() {}
 

@@ -67,20 +67,20 @@ void ThrEqualization::ConfigureCalibration()
     RD53RunProgress::total() += ThrEqualization::getNumberIterations();
 }
 
-void ThrEqualization::Start(int currentRun)
+void ThrEqualization::Running()
 {
-    LOG(INFO) << GREEN << "[ThrEqualization::Start] Starting" << RESET;
+    theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[ThrEqualization::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrEqualization.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrEqualization.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = currentRun;
     ThrEqualization::run();
     ThrEqualization::analyze();
-    ThrEqualization::saveChipRegisters(currentRun);
+    ThrEqualization::saveChipRegisters(theCurrentRun);
     ThrEqualization::sendData();
 
     PixelAlive::sendData();
@@ -102,6 +102,8 @@ void ThrEqualization::Stop()
 {
     LOG(INFO) << GREEN << "[ThrEqualization::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     ThrEqualization::draw();
     this->closeFileHandler();
 }
@@ -113,7 +115,11 @@ void ThrEqualization::localConfigure(const std::string fileRes_, int currentRun)
     PixelAlive::histos = nullptr;
 #endif
 
-    if(currentRun >= 0) theCurrentRun = currentRun;
+    if(currentRun >= 0)
+      {
+          theCurrentRun = currentRun;
+          LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+      }
     ThrEqualization::ConfigureCalibration();
     ThrEqualization::initializeFiles(fileRes_, currentRun);
 }

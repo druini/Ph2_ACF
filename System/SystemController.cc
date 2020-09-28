@@ -104,7 +104,11 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
 void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData)
 {
     fStreamerEnabled = streamData;
-    if(streamData == true) fNetworkStreamer = new TCPPublishServer(6000, 1);
+    if(streamData == true)
+    {
+        fNetworkStreamer = new TCPPublishServer(6000, 1);
+        fNetworkStreamer->startAccept();
+    }
 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
@@ -373,7 +377,18 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Start(int currentRun)
+void SystemController::Configure(std::string cHWFile, bool enableStream)
+{
+    std::stringstream outp;
+
+    InitializeHw(cHWFile, outp, true, enableStream);
+    InitializeSettings(cHWFile, outp);
+    std::cout << outp.str() << std::endl;
+    outp.str("");
+    ConfigureHw();
+}
+
+void SystemController::Start(int runNumber)
 {
     for(auto cBoard: *fDetectorContainer) fBeBoardInterface->Start(cBoard);
 }
@@ -393,30 +408,12 @@ void SystemController::Resume()
     for(auto cBoard: *fDetectorContainer) fBeBoardInterface->Resume(cBoard);
 }
 
-void SystemController::ConfigureHardware(std::string cHWFile, bool enableStream)
-{
-    std::stringstream outp;
+void SystemController::StartBoard(BeBoard* pBoard) { fBeBoardInterface->Start(pBoard); }
+void SystemController::StopBoard(BeBoard* pBoard) { fBeBoardInterface->Stop(pBoard); }
+void SystemController::PauseBoard(BeBoard* pBoard) { fBeBoardInterface->Pause(pBoard); }
+void SystemController::ResumeBoard(BeBoard* pBoard) { fBeBoardInterface->Resume(pBoard); }
 
-    InitializeHw(cHWFile, outp, true, enableStream);
-    InitializeSettings(cHWFile, outp);
-    std::cout << outp.str() << std::endl;
-    outp.str("");
-    ConfigureHw();
-}
-
-void SystemController::ConfigureCalibration() {}
-
-void SystemController::Configure(std::string cHWFile, bool enableStream)
-{
-    ConfigureHardware(cHWFile, enableStream);
-    ConfigureCalibration();
-}
-
-void SystemController::Start(BeBoard* pBoard) { fBeBoardInterface->Start(pBoard); }
-
-void SystemController::Stop(BeBoard* pBoard) { fBeBoardInterface->Stop(pBoard); }
-void SystemController::Pause(BeBoard* pBoard) { fBeBoardInterface->Pause(pBoard); }
-void SystemController::Resume(BeBoard* pBoard) { fBeBoardInterface->Resume(pBoard); }
+void SystemController::Abort() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Abort not implemented" << RESET; }
 
 uint32_t SystemController::ReadData(BeBoard* pBoard, bool pWait)
 {
@@ -462,15 +459,12 @@ void SystemController::ReadASEvent(BeBoard* pBoard, uint32_t pNMsec, uint32_t pu
 {
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-    // LOG (INFO) << BOLDGREEN << "TEST"<< fsm<< RESET;
 
     std::vector<uint32_t> cData;
     if(fsm and (pulses > 0))
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Send_pulses(pulses);
     else
     {
-        // LOG (INFO) << BOLDGREEN << "go "<< pulses<< RESET;
-
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(0);
         std::this_thread::sleep_for(std::chrono::microseconds(pNMsec));
         for(uint32_t i = 0; i < pulses; i++) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ChipTestPulse(); }

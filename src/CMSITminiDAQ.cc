@@ -307,7 +307,7 @@ int main(int argc, char** argv)
             // #######################
 
             LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-            mySysCntr.ConfigureHardware(configFile);
+            mySysCntr.Configure(configFile);
             LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
             if(program == true)
             {
@@ -516,8 +516,10 @@ int main(int argc, char** argv)
                 ph.Stop();
             }
             else
+            {
                 ph.analyze(true);
-            ph.draw();
+                ph.draw();
+            }
         }
         else if(whichCalib == "eudaq")
         {

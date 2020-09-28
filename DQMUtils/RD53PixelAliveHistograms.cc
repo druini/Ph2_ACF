@@ -16,16 +16,11 @@ void PixelAliveHistograms::book(TFile* theOutputFile, const DetectorContainer& t
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
-    // #######################
-    // # Retrieve parameters #
-    // #######################
-    nEvents = this->findValueInSettings(settingsMap, "nEvents");
-
     size_t ToTsize   = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
     size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
-    auto hOcc1D = CanvasContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, nEvents + 1);
+    auto hOcc1D = CanvasContainer<TH1F>("Occ1D", "Occ1D", 200 + 1, 0, 1 + 1. / 200);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Number of hits", "Entries");
 
     auto hOcc2D = CanvasContainer<TH2F>("PixelAlive", "Pixel Alive", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
@@ -100,7 +95,7 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                         {
                             if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != 0)
                             {
-                                Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy * nEvents);
+                                Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
                                 Occupancy2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
                                 ToTHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                             }
