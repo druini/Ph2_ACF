@@ -79,6 +79,8 @@ void ThrMinimization::Stop()
 {
     LOG(INFO) << GREEN << "[ThrMinimization::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     ThrMinimization::draw();
     this->closeFileHandler();
 }

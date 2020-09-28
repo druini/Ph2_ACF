@@ -83,6 +83,8 @@ void GainOptimization::Stop()
 {
     LOG(INFO) << GREEN << "[GainOptimization::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     GainOptimization::draw();
     this->closeFileHandler();
 }

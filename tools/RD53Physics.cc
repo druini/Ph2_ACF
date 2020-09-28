@@ -100,6 +100,7 @@ void Physics::sendBoardData(const BoardContainer* cBoard)
 void Physics::Stop()
 {
     LOG(INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
+
     Tool::Stop();
     if(thrMonitor.joinable() == true) thrMonitor.join();
 

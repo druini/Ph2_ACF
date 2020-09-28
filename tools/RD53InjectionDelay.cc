@@ -96,6 +96,8 @@ void InjectionDelay::Stop()
 {
     LOG(INFO) << GREEN << "[InjectionDelay::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     InjectionDelay::draw();
     this->closeFileHandler();
 }

@@ -98,6 +98,8 @@ void ClockDelay::Stop()
 {
     LOG(INFO) << GREEN << "[ClockDelay::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     ClockDelay::draw();
     this->closeFileHandler();
 }

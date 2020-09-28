@@ -102,6 +102,8 @@ void ThrEqualization::Stop()
 {
     LOG(INFO) << GREEN << "[ThrEqualization::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     ThrEqualization::draw();
     this->closeFileHandler();
 }

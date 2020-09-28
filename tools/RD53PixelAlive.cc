@@ -109,6 +109,8 @@ void PixelAlive::Stop()
 {
     LOG(INFO) << GREEN << "[PixelAlive::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     PixelAlive::draw();
     this->closeFileHandler();
 }

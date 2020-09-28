@@ -83,6 +83,8 @@ void Latency::Stop()
 {
     LOG(INFO) << GREEN << "[Latency::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     Latency::draw();
     this->closeFileHandler();
 }

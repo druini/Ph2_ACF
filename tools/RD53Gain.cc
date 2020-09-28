@@ -108,6 +108,8 @@ void Gain::Stop()
 {
     LOG(INFO) << GREEN << "[Gain::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     Gain::draw();
     this->closeFileHandler();
 }

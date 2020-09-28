@@ -81,6 +81,8 @@ void ThrAdjustment::Stop()
 {
     LOG(INFO) << GREEN << "[ThrAdjustment::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     ThrAdjustment::draw();
     this->closeFileHandler();
 }

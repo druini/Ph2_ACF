@@ -107,6 +107,8 @@ void SCurve::Stop()
 {
     LOG(INFO) << GREEN << "[SCurve::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     SCurve::draw();
     this->closeFileHandler();
 }
