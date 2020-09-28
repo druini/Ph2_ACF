@@ -1165,9 +1165,9 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
     };
     enum INJdelay
     {
-        AfterInjectCal  = 32,
-        BeforePrimeCal  = 8,
-        Loop            = 460
+        AfterInjectCal = 32,
+        BeforePrimeCal = 8,
+        Loop           = 460
     };
 
     uint8_t chipId = RD53Constants::BROADCAST_CHIPID;
@@ -1180,24 +1180,24 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
 
     if(injType == INJtype::Digital)
     {
-      // #######################################
-      // # Configuration for digital injection #
-      // #######################################
-      RD53::CalCmd calcmd_first(1, 0, 2, 0, 0);
-      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
-      RD53::CalCmd calcmd_second(0, 0, 2, 0, 0);
-      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
+        // #######################################
+        // # Configuration for digital injection #
+        // #######################################
+        RD53::CalCmd calcmd_first(1, 0, 2, 0, 0);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
+        RD53::CalCmd calcmd_second(0, 0, 2, 0, 0);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 
-      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
-      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
-      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = INJdelay::AfterInjectCal;
-      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = INJdelay::BeforePrimeCal;
-      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = INJdelay::AfterInjectCal;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = INJdelay::BeforePrimeCal;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
 
-      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
-      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en = false;
-      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
-      RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en = false;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
     }
     else if(injType == INJtype::Analog)
     {

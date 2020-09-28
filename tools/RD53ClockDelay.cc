@@ -111,10 +111,10 @@ void ClockDelay::localConfigure(const std::string fileRes_, int currentRun)
 #endif
 
     if(currentRun >= 0)
-      {
-          theCurrentRun = currentRun;
-          LOG(INFO) << GREEN << "[ClockDelay::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
-      }
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[ClockDelay::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     ClockDelay::ConfigureCalibration();
     ClockDelay::initializeFiles(fileRes_, currentRun);
 }

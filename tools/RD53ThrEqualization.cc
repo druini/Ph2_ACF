@@ -116,10 +116,10 @@ void ThrEqualization::localConfigure(const std::string fileRes_, int currentRun)
 #endif
 
     if(currentRun >= 0)
-      {
-          theCurrentRun = currentRun;
-          LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
-      }
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     ThrEqualization::ConfigureCalibration();
     ThrEqualization::initializeFiles(fileRes_, currentRun);
 }

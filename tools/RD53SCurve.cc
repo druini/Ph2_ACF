@@ -120,10 +120,10 @@ void SCurve::localConfigure(const std::string fileRes_, int currentRun)
 #endif
 
     if(currentRun >= 0)
-      {
-          theCurrentRun = currentRun;
-          LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
-      }
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     SCurve::ConfigureCalibration();
     SCurve::initializeFiles(fileRes_, currentRun);
 }

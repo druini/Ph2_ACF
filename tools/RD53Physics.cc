@@ -123,10 +123,10 @@ void Physics::localConfigure(const std::string fileRes_, int currentRun)
 #endif
 
     if(currentRun >= 0)
-      {
-          theCurrentRun = currentRun;
-          LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
-      }
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     Physics::ConfigureCalibration();
     Physics::initializeFiles(fileRes_, currentRun);
 }

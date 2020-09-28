@@ -109,10 +109,10 @@ void InjectionDelay::localConfigure(const std::string fileRes_, int currentRun)
 #endif
 
     if(currentRun >= 0)
-      {
-          theCurrentRun = currentRun;
-          LOG(INFO) << GREEN << "[InjectionDelay::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
-      }
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[InjectionDelay::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     InjectionDelay::ConfigureCalibration();
     InjectionDelay::initializeFiles(fileRes_, currentRun);
 }

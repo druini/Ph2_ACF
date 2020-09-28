@@ -201,7 +201,6 @@ class SystemController
     void PauseBoard(Ph2_HwDescription::BeBoard* pBoard);
     void ResumeBoard(Ph2_HwDescription::BeBoard* pBoard);
 
-
     void Abort();
 
     /*!

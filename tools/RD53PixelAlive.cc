@@ -128,7 +128,7 @@ void PixelAlive::localConfigure(const std::string fileRes_, int currentRun)
     }
     PixelAlive::ConfigureCalibration();
     PixelAlive::initializeFiles(fileRes_, currentRun);
-    }
+}
 
 void PixelAlive::initializeFiles(const std::string fileRes_, int currentRun)
 {
