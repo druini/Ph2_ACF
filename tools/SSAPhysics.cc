@@ -32,20 +32,20 @@ void SSAPhysics::ConfigureCalibration()
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
 }
 
-void SSAPhysics::Start(int currentRun)
+void SSAPhysics::Running()
 {
     LOG(INFO) << GREEN << "[SSAPhysics::Start] Starting" << RESET;
 
     if(saveRawData == true)
     {
         char runString[6];
-        sprintf(runString, "%06d", currentRun);
+        sprintf(runString, "%06d", fRunNumber);
         this->addFileHandler(std::string(RESULTDIR) + "/run_" + runString + ".raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->ChipReSync();
-    SystemController::Start(currentRun);
+    SystemController::Start(fRunNumber);
 
     keepRunning = true;
     thrRun      = std::thread(&SSAPhysics::run, this);

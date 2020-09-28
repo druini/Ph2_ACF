@@ -63,18 +63,18 @@ void ClockDelay::ConfigureCalibration()
 
 void ClockDelay::Running()
 {
-    LOG(INFO) << GREEN << "[ClockDelay::Running] Starting" << RESET;
+    theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[ClockDelay::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_ClockDelay.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ClockDelay.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = fRunNumber;
     ClockDelay::run();
     ClockDelay::analyze();
-    ClockDelay::saveChipRegisters(fRunNumber);
+    ClockDelay::saveChipRegisters(theCurrentRun);
     ClockDelay::sendData();
 
     la.sendData();
@@ -108,7 +108,11 @@ void ClockDelay::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
-    if(currentRun >= 0) theCurrentRun = currentRun;
+    if(currentRun >= 0)
+      {
+          theCurrentRun = currentRun;
+          LOG(INFO) << GREEN << "[ClockDelay::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+      }
     ClockDelay::ConfigureCalibration();
     ClockDelay::initializeFiles(fileRes_, currentRun);
 }

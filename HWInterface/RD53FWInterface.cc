@@ -1185,7 +1185,6 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
       // #######################################
       RD53::CalCmd calcmd_first(1, 0, 2, 0, 0);
       RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
-      // RD53::CalCmd calcmd_second(0, 0, 0, 0, 0);
       RD53::CalCmd calcmd_second(0, 0, 2, 0, 0);
       RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 
@@ -1205,7 +1204,6 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
         // ######################################
         // # Configuration for analog injection #
         // ######################################
-        // RD53::CalCmd calcmd_first(1, 0, 0, 0, 0);
         RD53::CalCmd calcmd_first(1, 0, 2, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
         RD53::CalCmd calcmd_second(0, 0, 2, 0, 0);
@@ -1242,8 +1240,10 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = INJdelay::BeforePrimeCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
 
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en = true;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en     = false;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en  = false;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en = false;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
 
         // @TMP@
         if(enableAutozero == true)
@@ -1259,7 +1259,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
     LOG(INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
               << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject +
                                     RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime))
-              << std::setprecision(-1) << RESET << GREEN << " Hz" << RESET;
+              << std::setprecision(-1) << " Hz" << RESET;
 
     // ##############################
     // # Download the configuration #

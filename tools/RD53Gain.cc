@@ -70,16 +70,17 @@ void Gain::Running()
 {
     LOG(INFO) << GREEN << "[Gain::Running] Starting" << RESET;
 
+    theCurrentRun = this->fRunNumber;
+
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_Gain.raw", 'w');
+        this->addFileHandler(std::string(fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Gain.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = fRunNumber;
     Gain::run();
     Gain::analyze();
-    Gain::saveChipRegisters(fRunNumber);
+    Gain::saveChipRegisters(theCurrentRun);
     Gain::sendData();
 }
 
@@ -117,7 +118,11 @@ void Gain::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
-    if(currentRun >= 0) theCurrentRun = currentRun;
+    if(currentRun >= 0)
+      {
+          theCurrentRun = currentRun;
+          LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+      }
     Gain::ConfigureCalibration();
     Gain::initializeFiles(fileRes_, currentRun);
 }
