@@ -95,10 +95,10 @@ void ThrAdjustment::localConfigure(const std::string fileRes_, int currentRun)
 #endif
 
     if(currentRun >= 0)
-      {
+    {
         theCurrentRun = currentRun;
         LOG(INFO) << GREEN << "[ThrAdjustment::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
-      }
+    }
     ThrAdjustment::ConfigureCalibration();
     ThrAdjustment::initializeFiles(fileRes_, currentRun);
 }

@@ -86,12 +86,12 @@ class Tool : public Ph2_System::SystemController
     virtual void Running(){};
     virtual bool GetRunningStatus();
 
-    void         Configure(std::string cHWFile, bool enableStream = false) override;
-    void         Start(int runNumber) override;
-    void         Stop() override;
+    void Configure(std::string cHWFile, bool enableStream = false) override;
+    void Start(int runNumber) override;
+    void Stop() override;
 
-    void         waitForRunToBeCompleted();
-    void         SaveResults();
+    void waitForRunToBeCompleted();
+    void SaveResults();
 
     /*!
      * \brief Create a result directory at the specified path + ChargeMode + Timestamp

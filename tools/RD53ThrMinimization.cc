@@ -93,10 +93,10 @@ void ThrMinimization::localConfigure(const std::string fileRes_, int currentRun)
 #endif
 
     if(currentRun >= 0)
-      {
-          theCurrentRun = currentRun;
-          LOG(INFO) << GREEN << "[ThrMinimization::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
-      }
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[ThrMinimization::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     ThrMinimization::ConfigureCalibration();
     ThrMinimization::initializeFiles(fileRes_, currentRun);
 }

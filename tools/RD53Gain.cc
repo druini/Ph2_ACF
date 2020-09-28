@@ -121,10 +121,10 @@ void Gain::localConfigure(const std::string fileRes_, int currentRun)
 #endif
 
     if(currentRun >= 0)
-      {
-          theCurrentRun = currentRun;
-          LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
-      }
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     Gain::ConfigureCalibration();
     Gain::initializeFiles(fileRes_, currentRun);
 }

@@ -97,10 +97,10 @@ void GainOptimization::localConfigure(const std::string fileRes_, int currentRun
 #endif
 
     if(currentRun >= 0)
-      {
-          theCurrentRun = currentRun;
-          LOG(INFO) << GREEN << "[GainOptimization::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
-      }
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[GainOptimization::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     GainOptimization::ConfigureCalibration();
     GainOptimization::initializeFiles(fileRes_, currentRun);
 }

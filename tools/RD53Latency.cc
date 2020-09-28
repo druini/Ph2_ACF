@@ -96,10 +96,10 @@ void Latency::localConfigure(const std::string fileRes_, int currentRun)
 #endif
 
     if(currentRun >= 0)
-      {
-          theCurrentRun = currentRun;
-          LOG(INFO) << GREEN << "[Latency::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
-      }
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[Latency::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     Latency::ConfigureCalibration();
     Latency::initializeFiles(fileRes_, currentRun);
 }
