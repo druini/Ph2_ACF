@@ -31,7 +31,6 @@ class MiddlewareController : public TCPServer
     bool        paused_     = false;
 
   private:
-    /* Ph2_System::SystemController* theSystemController_; */
     Tool* theSystemController_;
 };
 

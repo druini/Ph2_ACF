@@ -104,7 +104,11 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
 void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData)
 {
     fStreamerEnabled = streamData;
-    if(streamData == true) fNetworkStreamer = new TCPPublishServer(6000, 1);
+    if(streamData == true)
+    {
+        fNetworkStreamer = new TCPPublishServer(6000, 1);
+        fNetworkStreamer->startAccept();
+    }
 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
