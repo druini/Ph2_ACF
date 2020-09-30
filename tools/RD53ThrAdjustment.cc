@@ -231,6 +231,11 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, uint32_t nEven
                             regName,
                             midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
                             true);
+
+                        LOG(INFO) << BOLDMAGENTA << ">>> " << regName << " value for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                  << cModule->getId() << "/" << cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW
+                                  << midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << BOLDMAGENTA
+                                  << " <<<" << RESET;
                     }
 
         // ################
