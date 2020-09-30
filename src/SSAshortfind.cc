@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
     cShortFinder.Inherit(&cTool);
     cShortFinder.Initialise();
     cShortFinder.Start(0);
-    cShortFinder.waitForRunToBeCompeted();
+    cShortFinder.waitForRunToBeCompleted();
     cShortFinder.Stop();
 
     cTool.Destroy();

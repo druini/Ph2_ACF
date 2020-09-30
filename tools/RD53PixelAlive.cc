@@ -73,18 +73,18 @@ void PixelAlive::ConfigureCalibration()
 
 void PixelAlive::Running()
 {
-    LOG(INFO) << GREEN << "[PixelAlive::Start] Starting" << RESET;
+    theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[Gain::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_PixelAlive.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_PixelAlive.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = fRunNumber;
     PixelAlive::run();
     PixelAlive::analyze();
-    PixelAlive::saveChipRegisters(fRunNumber);
+    PixelAlive::saveChipRegisters(theCurrentRun);
     PixelAlive::sendData();
 }
 
@@ -109,6 +109,8 @@ void PixelAlive::Stop()
 {
     LOG(INFO) << GREEN << "[PixelAlive::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     PixelAlive::draw();
     this->closeFileHandler();
 }
@@ -119,7 +121,11 @@ void PixelAlive::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
-    if(currentRun >= 0) theCurrentRun = currentRun;
+    if(currentRun >= 0)
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[PixelAlive::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     PixelAlive::ConfigureCalibration();
     PixelAlive::initializeFiles(fileRes_, currentRun);
 }
@@ -225,8 +231,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                       ->at(cChip->getIndex())
                                                       ->getChannel<OccupancyAndPh>(row, col)
                                                       .fOccupancy;
-                                static_cast<RD53*>(cChip)->enablePixel(row, col, injType == INJtype::None ? occupancy < thrOccupancy : occupancy != 0);
-                                if(((injType == INJtype::None) && (occupancy >= thrOccupancy)) || ((injType != INJtype::None) && (occupancy == 0))) nMaskedPixelsPerCalib++;
+                                static_cast<RD53*>(cChip)->enablePixel(row, col, injType == INJtype::None ? occupancy <= thrOccupancy : occupancy >= thrOccupancy);
+                                if((*static_cast<RD53*>(cChip)->getPixelsMask())[col].Enable[row] == true) nMaskedPixelsPerCalib++;
                             }
 
                     LOG(INFO) << BOLDBLUE << "\t--> Number of potentially masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;

@@ -41,7 +41,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
     { return "InitializeDone"; }
     else if(buffer.substr(0, 5) == "Start") // Changing the status changes the mode in threadMain (BBC) function
     {
-        // currentRun_ = getVariableValue("RunNumber", buffer);
+        currentRun_ = getVariableValue("RunNumber", buffer);
         // running(stoi(currentRun_))
         // runningFuture_ = std::async(std::launch::async, &MiddlewareController::running, this, stoi(currentRun_));
         theSystemController_->Start(stoi(currentRun_));
@@ -92,27 +92,27 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
             theSystemController_ = new CombinedCalibration<BackEndAlignment, CBCPulseShape>;
 
         else if(getVariableValue("Calibration", buffer) == "pixelalive")
-            theSystemController_ = new PixelAlive;
+            theSystemController_ = new CombinedCalibration<PixelAlive>;
         else if(getVariableValue("Calibration", buffer) == "noise")
-            theSystemController_ = new PixelAlive;
+            theSystemController_ = new CombinedCalibration<PixelAlive>;
         else if(getVariableValue("Calibration", buffer) == "scurve")
-            theSystemController_ = new SCurve;
+            theSystemController_ = new CombinedCalibration<SCurve>;
         else if(getVariableValue("Calibration", buffer) == "gain")
-            theSystemController_ = new Gain;
+            theSystemController_ = new CombinedCalibration<Gain>;
         else if(getVariableValue("Calibration", buffer) == "gainopt")
-            theSystemController_ = new GainOptimization;
+            theSystemController_ = new CombinedCalibration<GainOptimization>;
         else if(getVariableValue("Calibration", buffer) == "threqu")
-            theSystemController_ = new ThrEqualization;
+            theSystemController_ = new CombinedCalibration<ThrEqualization>;
         else if(getVariableValue("Calibration", buffer) == "thrmin")
-            theSystemController_ = new ThrMinimization;
+            theSystemController_ = new CombinedCalibration<ThrMinimization>;
         else if(getVariableValue("Calibration", buffer) == "thradj")
-            theSystemController_ = new ThrAdjustment;
+            theSystemController_ = new CombinedCalibration<ThrAdjustment>;
         else if(getVariableValue("Calibration", buffer) == "latency")
-            theSystemController_ = new Latency;
+            theSystemController_ = new CombinedCalibration<Latency>;
         else if(getVariableValue("Calibration", buffer) == "injdelay")
-            theSystemController_ = new InjectionDelay;
+            theSystemController_ = new CombinedCalibration<InjectionDelay>;
         else if(getVariableValue("Calibration", buffer) == "clockdelay")
-            theSystemController_ = new ClockDelay;
+            theSystemController_ = new CombinedCalibration<ClockDelay>;
         else if(getVariableValue("Calibration", buffer) == "physics")
             theSystemController_ = new Physics;
 

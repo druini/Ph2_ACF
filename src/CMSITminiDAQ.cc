@@ -307,7 +307,7 @@ int main(int argc, char** argv)
             // #######################
 
             LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-            mySysCntr.ConfigureHardware(configFile);
+            mySysCntr.Configure(configFile);
             LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
             if(program == true)
             {
@@ -351,17 +351,19 @@ int main(int argc, char** argv)
             // #############################################
             // # Address different subsets of the detector #
             // #############################################
-            // for(int i = 0; i < 2; i++)
+            // @TMP@
+            // const int detDivision = 2;
+            // for(int i = 0; i < detDivision; i++)
             //   {
-            //       auto detectorSubset = [](const ChipContainer* theChip) { return (theChip->getId() % 2 == i); };
+            //       auto detectorSubset = [](const ChipContainer* theChip) { return (theChip->getId() % detDivision == i); };
             //       pa.fDetectorContainer->setReadoutChipQueryFunction(detectorSubset);
 
             pa.run();
             pa.analyze();
             pa.draw();
 
-            //       pa.fDetectorContainer->resetReadoutChipQueryFunction();
-            //   }
+            //     pa.fDetectorContainer->resetReadoutChipQueryFunction();
+            // }
         }
         else if(whichCalib == "noise")
         {
@@ -516,8 +518,10 @@ int main(int argc, char** argv)
                 ph.Stop();
             }
             else
+            {
                 ph.analyze(true);
-            ph.draw();
+                ph.draw();
+            }
         }
         else if(whichCalib == "eudaq")
         {

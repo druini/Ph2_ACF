@@ -44,6 +44,7 @@ run_on_IT:
     - source ./ci_setup.sh
     - cd ci_tools
     - cp CMSIT_RD53.txt CMSIT_RD53_default.txt
+    - CMSITminiDAQ -f CMSIT.xml -r
     - CMSITminiDAQ -f CMSIT.xml -c pixelalive
     - CMSITminiDAQ -f CMSIT.xml -c threqu
     - CMSITminiDAQ -f CMSIT.xml -c scurve

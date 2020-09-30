@@ -52,18 +52,18 @@ void ThrAdjustment::ConfigureCalibration()
 
 void ThrAdjustment::Running()
 {
-    LOG(INFO) << GREEN << "[ThrAdjustment::Start] Starting" << RESET;
+    theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[ThrAdjustment::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_ThrAdjustment.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrAdjustment.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = fRunNumber;
     ThrAdjustment::run();
     ThrAdjustment::analyze();
-    ThrAdjustment::saveChipRegisters(fRunNumber);
+    ThrAdjustment::saveChipRegisters(theCurrentRun);
     ThrAdjustment::sendData();
 
     PixelAlive::sendData();
@@ -81,6 +81,8 @@ void ThrAdjustment::Stop()
 {
     LOG(INFO) << GREEN << "[ThrAdjustment::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     ThrAdjustment::draw();
     this->closeFileHandler();
 }
@@ -92,7 +94,11 @@ void ThrAdjustment::localConfigure(const std::string fileRes_, int currentRun)
     PixelAlive::histos = nullptr;
 #endif
 
-    if(currentRun >= 0) theCurrentRun = currentRun;
+    if(currentRun >= 0)
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[ThrAdjustment::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     ThrAdjustment::ConfigureCalibration();
     ThrAdjustment::initializeFiles(fileRes_, currentRun);
 }

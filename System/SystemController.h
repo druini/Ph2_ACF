@@ -99,7 +99,7 @@ class SystemController
     void Destroy();
 
     /*!
-     * \brief create a FileHandler object with
+     * \brief Create a FileHandler object with
      * \param pFilename : the filename of the binary file
      */
     void         addFileHandler(const std::string& pFilename, char pOption);
@@ -107,19 +107,19 @@ class SystemController
     FileHandler* getFileHandler() { return fFileHandler; }
 
     /*!
-     * \brief issues a FileHandler for writing files to every BeBoardFWInterface if addFileHandler was called
+     * \brief Issues a FileHandler for writing files to every BeBoardFWInterface if addFileHandler was called
      */
     void     initializeWriteFileHandler();
     uint32_t computeEventSize32(const Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
-     * \brief read file in the a FileHandler object
+     * \brief Read file in the a FileHandler object
      * \param pVec : the data vector
      */
     void readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32 = 0);
 
     /*!
-     * \brief acceptor method for HwDescriptionVisitor
+     * \brief Acceptor method for HwDescriptionVisitor
      * \param pVisitor
      */
     void accept(HwDescriptionVisitor& pVisitor)
@@ -190,22 +190,18 @@ class SystemController
      */
     void ReadData(bool pWait = true);
 
-    virtual void Start(int currentRun = -1);
-    virtual void Running();
+    virtual void Start(int runNumber);
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
-    virtual void Abort();
-    virtual void ConfigureCalibration();
-    virtual void ConfigureHardware(std::string cHWFile, bool enableStream = false);
     virtual void Configure(std::string cHWFile, bool enableStream = false);
-    virtual bool GetRunningStatus();
-    virtual void waitForRunToBeCompeted();
 
-    void Start(Ph2_HwDescription::BeBoard* pBoard);
-    void Stop(Ph2_HwDescription::BeBoard* pBoard);
-    void Pause(Ph2_HwDescription::BeBoard* pBoard);
-    void Resume(Ph2_HwDescription::BeBoard* pBoard);
+    void StartBoard(Ph2_HwDescription::BeBoard* pBoard);
+    void StopBoard(Ph2_HwDescription::BeBoard* pBoard);
+    void PauseBoard(Ph2_HwDescription::BeBoard* pBoard);
+    void ResumeBoard(Ph2_HwDescription::BeBoard* pBoard);
+
+    void Abort();
 
     /*!
      * \brief Read N Events from pBoard
@@ -258,10 +254,6 @@ class SystemController
 
     void   DecodeData(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
     double findValueInSettings(const std::string name, double defaultValue = 0.) const;
-
-  protected:
-    std::future<void> fRunningFuture;
-    int               fRunNumber;
 
   private:
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);

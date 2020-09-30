@@ -368,7 +368,10 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
         for(auto col = 0u; col < RD53::nCols; col++)
         {
             if(mask == true) pRD53->enablePixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
-            if(inject == true) pRD53->injectPixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
+            if(inject == true)
+                pRD53->injectPixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
+            else
+                pRD53->injectPixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row] && (*pRD53->getPixelsMaskDefault())[col].InjEn[row]);
         }
 
     RD53Interface::WriteRD53Mask(pRD53, true, false, pVerifLoop);

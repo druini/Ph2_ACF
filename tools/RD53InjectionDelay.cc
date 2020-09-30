@@ -61,18 +61,18 @@ void InjectionDelay::ConfigureCalibration()
 
 void InjectionDelay::Running()
 {
-    LOG(INFO) << GREEN << "[InjectionDelay::Start] Starting" << RESET;
+    theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[InjectionDelay::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_InjectionDelay.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_InjectionDelay.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = fRunNumber;
     InjectionDelay::run();
     InjectionDelay::analyze();
-    InjectionDelay::saveChipRegisters(fRunNumber);
+    InjectionDelay::saveChipRegisters(theCurrentRun);
     InjectionDelay::sendData();
 
     la.sendData();
@@ -96,6 +96,8 @@ void InjectionDelay::Stop()
 {
     LOG(INFO) << GREEN << "[InjectionDelay::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     InjectionDelay::draw();
     this->closeFileHandler();
 }
@@ -106,7 +108,11 @@ void InjectionDelay::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
-    if(currentRun >= 0) theCurrentRun = currentRun;
+    if(currentRun >= 0)
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[InjectionDelay::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     InjectionDelay::ConfigureCalibration();
     InjectionDelay::initializeFiles(fileRes_, currentRun);
 }

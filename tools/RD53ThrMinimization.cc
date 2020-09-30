@@ -50,18 +50,18 @@ void ThrMinimization::ConfigureCalibration()
 
 void ThrMinimization::Running()
 {
-    LOG(INFO) << GREEN << "[ThrMinimization::Start] Starting" << RESET;
+    theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[ThrMinimization::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_ThrMinimization.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrMinimization.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    theCurrentRun = fRunNumber;
     ThrMinimization::run();
     ThrMinimization::analyze();
-    ThrMinimization::saveChipRegisters(fRunNumber);
+    ThrMinimization::saveChipRegisters(theCurrentRun);
     ThrMinimization::sendData();
 
     PixelAlive::sendData();
@@ -79,6 +79,8 @@ void ThrMinimization::Stop()
 {
     LOG(INFO) << GREEN << "[ThrMinimization::Stop] Stopping" << RESET;
 
+    Tool::Stop();
+
     ThrMinimization::draw();
     this->closeFileHandler();
 }
@@ -90,7 +92,11 @@ void ThrMinimization::localConfigure(const std::string fileRes_, int currentRun)
     PixelAlive::histos = nullptr;
 #endif
 
-    if(currentRun >= 0) theCurrentRun = currentRun;
+    if(currentRun >= 0)
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[ThrMinimization::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     ThrMinimization::ConfigureCalibration();
     ThrMinimization::initializeFiles(fileRes_, currentRun);
 }

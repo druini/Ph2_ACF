@@ -76,10 +76,31 @@ Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
 
 Tool::~Tool() {}
 
+bool Tool::GetRunningStatus() { return (fRunningFuture.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready); }
+
+void Tool::waitForRunToBeCompleted()
+{
+    while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
+}
+
+void Tool::Configure(std::string cHWFile, bool enableStream)
+{
+    SystemController::Configure(cHWFile, enableStream);
+    ConfigureCalibration();
+}
+
 void Tool::Start(int runNumber)
 {
+    fKeepRunning   = true;
     fRunNumber     = runNumber;
     fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
+}
+
+void Tool::Stop()
+{
+    fKeepRunning = false;
+    waitForRunToBeCompleted();
+    SystemController::Stop();
 }
 
 void Tool::Inherit(const Tool* pTool)
@@ -455,6 +476,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
 
     fDirectoryName = nDirname;
 }
+
 /*!
  * \brief Initialize the result Root file
  * \param pFilename : Root filename
@@ -792,8 +814,7 @@ void Tool::unmaskPair(Chip* cChip, std::pair<uint8_t, uint8_t> pPair)
         cMaskedList.insert(std::pair<std::string, MaskedChannels>(cMaskRegName.c_str(), cMaskedChannels));
     }
 
-    // do the actual channel un-masking
-    // LOG (INFO) << GREEN << "\t ......... UNMASKing channels : " << RESET ;
+    // Do the actual channel un-masking
     for(auto cMasked: cMaskedList)
     {
         uint8_t     cRegValue = 0; // cChip->getReg (cMasked.first);
@@ -806,8 +827,7 @@ void Tool::unmaskPair(Chip* cChip, std::pair<uint8_t, uint8_t> pPair)
             std::string cOut    = "Channel " + std::to_string((int)cMaskedChannel) + " in the " + cChType.c_str() + " layer\t";
             cOutput += cOut.data();
         }
-        // LOG (INFO) << GREEN << "\t Writing " << std::bitset<8> (cRegValue) <<  " to " << cMasked.first << " to UNMASK
-        // channels for stub sweep : " << cOutput.c_str() << RESET ;
+        // Channels for stub sweep : " << cOutput.c_str() << RESET ;
         fReadoutChipInterface->WriteChipReg(cChip, cMasked.first, cRegValue);
     }
     // Fabio: CBC specific but not used by common scans - END

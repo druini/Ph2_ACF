@@ -52,7 +52,7 @@ struct CombinedCalibration : public Tool
     {
         Tool::dumpConfigFiles();
         Tool::SaveResults();
-        // Tool::Destroy();
+        /* Tool::Destroy(); */
     }
 
   private:

@@ -33,7 +33,7 @@ class Physics : public Tool
   public:
     Physics() { Physics::setGenericEvtConverter(RD53dummyEvtConverter()); }
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
 
@@ -68,6 +68,7 @@ class Physics : public Tool
 
     void fillHisto();
     void chipErrorReport();
+    void clearContainers();
 
   protected:
     struct RD53dummyEvtConverter
@@ -75,16 +76,14 @@ class Physics : public Tool
         void operator()(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>& RD53EvtList){};
     };
 
-    std::string       fileRes;
-    int               theCurrentRun;
-    size_t            numberOfEventsPerRun;
-    bool              doUpdateChip;
-    bool              doDisplay;
-    bool              saveBinaryData;
-    std::atomic<bool> keepRunning;
-    std::thread       thrRun;
-    std::thread       thrMonitor;
-    evtConvType       genericEvtConverter;
+    std::string fileRes;
+    int         theCurrentRun;
+    size_t      numberOfEventsPerRun;
+    bool        doUpdateChip;
+    bool        doDisplay;
+    bool        saveBinaryData;
+    std::thread thrMonitor;
+    evtConvType genericEvtConverter;
 };
 
 #endif
