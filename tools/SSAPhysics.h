@@ -17,8 +17,6 @@
 // #include "../Utils/SSASharedConstants.h"
 // #include "../HWInterface/SSAFWInterface.h"
 
-#include <thread>
-
 #ifdef __USE_ROOT__
 #include "../DQMUtils/SSAPhysicsHistograms.h"
 #include "TApplication.h"
@@ -68,8 +66,6 @@ class SSAPhysics : public Tool
     bool              doDisplay;
     bool              saveRawData;
     bool              doLocal;
-    std::atomic<bool> keepRunning;
-    std::thread       thrRun;
 };
 
 #endif
