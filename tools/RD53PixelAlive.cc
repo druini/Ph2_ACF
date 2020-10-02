@@ -74,7 +74,7 @@ void PixelAlive::ConfigureCalibration()
 void PixelAlive::Running()
 {
     theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[Gain::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[PixelAlive::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
