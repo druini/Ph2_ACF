@@ -92,18 +92,12 @@ void PedeNoise::disableStubLogic()
                     if(cROC->getFrontEndType() == FrontEndType::CBC3)
                     {
                         LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET;
-    std::cout<<__LINE__ <<std::endl;
-    std::cout<<"fReadoutChipInterface = " << fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth") <<std::endl;
                         fStubLogicValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() =
                             fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth");
-    std::cout<<__LINE__ <<std::endl;
                         fHIPCountValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() =
                             fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(cROC), "HIP&TestMode");
-    std::cout<<__LINE__ <<std::endl;
                         fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth", 0x23);
-    std::cout<<__LINE__ <<std::endl;
                         fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cROC), "HIP&TestMode", 0x00);
-    std::cout<<__LINE__ <<std::endl;
                     }
                 }
             }
@@ -174,7 +168,6 @@ void PedeNoise::sweepSCurves()
     if(fDisableStubLogic) disableStubLogic();
     // LOG (INFO) << BLUE <<  "SV " <<cStartValue<< RESET ;
 
-    std::cout<<__LINE__ <<std::endl;
     measureSCurves(cStartValue);
 
     if(fDisableStubLogic) reloadStubLogic();
@@ -348,27 +341,18 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
     int cCounter = 0;
     for(auto cSign: cSigns)
     {
-    std::cout<<__LINE__ <<std::endl;
         bool cLimitFound   = false;
-    std::cout<<__LINE__ <<std::endl;
         int  cLimitCounter = 0;
         do
         {
-    std::cout<<__LINE__ <<std::endl;
             DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
-    std::cout<<__LINE__ <<std::endl;
             fDetectorDataContainer                       = theOccupancyContainer;
-    std::cout<<__LINE__ <<std::endl;
             fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
-    std::cout<<__LINE__ <<std::endl;
 
-    std::cout<<__LINE__ <<std::endl;
             if(cWithCBC) this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint, fNEventsPerBurst);
-    std::cout<<__LINE__ <<std::endl;
             if(cWithSSA) this->setDacAndMeasureData("Bias_THDAC", cValue, fEventsPerPoint, fNEventsPerBurst);
             // this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
 
-    std::cout<<__LINE__ <<std::endl;
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
 
 #ifdef __USE_ROOT__
@@ -376,22 +360,16 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
 #else
             if(fPlotSCurves)
             {
-    std::cout<<__LINE__ <<std::endl;
                 auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy, uint16_t>("SCurve");
-    std::cout<<__LINE__ <<std::endl;
                 theSCurveStreamer.setHeaderElement(cValue);
                 for(auto board: *theOccupancyContainer)
                 {
-    std::cout<<__LINE__ <<std::endl;
                     if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
-    std::cout<<__LINE__ <<std::endl;
                 }
             }
 #endif
 
-    std::cout<<__LINE__ <<std::endl;
             auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
-    std::cout<<__LINE__ <<std::endl;
             LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. "
                       << "Incrementing limit found counter "
                       << " -- current value is " << +cLimitCounter << RESET;
@@ -515,11 +493,9 @@ void PedeNoise::producePedeNoisePlots()
     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
     for(auto board: *fThresholdAndNoiseContainer)
     {
-        std::cout << __PRETTY_FUNCTION__<< " fStreamerEnabled = " << fStreamerEnabled << std::endl;
         if(fStreamerEnabled) 
         {
             theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
-            std::cout << __PRETTY_FUNCTION__<< " Streaming now!!!" << std::endl;
         } 
     }
 #endif
