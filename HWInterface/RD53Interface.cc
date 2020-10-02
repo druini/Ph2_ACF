@@ -222,7 +222,7 @@ uint16_t getPixelConfig(const std::vector<perColumnPixelData>& mask, uint16_t ro
 // ##############################################################################################################
 // # Encodes the configuration for a pixel pair                                                                 #
 // # In the LIN FE TDAC is unsigned and increasing it reduces the local threshold                               #
-// # In the DIFF FE TDAC is signed and increasing it reduces the local threshold                                #
+// # In the DIFF FE TDAC is signed and increasing it increases the local threshold                              #
 // # To prevent having to deal with that in the rest of the code, we map the TDAC range of the DIFF FE like so: #
 // # -15 -> 30, -14 -> 29, ... 0 -> 15, ... 15 -> 0                                                             #
 // # So for the rest of the code the TDAC range of the DIFF FE is [0, 30] and                                   #
