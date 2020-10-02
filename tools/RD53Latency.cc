@@ -88,7 +88,7 @@ void Latency::Stop()
     Latency::draw();
     this->closeFileHandler();
 
-    RD53RunProgress::reset() = 0;
+    RD53RunProgress::reset();
 }
 
 void Latency::localConfigure(const std::string fileRes_, int currentRun)

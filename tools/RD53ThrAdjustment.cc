@@ -86,7 +86,7 @@ void ThrAdjustment::Stop()
     ThrAdjustment::draw();
     this->closeFileHandler();
 
-    RD53RunProgress::reset() = 0;
+    RD53RunProgress::reset();
 }
 
 void ThrAdjustment::localConfigure(const std::string fileRes_, int currentRun)

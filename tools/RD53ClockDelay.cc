@@ -103,7 +103,7 @@ void ClockDelay::Stop()
     ClockDelay::draw();
     this->closeFileHandler();
 
-    RD53RunProgress::reset() = 0;
+    RD53RunProgress::reset();
 }
 
 void ClockDelay::localConfigure(const std::string fileRes_, int currentRun)

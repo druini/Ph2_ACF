@@ -84,7 +84,7 @@ void ThrMinimization::Stop()
     ThrMinimization::draw();
     this->closeFileHandler();
 
-    RD53RunProgress::reset() = 0;
+    RD53RunProgress::reset();
 }
 
 void ThrMinimization::localConfigure(const std::string fileRes_, int currentRun)
