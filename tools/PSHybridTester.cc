@@ -443,8 +443,8 @@ void PSHybridTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string>
     pCounters.resize(cIndices.size());
     for(auto cIndex: cIndices)
     {
-        char cBuffer[19];
-        sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
+        char cBuffer[20];
+        sprintf(cBuffer, "debug_blk_counter%02d", (cIndex & 0x63)); //max value can be 99, to avoid GCC 8 warning
         std::string cRegName = cBuffer;
         uint32_t    cCounter = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
         pCounters.push_back(cCounter);
@@ -500,8 +500,8 @@ void PSHybridTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string
     pCounters.resize(cIndices.size());
     for(auto cIndex: cIndices)
     {
-        char cBuffer[19];
-        sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
+        char cBuffer[20];
+        sprintf(cBuffer, "debug_blk_counter%02d", (cIndex & 0x63)); //max value can be 99, to avoid GCC 8 warning
         std::string cRegName = cBuffer;
         uint32_t    cCounter = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
         pCounters.push_back(cCounter);
