@@ -74,7 +74,7 @@ void PixelAlive::ConfigureCalibration()
 void PixelAlive::Running()
 {
     theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[Gain::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[PixelAlive::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
@@ -113,6 +113,8 @@ void PixelAlive::Stop()
 
     PixelAlive::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset();
 }
 
 void PixelAlive::localConfigure(const std::string fileRes_, int currentRun)

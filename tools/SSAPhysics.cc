@@ -20,8 +20,7 @@ void SSAPhysics::ConfigureCalibration()
     // #######################
     saveRawData = this->findValueInSettings("SaveRawData");
     doLocal     = false;
-    keepRunning = true;
-
+    
     // ###########################################
     // # Initialize directory and data container #
     // ###########################################
@@ -38,8 +37,8 @@ void SSAPhysics::Running()
 
     if(saveRawData == true)
     {
-        char runString[6];
-        sprintf(runString, "%06d", fRunNumber);
+        char runString[7];
+        sprintf(runString, "%06d", (fRunNumber & 0xF423F)); //max value can be 999999, to avoid GCC 8 warning
         this->addFileHandler(std::string(RESULTDIR) + "/run_" + runString + ".raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -47,8 +46,7 @@ void SSAPhysics::Running()
     for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->ChipReSync();
     SystemController::Start(fRunNumber);
 
-    keepRunning = true;
-    thrRun      = std::thread(&SSAPhysics::run, this);
+    SSAPhysics::run();
 }
 
 void SSAPhysics::sendBoardData(BoardContainer* const& cBoard)
@@ -62,10 +60,8 @@ void SSAPhysics::Stop()
 {
     LOG(INFO) << GREEN << "[SSAPhysics::Stop] Stopping" << RESET;
 
-    SystemController::Stop();
-    keepRunning = false;
-    if(thrRun.joinable() == true) thrRun.join();
-
+    Tool::Stop();
+    
     // ################
     // # Error report #
     // ################
@@ -98,7 +94,7 @@ void SSAPhysics::run()
 {
     unsigned int totalDataSize = 0;
 
-    while(keepRunning == true)
+    while(fKeepRunning)
     {
         for(const auto cBoard: *fDetectorContainer)
         {

@@ -26,6 +26,11 @@
 #include <type_traits>
 #include <vector>
 
+#if defined(__GNUC__) && !defined(__INTEL_COMPILER) && (((__GNUC__ * 100) + __GNUC_MINOR__) >= 800)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
+
 // workaround missing "is_trivially_copyable" in g++ < 5.0
 // #if __cplusplus < 201402
 // namespace std
@@ -446,12 +451,15 @@ class DataStreamModuleContainer : public DataStreamBase
 
         memcpy(&bufferBegin[bufferWritingPosition], &fDataSize, sizeof(fDataSize));
         bufferWritingPosition += sizeof(fDataSize);
+        std::cout << __PRETTY_FUNCTION__ << "fDataSize = " << +fDataSize << std::endl;
 
         memcpy(&bufferBegin[bufferWritingPosition], &fContainerCarried, sizeof(fContainerCarried));
         bufferWritingPosition += sizeof(fContainerCarried);
+        std::cout << __PRETTY_FUNCTION__ << "fContainerCarried = " << +fContainerCarried.fContainerCarried << std::endl;
 
         memcpy(&bufferBegin[bufferWritingPosition], &fNumberOfChips, sizeof(fNumberOfChips));
         bufferWritingPosition += sizeof(fNumberOfChips);
+        std::cout << __PRETTY_FUNCTION__ << "fNumberOfChips = " << +fNumberOfChips << std::endl;
 
         if(fContainerCarried.isModuleContainerCarried())
         {
@@ -476,7 +484,9 @@ class DataStreamModuleContainer : public DataStreamBase
             {
                 memcpy(&bufferBegin[bufferWritingPosition], &(channelContainer->at(0)), channelContainer->size() * sizeof(T));
                 bufferWritingPosition += channelContainer->size() * sizeof(T);
+                std::cout << __PRETTY_FUNCTION__ << "vectorSize = " << +channelContainer->size() << std::endl;
                 channelContainer = nullptr;
+
             }
         }
     }
@@ -652,4 +662,7 @@ class ModuleContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
     }
 };
 
+#if defined(__GNUC__) && !defined(__INTEL_COMPILER) && (((__GNUC__ * 100) + __GNUC_MINOR__) >= 800)
+#pragma GCC diagnostic pop
+#endif
 #endif

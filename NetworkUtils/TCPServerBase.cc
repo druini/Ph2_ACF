@@ -83,7 +83,8 @@ int TCPServerBase::accept(bool blocking)
         while(true)
         {
             clientSocket = ::accept(getSocketId(), (struct sockaddr*)&clientAddress, &clientAddressSize);
-            if(fAccept && fMaxNumberOfClients > 0 && fConnectedClients.size() >= fMaxNumberOfClients)
+			broadcast("");//This message is to check if there are clients that disconnected and, if so, they are removed from the client list 
+            if(false && fAccept && fMaxNumberOfClients > 0 && fConnectedClients.size() >= fMaxNumberOfClients)
             {
                 send(clientSocket, "Too many clients connected!", 27, 0);
                 ::shutdown(clientSocket, SHUT_WR);
@@ -206,8 +207,9 @@ void TCPServerBase::broadcastPacket(const std::string& message)
         catch(const std::exception& e)
         {
             // std::cout << __PRETTY_FUNCTION__ << "Connection closed with the server! Stop writing!" << std::endl;
+            if(fConnectedClientsFuture.find(it->first) != fConnectedClientsFuture.end())
+                fConnectedClientsFuture.erase(fConnectedClientsFuture.find(it->first));
             delete it->second;
-            fConnectedClientsFuture.erase(fConnectedClientsFuture.find(it->first));
             fConnectedClients.erase(it--);
         }
     }
@@ -228,7 +230,8 @@ void TCPServerBase::broadcast(const char* message, std::size_t length)
             // std::cout << __PRETTY_FUNCTION__ << "I don't think that this error is possible because I close the socket when I get disconnected...if you see this then you should contact Lorenzo
             // Uplegger" << std::endl; std::cout << __PRETTY_FUNCTION__ << "This should only happen with the TCPSubscribeServer because it doesn't keep track of the connected clients..." << std::endl;
             // std::cout << __PRETTY_FUNCTION__ << "Error: " << e.what() << std::endl;
-            fConnectedClientsFuture.erase(fConnectedClientsFuture.find(it->first));
+            if(fConnectedClientsFuture.find(it->first) != fConnectedClientsFuture.end())
+                fConnectedClientsFuture.erase(fConnectedClientsFuture.find(it->first));
             delete it->second;
             fConnectedClients.erase(it--);
         }
@@ -247,7 +250,8 @@ void TCPServerBase::broadcast(const std::string& message)
         }
         catch(const std::exception& e)
         {
-            fConnectedClientsFuture.erase(fConnectedClientsFuture.find(it->first));
+            if(fConnectedClientsFuture.find(it->first) != fConnectedClientsFuture.end())
+                fConnectedClientsFuture.erase(fConnectedClientsFuture.find(it->first));
             delete it->second;
             fConnectedClients.erase(it--);
         }
@@ -266,7 +270,8 @@ void TCPServerBase::broadcast(const std::vector<char>& message)
         }
         catch(const std::exception& e)
         {
-            fConnectedClientsFuture.erase(fConnectedClientsFuture.find(it->first));
+            if(fConnectedClientsFuture.find(it->first) != fConnectedClientsFuture.end())
+                fConnectedClientsFuture.erase(fConnectedClientsFuture.find(it->first));
             delete it->second;
             fConnectedClients.erase(it--);
         }
@@ -284,7 +289,8 @@ void TCPServerBase::broadcast(const std::vector<uint16_t>& message)
         }
         catch(const std::exception& e)
         {
-            fConnectedClientsFuture.erase(fConnectedClientsFuture.find(it->first));
+            if(fConnectedClientsFuture.find(it->first) != fConnectedClientsFuture.end())
+                fConnectedClientsFuture.erase(fConnectedClientsFuture.find(it->first));
             delete it->second;
             fConnectedClients.erase(it--);
         }

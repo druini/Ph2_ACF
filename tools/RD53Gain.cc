@@ -112,6 +112,8 @@ void Gain::Stop()
 
     Gain::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset();
 }
 
 void Gain::localConfigure(const std::string fileRes_, int currentRun)

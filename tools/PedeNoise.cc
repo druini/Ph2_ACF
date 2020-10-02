@@ -18,12 +18,23 @@
 
 PedeNoise::PedeNoise() : Tool() {}
 
-PedeNoise::~PedeNoise() { cleanContainerMap(); }
+PedeNoise::~PedeNoise() 
+{ 
+    clearDataMembers();
+}
 
 void PedeNoise::cleanContainerMap()
 {
     for(auto container: fSCurveOccupancyMap) fRecycleBin.free(container.second);
     fSCurveOccupancyMap.clear();
+}
+
+void PedeNoise::clearDataMembers()
+{
+    delete fThresholdAndNoiseContainer;
+    delete fStubLogicValue;
+    delete fHIPCountValue;
+    cleanContainerMap();
 }
 
 void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
@@ -64,8 +75,11 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
 void PedeNoise::disableStubLogic()
 {
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fStubLogicValue);
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fHIPCountValue);
+
+    fStubLogicValue = new DetectorDataContainer();
+    fHIPCountValue  = new DetectorDataContainer();
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *fStubLogicValue);
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *fHIPCountValue);
 
     for(auto cBoard: *fDetectorContainer)
     {
@@ -78,9 +92,9 @@ void PedeNoise::disableStubLogic()
                     if(cROC->getFrontEndType() == FrontEndType::CBC3)
                     {
                         LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET;
-                        fStubLogicValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() =
+                        fStubLogicValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() =
                             fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth");
-                        fHIPCountValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() =
+                        fHIPCountValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() =
                             fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(cROC), "HIP&TestMode");
                         fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth", 0x23);
                         fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cROC), "HIP&TestMode", 0x00);
@@ -108,9 +122,9 @@ void PedeNoise::reloadStubLogic()
                     {
                         LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
                         cRegVec.push_back(
-                            {"Pipe&StubInpSel&Ptwidth", fStubLogicValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>()});
+                            {"Pipe&StubInpSel&Ptwidth", fStubLogicValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>()});
                         cRegVec.push_back(
-                            {"HIP&TestMode", fHIPCountValue.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>()});
+                            {"HIP&TestMode", fHIPCountValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>()});
                         fReadoutChipInterface->WriteChipMultReg(cROC, cRegVec);
                     }
                 }
@@ -241,15 +255,16 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                             theOccupancyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cFe->getIndex())->at(cROC->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
                         if(occupancy > float(pNoiseStripThreshold * 0.001))
                         {
-                            char cRegName[11];
                             if(cWithCBC)
                             {
+                                char cRegName[11];
                                 sprintf(cRegName, "Channel%03d", iChan + 1);
                                 cRegVec.push_back({cRegName, 0xFF});
                             }
                             if(cWithSSA)
                             {
-                                sprintf(cRegName, "THTRIMMING_S%d", iChan + 1);
+                                char cRegName[17];
+                                sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
                                 cRegVec.push_back({cRegName, 0x1F});
                             }
                             LOG(INFO) << RED << "Found a noisy channel on ROC " << +cROC->getId() << " Channel " << iChan << " with an occupancy of " << occupancy << "; setting offset to " << +0xFF
@@ -378,7 +393,8 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
 }
 void PedeNoise::extractPedeNoise()
 {
-    ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, fThresholdAndNoiseContainer);
+    fThresholdAndNoiseContainer  = new DetectorDataContainer();
+    ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *fThresholdAndNoiseContainer);
     uint16_t                                                     counter          = 0;
     std::map<uint16_t, DetectorDataContainer*>::reverse_iterator previousIterator = fSCurveOccupancyMap.rend();
     for(std::map<uint16_t, DetectorDataContainer*>::reverse_iterator mIt = fSCurveOccupancyMap.rbegin(); mIt != fSCurveOccupancyMap.rend(); ++mIt)
@@ -412,21 +428,21 @@ void PedeNoise::extractPedeNoise()
                                 mIt->second->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
                             float binCenter = (mIt->first + (previousIterator)->first) / 2.;
 
-                            fThresholdAndNoiseContainer.at(board->getIndex())
+                            fThresholdAndNoiseContainer->at(board->getIndex())
                                 ->at(opticalGroup->getIndex())
                                 ->at(hybrid->getIndex())
                                 ->at(chip->getIndex())
                                 ->getChannel<ThresholdAndNoise>(iChannel)
                                 .fThreshold += binCenter * (previousOccupancy - currentOccupancy);
 
-                            fThresholdAndNoiseContainer.at(board->getIndex())
+                            fThresholdAndNoiseContainer->at(board->getIndex())
                                 ->at(opticalGroup->getIndex())
                                 ->at(hybrid->getIndex())
                                 ->at(chip->getIndex())
                                 ->getChannel<ThresholdAndNoise>(iChannel)
                                 .fNoise += binCenter * binCenter * (previousOccupancy - currentOccupancy);
 
-                            fThresholdAndNoiseContainer.at(board->getIndex())
+                            fThresholdAndNoiseContainer->at(board->getIndex())
                                 ->at(opticalGroup->getIndex())
                                 ->at(hybrid->getIndex())
                                 ->at(chip->getIndex())
@@ -444,7 +460,7 @@ void PedeNoise::extractPedeNoise()
 
     // calculate the averages and ship
 
-    for(auto board: fThresholdAndNoiseContainer)
+    for(auto board: *fThresholdAndNoiseContainer)
     {
         for(auto opticalGroup: *board)
         {
@@ -472,12 +488,15 @@ void PedeNoise::extractPedeNoise()
 void PedeNoise::producePedeNoisePlots()
 {
 #ifdef __USE_ROOT__
-    if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
+    if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(*fThresholdAndNoiseContainer);
 #else
     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
-    for(auto board: fThresholdAndNoiseContainer)
+    for(auto board: *fThresholdAndNoiseContainer)
     {
-        if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fStreamerEnabled) 
+        {
+            theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
+        } 
     }
 #endif
 }
@@ -492,13 +511,13 @@ void PedeNoise::setThresholdtoNSigma(BoardContainer* board, uint32_t pNSigma)
             {
                 uint32_t cROCId = chip->getId();
 
-                uint16_t cPedestal = round(fThresholdAndNoiseContainer.at(board->getIndex())
+                uint16_t cPedestal = round(fThresholdAndNoiseContainer->at(board->getIndex())
                                                ->at(opticalGroup->getIndex())
                                                ->at(hybrid->getIndex())
                                                ->at(chip->getIndex())
                                                ->getSummary<ThresholdAndNoise, ThresholdAndNoise>()
                                                .fThreshold);
-                uint16_t cNoise    = round(fThresholdAndNoiseContainer.at(board->getIndex())
+                uint16_t cNoise    = round(fThresholdAndNoiseContainer->at(board->getIndex())
                                             ->at(opticalGroup->getIndex())
                                             ->at(hybrid->getIndex())
                                             ->at(chip->getIndex())
@@ -539,7 +558,7 @@ void PedeNoise::Running()
     // ModuleContainer::SetQueryFunction(myFunction);
     measureNoise();
     // ModuleContainer::ResetQueryFunction();
-    Validate();
+    // Validate();
     LOG(INFO) << "Done with noise";
 }
 
@@ -550,6 +569,7 @@ void PedeNoise::Stop()
     dumpConfigFiles();
     SaveResults();
     closeFileHandler();
+    clearDataMembers();
     LOG(INFO) << "Noise measurement stopped.";
 }
 
