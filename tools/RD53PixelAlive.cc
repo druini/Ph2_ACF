@@ -113,6 +113,8 @@ void PixelAlive::Stop()
 
     PixelAlive::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset() = 0;
 }
 
 void PixelAlive::localConfigure(const std::string fileRes_, int currentRun)

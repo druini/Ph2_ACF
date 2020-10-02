@@ -106,6 +106,8 @@ void ThrEqualization::Stop()
 
     ThrEqualization::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset() = 0;
 }
 
 void ThrEqualization::localConfigure(const std::string fileRes_, int currentRun)

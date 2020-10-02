@@ -111,6 +111,8 @@ void SCurve::Stop()
 
     SCurve::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset() = 0;
 }
 
 void SCurve::localConfigure(const std::string fileRes_, int currentRun)

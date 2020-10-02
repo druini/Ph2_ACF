@@ -100,6 +100,8 @@ void InjectionDelay::Stop()
 
     InjectionDelay::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset() = 0;
 }
 
 void InjectionDelay::localConfigure(const std::string fileRes_, int currentRun)

@@ -87,6 +87,8 @@ void GainOptimization::Stop()
 
     GainOptimization::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset() = 0;
 }
 
 void GainOptimization::localConfigure(const std::string fileRes_, int currentRun)
