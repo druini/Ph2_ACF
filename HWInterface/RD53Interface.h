@@ -28,6 +28,7 @@ class RD53Interface : public ReadoutChipInterface
   public:
     RD53Interface(const BeBoardFWMap& pBoardMap);
 
+    int      CheckChipID(Ph2_HwDescription::Chip* pChip, int chipIDfromDB);
     bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t data, bool pVerifLoop = true) override;
     void     WriteBoardBroadcastChipReg(const Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode, uint16_t data) override;

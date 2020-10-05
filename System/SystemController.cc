@@ -318,6 +318,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cRD53->getId() << RESET;
                         static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cRD53));
                         LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
+                        // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cRD53), 0);
                     }
                 }
             }
