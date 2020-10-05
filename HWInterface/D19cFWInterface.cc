@@ -426,7 +426,7 @@ bool D19cFWInterface::LinkLock( const BeBoard* pBoard )
         std::this_thread::sleep_for (std::chrono::milliseconds (2000) );
         this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);  
         std::this_thread::sleep_for (std::chrono::milliseconds (100) );
-        
+           
         //check links are up 
         std::vector<std::string> cStates = { "GBT TX Ready" ,"MGT Ready", "GBT RX Ready"};
         bool cLinksLocked=true;
@@ -482,7 +482,7 @@ bool D19cFWInterface::LinkLock( const BeBoard* pBoard )
             }
             cAttempCount++;
         }while( !cLinksLocked && cAttempCount < cMaxAttempts );
-        return cLinksLocked;
+        return cLinksLocked; 
     }
 
 bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
@@ -812,9 +812,12 @@ void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
         }
         if( cWithLPGBT )
         {
+
+            LOG (INFO) << BOLDBLUE << "Link lock check.." << RESET;
             bool cGBTlock = LinkLock(pBoard);
             if ( cGBTlock )
                 LOG (INFO) << BOLDGREEN << "Link locked.." << RESET;
+
         }
         else
         {

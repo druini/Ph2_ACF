@@ -126,12 +126,12 @@ class D19clpGBTInterface : public lpGBTInterface
                          uint8_t                     pPreEmphStr   = 0);
 
     /*!
-     * \brief Configure lpGBT Tx and Rx polarity
+     * \brief Configure lpGBT High Speed Link Tx and Rx polarity
      * \param pChip       : pointer to Chip object
      * \param pTxPolarity : Tx polarity
      * \param pRxPolarity : Rx polarity
      */
-    void ConfigureTxRxPolarity(Ph2_HwDescription::Chip* pChip, uint8_t pTxPolarity = 1, uint8_t pRxPolarity = 0);
+    void ConfigureHighSpeedPolarity(Ph2_HwDescription::Chip* pChip, uint8_t pOutPolarity = 1, uint8_t pInPolarity = 0);
 
     /*!
      * \brief Configure lpGBT Data Player pattern
@@ -321,6 +321,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // mpa read/write
     bool     mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack=true);
     uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pRegisterAddress);
+    bool i2cWrite(Ph2_HwDescription::Chip* pChip, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadBack);
 
   private:
     std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},

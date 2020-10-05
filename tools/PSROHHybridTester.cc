@@ -660,6 +660,8 @@ void PSROHHybridTester::TestULInternalPattern(uint32_t pPattern)
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
             LOG(INFO) << BOLDGREEN << "Internal LpGBT pattern generation" << RESET;
+            // make sure serializer source is 0
+            //clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "ULDataSource0", 0);
             clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern);
@@ -725,23 +727,9 @@ void PSROHHybridTester::PrepareFCMDTest(uint8_t pSource, uint8_t pPattern)
         for(auto cOpticalGroup: *cBoard)
         {
             D19clpGBTInterface*  clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            std::vector<uint8_t> cClocks         = {1, 6, 11, 26};
-            uint8_t              cFreq = 4, cDriveStr = 7, cInvert = 0;
-            uint8_t              cPreEmphWidth = 0, cPreEmphMode = 1, cPreEmphStr = 3;
-            clpGBTInterface->ConfigureClocks(cOpticalGroup->flpGBT, cClocks, cFreq, cDriveStr, cInvert, cPreEmphWidth, cPreEmphMode, cPreEmphStr);
-            if(pSource == 3) clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
-            std::vector<uint8_t> cGroups = {0, 1, 2, 3}, cChannels = {0};
-            uint8_t              cDataRate = 3;
-            cDriveStr = 7, cPreEmphMode = 1, cPreEmphStr = 4;
-            cPreEmphWidth = 0, cInvert = 1;
-            clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, cGroups, pSource); // 0 --> link data, 3 --> constant pattern
-            clpGBTInterface->ConfigureTxGroups(cOpticalGroup->flpGBT, cGroups, cChannels, cDataRate);
-            for(const auto& cGroup: cGroups)
-            {
-                cInvert = (cGroup % 2 == 0) ? 1 : 0;
-                for(const auto& cChannel: cChannels)
-                { clpGBTInterface->ConfigureTxChannels(cOpticalGroup->flpGBT, {cGroup}, {cChannel}, cDriveStr, cPreEmphMode, cPreEmphStr, cPreEmphWidth, cInvert); }
-            }
+            if(pSource == 3) 
+              clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
+            clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, pSource); // 0 --> link data, 3 --> constant pattern
         }
     }
 }
@@ -788,9 +776,13 @@ bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
     {
         for(auto cOpticalGroup: *cBoard)
         {
+            //test cic read
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+            //LOG(INFO) << BOLDRED << "FEId0 readback = " << clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 0, 0x05) << RESET;
+            //LOG(INFO) << BOLDRED << "FEId1 readback = " << clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x05) << RESET;
             for(const auto cMaster: pMasters)
             {
+
                 uint8_t cSlaveAddress = 0x60;
                 uint8_t cSuccess      = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x9, 1);
                 if(cSuccess)
@@ -798,6 +790,7 @@ bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
                 else
                     LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED" << RESET;
                 cTestSuccess &= cSuccess;
+
             }
         }
     }

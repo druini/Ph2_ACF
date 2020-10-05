@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
     {
         if(cmd.foundOption("internal-pattern") && cmd.foundOption("backend-file")) { cBackEndROHHybridTester.TestULInternalPattern(cInternalPattern32); }
 
-        else if(cmd.foundOption("external-pattern") && cmd.foundOption("control-file"))
+        if(cmd.foundOption("external-pattern") && cmd.foundOption("control-file"))
         {
             cControlROHHybridTester.InjectExternalPattern(cExternalPattern);
             cBackEndROHHybridTester.TestULExternalPattern();
@@ -222,15 +222,6 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("testADC"))
     {
-        /*
-        std::vector<std::string> cADCs;
-        std::string cADC("ADC");
-        for(const char& cId : cADCList)
-        {
-          if(cId == ',') continue;
-          cADCs.push_back(cADC+cId);
-        }
-        */
         std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
         cBackEndROHHybridTester.TestADC(cADCs, 0, 1000, 20);
     }
@@ -309,7 +300,13 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
         cControlROHHybridTester.ClearBRAM(std::string("test"));
     }
-
+/*
+    D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(cBackEndTool.fBeBoardInterface->getFirmwareInterface());
+    LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
+    cFWInterface->StubDebug(true, 6);
+    LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
+    cFWInterface->L1ADebug();
+*/
     // Save Result File
     cBackEndTool.SaveResults();
     cBackEndTool.WriteRootFile();

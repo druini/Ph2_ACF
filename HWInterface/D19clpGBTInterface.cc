@@ -23,8 +23,9 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 {
     LOG(INFO) << BOLDBLUE << "Configuring lpGBT" << RESET;
     this->setBoard(pChip->getBeBoardId());
+
     // Load register map from configuration file
-    /* 
+     
     ChipRegMap clpGBTRegMap = pChip->getRegMap();
     for(const auto& cRegItem: clpGBTRegMap)
     {
@@ -35,18 +36,10 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
             this->WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
         }
     }
-    D19cFWInterface* cFWInterface = static_cast<D19cFWInterface*>(fBoardFW);
-    while(!(this->ReadChipReg(pChip, "PUSMStatus") == 0x12))
-    {
-      LOG(INFO) << BOLDBLUE << "PUSMStatus = " << this->ReadChipReg(pChip, "PUSMStatus") << RESET;
-      cFWInterface->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);                                                                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-      cFWInterface->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-      std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    }
-    */ 
+
     // Additional configurations (could eventually be moved to configuration file)
-    // Configure Tx Rx Polarity
-    this->ConfigureTxRxPolarity(pChip, 1, 0);
+    // Configure High Speed Link Tx Rx Polarity
+    this->ConfigureHighSpeedPolarity(pChip, 0, 1);
     // Clocks
     std::vector<uint8_t> cClocks         = {1, 6, 11, 26};
     uint8_t              cFreq = 4, cDriveStr = 7, cInvert = 0;
@@ -71,10 +64,14 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     // Reset I2C Masters
     this->ResetI2C(pChip, {0, 1, 2});
     // setting GPIO levels 
+/*
     this->WriteChipReg(pChip, "PIODirH", 0x12);
     this->WriteChipReg(pChip, "PIODirL", 0x4B);
     this->WriteChipReg(pChip, "PIOOutH", 0xFF);
     this->WriteChipReg(pChip, "PIOOutL", 0xFF);
+*/
+    this->WriteChipReg(pChip, "POWERUP2", 0x06);
+    this->WriteChipReg(pChip, "ULDataSource0", 6);
 
     return true;
 }
@@ -270,10 +267,10 @@ void D19clpGBTInterface::ConfigureClocks(Ph2_HwDescription::Chip*    pChip,
     }
 }
 
-void D19clpGBTInterface::ConfigureTxRxPolarity(Ph2_HwDescription::Chip* pChip, uint8_t pTxPolarity, uint8_t pRxPolarity)
+void D19clpGBTInterface::ConfigureHighSpeedPolarity(Ph2_HwDescription::Chip* pChip, uint8_t pOutPolarity, uint8_t pInPolarity)
 {
-    // Configure Rx and Tx lines polarity
-    uint8_t cPolarity = (pTxPolarity << 7 | pRxPolarity << 6);
+    // Configure Highr Speed Link Rx and Tx polarity
+    uint8_t cPolarity = (pOutPolarity << 7 | pInPolarity << 6);
     this->WriteChipReg(pChip, "ChipConfig", cPolarity);
 }
 
@@ -426,7 +423,7 @@ void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std:
 
     // Configure Rx Phase Shifter
     uint16_t cDelay = 0x00;
-    uint8_t  cFreq = 4, cEnFTune = 0, cDriveStr = 0; // Freq = 4 --> 320 MHz
+    uint8_t  cFreq = 4, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
     this->ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
 
     // Find Phase
@@ -841,4 +838,23 @@ uint32_t D19clpGBTInterface::mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFe
     LOG(INFO) << BOLDBLUE << "Readback 0x" << std::hex << +cReadBack << std::dec << " from register 0x" << std::hex << +pRegisterAddress << RESET;
     return cReadBack;
 }
-} // namespace Ph2_HwInterface
+
+bool D19clpGBTInterface::i2cWrite(Ph2_HwDescription::Chip* pChip, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadBack)
+{
+/*
+  std::map<uint8_t, std::vector<uint32_t>> cI2CWordsVector;
+  cI2CWordsVector.clear();
+  auto cVecSendIter = pVecSend.begin();
+  while(cVecSendIter < pVecSend.end())
+  {
+    uint32_t cWord = *cVecSendIter;
+    uint8_t cFeId = (cWord & (0xF << 23)) >> 23;
+    cI2CWordsVector[(cFeId == 1) ? 2 : 0].push_back(cWord);
+    cVecSendIter++;
+  }
+  auto cI2CWordsVectorIter = cI2CWordsVector.begin();
+ */ 
+ return true;
+}  
+
+} // namespace Ph2_HwInterface // namespace Ph2_HwInterface
