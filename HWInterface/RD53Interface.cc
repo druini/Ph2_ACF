@@ -15,6 +15,15 @@ namespace Ph2_HwInterface
 {
 RD53Interface::RD53Interface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap) {}
 
+int RD53Interface::CheckChipID(Chip* pChip, int chipIDfromDB)
+{
+    // @TMP@ : to be implemented for RD53B
+    auto chipID = RD53Interface::ReadChipReg(pChip, "CHIP_ID");
+    if(chipID == chipIDfromDB) LOG(INFO) << GREEN << "Chip ID: " << BOLDYELLOW << chipID << RESET << GREEN << " --> same as in database: " << BOLDYELLOW << chipIDfromDB << RESET;
+    else LOG(WARNING) << GREEN << "Chip ID: " << BOLDYELLOW << chipID << RESET << GREEN << " --> different from database: " << BOLDYELLOW << chipIDfromDB << RESET;
+    return chipID;
+}
+
 bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
     this->setBoard(pChip->getBeBoardId());
@@ -186,7 +195,6 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& pRegNode) //
     // return regReadback[0].second;
 
     const int nAttempts = 2;
-
     for(auto attempt = 0; attempt < nAttempts; attempt++)
     {
         auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
@@ -198,7 +206,6 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& pRegNode) //
         else
             return regReadback[0].second;
     }
-
     LOG(ERROR) << BOLDRED << "Empty register readback FIFO in " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
     return 0;
 }

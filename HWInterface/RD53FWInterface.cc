@@ -204,7 +204,6 @@ void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hy
     // # Check if all good #
     // #####################
     if(ReadReg("user.stat_regs.slow_cmd.error_flag") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
-
     if(ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false) LOG(ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
 
     // #######################
@@ -747,7 +746,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // ##################
         decodedEvents.clear();
         uint16_t status = RD53FWInterface::DecodeEventsMultiThreads(pData, decodedEvents); // Decode events with multiple threads
-        // uint16_t status = RD53FWInterface::DecodeEvents(pData, decodedEvents, {});         // Decode events with a
+        // uint16_t status = RD53FWInterface::DecodeEvents(pData, decodedEvents, {});         // Decode events with a single thread
         // RD53FWInterface::PrintEvents(decodedEvents, pData); // @TMP@
         if(RD53FWInterface::EvtErrorHandler(status) == false)
         {
