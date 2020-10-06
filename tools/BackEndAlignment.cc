@@ -397,7 +397,7 @@ void BackEndAlignment::Stop()
 {
     dumpConfigFiles();
 
-    Destroy();
+    // Destroy();
 }
 
 void BackEndAlignment::Pause() {}

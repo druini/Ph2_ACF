@@ -32,6 +32,7 @@ class PedeNoise : public Tool
   public:
     PedeNoise();
     ~PedeNoise();
+    void clearDataMembers();
 
     void Initialise(bool pAllChan = false, bool pDisableStubLogic = true);
     void measureNoise(); // method based on the one below that actually analyzes the scurves and extracts the noise
@@ -59,12 +60,12 @@ class PedeNoise : public Tool
     uint32_t fMaxNevents{65535};
     int      fNEventsPerBurst{-1};
 
-    DetectorDataContainer fThresholdAndNoiseContainer;
+    DetectorDataContainer *fThresholdAndNoiseContainer;
 
   private:
     // to hold the original register values
-    DetectorDataContainer fStubLogicValue;
-    DetectorDataContainer fHIPCountValue;
+    DetectorDataContainer *fStubLogicValue;
+    DetectorDataContainer *fHIPCountValue;
     bool                  cWithCBC = true;
     bool                  cWithSSA = false;
 

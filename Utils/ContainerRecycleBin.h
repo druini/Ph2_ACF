@@ -59,6 +59,11 @@ class ContainerRecycleBin
 
     ~ContainerRecycleBin()
     {
+        clean();
+    }
+
+    void clean()
+    {
         for(auto container: fRecycleBin)
         {
             delete container;

@@ -37,8 +37,8 @@ void SSAPhysics::Running()
 
     if(saveRawData == true)
     {
-        char runString[6];
-        sprintf(runString, "%06d", fRunNumber);
+        char runString[7];
+        sprintf(runString, "%06d", (fRunNumber & 0xF423F)); //max value can be 999999, to avoid GCC 8 warning
         this->addFileHandler(std::string(RESULTDIR) + "/run_" + runString + ".raw", 'w');
         this->initializeWriteFileHandler();
     }

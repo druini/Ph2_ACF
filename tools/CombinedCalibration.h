@@ -79,6 +79,7 @@ struct CombinedCalibration : public Tool
             std::cout << __PRETTY_FUNCTION__ << " waiting..." << std::endl;
         }
         std::cout << __PRETTY_FUNCTION__ << fRunningFuture.valid() << std::endl;
+        tool.Stop();
         tool.resetPointers();
         current_tool = &tool;
         std::cout << __PRETTY_FUNCTION__ << " Calibration done" << std::endl;
