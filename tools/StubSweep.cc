@@ -43,7 +43,7 @@ void StubSweep::Initialize()
             {
                 uint32_t cFeId = cFe->getId();
                 cFeCount++;
-                fType = static_cast<OuterTrackerModule*>(cFe)->getFrontEndType();
+                fType = static_cast<OuterTrackerHybrid*>(cFe)->getFrontEndType();
 
                 for(auto cCbc: *cFe)
                 {

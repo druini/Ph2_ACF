@@ -264,7 +264,7 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t GetData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     // wait for events from FC7
     bool WaitForData(Ph2_HwDescription::BeBoard* pBoard);
-    // split data per module/chip for a given board
+    // split data per hybrid/chip for a given board
     uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     // read back SSA counters directly
     void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);

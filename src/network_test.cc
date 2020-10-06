@@ -1,6 +1,6 @@
 //#include <cstring>
 //#include "../HWDescription/Chip.h"
-//#include "../HWDescription/Module.h"
+//#include "../HWDescription/Hybrid.h"
 //#include "../HWDescription/BeBoard.h"
 //#include "../HWInterface/ChipInterface.h"
 //#include "../HWInterface/BeBoardInterface.h"

@@ -2,7 +2,7 @@
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/FrontEndDescription.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
 
     BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-    ModuleContainer* ChipVec = pBoard->at(0)->at(0);
+    HybridContainer* ChipVec = pBoard->at(0)->at(0);
     TH1I*            h1      = new TH1I("h1", "S-CURVE;THDAC;number of hits", 100, 0, 100);
     for(int thd = 0; thd <= 75; thd++)
     {

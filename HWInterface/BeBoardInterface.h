@@ -17,9 +17,9 @@
   * The project compiles into the 5 following dynamic libraries
   *
   * \subsection lib1 HWDescription
-  * Hardware description of the boards, containing the modules, containing the CBC chips.\n
+  * Hardware description of the boards, containing the hybrid, containing the CBC chips.\n
   * The objects are:
-  FrontEndDescription, BeBoard, Chip, Module
+  FrontEndDescription, BeBoard, Chip, Hybrid
 
   * \subsection lib2 HWInterface
   * Hardware interface seen by the ACF middleware users. \n

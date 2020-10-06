@@ -304,7 +304,7 @@ int main(int argc, char* argv[])
         //                 0x3);
         //             }//chip
         //         }//hybrid
-        //     }// module
+        //     }// hybrid
         //     // check if i can read anything
         //     for( uint32_t cThreshold=0; cThreshold < 20; cThreshold++)
         //     {

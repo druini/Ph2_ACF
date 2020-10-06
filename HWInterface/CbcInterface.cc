@@ -691,7 +691,7 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
     }
 }
 
-void CbcInterface::WriteModuleBroadcastChipReg(const Module* pHybrid, const std::string& pRegNode, uint16_t pValue)
+void CbcInterface::WriteHybridBroadcastChipReg(const Hybrid* pHybrid, const std::string& pRegNode, uint16_t pValue)
 {
     // first set the correct BeBoard
     setBoard(pHybrid->getBeBoardId());
@@ -721,7 +721,7 @@ void CbcInterface::WriteModuleBroadcastChipReg(const Module* pHybrid, const std:
         for(auto cCbc: *pHybrid) static_cast<ReadoutChip*>(cCbc)->setReg(pRegNode, pValue);
 }
 
-void CbcInterface::WriteBroadcastCbcMultiReg(const Module* pHybrid, const std::vector<std::pair<std::string, uint8_t>> pVecReg)
+void CbcInterface::WriteBroadcastCbcMultiReg(const Hybrid* pHybrid, const std::vector<std::pair<std::string, uint8_t>> pVecReg)
 {
     // first set the correct BeBoard
     setBoard(pHybrid->getBeBoardId());

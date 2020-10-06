@@ -22,7 +22,7 @@ namespace Ph2_HwDescription
 // C'tors with object FE Description
 Chip::Chip(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue) : FrontEndDescription(pFeDesc), fChipId(pChipId), fMaxRegValue(pMaxRegValue) {}
 
-// C'tors which take Board ID, Frontend ID/Module ID, FMC ID, Chip ID
+// C'tors which take Board ID, Frontend ID/Hybrid ID, FMC ID, Chip ID
 Chip::Chip(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue) : FrontEndDescription(pBeId, pFMCId, pFeId), fChipId(pChipId), fMaxRegValue(pMaxRegValue) {}
 
 // Copy C'tor

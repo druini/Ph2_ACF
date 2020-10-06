@@ -33,10 +33,10 @@ void ShortFinder::Reset()
 
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cRegMapThisModule = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cRegMapThisHybrid = cRegMapThisModule->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
                 LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId()) << " back to their original values..." << RESET;
                 for(auto cChip: *cHybrid)
                 {
@@ -56,12 +56,12 @@ void ShortFinder::Print()
     for(auto cBoard: *fDetectorContainer)
     {
         auto& cShorts = fShorts.at(cBoard->getIndex());
-        for(auto cModule: *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
-            auto& cShortsThisModule = cShorts->at(cModule->getIndex());
-            for(auto cHybrid: *cModule)
+            auto& cShortsThisOpticalGroup = cShorts->at(cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cShortsHybrid = cShortsThisModule->at(cHybrid->getIndex());
+                auto& cShortsHybrid = cShortsThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cShortsReadoutChip = cShortsHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
@@ -120,17 +120,17 @@ void ShortFinder::Initialise()
         auto& cRegMapThisBoard                                                 = fRegMapContainer.at(cBoard->getIndex());
         auto& cShorts                                                          = fShorts.at(cBoard->getIndex());
         auto& cInjections                                                      = fInjections.at(cBoard->getIndex());
-        for(auto cModule: *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
-            auto& cShortsModule     = cShorts->at(cModule->getIndex());
-            auto& cInjectionsModule = cInjections->at(cModule->getIndex());
-            auto& cRegMapThisModule = cRegMapThisBoard->at(cModule->getIndex());
+            auto& cShortsOpticalGroup     = cShorts->at(cOpticalGroup->getIndex());
+            auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
 
-            for(auto cHybrid: *cModule)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cShortsHybrid     = cShortsModule->at(cHybrid->getIndex());
-                auto& cInjectionsHybrid = cInjectionsModule->at(cHybrid->getIndex());
-                auto& cRegMapThisHybrid = cRegMapThisModule->at(cHybrid->getIndex());
+                auto& cShortsHybrid     = cShortsOpticalGroup->at(cHybrid->getIndex());
+                auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     cInjectionsHybrid->at(cChip->getIndex())->getSummary<ChannelList>().clear();
@@ -150,19 +150,19 @@ void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<NCHANNELS>* pGroup)
     auto& cShorts              = fShorts.at(pBoard->getIndex());
     auto& cInjections          = fInjections.at(pBoard->getIndex());
 
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        auto& cModuleShorts     = cThisShortsContainer->at(cModule->getIndex());
-        auto& cModuleHits       = cThisHitsContainer->at(cModule->getIndex());
-        auto& cShortsModule     = cShorts->at(cModule->getIndex());
-        auto& cInjectionsModule = cInjections->at(cModule->getIndex());
+        auto& cOpticalGroupShorts     = cThisShortsContainer->at(cOpticalGroup->getIndex());
+        auto& cOpticalGroupHits       = cThisHitsContainer->at(cOpticalGroup->getIndex());
+        auto& cShortsOpticalGroup     = cShorts->at(cOpticalGroup->getIndex());
+        auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
 
-        for(auto cHybrid: *cModule)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cHybridShorts     = cModuleShorts->at(cHybrid->getIndex());
-            auto& cHybridHits       = cModuleHits->at(cHybrid->getIndex());
-            auto& cShortsHybrid     = cShortsModule->at(cHybrid->getIndex());
-            auto& cInjectionsHybrid = cInjectionsModule->at(cHybrid->getIndex());
+            auto& cHybridShorts     = cOpticalGroupShorts->at(cHybrid->getIndex());
+            auto& cHybridHits       = cOpticalGroupHits->at(cHybrid->getIndex());
+            auto& cShortsHybrid     = cShortsOpticalGroup->at(cHybrid->getIndex());
+            auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
                 auto& cReadoutChipShorts     = cHybridShorts->at(cChip->getIndex());
@@ -199,19 +199,19 @@ void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<NCHANNELS>* pGroup)
 //     auto& cShorts = fShorts.at(pBoard->getIndex());
 //     auto& cInjections = fInjections.at(pBoard->getIndex());
 
-//     for(auto cModule : *pBoard)
+//     for(auto cOpticalGroup : *pBoard)
 //     {
-//         auto& cModuleShorts = cThisShortsContainer->at(cModule->getIndex());
-//         auto& cModuleHits = cThisHitsContainer->at(cModule->getIndex());
-//         auto& cShortsModule = cShorts->at(cModule->getIndex());
-//         auto& cInjectionsModule = cInjections->at(cModule->getIndex());
+//         auto& cOpticalGroupShorts = cThisShortsContainer->at(cOpticalGroup->getIndex());
+//         auto& cOpticalGroupHits = cThisHitsContainer->at(cOpticalGroup->getIndex());
+//         auto& cShortsOpticalGroup = cShorts->at(cOpticalGroup->getIndex());
+//         auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
 
-//         for (auto cHybrid : *cModule)
+//         for (auto cHybrid : *cOpticalGroup)
 //         {
-//             auto& cHybridShorts = cModuleShorts->at(cHybrid->getIndex());
-//             auto& cHybridHits = cModuleHits->at(cHybrid->getIndex());
-//             auto& cShortsHybrid = cShortsModule->at(cHybrid->getIndex());
-//             auto& cInjectionsHybrid = cInjectionsModule->at(cHybrid->getIndex());
+//             auto& cHybridShorts = cOpticalGroupShorts->at(cHybrid->getIndex());
+//             auto& cHybridHits = cOpticalGroupHits->at(cHybrid->getIndex());
+//             auto& cShortsHybrid = cShortsOpticalGroup->at(cHybrid->getIndex());
+//             auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
 //             for (auto cChip : *cHybrid)
 //             {
 
@@ -293,7 +293,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     {
         for(auto cOpticalGroupData: *cBoardData) // for on opticalGroup - begin
         {
-            for(auto cHybridData: *cOpticalGroupData) // for on module - begin
+            for(auto cHybridData: *cOpticalGroupData) // for on hybrid - begin
             {
                 cNchips += cHybridData->size();
                 for(auto cROCData: *cHybridData) // for on chip - begin
@@ -307,10 +307,10 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                     fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold + cThresholdOffset);
 
                     LOG(INFO) << GREEN << "\t..Threshold at " << std::setprecision(2) << std::fixed << 100 * cOccTarget << " percent occupancy value for BeBoard " << +cBoardData->getId()
-                              << " OpticalGroup " << +cOpticalGroupData->getId() << " Module " << +cHybridData->getId() << " ROC " << +cROCData->getId() << " = " << cThreshold
+                              << " OpticalGroup " << +cOpticalGroupData->getId() << " Hybrid " << +cHybridData->getId() << " ROC " << +cROCData->getId() << " = " << cThreshold
                               << " [ setting threshold for short finding to " << +(cThreshold + cThresholdOffset) << " DAC units]" << RESET;
                 } // for on chip - end
-            }     // for on module - end
+            }     // for on hybrid - end
         }         // for on opticalGroup - end
     }             // for on board - end
     LOG(INFO) << BOLDBLUE << "Mean Threshold at " << std::setprecision(2) << std::fixed << 100 * cOccTarget << " percent occupancy value " << cMeanValue / cNchips << RESET;
@@ -355,7 +355,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                     }
                 } // chip
             }     // hybrid
-        }         // module
+        }         // opticalGroup
 
         // read back events
         this->ReadNEvents(pBoard, fEventsPerPoint);
@@ -400,7 +400,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
 
                     } // chip
                 }     // hybrid
-            }         // module
+            }         // opticalGroup
         }             // event loop
     }
 
@@ -424,7 +424,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                               << "th channel " << RESET;
             } // chip
         }     // hybrid
-    }         // module
+    }         // opticalGroup
 }
 void ShortFinder::FindShorts2S(BeBoard* pBoard)
 {
@@ -455,12 +455,12 @@ void ShortFinder::FindShorts2S(BeBoard* pBoard)
         for(auto cEvent: cEvents)
         {
             auto cEventCount = cEvent->GetEventCount();
-            for(auto cModule: *pBoard)
+            for(auto cOpticalGroup: *pBoard)
             {
-                auto& cShortsContainer = cThisShortsContainer->at(cModule->getIndex());
-                auto& cHitsContainer   = cThisHitsContainer->at(cModule->getIndex());
+                auto& cShortsContainer = cThisShortsContainer->at(cOpticalGroup->getIndex());
+                auto& cHitsContainer   = cThisHitsContainer->at(cOpticalGroup->getIndex());
 
-                for(auto cHybrid: *cModule)
+                for(auto cHybrid: *cOpticalGroup)
                 {
                     auto& cHybridShorts = cShortsContainer->at(cHybrid->getIndex());
                     auto& cHybridHits   = cHitsContainer->at(cHybrid->getIndex());

@@ -167,7 +167,7 @@ void SSASCurve::run(void)
                             channelNumber++;
                         } // ROC
                     }     // hybrid
-                }         // module
+                }         // opticalGroup
 
                 // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
                 // if (SyncDebug)
@@ -222,7 +222,7 @@ void SSASCurve::run(void)
                             }     // events
                         }         // ROC
                     }             // hybrid
-                }                 // module
+                }                 // opticalGroup
 #ifdef __USE_ROOT__
                 fDQMHistogramSSASCurveAsync.fillSSASCurveAsyncPlots(theHitContainer, thd);
 #endif
@@ -244,7 +244,7 @@ void SSASCurve::run(void)
                         } // chn;
                     }     // ROC
                 }         // hybrid
-            }             // module
+            }             // opticalGroup
 
             mean /= Nmeans;
 

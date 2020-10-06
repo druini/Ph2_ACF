@@ -154,7 +154,7 @@ void HybridTester::InitializeHists()
             {
                 uint32_t cFeId     = cFe->getId();
                 uint16_t cMaxRange = 1023;
-                fType              = static_cast<OuterTrackerModule*>(cFe)->getFrontEndType();
+                fType              = static_cast<OuterTrackerHybrid*>(cFe)->getFrontEndType();
 
                 for(auto cCbc: *cFe)
                 {
@@ -223,7 +223,7 @@ void HybridTester::Initialize(bool pThresholdScan)
     fDataCanvas = new TCanvas("fDataCanvas", "SingleStripEfficiency", 10, 0, 500, 500);
     fDataCanvas->Divide(2);
 
-    fSummaryCanvas = new TCanvas("fSummaryCanvas", "Summarizing Module Efficiency", 10, 0, 500, 500);
+    fSummaryCanvas = new TCanvas("fSummaryCanvas", "Summarizing Hybrid Efficiency", 10, 0, 500, 500);
     fSummaryCanvas->Divide(2);
 
     if(fThresholdScan)
@@ -444,7 +444,7 @@ void HybridTester::ScanThreshold()
                 // Loop over Events from this Acquisition
                 for(auto& cEvent: events)
                 {
-                    // loop over Modules & Cbcs and count hits separately
+                    // loop over Hybrids & Cbcs and count hits separately
                     cHitCounter += fillSCurves(theBoard, cEvent, cVcth);
                     cN++;
                 }

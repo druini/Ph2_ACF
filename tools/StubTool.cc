@@ -72,7 +72,7 @@ void StubTool::scanStubs()
             for(auto cFe: *cOpticalGroup)
             {
                 uint32_t         cFeId      = cFe->getId();
-                ModuleContainer& cCbcVector = *cFe;
+                HybridContainer& cCbcVector = *cFe;
                 const uint8_t    nCBC       = cCbcVector.size();
                 for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++) { configureTestPulse(static_cast<ReadoutChip*>(static_cast<ReadoutChip*>(cCbcVector.at(iCBC))), 1); }
                 // Uncoment for Bend uncoding 2
@@ -246,7 +246,7 @@ void StubTool::scanStubs_wNoise()
             for(auto cFe: *cOpticalGroup)
             {
                 uint32_t         cFeId      = cFe->getId();
-                ModuleContainer& cCbcVector = *cFe;
+                HybridContainer& cCbcVector = *cFe;
                 const uint8_t    nCBC       = cCbcVector.size();
                 // Uncoment for Bend uncoding 2
                 // hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nChan,0,nChan,16,0,8);
@@ -519,7 +519,7 @@ void StubTool::scanStubs_swap()
             for(auto cFe: *cOpticalGroup)
             {
                 uint32_t         cFeId      = cFe->getId();
-                ModuleContainer& cCbcVector = *cFe;
+                HybridContainer& cCbcVector = *cFe;
                 const uint8_t    nCBC       = cCbcVector.size();
                 // Uncoment for Bend uncoding 2
                 // hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nChan,0,nChan,16,0,8);
@@ -802,7 +802,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
             for(auto cFe: *cOpticalGroup)
             {
                 uint32_t         cFeId            = cFe->getId();
-                ModuleContainer& cCbcVector       = *cFe;
+                HybridContainer& cCbcVector       = *cFe;
                 const uint8_t    nCBC             = cCbcVector.size();
                 std::string      stubscanname_cw  = "StubsSCAN_ClusterWidth";
                 std::string      stubscanname_cbc = "StubsSCAN_ClusterWidth_vs_Strips";
@@ -955,7 +955,7 @@ void StubTool::scanStubs_ptWidth()
             for(auto cFe: *cOpticalGroup)
             {
                 uint32_t         cFeId      = cFe->getId();
-                ModuleContainer& cCbcVector = *cFe;
+                HybridContainer& cCbcVector = *cFe;
                 const uint8_t    nCBC       = cCbcVector.size();
                 // Uncoment for Bend uncoding 2
                 // hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nChan,0,nChan,16,0,8);
@@ -1248,7 +1248,7 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
             for(auto cFe: *cOpticalGroup)
             {
                 uint32_t         cFeId            = cFe->getId();
-                ModuleContainer& cCbcVector       = *cFe;
+                HybridContainer& cCbcVector       = *cFe;
                 const uint8_t    nCBC             = cCbcVector.size();
                 std::string      stubscanname_sof = "StubsSCAN_SoF";
                 std::string      stubscanname_cbc = "StubsSCAN_SoF_vs_Strips";

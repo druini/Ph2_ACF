@@ -447,12 +447,12 @@ class ChipDataContainer
     }
 };
 
-class ModuleDataContainer : public DataContainer<ChipDataContainer>
+class HybridDataContainer : public DataContainer<ChipDataContainer>
 {
   public:
-    ModuleDataContainer(uint16_t id) : DataContainer<ChipDataContainer>(id) {}
-    ModuleDataContainer(const ModuleDataContainer&) = delete;
-    ModuleDataContainer(ModuleDataContainer&& theCopyContainer) : DataContainer<ChipDataContainer>(std::move(theCopyContainer)) {}
+    HybridDataContainer(uint16_t id) : DataContainer<ChipDataContainer>(id) {}
+    HybridDataContainer(const HybridDataContainer&) = delete;
+    HybridDataContainer(HybridDataContainer&& theCopyContainer) : DataContainer<ChipDataContainer>(std::move(theCopyContainer)) {}
 
     template <typename T>
     T* addChipDataContainer(uint16_t id, T* chip)
@@ -464,19 +464,19 @@ class ModuleDataContainer : public DataContainer<ChipDataContainer>
   private:
 };
 
-class OpticalGroupDataContainer : public DataContainer<ModuleDataContainer>
+class OpticalGroupDataContainer : public DataContainer<HybridDataContainer>
 {
   public:
-    OpticalGroupDataContainer(uint16_t id) : DataContainer<ModuleDataContainer>(id) {}
+    OpticalGroupDataContainer(uint16_t id) : DataContainer<HybridDataContainer>(id) {}
     OpticalGroupDataContainer(const OpticalGroupDataContainer&) = delete;
-    OpticalGroupDataContainer(OpticalGroupDataContainer&& theCopyContainer) : DataContainer<ModuleDataContainer>(std::move(theCopyContainer)) {}
+    OpticalGroupDataContainer(OpticalGroupDataContainer&& theCopyContainer) : DataContainer<HybridDataContainer>(std::move(theCopyContainer)) {}
 
     template <class T>
-    T* addModuleDataContainer(uint16_t id, T* module)
+    T* addHybridDataContainer(uint16_t id, T* hybrid)
     {
-        return static_cast<T*>(DataContainer<ModuleDataContainer>::addObject(id, module));
+        return static_cast<T*>(DataContainer<HybridDataContainer>::addObject(id, hybrid));
     }
-    ModuleDataContainer* addModuleDataContainer(uint16_t id) { return DataContainer<ModuleDataContainer>::addObject(id, new ModuleDataContainer(id)); }
+    HybridDataContainer* addHybridDataContainer(uint16_t id) { return DataContainer<HybridDataContainer>::addObject(id, new HybridDataContainer(id)); }
 
   private:
 };

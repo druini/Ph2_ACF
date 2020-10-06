@@ -164,10 +164,10 @@ void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fCicInterface->SelectMux(cCic, cPhyPort);
             } // hybrid
-        }     // module
+        }     // hybrid
         // check output
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4);
@@ -205,7 +205,7 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", cPattern);
             } // chip
         }     // hybrid
-    }         // module
+    }         // opticalGroup
     // now capture output on pogo sockets
     // this->SSAOutputsPogoDebug(pBoard, false);
     this->SSAOutputsPogoScope(pBoard, false);
@@ -250,7 +250,7 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
        */
             } // chip
         }     // hybrid
-    }         // module
+    }         // opticalGroup
     // now capture output on pogo sockets
     // this->SSAOutputsPogoDebug(pBoard, true);
     this->SSAOutputsPogoScope(pBoard, true);

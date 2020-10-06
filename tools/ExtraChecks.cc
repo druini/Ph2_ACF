@@ -255,7 +255,7 @@ void ExtraChecks::Initialise()
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 // configure CBCs
                 for(auto cChip: *cHybrid)
                 {
@@ -518,8 +518,8 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
         {
             for(auto cFe: *cOpticalGroup)
             {
-                TProfile2D* cPedestalHist = static_cast<TProfile2D*>(getHist(static_cast<OuterTrackerModule*>(cFe), "Pedestal_perSide"));
-                TProfile2D* cNoiseHist    = static_cast<TProfile2D*>(getHist(static_cast<OuterTrackerModule*>(cFe), "Noise_perSide"));
+                TProfile2D* cPedestalHist = static_cast<TProfile2D*>(getHist(static_cast<OuterTrackerHybrid*>(cFe), "Pedestal_perSide"));
+                TProfile2D* cNoiseHist    = static_cast<TProfile2D*>(getHist(static_cast<OuterTrackerHybrid*>(cFe), "Noise_perSide"));
 
                 LOG(DEBUG) << BOLDBLUE << "FE" << +cFe->getId() << RESET;
                 auto&  cHybridNoise    = cThisNoiseContainer->at(cOpticalGroup->getIndex())->at(cFe->getIndex());
@@ -594,7 +594,7 @@ void ExtraChecks::OccupancyCheck(uint16_t pTriggerRate, bool pDisableStubs)
         {
             for(auto cFe: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cFe)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cFe)->getLinkId());
                 // configure CBCs
                 for(auto cChip: *cFe)
                 {
@@ -626,7 +626,7 @@ void ExtraChecks::OccupancyCheck(uint16_t pTriggerRate, bool pDisableStubs)
                     TH2D* cHitMap       = static_cast<TH2D*>(getHist(cFe, "HitMap"));
                     TH1D* cHitOccupancy = static_cast<TH1D*>(getHist(cFe, "NominalOccupancy"));
 
-                    std::vector<int> cModuleOccupancy(0);
+                    std::vector<int> cHybridOccupancy(0);
                     for(auto cEvent: cEvents)
                     {
                         std::vector<uint32_t> cHitDummy(0);
@@ -642,12 +642,12 @@ void ExtraChecks::OccupancyCheck(uint16_t pTriggerRate, bool pDisableStubs)
                                 cHitMap->Fill(cSensorChannel, (cHit % 2 == 0) ? 0 : 1, 1);
                             }
                         }
-                        cModuleOccupancy.push_back(cHitDummy.size());
+                        cHybridOccupancy.push_back(cHitDummy.size());
                         cHitOccupancy->Fill(cHitDummy.size());
                     }
-                    float cMeanOccupancy = std::accumulate(cModuleOccupancy.begin(), cModuleOccupancy.end(), 0.) / cModuleOccupancy.size();
+                    float cMeanOccupancy = std::accumulate(cHybridOccupancy.begin(), cHybridOccupancy.end(), 0.) / cHybridOccupancy.size();
                     char  cBuffer[200];
-                    std::sprintf(cBuffer, "\tModule occupancy found to be %.2e for FE%d", cMeanOccupancy / (cFe->size() * NCHANNELS), cFe->getId());
+                    std::sprintf(cBuffer, "\tHybrid occupancy found to be %.2e for FE%d", cMeanOccupancy / (cFe->size() * NCHANNELS), cFe->getId());
                     LOG(INFO) << BOLDBLUE << cBuffer << RESET;
                 }
             }
@@ -725,7 +725,7 @@ void ExtraChecks::ConsecutiveTriggers(uint8_t pNconsecutive)
         {
             for(auto cFe: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cFe)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cFe)->getLinkId());
                 for(auto cChip: *cFe)
                 {
                     if(cChip->getId() == 0) static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(static_cast<ReadoutChip*>(cChip), "VCth", 100);
@@ -969,7 +969,7 @@ void ExtraChecks::DataCheckTP(std::vector<uint8_t> pChipIds, uint8_t pTPamplitud
         {
             for(auto cFe: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cFe)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cFe)->getLinkId());
                 // configure CBCs
                 for(auto cChip: *cFe)
                 {
@@ -997,7 +997,7 @@ void ExtraChecks::DataCheckTP(std::vector<uint8_t> pChipIds, uint8_t pTPamplitud
         {
             for(auto cFe: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cFe)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cFe)->getLinkId());
                 for(auto cChip: *cFe)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
@@ -1135,7 +1135,7 @@ void ExtraChecks::DataCheckTP(std::vector<uint8_t> pChipIds, uint8_t pTPamplitud
                 auto& cThresholdsThisHybrid = cThresholdsThisBoard->at(cOpticalGroup->getIndex())->at(cFe->getIndex());
                 auto& cLogicThisHybrid      = cLogicThisBoard->at(cOpticalGroup->getIndex())->at(cFe->getIndex());
                 auto& cHIPsThisHybrid       = cHIPsThisBoard->at(cOpticalGroup->getIndex())->at(cFe->getIndex());
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cFe)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cFe)->getLinkId());
                 for(auto cChip: *cFe)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
@@ -1304,7 +1304,7 @@ void ExtraChecks::QuickStubCheck(std::vector<uint8_t> pChipIds, uint16_t pTrigge
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
@@ -1327,7 +1327,7 @@ void ExtraChecks::QuickStubCheck(std::vector<uint8_t> pChipIds, uint16_t pTrigge
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
@@ -1369,8 +1369,8 @@ void ExtraChecks::QuickStubCheck(std::vector<uint8_t> pChipIds, uint16_t pTrigge
             for(auto cFe: *cOpticalGroup)
             {
                 auto cFeId = cFe->getId();
-                LOG(INFO) << BOLDBLUE << "Link Id : " << +static_cast<OuterTrackerModule*>(cFe)->getLinkId() << RESET;
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cFe)->getLinkId());
+                LOG(INFO) << BOLDBLUE << "Link Id : " << +static_cast<OuterTrackerHybrid*>(cFe)->getLinkId() << RESET;
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cFe)->getLinkId());
                 TH2D*     cBxCounter    = static_cast<TH2D*>(getHist(cFe, "BxCounter"));
                 TProfile* cMatchedStubs = static_cast<TProfile*>(getHist(cFe, "MatchedStubs"));
                 TProfile* cMatchedBends = static_cast<TProfile*>(getHist(cFe, "CorrectBend"));
@@ -1434,7 +1434,7 @@ void ExtraChecks::QuickStubCheck(std::vector<uint8_t> pChipIds, uint16_t pTrigge
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
@@ -1485,7 +1485,7 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
@@ -1545,7 +1545,7 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
                     {
                         auto cFeId = cFe->getId();
                         auto cBxId = cEvent->BxId(cFe->getId());
-                        LOG(DEBUG) << BOLDBLUE << "Link Id : " << +static_cast<OuterTrackerModule*>(cFe)->getLinkId() << " FE " << +cFeId << " - Bx Id " << +cBxId << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "Link Id : " << +static_cast<OuterTrackerHybrid*>(cFe)->getLinkId() << " FE " << +cFeId << " - Bx Id " << +cBxId << RESET;
                         // cBxCounter->Fill( static_cast<float>(cEventCount) , cFeId , cBxId );
                         TH2D* cL1Status     = static_cast<TH2D*>(getHist(cFe, "L1Status"));
                         TH2D* cMatchedStubs = static_cast<TH2D*>(getHist(cFe, "MatchedStubs"));
@@ -1620,7 +1620,7 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
@@ -1652,7 +1652,7 @@ void ExtraChecks::L1Eye()
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                    auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                     fCicInterface->SetStaticPhaseAlignment(cCic, cChipId, 0, cPhase);
                 }
             }
@@ -1923,7 +1923,7 @@ void ExtraChecks::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
         for(auto cOpticalGroup: *cBoard)
             for(auto cFe: *cOpticalGroup)
             {
-                if(theBoard->ifOptical()) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cFe)->getLinkId());
+                if(theBoard->ifOptical()) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cFe)->getLinkId());
                 // configure CBCs
                 for(auto cChip: *cFe)
                 {

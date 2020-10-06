@@ -70,7 +70,7 @@ class ChipInterface
      */
     virtual bool WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) = 0;
 
-    virtual void WriteModuleBroadcastChipReg(const Ph2_HwDescription::Module* pModule, const std::string& pRegNode, uint16_t data)
+    virtual void WriteHybridBroadcastChipReg(const Ph2_HwDescription::Hybrid* pHybrid, const std::string& pRegNode, uint16_t data)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
