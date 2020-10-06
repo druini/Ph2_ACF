@@ -68,9 +68,8 @@ void Gain::ConfigureCalibration()
 
 void Gain::Running()
 {
-    LOG(INFO) << GREEN << "[Gain::Running] Starting" << RESET;
-
     theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[Gain::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
@@ -125,7 +124,7 @@ void Gain::localConfigure(const std::string fileRes_, int currentRun)
     if(currentRun >= 0)
     {
         theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+        LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     Gain::ConfigureCalibration();
     Gain::initializeFiles(fileRes_, currentRun);
