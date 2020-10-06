@@ -240,11 +240,11 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
                 LOG(DEBUG) << BOLDBLUE << "\tEvent " << +cEventCount << RESET;
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto& cMatchesThisHybrid = cMatchesThisBoard->at(cOpticalGroup->getIndex());
+                    auto& cMatchesThisOpticalGroup = cMatchesThisBoard->at(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
                         auto& cCic               = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                        auto& cMatchesThisHybrid = cMatchesThisHybrid->at(cHybrid->getIndex());
+                        auto& cMatchesThisHybrid = cMatchesThisOpticalGroup->at(cHybrid->getIndex());
                         if(cCic != NULL)
                         {
                             auto cBx = cEvent->BxId(cHybrid->getId());

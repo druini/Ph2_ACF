@@ -2257,10 +2257,10 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
     // summary
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cMismatchesHybrid = cMismatchesThisBoard->at(cOpticalGroup->getIndex());
+        auto& cMismatchesOpticalGroup = cMismatchesThisBoard->at(cOpticalGroup->getIndex());
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cMismatchesHybrid = cMismatchesHybrid->at(cHybrid->getIndex());
+            auto& cMismatchesHybrid = cMismatchesOpticalGroup->at(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
                 auto& cMismatchesChip = cMismatchesHybrid->at(cChip->getIndex());
