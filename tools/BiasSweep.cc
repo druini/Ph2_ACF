@@ -119,7 +119,7 @@ void BiasSweep::Initialize()
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                Module* theHybrid = static_cast<Module*>(cHybrid);
+                Hybrid* theHybrid = static_cast<Hybrid*>(cHybrid);
                 fType             = theHybrid->getFrontEndType();
 
                 for(auto cCbc: *cHybrid)

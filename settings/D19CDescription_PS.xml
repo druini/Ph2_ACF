@@ -5,7 +5,7 @@
     
     <CDCE configure="0" clockRate="120"/>
     <OpticalGroup Id="0" FMCId="0" >
-        <Module FeId="0" ModuleId="0" Status="1">
+        <Hybrid FeId="0" HybridId="0" Status="1">
             <Global>
                 <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
             </Global>
@@ -21,7 +21,7 @@
             
             <CIC_Files path="./settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
-        </Module>
+        </Hybrid>
     </OpticalGroup>
 
     <!--CONFIG-->

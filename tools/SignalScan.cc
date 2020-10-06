@@ -21,14 +21,14 @@ void SignalScan::Initialize()
                 fCanvasMap[cFe] = ctmpCanvas;
 
                 // 1D Hist forlatency scan
-                TString  cName = Form("h_module_thresholdScan_Fe%d", cFeId);
+                TString  cName = Form("h_hybrid_thresholdScan_Fe%d", cFeId);
                 TObject* cObj  = gROOT->FindObject(cName);
 
                 if(cObj) delete cObj;
 
                 TH2F* cSignalHist =
                     new TH2F(cName, Form("Signal threshold vs channel FE%d; Channel # ; Threshold; # of Hits", cFeId), fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, 255, -.5, 255 - .5);
-                bookHistogram(cFe, "module_signal", cSignalHist);
+                bookHistogram(cFe, "hybrid_signal", cSignalHist);
             }
         }
     }
@@ -248,7 +248,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //     {
 //         LOG (INFO) << "Threshold: " << +cVCth << " - Iteration " << i << " - Taking " << fNevents ;
 
-//         // Take Data for all Modules
+//         // Take Data for all Hybrids
 //         for ( BeBoard* pBoard : fBoardVector )
 //         {
 //             // I need this to normalize the TDC values I get from the Strasbourg FW
@@ -269,9 +269,9 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //                 // Loop over Events from this Acquisition
 //                 for ( auto& cEvent : events )
 //                 {
-//                     for ( auto cFe : pBoard->fModuleVector )
+//                     for ( auto cFe : pBoard->fHybridVector )
 //                     {
-//                         TH2F* cSignalHist = static_cast<TH2F*> (getHist ( cFe, "module_signal") );
+//                         TH2F* cSignalHist = static_cast<TH2F*> (getHist ( cFe, "hybrid_signal") );
 //                         int cEventHits = 0;
 //                         int cEventClusters = 0;
 
@@ -319,7 +319,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //                 }
 
 //                 LOG (INFO) << "Recorded " << cTotalEvents << " Events" ;
-//                 updateHists ( "module_signal", false );
+//                 updateHists ( "hybrid_signal", false );
 //             }
 
 //             fBeBoardInterface->Stop (pBoard);
@@ -327,7 +327,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //         }
 
 //         // done counting hits for all FE's, now update the Histograms
-//         updateHists ( "module_signal", false );
+//         updateHists ( "hybrid_signal", false );
 //         // now I need to increment the threshold by cVCth+fVcthDirecton*fSignalScanStep
 //         cVCth += cVcthDirection * fSignalScanStep;
 //         cVisitor.setOption ('w');
@@ -346,10 +346,10 @@ void SignalScan::updateHists(std::string pHistName, bool pFinal)
     for(auto& cCanvas: fCanvasMap)
     {
         // maybe need to declare temporary pointers outside the if condition?
-        if(pHistName == "module_signal")
+        if(pHistName == "hybrid_signal")
         {
             cCanvas.second->cd();
-            TH2F* cTmpHist = dynamic_cast<TH2F*>(getHist(static_cast<Ph2_HwDescription::Module*>(cCanvas.first), pHistName));
+            TH2F* cTmpHist = dynamic_cast<TH2F*>(getHist(static_cast<Ph2_HwDescription::Hybrid*>(cCanvas.first), pHistName));
             cTmpHist->DrawCopy("colz");
             cCanvas.second->Update();
         }

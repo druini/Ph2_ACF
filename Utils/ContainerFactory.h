@@ -13,7 +13,7 @@
 #define __CONTAINERFACTORY_H__
 
 #include "../HWDescription/BeBoard.h"
-#include "../HWDescription/Module.h"
+#include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OpticalGroup.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../Utils/Container.h"
@@ -40,7 +40,7 @@ void print(const DetectorDataContainer& detector)
             std::cout << "OpticalGroup" << std::endl;
             for(const auto hybrid: *opticalGroup)
             {
-                std::cout << "Module" << std::endl;
+                std::cout << "Hybrid" << std::endl;
                 for(const auto chip: *hybrid)
                 {
                     std::cout << "Chip" << std::endl;
@@ -72,12 +72,12 @@ void copyAndInitStructure(const DetectorContainer& original, DetectorDataContain
             copyBoard->back()->initialize<SO, SM>();
             for(const auto hybrid: *opticalGroup)
             {
-                ModuleDataContainer* copyModule = copyOpticalGroup->addModuleDataContainer(hybrid->getId());
+                HybridDataContainer* copyHybrid = copyOpticalGroup->addHybridDataContainer(hybrid->getId());
                 copyOpticalGroup->back()->initialize<SM, SC>();
                 for(const auto chip: *hybrid)
                 {
-                    copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
-                    copyModule->back()->initialize<SC, T>();
+                    copyHybrid->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
+                    copyHybrid->back()->initialize<SC, T>();
                 }
             }
         }
@@ -109,7 +109,7 @@ void copyAndInitChip(const DetectorContainer& original, DetectorDataContainer& c
 }
 
 template <typename T>
-void copyAndInitModule(const DetectorContainer& original, DetectorDataContainer& copy)
+void copyAndInitHybrid(const DetectorContainer& original, DetectorDataContainer& copy)
 {
     copyAndInitStructure<EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer, EmptyContainer>(original, copy);
 }
@@ -144,14 +144,14 @@ void copyAndInitStructure(const DetectorContainer& original, DetectorDataContain
         {
             OpticalGroupDataContainer* copyOpticalGroup = copyBoard->addOpticalGroupDataContainer(opticalGroup->getId());
             static_cast<OpticalGroupDataContainer*>(copyBoard->back())->initialize<SO, SM>(opticalGroupSummary);
-            for(const ModuleContainer* hybrid: *opticalGroup)
+            for(const HybridContainer* hybrid: *opticalGroup)
             {
-                ModuleDataContainer* copyModule = copyOpticalGroup->addModuleDataContainer(hybrid->getId());
-                static_cast<ModuleDataContainer*>(copyOpticalGroup->back())->initialize<SM, SC>(hybridSummary);
+                HybridDataContainer* copyHybrid = copyOpticalGroup->addHybridDataContainer(hybrid->getId());
+                static_cast<HybridDataContainer*>(copyOpticalGroup->back())->initialize<SM, SC>(hybridSummary);
                 for(const ChipContainer* chip: *hybrid)
                 {
-                    copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
-                    static_cast<ChipDataContainer*>(copyModule->back())->initialize<SC, T>(chipSummay, channel);
+                    copyHybrid->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
+                    static_cast<ChipDataContainer*>(copyHybrid->back())->initialize<SC, T>(chipSummay, channel);
                 }
             }
         }
@@ -185,7 +185,7 @@ void copyAndInitChip(const DetectorContainer& original, DetectorDataContainer& c
 }
 
 template <typename T>
-void copyAndInitModule(const DetectorContainer& original, DetectorDataContainer& copy, T& hybridSummary)
+void copyAndInitHybrid(const DetectorContainer& original, DetectorDataContainer& copy, T& hybridSummary)
 {
     EmptyContainer theEmpty;
     copyAndInitStructure<EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer, EmptyContainer>(original, copy, theEmpty, theEmpty, hybridSummary, theEmpty, theEmpty, theEmpty);

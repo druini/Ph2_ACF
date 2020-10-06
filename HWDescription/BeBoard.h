@@ -15,7 +15,6 @@
 #include "../Utils/Visitor.h"
 #include "../Utils/easylogging++.h"
 #include "Definition.h"
-#include "Module.h"
 #include "OpticalGroup.h"
 #include <map>
 #include <stdint.h>
@@ -31,7 +30,7 @@ using BeBoardRegMap = std::map<std::string, uint32_t>; /*!< Map containing the r
 
 /*!
  * \class BeBoard
- * \brief Read/Write BeBoard's registers on a file, handles a register map and handles a vector of Module which are
+ * \brief Read/Write BeBoard's registers on a file, handles a register map and handles a vector of Hybrid which are
  * connected to the BeBoard
  */
 class BeBoard : public BoardContainer
@@ -61,10 +60,6 @@ class BeBoard : public BoardContainer
      */
     ~BeBoard()
     {
-        // for ( auto& pModule : fModuleVector )
-        //     if (pModule) delete pModule;
-
-        // fModuleVector.clear();
     }
 
     // Public Methods
@@ -81,7 +76,7 @@ class BeBoard : public BoardContainer
     }
 
     /*!
-     * \brief Get the number of modules connected to the BeBoard
+     * \brief Get the number of hybrid connected to the BeBoard
      * \return The size of the vector
      */
     uint8_t getNFe() const

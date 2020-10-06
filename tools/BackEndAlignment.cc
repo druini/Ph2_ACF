@@ -28,10 +28,10 @@ void BackEndAlignment::Reset()
 
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cRegMapThisModule = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cRegMapThisHybrid = cRegMapThisModule->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
                 LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId()) << " back to their original values..." << RESET;
                 for(auto cChip: *cHybrid)
                 {
@@ -168,11 +168,11 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
 
     // force CIC to output repeating 101010 pattern [by disabling all FEs]
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cHybrid: *cModule)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             // only produce L1A header .. so disable all FEs .. for CIC2 only
             if(!cSparsified && cCic->getFrontEndType() == FrontEndType::CIC2) fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 1);
 
@@ -196,7 +196,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
-            auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             fCicInterface->SelectOutput(cCic, false);
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
         }
@@ -213,7 +213,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
-            auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, true);
             fCicInterface->SelectOutput(cCic, true);
         }
@@ -225,7 +225,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
-            auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             fCicInterface->SelectOutput(cCic, false);
             if(!cSparsified && cCic->getFrontEndType() == FrontEndType::CIC2) fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 0);
         }
@@ -245,7 +245,7 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<Module*>(cHybrid)->getLinkId());
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<Hybrid*>(cHybrid)->getLinkId());
             for(auto cReadoutChip: *cHybrid)
             {
                 ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
@@ -341,7 +341,7 @@ bool BackEndAlignment::Align()
         // read back register map before you've done anything
         auto cBoardRegisterMap = theBoard->getBeBoardRegMap();
 
-        OuterTrackerModule* cFirstHybrid = static_cast<OuterTrackerModule*>(cBoard->at(0)->at(0));
+        OuterTrackerHybrid* cFirstHybrid = static_cast<OuterTrackerHybrid*>(cBoard->at(0)->at(0));
         bool                cWithCIC     = cFirstHybrid->fCic != NULL;
         if(cWithCIC)
             cAligned = this->CICAlignment(theBoard);

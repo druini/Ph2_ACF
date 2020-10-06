@@ -12,7 +12,7 @@
     <!-- RHS -->
     <OpticalGroup Id="0" FMCId="0" >
       <GBT phaseTap="8" enable="0"/>
-        <Module FeId="0" FMCId="0" ModuleId="0" Status="1" LinkId="0" >
+        <Hybrid FeId="0" FMCId="0" HybridId="0" Status="1" LinkId="0" >
             <Global>
                 <Settings threshold="550" latency="74"/>
                 <TestPulse enable="1" polarity="0" amplitude="0x3F" channelgroup="0" delay="0" groundothers="0"/>
@@ -34,10 +34,10 @@
 
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Module>
+        </Hybrid>
 
         <!-- LHS -->
-    <!--    <Module FeId="1" FMCId="0" ModuleId="0" Status="1" LinkId="0">
+    <!--    <Hybrid FeId="1" FMCId="0" HybridId="0" Status="1" LinkId="0">
             <Global>
                 <Settings threshold="550" latency="19"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -59,7 +59,7 @@
 
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Module>
+        </Hybrid>
     -->
     </OpticalGroup>
 

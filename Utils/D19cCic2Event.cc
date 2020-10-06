@@ -12,7 +12,7 @@
 #include "../Utils/D19cCic2Event.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Definition.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/DataContainer.h"
 #include "../Utils/EmptyContainer.h"
@@ -20,7 +20,7 @@
 
 using namespace Ph2_HwDescription;
 
-const unsigned N2SMODULES = 12;
+const unsigned N2SHYBRIDS = 12;
 
 namespace Ph2_HwInterface
 {
@@ -35,12 +35,12 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
     fROCIds.clear();
     fNCbc = 0;
     // assuming that FEIds aren't shared between links
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cModule)
+        for(auto cFe: *cOpticalGroup)
         {
-            auto  cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
-            auto& cCic                = cOuterTrackerModule->fCic;
+            auto  cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+            auto& cCic                = cOuterTrackerHybrid->fCic;
             fNCbc += (cCic == NULL) ? cFe->fullSize() : 1;
             FeData cFeData;
             fEventStubList.push_back(cFeData);
@@ -56,7 +56,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
                 fEventRawList.push_back(cRawFeData);
             }
         } // hybrids
-    }     // modules
+    }     // opticalGroup
     fBeId        = pBoard->getBeId();
     fBeFWType    = 0;
     fCBCDataType = 0;
@@ -91,12 +91,12 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
             auto     cIterator = cEventIterator + LENGTH_EVENT_HEADER;
             uint32_t cStatus   = 0x00000000;
             size_t   cRocIndex = 0;
-            for(auto cModule: *pBoard)
+            for(auto cOpticalGroup: *pBoard)
             {
-                for(auto cFe: *cModule)
+                for(auto cFe: *cOpticalGroup)
                 {
-                    auto   cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
-                    auto&  cCic                = cOuterTrackerModule->fCic;
+                    auto   cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+                    auto&  cCic                = cOuterTrackerHybrid->fCic;
                     size_t cNReadoutChips      = (cCic == NULL) ? cFe->fullSize() : 1;
                     for(size_t cIndex = 0; cIndex < cNReadoutChips; cIndex++)
                     {
@@ -218,7 +218,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         cIterator += cHitInfoSize + cStubInfoSize;
                     }
                 } // hybrid loop
-            }     // module loop
+            }     // hybrid loop
         }
         cEventIterator += cEventSize;
         cNEvents++;
@@ -246,14 +246,14 @@ void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const 
 void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list)
 {
     // get the first CIC
-    auto theFirstCIC = static_cast<OuterTrackerModule*>(pBoard->at(0)->at(0))->fCic;
+    auto theFirstCIC = static_cast<OuterTrackerHybrid*>(pBoard->at(0)->at(0))->fCic;
     bool cWithCIC2   = (theFirstCIC->getFrontEndType() == FrontEndType::CIC2);
 
     fIsSparsified = pBoard->getSparsification();
 
     fEventHitList.clear();
     fEventStubList.clear();
-    for(size_t cFeIndex = 0; cFeIndex < N2SMODULES * 2; cFeIndex++)
+    for(size_t cFeIndex = 0; cFeIndex < N2SHYBRIDS * 2; cFeIndex++)
     {
         FeData cFeData;
         fEventStubList.push_back(cFeData);
@@ -342,21 +342,21 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
             // for( uint32_t cIndex=EVENT_HEADER_SIZE+3; cIndex < cL1DataSize; cIndex++)
             //  LOG (INFO) << BOLDBLUE << std::bitset<32>(*(cIterator+cIndex)) << RESET;
 
+            size_t cOpticalGroupIndex = 0;
             size_t cHybridIndex = 0;
-            size_t cModuleIndex = 0;
             for(auto cOpticalGroup: *pBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     if(cHybrid->getId() == cFeId)
                     {
-                        cModuleIndex = cOpticalGroup->getIndex();
+                        cOpticalGroupIndex = cOpticalGroup->getIndex();
                         cHybridIndex = cHybrid->getIndex();
                     }
                 }
             }
 
-            auto   cReadoutChips = pBoard->at(cModuleIndex)->at(cHybridIndex);
+            auto   cReadoutChips = pBoard->at(cOpticalGroupIndex)->at(cHybridIndex);
             size_t cL1Offset     = cOffset + 2 + cWithCIC2;
             if(cWithCIC2)
             {

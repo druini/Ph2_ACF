@@ -45,12 +45,12 @@ void DataChecker::Initialise()
         auto& cMismatches = fDataMismatches.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cInjectionsModule = cInjections->at(cOpticalGroup->getIndex());
-            auto& cMismatchesModule = cMismatches->at(cOpticalGroup->getIndex());
+            auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
+            auto& cMismatchesOpticalGroup = cMismatches->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjectionsHybrid = cInjectionsModule->at(cHybrid->getIndex());
-                auto& cMismatchesHybrid = cMismatchesModule->at(cHybrid->getIndex());
+                auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
+                auto& cMismatchesHybrid = cMismatchesOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
@@ -286,13 +286,13 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
 
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cThisModuleHitCheck  = cThisHitCheckContainer->at(cOpticalGroup->getIndex());
-        auto& cThisModuleStubCheck = cThisStubCheckContainer->at(cOpticalGroup->getIndex());
+        auto& cThisOpticalGroupHitCheck  = cThisHitCheckContainer->at(cOpticalGroup->getIndex());
+        auto& cThisOpticalGroupStubCheck = cThisStubCheckContainer->at(cOpticalGroup->getIndex());
 
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cHybridHitCheck  = cThisModuleHitCheck->at(cHybrid->getIndex());
-            auto& cHybridStubCheck = cThisModuleStubCheck->at(cHybrid->getIndex());
+            auto& cHybridHitCheck  = cThisOpticalGroupHitCheck->at(cHybrid->getIndex());
+            auto& cHybridStubCheck = cThisOpticalGroupStubCheck->at(cHybrid->getIndex());
 
             auto  cHybridId     = cHybrid->getId();
             TH2D* cMatchedStubs = static_cast<TH2D*>(getHist(cHybrid, "MatchedStubs"));
@@ -756,7 +756,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 // configure CBCs
                 for(auto cChip: *cHybrid)
                 {
@@ -995,7 +995,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         //             for( int cOffset=cInitialWindowOffset; cOffset <= cFinalWindowOffset; cOffset++)
         //             {
         //                 LOG (INFO) << BOLDMAGENTA << "Correlation window offset set to " << +cOffset << RESET;
-        //                 for (auto& cHybrid : cBoard->fModuleVector)
+        //                 for (auto& cHybrid : cBoard->fHybridVector)
         //                 {
         //                     for (auto& cChip : cHybrid->fReadoutChipVector)
         //                     {
@@ -1031,7 +1031,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         //                     this->ReadNEvents ( cBoard , cEventsPerPoint);
         //                     const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
         //                     // matching
-        //                     for (auto& cHybrid : cBoard->fModuleVector)
+        //                     for (auto& cHybrid : cBoard->fHybridVector)
         //                     {
         //                         auto cHybridId = cHybrid->getId();
         //                         for (auto& cChip : cHybrid->fReadoutChipVector)
@@ -1177,7 +1177,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         //         //     for( int cOffset=cInitialWindowOffset; cOffset <= cFinalWindowOffset; cOffset++)
         //         //     {
         //         //         LOG (INFO) << BOLDMAGENTA << "Correlation window offset set to " << +cOffset << RESET;
-        //         //         for (auto& cHybrid : cBoard->fModuleVector)
+        //         //         for (auto& cHybrid : cBoard->fHybridVector)
         //         //         {
         //         //             for (auto& cChip : cHybrid->fReadoutChipVector)
         //         //             {
@@ -1217,7 +1217,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         //         //             this->ReadNEvents ( cBoard , cEventsPerPoint);
         //         //             const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
         //         //             // matching
-        //         //             for (auto& cHybrid : cBoard->fModuleVector)
+        //         //             for (auto& cHybrid : cBoard->fHybridVector)
         //         //             {
         //         //                 auto cHybridId = cHybrid->getId();
         //         //                 for (auto& cChip : cHybrid->fReadoutChipVector)
@@ -1383,7 +1383,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                 auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->at(cHybrid->getIndex());
                 auto& cLogicThisHybrid      = cLogicThisOpticalGroup->at(cHybrid->getIndex());
                 auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->at(cHybrid->getIndex());
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
@@ -1464,7 +1464,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
             //     {
             //         for (auto cHybrid : *cOpticalGroup)
             //         {
-            //             auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+            //             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             //             if( cCic != NULL )
             //             {
             //                 for(auto cChipId : pChipIds )
@@ -1667,7 +1667,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
                 auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->at(cOpticalGroup->getIndex());
                 auto& cLogicThisHybrid      = cLogicThisOpticalGroup->at(cOpticalGroup->getIndex());
                 auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->at(cOpticalGroup->getIndex());
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
@@ -1713,13 +1713,13 @@ void DataChecker::L1Eye(std::vector<uint8_t> pChipIds)
             // {
             //     for (auto& cHybrid : *cOpticalGroup)
             //     {
-            //         auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+            //         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             //         //fCicInterface->ResetPhaseAligner(cCic);
             //         for(auto cChipId : pChipIds )
             //         {
             //             // bool cConfigured = fCicInterface->SetStaticPhaseAlignment(  cCic , cChipId ,  0 , cPhase);
             //             // check if a resync is needed
-            //             //fCicInterface->CheckReSync( static_cast<OuterTrackerModule*>(cHybrid)->fCic);
+            //             //fCicInterface->CheckReSync( static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
             //         }
             //     }
             // }
@@ -1794,7 +1794,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 cWithCIC   = cWithCIC || (cCic != NULL);
                 for(auto cChip: *cHybrid)
                 {
@@ -1882,7 +1882,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
 
                                 } // chip
                             }     // hybrid
-                        }         // modules
+                        }         // opticalGroup
                         SLinkEvent cSLev    = cEvent->GetSLinkEvent(cBeBoard);
                         auto       cPayload = cSLev.getData<uint32_t>();
                         cDAQFileHandler->setData(cPayload);
@@ -1909,7 +1909,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 cWithCIC   = cWithCIC || (cCic != NULL);
                 for(auto cChip: *cHybrid)
                 {
@@ -1932,7 +1932,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
                     }
                 } // chip
             }     // hybrid
-        }         // module
+        }         // hybrid
 
         // now want to see the CIC output
         (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 5);
@@ -2036,10 +2036,10 @@ void DataChecker::MaskForStubs(BeBoard* pBoard, uint16_t pSeed, bool pSeedLayer)
         auto& cInjThisBoard = fInjections.at(pBoard->getIndex());
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cInjThisModule = cInjThisBoard->at(cOpticalGroup->getIndex());
+            auto& cInjThisOpticalGroup = cInjThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjThisHybrid = cInjThisModule->at(cHybrid->getIndex());
+                auto& cInjThisHybrid = cInjThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getId() != cChipId) continue;
@@ -2115,10 +2115,10 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
         // lower threshold and mask
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cInjThisModule = cInjThisBoard->at(cOpticalGroup->getIndex());
+            auto& cInjThisOpticalGroup = cInjThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjThisHybrid = cInjThisModule->at(cHybrid->getIndex());
+                auto& cInjThisHybrid = cInjThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cInjThisChip = cInjThisHybrid->at(cChip->getIndex());
@@ -2149,12 +2149,12 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
         // check for matches
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cInjThisModule        = cInjThisBoard->at(cOpticalGroup->getIndex());
-            auto& cMismatchesThisModule = cMismatchesThisBoard->at(cOpticalGroup->getIndex());
+            auto& cInjThisOpticalGroup        = cInjThisBoard->at(cOpticalGroup->getIndex());
+            auto& cMismatchesThisOpticalGroup = cMismatchesThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjThisHybrid        = cInjThisModule->at(cHybrid->getIndex());
-                auto& cMismatchesThisHybrid = cMismatchesThisModule->at(cHybrid->getIndex());
+                auto& cInjThisHybrid        = cInjThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cMismatchesThisHybrid = cMismatchesThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cInjThisChip        = cInjThisHybrid->at(cChip->getIndex());
@@ -2226,12 +2226,12 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
         // return threshold to normal
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cInjThisModule = cInjThisBoard->at(cOpticalGroup->getIndex());
-            auto& cThThisModule  = cThThisBoard->at(cOpticalGroup->getIndex());
+            auto& cInjThisOpticalGroup = cInjThisBoard->at(cOpticalGroup->getIndex());
+            auto& cThThisOpticalGroup  = cThThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjThisHybrid = cInjThisModule->at(cHybrid->getIndex());
-                auto& cThThisHybrid  = cThThisModule->at(cHybrid->getIndex());
+                auto& cInjThisHybrid = cInjThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cThThisHybrid  = cThThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cInjThisChip = cInjThisHybrid->at(cChip->getIndex());
@@ -2257,10 +2257,10 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
     // summary
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cMismatchesModule = cMismatchesThisBoard->at(cOpticalGroup->getIndex());
+        auto& cMismatchesOpticalGroup = cMismatchesThisBoard->at(cOpticalGroup->getIndex());
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cMismatchesHybrid = cMismatchesModule->at(cHybrid->getIndex());
+            auto& cMismatchesHybrid = cMismatchesOpticalGroup->at(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
                 auto& cMismatchesChip = cMismatchesHybrid->at(cChip->getIndex());
@@ -2279,7 +2279,7 @@ void DataChecker::HitCheck()
     {
         auto cBeBoard = static_cast<BeBoard*>(cBoard);
 
-        OuterTrackerModule* cFirstHybrid = static_cast<OuterTrackerModule*>(cBoard->at(0)->at(0));
+        OuterTrackerHybrid* cFirstHybrid = static_cast<OuterTrackerHybrid*>(cBoard->at(0)->at(0));
         // bool cWithCIC = cFirstHybrid->fCic != NULL;
         // if( cWithCIC )
         //     cAligned = this->CICAlignment(theBoard);
@@ -2306,7 +2306,7 @@ void DataChecker::ClusterCheck(std::vector<uint8_t> pChannels)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fCicInterface->SetSparsification(cCic, true);
                 for(auto cChip: *cHybrid)
                 {

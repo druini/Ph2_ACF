@@ -83,7 +83,7 @@ void D19cCbc3EventZS::SetEvent(const BeBoard* pBoard, uint32_t pZSEventSize, con
     fNCbc          = 0;
     fEventDataSize = fEventSize;
 
-    // now iterate through modules
+    // now iterate through hybrids
     uint32_t address_offset = D19C_EVENT_HEADER1_SIZE_32_CBC3;
 
     for(uint8_t cFe = 0; cFe < fNFe_software; cFe++)

@@ -154,8 +154,8 @@ void SSAPhysics::fillDataContainer(BoardContainer* const& cBoard)
     // # Clear container #
     // ###################
     for(const auto cOpticalGroup: *fOccContainer.at(cBoard->getIndex()))
-        for(const auto cModule: *cOpticalGroup)
-            for(const auto cChip: *cModule)
+        for(const auto cHybrid: *cOpticalGroup)
+            for(const auto cChip: *cHybrid)
                 for(auto& channel: *cChip->getChannelContainer<Occupancy>())
                 {
                     channel.fOccupancy      = 0;

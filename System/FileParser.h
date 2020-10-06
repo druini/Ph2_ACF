@@ -79,23 +79,23 @@ class FileParser
     void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseSLink(pugi::xml_node pSLinkNode, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
-    void parseModuleContainer(pugi::xml_node pModuleNode, Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::ostream& os, Ph2_HwDescription::BeBoard* pBoard);
-    void parseCbcContainer(pugi::xml_node pModuleNode, Ph2_HwDescription::Module* cModule, std::string cFilePrefix, std::ostream& os);
+    void parseHybridContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::ostream& os, Ph2_HwDescription::BeBoard* pBoard);
+    void parseCbcContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
     void parseCbcSettings(pugi::xml_node pCbcNode, Ph2_HwDescription::ReadoutChip* pCbc, std::ostream& os);
-    void parseGlobalCbcSettings(pugi::xml_node pModuleNode, Ph2_HwDescription::Module* pModule, std::ostream& os);
+    void parseGlobalCbcSettings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     //
-    void parseSSAContainer(pugi::xml_node pModuleNode, Ph2_HwDescription::Module* cModule, std::string cFilePrefix, std::ostream& os);
-    void parseSSASettings(pugi::xml_node pModuleNode, Ph2_HwDescription::ReadoutChip* cSSA);
+    void parseSSAContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
+    void parseSSASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cSSA);
     //
-    void parseMPA(pugi::xml_node pModuleNode, Ph2_HwDescription::Module* cModule, std::string cFilePrefix);
-    void parseMPASettings(pugi::xml_node pModuleNode, Ph2_HwDescription::ReadoutChip* cMPA);
+    void parseMPA(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix);
+    void parseMPASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cMPA);
 
     // ########################
     // # RD53 specific parser #
     // ########################
-    void parseRD53(pugi::xml_node pModuleNode, Ph2_HwDescription::Module* cModule, std::string cFilePrefix, std::ostream& os);
+    void parseRD53(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
     void parseRD53Settings(pugi::xml_node pRd53Node, Ph2_HwDescription::ReadoutChip* pRD53, std::ostream& os);
-    void parseGlobalRD53Settings(pugi::xml_node pModuleNode, Ph2_HwDescription::Module* pModule, std::ostream& os);
+    void parseGlobalRD53Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     // ########################
 
     std::map<uint8_t, std::string> ChannelMaskMapCBC2 = {

@@ -114,7 +114,7 @@ class Counter : public HwDescriptionVisitor
         fNCbc++;
         fCbcMask |= (1 << pCbc.getChipId());
     }
-    void     visitModule(Ph2_HwDescription::Module& pModule) { fNFe++; }
+    void     visitHybrid(Ph2_HwDescription::Hybrid& pHybrid) { fNFe++; }
     void     visitBeboard(Ph2_HwDescription::BeBoard& pBoard) { fNBe++; }
     uint32_t getNChip() const { return fNCbc; }
     uint32_t getNFe() const { return fNFe; }

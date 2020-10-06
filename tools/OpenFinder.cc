@@ -34,10 +34,10 @@ void OpenFinder::Reset()
 
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cRegMapThisModule = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cRegMapThisHybrid = cRegMapThisModule->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
                 LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId()) << " back to their original values..." << RESET;
                 for(auto cChip: *cHybrid)
                 {
@@ -84,17 +84,17 @@ void OpenFinder::Initialise(Parameters pParameters)
         auto& cRegMapThisBoard                                                 = fRegMapContainer.at(cBoard->getIndex());
         auto& cOpens                                                           = fOpens.at(cBoard->getIndex());
         auto& cOccupancy                                                       = fInTimeOccupancy.at(cBoard->getIndex());
-        for(auto cModule: *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
-            auto& cOpensModule      = cOpens->at(cModule->getIndex());
-            auto& cOccupancyModule  = cOccupancy->at(cModule->getIndex());
-            auto& cRegMapThisModule = cRegMapThisBoard->at(cModule->getIndex());
+            auto& cOpensOpticalGroup      = cOpens->at(cOpticalGroup->getIndex());
+            auto& cOccupancyOpticalGroup  = cOccupancy->at(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
 
-            for(auto cHybrid: *cModule)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cOpensHybrid      = cOpensModule->at(cHybrid->getIndex());
-                auto& cRegMapThisHybrid = cRegMapThisModule->at(cHybrid->getIndex());
-                auto& cOccupancyHybrid  = cOccupancyModule->at(cModule->getIndex());
+                auto& cOpensHybrid      = cOpensOpticalGroup->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cOccupancyHybrid  = cOccupancyOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     cOpensHybrid->at(cChip->getIndex())->getSummary<ChannelList>().clear();
@@ -163,12 +163,12 @@ bool OpenFinder::FindLatency(BeBoard* pBoard, std::vector<uint16_t> pLatencies)
         LOG(DEBUG) << BOLDBLUE << "L1A latency set to " << +cLatency << RESET;
         this->ReadNEvents(cBeBoard, fEventsPerPoint);
         const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
-        for(auto cModule: *pBoard)
+        for(auto cOpticalGroup: *pBoard)
         {
-            auto& cSummaryThisModule = cSummaryThisBoard->at(cModule->getIndex());
-            for(auto cHybrid: *cModule)
+            auto& cSummaryThisOpticalGroup = cSummaryThisBoard->at(cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cSummaryThisHybrid = cSummaryThisModule->at(cModule->getIndex());
+                auto& cSummaryThisHybrid = cSummaryThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cSummaryThisChip = cSummaryThisHybrid->at(cChip->getIndex());
@@ -198,12 +198,12 @@ bool OpenFinder::FindLatency(BeBoard* pBoard, std::vector<uint16_t> pLatencies)
 
     // set optimal latency for each chip
     bool cFailed = false;
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        auto& cSummaryThisModule = cSummaryThisBoard->at(cModule->getIndex());
-        for(auto cHybrid: *cModule)
+        auto& cSummaryThisOpticalGroup = cSummaryThisBoard->at(cOpticalGroup->getIndex());
+        for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cSummaryThisHybrid = cSummaryThisModule->at(cHybrid->getIndex());
+            auto& cSummaryThisHybrid = cSummaryThisOpticalGroup->at(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
                 auto& cSummaryThisChip = cSummaryThisHybrid->at(cChip->getIndex())->getSummary<ScanSummaries>()[fAntennaPosition - cAntennaSwitchMinValue];
@@ -239,14 +239,14 @@ void OpenFinder::CountOpens(BeBoard* pBoard)
 
     auto& cOpens            = fOpens.at(pBoard->getIndex());
     auto& cSummaryThisBoard = cMeasurement.at(pBoard->getIndex());
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        auto& cOpensThisModule   = cOpens->at(cModule->getIndex());
-        auto& cSummaryThisModule = cSummaryThisBoard->at(cModule->getIndex());
-        for(auto cHybrid: *cModule)
+        auto& cOpensThisOpticalGroup   = cOpens->at(cOpticalGroup->getIndex());
+        auto& cSummaryThisOpticalGroup = cSummaryThisBoard->at(cOpticalGroup->getIndex());
+        for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cOpensThisHybrid   = cOpensThisModule->at(cModule->getIndex());
-            auto& cSummaryThisHybrid = cSummaryThisModule->at(cModule->getIndex());
+            auto& cOpensThisHybrid   = cOpensThisOpticalGroup->at(cHybrid->getIndex());
+            auto& cSummaryThisHybrid = cSummaryThisOpticalGroup->at(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
                 auto  cConnectedChannels = cSearchAntennaMap->second.find((int)cChip->getId())->second;
@@ -281,7 +281,7 @@ void OpenFinder::Print()
     for(auto cBoard: *fDetectorContainer)
     {
         auto& cOpens = fOpens.at(cBoard->getIndex());
-        for(auto cModule: *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
             // create TTree for opens: opensTree
             auto OpensTree = new TTree("Opens", "Open channels in the hybrid");
@@ -294,10 +294,10 @@ void OpenFinder::Print()
             OpensTree->Branch("CBC", &nCBC);
             OpensTree->Branch("Channels", &openChannels);
 
-            auto& cOpensThisModule = cOpens->at(cModule->getIndex());
-            for(auto cHybrid: *cModule)
+            auto& cOpensThisOpticalGroup = cOpens->at(cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cOpensThisHybrid = cOpensThisModule->at(cModule->getIndex());
+                auto& cOpensThisHybrid = cOpensThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cOpensThisChip = cOpensThisHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
@@ -517,7 +517,7 @@ void OpenFinder::FindOpensPS()
                             } // chnl
                         }     // chip
                     }         // hybrid
-                }             // module
+                }             // opticalGroup
             }
             if(!cOpensFound) LOG(INFO) << BOLDGREEN << "No opens found on this hybrid." << RESET;
         }
