@@ -195,7 +195,6 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& pRegNode) //
     // return regReadback[0].second;
 
     const int nAttempts = 2;
-
     for(auto attempt = 0; attempt < nAttempts; attempt++)
     {
         auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
@@ -207,7 +206,6 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& pRegNode) //
         else
             return regReadback[0].second;
     }
-
     LOG(ERROR) << BOLDRED << "Empty register readback FIFO in " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
     return 0;
 }

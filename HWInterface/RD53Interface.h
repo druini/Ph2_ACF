@@ -18,8 +18,8 @@
 // # CONSTANTS #
 // #############
 #define VCALSLEEP 50000 // [microseconds]
-#define NPIXCMD 100     // Number of possible pixel commands to stack
 #define MONITORSLEEP 10 // [seconds]
+#define NPIXCMD     100 // Number of possible pixel commands to stack
 
 namespace Ph2_HwInterface
 {
