@@ -226,8 +226,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
                         cBoard->setSparsification(cSparsified);
 
-                        LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(theOuterTrackerHybrid->getHybridId() % 2) << " on link " << +theOuterTrackerHybrid->getLinkId() << " on hybrid "
-                                  << +theOuterTrackerHybrid->getHybridId() << RESET;
+                        LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(theOuterTrackerHybrid->getId() % 2) << " on link " << +theOuterTrackerHybrid->getLinkId() << " on hybrid "
+                                  << +theOuterTrackerHybrid->getId() << RESET;
                         fCicInterface->ConfigureChip(cCic);
 
                         // CIC start-up

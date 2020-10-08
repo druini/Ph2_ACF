@@ -481,7 +481,7 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
     }
     else
         cFileName = expandEnvironmentVariables(pSSAnode.attribute("configfile").value());
-    ReadoutChip* cSSA = pHybrid->addChipContainer(cChipId, new SSA(pHybrid->getId(), pHybrid->getFMCId(), pHybrid->getHybridId(), cChipId, 0, cFileName));
+    ReadoutChip* cSSA = pHybrid->addChipContainer(cChipId, new SSA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, 0, cFileName));
     cSSA->setNumberOfChannels(120);
     this->parseSSASettings(pSSAnode, cSSA);
 }
@@ -503,7 +503,7 @@ void FileParser::parseMPA(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::stri
     }
     else
         cFileName = expandEnvironmentVariables(pHybridNode.attribute("configfile").value());
-    ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getId(), pHybrid->getFMCId(), pHybrid->getHybridId(), cChipId, cFileName));
+    ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cFileName));
     cMPA->setNumberOfChannels(1920);
     this->parseMPASettings(pHybridNode, cMPA);
 }
@@ -530,13 +530,13 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         if(pBoard->getBoardType() == BoardType::RD53)
         {
             cHybrid = pOpticalGroup->addHybridContainer(pHybridNode.attribute("Id").as_int(),
-                                                        new Hybrid(pOpticalGroup->getId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
+                                                        new Hybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
         }
         else
         {
             cHybrid = pOpticalGroup->addHybridContainer(
                 pHybridNode.attribute("Id").as_int(),
-                new OuterTrackerHybrid(pOpticalGroup->getId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
+                new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
             static_cast<OuterTrackerHybrid*>(cHybrid)->setLinkId(pHybridNode.attribute("LinkId").as_int());
         }
 
@@ -589,7 +589,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                            << "|"
                            << "----" << cName << "  "
                            << "Id" << cChipId << " , File: " << cFileName << RESET << std::endl;
-                        Cic* cCic = new Cic(cHybrid->getId(), cHybrid->getFMCId(), cHybrid->getHybridId(), cChipId, cFileName);
+                        Cic* cCic = new Cic(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cChipId, cFileName);
                         static_cast<OuterTrackerHybrid*>(cHybrid)->addCic(cCic);
                         cCic->setFrontEndType(cType);
 
@@ -675,7 +675,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
         cFileName = expandEnvironmentVariables(pCbcNode.attribute("configfile").value());
 
     uint32_t     cChipId = pCbcNode.attribute("Id").as_int();
-    ReadoutChip* cCbc    = cHybrid->addChipContainer(cChipId, new Cbc(cHybrid->getId(), cHybrid->getFMCId(), cHybrid->getHybridId(), cChipId, cFileName));
+    ReadoutChip* cCbc    = cHybrid->addChipContainer(cChipId, new Cbc(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cChipId, cFileName));
     cCbc->setNumberOfChannels(254);
 
     // parse the specific CBC settings so that Registers take precedence
