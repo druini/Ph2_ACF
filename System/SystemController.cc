@@ -216,22 +216,22 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 LOG(INFO) << BOLDMAGENTA << "CIC start-up seqeunce for hybrids on link " << +cLinkId << RESET;
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>(cHybrid);
-                    if(theOuterTrackerModule->fCic != NULL)
+                    OuterTrackerHybrid* theOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
+                    if(theOuterTrackerHybrid->fCic != NULL)
                     {
                         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
-                        auto& cCic = theOuterTrackerModule->fCic;
+                        auto& cCic = theOuterTrackerHybrid->fCic;
 
                         // read CIC sparsification setting
                         bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
                         cBoard->setSparsification(cSparsified);
 
-                        LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(theOuterTrackerModule->getFeId() % 2) << " on link " << +theOuterTrackerModule->getLinkId() << " on hybrid "
-                                  << +theOuterTrackerModule->getFeId() << RESET;
+                        LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(theOuterTrackerHybrid->getHybridId() % 2) << " on link " << +theOuterTrackerHybrid->getLinkId() << " on hybrid "
+                                  << +theOuterTrackerHybrid->getHybridId() << RESET;
                         fCicInterface->ConfigureChip(cCic);
 
                         // CIC start-up
-                        uint8_t cModeSelect = (static_cast<ReadoutChip*>(theOuterTrackerModule->at(0))->getFrontEndType() != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
+                        uint8_t cModeSelect = (static_cast<ReadoutChip*>(theOuterTrackerHybrid->at(0))->getFrontEndType() != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
                         // select CIC mode
                         bool cSuccess = fCicInterface->SelectMode(cCic, cModeSelect);
                         if(!cSuccess)
@@ -244,8 +244,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         uint8_t cDriveStrength = 5;
                         cSuccess               = fCicInterface->StartUp(cCic, cDriveStrength);
                         fBeBoardInterface->ChipReSync(cBoard);
-                        LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerModule->getId() % 2) << " connected to link "
-                                  << +theOuterTrackerModule->getLinkId() << RESET;
+                        LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerHybrid->getId() % 2) << " connected to link "
+                                  << +theOuterTrackerHybrid->getLinkId() << RESET;
                         LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
                     }
                     // Configure readout-chips [CBCs, MPAs, SSAs]
@@ -312,7 +312,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 // ############################
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    LOG(INFO) << GREEN << "Initializing communication to Module: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
+                    LOG(INFO) << GREEN << "Initializing communication to Hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
                     for(const auto cRD53: *cHybrid)
                     {
                         LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cRD53->getId() << RESET;

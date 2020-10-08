@@ -5,7 +5,7 @@
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/FrontEndDescription.h"
 #include "../HWDescription/MPA.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
     BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
 
-    ModuleContainer* ChipVec = pBoard->at(0)->at(0);
+    HybridContainer* ChipVec = pBoard->at(0)->at(0);
 
     std::chrono::milliseconds LongPOWait(500);
     std::chrono::milliseconds ShortWait(10);

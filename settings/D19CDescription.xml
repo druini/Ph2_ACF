@@ -6,7 +6,7 @@
     
     <OpticalGroup Id="0" FMCId="0" >
         
-        <Module FeId="0" ModuleId="0" Status="1">
+        <Hybrid Id="0" Status="1">
             <Global>
                 <Settings threshold="500" latency="29"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="0" groundothers="0"/>
@@ -18,7 +18,7 @@
             <CBC_Files path="./settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             <CBC Id="1" configfile="CBC3_default.txt" />
-        </Module>
+        </Hybrid>
     </OpticalGroup>
 
     <SLink>

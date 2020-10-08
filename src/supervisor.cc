@@ -2,7 +2,7 @@
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Definition.h"
-#include "../HWDescription/Module.h"
+#include "../HWDescription/Hybrid.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/ChipInterface.h"
 #include "../Utils/MiddlewareInterface.h"

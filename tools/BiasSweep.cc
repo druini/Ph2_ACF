@@ -119,7 +119,7 @@ void BiasSweep::Initialize()
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                Module* theHybrid = static_cast<Module*>(cHybrid);
+                Hybrid* theHybrid = static_cast<Hybrid*>(cHybrid);
                 fType             = theHybrid->getFrontEndType();
 
                 for(auto cCbc: *cHybrid)
@@ -171,8 +171,8 @@ void BiasSweep::MeasureMinPower(BeBoard* pBoard, ReadoutChip* pCbc)
     TTree*      cTmpTree  = static_cast<TTree*>(getHist(pCbc, "DataTree"));
     fData->fBias          = "MinimalPower";
     fData->fTimestamp     = static_cast<long int>(cTime);
-    fData->fFeId          = pCbc->getFeId();
-    fData->fCbcId         = pCbc->getChipId();
+    fData->fFeId          = pCbc->getHybridId();
+    fData->fCbcId         = pCbc->getId();
     fData->fUnit[0]       = 'I';
     fData->fUnit[1]       = 0;
     fData->fInitialXValue = 0;
@@ -278,7 +278,7 @@ void BiasSweep::SweepBias(std::string pBias, ReadoutChip* pCbc)
         // just create objects, sweep and fill and forget about them again!
 
         std::time_t cTime = std::time(nullptr);
-        TString     cName = Form("g_BiasSweep_%s_Fe%d_Cbc%d_TS%d", pBias.c_str(), pCbc->getFeId(), pCbc->getChipId(), static_cast<int>(cTime));
+        TString     cName = Form("g_BiasSweep_%s_Fe%d_Cbc%d_TS%d", pBias.c_str(), pCbc->getHybridId(), pCbc->getId(), static_cast<int>(cTime));
 
         TObject* cObj = gROOT->FindObject(cName);
 
@@ -301,8 +301,8 @@ void BiasSweep::SweepBias(std::string pBias, ReadoutChip* pCbc)
         TTree* cTmpTree       = static_cast<TTree*>(getHist(pCbc, "DataTree"));
         fData->fBias          = pBias.c_str();
         fData->fTimestamp     = static_cast<long int>(cTime);
-        fData->fFeId          = pCbc->getFeId();
-        fData->fCbcId         = pCbc->getChipId();
+        fData->fFeId          = pCbc->getHybridId();
+        fData->fCbcId         = pCbc->getId();
         fData->fUnit[0]       = (cCurrent) ? 'I' : 'V';
         fData->fUnit[1]       = 0;
         fData->fInitialXValue = 0;

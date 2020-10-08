@@ -20,7 +20,7 @@ void SSAPhysics::ConfigureCalibration()
     // #######################
     saveRawData = this->findValueInSettings("SaveRawData");
     doLocal     = false;
-    
+
     // ###########################################
     // # Initialize directory and data container #
     // ###########################################
@@ -38,12 +38,12 @@ void SSAPhysics::Running()
     if(saveRawData == true)
     {
         char runString[7];
-        sprintf(runString, "%06d", (fRunNumber & 0xF423F)); //max value can be 999999, to avoid GCC 8 warning
+        sprintf(runString, "%06d", (fRunNumber & 0xF423F)); // max value can be 999999, to avoid GCC 8 warning
         this->addFileHandler(std::string(RESULTDIR) + "/run_" + runString + ".raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->ChipReSync();
+    for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getId()])->ChipReSync();
     SystemController::Start(fRunNumber);
 
     SSAPhysics::run();
@@ -61,7 +61,7 @@ void SSAPhysics::Stop()
     LOG(INFO) << GREEN << "[SSAPhysics::Stop] Stopping" << RESET;
 
     Tool::Stop();
-    
+
     // ################
     // # Error report #
     // ################
@@ -154,8 +154,8 @@ void SSAPhysics::fillDataContainer(BoardContainer* const& cBoard)
     // # Clear container #
     // ###################
     for(const auto cOpticalGroup: *fOccContainer.at(cBoard->getIndex()))
-        for(const auto cModule: *cOpticalGroup)
-            for(const auto cChip: *cModule)
+        for(const auto cHybrid: *cOpticalGroup)
+            for(const auto cChip: *cHybrid)
                 for(auto& channel: *cChip->getChannelContainer<Occupancy>())
                 {
                     channel.fOccupancy      = 0;

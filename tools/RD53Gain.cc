@@ -153,8 +153,8 @@ void Gain::run()
     // ##########################
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule) this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid) this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
 
     for(auto container: detectorContainerVector) theRecyclingBin.free(container);
     detectorContainerVector.clear();
@@ -171,8 +171,8 @@ void Gain::run()
     // #########################
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
@@ -180,7 +180,7 @@ void Gain::run()
                                     detectorContainerVector[i]
                                         ->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
-                                        ->at(cModule->getIndex())
+                                        ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<OccupancyAndPh>(row, col)
                                         .fOccupancy = RD53Shared::ISDISABLED;
@@ -226,8 +226,8 @@ void Gain::draw(bool saveData)
     {
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
-                for(const auto cModule: *cOpticalGroup)
-                    for(const auto cChip: *cModule)
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid)
                     {
                         std::stringstream myString;
                         myString.clear();
@@ -235,7 +235,7 @@ void Gain::draw(bool saveData)
                         myString << this->fDirectoryName + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Gain_"
                                  << "B" << std::setfill('0') << std::setw(2) << cBoard->getId() << "_"
                                  << "O" << std::setfill('0') << std::setw(2) << cOpticalGroup->getId() << "_"
-                                 << "M" << std::setfill('0') << std::setw(2) << cModule->getId() << "_"
+                                 << "M" << std::setfill('0') << std::setw(2) << cHybrid->getId() << "_"
                                  << "C" << std::setfill('0') << std::setw(2) << cChip->getId() << ".dat";
                         std::ofstream fileOutID(myString.str(), std::ios::out);
                         for(auto i = 0u; i < dacList.size(); i++)
@@ -248,7 +248,7 @@ void Gain::draw(bool saveData)
                                                   << detectorContainerVector[i]
                                                              ->at(cBoard->getIndex())
                                                              ->at(cOpticalGroup->getIndex())
-                                                             ->at(cModule->getIndex())
+                                                             ->at(cHybrid->getIndex())
                                                              ->at(cChip->getIndex())
                                                              ->getChannel<OccupancyAndPh>(row, col)
                                                              .fOccupancy *
@@ -257,7 +257,7 @@ void Gain::draw(bool saveData)
                                                   << detectorContainerVector[i]
                                                          ->at(cBoard->getIndex())
                                                          ->at(cOpticalGroup->getIndex())
-                                                         ->at(cModule->getIndex())
+                                                         ->at(cHybrid->getIndex())
                                                          ->at(cChip->getIndex())
                                                          ->getChannel<OccupancyAndPh>(row, col)
                                                          .fPh
@@ -283,8 +283,8 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
     size_t index = 0;
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
@@ -296,14 +296,14 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                     y[i] = detectorContainerVector[i]
                                                ->at(cBoard->getIndex())
                                                ->at(cOpticalGroup->getIndex())
-                                               ->at(cModule->getIndex())
+                                               ->at(cHybrid->getIndex())
                                                ->at(cChip->getIndex())
                                                ->getChannel<OccupancyAndPh>(row, col)
                                                .fPh;
                                     e[i] = detectorContainerVector[i]
                                                ->at(cBoard->getIndex())
                                                ->at(cOpticalGroup->getIndex())
-                                               ->at(cModule->getIndex())
+                                               ->at(cHybrid->getIndex())
                                                ->at(cChip->getIndex())
                                                ->getChannel<OccupancyAndPh>(row, col)
                                                .fPhError;
@@ -315,36 +315,36 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                 {
                                     theGainAndInterceptContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
-                                        ->at(cModule->getIndex())
+                                        ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<GainAndIntercept>(row, col)
                                         .fGain = gain;
                                     theGainAndInterceptContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
-                                        ->at(cModule->getIndex())
+                                        ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<GainAndIntercept>(row, col)
                                         .fGainError = gainErr;
                                     theGainAndInterceptContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
-                                        ->at(cModule->getIndex())
+                                        ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<GainAndIntercept>(row, col)
                                         .fIntercept = intercept;
                                     theGainAndInterceptContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
-                                        ->at(cModule->getIndex())
+                                        ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<GainAndIntercept>(row, col)
                                         .fInterceptError = interceptErr;
 
-                                    if(gain > theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>())
-                                        theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>() = gain;
+                                    if(gain > theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>())
+                                        theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() = gain;
                                 }
                                 else
                                     theGainAndInterceptContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
-                                        ->at(cModule->getIndex())
+                                        ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<GainAndIntercept>(row, col)
                                         .fGain = RD53Shared::FITERROR;
@@ -357,14 +357,14 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
 
     for(const auto cBoard: *theGainAndInterceptContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << GREEN << "Average gain for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/"
-                              << cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(4) << cChip->getSummary<GainAndIntercept, GainAndIntercept>().fGain << RESET
+                    LOG(INFO) << GREEN << "Average gain for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                              << +cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(4) << cChip->getSummary<GainAndIntercept, GainAndIntercept>().fGain << RESET
                               << GREEN << " (ToT/Delta_VCal)" << std::setprecision(-1) << RESET;
                     LOG(INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW
-                              << theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>() << RESET;
+                              << theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << RESET;
                 }
 
     return theGainAndInterceptContainer;
@@ -450,11 +450,11 @@ void Gain::chipErrorReport()
 
     for(const auto cBoard: *fDetectorContainer)
         for(auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8)
                               << "" << RESET;
                     LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8)
@@ -478,15 +478,15 @@ void Gain::saveChipRegisters(int currentRun)
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
                     if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> Gain saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Gain saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
 }

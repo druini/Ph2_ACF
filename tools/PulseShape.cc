@@ -31,7 +31,7 @@ void PulseShape::Initialize()
                 LOG(INFO) << "Certain board()";
                 uint32_t cFeId = cFe->getId();
                 std::cerr << "cFeId = " << cFeId;
-                fType = static_cast<OuterTrackerModule*>(cFe)->getFrontEndType();
+                fType = static_cast<OuterTrackerHybrid*>(cFe)->getFrontEndType();
 
                 for(auto cCbc: *cFe)
                 {
@@ -136,7 +136,7 @@ void PulseShape::ScanVcth(uint32_t pDelay, int cLow)
         uint32_t cNthAcq = 0;
         int      cNHits  = 0;
 
-        // Take Data for all Modules
+        // Take Data for all Hybrids
         for(auto pBoard: *fDetectorContainer)
         {
             BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
@@ -145,7 +145,7 @@ void PulseShape::ScanVcth(uint32_t pDelay, int cLow)
                 for(auto cFe: *cOpticalGroup)
                 {
                     cVisitor.setThreshold(cVcth);
-                    static_cast<OuterTrackerModule*>(cFe)->accept(cVisitor);
+                    static_cast<OuterTrackerHybrid*>(cFe)->accept(cVisitor);
                 }
             }
 
@@ -243,7 +243,7 @@ void PulseShape::fitGraph(int pLow)
     {
         for(auto& cChannel: cCbc.second)
         {
-            TString  cName = Form("f_cbc_pulse_Fe%dCbc%d_Channel%d", static_cast<ReadoutChip*>(cCbc.first)->getFeId(), static_cast<ReadoutChip*>(cCbc.first)->getChipId(), cChannel->fChannelId);
+            TString  cName = Form("f_cbc_pulse_Fe%dCbc%d_Channel%d", static_cast<ReadoutChip*>(cCbc.first)->getHybridId(), static_cast<ReadoutChip*>(cCbc.first)->getId(), cChannel->fChannelId);
             TObject* cObj  = gROOT->FindObject(cName);
 
             if(cObj) delete cObj;

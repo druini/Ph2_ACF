@@ -17,7 +17,7 @@
             />
       </lpGBT>
       -->
-      <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
+      <Hybrid Id="0" Status="1">
         <RD53_Files path="./" />
 
         <RD53 Id="0" Lane="0" configfile="CMSIT_RD53.txt">
@@ -118,7 +118,7 @@
             CMDERR_CNT              =     "0"
             SKIPPED_TRIGGER_CNT     =     "0"
             />
-      </Module>
+      </Hybrid>
     </OpticalGroup>
 
     <!-- Configuration for backend readout board -->

@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     if(cHardReset) { cTool.fBeBoardInterface->RebootBoard(pBoard); }
     else if(cDDR3SelfTest)
     {
-        cTool.fBeBoardInterface->setBoard(pBoard->getBeBoardId());
+        cTool.fBeBoardInterface->setBoard(pBoard->getId());
         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->DDR3SelfTest();
         //(D19cFWInterface*)(cTool.fBeBoardInterface->fBoardFW)->DDR3SelfTest();
     }
@@ -158,7 +158,7 @@ int main(int argc, char** argv)
             uint32_t cNEventsToCollect = (cmd.foundOption("events")) ? convertAnyInt(cmd.optionValue("events").c_str()) : 10000;
 
             // be careful works only for one hybrid
-            ModuleContainer* cCbcVector = pBoard->at(0)->at(0);
+            HybridContainer* cCbcVector = pBoard->at(0)->at(0);
             /*for( auto cCbc : cCbcVector )
             {
                 static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->enableHipSuppression( cCbc, false, true,0);

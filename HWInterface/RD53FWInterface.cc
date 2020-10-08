@@ -233,7 +233,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
     // #################################
     // # Compose chip-lane in readback #
     // #################################
-    uint32_t chipLane = pChip->getFeId();
+    uint32_t chipLane = pChip->getHybridId();
     if(this->singleChip != true) chipLane = NLANE_HYBRID * chipLane + static_cast<RD53*>(pChip)->getChipLane();
 
     // #####################
@@ -444,7 +444,7 @@ std::vector<uint16_t> RD53FWInterface::GetInitSequence(const unsigned int type)
     return initSequence;
 }
 
-uint32_t RD53FWInterface::GetHybridEnabledChips(const Module* pHybrid)
+uint32_t RD53FWInterface::GetHybridEnabledChips(const Hybrid* pHybrid)
 {
     const uint32_t hybrid_id = pHybrid->getId();
     uint32_t       chips_en  = 0;
@@ -986,7 +986,7 @@ int RD53FWInterface::Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup
         auto opticalGroup = std::find_if(pBoard->begin(), pBoard->end(), [&](OpticalGroupContainer* cOpticalGroup) { return cOpticalGroup->getId() == optGroup_id; });
         if(opticalGroup != pBoard->end())
         {
-            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [&](ModuleContainer* cHybrid) { return cHybrid->getId() == hybrid_id; });
+            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [&](HybridContainer* cHybrid) { return cHybrid->getId() == hybrid_id; });
             if(hybrid != (*opticalGroup)->end())
             {
                 auto it = std::find_if((*hybrid)->begin(), (*hybrid)->end(), [&](ChipContainer* pChip) { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
@@ -1840,7 +1840,7 @@ bool RD53FWInterface::RunPRBStest(bool given_time, unsigned long long frames_or_
         {"user.ctrl_regs.PRBS_checker.stop_checker", 1},
         {"user.ctrl_regs.PRBS_checker.stop_checker", 0},
 
-        // Select module and chip
+        // Select hybrid and chip
         {"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
         {"user.ctrl_regs.PRBS_checker.chip_address", chip_id}});
 

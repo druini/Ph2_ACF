@@ -295,7 +295,7 @@ int main(int argc, char** argv)
             mySysCntr.InitializeSettings(configFile, outp);
             if(reset == true)
             {
-                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getBeBoardId()])->ResetSequence();
+                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence();
                 exit(EXIT_SUCCESS);
             }
             if(binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53FWInterface::decodedEvents);
@@ -589,14 +589,13 @@ int main(int argc, char** argv)
 
             for(const auto cBoard: *mySysCntr.fDetectorContainer)
                 for(const auto cOpticalGroup: *cBoard)
-                    for(const auto cModule: *cOpticalGroup)
-                        for(const auto cChip: *cModule)
+                    for(const auto cHybrid: *cOpticalGroup)
+                        for(const auto cChip: *cHybrid)
                         {
                             mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 2, true);
-                            LOG(INFO) << GREEN << "PRBS test for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/"
-                                      << cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
-                                      << ((static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getBeBoardId()])->RunPRBStest(given_time, frames_or_time, cModule->getId(), cChip->getId()) ==
-                                           true)
+                            LOG(INFO) << GREEN << "PRBS test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                      << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
+                                      << ((static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getId()])->RunPRBStest(given_time, frames_or_time, cHybrid->getId(), cChip->getId()) == true)
                                               ? "PASSED"
                                               : "NOT PASSED")
                                       << RESET;

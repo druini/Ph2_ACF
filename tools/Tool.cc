@@ -24,7 +24,7 @@ Tool::Tool()
 #ifdef __USE_ROOT__
     fCanvasMap()
     , fChipHistMap()
-    , fModuleHistMap()
+    , fHybridHistMap()
     ,
 #endif
     fType()
@@ -39,7 +39,7 @@ Tool::Tool()
     , fAllChan(false)
     , fMaskChannelsFromOtherGroups(false)
     , fTestPulse(false)
-    , fDoModuleBroadcast(false)
+    , fDoHybridBroadcast(false)
     , fDoBoardBroadcast(false)
     , fChannelGroupHandler(nullptr)
 {
@@ -54,7 +54,7 @@ Tool::Tool(THttpServer* pHttpServer)
     : SystemController()
     , fCanvasMap()
     , fChipHistMap()
-    , fModuleHistMap()
+    , fHybridHistMap()
     , fType()
     , fTestGroupChannelMap()
     , fDirectoryName("")
@@ -64,7 +64,7 @@ Tool::Tool(THttpServer* pHttpServer)
     , fAllChan(false)
     , fMaskChannelsFromOtherGroups(false)
     , fTestPulse(false)
-    , fDoModuleBroadcast(false)
+    , fDoHybridBroadcast(false)
     , fDoBoardBroadcast(false)
     , fChannelGroupHandler(nullptr)
 {
@@ -117,7 +117,7 @@ void Tool::Inherit(const Tool* pTool)
 #ifdef __USE_ROOT__
     fCanvasMap      = pTool->fCanvasMap;
     fChipHistMap    = pTool->fChipHistMap;
-    fModuleHistMap  = pTool->fModuleHistMap;
+    fHybridHistMap  = pTool->fHybridHistMap;
     fBeBoardHistMap = pTool->fBeBoardHistMap;
 #endif
     fTestGroupChannelMap         = pTool->fTestGroupChannelMap;
@@ -125,7 +125,7 @@ void Tool::Inherit(const Tool* pTool)
     fAllChan                     = pTool->fAllChan;
     fMaskChannelsFromOtherGroups = pTool->fMaskChannelsFromOtherGroups;
     fTestPulse                   = pTool->fTestPulse;
-    fDoModuleBroadcast           = pTool->fDoModuleBroadcast;
+    fDoHybridBroadcast           = pTool->fDoHybridBroadcast;
     fDoBoardBroadcast            = pTool->fDoBoardBroadcast;
 
 #ifdef __HTTP__
@@ -188,7 +188,7 @@ void Tool::SoftDestroy()
         }
     }
     fChipHistMap.clear();
-    for(auto chip: fModuleHistMap)
+    for(auto chip: fHybridHistMap)
     {
         for(auto hist: chip.second)
         {
@@ -196,7 +196,7 @@ void Tool::SoftDestroy()
             hist.second = nullptr;
         }
     }
-    fModuleHistMap.clear();
+    fHybridHistMap.clear();
     for(auto chip: fBeBoardHistMap)
     {
         for(auto hist: chip.second)
@@ -223,7 +223,7 @@ void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObje
     if(cChipHistMap == std::end(fChipHistMap))
     {
         // Fabio: CBC specific -> to be moved out from Tool
-        LOG(INFO) << "Histo Map for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getFeId()) << ") does not exist - creating ";
+        LOG(INFO) << "Histo Map for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getHybridId()) << ") does not exist - creating ";
         std::map<std::string, TObject*> cTempChipMap;
 
         fChipHistMap[pChip] = cTempChipMap;
@@ -242,29 +242,29 @@ void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObje
 #endif
 }
 
-void Tool::bookHistogram(ModuleContainer* pModule, std::string pName, TObject* pObject)
+void Tool::bookHistogram(HybridContainer* pHybrid, std::string pName, TObject* pObject)
 {
     TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
     if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
 
     // find or create map<string,TOBject> for specific CBC
-    auto cModuleHistMap = fModuleHistMap.find(pModule);
+    auto cHybridHistMap = fHybridHistMap.find(pHybrid);
 
-    if(cModuleHistMap == std::end(fModuleHistMap))
+    if(cHybridHistMap == std::end(fHybridHistMap))
     {
-        LOG(INFO) << "Histo Map for Module " << int(pModule->getId()) << " does not exist - creating ";
-        std::map<std::string, TObject*> cTempModuleMap;
+        LOG(INFO) << "Histo Map for Hybrid " << int(pHybrid->getId()) << " does not exist - creating ";
+        std::map<std::string, TObject*> cTempHybridMap;
 
-        fModuleHistMap[pModule] = cTempModuleMap;
-        cModuleHistMap          = fModuleHistMap.find(pModule);
+        fHybridHistMap[pHybrid] = cTempHybridMap;
+        cHybridHistMap          = fHybridHistMap.find(pHybrid);
     }
 
     // find histogram with given name: if it exists, delete the object, if not create
-    auto cHisto = cModuleHistMap->second.find(pName);
+    auto cHisto = cHybridHistMap->second.find(pName);
 
-    if(cHisto != std::end(cModuleHistMap->second)) cModuleHistMap->second.erase(cHisto);
+    if(cHisto != std::end(cHybridHistMap->second)) cHybridHistMap->second.erase(cHisto);
 
-    cModuleHistMap->second[pName] = pObject;
+    cHybridHistMap->second[pName] = pObject;
 #ifdef __HTTP__
     if(fHttpServer) fHttpServer->Register("/Histograms", pObject);
 #endif
@@ -280,10 +280,10 @@ void Tool::bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* p
 
     if(cBeBoardHistMap == std::end(fBeBoardHistMap))
     {
-        LOG(INFO) << "Histo Map for Module " << int(pBeBoard->getId()) << " does not exist - creating ";
-        std::map<std::string, TObject*> cTempModuleMap;
+        LOG(INFO) << "Histo Map for Hybrid " << int(pBeBoard->getId()) << " does not exist - creating ";
+        std::map<std::string, TObject*> cTempHybridMap;
 
-        fBeBoardHistMap[pBeBoard] = cTempModuleMap;
+        fBeBoardHistMap[pBeBoard] = cTempHybridMap;
         cBeBoardHistMap           = fBeBoardHistMap.find(pBeBoard);
     }
 
@@ -305,7 +305,7 @@ TObject* Tool::getHist(ChipContainer* pChip, std::string pName)
     if(cChipHistMap == std::end(fChipHistMap))
     {
         // Fabio: CBC specific -> to be moved out from Tool
-        LOG(ERROR) << RED << "Error: could not find the Histograms for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getFeId()) << ")" << RESET;
+        LOG(ERROR) << RED << "Error: could not find the Histograms for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getHybridId()) << ")" << RESET;
         return nullptr;
     }
     else
@@ -322,20 +322,20 @@ TObject* Tool::getHist(ChipContainer* pChip, std::string pName)
     }
 }
 
-TObject* Tool::getHist(ModuleContainer* pModule, std::string pName)
+TObject* Tool::getHist(HybridContainer* pHybrid, std::string pName)
 {
-    auto cModuleHistMap = fModuleHistMap.find(pModule);
+    auto cHybridHistMap = fHybridHistMap.find(pHybrid);
 
-    if(cModuleHistMap == std::end(fModuleHistMap))
+    if(cHybridHistMap == std::end(fHybridHistMap))
     {
-        LOG(ERROR) << RED << "Error: could not find the Histograms for Module " << int(pModule->getId()) << RESET;
+        LOG(ERROR) << RED << "Error: could not find the Histograms for Hybrid " << int(pHybrid->getId()) << RESET;
         return nullptr;
     }
     else
     {
-        auto cHisto = cModuleHistMap->second.find(pName);
+        auto cHisto = cHybridHistMap->second.find(pName);
 
-        if(cHisto == std::end(cModuleHistMap->second))
+        if(cHisto == std::end(cHybridHistMap->second))
         {
             LOG(ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET;
             return nullptr;
@@ -351,7 +351,7 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
 
     if(cBeBoardHistMap == std::end(fBeBoardHistMap))
     {
-        LOG(ERROR) << RED << "Error: could not find the Histograms for Module " << int(pBeBoard->getId()) << RESET;
+        LOG(ERROR) << RED << "Error: could not find the Histograms for Hybrid " << int(pBeBoard->getId()) << RESET;
         return nullptr;
     }
     else
@@ -384,7 +384,7 @@ void Tool::SaveResults()
     }
 
     // Now per FE
-    for(const auto& cHybrid: fModuleHistMap)
+    for(const auto& cHybrid: fHybridHistMap)
     {
         TString  cDirName = Form("FE%d", cHybrid.first->getId());
         TObject* cObj     = gROOT->FindObject(cDirName);
@@ -403,7 +403,7 @@ void Tool::SaveResults()
     for(const auto& cChip: fChipHistMap)
     {
         // Fabio: CBC specific -> to be moved out from Tool
-        TString  cDirName = Form("FE%dCBC%d", static_cast<ReadoutChip*>(cChip.first)->getFeId(), cChip.first->getId());
+        TString  cDirName = Form("FE%dCBC%d", static_cast<ReadoutChip*>(cChip.first)->getHybridId(), cChip.first->getId());
         TObject* cObj     = gROOT->FindObject(cDirName);
 
         // if ( cObj ) delete cObj;
@@ -579,20 +579,20 @@ void Tool::dumpConfigFiles()
 
             for(auto opticalGroup: *board)
             {
-                for(auto module: *opticalGroup)
+                for(auto hybrid: *opticalGroup)
                 {
-                    for(auto chip: *module)
+                    for(auto chip: *hybrid)
                     {
-                        std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(module->getId()) +
+                        std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(hybrid->getId()) +
                                                 "_Chip" + std::to_string(chip->getId()) + ".txt";
                         LOG(DEBUG) << BOLDBLUE << "Dumping readout chip configuration to " << cFilename << RESET;
                         chip->saveRegMap(cFilename.data());
                     }
-                    auto& cCic = static_cast<OuterTrackerModule*>(module)->fCic;
+                    auto& cCic = static_cast<OuterTrackerHybrid*>(hybrid)->fCic;
                     if(cCic != NULL)
                     {
                         std::string cFilename =
-                            fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(module->getId()) + ".txt";
+                            fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(hybrid->getId()) + ".txt";
                         LOG(INFO) << BOLDBLUE << "Dumping CIC configuration to " << cFilename << RESET;
                         cCic->saveRegMap(cFilename.data());
                     }
@@ -682,7 +682,7 @@ void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
 
     default:
     {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord " << cChip->getBeBoardId() << " Module " << cChip->getFeId() << " Chip " << cChip->getChipId()
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord " << cChip->getBeBoardId() << " Hybrid " << cChip->getHybridId() << " Chip " << +cChip->getId()
                    << ", aborting" << RESET;
         throw("[Tool::selectGroupTestPulse]\tError, FrontEnd type not found");
         break;
@@ -1360,7 +1360,7 @@ void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string& dacName
         {
             for(auto cChip: *cHybrid)
             {
-                std::vector<uint16_t> dacVector; //= dacList.at(cHybrid->getModuleId()).at(cChip->getChipId());
+                std::vector<uint16_t> dacVector; //= dacList.at(cHybrid->getHybridId()).at(cChip->getId());
                 fReadoutChipInterface->WriteChipAllLocalReg(cChip, dacName, *globalDACContainer.at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
             }
         }
@@ -1383,10 +1383,10 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                if(fDoModuleBroadcast == false)
+                if(fDoHybridBroadcast == false)
                     for(auto cChip: *cHybrid) fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
                 else
-                    fReadoutChipInterface->WriteModuleBroadcastChipReg(static_cast<Module*>(cHybrid), dacName, dacValue);
+                    fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue);
             }
         }
     }

@@ -11,8 +11,8 @@
  */
 
 #include "D19cFWInterface.h"
-#include "../HWDescription/Module.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/Hybrid.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../Utils/D19cSSAEvent.h"
 #include "D19cFpgaConfig.h"
 #include "GbtInterface.h"
@@ -689,13 +689,13 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         fI2CSlaveMap.clear();
         fSlaveMap.clear();
         // assuming only one type of CIC per board ...
-        for(auto cModule: *pBoard)
+        for(auto cHybrid: *pBoard)
         {
             // default I2C map is for 8CBC3
-            for(auto cFe: *cModule)
+            for(auto cFe: *cHybrid)
             {
-                auto    cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
-                auto&   cCic                = cOuterTrackerModule->fCic;
+                auto    cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+                auto&   cCic                = cOuterTrackerHybrid->fCic;
                 uint8_t cBaseAddress;
                 uint8_t cNBytes;
                 std::cout << cCic << std::endl;
@@ -724,9 +724,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                     } // chips
                     cBaseAddress                                  = 0x60;
                     cNBytes                                       = 2;
-                    std::vector<uint32_t> cOldI2CSlaveDescription = {cBaseAddress, cNBytes, 1, 1, 1, 1, cCic->getChipId()};
+                    std::vector<uint32_t> cOldI2CSlaveDescription = {cBaseAddress, cNBytes, 1, 1, 1, 1, cCic->getId()};
                     std::vector<uint32_t> cI2CSlaveDescription    = {cBaseAddress, cNBytes, 1, 1, 1, 1};
-                    fI2CSlaveMap[cCic->getChipId()]               = cI2CSlaveDescription;
+                    fI2CSlaveMap[cCic->getId()]                   = cI2CSlaveDescription;
                     fSlaveMap.push_back(cOldI2CSlaveDescription);
                 }
                 else
@@ -748,7 +748,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                     } // chips
                 }
             } // hybrids
-        }     // modules
+        }     // hybrids
         // and then loop over map and write
         for(auto cIterator = fI2CSlaveMap.begin(); cIterator != fI2CSlaveMap.end(); cIterator++)
         {
@@ -777,12 +777,12 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // {
     //   fSlaveMap.clear();
     //   // assuming only one type of CIC per board ...
-    //   for( auto cModule : *pBoard )
+    //   for( auto cHybrid : *pBoard )
     //   {
-    //       for (auto cFe : *cModule )
+    //       for (auto cFe : *cHybrid )
     //       {
-    //         auto cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
-    //         auto& cCic = cOuterTrackerModule->fCic;
+    //         auto cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+    //         auto& cCic = cOuterTrackerHybrid->fCic;
     //         uint8_t cBaseAddress;
     //         uint8_t cNBytes;
     //         if( cCic != NULL )
@@ -817,7 +817,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     //           }// chips
     //         }
     //       }//hybrids
-    //   }//modules
+    //   }//hybrids
     //   // and then loop over map and write
     //   for (unsigned int ism = 0; ism < fSlaveMap.size(); ism++)
     //   {
@@ -861,9 +861,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // resetting hard
     if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
     {
-        for(auto cModule: *pBoard)
+        for(auto cOpticalGroup: *pBoard)
         {
-            if(pBoard->ifOptical()) this->selectLink(cModule->getId());
+            if(pBoard->ifOptical()) this->selectLink(cOpticalGroup->getId());
             this->ChipReset();
         }
     }
@@ -877,12 +877,12 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
     {
         // assuming only one type of CIC per board ...
-        for(auto cModule: *pBoard)
+        for(auto cOpticalGroup: *pBoard)
         {
-            for(auto cFe: *cModule)
+            for(auto cFe: *cOpticalGroup)
             {
-                auto                                          cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
-                auto&                                         cCic                = cOuterTrackerModule->fCic;
+                auto                                          cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+                auto&                                         cCic                = cOuterTrackerHybrid->fCic;
                 std::vector<std::pair<std::string, uint32_t>> cVecReg;
                 // make sure CIC is receiving clock
                 // cVecReg.push_back( {"fc7_daq_cnfg.physical_interface_block.cic.clock_enable" , 1 } ) ;
@@ -890,7 +890,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                 cVecReg.push_back({"fc7_daq_cnfg.stub_debug.enable", 0});
                 std::string cFwRegName = "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable";
                 std::string cRegName   = (cCic->getFrontEndType() == FrontEndType::CIC) ? "CBC_SPARSIFICATION_SEL" : "FE_CONFIG";
-                ChipRegItem cRegItem   = static_cast<OuterTrackerModule*>(pBoard->at(0)->at(0))->fCic->getRegItem(cRegName);
+                ChipRegItem cRegItem   = static_cast<OuterTrackerHybrid*>(pBoard->at(0)->at(0))->fCic->getRegItem(cRegName);
                 uint8_t     cRegValue  = (cCic->getFrontEndType() == FrontEndType::CIC) ? cRegItem.fValue : (cRegItem.fValue & 0x10) >> 4;
                 LOG(INFO) << BOLDBLUE << "Sparsification set to " << +cRegValue << RESET;
                 cVecReg.push_back({cFwRegName, (cCic->getFrontEndType() == FrontEndType::CIC) ? cRegItem.fValue : (cRegItem.fValue & 0x10) >> 4});
@@ -929,20 +929,20 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     fNHybrids              = 0;
     uint16_t hybrid_enable = 0;
     cVecReg.clear();
-    for(auto cModule: *pBoard)
+    for(auto cHybrid: *pBoard)
     {
-        for(auto cFe: *cModule)
+        for(auto cFe: *cHybrid)
         {
-            auto cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
+            auto cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
 
             std::vector<uint32_t> cVec;
             std::vector<uint32_t> cReplies;
             uint8_t               cChipsEnable = 0x00;
-            LOG(INFO) << BOLDBLUE << "Enabling FE hybrid : " << +cFe->getId() << " - link Id " << +cModule->getId() << RESET;
+            LOG(INFO) << BOLDBLUE << "Enabling FE hybrid : " << +cFe->getId() << " - link Id " << +cHybrid->getId() << RESET;
             for(auto cChip: *cFe)
             {
                 auto cReadoutChip = static_cast<ReadoutChip*>(cChip);
-                LOG(DEBUG) << BOLDBLUE << "Trying to perform an I2C write to " << +cReadoutChip->getChipId() << " on FE" << +cFe->getId() << RESET;
+                LOG(DEBUG) << BOLDBLUE << "Trying to perform an I2C write to " << +cReadoutChip->getId() << " on FE" << +cFe->getId() << RESET;
                 cVec.clear();
                 cReplies.clear();
                 // find first non-zero register in the map
@@ -976,8 +976,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             cReplies.clear();
             if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
             {
-                auto& cCic = cOuterTrackerModule->fCic;
-                LOG(INFO) << BOLDBLUE << "CIC " << +cCic->getChipId() << " on FE" << +cFe->getId() << RESET;
+                auto& cCic = cOuterTrackerHybrid->fCic;
+                LOG(INFO) << BOLDBLUE << "CIC " << +cCic->getId() << " on FE" << +cFe->getId() << RESET;
                 size_t cIndex       = 0;
                 auto   cRegisterMap = cCic->getRegMap();
                 auto   cIterator    = cRegisterMap.begin();
@@ -988,12 +988,12 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                 } while((*cIterator).second.fValue != 0 && cIndex < cRegisterMap.size());
                 ChipRegItem cRegItem = cCic->getRegItem((*cIterator).first);
                 bool        cWrite   = false;
-                this->EncodeReg(cRegItem, cFe->getId(), cCic->getChipId(), cVec, true, cWrite);
+                this->EncodeReg(cRegItem, cFe->getId(), cCic->getId(), cVec, true, cWrite);
                 bool cWriteSuccess = !this->WriteI2C(cVec, cReplies, true, false);
                 if(cWriteSuccess)
                 {
                     LOG(INFO) << BOLDGREEN << "Successful read from " << (*cIterator).first << " [first non-zero I2C register of CIC] on hybrid " << +cFe->getId() << " .... Enabling CIC"
-                              << +cCic->getChipId() << RESET;
+                              << +cCic->getId() << RESET;
                     hybrid_enable |= 1 << cFe->getId();
                     fNCic++;
                 }
@@ -1383,14 +1383,14 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard, bool pScope)
     PhaseTuner pTuner;
     bool       cSuccess = true;
     // back-end tuning on l1 lines
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cHybrid: *cModule)
+        for(auto cHybrid: *cOpticalGroup)
         {
             // uint8_t cBitslip=0;
-            selectLink(cModule->getId());
-            auto& cCic    = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-            int   cChipId = cCic->getChipId();
+            selectLink(cOpticalGroup->getId());
+            auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            int   cChipId = cCic->getId();
             // need to know the address
             // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging
             // if( cHybrid->getId() > 0 )
@@ -1452,13 +1452,13 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
     this->ReconfigureTriggerFSM(cVecReg);
 
     // back-end tuning on l1 lines
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        selectLink(cModule->getId());
-        for(auto cHybrid: *cModule)
+        selectLink(cOpticalGroup->getId());
+        for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cCic    = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-            int   cChipId = cCic->getChipId();
+            auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            int   cChipId = cCic->getId();
             // if( cHybrid->getId() > 0 )
             //   this->WriteReg( "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select" , cHybrid->getId()) ;
             uint8_t cLineId = 0;
@@ -1571,18 +1571,18 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
     bool       cSuccess = true;
 
     // back-end tuning on stub lines
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        selectLink(cModule->getId());
-        for(auto cHybrid: *cModule)
+        selectLink(cOpticalGroup->getId());
+        for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             if(cCic == NULL) continue;
 
             // this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
             if(pScope) this->StubDebug();
 
-            LOG(INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid->getId() << " Chip" << +cCic->getChipId() << RESET;
+            LOG(INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid->getId() << " Chip" << +cCic->getId() << RESET;
             uint8_t cNlines = 6;
             for(uint8_t cLineId = 1; cLineId < cNlines; cLineId += 1)
             {
@@ -1686,9 +1686,9 @@ void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
     if(cEventType == EventType::MPAAS)
     {
         pData.clear();
-        for(auto cModule: *pBoard)
+        for(auto cOpticalGroup: *pBoard)
         {
-            for(auto cFe: *cModule)
+            for(auto cFe: *cOpticalGroup)
             {
                 for(auto cChip: *cFe)
                 {
@@ -1836,7 +1836,7 @@ void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                     }
                 } // chip loop
             }     // hybrid loop
-        }         // module loop
+        }         // hybrid loop
         // clear counters after they have been read
         this->PS_Clear_counters(fFastCommandDuration);
     }
@@ -1853,9 +1853,9 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
     if(cEventType == EventType::SSAAS)
     {
         pData.clear();
-        for(auto cModule: *pBoard)
+        for(auto cOpticalGroup: *pBoard)
         {
-            for(auto cFe: *cModule)
+            for(auto cFe: *cOpticalGroup)
             {
                 for(auto cChip: *cFe)
                 {
@@ -1924,7 +1924,7 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                     }
                 } // chip loop
             }     // hybrid loop
-        }         // module loop
+        }         // hybrid loop
         // clear counters after they have been read
         this->PS_Clear_counters(fFastCommandDuration);
     }
@@ -1940,9 +1940,9 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
     bool      cWithMPA   = false;
     bool      cWithSSA   = false;
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cModule)
+        for(auto cFe: *cOpticalGroup)
         {
             for(auto cChip: *cFe)
             {
@@ -1950,7 +1950,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
                 cWithSSA = cWithSSA || (cChip->getFrontEndType() == FrontEndType::SSA);
             } // chips
         }     // hybrids
-    }         // modules
+    }         // opticalGroup
     uint32_t cNEvents = 0;
     uint32_t cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
     if(fIsDDR3Readout && !cAsync)
@@ -2368,9 +2368,9 @@ uint32_t D19cFWInterface::computeEventSize(BeBoard* pBoard)
     uint32_t cNChips           = 0;
 
     uint32_t cNEventSize32 = 0;
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cHybrid: *cModule) { cNChips += cHybrid->size(); }
+        for(auto cHybrid: *cOpticalGroup) { cNChips += cHybrid->size(); }
     }
     if(fNCic != 0)
     {
@@ -4011,7 +4011,7 @@ void D19cFWInterface::Pix_write_MPA(Chip* cMPA, ChipRegItem cRegItem, uint32_t r
     rowreg.fValue      = data;
     std::vector<uint32_t> cVecReq;
     cVecReq.clear();
-    this->EncodeReg(rowreg, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, true);
+    this->EncodeReg(rowreg, cMPA->getHybridId(), cMPA->getId(), cVecReq, false, true);
     this->WriteChipBlockReg(cVecReq, cWriteAttempts, false);
 }
 
@@ -4022,7 +4022,7 @@ uint32_t D19cFWInterface::Pix_read_MPA(Chip* cMPA, ChipRegItem cRegItem, uint32_
 
     std::vector<uint32_t> cVecReq;
     cVecReq.clear();
-    this->EncodeReg(cRegItem, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, false);
+    this->EncodeReg(cRegItem, cMPA->getHybridId(), cMPA->getId(), cVecReq, false, false);
     this->WriteChipBlockReg(cVecReq, cWriteAttempts, false);
     // std::chrono::milliseconds cShort( 1 );
     // uint32_t readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");

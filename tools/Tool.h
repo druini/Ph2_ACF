@@ -46,7 +46,7 @@ class Tool : public Ph2_System::SystemController
 {
 #ifdef __USE_ROOT__
     using ChipHistogramMap    = std::map<ChipContainer*, std::map<std::string, TObject*>>;
-    using ModuleHistogramMap  = std::map<ModuleContainer*, std::map<std::string, TObject*>>;
+    using HybridHistogramMap  = std::map<HybridContainer*, std::map<std::string, TObject*>>;
     using BeBoardHistogramMap = std::map<BoardContainer*, std::map<std::string, TObject*>>;
     using CanvasMap           = std::map<BaseContainer*, TCanvas*>;
 #endif
@@ -71,11 +71,11 @@ class Tool : public Ph2_System::SystemController
 
 #ifdef __USE_ROOT__
     void bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject);
-    void bookHistogram(ModuleContainer* pModule, std::string pName, TObject* pObject);
+    void bookHistogram(HybridContainer* pHybrid, std::string pName, TObject* pObject);
     void bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* pObject);
 
     TObject* getHist(ChipContainer* pChip, std::string pName);
-    TObject* getHist(ModuleContainer* pModule, std::string pName);
+    TObject* getHist(HybridContainer* pHybrid, std::string pName);
     TObject* getHist(BoardContainer* pBeBoard, std::string pName);
 
     void WriteRootFile();
@@ -121,7 +121,7 @@ class Tool : public Ph2_System::SystemController
     // Make test groups for everything Test pulse or Calibration
     void SetTestAllChannels(bool pAllChan) { fAllChan = pAllChan; }
     void SetTestPulse(bool pTestPulse) { fTestPulse = pTestPulse; }
-    void SetModuleBroadcast(bool pDoBroadcast) { fDoModuleBroadcast = pDoBroadcast; }
+    void SetHybridBroadcast(bool pDoBroadcast) { fDoHybridBroadcast = pDoBroadcast; }
     void SetBoardBroadcast(bool pDoBroadcast) { fDoBoardBroadcast = pDoBroadcast; }
     void SetSkipMaskedChannels(bool pSkipMaskedChannels) { fSkipMaskedChannels = pSkipMaskedChannels; }
     // For hybrid testing
@@ -294,9 +294,9 @@ class Tool : public Ph2_System::SystemController
     }
 
     template <typename T, typename C, typename M, typename... H>
-    ModuleContainerStream<T, C, M, H...> prepareModuleContainerStreamer(std::string appendName = "")
+    HybridContainerStream<T, C, M, H...> prepareHybridContainerStreamer(std::string appendName = "")
     {
-        ModuleContainerStream<T, C, M, H...> theContainerStreamer(getCalibrationName() + appendName);
+        HybridContainerStream<T, C, M, H...> theContainerStreamer(getCalibrationName() + appendName);
         return theContainerStreamer;
     }
 
@@ -308,7 +308,7 @@ class Tool : public Ph2_System::SystemController
 #ifdef __USE_ROOT__
     CanvasMap           fCanvasMap;
     ChipHistogramMap    fChipHistMap;
-    ModuleHistogramMap  fModuleHistMap;
+    HybridHistogramMap  fHybridHistMap;
     BeBoardHistogramMap fBeBoardHistMap;
 #endif
 
@@ -333,7 +333,7 @@ class Tool : public Ph2_System::SystemController
     bool                 fAllChan;
     bool                 fMaskChannelsFromOtherGroups;
     bool                 fTestPulse;
-    bool                 fDoModuleBroadcast;
+    bool                 fDoHybridBroadcast;
     bool                 fDoBoardBroadcast;
     ChannelGroupHandler* fChannelGroupHandler;
 

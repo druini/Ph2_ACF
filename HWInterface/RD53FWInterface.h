@@ -290,7 +290,7 @@ class RD53FWInterface : public BeBoardFWInterface
     bool CheckChipCommunication();
     void InitHybridByHybrid(const Ph2_HwDescription::BeBoard* pBoard);
     std::vector<uint16_t> GetInitSequence(const unsigned int type);
-    uint32_t              GetHybridEnabledChips(const Ph2_HwDescription::Module* pHybrid);
+    uint32_t              GetHybridEnabledChips(const Ph2_HwDescription::Hybrid* pHybrid);
 
     // ###################
     // # Clock generator #

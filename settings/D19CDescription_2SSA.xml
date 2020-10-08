@@ -5,14 +5,14 @@
     
     <CDCE configure="0" clockRate="120"/>
     <OpticalGroup Id="0" FMCId="0" >
-        <Module FeId="0" ModuleId="0" Status="1">
+        <Hybrid Id="0" Status="1">
             <Global>
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
             <SSA Id="6" configfile="SSA.txt" />
             <SSA Id="7" configfile="SSA.txt" />
-        </Module>
+        </Hybrid>
     </OpticalGroup>
 
     <!--CONFIG-->

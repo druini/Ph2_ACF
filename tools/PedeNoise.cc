@@ -18,10 +18,7 @@
 
 PedeNoise::PedeNoise() : Tool() {}
 
-PedeNoise::~PedeNoise() 
-{ 
-    clearDataMembers();
-}
+PedeNoise::~PedeNoise() { clearDataMembers(); }
 
 void PedeNoise::cleanContainerMap()
 {
@@ -75,7 +72,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
 void PedeNoise::disableStubLogic()
 {
-
     fStubLogicValue = new DetectorDataContainer();
     fHIPCountValue  = new DetectorDataContainer();
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *fStubLogicValue);
@@ -225,7 +221,7 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
     std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
     std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
-    auto theOccupancyStream = prepareModuleContainerStreamer<Occupancy, Occupancy, Occupancy>();
+    auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
     // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
     for(auto board: theOccupancyContainer)
     {
@@ -239,7 +235,7 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
         {
             for(auto cFe: *cOpticalGroup)
             {
-                // std::cout << __PRETTY_FUNCTION__ << " The Module Occupancy = " <<
+                // std::cout << __PRETTY_FUNCTION__ << " The Hybrid Occupancy = " <<
                 // theOccupancyContainer.at(cBoard->getIndex())->at(cFe->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy
                 // << std::endl;
 
@@ -393,7 +389,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
 }
 void PedeNoise::extractPedeNoise()
 {
-    fThresholdAndNoiseContainer  = new DetectorDataContainer();
+    fThresholdAndNoiseContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *fThresholdAndNoiseContainer);
     uint16_t                                                     counter          = 0;
     std::map<uint16_t, DetectorDataContainer*>::reverse_iterator previousIterator = fSCurveOccupancyMap.rend();
@@ -464,9 +460,9 @@ void PedeNoise::extractPedeNoise()
     {
         for(auto opticalGroup: *board)
         {
-            for(auto module: *opticalGroup)
+            for(auto hybrid: *opticalGroup)
             {
-                for(auto chip: *module)
+                for(auto chip: *hybrid)
                 {
                     for(uint8_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                     {
@@ -493,10 +489,7 @@ void PedeNoise::producePedeNoisePlots()
     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
     for(auto board: *fThresholdAndNoiseContainer)
     {
-        if(fStreamerEnabled) 
-        {
-            theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
-        } 
+        if(fStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer); }
     }
 #endif
 }
@@ -555,9 +548,9 @@ void PedeNoise::Running()
     //     std::cout<<"Using it"<<std::endl;
     //     return (theChip->getId()==0);
     //     };
-    // ModuleContainer::SetQueryFunction(myFunction);
+    // HybridContainer::SetQueryFunction(myFunction);
     measureNoise();
-    // ModuleContainer::ResetQueryFunction();
+    // HybridContainer::ResetQueryFunction();
     // Validate();
     LOG(INFO) << "Done with noise";
 }
