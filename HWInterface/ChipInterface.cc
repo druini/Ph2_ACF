@@ -39,7 +39,7 @@ void ChipInterface::setBoard(uint16_t pBoardIdentifier)
         BeBoardFWMap::iterator i = fBoardMap.find(pBoardIdentifier);
 
         if(i == fBoardMap.end())
-            LOG(INFO) << "The Board: " << +(pBoardIdentifier >> 8) << "  doesn't exist";
+            LOG(INFO) << "The Board: " << +pBoardIdentifier << "  doesn't exist";
         else
         {
             fBoardFW             = i->second;
