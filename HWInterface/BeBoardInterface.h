@@ -223,7 +223,7 @@ class BeBoardInterface
      * \return none
      */
     template <typename... Ts>
-    void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::Chip* pChip, const Ts&... args)
+    void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const Ts&... args)
     {
         std::lock_guard<std::mutex> theGuard(theMtx);
 

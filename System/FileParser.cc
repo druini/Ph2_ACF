@@ -985,7 +985,7 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Module* cModule, std::str
 
     uint32_t     chipId   = theChipNode.attribute("Id").as_int();
     uint32_t     chipLane = theChipNode.attribute("Lane").as_int();
-    ReadoutChip* theChip  = cModule->addChipContainer(chipId, new RD53(cModule->getBeId(), cModule->getFMCId(), cModule->getFeId(), chipId, chipLane, cFileName));
+    ReadoutChip* theChip  = cModule->addChipContainer(chipId, new RD53(cModule->getBeBoardId(), cModule->getFMCId(), cModule->getFeId(), chipId, chipLane, cFileName));
     theChip->setNumberOfChannels(RD53::nRows, RD53::nCols);
 
     this->parseRD53Settings(theChipNode, theChip, os);
