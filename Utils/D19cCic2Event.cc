@@ -343,7 +343,7 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
             //  LOG (INFO) << BOLDBLUE << std::bitset<32>(*(cIterator+cIndex)) << RESET;
 
             size_t cOpticalGroupIndex = 0;
-            size_t cHybridIndex = 0;
+            size_t cHybridIndex       = 0;
             for(auto cOpticalGroup: *pBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
@@ -351,7 +351,7 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
                     if(cHybrid->getId() == cFeId)
                     {
                         cOpticalGroupIndex = cOpticalGroup->getIndex();
-                        cHybridIndex = cHybrid->getIndex();
+                        cHybridIndex       = cHybrid->getIndex();
                     }
                 }
             }

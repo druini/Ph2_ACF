@@ -20,7 +20,7 @@ void SSAPhysics::ConfigureCalibration()
     // #######################
     saveRawData = this->findValueInSettings("SaveRawData");
     doLocal     = false;
-    
+
     // ###########################################
     // # Initialize directory and data container #
     // ###########################################
@@ -38,7 +38,7 @@ void SSAPhysics::Running()
     if(saveRawData == true)
     {
         char runString[7];
-        sprintf(runString, "%06d", (fRunNumber & 0xF423F)); //max value can be 999999, to avoid GCC 8 warning
+        sprintf(runString, "%06d", (fRunNumber & 0xF423F)); // max value can be 999999, to avoid GCC 8 warning
         this->addFileHandler(std::string(RESULTDIR) + "/run_" + runString + ".raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -61,7 +61,7 @@ void SSAPhysics::Stop()
     LOG(INFO) << GREEN << "[SSAPhysics::Stop] Stopping" << RESET;
 
     Tool::Stop();
-    
+
     // ################
     // # Error report #
     // ################

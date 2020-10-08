@@ -18,10 +18,7 @@
 
 PedeNoise::PedeNoise() : Tool() {}
 
-PedeNoise::~PedeNoise() 
-{ 
-    clearDataMembers();
-}
+PedeNoise::~PedeNoise() { clearDataMembers(); }
 
 void PedeNoise::cleanContainerMap()
 {
@@ -75,7 +72,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
 void PedeNoise::disableStubLogic()
 {
-
     fStubLogicValue = new DetectorDataContainer();
     fHIPCountValue  = new DetectorDataContainer();
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *fStubLogicValue);
@@ -393,7 +389,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
 }
 void PedeNoise::extractPedeNoise()
 {
-    fThresholdAndNoiseContainer  = new DetectorDataContainer();
+    fThresholdAndNoiseContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *fThresholdAndNoiseContainer);
     uint16_t                                                     counter          = 0;
     std::map<uint16_t, DetectorDataContainer*>::reverse_iterator previousIterator = fSCurveOccupancyMap.rend();
@@ -493,10 +489,7 @@ void PedeNoise::producePedeNoisePlots()
     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
     for(auto board: *fThresholdAndNoiseContainer)
     {
-        if(fStreamerEnabled) 
-        {
-            theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
-        } 
+        if(fStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer); }
     }
 #endif
 }

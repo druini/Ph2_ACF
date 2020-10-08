@@ -40,10 +40,7 @@ uint32_t BeBoard::getReg(const std::string& pReg) const
         return i->second;
 }
 
-void BeBoard::setReg(const std::string& pReg, uint32_t psetValue)
-{
-    fRegMap[pReg] = psetValue;
-}
+void BeBoard::setReg(const std::string& pReg, uint32_t psetValue) { fRegMap[pReg] = psetValue; }
 
 void BeBoard::updateCondData(uint32_t& pTDCVal)
 {

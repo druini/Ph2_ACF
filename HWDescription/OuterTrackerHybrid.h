@@ -17,8 +17,8 @@
 #include "../Utils/easylogging++.h"
 #include "Cic.h"
 #include "FrontEndDescription.h"
-#include "MPA.h"
 #include "Hybrid.h"
+#include "MPA.h"
 #include "SSA.h"
 #include <stdint.h>
 #include <vector>

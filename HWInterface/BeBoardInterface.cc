@@ -27,7 +27,7 @@ void BeBoardInterface::setBoard(uint16_t pBoardIdentifier)
             LOG(INFO) << "The Board: " << +(pBoardIdentifier >> 8) << "  doesn't exist";
         else
         {
-            fBoardFW            = i->second;
+            fBoardFW             = i->second;
             fPrevBoardIdentifier = pBoardIdentifier;
         }
     }

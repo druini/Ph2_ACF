@@ -54,7 +54,7 @@ class ReadoutChip
 
     ~ReadoutChip();
 
-    uint8_t getId() const override  { return ChipContainer::getId(); }
+    uint8_t getId() const override { return ChipContainer::getId(); }
 
     /*!
      * \brief acceptor method for HwDescriptionVisitor

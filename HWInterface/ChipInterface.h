@@ -31,8 +31,8 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
 class ChipInterface
 {
   protected:
-    BeBoardFWMap        fBoardMap;           /*!< Map of Board connected */
-    BeBoardFWInterface* fBoardFW;            /*!< Board loaded */
+    BeBoardFWMap        fBoardMap;            /*!< Map of Board connected */
+    BeBoardFWInterface* fBoardFW;             /*!< Board loaded */
     uint16_t            fPrevBoardIdentifier; /*!< Id of the previous board */
 
     uint16_t fRegisterCount;    /*!< Counter for the number of Registers written */

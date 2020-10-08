@@ -421,8 +421,7 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
         std::reverse(cSelect.begin(), cSelect.end());
         std::bitset<5> cClockDelay(cSelect);
         uint8_t        cNewRegValue = ((cOriginalValue & 0xE0) | static_cast<uint8_t>(cClockDelay.to_ulong()));
-        LOG(DEBUG) << BOLDBLUE << "Setting clock delay on Chip" << +pCbc->getId() << " to " << std::bitset<5>(+dacValue) << " - register set to : 0x" << std::hex << +cNewRegValue << std::dec
-                   << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Setting clock delay on Chip" << +pCbc->getId() << " to " << std::bitset<5>(+dacValue) << " - register set to : 0x" << std::hex << +cNewRegValue << std::dec << RESET;
         return WriteChipSingleReg(pCbc, "40MhzClk&Or254", cNewRegValue, pVerifLoop);
     }
     else if(dacName == "PtCut")

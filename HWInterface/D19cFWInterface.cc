@@ -726,7 +726,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                     cNBytes                                       = 2;
                     std::vector<uint32_t> cOldI2CSlaveDescription = {cBaseAddress, cNBytes, 1, 1, 1, 1, cCic->getId()};
                     std::vector<uint32_t> cI2CSlaveDescription    = {cBaseAddress, cNBytes, 1, 1, 1, 1};
-                    fI2CSlaveMap[cCic->getId()]               = cI2CSlaveDescription;
+                    fI2CSlaveMap[cCic->getId()]                   = cI2CSlaveDescription;
                     fSlaveMap.push_back(cOldI2CSlaveDescription);
                 }
                 else

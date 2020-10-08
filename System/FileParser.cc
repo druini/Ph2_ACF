@@ -523,15 +523,14 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
            << "       "
            << "|"
            << "----" << pHybridNode.name() << " --> " << BOLDBLUE << pHybridNode.first_attribute().name() << ": " << BOLDYELLOW << pHybridNode.attribute("Id").value() << BOLDBLUE
-           << ", FMCId: " << BOLDYELLOW << pOpticalGroup->getFMCId() << BOLDBLUE << ", Status: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("Status").value())
-           << BOLDBLUE << ", LinkId: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("LinkId").value()) << RESET << std::endl;
+           << ", FMCId: " << BOLDYELLOW << pOpticalGroup->getFMCId() << BOLDBLUE << ", Status: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("Status").value()) << BOLDBLUE
+           << ", LinkId: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("LinkId").value()) << RESET << std::endl;
 
         Hybrid* cHybrid;
         if(pBoard->getBoardType() == BoardType::RD53)
         {
-            cHybrid =
-                pOpticalGroup->addHybridContainer(pHybridNode.attribute("Id").as_int(),
-                                                  new Hybrid(pOpticalGroup->getId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
+            cHybrid = pOpticalGroup->addHybridContainer(pHybridNode.attribute("Id").as_int(),
+                                                        new Hybrid(pOpticalGroup->getId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
         }
         else
         {

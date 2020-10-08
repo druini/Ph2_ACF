@@ -58,9 +58,7 @@ class BeBoard : public BoardContainer
     /*!
      * \brief Destructor
      */
-    ~BeBoard()
-    {
-    }
+    ~BeBoard() {}
 
     // Public Methods
 
