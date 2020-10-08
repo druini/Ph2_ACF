@@ -724,9 +724,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                     } // chips
                     cBaseAddress                                  = 0x60;
                     cNBytes                                       = 2;
-                    std::vector<uint32_t> cOldI2CSlaveDescription = {cBaseAddress, cNBytes, 1, 1, 1, 1, cCic->getChipId()};
+                    std::vector<uint32_t> cOldI2CSlaveDescription = {cBaseAddress, cNBytes, 1, 1, 1, 1, cCic->getId()};
                     std::vector<uint32_t> cI2CSlaveDescription    = {cBaseAddress, cNBytes, 1, 1, 1, 1};
-                    fI2CSlaveMap[cCic->getChipId()]               = cI2CSlaveDescription;
+                    fI2CSlaveMap[cCic->getId()]               = cI2CSlaveDescription;
                     fSlaveMap.push_back(cOldI2CSlaveDescription);
                 }
                 else
@@ -942,7 +942,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             for(auto cChip: *cFe)
             {
                 auto cReadoutChip = static_cast<ReadoutChip*>(cChip);
-                LOG(DEBUG) << BOLDBLUE << "Trying to perform an I2C write to " << +cReadoutChip->getChipId() << " on FE" << +cFe->getId() << RESET;
+                LOG(DEBUG) << BOLDBLUE << "Trying to perform an I2C write to " << +cReadoutChip->getId() << " on FE" << +cFe->getId() << RESET;
                 cVec.clear();
                 cReplies.clear();
                 // find first non-zero register in the map
@@ -977,7 +977,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
             {
                 auto& cCic = cOuterTrackerHybrid->fCic;
-                LOG(INFO) << BOLDBLUE << "CIC " << +cCic->getChipId() << " on FE" << +cFe->getId() << RESET;
+                LOG(INFO) << BOLDBLUE << "CIC " << +cCic->getId() << " on FE" << +cFe->getId() << RESET;
                 size_t cIndex       = 0;
                 auto   cRegisterMap = cCic->getRegMap();
                 auto   cIterator    = cRegisterMap.begin();
@@ -988,12 +988,12 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                 } while((*cIterator).second.fValue != 0 && cIndex < cRegisterMap.size());
                 ChipRegItem cRegItem = cCic->getRegItem((*cIterator).first);
                 bool        cWrite   = false;
-                this->EncodeReg(cRegItem, cFe->getId(), cCic->getChipId(), cVec, true, cWrite);
+                this->EncodeReg(cRegItem, cFe->getId(), cCic->getId(), cVec, true, cWrite);
                 bool cWriteSuccess = !this->WriteI2C(cVec, cReplies, true, false);
                 if(cWriteSuccess)
                 {
                     LOG(INFO) << BOLDGREEN << "Successful read from " << (*cIterator).first << " [first non-zero I2C register of CIC] on hybrid " << +cFe->getId() << " .... Enabling CIC"
-                              << +cCic->getChipId() << RESET;
+                              << +cCic->getId() << RESET;
                     hybrid_enable |= 1 << cFe->getId();
                     fNCic++;
                 }
@@ -1390,7 +1390,7 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard, bool pScope)
             // uint8_t cBitslip=0;
             selectLink(cOpticalGroup->getId());
             auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            int   cChipId = cCic->getChipId();
+            int   cChipId = cCic->getId();
             // need to know the address
             // here in case you want to look at the L1A by scoping the lines in firmware - useful when debuging
             // if( cHybrid->getId() > 0 )
@@ -1458,7 +1458,7 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            int   cChipId = cCic->getChipId();
+            int   cChipId = cCic->getId();
             // if( cHybrid->getId() > 0 )
             //   this->WriteReg( "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select" , cHybrid->getId()) ;
             uint8_t cLineId = 0;
@@ -1582,7 +1582,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
             // this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
             if(pScope) this->StubDebug();
 
-            LOG(INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid->getId() << " Chip" << +cCic->getChipId() << RESET;
+            LOG(INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid->getId() << " Chip" << +cCic->getId() << RESET;
             uint8_t cNlines = 6;
             for(uint8_t cLineId = 1; cLineId < cNlines; cLineId += 1)
             {
@@ -4011,7 +4011,7 @@ void D19cFWInterface::Pix_write_MPA(Chip* cMPA, ChipRegItem cRegItem, uint32_t r
     rowreg.fValue      = data;
     std::vector<uint32_t> cVecReq;
     cVecReq.clear();
-    this->EncodeReg(rowreg, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, true);
+    this->EncodeReg(rowreg, cMPA->getHybridId(), cMPA->getId(), cVecReq, false, true);
     this->WriteChipBlockReg(cVecReq, cWriteAttempts, false);
 }
 
@@ -4022,7 +4022,7 @@ uint32_t D19cFWInterface::Pix_read_MPA(Chip* cMPA, ChipRegItem cRegItem, uint32_
 
     std::vector<uint32_t> cVecReq;
     cVecReq.clear();
-    this->EncodeReg(cRegItem, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, false);
+    this->EncodeReg(cRegItem, cMPA->getHybridId(), cMPA->getId(), cVecReq, false, false);
     this->WriteChipBlockReg(cVecReq, cWriteAttempts, false);
     // std::chrono::milliseconds cShort( 1 );
     // uint32_t readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");

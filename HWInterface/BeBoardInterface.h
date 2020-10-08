@@ -64,7 +64,7 @@ class BeBoardInterface
   private:
     BeBoardFWMap        fBoardMap;
     BeBoardFWInterface* fBoardFW;
-    uint16_t            prevBoardIdentifier;
+    uint16_t            fPrevBoardIdentifier;
     std::mutex          theMtx;
 
   public:

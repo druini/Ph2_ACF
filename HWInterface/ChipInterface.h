@@ -33,7 +33,7 @@ class ChipInterface
   protected:
     BeBoardFWMap        fBoardMap;           /*!< Map of Board connected */
     BeBoardFWInterface* fBoardFW;            /*!< Board loaded */
-    uint16_t            prevBoardIdentifier; /*!< Id of the previous board */
+    uint16_t            fPrevBoardIdentifier; /*!< Id of the previous board */
 
     uint16_t fRegisterCount;    /*!< Counter for the number of Registers written */
     uint16_t fTransactionCount; /*!< Counter for the number of Transactions */

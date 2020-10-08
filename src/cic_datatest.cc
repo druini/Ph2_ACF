@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
             t.show("Time to prepare the CIC for data taking ");
             LOG(INFO) << BOLDGREEN << "Now trying to take data with the CIC [unsparsified 2S for the moment..]" << RESET;
             // cCicAligner.TestI2C();
-            // cTool.fBeBoardInterface->setBoard ( pBoard->getBeBoardId() );
+            // cTool.fBeBoardInterface->setBoard ( pBoard->getId() );
             if(dynamic_cast<D19cFWInterface*>(cCicAligner.fBeBoardInterface->getFirmwareInterface())->Bx0Alignment())
             {
                 // init threshold visitior

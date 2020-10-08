@@ -76,7 +76,7 @@ void D19cCbc3EventZS::SetEvent(const BeBoard* pBoard, uint32_t pZSEventSize, con
     fBunch      = 0xFFFFFFFF & list.at(3);
     fTDC        = 0x000000FF & list.at(4);
 
-    fBeId          = pBoard->getBeId();
+    fBeId          = pBoard->getId();
     fBeFWType      = 0;
     fCBCDataType   = (0x0000FF00 & list.at(1)) >> 8;
     fBeStatus      = 0;
@@ -660,7 +660,7 @@ void D19cCbc3EventZS::print(std::ostream& os) const
 {
     os << BOLDGREEN << "EventType: d19c CBC3" << RESET << std::endl;
     os << BOLDBLUE << "L1A Counter: " << this->GetEventCount() << RESET << std::endl;
-    os << "          Be Id: " << +this->GetBeId() << std::endl;
+    os << "          Be Id: " << +this->getBeBoardId() << std::endl;
     // os << "          Be FW: " << +this->GetFWType() << std::endl;
     // os << "      Be Status: " << +this->GetBeStatus() << std::endl;
     // os << "  Cbc Data type: " << +this->GetCbcDataType() << std::endl;

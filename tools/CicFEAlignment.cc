@@ -335,7 +335,7 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine, uint16_t pDelay, u
                 {
                     auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                     auto cReadoutChip          = static_cast<ReadoutChip*>(cChip);
-                    if(cReadoutChip->getChipId() != pFe) continue;
+                    if(cReadoutChip->getId() != pFe) continue;
 
                     std::vector<uint8_t> cBendLUT = cReadoutChipInterface->readLUT(cReadoutChip);
                     // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5
@@ -392,7 +392,7 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine, uint16_t pDelay, u
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cChip);
-                    if(theReadoutChip->getChipId() != pFe) continue;
+                    if(theReadoutChip->getId() != pFe) continue;
 
                     LOG(DEBUG) << BOLDBLUE << "Setting threshold on CBC" << +cChip->getId() << " back to " << +cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
                     fReadoutChipInterface->WriteChipReg(theReadoutChip, "VCth", cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());

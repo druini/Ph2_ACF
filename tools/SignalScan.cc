@@ -283,18 +283,18 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //                             //now loop the channels for this particular event and increment a counter
 //                             for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
 //                             {
-//                                 if ( cEvent->DataBit ( cCbc->getFeId(), cCbc->getChipId(), cId ) )
+//                                 if ( cEvent->DataBit ( cCbc->getHybridId(), cCbc->getId(), cId ) )
 //                                 {
-//                                     cSignalHist->Fill (cCbc->getChipId() *NCHANNELS + cId, cVCth );
+//                                     cSignalHist->Fill (cCbc->getId() *NCHANNELS + cId, cVCth );
 //                                     cEventHits++;
 //                                 }
 //                             }
 
 //                             //append HexDataString to cDataString
-//                             cDataString += cEvent->DataHexString (cCbc->getFeId(), cCbc->getChipId() );
+//                             cDataString += cEvent->DataHexString (cCbc->getHybridId(), cCbc->getId() );
 //                             cDataString += "-";
 
-//                             std::vector<Cluster> cClusters = cEvent->getClusters (cCbc->getFeId(), cCbc->getChipId()
+//                             std::vector<Cluster> cClusters = cEvent->getClusters (cCbc->getHybridId(), cCbc->getId()
 //                             ); cEventClusters += cClusters.size();
 
 //                             cClusterDataString += "-";

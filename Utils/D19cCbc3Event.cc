@@ -158,7 +158,7 @@ void D19cCbc3Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
     fEventCount = 0x00FFFFFF & list.at(2);
     fBunch      = 0xFFFFFFFF & list.at(3);
 
-    fBeId          = pBoard->getBeId();
+    fBeId          = pBoard->getId();
     fBeFWType      = 0;
     fCBCDataType   = 0;
     fBeStatus      = 0;
@@ -509,7 +509,7 @@ void D19cCbc3Event::print(std::ostream& os) const
 {
     os << BOLDGREEN << "EventType: d19c CBC3" << RESET << std::endl;
     os << BOLDBLUE << "L1A Counter [FW]: " << this->GetEventCount() << RESET << std::endl;
-    os << "          Be Id: " << +this->GetBeId() << std::endl;
+    os << "          Be Id: " << +this->getBeBoardId() << std::endl;
     // os << "          Be FW: " << +this->GetFWType() << std::endl;
     // os << "      Be Status: " << +this->GetBeStatus() << std::endl;
     // os << "  Cbc Data type: " << +this->GetCbcDataType() << std::endl;
@@ -530,7 +530,7 @@ void D19cCbc3Event::print(std::ostream& os) const
     /*for( auto cPacket : fEventDataVector )
     {
         uint32_t cL1Header = cPacket[0];
-        uint8_t cFeId = getFeIdFromVectorIndex(vectorIndex,fNCbc);
+        uint8_t cFeId = getHybridIdFromVectorIndex(vectorIndex,fNCbc);
         uint8_t cCbcId = getCbcIdFromVectorIndex(vectorIndex++,fNCbc);
         os << BOLDCYAN << "FE" << +cFeId << " CBC" << +cCbcId << RESET << std::endl;
         os << BOLDCYAN << "L1 Header " << std::bitset<32>(cPacket[0]) << std::endl;
@@ -539,7 +539,7 @@ void D19cCbc3Event::print(std::ostream& os) const
     }*/
     for(__attribute__((unused)) auto const& hitVector: fEventDataVector)
     {
-        uint8_t cFeId  = getFeIdFromVectorIndex(vectorIndex, fNCbc);
+        uint8_t cFeId  = getHybridIdFromVectorIndex(vectorIndex, fNCbc);
         uint8_t cCbcId = getCbcIdFromVectorIndex(vectorIndex++, fNCbc);
         this->printCbcHeader(os, cFeId, cCbcId);
         os << GREEN << "FEId = " << +cFeId << " CBCId = " << +cCbcId << RESET << std::endl;

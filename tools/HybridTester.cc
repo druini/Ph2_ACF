@@ -14,13 +14,13 @@ struct HistogramFiller : public HwDescriptionVisitor
     void visit(ChipContainer* pCbc)
     {
         ReadoutChip*      theCbc         = static_cast<ReadoutChip*>(pCbc);
-        std::vector<bool> cDataBitVector = fEvent->DataBitVector(theCbc->getFeId(), theCbc->getChipId());
+        std::vector<bool> cDataBitVector = fEvent->DataBitVector(theCbc->getHybridId(), theCbc->getId());
 
         for(uint32_t cId = 0; cId < NCHANNELS; cId++)
         {
             if(cDataBitVector.at(cId))
             {
-                uint32_t globalChannel = (theCbc->getChipId() * 254) + cId;
+                uint32_t globalChannel = (theCbc->getId() * 254) + cId;
 
                 //              LOG(INFO) << "Channel " << globalChannel << " VCth " << int(pCbc.getReg( "VCth" )) ;
                 // find out why histograms are not filling!
@@ -256,7 +256,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_
                 uint32_t cbcEventCounter = 0;
                 for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
                 {
-                    if ( pEvent->DataBit( cCbc->getFeId(), cCbc->getChipId(), cId ) )
+                    if ( pEvent->DataBit( cCbc->getHybridId(), cCbc->getId(), cId ) )
                     {
                         sCurveHist->Fill( pValue );
                         cHitCounter++;
@@ -272,7 +272,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_
                 {
                     // for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
                     //{
-                    // if ( pEvent->DataBit ( cCbc->getFeId(), cCbc->getChipId(), cId ) )
+                    // if ( pEvent->DataBit ( cCbc->getHybridId(), cCbc->getId(), cId ) )
                     //{
                     // cScurve->second->Fill ( pValue );
                     // cHitCounter++;
@@ -378,7 +378,7 @@ void HybridTester::ScanThresholds()
         {
             for ( auto cCbc : cFe->fReadoutChipVector )
             {
-                fSCurveCanvas->cd(cCbc->getChipId()+1);
+                fSCurveCanvas->cd(cCbc->getId()+1);
                 TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
                 sCurveHist->Scale(100./(NCHANNELS*fTotalEvents));
                 sCurveHist->GetYaxis()->SetTitle("Occupancy (%)");
@@ -386,7 +386,7 @@ void HybridTester::ScanThresholds()
                 sCurveHist->DrawCopy("P0");
 
                 sCurveHist->Write( sCurveHist->GetName(), TObject::kOverwrite );
-                fSCurveCanvas->cd(cCbc->getChipId()+1)->Update();
+                fSCurveCanvas->cd(cCbc->getId()+1)->Update();
             }
         }
     }*/
@@ -610,10 +610,10 @@ void HybridTester::updateSCurveCanvas(BeBoard* pBoard)
     {
         for ( auto cCbc : cFe->fReadoutChipVector )
         {
-            fSCurveCanvas->cd(cCbc->getChipId()+1);
+            fSCurveCanvas->cd(cCbc->getId()+1);
             TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
             sCurveHist->DrawCopy("P0");
-            fSCurveCanvas->cd(cCbc->getChipId()+1)->Update();
+            fSCurveCanvas->cd(cCbc->getId()+1)->Update();
         }
     }*/
 

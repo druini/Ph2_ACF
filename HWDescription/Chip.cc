@@ -79,14 +79,14 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg)
 
 bool ChipComparer::operator()(const Chip& chip1, const Chip& chip2) const
 {
-    if(chip1.getBeId() != chip2.getBeId())
-        return chip1.getBeId() < chip2.getBeId();
+    if(chip1.getId() != chip2.getId())
+        return chip1.getId() < chip2.getId();
     else if(chip1.getFMCId() != chip2.getFMCId())
         return chip1.getFMCId() < chip2.getFMCId();
-    else if(chip1.getFeId() != chip2.getFeId())
-        return chip1.getFeId() < chip2.getFeId();
+    else if(chip1.getHybridId() != chip2.getHybridId())
+        return chip1.getHybridId() < chip2.getHybridId();
     else
-        return chip1.getChipId() < chip2.getChipId();
+        return chip1.getId() < chip2.getId();
 }
 
 bool RegItemComparer::operator()(const ChipRegPair& pRegItem1, const ChipRegPair& pRegItem2) const

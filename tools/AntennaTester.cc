@@ -13,13 +13,13 @@ struct HistogramFiller : public HwDescriptionVisitor
 
     void visit(Chip& pCbc)
     {
-        std::vector<bool> cDataBitVector = fEvent->DataBitVector(pCbc.getFeId(), pCbc.getChipId());
+        std::vector<bool> cDataBitVector = fEvent->DataBitVector(pCbc.getHybridId(), pCbc.getId());
 
         for(uint32_t cId = 0; cId < NCHANNELS; cId++)
         {
             if(cDataBitVector.at(cId))
             {
-                uint32_t globalChannel = (pCbc.getChipId() * 254) + cId;
+                uint32_t globalChannel = (pCbc.getId() * 254) + cId;
 
                 // find out why histograms are not filling!
                 if(globalChannel % 2 == 0)

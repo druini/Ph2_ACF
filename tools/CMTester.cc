@@ -399,10 +399,10 @@ void CMTester::FinishRun()
         float CMnoiseFrac    = fabs(cNHitsFit->GetParameter(1));
         float CMnoiseFracErr = fabs(cNHitsFit->GetParError(1));
         if(fTotalNoise[iCbc] > 0)
-            LOG(INFO) << BOLDRED << "Average noise on FE " << +static_cast<ReadoutChip*>(cCbc.first)->getFeId() << " CBC " << +cCbc.first->getId() << " : " << fTotalNoise[iCbc] << " . At Vcth "
+            LOG(INFO) << BOLDRED << "Average noise on FE " << +static_cast<ReadoutChip*>(cCbc.first)->getHybridId() << " CBC " << +cCbc.first->getId() << " : " << fTotalNoise[iCbc] << " . At Vcth "
                       << cVcth << " CM is " << CMnoiseFrac << "+/-" << CMnoiseFracErr << "%, so " << CMnoiseFrac * fTotalNoise[iCbc] << " VCth." << RESET;
         else
-            LOG(INFO) << BOLDRED << "FE " << +static_cast<ReadoutChip*>(cCbc.first)->getFeId() << " CBC " << +cCbc.first->getId() << " . At Vcth " << cVcth << " CM is " << CMnoiseFrac << "+/-"
+            LOG(INFO) << BOLDRED << "FE " << +static_cast<ReadoutChip*>(cCbc.first)->getHybridId() << " CBC " << +cCbc.first->getId() << " . At Vcth " << cVcth << " CM is " << CMnoiseFrac << "+/-"
                       << CMnoiseFracErr << "%" << RESET;
 
         // now compute the correlation coefficient and the uncorrelated probability

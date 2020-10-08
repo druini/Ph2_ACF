@@ -125,9 +125,9 @@ void Eudaq2Producer::DoStartRun()
     LOG(INFO) << "Downloading the register configuration of the CBCs" << RESET;
     for(auto cBoard : this->fBoardVector){
       for(auto cFe : cBoard->fModuleVector){
-        int cFeId = int(cFe->getFeId());
+        int cFeId = int(cFe->getHybridId());
         for(auto cCbc : cFe->fReadoutChipVector ){
-          int cCbcId = int(cCbc->getChipId());
+          int cCbcId = int(cCbc->getId());
           auto cRegMap = cCbc->getRegMap();
           for(auto& ireg : cRegMap){
             std::printf (name, "%s_%02d_%02d", ireg.first.c_str(), int(cFeId), int(cCbcId));
@@ -347,7 +347,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 {
                     int cChipId = (int)cCbc->getId();
                     // adding this check here [sarah]
-                    // std::string cCheck = pPh2Event->DataBitString( cCbc->getFeId() , cCbc->getChipId() );
+                    // std::string cCheck = pPh2Event->DataBitString( cCbc->getHybridId() , cCbc->getId() );
                     // if( cCheck.empty() )
                     //	continue;
 
@@ -450,7 +450,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             for(auto cCbc: *cHybrid)
             {
                 char     name[100];
-                uint32_t cHybridId = cHybridId->getFeId();
+                uint32_t cHybridId = cHybridId->getHybridId();
                 uint32_t cCbcId    = cCbc->getCId();
                 // auto cL1Id = static_cast<const D19cCicEvent*>(pPh2Event)->L1Id( cHybrid->getId(), cCbc->getCId() );
                 std::sprintf(name, "pipeline_address_%02d_%02d", cHybridId, cCbcId);

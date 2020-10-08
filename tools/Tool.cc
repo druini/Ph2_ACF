@@ -223,7 +223,7 @@ void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObje
     if(cChipHistMap == std::end(fChipHistMap))
     {
         // Fabio: CBC specific -> to be moved out from Tool
-        LOG(INFO) << "Histo Map for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getFeId()) << ") does not exist - creating ";
+        LOG(INFO) << "Histo Map for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getHybridId()) << ") does not exist - creating ";
         std::map<std::string, TObject*> cTempChipMap;
 
         fChipHistMap[pChip] = cTempChipMap;
@@ -305,7 +305,7 @@ TObject* Tool::getHist(ChipContainer* pChip, std::string pName)
     if(cChipHistMap == std::end(fChipHistMap))
     {
         // Fabio: CBC specific -> to be moved out from Tool
-        LOG(ERROR) << RED << "Error: could not find the Histograms for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getFeId()) << ")" << RESET;
+        LOG(ERROR) << RED << "Error: could not find the Histograms for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getHybridId()) << ")" << RESET;
         return nullptr;
     }
     else
@@ -403,7 +403,7 @@ void Tool::SaveResults()
     for(const auto& cChip: fChipHistMap)
     {
         // Fabio: CBC specific -> to be moved out from Tool
-        TString  cDirName = Form("FE%dCBC%d", static_cast<ReadoutChip*>(cChip.first)->getFeId(), cChip.first->getId());
+        TString  cDirName = Form("FE%dCBC%d", static_cast<ReadoutChip*>(cChip.first)->getHybridId(), cChip.first->getId());
         TObject* cObj     = gROOT->FindObject(cDirName);
 
         // if ( cObj ) delete cObj;
@@ -682,7 +682,7 @@ void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
 
     default:
     {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord " << cChip->getBeId() << " Hybrid " << cChip->getFeId() << " Chip " << cChip->getChipId()
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord " << cChip->getBeBoardId() << " Hybrid " << cChip->getHybridId() << " Chip " << cChip->getId()
                    << ", aborting" << RESET;
         throw("[Tool::selectGroupTestPulse]\tError, FrontEnd type not found");
         break;
@@ -1360,7 +1360,7 @@ void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string& dacName
         {
             for(auto cChip: *cHybrid)
             {
-                std::vector<uint16_t> dacVector; //= dacList.at(cHybrid->getHybridId()).at(cChip->getChipId());
+                std::vector<uint16_t> dacVector; //= dacList.at(cHybrid->getHybridId()).at(cChip->getId());
                 fReadoutChipInterface->WriteChipAllLocalReg(cChip, dacName, *globalDACContainer.at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
             }
         }

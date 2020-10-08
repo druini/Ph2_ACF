@@ -112,7 +112,7 @@ class Counter : public HwDescriptionVisitor
     void visitChip(Ph2_HwDescription::Chip& pCbc)
     {
         fNCbc++;
-        fCbcMask |= (1 << pCbc.getChipId());
+        fCbcMask |= (1 << pCbc.getId());
     }
     void     visitHybrid(Ph2_HwDescription::Hybrid& pHybrid) { fNFe++; }
     void     visitBeboard(Ph2_HwDescription::BeBoard& pBoard) { fNBe++; }
@@ -134,12 +134,12 @@ class Configurator : public HwDescriptionVisitor
     void visitBeBoard(Ph2_HwDescription::BeBoard& pBoard)
     {
         fBeBoardInterface->ConfigureBoard(&pBoard);
-        LOG(INFO) << "Successfully configured Board " << +pBoard.getBeId();
+        LOG(INFO) << "Successfully configured Board " << +pBoard.getId();
     }
     void visitChip(Ph2_HwDescription::Chip& pCbc)
     {
         fCbcInterface->ConfigureChip(&pCbc);
-        LOG(INFO) << "Successfully configured Chip " << +pCbc.getChipId();
+        LOG(INFO) << "Successfully configured Chip " << +pCbc.getId();
     }
 };
 
@@ -163,7 +163,7 @@ struct CbcRegReader : public HwDescriptionVisitor
         fReadRegValue = pCbc.getReg(fRegName);
 
         if(fOutput)
-            LOG(INFO) << "Reading Reg " << RED << fRegName << RESET << " on CBC " << +pCbc.getChipId() << " memory value: " << std::hex << +fRegValue << " read value: " << +fReadRegValue << std::dec;
+            LOG(INFO) << "Reading Reg " << RED << fRegName << RESET << " on CBC " << +pCbc.getId() << " memory value: " << std::hex << +fRegValue << " read value: " << +fReadRegValue << std::dec;
     }
     uint16_t getMemoryValue() { return fRegValue; }
     uint16_t getHWValue() { return fReadRegValue; }

@@ -6,7 +6,7 @@
     
     <OpticalGroup Id="0" FMCId="0" >
         
-        <Hybrid FeId="0" HybridId="0" Status="1">
+        <Hybrid Id="0" Status="1">
             <Global>
                 <Settings threshold="500" latency="29"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="0" groundothers="0"/>

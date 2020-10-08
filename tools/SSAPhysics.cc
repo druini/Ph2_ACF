@@ -43,7 +43,7 @@ void SSAPhysics::Running()
         this->initializeWriteFileHandler();
     }
 
-    for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->ChipReSync();
+    for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getId()])->ChipReSync();
     SystemController::Start(fRunNumber);
 
     SSAPhysics::run();
