@@ -13,7 +13,7 @@
     <OpticalGroup Id="0" FMCId="0" >
         <GBT phaseTap="7" enable="1"/>
         <!-- LHS --> 
-        <Hybrid FeId="1" FMCId="0" HybridId="0" Status="1" LinkId="0">
+        <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
                 <Settings threshold="550" latency="104"/>
                 <TestPulse enable="1" polarity="0" amplitude="0x3F" channelgroup="0" delay="0" groundothers="1"/>

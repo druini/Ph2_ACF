@@ -58,9 +58,7 @@ class BeBoard : public BoardContainer
     /*!
      * \brief Destructor
      */
-    ~BeBoard()
-    {
-    }
+    ~BeBoard() {}
 
     // Public Methods
 
@@ -106,24 +104,6 @@ class BeBoard : public BoardContainer
     // */
     BeBoardRegMap getBeBoardRegMap() const { return fRegMap; }
 
-    /*!
-     * \brief Get the BeBoardId of the BeBoard
-     * \return the BeBoard Id
-     */
-    uint8_t getBeId() const { return fBeId; }
-
-    /*!
-     * \brief Get the BeBoardIdentifier
-     * \return The BeBoardIdentifier
-     */
-    uint32_t getBeBoardId() const { return fBeId << 8; }
-
-    /*!
-     * \brief Set the Be Id of the BeBoard
-     * \param pBeId
-     */
-    void setBeId(uint8_t pBeId) { fBeId = pBeId; }
-
     void setOptical(bool pOptical) { fOptical = pOptical; }
 
     void setCDCEconfiguration(bool pConfigure, uint32_t pClockRate = 120)
@@ -164,7 +144,6 @@ class BeBoard : public BoardContainer
     int dummyValue_ = 1989;
 
   protected:
-    uint8_t      fBeId;
     BoardType    fBoardType;
     EventType    fEventType;
     FrontEndType fFrontEndType;

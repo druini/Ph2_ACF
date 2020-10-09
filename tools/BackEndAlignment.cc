@@ -250,7 +250,7 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
             {
                 ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
                 // fBeBoardInterface->WriteBoardReg (pBoard,
-                // "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cReadoutChip->getChipId() );
+                // "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cReadoutChip->getId() );
                 // original mask
                 const ChannelGroup<NCHANNELS>* cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cReadoutChip->getChipOriginalMask());
                 // original threshold

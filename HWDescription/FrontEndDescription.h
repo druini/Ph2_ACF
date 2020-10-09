@@ -38,7 +38,7 @@ class FrontEndDescription
      * \brief Get the Be ID
      * \return The Be ID
      */
-    uint8_t getBeId() const { return fBeId; }
+    uint8_t getBeBoardId() const { return fBeId; }
 
     /*!
      * \brief Get the FMC ID
@@ -50,13 +50,7 @@ class FrontEndDescription
      * \brief Get the FE ID
      * \return The FE ID
      */
-    uint8_t getFeId() const { return fFeId; }
-
-    /*!
-     * \brief Get the BeBoardIdentifier
-     * \return The BeBoardIdentifier
-     */
-    uint16_t getBeBoardId() const { return fBeId << 8; }
+    uint8_t getHybridId() const { return fFeId; }
 
     /*!
      * \brief Get the Status
@@ -70,7 +64,7 @@ class FrontEndDescription
      * \brief Set the Be ID
      * \param pBeId
      */
-    void setBeId(uint8_t pBeId) { fBeId = pBeId; }
+    void setBeBoardId(uint8_t pBeId) { fBeId = pBeId; }
     /*!
      * \brief Set the FMC ID
      * \param pFMCId

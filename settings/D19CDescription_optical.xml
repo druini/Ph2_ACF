@@ -10,7 +10,7 @@
     <CDCE configure = "0"/>
    
     <OpticalGroup Id="0" FMCId="0" >
-        <Hybrid FeId="0" FMCId="0" HybridId="0" Status="1" LinkId="0">
+        <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
                 <Settings threshold="500" latency="19"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -34,7 +34,7 @@
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
 
-        <Hybrid FeId="1" FMCId="0" HybridId="0" Status="1" LinkId="0">
+        <Hybrid Id="1" Status="1" LinkId="0">
             <Global>
                 <Settings threshold="500" latency="19"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>

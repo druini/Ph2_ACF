@@ -27,7 +27,7 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
 
     std::vector<uint32_t> cVecReq;
 
-    fBoardFW->EncodeReg(cRegItem, pMPA->getFeId(), pMPA->getChipId(), cVecReq, true, false);
+    fBoardFW->EncodeReg(cRegItem, pMPA->getHybridId(), pMPA->getId(), cVecReq, true, false);
     fBoardFW->ReadChipBlockReg(cVecReq);
 
     // bools to find the values of failed and read
@@ -47,8 +47,8 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegNode, uint16_
     ChipRegItem cRegItem = pMPA->getRegItem(pRegNode);
     cRegItem.fValue      = pValue & 0xFF;
     std::vector<uint32_t> cVec;
-    // std::cout<<pMPA->getFeId()<<" , "<<pMPA->getChipId()<<std::endl;
-    fBoardFW->EncodeReg(cRegItem, pMPA->getFeId(), pMPA->getChipId(), cVec, pVerifLoop, true);
+    // std::cout<<pMPA->getHybridId()<<" , "<<pMPA->getId()<<std::endl;
+    fBoardFW->EncodeReg(cRegItem, pMPA->getHybridId(), pMPA->getId(), cVec, pVerifLoop, true);
     uint8_t cWriteAttempts = 0;
     bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
 
@@ -80,7 +80,7 @@ bool MPAInterface::WriteChipMultReg(Chip* pMPA, const std::vector<std::pair<std:
         }
         cRegItem        = pMPA->getRegItem(cReg.first);
         cRegItem.fValue = cReg.second;
-        fBoardFW->EncodeReg(cRegItem, pMPA->getFeId(), pMPA->getChipId(), cVec, pVerifLoop, true);
+        fBoardFW->EncodeReg(cRegItem, pMPA->getHybridId(), pMPA->getId(), cVec, pVerifLoop, true);
 
         // HACK! take out
         this->WriteChipReg(pMPA, cReg.first, cReg.second, pVerifLoop);
@@ -150,7 +150,7 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
             char dacName1[20];
 
             sprintf(dacName1, dacTemplate.c_str(), iChannel + 1);
-            // fBoardFW->EncodeReg ( cRegItem, pMPA->getFeId(), pMPA->getChipId(), cVec, pVerifLoop, true );
+            // fBoardFW->EncodeReg ( cRegItem, pMPA->getHybridId(), pMPA->getId(), cVec, pVerifLoop, true );
             // #ifdef COUNT_FLAG
             //     fRegisterCount++;
             // #endif
@@ -188,7 +188,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
         fRegisterCount++;
 #endif
         // LOG (INFO) << BOLDRED << "Write "<<cRegItem.first<< RESET;
-        fBoardFW->EncodeReg(cRegItem.second, pMPA->getFeId(), pMPA->getChipId(), cVec, pVerifLoop, true);
+        fBoardFW->EncodeReg(cRegItem.second, pMPA->getHybridId(), pMPA->getId(), cVec, pVerifLoop, true);
         bool cSuccess = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
         if(cSuccess)
         {
@@ -234,7 +234,7 @@ void MPAInterface::Pix_write(ReadoutChip* cMPA, ChipRegItem cRegItem, uint32_t r
     rowreg.fValue      = data;
     std::vector<uint32_t> cVecReq;
     cVecReq.clear();
-    fBoardFW->EncodeReg(rowreg, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, true);
+    fBoardFW->EncodeReg(rowreg, cMPA->getHybridId(), cMPA->getId(), cVecReq, false, true);
     fBoardFW->WriteChipBlockReg(cVecReq, cWriteAttempts, false);
 }
 
@@ -245,7 +245,7 @@ uint32_t MPAInterface::Pix_read(ReadoutChip* cMPA, ChipRegItem cRegItem, uint32_
 
     std::vector<uint32_t> cVecReq;
     cVecReq.clear();
-    fBoardFW->EncodeReg(cRegItem, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, false);
+    fBoardFW->EncodeReg(cRegItem, cMPA->getHybridId(), cMPA->getId(), cVecReq, false, false);
     fBoardFW->WriteChipBlockReg(cVecReq, cWriteAttempts, false);
     std::chrono::milliseconds cShort(1);
 

@@ -574,7 +574,7 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
-                    if(cReadoutChip->getChipId() % 2 == 0)
+                    if(cReadoutChip->getId() % 2 == 0)
                     {
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", cTh1);
                         static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cReadoutChip, {10, 244}, {0, 0}, true);

@@ -154,9 +154,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     std::string cUri          = cBeBoardConnectionNode.attribute("uri").value();
     std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute("address_table").value());
 
-    if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getBeBoardId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str()); }
+    if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str()); }
     else if(cBeBoard->getBoardType() == BoardType::RD53)
-        pBeBoardFWMap[cBeBoard->getBeBoardId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+        pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
 
     os << BOLDCYAN << "|"
        << "       "
@@ -218,7 +218,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
                     {
                         if(std::string(cAttribute.name()) == "phaseTap") // T.B.D store this somewhere...but where
                         {
-                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setGBTxPhase(convertAnyInt(cAttribute.value()));
+                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getId()])->setGBTxPhase(convertAnyInt(cAttribute.value()));
                             os << BOLDBLUE << "\t|"
                                << "       "
                                << "|"
@@ -229,7 +229,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
                         if(std::string(cAttribute.name()) == "txPolarity") // T.B.D store this somewhere...but where
                         {
                             auto cPolarity = convertAnyInt(cAttribute.value());
-                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setTxPolarity(cGBTId, cPolarity);
+                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getId()])->setTxPolarity(cGBTId, cPolarity);
                             os << BOLDBLUE << "\t|"
                                << "       "
                                << "|"
@@ -240,7 +240,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
                         if(std::string(cAttribute.name()) == "rxPolarity") // T.B.D store this somewhere...but where
                         {
                             auto cPolarity = convertAnyInt(cAttribute.value());
-                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getBeBoardId()])->setRxPolarity(cGBTId, cPolarity);
+                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getId()])->setRxPolarity(cGBTId, cPolarity);
                             os << BOLDBLUE << "\t|"
                                << "       "
                                << "|"
@@ -265,7 +265,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
     std::string   cFilePath       = "";
     uint32_t      cOpticalGroupId = pOpticalGroupNode.attribute("Id").as_int();
     uint32_t      cFMCId          = pOpticalGroupNode.attribute("FMCId").as_int();
-    uint32_t      cBoardId        = pBoard->getBeBoardId();
+    uint32_t      cBoardId        = pBoard->getId();
     OpticalGroup* theOpticalGroup = pBoard->addOpticalGroupContainer(cBoardId, new OpticalGroup(cBoardId, cFMCId, cOpticalGroupId));
 
     for(pugi::xml_node theChild: pOpticalGroupNode.children())
@@ -396,7 +396,7 @@ void FileParser::parseSLink(pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ost
                 if(cTypeString == "HV")
                 {
                     cUID   = 5;
-                    cFeId  = convertAnyInt(cNode.attribute("FeId").value());
+                    cFeId  = convertAnyInt(cNode.attribute("Id").value());
                     cCbcId = convertAnyInt(cNode.attribute("Sensor").value());
                     cValue = convertAnyInt(cNode.first_child().value());
                 }
@@ -408,7 +408,7 @@ void FileParser::parseSLink(pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ost
                 else if(cTypeString == "User")
                 {
                     cUID   = convertAnyInt(cNode.attribute("UID").value());
-                    cFeId  = convertAnyInt(cNode.attribute("FeId").value());
+                    cFeId  = convertAnyInt(cNode.attribute("Id").value());
                     cCbcId = convertAnyInt(cNode.attribute("CbcId").value());
                     cValue = convertAnyInt(cNode.first_child().value());
                 }
@@ -417,7 +417,7 @@ void FileParser::parseSLink(pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ost
                     // here is where it gets nasty
                     cUID     = 1;
                     cRegName = cNode.attribute("Register").value();
-                    cFeId    = convertAnyInt(cNode.attribute("FeId").value());
+                    cFeId    = convertAnyInt(cNode.attribute("Id").value());
                     cCbcId   = convertAnyInt(cNode.attribute("CbcId").value());
 
                     // ok, now I need to loop th CBCs to find page & address and the initial value
@@ -481,7 +481,7 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
     }
     else
         cFileName = expandEnvironmentVariables(pSSAnode.attribute("configfile").value());
-    ReadoutChip* cSSA = pHybrid->addChipContainer(cChipId, new SSA(pHybrid->getBeId(), pHybrid->getFMCId(), pHybrid->getFeId(), cChipId, 0, cFileName));
+    ReadoutChip* cSSA = pHybrid->addChipContainer(cChipId, new SSA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, 0, cFileName));
     cSSA->setNumberOfChannels(120);
     this->parseSSASettings(pSSAnode, cSSA);
 }
@@ -503,7 +503,7 @@ void FileParser::parseMPA(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::stri
     }
     else
         cFileName = expandEnvironmentVariables(pHybridNode.attribute("configfile").value());
-    ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getBeId(), pHybrid->getFMCId(), pHybrid->getFeId(), cChipId, cFileName));
+    ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cFileName));
     cMPA->setNumberOfChannels(1920);
     this->parseMPASettings(pHybridNode, cMPA);
 }
@@ -522,23 +522,21 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         os << BOLDBLUE << "|"
            << "       "
            << "|"
-           << "----" << pHybridNode.name() << " --> " << BOLDBLUE << pHybridNode.first_attribute().name() << ": " << BOLDYELLOW << pHybridNode.attribute("FeId").value() << BOLDBLUE
-           << ", FMCId: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("FMCId").value()) << BOLDBLUE << ", HybridId: " << BOLDYELLOW
-           << expandEnvironmentVariables(pHybridNode.attribute("HybridId").value()) << BOLDBLUE << ", Status: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("Status").value())
-           << BOLDBLUE << ", LinkId: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("LinkId").value()) << RESET << std::endl;
+           << "----" << pHybridNode.name() << " --> " << BOLDBLUE << pHybridNode.first_attribute().name() << ": " << BOLDYELLOW << pHybridNode.attribute("Id").value() << BOLDBLUE
+           << ", FMCId: " << BOLDYELLOW << pOpticalGroup->getFMCId() << BOLDBLUE << ", Status: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("Status").value()) << BOLDBLUE
+           << ", LinkId: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("LinkId").value()) << RESET << std::endl;
 
         Hybrid* cHybrid;
         if(pBoard->getBoardType() == BoardType::RD53)
         {
-            cHybrid =
-                pOpticalGroup->addHybridContainer(pHybridNode.attribute("FeId").as_int(),
-                                                  new Hybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("FeId").as_int(), pHybridNode.attribute("FeId").as_int()));
+            cHybrid = pOpticalGroup->addHybridContainer(pHybridNode.attribute("Id").as_int(),
+                                                        new Hybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
         }
         else
         {
             cHybrid = pOpticalGroup->addHybridContainer(
-                pHybridNode.attribute("FeId").as_int(),
-                new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("FeId").as_int(), pHybridNode.attribute("FeId").as_int()));
+                pHybridNode.attribute("Id").as_int(),
+                new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
             static_cast<OuterTrackerHybrid*>(cHybrid)->setLinkId(pHybridNode.attribute("LinkId").as_int());
         }
 
@@ -591,7 +589,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                            << "|"
                            << "----" << cName << "  "
                            << "Id" << cChipId << " , File: " << cFileName << RESET << std::endl;
-                        Cic* cCic = new Cic(cHybrid->getBeId(), cHybrid->getFMCId(), cHybrid->getFeId(), cChipId, cFileName);
+                        Cic* cCic = new Cic(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cChipId, cFileName);
                         static_cast<OuterTrackerHybrid*>(cHybrid)->addCic(cCic);
                         cCic->setFrontEndType(cType);
 
@@ -677,7 +675,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
         cFileName = expandEnvironmentVariables(pCbcNode.attribute("configfile").value());
 
     uint32_t     cChipId = pCbcNode.attribute("Id").as_int();
-    ReadoutChip* cCbc    = cHybrid->addChipContainer(cChipId, new Cbc(cHybrid->getBeId(), cHybrid->getFMCId(), cHybrid->getFeId(), cChipId, cFileName));
+    ReadoutChip* cCbc    = cHybrid->addChipContainer(cChipId, new Cbc(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cChipId, cFileName));
     cCbc->setNumberOfChannels(254);
 
     // parse the specific CBC settings so that Registers take precedence
@@ -985,7 +983,7 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
 
     uint32_t     chipId   = theChipNode.attribute("Id").as_int();
     uint32_t     chipLane = theChipNode.attribute("Lane").as_int();
-    ReadoutChip* theChip  = cHybrid->addChipContainer(chipId, new RD53(cHybrid->getBeId(), cHybrid->getFMCId(), cHybrid->getFeId(), chipId, chipLane, cFileName));
+    ReadoutChip* theChip  = cHybrid->addChipContainer(chipId, new RD53(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), chipId, chipLane, cFileName));
     theChip->setNumberOfChannels(RD53::nRows, RD53::nCols);
 
     this->parseRD53Settings(theChipNode, theChip, os);

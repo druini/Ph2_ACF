@@ -46,7 +46,7 @@ class RD53Interface : public ReadoutChipInterface
     template <typename T>
     void sendCommand(Ph2_HwDescription::Chip* pChip, const T& cmd)
     {
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getFeId());
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getHybridId());
     }
 
     template <typename T, size_t N>

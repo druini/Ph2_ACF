@@ -245,9 +245,9 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Ch
 
     uint32_t chipLane;
     if(this->singleChip == true)
-        chipLane = pChip->getFeId(); // @TMP@
+        chipLane = pChip->getHybridId(); // @TMP@
     else
-        chipLane = NLANE_HYBRID * pChip->getFeId() + static_cast<RD53*>(pChip)->getChipLane(); // @TMP@
+        chipLane = NLANE_HYBRID * pChip->getHybridId() + static_cast<RD53*>(pChip)->getChipLane(); // @TMP@
 
     // #####################
     // # Read the register #

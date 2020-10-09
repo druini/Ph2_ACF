@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     if(cHardReset) { cTool.fBeBoardInterface->RebootBoard(pBoard); }
     else if(cDDR3SelfTest)
     {
-        cTool.fBeBoardInterface->setBoard(pBoard->getBeBoardId());
+        cTool.fBeBoardInterface->setBoard(pBoard->getId());
         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->DDR3SelfTest();
         //(D19cFWInterface*)(cTool.fBeBoardInterface->fBoardFW)->DDR3SelfTest();
     }

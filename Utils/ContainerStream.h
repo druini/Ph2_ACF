@@ -486,7 +486,6 @@ class DataStreamHybridContainer : public DataStreamBase
                 bufferWritingPosition += channelContainer->size() * sizeof(T);
                 std::cout << __PRETTY_FUNCTION__ << "vectorSize = " << +channelContainer->size() << std::endl;
                 channelContainer = nullptr;
-
             }
         }
     }

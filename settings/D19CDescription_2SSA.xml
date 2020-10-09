@@ -5,7 +5,7 @@
     
     <CDCE configure="0" clockRate="120"/>
     <OpticalGroup Id="0" FMCId="0" >
-        <Hybrid FeId="0" HybridId="0" Status="1">
+        <Hybrid Id="0" Status="1">
             <Global>
             </Global>
 

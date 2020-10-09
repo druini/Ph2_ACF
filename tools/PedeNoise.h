@@ -60,14 +60,14 @@ class PedeNoise : public Tool
     uint32_t fMaxNevents{65535};
     int      fNEventsPerBurst{-1};
 
-    DetectorDataContainer *fThresholdAndNoiseContainer;
+    DetectorDataContainer* fThresholdAndNoiseContainer;
 
   private:
     // to hold the original register values
-    DetectorDataContainer *fStubLogicValue;
-    DetectorDataContainer *fHIPCountValue;
-    bool                  cWithCBC = true;
-    bool                  cWithSSA = false;
+    DetectorDataContainer* fStubLogicValue;
+    DetectorDataContainer* fHIPCountValue;
+    bool                   cWithCBC = true;
+    bool                   cWithSSA = false;
 
     // Settings
     bool fPlotSCurves{false};

@@ -19,11 +19,11 @@ namespace Ph2_HwDescription
 {
 // Constructors
 
-BeBoard::BeBoard() : BoardContainer(0), fBeId(0), fEventType(EventType::VR), fCondDataSet(nullptr) {}
+BeBoard::BeBoard() : BoardContainer(0), fEventType(EventType::VR), fCondDataSet(nullptr) {}
 
-BeBoard::BeBoard(uint8_t pBeId) : BoardContainer(pBeId), fBeId(pBeId), fEventType(EventType::VR), fCondDataSet(nullptr) {}
+BeBoard::BeBoard(uint8_t pBeId) : BoardContainer(pBeId), fEventType(EventType::VR), fCondDataSet(nullptr) {}
 
-BeBoard::BeBoard(uint8_t pBeId, const std::string& filename) : BoardContainer(pBeId), fBeId(pBeId), fEventType(EventType::VR), fCondDataSet(nullptr) { loadConfigFile(filename); }
+BeBoard::BeBoard(uint8_t pBeId, const std::string& filename) : BoardContainer(pBeId), fEventType(EventType::VR), fCondDataSet(nullptr) { loadConfigFile(filename); }
 
 // Public Members:
 
@@ -33,17 +33,14 @@ uint32_t BeBoard::getReg(const std::string& pReg) const
 
     if(i == fRegMap.end())
     {
-        LOG(INFO) << "The Board object: " << +fBeId << " doesn't have " << pReg;
+        LOG(INFO) << "The Board object: " << +getId() << " doesn't have " << pReg;
         return 0;
     }
     else
         return i->second;
 }
 
-void BeBoard::setReg(const std::string& pReg, uint32_t psetValue)
-{
-    fRegMap[pReg] = psetValue;
-}
+void BeBoard::setReg(const std::string& pReg, uint32_t psetValue) { fRegMap[pReg] = psetValue; }
 
 void BeBoard::updateCondData(uint32_t& pTDCVal)
 {

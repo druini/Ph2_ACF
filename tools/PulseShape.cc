@@ -243,7 +243,7 @@ void PulseShape::fitGraph(int pLow)
     {
         for(auto& cChannel: cCbc.second)
         {
-            TString  cName = Form("f_cbc_pulse_Fe%dCbc%d_Channel%d", static_cast<ReadoutChip*>(cCbc.first)->getFeId(), static_cast<ReadoutChip*>(cCbc.first)->getChipId(), cChannel->fChannelId);
+            TString  cName = Form("f_cbc_pulse_Fe%dCbc%d_Channel%d", static_cast<ReadoutChip*>(cCbc.first)->getHybridId(), static_cast<ReadoutChip*>(cCbc.first)->getId(), cChannel->fChannelId);
             TObject* cObj  = gROOT->FindObject(cName);
 
             if(cObj) delete cObj;

@@ -57,10 +57,7 @@ class ContainerRecycleBin
     ContainerRecycleBin& operator=(const ContainerRecycleBin&) = delete;
     ContainerRecycleBin& operator=(ContainerRecycleBin&&) = delete;
 
-    ~ContainerRecycleBin()
-    {
-        clean();
-    }
+    ~ContainerRecycleBin() { clean(); }
 
     void clean()
     {
