@@ -277,18 +277,18 @@ class RD53FWInterface : public BeBoardFWInterface
     bool RunPRBStest(bool given_time, unsigned long long frames_or_time, uint16_t hybrid_id, uint16_t chip_id);
 
   private:
-    void PrintFWstatus();
-    void TurnOffFMC();
-    void TurnOnFMC();
-    void ResetBoard();
-    void ResetFastCmdBlk();
-    void ResetSlowCmdBlk();
-    void ResetReadoutBlk();
-    void ConfigureFastCommands(const FastCommandsConfig* config = nullptr);
-    void ConfigureDIO5(const DIO5Config* config);
-    void SendBoardCommand(const std::string& cmd_reg);
-    bool CheckChipCommunication();
-    void InitHybridByHybrid(const Ph2_HwDescription::BeBoard* pBoard);
+    void                  PrintFWstatus();
+    void                  TurnOffFMC();
+    void                  TurnOnFMC();
+    void                  ResetBoard();
+    void                  ResetFastCmdBlk();
+    void                  ResetSlowCmdBlk();
+    void                  ResetReadoutBlk();
+    void                  ConfigureFastCommands(const FastCommandsConfig* config = nullptr);
+    void                  ConfigureDIO5(const DIO5Config* config);
+    void                  SendBoardCommand(const std::string& cmd_reg);
+    bool                  CheckChipCommunication();
+    void                  InitHybridByHybrid(const Ph2_HwDescription::BeBoard* pBoard);
     std::vector<uint16_t> GetInitSequence(const unsigned int type);
     uint32_t              GetHybridEnabledChips(const Ph2_HwDescription::Hybrid* pHybrid);
 

@@ -529,8 +529,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         Hybrid* cHybrid;
         if(pBoard->getBoardType() == BoardType::RD53)
         {
-            cHybrid = pOpticalGroup->addHybridContainer(pHybridNode.attribute("Id").as_int(),
-                                                        new Hybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
+            cHybrid = pOpticalGroup->addHybridContainer(
+                pHybridNode.attribute("Id").as_int(), new Hybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
         }
         else
         {

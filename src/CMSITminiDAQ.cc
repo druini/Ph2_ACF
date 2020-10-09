@@ -394,152 +394,152 @@ int main(int argc, char** argv)
             pa.run();
             pa.analyze();
             pa.draw();
-                    }
-                    else if(whichCalib == "scurve")
-                    {
-                        // ##############
-                        // # Run SCurve #
-                        // ##############
-                        LOG(INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
+        }
+        else if(whichCalib == "scurve")
+        {
+            // ##############
+            // # Run SCurve #
+            // ##############
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
 
-                        std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_SCurve");
-                        SCurve      sc;
-                        sc.Inherit(&mySysCntr);
-                        sc.localConfigure(fileName, runNumber);
-                        sc.run();
-                        sc.analyze();
-                        sc.draw();
-                    }
-                    else if(whichCalib == "gain")
-                    {
-                        // ############
-                        // # Run Gain #
-                        // ############
-                        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
+            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_SCurve");
+            SCurve      sc;
+            sc.Inherit(&mySysCntr);
+            sc.localConfigure(fileName, runNumber);
+            sc.run();
+            sc.analyze();
+            sc.draw();
+        }
+        else if(whichCalib == "gain")
+        {
+            // ############
+            // # Run Gain #
+            // ############
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
 
-                        std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Gain");
-                        Gain        ga;
-                        ga.Inherit(&mySysCntr);
-                        ga.localConfigure(fileName, runNumber);
-                        ga.run();
-                        ga.analyze();
-                        ga.draw();
-                    }
-                    else if(whichCalib == "gainopt")
-                    {
-                        // #########################
-                        // # Run Gain Optimization #
-                        // #########################
-                        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
+            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Gain");
+            Gain        ga;
+            ga.Inherit(&mySysCntr);
+            ga.localConfigure(fileName, runNumber);
+            ga.run();
+            ga.analyze();
+            ga.draw();
+        }
+        else if(whichCalib == "gainopt")
+        {
+            // #########################
+            // # Run Gain Optimization #
+            // #########################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
 
-                        std::string      fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_GainOptimization");
-                        GainOptimization go;
-                        go.Inherit(&mySysCntr);
-                        go.localConfigure(fileName, runNumber);
-                        go.run();
-                        go.analyze();
-                        go.draw();
-                    }
-                    else if(whichCalib == "threqu")
-                    {
-                        // ##############################
-                        // # Run Threshold Equalization #
-                        // ##############################
-                        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
+            std::string      fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_GainOptimization");
+            GainOptimization go;
+            go.Inherit(&mySysCntr);
+            go.localConfigure(fileName, runNumber);
+            go.run();
+            go.analyze();
+            go.draw();
+        }
+        else if(whichCalib == "threqu")
+        {
+            // ##############################
+            // # Run Threshold Equalization #
+            // ##############################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
-                        std::string     fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrEqualization");
-                        ThrEqualization te;
-                        te.Inherit(&mySysCntr);
-                        te.localConfigure(fileName, runNumber);
-                        te.run();
-                        te.analyze();
-                        te.draw();
-                    }
-                    else if(whichCalib == "thrmin")
-                    {
-                        // ##############################
-                        // # Run Threshold Minimization #
-                        // ##############################
-                        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Threshold Minimization @@@" << RESET;
+            std::string     fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrEqualization");
+            ThrEqualization te;
+            te.Inherit(&mySysCntr);
+            te.localConfigure(fileName, runNumber);
+            te.run();
+            te.analyze();
+            te.draw();
+        }
+        else if(whichCalib == "thrmin")
+        {
+            // ##############################
+            // # Run Threshold Minimization #
+            // ##############################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Threshold Minimization @@@" << RESET;
 
-                        std::string     fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrMinimization");
-                        ThrMinimization tm;
-                        tm.Inherit(&mySysCntr);
-                        tm.localConfigure(fileName, runNumber);
-                        tm.run();
-                        tm.analyze();
-                        tm.draw();
-                    }
-                    else if(whichCalib == "thradj")
-                    {
-                        // ##############################
-                        // # Run Threshold Minimization #
-                        // ##############################
-                        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Threshold Adjustment @@@" << RESET;
+            std::string     fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrMinimization");
+            ThrMinimization tm;
+            tm.Inherit(&mySysCntr);
+            tm.localConfigure(fileName, runNumber);
+            tm.run();
+            tm.analyze();
+            tm.draw();
+        }
+        else if(whichCalib == "thradj")
+        {
+            // ##############################
+            // # Run Threshold Minimization #
+            // ##############################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Threshold Adjustment @@@" << RESET;
 
-                        std::string   fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrAdjustment");
-                        ThrAdjustment ta;
-                        ta.Inherit(&mySysCntr);
-                        ta.localConfigure(fileName, runNumber);
-                        ta.run();
-                        ta.analyze();
-                        ta.draw();
-                    }
-                    else if(whichCalib == "injdelay")
-                    {
-                        // #######################
-                        // # Run Injection Delay #
-                        // #######################
-                        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Injection Delay scan @@@" << RESET;
+            std::string   fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrAdjustment");
+            ThrAdjustment ta;
+            ta.Inherit(&mySysCntr);
+            ta.localConfigure(fileName, runNumber);
+            ta.run();
+            ta.analyze();
+            ta.draw();
+        }
+        else if(whichCalib == "injdelay")
+        {
+            // #######################
+            // # Run Injection Delay #
+            // #######################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Injection Delay scan @@@" << RESET;
 
-                        std::string    fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_InjectionDelay");
-                        InjectionDelay id;
-                        id.Inherit(&mySysCntr);
-                        id.localConfigure(fileName, runNumber);
-                        id.run();
-                        id.analyze();
-                        id.draw();
-                    }
-                    else if(whichCalib == "clockdelay")
-                    {
-                        // ###################
-                        // # Run Clock Delay #
-                        // ###################
-                        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Clock Delay scan @@@" << RESET;
+            std::string    fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_InjectionDelay");
+            InjectionDelay id;
+            id.Inherit(&mySysCntr);
+            id.localConfigure(fileName, runNumber);
+            id.run();
+            id.analyze();
+            id.draw();
+        }
+        else if(whichCalib == "clockdelay")
+        {
+            // ###################
+            // # Run Clock Delay #
+            // ###################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Clock Delay scan @@@" << RESET;
 
-                        std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ClockDelay");
-                        ClockDelay  cd;
-                        cd.Inherit(&mySysCntr);
-                        cd.localConfigure(fileName, runNumber);
-                        cd.run();
-                        cd.analyze();
-                        cd.draw();
-                    }
-                    else if(whichCalib == "physics")
-                    {
-                        // ###############
-                        // # Run Physics #
-                        // ###############
-                        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Phsyics data taking @@@" << RESET;
+            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ClockDelay");
+            ClockDelay  cd;
+            cd.Inherit(&mySysCntr);
+            cd.localConfigure(fileName, runNumber);
+            cd.run();
+            cd.analyze();
+            cd.draw();
+        }
+        else if(whichCalib == "physics")
+        {
+            // ###############
+            // # Run Physics #
+            // ###############
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Phsyics data taking @@@" << RESET;
 
-                        std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
-                        Physics     ph;
-                        ph.Inherit(&mySysCntr);
-                        ph.localConfigure(fileName, -1);
-                        if(binaryFile == "")
-                        {
-                            ph.Start(runNumber);
-                            usleep(2e6);
-                            ph.Stop();
-                        }
-                        else
-                        {
-                            ph.analyze(true);
-                            ph.draw();
-                        }
-                    }
-                    else if(whichCalib == "eudaq")
-                    {
+            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
+            Physics     ph;
+            ph.Inherit(&mySysCntr);
+            ph.localConfigure(fileName, -1);
+            if(binaryFile == "")
+            {
+                ph.Start(runNumber);
+                usleep(2e6);
+                ph.Stop();
+            }
+            else
+            {
+                ph.analyze(true);
+                ph.draw();
+            }
+        }
+        else if(whichCalib == "eudaq")
+        {
 #ifdef __EUDAQ__
             // ######################
             // # Run EUDAQ producer #
@@ -629,4 +629,4 @@ int main(int argc, char** argv)
     }
 
     return EXIT_SUCCESS;
-            }
+}
