@@ -682,7 +682,7 @@ void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
 
     default:
     {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord " << cChip->getBeBoardId() << " Hybrid " << cChip->getHybridId() << " Chip " << cChip->getId()
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " FrontEnd type not recognized for Bebord " << cChip->getBeBoardId() << " Hybrid " << cChip->getHybridId() << " Chip " << +cChip->getId()
                    << ", aborting" << RESET;
         throw("[Tool::selectGroupTestPulse]\tError, FrontEnd type not found");
         break;

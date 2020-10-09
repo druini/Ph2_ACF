@@ -74,7 +74,7 @@ void PixelAlive::ConfigureCalibration()
 void PixelAlive::Running()
 {
     theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[Gain::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[PixelAlive::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
@@ -113,6 +113,8 @@ void PixelAlive::Stop()
 
     PixelAlive::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset();
 }
 
 void PixelAlive::localConfigure(const std::string fileRes_, int currentRun)
@@ -124,7 +126,7 @@ void PixelAlive::localConfigure(const std::string fileRes_, int currentRun)
     if(currentRun >= 0)
     {
         theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[PixelAlive::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+        LOG(INFO) << GREEN << "[PixelAlive::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     PixelAlive::ConfigureCalibration();
     PixelAlive::initializeFiles(fileRes_, currentRun);
@@ -210,7 +212,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                     size_t nMaskedPixelsPerCalib = 0;
 
                     LOG(INFO) << GREEN << "Average occupancy for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW
+                              << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW
                               << theOccContainer->at(cBoard->getIndex())
                                      ->at(cOpticalGroup->getIndex())
                                      ->at(cHybrid->getIndex())
@@ -232,7 +234,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                       ->getChannel<OccupancyAndPh>(row, col)
                                                       .fOccupancy;
                                 static_cast<RD53*>(cChip)->enablePixel(row, col, injType == INJtype::None ? occupancy <= thrOccupancy : occupancy >= thrOccupancy);
-                                if((*static_cast<RD53*>(cChip)->getPixelsMask())[col].Enable[row] == true) nMaskedPixelsPerCalib++;
+                                if((*static_cast<RD53*>(cChip)->getPixelsMask())[col].Enable[row] == false) nMaskedPixelsPerCalib++;
                             }
 
                     LOG(INFO) << BOLDBLUE << "\t--> Number of potentially masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
@@ -333,7 +335,7 @@ void PixelAlive::chipErrorReport()
                 for(const auto cChip: *cHybrid)
                 {
                     LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8)
                               << "" << RESET;
                     LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8)
@@ -365,6 +367,6 @@ void PixelAlive::saveChipRegisters(int currentRun)
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
                     LOG(INFO) << BOLDBLUE << "\t--> PixelAlive saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
-                              << "/" << cHybrid->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+                              << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
 }

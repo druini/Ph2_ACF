@@ -68,9 +68,8 @@ void Gain::ConfigureCalibration()
 
 void Gain::Running()
 {
-    LOG(INFO) << GREEN << "[Gain::Running] Starting" << RESET;
-
     theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[Gain::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
@@ -112,6 +111,8 @@ void Gain::Stop()
 
     Gain::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset();
 }
 
 void Gain::localConfigure(const std::string fileRes_, int currentRun)
@@ -123,7 +124,7 @@ void Gain::localConfigure(const std::string fileRes_, int currentRun)
     if(currentRun >= 0)
     {
         theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+        LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     Gain::ConfigureCalibration();
     Gain::initializeFiles(fileRes_, currentRun);
@@ -360,10 +361,11 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                 for(const auto cChip: *cHybrid)
                 {
                     LOG(INFO) << GREEN << "Average gain for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(4) << cChip->getSummary<GainAndIntercept, GainAndIntercept>().fGain << RESET
+                              << +cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(4) << cChip->getSummary<GainAndIntercept, GainAndIntercept>().fGain << RESET
                               << GREEN << " (ToT/Delta_VCal)" << std::setprecision(-1) << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW
-                              << theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW << std::fixed << std::setprecision(4)
+                              << theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << std::setprecision(-1)
+                              << RESET;
                 }
 
     return theGainAndInterceptContainer;
@@ -453,7 +455,7 @@ void Gain::chipErrorReport()
                 for(const auto cChip: *cHybrid)
                 {
                     LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8)
                               << "" << RESET;
                     LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8)
@@ -486,6 +488,6 @@ void Gain::saveChipRegisters(int currentRun)
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
                     LOG(INFO) << BOLDBLUE << "\t--> Gain saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
 }

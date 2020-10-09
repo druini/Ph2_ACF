@@ -352,17 +352,32 @@ int main(int argc, char** argv)
             // # Address different subsets of the detector #
             // #############################################
             // @TMP@
-            // const int detDivision = 2;
-            // for(int i = 0; i < detDivision; i++)
-            //   {
-            //       auto detectorSubset = [](const ChipContainer* theChip) { return (theChip->getId() % detDivision == i); };
-            //       pa.fDetectorContainer->setReadoutChipQueryFunction(detectorSubset);
+            // const int detDivision = 8;
+            // auto      query       = [](int indx, int division, int thr) { return (division / thr < 1 ? indx < 1 : indx < 2); };
+            // for(auto i = 0; query(i, detDivision, 8); i++)
+            // {
+            //     auto detectorSubset = [i](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == i); };
+            //     if(query(1, detDivision, 8) == true) pa.fDetectorContainer->setOpticalGroupQueryFunction(detectorSubset);
+
+            //     for(auto j = 0; query(j, detDivision, 4); j++)
+            //     {
+            //         auto detectorSubset = [j](const ModuleContainer* theModule) { return (theModule->getId() % 2 == j); };
+            //         if(query(1, detDivision, 4) == true) pa.fDetectorContainer->setHybridQueryFunction(detectorSubset);
+
+            //         for(auto k = 0; query(k, detDivision, 2); k++)
+            //         {
+            //             auto detectorSubset = [k](const ChipContainer* theChip) { return (theChip->getId() % 2 == k); };
+            //             if(query(1, detDivision, 2) == true) pa.fDetectorContainer->setReadoutChipQueryFunction(detectorSubset);
 
             pa.run();
             pa.analyze();
             pa.draw();
 
-            //     pa.fDetectorContainer->resetReadoutChipQueryFunction();
+            //             pa.fDetectorContainer->resetReadoutChipQueryFunction();
+            //         }
+            //         pa.fDetectorContainer->resetHybridQueryFunction();
+            //     }
+            //     pa.fDetectorContainer->resetOpticalGroupQueryFunction();
             // }
         }
         else if(whichCalib == "noise")
@@ -579,7 +594,7 @@ int main(int argc, char** argv)
                         {
                             mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 2, true);
                             LOG(INFO) << GREEN << "PRBS test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                      << cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
+                                      << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
                                       << ((static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getId()])->RunPRBStest(given_time, frames_or_time, cHybrid->getId(), cChip->getId()) == true)
                                               ? "PASSED"
                                               : "NOT PASSED")

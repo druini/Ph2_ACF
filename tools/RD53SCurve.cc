@@ -69,7 +69,7 @@ void SCurve::ConfigureCalibration()
 void SCurve::Running()
 {
     theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[SCurve::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[SCurve::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
@@ -111,6 +111,8 @@ void SCurve::Stop()
 
     SCurve::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset();
 }
 
 void SCurve::localConfigure(const std::string fileRes_, int currentRun)
@@ -122,7 +124,7 @@ void SCurve::localConfigure(const std::string fileRes_, int currentRun)
     if(currentRun >= 0)
     {
         theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+        LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     SCurve::ConfigureCalibration();
     SCurve::initializeFiles(fileRes_, currentRun);
@@ -342,10 +344,11 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                 for(const auto cChip: *cHybrid)
                 {
                     LOG(INFO) << GREEN << "Average threshold for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(1) << cChip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold << RESET
-                              << GREEN << " (Delta_VCal)" << std::setprecision(-1) << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW
-                              << theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << RESET;
+                              << +cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(1) << cChip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold
+                              << RESET << GREEN << " (Delta_VCal)" << std::setprecision(-1) << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << std::fixed << std::setprecision(1)
+                              << theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>()
+                              << std::setprecision(-1) << RESET;
                 }
 
     return theThresholdAndNoiseContainer;
@@ -397,7 +400,7 @@ void SCurve::chipErrorReport()
                 for(const auto cChip: *cHybrid)
                 {
                     LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8)
                               << "" << RESET;
                     LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8)
@@ -430,6 +433,6 @@ void SCurve::saveChipRegisters(int currentRun)
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
                     LOG(INFO) << BOLDBLUE << "\t--> SCurve saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
 }

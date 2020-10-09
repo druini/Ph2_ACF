@@ -26,7 +26,7 @@ const RD53::FrontEnd* RD53::getMajorityFE(size_t colStart, size_t colStop)
     });
 }
 
-RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName) : ReadoutChip(pBeId, pFMCId, pFeId, pRD53Id)
+RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName) : ReadoutChip(pBeId, pFMCId, pHybridId, pRD53Id)
 {
     fMaxRegValue      = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;

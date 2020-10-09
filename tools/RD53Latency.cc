@@ -51,7 +51,7 @@ void Latency::ConfigureCalibration()
 void Latency::Running()
 {
     theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[Latency::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[Latency::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
@@ -87,6 +87,8 @@ void Latency::Stop()
 
     Latency::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset();
 }
 
 void Latency::localConfigure(const std::string fileRes_, int currentRun)
@@ -98,7 +100,7 @@ void Latency::localConfigure(const std::string fileRes_, int currentRun)
     if(currentRun >= 0)
     {
         theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[Latency::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+        LOG(INFO) << GREEN << "[Latency::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     Latency::ConfigureCalibration();
     Latency::initializeFiles(fileRes_, currentRun);
@@ -183,11 +185,11 @@ void Latency::analyze()
 
                     if(nTRIGxEvent > 1)
                         LOG(INFO) << GREEN << "Best latency for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << cChip->getId() << RESET << GREEN << "] is within [" << BOLDYELLOW << (regVal - (int)nTRIGxEvent + 1 >= 0 ? std::to_string(regVal - (int)nTRIGxEvent + 1) : "N.A.")
+                                  << +cChip->getId() << RESET << GREEN << "] is within [" << BOLDYELLOW << (regVal - (int)nTRIGxEvent + 1 >= 0 ? std::to_string(regVal - (int)nTRIGxEvent + 1) : "N.A.")
                                   << "," << regVal << GREEN << "] (n.bx)" << RESET;
                     else
                         LOG(INFO) << GREEN << "Best latency for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << regVal << RESET << GREEN << " (n.bx)" << RESET;
+                                  << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << regVal << RESET << GREEN << " (n.bx)" << RESET;
 
                     // ######################################################
                     // # Fill latency container and download new DAC values #
@@ -253,7 +255,7 @@ void Latency::chipErrorReport()
                 for(const auto cChip: *cHybrid)
                 {
                     LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8)
                               << "" << RESET;
                     LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8)
@@ -286,6 +288,6 @@ void Latency::saveChipRegisters(int currentRun)
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
                     LOG(INFO) << BOLDBLUE << "\t--> Latency saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
-                              << "/" << cHybrid->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+                              << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
 }

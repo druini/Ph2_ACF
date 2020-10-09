@@ -70,7 +70,7 @@ void ThrEqualization::ConfigureCalibration()
 void ThrEqualization::Running()
 {
     theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[ThrEqualization::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[ThrEqualization::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
@@ -106,6 +106,8 @@ void ThrEqualization::Stop()
 
     ThrEqualization::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset();
 }
 
 void ThrEqualization::localConfigure(const std::string fileRes_, int currentRun)
@@ -118,7 +120,7 @@ void ThrEqualization::localConfigure(const std::string fileRes_, int currentRun)
     if(currentRun >= 0)
     {
         theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+        LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     ThrEqualization::ConfigureCalibration();
     ThrEqualization::initializeFiles(fileRes_, currentRun);
@@ -286,6 +288,11 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
                             regName,
                             midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
                             true);
+
+                        LOG(INFO) << BOLDMAGENTA << ">>> " << regName << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                  << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW
+                                  << midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << BOLDMAGENTA
+                                  << " <<<" << RESET;
                     }
 
         // ################
@@ -496,7 +503,7 @@ void ThrEqualization::chipErrorReport()
                 for(const auto cChip: *cHybrid)
                 {
                     LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8)
                               << "" << RESET;
                     LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8)
@@ -528,6 +535,6 @@ void ThrEqualization::saveChipRegisters(int currentRun)
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
                     LOG(INFO) << BOLDBLUE << "\t--> ThrEqualization saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
-                              << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+                              << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
 }

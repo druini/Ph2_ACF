@@ -147,8 +147,8 @@ class BeBoardInterface
      * \param pBoard
      * \param pRegVec : Vector of Register/Value pairs
      */
-
     void ReadBoardMultReg(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::pair<std::string, uint32_t>>& pRegVec);
+
     /*!
      * \brief Get the board infos
      * \param pBoard
@@ -171,14 +171,14 @@ class BeBoardInterface
      * \brief Hard reset of all Chip
      * \param pChip
      */
-
     void ChipReSync(const Ph2_HwDescription::BeBoard* pBoard);
+
     /*!
      * \brief Fast Reset of the Chip
      * \param pChip
      */
-
     void ChipReset(const Ph2_HwDescription::BeBoard* pBoard);
+
     /*!
      * \brief Send Chip Trigger
      * \param pChip
@@ -223,7 +223,7 @@ class BeBoardInterface
      * \return none
      */
     template <typename... Ts>
-    void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::Chip* pChip, const Ts&... args)
+    void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const Ts&... args)
     {
         std::lock_guard<std::mutex> theGuard(theMtx);
 

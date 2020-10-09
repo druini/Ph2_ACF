@@ -163,7 +163,7 @@ class SystemController
                     for(const auto cChip: *cHybrid)
                     {
                         LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << cChip->getId() << RESET << GREEN << "]" << RESET;
+                                  << +cChip->getId() << RESET << GREEN << "]" << RESET;
                         fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args...);
                         LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                     }

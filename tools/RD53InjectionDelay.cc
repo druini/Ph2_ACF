@@ -62,7 +62,7 @@ void InjectionDelay::ConfigureCalibration()
 void InjectionDelay::Running()
 {
     theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[InjectionDelay::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[InjectionDelay::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
@@ -100,6 +100,8 @@ void InjectionDelay::Stop()
 
     InjectionDelay::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset();
 }
 
 void InjectionDelay::localConfigure(const std::string fileRes_, int currentRun)
@@ -111,7 +113,7 @@ void InjectionDelay::localConfigure(const std::string fileRes_, int currentRun)
     if(currentRun >= 0)
     {
         theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[InjectionDelay::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+        LOG(INFO) << GREEN << "[InjectionDelay::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     InjectionDelay::ConfigureCalibration();
     InjectionDelay::initializeFiles(fileRes_, currentRun);
@@ -247,9 +249,9 @@ void InjectionDelay::analyze()
                     }
 
                     LOG(INFO) << GREEN << "Best delay for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << regVal << RESET << GREEN << " (1.5625 ns) computed over two bx" << RESET;
+                              << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << regVal << RESET << GREEN << " (1.5625 ns) computed over two bx" << RESET;
                     LOG(INFO) << GREEN << "New delay dac value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
-                              << "/" << cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << (regVal & maxDelay) << RESET;
+                              << "/" << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << (regVal & maxDelay) << RESET;
 
                     // ####################################################
                     // # Fill delay container and download new DAC values #
@@ -262,7 +264,7 @@ void InjectionDelay::analyze()
                     if(regVal / (maxDelay + 1) == 0) latency--;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency, true);
                     LOG(INFO) << GREEN << "New latency dac value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
-                              << "/" << cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << latency << RESET;
+                              << "/" << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << latency << RESET;
                 }
 }
 
@@ -334,7 +336,7 @@ void InjectionDelay::chipErrorReport()
                 for(const auto cChip: *cHybrid)
                 {
                     LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8)
                               << "" << RESET;
                     LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8)
@@ -367,6 +369,6 @@ void InjectionDelay::saveChipRegisters(int currentRun)
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
                     LOG(INFO) << BOLDBLUE << "\t--> InjectionDelay saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
-                              << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+                              << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
 }
