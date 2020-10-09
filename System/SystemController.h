@@ -11,7 +11,7 @@
 #define SYSTEMCONTROLLER_H
 
 #include "../HWDescription/Definition.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWInterface/BeBoardFWInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/CbcInterface.h"
@@ -159,11 +159,11 @@ class SystemController
     {
         if(sizeof...(Ts) > 0)
             for(const auto cOpticalGroup: *pBoard)
-                for(const auto cModule: *cOpticalGroup)
-                    for(const auto cChip: *cModule)
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid)
                     {
-                        LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/module/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/"
-                                  << cChip->getId() << RESET << GREEN << "]" << RESET;
+                        LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                  << +cChip->getId() << RESET << GREEN << "]" << RESET;
                         fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args...);
                         LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                     }

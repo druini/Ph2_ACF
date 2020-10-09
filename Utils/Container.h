@@ -251,7 +251,7 @@ class ChipContainer : public BaseContainer
 namespace Ph2_HwDescription
 {
 class ReadoutChip;
-class Module;
+class Hybrid;
 class OpticalGroup;
 class BeBoard;
 } // namespace Ph2_HwDescription
@@ -364,10 +364,10 @@ void HWDescriptionContainer<T, HW>::setQueryFunction(std::function<bool(const T*
 template <typename T, typename HW>
 std::function<bool(const T*)> HWDescriptionContainer<T, HW>::QueryFunction::fQueryFunction = 0;
 
-class ModuleContainer : public HWDescriptionContainer<ChipContainer, Ph2_HwDescription::ReadoutChip>
+class HybridContainer : public HWDescriptionContainer<ChipContainer, Ph2_HwDescription::ReadoutChip>
 {
   public:
-    ModuleContainer(uint16_t id) : HWDescriptionContainer<ChipContainer, Ph2_HwDescription::ReadoutChip>(id) {}
+    HybridContainer(uint16_t id) : HWDescriptionContainer<ChipContainer, Ph2_HwDescription::ReadoutChip>(id) {}
     template <typename T>
     T* addChipContainer(uint16_t id, T* chip)
     {
@@ -377,14 +377,14 @@ class ModuleContainer : public HWDescriptionContainer<ChipContainer, Ph2_HwDescr
   private:
 };
 
-class OpticalGroupContainer : public HWDescriptionContainer<ModuleContainer, Ph2_HwDescription::Module>
+class OpticalGroupContainer : public HWDescriptionContainer<HybridContainer, Ph2_HwDescription::Hybrid>
 {
   public:
-    OpticalGroupContainer(uint16_t id) : HWDescriptionContainer<ModuleContainer, Ph2_HwDescription::Module>(id) {}
+    OpticalGroupContainer(uint16_t id) : HWDescriptionContainer<HybridContainer, Ph2_HwDescription::Hybrid>(id) {}
     template <class T>
-    T* addModuleContainer(uint16_t id, T* module)
+    T* addHybridContainer(uint16_t id, T* hybrid)
     {
-        return static_cast<T*>(HWDescriptionContainer<ModuleContainer, Ph2_HwDescription::Module>::addObject(id, module));
+        return static_cast<T*>(HWDescriptionContainer<HybridContainer, Ph2_HwDescription::Hybrid>::addObject(id, hybrid));
     }
 
   private:
@@ -421,14 +421,14 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
             for(uint16_t opticalGroupIndex = 0; opticalGroupIndex < theBoard->std::vector<OpticalGroupContainer*>::size(); ++opticalGroupIndex)
             {
                 auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
-                for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<ModuleContainer*>::size(); ++hybridIndex)
+                for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<HybridContainer*>::size(); ++hybridIndex)
                 {
                     auto     theHybrid       = (*theOpticalGroup)[hybridIndex];
                     uint16_t theNewChipIndex = 0;
                     for(uint16_t chipIndex = 0; chipIndex < theHybrid->std::vector<ChipContainer*>::size(); ++chipIndex)
                     {
                         auto                           theChip = (*theHybrid)[chipIndex];
-                        ModuleContainer::QueryFunction theQueryFunctor;
+                        HybridContainer::QueryFunction theQueryFunctor;
                         if(theQueryFunctor(theChip))
                             theChip->setIndex(theNewChipIndex++);
                         else
@@ -449,7 +449,7 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
             {
                 auto     theOpticalGroup   = (*theBoard)[opticalGroupIndex];
                 uint16_t theNewHybridIndex = 0;
-                for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<ModuleContainer*>::size(); ++hybridIndex)
+                for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<HybridContainer*>::size(); ++hybridIndex)
                 {
                     auto                                 theHybrid = (*theOpticalGroup)[hybridIndex];
                     OpticalGroupContainer::QueryFunction theQueryFunctor;
@@ -514,7 +514,7 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
     }
     void resetReadoutChipQueryFunction()
     {
-        ModuleContainer ::resetQueryFunction();
+        HybridContainer ::resetQueryFunction();
         updateChipIndex();
     }
 
@@ -528,14 +528,14 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
         BoardContainer ::setQueryFunction(theQueryFunction);
         updateOpticalGroupIndex();
     }
-    void setHybridQueryFunction(std::function<bool(const ModuleContainer*)> theQueryFunction)
+    void setHybridQueryFunction(std::function<bool(const HybridContainer*)> theQueryFunction)
     {
         OpticalGroupContainer::setQueryFunction(theQueryFunction);
         updateHybridIndex();
     }
     void setReadoutChipQueryFunction(std::function<bool(const ChipContainer*)> theQueryFunction)
     {
-        ModuleContainer ::setQueryFunction(theQueryFunction);
+        HybridContainer ::setQueryFunction(theQueryFunction);
         updateChipIndex();
     }
 

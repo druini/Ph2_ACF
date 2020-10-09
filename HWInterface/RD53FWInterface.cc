@@ -128,28 +128,16 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // # 2 = double chip hybrid       #
     // # 4 = quad chip hybrid         #
     // ################################
-    this->singleChip  = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
-    uint32_t chips_en = 0;
-    enabledHybrids    = 0;
+    this->singleChip     = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
+    this->enabledHybrids = 0;
+    uint32_t chips_en    = 0;
     for(const auto cOpticalGroup: *pBoard)
         for(const auto cHybrid: *cOpticalGroup)
         {
-            uint16_t hybrid_id = cHybrid->getId();
-            enabledHybrids |= 1 << hybrid_id;
-            if(this->singleChip == true)
-                chips_en = enabledHybrids;
-            else
-            {
-                uint16_t mod_chips_en = 0;
-                for(const auto cChip: *cHybrid)
-                {
-                    uint16_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
-                    mod_chips_en |= 1 << chip_lane;
-                }
-                chips_en |= mod_chips_en << (NLANE_HYBRID * hybrid_id);
-            }
+            this->enabledHybrids |= 1 << cHybrid->getId();
+            chips_en |= RD53FWInterface::GetHybridEnabledChips(cHybrid);
         }
-    cVecReg.push_back({"user.ctrl_regs.Hybrids_en", enabledHybrids});
+    cVecReg.push_back({"user.ctrl_regs.Hybrids_en", this->enabledHybrids});
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
     if(cVecReg.size() != 0) RegManager::WriteStackReg(cVecReg);
 
@@ -238,15 +226,15 @@ void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hy
     if(retry == true) LOG(ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ")" << RESET;
 }
 
-std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Chip* pChip)
+std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(ReadoutChip* pChip)
 {
     std::vector<std::pair<uint16_t, uint16_t>> regReadback;
 
-    uint32_t chipLane;
-    if(this->singleChip == true)
-        chipLane = pChip->getFeId(); // @TMP@
-    else
-        chipLane = NLANE_HYBRID * pChip->getFeId() + static_cast<RD53*>(pChip)->getChipLane(); // @TMP@
+    // #################################
+    // # Compose chip-lane in readback #
+    // #################################
+    uint32_t chipLane = pChip->getHybridId();
+    if(this->singleChip != true) chipLane = NLANE_HYBRID * chipLane + static_cast<RD53*>(pChip)->getChipLane();
 
     // #####################
     // # Read the register #
@@ -363,26 +351,12 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
     for(const auto cOpticalGroup: *pBoard)
         for(const auto cHybrid: *cOpticalGroup)
         {
-            // ########################
-            // # Retrieve lane number #
-            // ########################
-            const uint16_t hybrid_id    = cHybrid->getId();
-            uint16_t       mod_chips_en = 0;
-            uint16_t       chips_en_to_check;
-            for(const auto cChip: *cHybrid)
-            {
-                uint16_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
-                mod_chips_en |= 1 << chip_lane;
-            }
-            if(this->singleChip == true)
-                chips_en_to_check = mod_chips_en << hybrid_id;
-            else
-                chips_en_to_check = mod_chips_en << (NLANE_HYBRID * hybrid_id);
-
             // #############################
             // # Check if all lanes are up #
             // #############################
-            uint32_t channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
+            const uint32_t hybrid_id         = cHybrid->getId();
+            const uint32_t chips_en_to_check = RD53FWInterface::GetHybridEnabledChips(cHybrid);
+            const uint32_t channel_up        = ReadReg("user.stat_regs.aurora_rx_channel_up");
 
             if((channel_up & chips_en_to_check) == chips_en_to_check)
             {
@@ -468,6 +442,27 @@ std::vector<uint16_t> RD53FWInterface::GetInitSequence(const unsigned int type)
     }
 
     return initSequence;
+}
+
+uint32_t RD53FWInterface::GetHybridEnabledChips(const Hybrid* pHybrid)
+{
+    const uint32_t hybrid_id = pHybrid->getId();
+    uint32_t       chips_en  = 0;
+
+    if(this->singleChip == true)
+        chips_en = 1 << hybrid_id;
+    else
+    {
+        uint32_t hyb_chips_en = 0;
+        for(const auto cChip: *pHybrid)
+        {
+            uint32_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
+            hyb_chips_en |= 1 << chip_lane;
+        }
+        chips_en |= hyb_chips_en << (NLANE_HYBRID * hybrid_id);
+    }
+
+    return chips_en;
 }
 
 void RD53FWInterface::Start()
@@ -991,7 +986,7 @@ int RD53FWInterface::Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup
         auto opticalGroup = std::find_if(pBoard->begin(), pBoard->end(), [&](OpticalGroupContainer* cOpticalGroup) { return cOpticalGroup->getId() == optGroup_id; });
         if(opticalGroup != pBoard->end())
         {
-            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [&](ModuleContainer* cHybrid) { return cHybrid->getId() == hybrid_id; });
+            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [&](HybridContainer* cHybrid) { return cHybrid->getId() == hybrid_id; });
             if(hybrid != (*opticalGroup)->end())
             {
                 auto it = std::find_if((*hybrid)->begin(), (*hybrid)->end(), [&](ChipContainer* pChip) { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
@@ -1845,7 +1840,7 @@ bool RD53FWInterface::RunPRBStest(bool given_time, unsigned long long frames_or_
         {"user.ctrl_regs.PRBS_checker.stop_checker", 1},
         {"user.ctrl_regs.PRBS_checker.stop_checker", 0},
 
-        // Select module and chip
+        // Select hybrid and chip
         {"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
         {"user.ctrl_regs.PRBS_checker.chip_address", chip_id}});
 

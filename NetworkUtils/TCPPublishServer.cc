@@ -20,7 +20,7 @@ void TCPPublishServer::acceptConnections()
             std::cout << __PRETTY_FUNCTION__ << "Wating for clients to connect" << std::endl;
             TCPTransmitterSocket* clientSocket = acceptClient<TCPTransmitterSocket>();
             std::cout << __PRETTY_FUNCTION__ << "Client connected on socket: " << clientSocket->getSocketId() << std::endl;
-       }
+        }
         catch(int e)
         {
             std::cout << __PRETTY_FUNCTION__ << "SHUTTING DOWN SOCKET" << std::endl;

@@ -78,7 +78,7 @@ void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::ve
     uint16_t cLeading = ((0xFFFF0000 & list.at(0)) >> 16);
     if(cLeading != 0xFFFF) LOG(ERROR) << "Incorrect leading bits";
 
-    // not iterate through modules
+    // not iterate through hybrids
     uint32_t address_offset = D19C_EVENT_HEADER1_SIZE_32_MPA;
     uint32_t data_offset    = address_offset;
 

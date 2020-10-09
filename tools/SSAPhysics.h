@@ -60,12 +60,12 @@ class SSAPhysics : public Tool
 #endif
 
   protected:
-    std::string       fileRes;
-    std::string       fileReg;
-    bool              doUpdateChip;
-    bool              doDisplay;
-    bool              saveRawData;
-    bool              doLocal;
+    std::string fileRes;
+    std::string fileReg;
+    bool        doUpdateChip;
+    bool        doDisplay;
+    bool        saveRawData;
+    bool        doLocal;
 };
 
 #endif

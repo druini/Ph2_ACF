@@ -53,8 +53,8 @@ void PixelAlive::ConfigureCalibration()
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
                     auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT");
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", inj | (val & maxDelay), true);
@@ -74,7 +74,7 @@ void PixelAlive::ConfigureCalibration()
 void PixelAlive::Running()
 {
     theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[PixelAlive::Running] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[PixelAlive::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
@@ -126,7 +126,7 @@ void PixelAlive::localConfigure(const std::string fileRes_, int currentRun)
     if(currentRun >= 0)
     {
         theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[PixelAlive::localConfigure] Starting run " << BOLDYELLOW << theCurrentRun << RESET;
+        LOG(INFO) << GREEN << "[PixelAlive::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     PixelAlive::ConfigureCalibration();
     PixelAlive::initializeFiles(fileRes_, currentRun);
@@ -206,16 +206,16 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
                     size_t nMaskedPixelsPerCalib = 0;
 
-                    LOG(INFO) << GREEN << "Average occupancy for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/"
-                              << cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW
+                    LOG(INFO) << GREEN << "Average occupancy for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                              << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW
                               << theOccContainer->at(cBoard->getIndex())
                                      ->at(cOpticalGroup->getIndex())
-                                     ->at(cModule->getIndex())
+                                     ->at(cHybrid->getIndex())
                                      ->at(cChip->getIndex())
                                      ->getSummary<GenericDataVector, OccupancyAndPh>()
                                      .fOccupancy
@@ -229,7 +229,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                             {
                                 float occupancy = theOccContainer->at(cBoard->getIndex())
                                                       ->at(cOpticalGroup->getIndex())
-                                                      ->at(cModule->getIndex())
+                                                      ->at(cHybrid->getIndex())
                                                       ->at(cChip->getIndex())
                                                       ->getChannel<OccupancyAndPh>(row, col)
                                                       .fOccupancy;
@@ -244,13 +244,13 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                     // # Copy register values for streaming #
                     // ######################################
                     for(auto i = 0u; i < BCIDsize; i++)
-                        theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
+                        theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
                     for(auto i = 0u; i < TrgIDsize; i++)
-                        theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
+                        theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
 
                     for(auto i = 1u; i < theOccContainer->at(cBoard->getIndex())
                                              ->at(cOpticalGroup->getIndex())
-                                             ->at(cModule->getIndex())
+                                             ->at(cHybrid->getIndex())
                                              ->at(cChip->getIndex())
                                              ->getSummary<GenericDataVector, OccupancyAndPh>()
                                              .data1.size();
@@ -258,13 +258,13 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                     {
                         int deltaBCID = theOccContainer->at(cBoard->getIndex())
                                             ->at(cOpticalGroup->getIndex())
-                                            ->at(cModule->getIndex())
+                                            ->at(cHybrid->getIndex())
                                             ->at(cChip->getIndex())
                                             ->getSummary<GenericDataVector, OccupancyAndPh>()
                                             .data1[i] -
                                         theOccContainer->at(cBoard->getIndex())
                                             ->at(cOpticalGroup->getIndex())
-                                            ->at(cModule->getIndex())
+                                            ->at(cHybrid->getIndex())
                                             ->at(cChip->getIndex())
                                             ->getSummary<GenericDataVector, OccupancyAndPh>()
                                             .data1[i - 1];
@@ -274,7 +274,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                         else
                             theBCIDContainer.at(cBoard->getIndex())
                                 ->at(cOpticalGroup->getIndex())
-                                ->at(cModule->getIndex())
+                                ->at(cHybrid->getIndex())
                                 ->at(cChip->getIndex())
                                 ->getSummary<GenericDataArray<BCIDsize>>()
                                 .data[deltaBCID]++;
@@ -282,7 +282,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
 
                     for(auto i = 1u; i < theOccContainer->at(cBoard->getIndex())
                                              ->at(cOpticalGroup->getIndex())
-                                             ->at(cModule->getIndex())
+                                             ->at(cHybrid->getIndex())
                                              ->at(cChip->getIndex())
                                              ->getSummary<GenericDataVector, OccupancyAndPh>()
                                              .data2.size();
@@ -290,13 +290,13 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                     {
                         int deltaTrgID = theOccContainer->at(cBoard->getIndex())
                                              ->at(cOpticalGroup->getIndex())
-                                             ->at(cModule->getIndex())
+                                             ->at(cHybrid->getIndex())
                                              ->at(cChip->getIndex())
                                              ->getSummary<GenericDataVector, OccupancyAndPh>()
                                              .data2[i] -
                                          theOccContainer->at(cBoard->getIndex())
                                              ->at(cOpticalGroup->getIndex())
-                                             ->at(cModule->getIndex())
+                                             ->at(cHybrid->getIndex())
                                              ->at(cChip->getIndex())
                                              ->getSummary<GenericDataVector, OccupancyAndPh>()
                                              .data2[i - 1];
@@ -306,7 +306,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                         else
                             theTrgIDContainer.at(cBoard->getIndex())
                                 ->at(cOpticalGroup->getIndex())
-                                ->at(cModule->getIndex())
+                                ->at(cHybrid->getIndex())
                                 ->at(cChip->getIndex())
                                 ->getSummary<GenericDataArray<TrgIDsize>>()
                                 .data[deltaTrgID]++;
@@ -331,11 +331,11 @@ void PixelAlive::chipErrorReport()
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8)
                               << "" << RESET;
                     LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8)
@@ -359,14 +359,14 @@ void PixelAlive::saveChipRegisters(int currentRun)
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
                     if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> PixelAlive saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
-                              << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> PixelAlive saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
+                              << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
 }

@@ -394,7 +394,7 @@ Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-f
   <BeBoard Id="0" boardType="D19C" eventType="VR">
       <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.1.81:50001" address_table="file://settings/address_tables/d19c_address_table.xml" />
 
-    <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
+    <Hybrid FeId="0" FMCId="0" HybridId="0" Status="1">
         <Global>
             <Settings threshold="550" latency="26"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -405,7 +405,7 @@ Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-f
         <CBC_Files path="./settings/CbcFiles/" />
         <CBC Id="0" configfile="CBC3_default.txt" />
         <CBC Id="1" configfile="CBC3_default.txt" />
-    </Module>
+    </Hybrid>
 
     <SLink>
         <DebugMode type="FULL"/>

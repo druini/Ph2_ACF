@@ -19,8 +19,10 @@ int RD53Interface::CheckChipID(Chip* pChip, int chipIDfromDB)
 {
     // @TMP@ : to be implemented for RD53B
     auto chipID = RD53Interface::ReadChipReg(pChip, "CHIP_ID");
-    if(chipID == chipIDfromDB) LOG(INFO) << GREEN << "Chip ID: " << BOLDYELLOW << chipID << RESET << GREEN << " --> same as in database: " << BOLDYELLOW << chipIDfromDB << RESET;
-    else LOG(WARNING) << GREEN << "Chip ID: " << BOLDYELLOW << chipID << RESET << GREEN << " --> different from database: " << BOLDYELLOW << chipIDfromDB << RESET;
+    if(chipID == chipIDfromDB)
+        LOG(INFO) << GREEN << "Chip ID: " << BOLDYELLOW << chipID << RESET << GREEN << " --> same as in database: " << BOLDYELLOW << chipIDfromDB << RESET;
+    else
+        LOG(WARNING) << GREEN << "Chip ID: " << BOLDYELLOW << chipID << RESET << GREEN << " --> different from database: " << BOLDYELLOW << chipIDfromDB << RESET;
     return chipID;
 }
 
@@ -33,7 +35,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     // ###################################
     // # Initializing chip communication #
     // ###################################
-    RD53Interface::InitRD53Aurora(pChip);
+    RD53Interface::InitRD53Aurora(static_cast<RD53*>(pChip));
 
     // ################################################
     // # Programming global registers from white list #
@@ -99,7 +101,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     return true;
 }
 
-void RD53Interface::InitRD53Aurora(Chip* pChip, int nActiveLanes)
+void RD53Interface::InitRD53Aurora(ReadoutChip* pChip, int nActiveLanes)
 {
     this->setBoard(pChip->getBeBoardId());
 
@@ -115,7 +117,7 @@ void RD53Interface::InitRD53Aurora(Chip* pChip, int nActiveLanes)
         // # Enable monitoring (needed for AutoRead register monitoring) #
         // ###############################################################
         RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
-        RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x4));
+        RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), 0x4));
 
         usleep(DEEPSLEEP);
     } while(RD53Interface::ReadRD53Reg(pChip, "VCAL_HIGH").size() == 0);
@@ -143,7 +145,7 @@ void RD53Interface::InitRD53Aurora(Chip* pChip, int nActiveLanes)
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
     RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0x0F, true);         // CML_EN_LANE[3:0]: the actual number of lanes is determined by OUTPUT_CONFIG
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, true); // 0x30 = reset Aurora AND Serializer
-    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getChipId(), 0x01));
+    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), 0x01));
 
     usleep(DEEPSLEEP);
 }
@@ -152,7 +154,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& pRegNode, const
 {
     this->setBoard(pChip->getBeBoardId());
 
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getChipId(), pChip->getRegItem(pRegNode).fAddress, data));
+    RD53Interface::sendCommand(static_cast<RD53*>(pChip), RD53Cmd::WrReg(pChip->getId(), pChip->getRegItem(pRegNode).fAddress, data));
     if((pRegNode == "VCAL_HIGH") || (pRegNode == "VCAL_MED")) usleep(VCALSLEEP); // @TMP@
 
     if(pVerifLoop == true)
@@ -162,7 +164,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& pRegNode, const
             auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
             if(pixMode == 0)
             {
-                auto regReadback = RD53Interface::ReadRD53Reg(pChip, pRegNode);
+                auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
                 auto row         = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
                 if(regReadback.size() == 0 /* @TMP@ */ || regReadback[0].first != row || regReadback[0].second != data)
                 {
@@ -183,16 +185,13 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
 {
     this->setBoard(pBoard->getId());
 
-    uint16_t address = static_cast<RD53*>(pBoard->at(0)->at(0)->at(0))->getRegItem(pRegNode).fAddress;
+    const uint16_t address = static_cast<RD53*>(pBoard->at(0)->at(0)->at(0))->getRegItem(pRegNode).fAddress;
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, address, data).getFrames(), -1);
 }
 
-uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& pRegNode) // @TMP@
+uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 {
     this->setBoard(pChip->getBeBoardId());
-
-    // auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
-    // return regReadback[0].second;
 
     const int nAttempts = 2;
     for(auto attempt = 0; attempt < nAttempts; attempt++)
@@ -206,15 +205,17 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& pRegNode) //
         else
             return regReadback[0].second;
     }
+
     LOG(ERROR) << BOLDRED << "Empty register readback FIFO in " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
+
     return 0;
 }
 
-std::vector<std::pair<uint16_t, uint16_t>> RD53Interface::ReadRD53Reg(Chip* pChip, const std::string& pRegNode)
+std::vector<std::pair<uint16_t, uint16_t>> RD53Interface::ReadRD53Reg(ReadoutChip* pChip, const std::string& pRegNode)
 {
     this->setBoard(pChip->getBeBoardId());
 
-    RD53Interface::sendCommand(pChip, RD53Cmd::RdReg(pChip->getChipId(), pChip->getRegItem(pRegNode).fAddress));
+    RD53Interface::sendCommand(pChip, RD53Cmd::RdReg(pChip->getId(), pChip->getRegItem(pRegNode).fAddress));
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
     for(auto i = 0u; i < regReadback.size(); i++)
@@ -254,13 +255,12 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, bo
 
     std::vector<uint16_t> commandList;
 
-    const uint16_t REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;
-    const uint16_t REGION_ROW_ADDR = pRD53->getRegItem("REGION_ROW").fAddress;
-    const uint16_t PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
-    const uint8_t  highGain        = pRD53->getRegItem("HighGain_LIN").fValue;
-    const uint8_t  chipID          = pRD53->getChipId();
-
-    std::vector<perColumnPixelData>& mask = doDefault ? *pRD53->getPixelsMaskDefault() : *pRD53->getPixelsMask();
+    const uint16_t                   REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;
+    const uint16_t                   REGION_ROW_ADDR = pRD53->getRegItem("REGION_ROW").fAddress;
+    const uint16_t                   PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
+    const uint8_t                    highGain        = pRD53->getRegItem("HighGain_LIN").fValue;
+    const uint8_t                    chipID          = pRD53->getId();
+    std::vector<perColumnPixelData>& mask            = doDefault ? *pRD53->getPixelsMaskDefault() : *pRD53->getPixelsMask();
 
     // ##########################
     // # Disable default config #
@@ -305,7 +305,7 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, bo
 
                 if(commandList.size() > RD53Constants::FIELDS_SHORTCMD * NPIXCMD)
                 {
-                    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getFeId()); // @TMP@
+                    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
                     commandList.clear();
                 }
             }
@@ -334,14 +334,14 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, bo
 
                 if((commandList.size() > RD53Constants::FIELDS_LONGCMD * NPIXCMD) || (row == (RD53::nRows - 1)))
                 {
-                    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getFeId()); // @TMP@
+                    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
                     commandList.clear();
                 }
             }
         }
     }
 
-    if(commandList.size() != 0) static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getFeId()); // @TMP@
+    if(commandList.size() != 0) static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
 }
 
 bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
@@ -410,7 +410,7 @@ void RD53Interface::ReadChipAllLocalReg(ReadoutChip* pChip, const std::string& r
 // # Dedicated to minitoring #
 // ###########################
 
-float RD53Interface::ReadChipMonitor(Chip* pChip, const char* observableName)
+float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const char* observableName)
 {
     this->setBoard(pChip->getBeBoardId());
 
@@ -468,10 +468,10 @@ float RD53Interface::ReadChipMonitor(Chip* pChip, const char* observableName)
     return value;
 }
 
-uint32_t RD53Interface::measureADC(Chip* pChip, uint32_t data)
+uint32_t RD53Interface::measureADC(ReadoutChip* pChip, uint32_t data)
 {
     const uint16_t GLOBAL_PULSE_ROUTE = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
-    const uint8_t  chipID             = pChip->getChipId();
+    const uint8_t  chipID             = pChip->getId();
     const uint16_t trimADC            = bits::pack<1, 5, 6>(true, pChip->getRegItem("BG_MONITOR_CONFIG").fValue, pChip->getRegItem("ADC_MONITOR_CONFIG").fValue);
     // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should give an average VrefADC of 0.9 V
     const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GLOBAL_PULSE_ROUTE");
@@ -480,32 +480,31 @@ uint32_t RD53Interface::measureADC(Chip* pChip, uint32_t data)
 
     RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_CONFIG").fAddress, trimADC).appendTo(commandList);
     RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0040).appendTo(commandList); // Reset Monitor Data
-    RD53Cmd::GlobalPulse(pChip->getChipId(), 0x0004).appendTo(commandList);
+    RD53Cmd::GlobalPulse(pChip->getId(), 0x0004).appendTo(commandList);
     RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0008).appendTo(commandList); // Clear Monitor Data
-    RD53Cmd::GlobalPulse(pChip->getChipId(), 0x0004).appendTo(commandList);
+    RD53Cmd::GlobalPulse(pChip->getId(), 0x0004).appendTo(commandList);
     RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_SELECT").fAddress, data).appendTo(commandList); // 14 bits: bit 13 enable, bits 7:12 I-Mon, bits 0:6 V-Mon
     RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x1000).appendTo(commandList);                         // Trigger Monitor Data to start conversion
-    RD53Cmd::GlobalPulse(pChip->getChipId(), 0x0004).appendTo(commandList);
+    RD53Cmd::GlobalPulse(pChip->getId(), 0x0004).appendTo(commandList);
     RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, GlbPulseVal).appendTo(commandList); // Restore value in Global Pulse Route
 
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getFeId());
-
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getHybridId());
     return RD53Interface::ReadChipReg(pChip, "MONITORING_DATA_ADC");
 }
 
-float RD53Interface::measureVoltageCurrent(Chip* pChip, uint32_t data, bool isCurrentNotVoltage)
+float RD53Interface::measureVoltageCurrent(ReadoutChip* pChip, uint32_t data, bool isCurrentNotVoltage)
 {
     const float safetyMargin = 0.9;
 
     auto ADC = RD53Interface::measureADC(pChip, data);
     if(ADC > (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1.) * safetyMargin)
-        LOG(WARNING) << BOLDRED << "\t--> ADC measurement in saturation (ADC = " << BOLDYELLOW << ADC << BOLDRED
+        LOG(WARNING) << BOLDRED << "\t\t--> ADC measurement in saturation (ADC = " << BOLDYELLOW << ADC << BOLDRED
                      << "): likely the R-IMUX resistor, that converts the current into a voltage, is not connected" << RESET;
 
     return RD53Interface::convertADC2VorI(pChip, ADC, isCurrentNotVoltage);
 }
 
-float RD53Interface::measureTemperature(Chip* pChip, uint32_t data)
+float RD53Interface::measureTemperature(ReadoutChip* pChip, uint32_t data)
 {
     // ################################################################################################
     // # Temperature measurement is done by measuring twice, once with high bias, once with low bias  #
@@ -541,7 +540,7 @@ float RD53Interface::measureTemperature(Chip* pChip, uint32_t data)
     return e / (idealityFactor * kb * log(R)) * (valueHigh - valueLow) - T0C;
 }
 
-float RD53Interface::convertADC2VorI(Chip* pChip, uint32_t value, bool isCurrentNotVoltage)
+float RD53Interface::convertADC2VorI(ReadoutChip* pChip, uint32_t value, bool isCurrentNotVoltage)
 {
     // #####################################################################
     // # ADCoffset     =  63 [1/10mV] Offset due to ground shift           #
@@ -556,16 +555,8 @@ float RD53Interface::convertADC2VorI(Chip* pChip, uint32_t value, bool isCurrent
     return voltage / (isCurrentNotVoltage == true ? resistorI2V : 1);
 }
 
-float RD53Interface::ReadHybridTemperature(Chip* pChip)
-{
-    auto hybridId = static_cast<RD53*>(pChip)->getFeId(); // @TMP@
-    return static_cast<RD53FWInterface*>(fBoardFW)->ReadHybridTemperature(hybridId);
-}
+float RD53Interface::ReadHybridTemperature(ReadoutChip* pChip) { return static_cast<RD53FWInterface*>(fBoardFW)->ReadHybridTemperature(pChip->getHybridId()); }
 
-float RD53Interface::ReadHybridVoltage(Chip* pChip)
-{
-    auto hybridId = static_cast<RD53*>(pChip)->getFeId(); // @TMP@
-    return static_cast<RD53FWInterface*>(fBoardFW)->ReadHybridVoltage(hybridId);
-}
+float RD53Interface::ReadHybridVoltage(ReadoutChip* pChip) { return static_cast<RD53FWInterface*>(fBoardFW)->ReadHybridVoltage(pChip->getHybridId()); }
 
 } // namespace Ph2_HwInterface

@@ -17,9 +17,9 @@
   * The project compiles into the 5 following dynamic libraries
   *
   * \subsection lib1 HWDescription
-  * Hardware description of the boards, containing the modules, containing the CBC chips.\n
+  * Hardware description of the boards, containing the hybrid, containing the CBC chips.\n
   * The objects are:
-  FrontEndDescription, BeBoard, Chip, Module
+  FrontEndDescription, BeBoard, Chip, Hybrid
 
   * \subsection lib2 HWInterface
   * Hardware interface seen by the ACF middleware users. \n
@@ -64,7 +64,7 @@ class BeBoardInterface
   private:
     BeBoardFWMap        fBoardMap;
     BeBoardFWInterface* fBoardFW;
-    uint16_t            prevBoardIdentifier;
+    uint16_t            fPrevBoardIdentifier;
     std::mutex          theMtx;
 
   public:
@@ -147,8 +147,8 @@ class BeBoardInterface
      * \param pBoard
      * \param pRegVec : Vector of Register/Value pairs
      */
-
     void ReadBoardMultReg(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::pair<std::string, uint32_t>>& pRegVec);
+
     /*!
      * \brief Get the board infos
      * \param pBoard
@@ -171,14 +171,14 @@ class BeBoardInterface
      * \brief Hard reset of all Chip
      * \param pChip
      */
-
     void ChipReSync(const Ph2_HwDescription::BeBoard* pBoard);
+
     /*!
      * \brief Fast Reset of the Chip
      * \param pChip
      */
-
     void ChipReset(const Ph2_HwDescription::BeBoard* pBoard);
+
     /*!
      * \brief Send Chip Trigger
      * \param pChip
@@ -223,7 +223,7 @@ class BeBoardInterface
      * \return none
      */
     template <typename... Ts>
-    void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::Chip* pChip, const Ts&... args)
+    void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const Ts&... args)
     {
         std::lock_guard<std::mutex> theGuard(theMtx);
 
