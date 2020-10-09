@@ -79,8 +79,8 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg)
 
 bool ChipComparer::operator()(const Chip& chip1, const Chip& chip2) const
 {
-    if(chip1.getId() != chip2.getId())
-        return chip1.getId() < chip2.getId();
+    if(chip1.getBeBoardId() != chip2.getBeBoardId())
+        return chip1.getBeBoardId() < chip2.getBeBoardId();
     else if(chip1.getFMCId() != chip2.getFMCId())
         return chip1.getFMCId() < chip2.getFMCId();
     else if(chip1.getHybridId() != chip2.getHybridId())
