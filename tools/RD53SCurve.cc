@@ -346,8 +346,9 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                     LOG(INFO) << GREEN << "Average threshold for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                               << +cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(1) << cChip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold
                               << RESET << GREEN << " (Delta_VCal)" << std::setprecision(-1) << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW
-                              << theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << std::fixed << std::setprecision(1)
+                              << theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>()
+                              << std::setprecision(-1) << RESET;
                 }
 
     return theThresholdAndNoiseContainer;
