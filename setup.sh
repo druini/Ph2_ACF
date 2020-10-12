@@ -73,7 +73,7 @@ export HttpFlag='-D__HTTP__'
 export ZmqFlag='-D__ZMQ__'
 export USBINSTFlag='-D__USBINST__'
 export Amc13Flag='-D__AMC13__'
-export TCUSBFlag='-D__TCUSB__'
+#export TCUSBFlag='-D__TCUSB__'
 export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
@@ -102,6 +102,9 @@ export CompileForShep=false
 
 # Compile with EUDAQ libraries
 export CompileWithEUDAQ=false
+
+# Compile with TC_USB library
+expoer CompileWithTCUSB=false
 
 # Clang-format command
 alias formatAll="find ${BASE_DIR} -iname *.h -o -iname *.cc | xargs /opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format -i"
