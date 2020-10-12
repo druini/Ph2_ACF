@@ -22,17 +22,18 @@
 class ClockDelay : public PixelAlive
 {
   public:
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
+    void sendData() override;
 
-    void   sendData();
     void   localConfigure(const std::string fileRes_, int currentRun);
     void   initializeFiles(const std::string fileRes_, int currentRun);
     void   run();
-    void   draw(int currentRun);
+    void   draw();
     void   analyze();
     size_t getNumberIterations() { return PixelAlive::getNumberIterations() * (stopValue - startValue); }
+    void   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     ClockDelayHistograms* histos;
@@ -57,10 +58,10 @@ class ClockDelay : public PixelAlive
     void fillHisto();
     void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
     void chipErrorReport();
-    void saveChipRegisters(int currentRun);
 
   protected:
     std::string fileRes;
+    int         theCurrentRun;
     size_t      shiftData;
     size_t      saveData;
     size_t      maxDelay;

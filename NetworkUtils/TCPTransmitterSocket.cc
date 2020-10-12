@@ -12,6 +12,9 @@ TCPTransmitterSocket::TCPTransmitterSocket(int socketId) : TCPSocket(socketId) {
 //========================================================================================================================
 TCPTransmitterSocket::~TCPTransmitterSocket(void) {}
 
+//==============================================================================
+void TCPTransmitterSocket::sendPacket(char const* buffer, std::size_t size) { send(TCPPacket::encode(buffer, size)); }
+
 //========================================================================================================================
 void TCPTransmitterSocket::sendPacket(const std::string& buffer) { send(TCPPacket::encode(buffer)); }
 
@@ -77,6 +80,17 @@ void TCPTransmitterSocket::send(const std::vector<char>& buffer)
         return;
     }
     send(&buffer.at(0), buffer.size());
+}
+
+//==============================================================================
+void TCPTransmitterSocket::send(const std::vector<uint16_t>& buffer)
+{
+    if(buffer.size() == 0)
+    {
+        std::cout << __PRETTY_FUNCTION__ << "I am sorry but I won't send an empty packet!" << std::endl;
+        return;
+    }
+    send((const char*)&buffer.at(0), buffer.size());
 }
 
 //========================================================================================================================

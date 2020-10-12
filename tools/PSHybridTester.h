@@ -38,7 +38,7 @@ class PSHybridTester : public Tool
     void SelectCIC(bool pSelect);
     void SelectAntennaPosition(const std::string& pPosition, uint16_t pPotentiometer);
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void Pause() override;
     void Resume() override;

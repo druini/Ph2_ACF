@@ -3,10 +3,10 @@
   <BeBoard Id="0" boardType="D19C" eventType="MPA">
       <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/d19c_MT_address_table.xml" />
     <OpticalGroup Id="0" FMCId="0" >
-        <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
+        <Hybrid Id="0" Status="1">
             <MPA_Files path="./settings/MPAFiles/" />
             <MPA Id="0" configfile="MPATST.txt" />
-        </Module>
+        </Hybrid>
     </OpticalGroup>
 
         <!--CONFIG-->
@@ -23,7 +23,7 @@
             <!-- Fast Command Block -->
             <Register name="fast_command_block">
                 <Register name="triggers_to_accept"> 100 </Register>
-                <Register name="trigger_source"> 3 </Register>
+                <Register name="trigger_source"> 6 </Register>
                 <Register name="user_trigger_frequency"> 1000 </Register>
     		<Register name="stubs_mask"> 1 </Register>
                     <!--this is the delay for the stub trigger-->
@@ -120,8 +120,8 @@
         <Setting name="NMpulse">3000</Setting>
         <Setting name="Nlvl">50</Setting>
         <Setting name="Vfac">0.9</Setting>
-    <Setting name="Mrms">90.</Setting>
-    <Setting name="TestPulsePotentiometer">0x50</Setting>
+    <Setting name="Mrms">200.</Setting>
+    <Setting name="TestPulsePotentiometer">0x90</Setting>
     <Setting name="SyncDebug">0</Setting>
 
 

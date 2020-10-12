@@ -44,6 +44,7 @@ class D19clpGBTInterface : public lpGBTInterface
     //Configures the lpGBT Rx Groups
     void ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate = 0, uint8_t pTrackMode = 0);
     //Configure lpGBT Rx Channels
+
     void ConfigureRxChannels(Ph2_HwDescription::Chip*    pChip,
                              const std::vector<uint8_t>& pGroups,
                              const std::vector<uint8_t>& pChannels,

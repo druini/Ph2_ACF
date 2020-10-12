@@ -40,7 +40,7 @@ class D19cMPAEvent : public Event
     uint32_t GetEventCountCBC() const override { return fEventCount; }
 
     // private members of MPA events only
-    uint32_t GetBeId() const { return fBeId; }
+    uint32_t getBeBoardId() const { return fBeId; }
     uint8_t  GetFWType() const { return fBeFWType; }
     uint32_t GetCBCDataType() const { return fCBCDataType; }
     uint32_t GetNC() const { return fNCbc; }

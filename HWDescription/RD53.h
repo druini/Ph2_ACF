@@ -131,7 +131,7 @@ class RD53 : public ReadoutChip
     static const FrontEnd*    frontEnds[];
     static const FrontEnd*    getMajorityFE(size_t colStart, size_t colStop);
 
-    RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName);
+    RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName);
     RD53(const RD53& chipObj);
 
     void     loadfRegMap(const std::string& fileName) override;
@@ -201,6 +201,7 @@ class RD53 : public ReadoutChip
     std::string                     configFileName;
     uint8_t                         myChipLane;
 };
+
 } // namespace Ph2_HwDescription
 
 // ###############################
@@ -311,6 +312,7 @@ struct RdReg : public Command<RD53CmdEncoder::READ, 4>
 {
     RdReg(uint8_t chip_id, uint16_t address);
 };
+
 } // namespace RD53Cmd
 
 #endif

@@ -19,8 +19,9 @@ int main(int argc, char** argv)
     el::Loggers::reconfigureAllLoggers(conf);
 
     MiddlewareController theMiddlewareController(PORT);
+    theMiddlewareController.startAccept();
 
-    while(1) {}
+    while(true) { std::this_thread::sleep_for(std::chrono::milliseconds(1000)); }
 
     return EXIT_SUCCESS;
 }

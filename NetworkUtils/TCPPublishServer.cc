@@ -17,7 +17,9 @@ void TCPPublishServer::acceptConnections()
         try
         {
             // if(fConnectedClients.size() < fMaxNumberOfClients)
-            __attribute__((unused)) TCPTransmitterSocket* clientSocket = acceptClient<TCPTransmitterSocket>();
+            std::cout << __PRETTY_FUNCTION__ << "Wating for clients to connect" << std::endl;
+            TCPTransmitterSocket* clientSocket = acceptClient<TCPTransmitterSocket>();
+            std::cout << __PRETTY_FUNCTION__ << "Client connected on socket: " << clientSocket->getSocketId() << std::endl;
         }
         catch(int e)
         {
@@ -28,5 +30,5 @@ void TCPPublishServer::acceptConnections()
             if(e == E_SHUTDOWN) break;
         }
     }
-    fAcceptPromise.set_value(true);
+    // fAcceptPromise.set_value(true);
 }

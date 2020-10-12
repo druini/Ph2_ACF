@@ -108,12 +108,8 @@ class RD53FWInterface : public BeBoardFWInterface
     void     ChipReset() override;
     void     ChipReSync() override;
 
-    bool                  CheckChipCommunication();
-    void                  InitHybridByHybrid(const Ph2_HwDescription::BeBoard* pBoard);
-    std::vector<uint16_t> GetInitSequence(const unsigned int type);
-
     void                                       WriteChipCommand(const std::vector<uint16_t>& data, int hybridId);
-    std::vector<std::pair<uint16_t, uint16_t>> ReadChipRegisters(Ph2_HwDescription::Chip* pChip);
+    std::vector<std::pair<uint16_t, uint16_t>> ReadChipRegisters(Ph2_HwDescription::ReadoutChip* pChip);
 
     struct ChipFrame
     {
@@ -189,11 +185,12 @@ class RD53FWInterface : public BeBoardFWInterface
         uint32_t first_cal_data  = 0;
         uint32_t second_cal_data = 0;
 
-        uint32_t delay_after_ecr        = 0;
-        uint32_t delay_after_autozero   = 0; // @TMP@
-        uint32_t delay_after_first_cal  = 0;
-        uint32_t delay_after_second_cal = 0;
-        uint16_t delay_loop             = 0;
+        uint32_t delay_after_first_prime = 0;
+        uint32_t delay_after_ecr         = 0;
+        uint32_t delay_after_autozero    = 0; // @TMP@
+        uint32_t delay_after_inject      = 0;
+        uint16_t delay_after_trigger     = 0;
+        uint32_t delay_after_prime       = 0;
     };
 
     struct FastCommandsConfig
@@ -274,17 +271,26 @@ class RD53FWInterface : public BeBoardFWInterface
     float calcTemperature(uint32_t sensor1, uint32_t sensor2, int beta = 3435);
     float calcVoltage(uint32_t senseVDD, uint32_t senseGND);
 
+    // ##############################
+    // # Pseudo Random Bit Sequence #
+    // ##############################
+    bool RunPRBStest(bool given_time, unsigned long long frames_or_time, uint16_t hybrid_id, uint16_t chip_id);
+
   private:
-    void PrintFWstatus();
-    void TurnOffFMC();
-    void TurnOnFMC();
-    void ResetBoard();
-    void ResetFastCmdBlk();
-    void ResetSlowCmdBlk();
-    void ResetReadoutBlk();
-    void ConfigureFastCommands(const FastCommandsConfig* config = nullptr);
-    void ConfigureDIO5(const DIO5Config* config);
-    void SendBoardCommand(const std::string& cmd_reg);
+    void                  PrintFWstatus();
+    void                  TurnOffFMC();
+    void                  TurnOnFMC();
+    void                  ResetBoard();
+    void                  ResetFastCmdBlk();
+    void                  ResetSlowCmdBlk();
+    void                  ResetReadoutBlk();
+    void                  ConfigureFastCommands(const FastCommandsConfig* config = nullptr);
+    void                  ConfigureDIO5(const DIO5Config* config);
+    void                  SendBoardCommand(const std::string& cmd_reg);
+    bool                  CheckChipCommunication();
+    void                  InitHybridByHybrid(const Ph2_HwDescription::BeBoard* pBoard);
+    std::vector<uint16_t> GetInitSequence(const unsigned int type);
+    uint32_t              GetHybridEnabledChips(const Ph2_HwDescription::Hybrid* pHybrid);
 
     // ###################
     // # Clock generator #
@@ -295,9 +301,10 @@ class RD53FWInterface : public BeBoardFWInterface
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
-    uint16_t           enabledHybrids;
     bool               singleChip;
+    uint16_t           enabledHybrids;
 };
+
 } // namespace Ph2_HwInterface
 
 #endif

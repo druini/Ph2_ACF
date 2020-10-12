@@ -52,19 +52,20 @@ void GainOptimization::ConfigureCalibration()
     RD53RunProgress::total() += GainOptimization::getNumberIterations();
 }
 
-void GainOptimization::Start(int currentRun)
+void GainOptimization::Running()
 {
-    LOG(INFO) << GREEN << "[GainOptimization::Start] Starting" << RESET;
+    theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[GainOptimization::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_GainOptimization.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     GainOptimization::run();
     GainOptimization::analyze();
-    GainOptimization::saveChipRegisters(currentRun);
+    GainOptimization::saveChipRegisters(theCurrentRun);
     GainOptimization::sendData();
 
     Gain::sendData();
@@ -81,7 +82,13 @@ void GainOptimization::sendData()
 void GainOptimization::Stop()
 {
     LOG(INFO) << GREEN << "[GainOptimization::Stop] Stopping" << RESET;
+
+    Tool::Stop();
+
+    GainOptimization::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset();
 }
 
 void GainOptimization::localConfigure(const std::string fileRes_, int currentRun)
@@ -91,6 +98,11 @@ void GainOptimization::localConfigure(const std::string fileRes_, int currentRun
     Gain::histos = nullptr;
 #endif
 
+    if(currentRun >= 0)
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[GainOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     GainOptimization::ConfigureCalibration();
     GainOptimization::initializeFiles(fileRes_, currentRun);
 }
@@ -104,7 +116,7 @@ void GainOptimization::initializeFiles(const std::string fileRes_, int currentRu
 
     fileRes = fileRes_;
 
-    if(saveBinaryData == true)
+    if((currentRun >= 0) && (saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
         this->initializeWriteFileHandler();
@@ -126,9 +138,9 @@ void GainOptimization::run()
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theKrumCurrContainer);
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
-                    theKrumCurrContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                    theKrumCurrContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                         static_cast<RD53*>(cChip)->getReg(frontEnd->gainReg);
 
     // ################
@@ -137,9 +149,9 @@ void GainOptimization::run()
     GainOptimization::chipErrorReport();
 }
 
-void GainOptimization::draw(int currentRun)
+void GainOptimization::draw()
 {
-    GainOptimization::saveChipRegisters(currentRun);
+    GainOptimization::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -149,7 +161,7 @@ void GainOptimization::draw(int currentRun)
     this->InitResultFile(fileRes);
     LOG(INFO) << BOLDBLUE << "\t--> GainOptimization saving histograms..." << RESET;
 
-    Gain::draw(-1);
+    Gain::draw(false);
 
     histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
     GainOptimization::fillHisto();
@@ -166,10 +178,10 @@ void GainOptimization::analyze()
 {
     for(const auto cBoard: theKrumCurrContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
-                    LOG(INFO) << GREEN << "Krummenacher Current for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId()
-                              << "/" << cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << cChip->getSummary<uint16_t>() << RESET;
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                    LOG(INFO) << GREEN << "Krummenacher Current for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
+                              << "/" << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << cChip->getSummary<uint16_t>() << RESET;
 }
 
 void GainOptimization::fillHisto()
@@ -200,8 +212,8 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
 
     for(const auto cBoard: bestContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule) cChip->getSummary<OccupancyAndPh>().fPh = 0;
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid) cChip->getSummary<OccupancyAndPh>().fPh = 0;
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -210,19 +222,24 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
         // ###########################
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
-                for(const auto cModule: *cOpticalGroup)
-                    for(const auto cChip: *cModule)
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid)
                     {
-                        midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                            (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
-                             maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) /
+                        midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                            (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
+                             maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) /
                             2;
 
                         this->fReadoutChipInterface->WriteChipReg(
                             static_cast<RD53*>(cChip),
                             regName,
-                            midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
+                            midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
                             true);
+
+                        LOG(INFO) << BOLDMAGENTA << ">>> " << regName << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                  << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW
+                                  << midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << BOLDMAGENTA
+                                  << " <<<" << RESET;
                     }
 
         // ################
@@ -232,13 +249,18 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
         auto output = Gain::analyze();
         output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
+        // ##############################################
+        // # Send periodic data to minitor the progress #
+        // ##############################################
+        Gain::sendData();
+
         // #####################
         // # Compute next step #
         // #####################
         for(const auto cBoard: *output)
             for(const auto cOpticalGroup: *cBoard)
-                for(const auto cModule: *cOpticalGroup)
-                    for(const auto cChip: *cModule)
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid)
                     {
                         // ##############################################
                         // # Search for maximum and build discriminator #
@@ -260,23 +282,23 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                         // ########################
                         // # Save best DAC values #
                         // ########################
-                        float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh;
+                        float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh;
                         if(fabs(newValue - target) < fabs(oldValue - target))
                         {
-                            bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = newValue;
-                            bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                            bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fPh = newValue;
+                            bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                         }
 
                         if((newValue > target) || (newValue < 0))
 
-                            maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                            maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
 
                         else
 
-                            minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                            minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                     }
     }
 
@@ -285,12 +307,12 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
     // ###########################
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                     this->fReadoutChipInterface->WriteChipReg(
                         static_cast<RD53*>(cChip),
                         regName,
-                        bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
+                        bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
                         true);
 
     // ################
@@ -306,11 +328,11 @@ void GainOptimization::chipErrorReport()
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8)
                               << "" << RESET;
                     LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8)
@@ -334,15 +356,15 @@ void GainOptimization::saveChipRegisters(int currentRun)
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
                     if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> GainOptimization saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/"
-                              << cOpticalGroup->getId() << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> GainOptimization saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
+                              << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
 }

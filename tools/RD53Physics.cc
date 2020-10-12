@@ -25,7 +25,6 @@ void Physics::ConfigureCalibration()
     doDisplay      = this->findValueInSettings("DisplayHisto");
     doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings("SaveBinaryData");
-    keepRunning    = true;
 
     // ################################
     // # Custom channel group handler #
@@ -54,13 +53,14 @@ void Physics::ConfigureCalibration()
     this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
 }
 
-void Physics::Start(int currentRun)
+void Physics::Running()
 {
-    LOG(INFO) << GREEN << "[Physics::Start] Starting" << RESET;
+    theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[Physics::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Physics.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
@@ -69,20 +69,18 @@ void Physics::Start(int currentRun)
     // ##############################
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule) fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, theChnGroupHandler->allChannelGroup(), true, false);
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid) fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, theChnGroupHandler->allChannelGroup(), true, false);
 
-    for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getBeBoardId()])->ChipReSync();
-    SystemController::Start(currentRun);
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ChipReSync();
+    SystemController::Start(theCurrentRun);
 
-    theCurrentRun        = currentRun;
     numberOfEventsPerRun = 0;
-    keepRunning          = true;
-    thrRun               = std::thread(&Physics::run, this);
     thrMonitor           = std::thread(&Physics::monitor, this);
+    Physics::run();
 }
 
-void Physics::sendData(const BoardContainer* cBoard)
+void Physics::sendBoardData(const BoardContainer* cBoard)
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
@@ -102,9 +100,8 @@ void Physics::sendData(const BoardContainer* cBoard)
 void Physics::Stop()
 {
     LOG(INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
-    keepRunning = false;
-    SystemController::Stop();
-    if(thrRun.joinable() == true) thrRun.join();
+
+    Tool::Stop();
     if(thrMonitor.joinable() == true) thrMonitor.join();
 
     // ################
@@ -112,11 +109,11 @@ void Physics::Stop()
     // ################
     Physics::chipErrorReport();
 
-    Physics::saveChipRegisters(theCurrentRun);
+    Physics::draw();
     this->closeFileHandler();
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded events: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << 1. * numberOfEventsPerRun / nTRIGxEvent << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
 }
 
 void Physics::localConfigure(const std::string fileRes_, int currentRun)
@@ -125,6 +122,11 @@ void Physics::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
+    if(currentRun >= 0)
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     Physics::ConfigureCalibration();
     Physics::initializeFiles(fileRes_, currentRun);
 }
@@ -147,7 +149,7 @@ void Physics::initializeFiles(const std::string fileRes_, int currentRun)
 
 void Physics::run()
 {
-    while(keepRunning == true)
+    while(this->fKeepRunning == true)
     {
         RD53FWInterface::decodedEvents.clear();
         Physics::analyze();
@@ -159,6 +161,8 @@ void Physics::run()
 
 void Physics::draw()
 {
+    Physics::saveChipRegisters(theCurrentRun);
+
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
@@ -196,7 +200,7 @@ void Physics::analyze(bool doReadBinary)
         if(dataSize != 0)
         {
             Physics::fillDataContainer(cBoard);
-            Physics::sendData(cBoard);
+            Physics::sendBoardData(cBoard);
         }
     }
 }
@@ -218,25 +222,7 @@ void Physics::fillDataContainer(BeBoard* cBoard)
     // ###################
     // # Clear container #
     // ###################
-    for(const auto cBoard: theOccContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
-                {
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
-                        {
-                            cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy   = 0;
-                            cChip->getChannel<OccupancyAndPh>(row, col).fPh          = 0;
-                            cChip->getChannel<OccupancyAndPh>(row, col).fPhError     = 0;
-                            cChip->getChannel<OccupancyAndPh>(row, col).readoutError = false;
-                        }
-
-                    for(auto i = 0u; i < BCIDsize; i++)
-                        theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
-                    for(auto i = 0u; i < TrgIDsize; i++)
-                        theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
-                }
+    Physics::clearContainers();
 
     // ###################
     // # Fill containers #
@@ -249,8 +235,8 @@ void Physics::fillDataContainer(BeBoard* cBoard)
     // ######################################
     for(const auto cBoard: theOccContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
                     for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.size(); i++)
                     {
@@ -261,7 +247,7 @@ void Physics::fillDataContainer(BeBoard* cBoard)
                         else
                             theBCIDContainer.at(cBoard->getIndex())
                                 ->at(cOpticalGroup->getIndex())
-                                ->at(cModule->getIndex())
+                                ->at(cHybrid->getIndex())
                                 ->at(cChip->getIndex())
                                 ->getSummary<GenericDataArray<BCIDsize>>()
                                 .data[deltaBCID]++;
@@ -277,7 +263,7 @@ void Physics::fillDataContainer(BeBoard* cBoard)
                         else
                             theTrgIDContainer.at(cBoard->getIndex())
                                 ->at(cOpticalGroup->getIndex())
-                                ->at(cModule->getIndex())
+                                ->at(cHybrid->getIndex())
                                 ->at(cChip->getIndex())
                                 ->getSummary<GenericDataArray<TrgIDsize>>()
                                 .data[deltaTrgID]++;
@@ -290,8 +276,8 @@ void Physics::fillDataContainer(BeBoard* cBoard)
     // #######################
     for(const auto cBoard: theOccContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++) cChip->getChannel<OccupancyAndPh>(row, col).normalize(events.size(), true);
 }
@@ -302,11 +288,11 @@ void Physics::chipErrorReport()
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8)
                               << "" << RESET;
                     LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8)
@@ -330,25 +316,53 @@ void Physics::saveChipRegisters(int currentRun)
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
                     if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> Physics saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
-                              << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Physics saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
+                              << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+                }
+}
+
+void Physics::clearContainers()
+{
+    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+
+    // ####################
+    // # Clear containers #
+    // ####################
+    for(const auto cBoard: theOccContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    for(auto row = 0u; row < RD53::nRows; row++)
+                        for(auto col = 0u; col < RD53::nCols; col++)
+                        {
+                            cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy   = 0;
+                            cChip->getChannel<OccupancyAndPh>(row, col).fPh          = 0;
+                            cChip->getChannel<OccupancyAndPh>(row, col).fPhError     = 0;
+                            cChip->getChannel<OccupancyAndPh>(row, col).readoutError = false;
+                        }
+
+                    for(auto i = 0u; i < BCIDsize; i++)
+                        theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
+                    for(auto i = 0u; i < TrgIDsize; i++)
+                        theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
                 }
 }
 
 void Physics::monitor()
 {
-    while(keepRunning == true)
+    while(this->fKeepRunning == true)
     {
-        for(const auto cBoard: *fDetectorContainer)
-            SystemController::ReadSystemMonitor(cBoard, "VOUT_ana_ShuLDO", "VOUT_dig_ShuLDO", "ADCbandgap", "VREF_VDAC", "VOUT_BG", "Iref", "TEMPSENS_1", "TEMPSENS_4");
+        for(const auto cBoard: *fDetectorContainer) SystemController::ReadSystemMonitor(cBoard, "VOUT_ana_ShuLDO", "VOUT_dig_ShuLDO", "ADCbandgap", "VREF_VDAC", "Iref", "TEMPSENS_1", "TEMPSENS_4");
         std::this_thread::sleep_for(std::chrono::seconds(MONITORSLEEP));
     }
 }

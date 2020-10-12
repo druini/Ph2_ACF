@@ -48,19 +48,20 @@ void Latency::ConfigureCalibration()
     RD53RunProgress::total() += Latency::getNumberIterations();
 }
 
-void Latency::Start(int currentRun)
+void Latency::Running()
 {
-    LOG(INFO) << GREEN << "[Latency::Start] Starting" << RESET;
+    theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[Latency::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Latency.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Latency.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     Latency::run();
     Latency::analyze();
-    Latency::saveChipRegisters(currentRun);
+    Latency::saveChipRegisters(theCurrentRun);
     Latency::sendData();
 }
 
@@ -81,7 +82,13 @@ void Latency::sendData()
 void Latency::Stop()
 {
     LOG(INFO) << GREEN << "[Latency::Stop] Stopping" << RESET;
+
+    Tool::Stop();
+
+    Latency::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset();
 }
 
 void Latency::localConfigure(const std::string fileRes_, int currentRun)
@@ -90,6 +97,11 @@ void Latency::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
+    if(currentRun >= 0)
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[Latency::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     Latency::ConfigureCalibration();
     Latency::initializeFiles(fileRes_, currentRun);
 }
@@ -123,9 +135,9 @@ void Latency::run()
     Latency::chipErrorReport();
 }
 
-void Latency::draw(int currentRun)
+void Latency::draw(bool saveData)
 {
-    Latency::saveChipRegisters(currentRun);
+    if(saveData == true) Latency::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -154,8 +166,8 @@ void Latency::analyze()
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
                     auto best   = 0.;
                     int  regVal = 0;
@@ -163,7 +175,7 @@ void Latency::analyze()
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
                         auto current =
-                            theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i];
+                            theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i];
                         if(current > best)
                         {
                             regVal = dacList[i];
@@ -172,17 +184,17 @@ void Latency::analyze()
                     }
 
                     if(nTRIGxEvent > 1)
-                        LOG(INFO) << GREEN << "Best latency for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/"
-                                  << cChip->getId() << RESET << GREEN << "] is within [" << BOLDYELLOW << (regVal - (int)nTRIGxEvent + 1 >= 0 ? std::to_string(regVal - (int)nTRIGxEvent + 1) : "N.A.")
+                        LOG(INFO) << GREEN << "Best latency for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                  << +cChip->getId() << RESET << GREEN << "] is within [" << BOLDYELLOW << (regVal - (int)nTRIGxEvent + 1 >= 0 ? std::to_string(regVal - (int)nTRIGxEvent + 1) : "N.A.")
                                   << "," << regVal << GREEN << "] (n.bx)" << RESET;
                     else
-                        LOG(INFO) << GREEN << "Best latency for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/"
-                                  << cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << regVal << RESET << GREEN << " (n.bx)" << RESET;
+                        LOG(INFO) << GREEN << "Best latency for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                  << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << regVal << RESET << GREEN << " (n.bx)" << RESET;
 
                     // ######################################################
                     // # Fill latency container and download new DAC values #
                     // ######################################################
-                    theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
+                    theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", regVal, true);
                 }
 }
@@ -219,12 +231,17 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
         // ###############
         for(const auto cBoard: *output)
             for(const auto cOpticalGroup: *cBoard)
-                for(const auto cModule: *cOpticalGroup)
-                    for(const auto cChip: *cModule)
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid)
                     {
                         float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
-                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i] = occ;
+                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i] = occ;
                     }
+
+        // ##############################################
+        // # Send periodic data to minitor the progress #
+        // ##############################################
+        Latency::sendData();
     }
 }
 
@@ -234,11 +251,11 @@ void Latency::chipErrorReport()
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
+                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8)
                               << "" << RESET;
                     LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8)
@@ -262,15 +279,15 @@ void Latency::saveChipRegisters(int currentRun)
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
                     if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> Latency saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
-                              << "/" << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Latency saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
+                              << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
 }

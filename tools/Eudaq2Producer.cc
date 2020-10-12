@@ -125,9 +125,9 @@ void Eudaq2Producer::DoStartRun()
     LOG(INFO) << "Downloading the register configuration of the CBCs" << RESET;
     for(auto cBoard : this->fBoardVector){
       for(auto cFe : cBoard->fModuleVector){
-        int cFeId = int(cFe->getFeId());
+        int cFeId = int(cFe->getHybridId());
         for(auto cCbc : cFe->fReadoutChipVector ){
-          int cCbcId = int(cCbc->getChipId());
+          int cCbcId = int(cCbc->getId());
           auto cRegMap = cCbc->getRegMap();
           for(auto& ireg : cRegMap){
             std::printf (name, "%s_%02d_%02d", ireg.first.c_str(), int(cFeId), int(cCbcId));
@@ -310,16 +310,16 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
     uint32_t cNRows         = (NCHANNELS / 2) * cMaxChipNumber;
     // top bottom sensors
     uint32_t cSensorId = 0;
-    // iterator for the module vector
+    // iterator for the hybrid vector
 
     for(auto cOpticalReadout: *pBoard)
     {
-        std::vector<Module*>::const_iterator cFeIter = cOpticalReadout->begin();
+        std::vector<Hybrid*>::const_iterator cFeIter = cOpticalReadout->begin();
         while(cFeIter < cOpticalReadout->end())
         {
-            // make sure that we always start counting from the right hybrid (hybrid0 within the module)
+            // make sure that we always start counting from the right hybrid (hybrid0 within the hybrid)
             uint32_t cFeId0 = (*cFeIter)->getId();
-            // build sensor id (one needs divide by two because 2 hybrids per module, but multiply by two because 2
+            // build sensor id (one needs divide by two because 2 hybrids per hybrid, but multiply by two because 2
             // sensors per hybrid)
             cSensorId = (cFeId0 - (cFeId0 % 2));
 
@@ -330,12 +330,12 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             std::vector<uint8_t> top_data_final(6);
             std::vector<uint8_t> bottom_data_final(6);
 
-            // we have two hybrids (FE) per module therefore we iterate a bit here
+            // we have two hybrids (FE) per hybrid therefore we iterate a bit here
             uint32_t cIterRange = ((cFeId0 % 2) == 0) ? 2 : 1; // now we also need to make sure that we starting from the right hybrid (0)
             for(uint32_t i = 0; i < cIterRange; i++)
             {
                 // get the current iterator
-                std::vector<Module*>::const_iterator cFeIterCurrent = cFeIter + i;
+                std::vector<Hybrid*>::const_iterator cFeIterCurrent = cFeIter + i;
                 // check that we are still not at the end
                 if(cFeIterCurrent >= cOpticalReadout->end()) continue;
                 // get the fe id
@@ -347,7 +347,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 {
                     int cChipId = (int)cCbc->getId();
                     // adding this check here [sarah]
-                    // std::string cCheck = pPh2Event->DataBitString( cCbc->getFeId() , cCbc->getChipId() );
+                    // std::string cCheck = pPh2Event->DataBitString( cCbc->getHybridId() , cCbc->getId() );
                     // if( cCheck.empty() )
                     //	continue;
 
@@ -395,7 +395,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                     } // end of hit loop
                 }     // end of cCbc loop
 
-            } // end fe within a module loop loop
+            } // end fe within a hybrid loop loop
 
             //// top sensor
             // number of rows
@@ -429,7 +429,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             // send
             pEudaqSubEvent->AddBlock(cSensorId + 1, bottom_data_final);
 
-            // now go to the next module
+            // now go to the next hybrid
             cFeIter += cIterRange;
 
         } // end of cFe loop
@@ -450,7 +450,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             for(auto cCbc: *cHybrid)
             {
                 char     name[100];
-                uint32_t cHybridId = cHybridId->getFeId();
+                uint32_t cHybridId = cHybridId->getHybridId();
                 uint32_t cCbcId    = cCbc->getCId();
                 // auto cL1Id = static_cast<const D19cCicEvent*>(pPh2Event)->L1Id( cHybrid->getId(), cCbc->getCId() );
                 std::sprintf(name, "pipeline_address_%02d_%02d", cHybridId, cCbcId);

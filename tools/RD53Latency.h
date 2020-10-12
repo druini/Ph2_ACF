@@ -22,17 +22,18 @@
 class Latency : public PixelAlive
 {
   public:
-    void Start(int currentRun = -1) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
+    void sendData() override;
 
-    void   sendData();
     void   localConfigure(const std::string fileRes_, int currentRun);
     void   initializeFiles(const std::string fileRes_, int currentRun);
     void   run();
-    void   draw(int currentRun);
+    void   draw(bool saveData = true);
     void   analyze();
     size_t getNumberIterations() { return PixelAlive::getNumberIterations() * (stopValue - startValue) / nTRIGxEvent; }
+    void   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     LatencyHistograms* histos;
@@ -56,10 +57,10 @@ class Latency : public PixelAlive
     void fillHisto();
     void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
     void chipErrorReport();
-    void saveChipRegisters(int currentRun);
 
   protected:
     std::string fileRes;
+    int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;

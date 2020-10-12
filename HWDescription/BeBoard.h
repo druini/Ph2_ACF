@@ -15,7 +15,6 @@
 #include "../Utils/Visitor.h"
 #include "../Utils/easylogging++.h"
 #include "Definition.h"
-#include "Module.h"
 #include "OpticalGroup.h"
 #include <map>
 #include <stdint.h>
@@ -31,7 +30,7 @@ using BeBoardRegMap = std::map<std::string, uint32_t>; /*!< Map containing the r
 
 /*!
  * \class BeBoard
- * \brief Read/Write BeBoard's registers on a file, handles a register map and handles a vector of Module which are
+ * \brief Read/Write BeBoard's registers on a file, handles a register map and handles a vector of Hybrid which are
  * connected to the BeBoard
  */
 class BeBoard : public BoardContainer
@@ -59,13 +58,7 @@ class BeBoard : public BoardContainer
     /*!
      * \brief Destructor
      */
-    ~BeBoard()
-    {
-        // for ( auto& pModule : fModuleVector )
-        //     if (pModule) delete pModule;
-
-        // fModuleVector.clear();
-    }
+    ~BeBoard() {}
 
     // Public Methods
 
@@ -81,7 +74,7 @@ class BeBoard : public BoardContainer
     }
 
     /*!
-     * \brief Get the number of modules connected to the BeBoard
+     * \brief Get the number of hybrid connected to the BeBoard
      * \return The size of the vector
      */
     uint8_t getNFe() const
@@ -110,24 +103,6 @@ class BeBoard : public BoardContainer
     // * \return The map of register
     // */
     BeBoardRegMap getBeBoardRegMap() const { return fRegMap; }
-
-    /*!
-     * \brief Get the BeBoardId of the BeBoard
-     * \return the BeBoard Id
-     */
-    uint8_t getBeId() const { return fBeId; }
-
-    /*!
-     * \brief Get the BeBoardIdentifier
-     * \return The BeBoardIdentifier
-     */
-    uint32_t getBeBoardId() const { return fBeId << 8; }
-
-    /*!
-     * \brief Set the Be Id of the BeBoard
-     * \param pBeId
-     */
-    void setBeId(uint8_t pBeId) { fBeId = pBeId; }
 
     void setOptical(bool pOptical) { fOptical = pOptical; }
 
@@ -169,7 +144,6 @@ class BeBoard : public BoardContainer
     int dummyValue_ = 1989;
 
   protected:
-    uint8_t      fBeId;
     BoardType    fBoardType;
     EventType    fEventType;
     FrontEndType fFrontEndType;

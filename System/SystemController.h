@@ -11,7 +11,7 @@
 #define SYSTEMCONTROLLER_H
 
 #include "../HWDescription/Definition.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWInterface/BeBoardFWInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/CbcInterface.h"
@@ -99,7 +99,7 @@ class SystemController
     void Destroy();
 
     /*!
-     * \brief create a FileHandler object with
+     * \brief Create a FileHandler object with
      * \param pFilename : the filename of the binary file
      */
     void         addFileHandler(const std::string& pFilename, char pOption);
@@ -107,19 +107,19 @@ class SystemController
     FileHandler* getFileHandler() { return fFileHandler; }
 
     /*!
-     * \brief issues a FileHandler for writing files to every BeBoardFWInterface if addFileHandler was called
+     * \brief Issues a FileHandler for writing files to every BeBoardFWInterface if addFileHandler was called
      */
     void     initializeWriteFileHandler();
     uint32_t computeEventSize32(const Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
-     * \brief read file in the a FileHandler object
+     * \brief Read file in the a FileHandler object
      * \param pVec : the data vector
      */
     void readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32 = 0);
 
     /*!
-     * \brief acceptor method for HwDescriptionVisitor
+     * \brief Acceptor method for HwDescriptionVisitor
      * \param pVisitor
      */
     void accept(HwDescriptionVisitor& pVisitor)
@@ -159,11 +159,11 @@ class SystemController
     {
         if(sizeof...(Ts) > 0)
             for(const auto cOpticalGroup: *pBoard)
-                for(const auto cModule: *cOpticalGroup)
-                    for(const auto cChip: *cModule)
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid)
                     {
-                        LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/module/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/"
-                                  << cChip->getId() << RESET << GREEN << "]" << RESET;
+                        LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                  << +cChip->getId() << RESET << GREEN << "]" << RESET;
                         fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args...);
                         LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                     }
@@ -190,18 +190,18 @@ class SystemController
      */
     void ReadData(bool pWait = true);
 
-    virtual void Start(int currentRun = -1);
+    virtual void Start(int runNumber);
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
-    virtual void ConfigureCalibration();
-    virtual void ConfigureHardware(std::string cHWFile, bool enableStream = false);
     virtual void Configure(std::string cHWFile, bool enableStream = false);
 
-    void Start(Ph2_HwDescription::BeBoard* pBoard);
-    void Stop(Ph2_HwDescription::BeBoard* pBoard);
-    void Pause(Ph2_HwDescription::BeBoard* pBoard);
-    void Resume(Ph2_HwDescription::BeBoard* pBoard);
+    void StartBoard(Ph2_HwDescription::BeBoard* pBoard);
+    void StopBoard(Ph2_HwDescription::BeBoard* pBoard);
+    void PauseBoard(Ph2_HwDescription::BeBoard* pBoard);
+    void ResumeBoard(Ph2_HwDescription::BeBoard* pBoard);
+
+    void Abort();
 
     /*!
      * \brief Read N Events from pBoard

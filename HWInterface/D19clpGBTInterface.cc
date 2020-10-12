@@ -1,4 +1,5 @@
-/*!  \file                  D19clpGBTInterface.cc
+/*!
+  \file                  D19clpGBTInterface.cc
   \brief                 Interface to access and control the low-power Gigabit Transceiver chip
   \author                Younes Otarid
   \version               1.0
@@ -7,7 +8,6 @@
 */
 
 #include "D19clpGBTInterface.h"
-#include "D19cFWInterface.h"
 #include <chrono>
 #include <cstring>
 #include <fstream>
@@ -20,7 +20,6 @@ namespace Ph2_HwInterface
 {
 bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
-
     LOG(INFO) << BOLDBLUE << "Configuring lpGBT" << RESET;
     this->setBoard(pChip->getBeBoardId());
      //Load register map from configuration file

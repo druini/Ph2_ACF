@@ -31,9 +31,9 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
 class ChipInterface
 {
   protected:
-    BeBoardFWMap        fBoardMap;           /*!< Map of Board connected */
-    BeBoardFWInterface* fBoardFW;            /*!< Board loaded */
-    uint16_t            prevBoardIdentifier; /*!< Id of the previous board */
+    BeBoardFWMap        fBoardMap;            /*!< Map of Board connected */
+    BeBoardFWInterface* fBoardFW;             /*!< Board loaded */
+    uint16_t            fPrevBoardIdentifier; /*!< Id of the previous board */
 
     uint16_t fRegisterCount;    /*!< Counter for the number of Registers written */
     uint16_t fTransactionCount; /*!< Counter for the number of Transactions */
@@ -70,7 +70,7 @@ class ChipInterface
      */
     virtual bool WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) = 0;
 
-    virtual void WriteModuleBroadcastChipReg(const Ph2_HwDescription::Module* pModule, const std::string& pRegNode, uint16_t data)
+    virtual void WriteHybridBroadcastChipReg(const Ph2_HwDescription::Hybrid* pHybrid, const std::string& pRegNode, uint16_t data)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }

@@ -34,7 +34,7 @@ class PedestalEqualization : public Tool
     void FindOffsets();
     void writeObjects();
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void Pause() override;

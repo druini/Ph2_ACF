@@ -140,7 +140,7 @@ enum class BoardType
 enum class FrontEndType
 {
     UNDEFINED = 0,
-    MODULE,
+    HYBRID,
     CBC3,
     MPA,
     SSA,

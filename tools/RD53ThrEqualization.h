@@ -27,15 +27,15 @@
 class ThrEqualization : public PixelAlive
 {
   public:
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
+    void sendData() override;
 
-    void   sendData();
     void   localConfigure(const std::string fileRes_, int currentRun);
     void   initializeFiles(const std::string fileRes_, int currentRun);
     void   run();
-    void   draw(int currentRun);
+    void   draw();
     void   analyze();
     size_t getNumberIterations()
     {
@@ -46,6 +46,7 @@ class ThrEqualization : public PixelAlive
         return PixelAlive::getNumberIterations() * (nBitVCal + moreIterationsPA) +
                RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * (nBitTDAC + moreIterations) * nEvents / nEvtsBurst;
     }
+    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     ThrEqualizationHistograms* histos;
@@ -73,10 +74,10 @@ class ThrEqualization : public PixelAlive
     void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
     void bitWiseScanLocal(const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
     void chipErrorReport();
-    void saveChipRegisters(int currentRun);
 
   protected:
     std::string fileRes;
+    int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;

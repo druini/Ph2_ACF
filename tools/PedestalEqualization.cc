@@ -143,30 +143,30 @@ void PedestalEqualization::FindVplus()
     {
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            for(auto module: *opticalGroup) // for on module - begin
+            for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                nCbc += module->size();
-                for(auto chip: *module) // for on chip - begin
+                nCbc += hybrid->size();
+                for(auto chip: *hybrid) // for on chip - begin
                 {
-                    ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(module->getIndex())->at(chip->getIndex()));
+                    ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
                     uint16_t     tmpVthr = 0;
                     if(cWithCBC) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
                     if(cWithSSA) tmpVthr = theChip->getReg("Bias_THDAC");
 
                     chip->getSummary<uint16_t>() = tmpVthr;
 
-                    LOG(INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId() << " Module " << +module->getId() << " ROC " << +chip->getId()
+                    LOG(INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId() << " Hybrid " << +hybrid->getId() << " ROC " << +chip->getId()
                               << " = " << tmpVthr << RESET;
                     cMeanValue += tmpVthr;
                 } // for on chip - end
-            }     // for on module - end
+            }     // for on hybrid - end
         }         // for on opticalGroup - end
     }             // for on board - end
 
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.fillVplusPlots(theVcthContainer);
 #else
-    auto theVCthStream = prepareModuleContainerStreamer<EmptyContainer, uint16_t, EmptyContainer>();
+    auto theVCthStream = prepareHybridContainerStreamer<EmptyContainer, uint16_t, EmptyContainer>();
     for(auto board: theVcthContainer)
     {
         if(fStreamerEnabled) theVCthStream.streamAndSendBoard(board, fNetworkStreamer);
@@ -208,18 +208,18 @@ void PedestalEqualization::FindOffsets()
     {
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            for(auto module: *opticalGroup) // for on module - begin
+            for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                for(auto chip: *module) // for on chip - begin
+                for(auto chip: *hybrid) // for on chip - begin
                 {
                     if(fDisableStubLogic and cWithCBC)
                     {
-                        ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(module->getIndex())->at(chip->getIndex()));
+                        ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
 
-                        uint8_t stubLogicValue = fStubLogicCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<uint8_t>();
+                        uint8_t stubLogicValue = fStubLogicCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>();
                         fReadoutChipInterface->WriteChipReg(theChip, "Pipe&StubInpSel&Ptwidth", stubLogicValue);
 
-                        uint8_t HIPCountValue = fHIPCountCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(module->getIndex())->at(chip->getIndex())->getSummary<uint8_t>();
+                        uint8_t HIPCountValue = fHIPCountCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>();
                         fReadoutChipInterface->WriteChipReg(theChip, "HIP&TestMode", HIPCountValue);
                     }
 
@@ -232,13 +232,13 @@ void PedestalEqualization::FindOffsets()
                         if(cWithCBC) sprintf(charRegName, "Channel%03d", channelNumber++);
                         if(cWithSSA) sprintf(charRegName, "THTRIMMING_S%d", channelNumber++);
                         std::string cRegName = charRegName;
-                        channel = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(module->getIndex())->at(chip->getIndex()))->getReg(cRegName);
+                        channel = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()))->getReg(cRegName);
                         cMeanOffset += channel;
                     }
 
                     LOG(INFO) << BOLDRED << "Mean offset on ROC" << +chip->getId() << " is : " << (cMeanOffset) / (double)NCH << " Vcth units." << RESET;
                 } // for on chip - end
-            }     // for on module - end
+            }     // for on hybrid - end
         }         // for on opticalGroup - end
     }             // for on board - end
 
@@ -275,7 +275,7 @@ void PedestalEqualization::writeObjects()
 
 void PedestalEqualization::ConfigureCalibration() { CreateResultDirectory("Results/Run_PedestalEqualization"); }
 
-void PedestalEqualization::Start(int currentRun)
+void PedestalEqualization::Running()
 {
     LOG(INFO) << "Starting Pedestal Equalization";
     Initialise(true, true);

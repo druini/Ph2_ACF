@@ -18,8 +18,8 @@
 // # CONSTANTS #
 // #############
 #define VCALSLEEP 50000 // [microseconds]
-#define NPIXCMD 100     // Number of possible pixel commands to stack
 #define MONITORSLEEP 10 // [seconds]
+#define NPIXCMD 100     // Number of possible pixel commands to stack
 
 namespace Ph2_HwInterface
 {
@@ -28,6 +28,7 @@ class RD53Interface : public ReadoutChipInterface
   public:
     RD53Interface(const BeBoardFWMap& pBoardMap);
 
+    int      CheckChipID(Ph2_HwDescription::Chip* pChip, int chipIDfromDB);
     bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t data, bool pVerifLoop = true) override;
     void     WriteBoardBroadcastChipReg(const Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode, uint16_t data) override;
@@ -39,14 +40,14 @@ class RD53Interface : public ReadoutChipInterface
     bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override;
 
   private:
-    std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode);
+    std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& pRegNode);
     void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
-    void                                       InitRD53Aurora(Ph2_HwDescription::Chip* pChip, int nActiveLanes = 1);
+    void                                       InitRD53Aurora(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1);
 
     template <typename T>
-    void sendCommand(Ph2_HwDescription::Chip* pChip, const T& cmd)
+    void sendCommand(Ph2_HwDescription::ReadoutChip* pChip, const T& cmd)
     {
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getFeId());
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getHybridId());
     }
 
     template <typename T, size_t N>
@@ -60,22 +61,23 @@ class RD53Interface : public ReadoutChipInterface
     // ###########################
   public:
     template <typename T, typename... Ts>
-    void ReadChipMonitor(Ph2_HwDescription::Chip* pChip, const T& observableName, const Ts&... observableNames)
+    void ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const T& observableName, const Ts&... observableNames)
     {
         ReadChipMonitor(pChip, observableName);
         ReadChipMonitor(pChip, observableNames...);
     }
 
-    float ReadChipMonitor(Ph2_HwDescription::Chip* pChip, const char* observableName);
-    float ReadHybridTemperature(Ph2_HwDescription::Chip* pChip);
-    float ReadHybridVoltage(Ph2_HwDescription::Chip* pChip);
+    float ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const char* observableName);
+    float ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip);
+    float ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip);
 
   private:
-    uint32_t measureADC(Ph2_HwDescription::Chip* pChip, uint32_t data);
-    float    measureVoltageCurrent(Ph2_HwDescription::Chip* pChip, uint32_t data, bool isCurrentNotVoltage);
-    float    measureTemperature(Ph2_HwDescription::Chip* pChip, uint32_t data);
-    float    convertADC2VorI(Ph2_HwDescription::Chip* pChip, uint32_t value, bool isCurrentNotVoltage = false);
+    uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data);
+    float    measureVoltageCurrent(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, bool isCurrentNotVoltage);
+    float    measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data);
+    float    convertADC2VorI(Ph2_HwDescription::ReadoutChip* pChip, uint32_t value, bool isCurrentNotVoltage = false);
 };
+
 } // namespace Ph2_HwInterface
 
 #endif

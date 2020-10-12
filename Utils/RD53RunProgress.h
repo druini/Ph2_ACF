@@ -27,6 +27,12 @@ class RD53RunProgress
         return value;
     }
 
+    static void reset()
+    {
+        RD53RunProgress::total()   = 0;
+        RD53RunProgress::current() = 0;
+    }
+
     static void update(size_t dataSize, bool display = false)
     {
         RD53RunProgress::current()++;

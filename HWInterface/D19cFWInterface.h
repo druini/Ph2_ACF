@@ -264,11 +264,11 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t GetData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     // wait for events from FC7
     bool WaitForData(Ph2_HwDescription::BeBoard* pBoard);
-    // split data per module/chip for a given board
+    // split data per hybrid/chip for a given board
     uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     // read back SSA counters directly
     void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+    void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool cFast);
 
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
     // I2C command sending implementation
@@ -290,7 +290,6 @@ class D19cFWInterface : public BeBoardFWInterface
     // convert code of the chip from firmware
     std::string  getChipName(uint32_t pChipCode);
     FrontEndType getFrontEndType(uint32_t pChipCode);
-    void SetI2CAddressTable();
 
     // FMC Maps
     std::map<uint32_t, std::string> fFMCMap = {{0, "NONE"},
@@ -345,7 +344,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig);
 
   public:
-
     ///////////////////////////////////////////////////////
     //      CBC Methods                                 //
     /////////////////////////////////////////////////////
@@ -357,7 +355,8 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param pCbcId : Id of the Chip to work with
      * \param pVecReq : Vector to stack the encoded words
      */
-    void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override; /*!< Encode a/several word(s) readable for a Chip*/
+    void
+         EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override; /*!< Encode a/several word(s) readable for a Chip*/
     void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
         override; /*!< Encode a/several word(s) readable for a Chip*/
 
@@ -411,8 +410,8 @@ class D19cFWInterface : public BeBoardFWInterface
     // Optical readout specific functions - d19c [temporary]
     void                       setGBTxPhase(uint32_t pPhase) { fGBTphase = pPhase; }
     void                       configureLink(const Ph2_HwDescription::BeBoard* pBoard);
-    bool                       GBTLock(const Ph2_HwDescription::BeBoard* pBoard);
     bool 		       LinkLock( const Ph2_HwDescription::BeBoard* pBoard );
+    bool                       GBTLock(const Ph2_HwDescription::BeBoard* pBoard);
     std::pair<uint16_t, float> readADC(std::string pValueToRead = "AMUX_L", bool pApplyCorrection = false);
     void                       setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
     void                       setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
@@ -668,9 +667,8 @@ class D19cFWInterface : public BeBoardFWInterface
     void KillI2C();
     ///
 
-    void                  Pix_write_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
-    uint32_t              Pix_read_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
-    std::vector<uint16_t> ReadoutCounters_MPA(uint32_t raw_mode_en = 0);
+    void     Pix_write_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
+    uint32_t Pix_read_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
 
     void Compose_fast_command(uint32_t duration = 0, uint32_t resync_en = 0, uint32_t l1a_en = 0, uint32_t cal_pulse_en = 0, uint32_t bc0_en = 0);
     void PS_Open_shutter(uint32_t duration = 0);
@@ -732,11 +730,10 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    uint8_t  flpGBTAddress = 0x70;
     void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty) override {}
-    void     ResetOptoLink(Ph2_HwDescription::Chip* pChip) override;
-    bool     WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress) override;
+    void     ResetOptoLink(Ph2_HwDescription::Chip* pChip) override {}
+    bool     WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override { return false; }
+    uint32_t ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress) override { return 0; }
 };
 } // namespace Ph2_HwInterface
 

@@ -19,6 +19,7 @@ SystemController::SystemController()
     , fReadoutChipInterface(nullptr)
     , fChipInterface(nullptr)
     , flpGBTInterface(nullptr)
+    , fCicInterface(nullptr)
     , fDetectorContainer(nullptr)
     , fSettingsMap()
     , fFileHandler(nullptr)
@@ -103,7 +104,11 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
 void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData)
 {
     fStreamerEnabled = streamData;
-    if(streamData == true) fNetworkStreamer = new TCPPublishServer(6000, 1);
+    if(streamData == true)
+    {
+        fNetworkStreamer = new TCPPublishServer(6000, 1);
+        fNetworkStreamer->startAccept();
+    }
 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
@@ -112,6 +117,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(fDetectorContainer->size() > 0)
     {
         const BeBoard* cFirstBoard = fDetectorContainer->at(0);
+
         if(cFirstBoard->getBoardType() != BoardType::RD53)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
@@ -154,33 +160,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     }
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
                     fCicInterface = new CicInterface(fBeBoardFWMap);
-                    // OuterTrackerModule* cFirstHybrid = static_cast<OuterTrackerModule*>(cFirstOpticalGroup->at(0));
-                    // if( cFirstHybrid->size() > 0 )//# of ROCs connected to Hybrid0
-                    // {
-                    //   LOG (INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for ROCs .."
-                    //     << +cFirstHybrid->size()
-                    //     << " ROCs found ..."
-                    //     << RESET;
-                    //   auto cFirstROC = cFirstHybrid->at(0);
-                    //   auto cChipType = cFirstROC->getFrontEndType();
-                    //   if (cChipType == FrontEndType::CBC3)
-                    //   {
-                    //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
-                    //     fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
-                    //   }
-                    //   else if(cChipType == FrontEndType::SSA)
-                    //   {
-                    //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
-                    //     fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
-                    //   }
-                    //   else if(cChipType == FrontEndType::MPA)
-                    //   {
-                    //     LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
-                    //     fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
-                    //   }
-                    //   LOG (INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
-                    //   fCicInterface = new CicInterface(fBeBoardFWMap);
-                    // }
                 }
             }
         }
@@ -204,7 +183,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
         return;
     }
 
-    LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from .xml file @@@" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from xml file @@@" << RESET;
 
     for(const auto cBoard: *fDetectorContainer)
     {
@@ -228,11 +207,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     cLPGBT = true;
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     // To be uncommented if crate is used
-                    //clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
-                    clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", false);
+                    clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
+                    //clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", false);
                     //clpGBTInterface->WriteReg(cOpticalGroup->flpGBT, 0x0ef, 0x6, false);
                     //
-                    //clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
+                    clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                     clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
                     uint8_t cPUSMStatus = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "PUSMStatus");
                     uint16_t cIter = 0, cMaxIter = 2000;
@@ -251,31 +230,32 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             }	       	
             if(cLPGBT)
             {
-	        bool cGBTlock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
-	        if ( cGBTlock )
-	          LOG (INFO) << BOLDGREEN << "Link locked.." << RESET;
-	    }
+	          bool cGBTlock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
+	          if ( cGBTlock )
+	            LOG (INFO) << BOLDGREEN << "Link locked.." << RESET;
+	        }
             for(auto cOpticalGroup: *cBoard)
             {
                 uint8_t cLinkId = cOpticalGroup->getId();
                 LOG(INFO) << BOLDMAGENTA << "CIC start-up seqeunce for hybrids on link " << +cLinkId << RESET;
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    OuterTrackerModule* theOuterTrackerModule = static_cast<OuterTrackerModule*>(cHybrid);
-                    if(theOuterTrackerModule->fCic != NULL)
+                    OuterTrackerHybrid* theOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
+                    if(theOuterTrackerHybrid->fCic != NULL)
                     {
-                        auto& cCic = theOuterTrackerModule->fCic;
+                        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
+                        auto& cCic = theOuterTrackerHybrid->fCic;
 
                         // read CIC sparsification setting
                         bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
                         cBoard->setSparsification(cSparsified);
 
-                        LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(theOuterTrackerModule->getFeId() % 2) << " on link " << +theOuterTrackerModule->getLinkId() << " on hybrid "
-                                  << +theOuterTrackerModule->getFeId() << RESET;
+                        LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(theOuterTrackerHybrid->getId() % 2) << " on link " << +theOuterTrackerHybrid->getLinkId() << " on hybrid "
+                                  << +theOuterTrackerHybrid->getId() << RESET;
                         fCicInterface->ConfigureChip(cCic);
 
                         // CIC start-up
-                        uint8_t cModeSelect = (static_cast<ReadoutChip*>(theOuterTrackerModule->at(0))->getFrontEndType() != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
+                        uint8_t cModeSelect = (static_cast<ReadoutChip*>(theOuterTrackerHybrid->at(0))->getFrontEndType() != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
                         // select CIC mode
                         bool cSuccess = fCicInterface->SelectMode(cCic, cModeSelect);
                         if(!cSuccess)
@@ -288,8 +268,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         uint8_t cDriveStrength = 5;
                         cSuccess               = fCicInterface->StartUp(cCic, cDriveStrength);
                         fBeBoardInterface->ChipReSync(cBoard);
-                        LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerModule->getId() % 2) << " connected to link "
-                                  << +theOuterTrackerModule->getLinkId() << RESET;
+                        LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerHybrid->getId() % 2) << " connected to link "
+                                  << +theOuterTrackerHybrid->getLinkId() << RESET;
                         LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
                     }
                     // Configure readout-chips [CBCs, MPAs, SSAs]
@@ -337,23 +317,31 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ###################
             for(auto cOpticalGroup: *cBoard)
             {
+                // ########################
+                // # Configure lpGBT chip #
+                // ########################
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
+                    // @TMP@
                     // RD53lpGBTInterface *clpGBTInterface = static_cast<RD53lpGBTInterface*>(flpGBTInterface);
                     // clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                     // if(clpGBTInterface->IslpGBTReady(cOpticalGroup->flpGBT))
-                    //    LOG(INFO) << BOLDRED << "lpGBT NOT READY" << RESET;
+                    //    LOG(ERROR) << BOLDRED << "lpGBT chip NOT configured" << RESET;
                     // else
-                    //    LOG(INFO) << BOLDMAGENTA << "lpGBT Configured" << RESET;
+                    //    LOG(INFO) << GREEN << "lpGBT chip configured" << RESET;
                 }
+                // ############################
+                // # Configure frontend chips #
+                // ############################
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    LOG(INFO) << GREEN << "Initializing communication to Module: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
+                    LOG(INFO) << GREEN << "Initializing communication to Hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
                     for(const auto cRD53: *cHybrid)
                     {
                         LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cRD53->getId() << RESET;
                         static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cRD53));
                         LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
+                        // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cRD53), 0);
                     }
                 }
             }
@@ -413,7 +401,18 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Start(int currentRun)
+void SystemController::Configure(std::string cHWFile, bool enableStream)
+{
+    std::stringstream outp;
+
+    InitializeHw(cHWFile, outp, true, enableStream);
+    InitializeSettings(cHWFile, outp);
+    std::cout << outp.str() << std::endl;
+    outp.str("");
+    ConfigureHw();
+}
+
+void SystemController::Start(int runNumber)
 {
     for(auto cBoard: *fDetectorContainer) fBeBoardInterface->Start(cBoard);
 }
@@ -433,30 +432,12 @@ void SystemController::Resume()
     for(auto cBoard: *fDetectorContainer) fBeBoardInterface->Resume(cBoard);
 }
 
-void SystemController::ConfigureHardware(std::string cHWFile, bool enableStream)
-{
-    std::stringstream outp;
+void SystemController::StartBoard(BeBoard* pBoard) { fBeBoardInterface->Start(pBoard); }
+void SystemController::StopBoard(BeBoard* pBoard) { fBeBoardInterface->Stop(pBoard); }
+void SystemController::PauseBoard(BeBoard* pBoard) { fBeBoardInterface->Pause(pBoard); }
+void SystemController::ResumeBoard(BeBoard* pBoard) { fBeBoardInterface->Resume(pBoard); }
 
-    InitializeHw(cHWFile, outp, true, enableStream);
-    InitializeSettings(cHWFile, outp);
-    std::cout << outp.str() << std::endl;
-    outp.str("");
-    ConfigureHw();
-}
-
-void SystemController::ConfigureCalibration() {}
-
-void SystemController::Configure(std::string cHWFile, bool enableStream)
-{
-    ConfigureHardware(cHWFile, enableStream);
-    ConfigureCalibration();
-}
-
-void SystemController::Start(BeBoard* pBoard) { fBeBoardInterface->Start(pBoard); }
-
-void SystemController::Stop(BeBoard* pBoard) { fBeBoardInterface->Stop(pBoard); }
-void SystemController::Pause(BeBoard* pBoard) { fBeBoardInterface->Pause(pBoard); }
-void SystemController::Resume(BeBoard* pBoard) { fBeBoardInterface->Resume(pBoard); }
+void SystemController::Abort() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Abort not implemented" << RESET; }
 
 uint32_t SystemController::ReadData(BeBoard* pBoard, bool pWait)
 {
@@ -502,15 +483,12 @@ void SystemController::ReadASEvent(BeBoard* pBoard, uint32_t pNMsec, uint32_t pu
 {
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-    // LOG (INFO) << BOLDGREEN << "TEST"<< fsm<< RESET;
 
     std::vector<uint32_t> cData;
     if(fsm and (pulses > 0))
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Send_pulses(pulses);
     else
     {
-        // LOG (INFO) << BOLDGREEN << "go "<< pulses<< RESET;
-
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(0);
         std::this_thread::sleep_for(std::chrono::microseconds(pNMsec));
         for(uint32_t i = 0; i < pulses; i++) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ChipTestPulse(); }

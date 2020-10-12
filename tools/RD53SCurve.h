@@ -34,17 +34,18 @@ class SCurve : public Tool
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
     }
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
+    void sendData() override;
 
-    void                                   sendData();
     void                                   localConfigure(const std::string fileRes_, int currentRun);
     void                                   initializeFiles(const std::string fileRes_, int currentRun);
     void                                   run();
-    void                                   draw(int currentRun);
+    void                                   draw();
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * nSteps; }
+    void   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     SCurveHistograms* histos;
@@ -73,10 +74,10 @@ class SCurve : public Tool
     void fillHisto();
     void computeStats(const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
     void chipErrorReport();
-    void saveChipRegisters(int currentRun);
 
   protected:
     std::string fileRes;
+    int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;

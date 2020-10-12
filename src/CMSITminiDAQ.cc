@@ -108,7 +108,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clockdelay physics eudaq]. Default: pixelalive",
+                     "injdelay clockdelay physics eudaq prbstime prbsframes]. Default: pixelalive",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -295,7 +295,7 @@ int main(int argc, char** argv)
             mySysCntr.InitializeSettings(configFile, outp);
             if(reset == true)
             {
-                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getBeBoardId()])->ResetSequence();
+                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence();
                 exit(EXIT_SUCCESS);
             }
             if(binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53FWInterface::decodedEvents);
@@ -307,7 +307,7 @@ int main(int argc, char** argv)
             // #######################
 
             LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-            mySysCntr.ConfigureHardware(configFile);
+            mySysCntr.Configure(configFile);
             LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
             if(program == true)
             {
@@ -334,7 +334,7 @@ int main(int argc, char** argv)
             la.localConfigure(fileName, runNumber);
             la.run();
             la.analyze();
-            la.draw(runNumber);
+            la.draw();
         }
         else if(whichCalib == "pixelalive")
         {
@@ -347,9 +347,38 @@ int main(int argc, char** argv)
             PixelAlive  pa;
             pa.Inherit(&mySysCntr);
             pa.localConfigure(fileName, runNumber);
+
+            // #############################################
+            // # Address different subsets of the detector #
+            // #############################################
+            // @TMP@
+            // const int detDivision = 8;
+            // auto      query       = [](int indx, int division, int thr) { return (division / thr < 1 ? indx < 1 : indx < 2); };
+            // for(auto i = 0; query(i, detDivision, 8); i++)
+            // {
+            //     auto detectorSubset = [i](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == i); };
+            //     if(query(1, detDivision, 8) == true) pa.fDetectorContainer->setOpticalGroupQueryFunction(detectorSubset);
+
+            //     for(auto j = 0; query(j, detDivision, 4); j++)
+            //     {
+            //         auto detectorSubset = [j](const ModuleContainer* theModule) { return (theModule->getId() % 2 == j); };
+            //         if(query(1, detDivision, 4) == true) pa.fDetectorContainer->setHybridQueryFunction(detectorSubset);
+
+            //         for(auto k = 0; query(k, detDivision, 2); k++)
+            //         {
+            //             auto detectorSubset = [k](const ChipContainer* theChip) { return (theChip->getId() % 2 == k); };
+            //             if(query(1, detDivision, 2) == true) pa.fDetectorContainer->setReadoutChipQueryFunction(detectorSubset);
+
             pa.run();
             pa.analyze();
-            pa.draw(runNumber);
+            pa.draw();
+
+            //             pa.fDetectorContainer->resetReadoutChipQueryFunction();
+            //         }
+            //         pa.fDetectorContainer->resetHybridQueryFunction();
+            //     }
+            //     pa.fDetectorContainer->resetOpticalGroupQueryFunction();
+            // }
         }
         else if(whichCalib == "noise")
         {
@@ -364,7 +393,7 @@ int main(int argc, char** argv)
             pa.localConfigure(fileName, runNumber);
             pa.run();
             pa.analyze();
-            pa.draw(runNumber);
+            pa.draw();
         }
         else if(whichCalib == "scurve")
         {
@@ -379,7 +408,7 @@ int main(int argc, char** argv)
             sc.localConfigure(fileName, runNumber);
             sc.run();
             sc.analyze();
-            sc.draw(runNumber);
+            sc.draw();
         }
         else if(whichCalib == "gain")
         {
@@ -394,7 +423,7 @@ int main(int argc, char** argv)
             ga.localConfigure(fileName, runNumber);
             ga.run();
             ga.analyze();
-            ga.draw(runNumber);
+            ga.draw();
         }
         else if(whichCalib == "gainopt")
         {
@@ -409,7 +438,7 @@ int main(int argc, char** argv)
             go.localConfigure(fileName, runNumber);
             go.run();
             go.analyze();
-            go.draw(runNumber);
+            go.draw();
         }
         else if(whichCalib == "threqu")
         {
@@ -424,7 +453,7 @@ int main(int argc, char** argv)
             te.localConfigure(fileName, runNumber);
             te.run();
             te.analyze();
-            te.draw(runNumber);
+            te.draw();
         }
         else if(whichCalib == "thrmin")
         {
@@ -439,7 +468,7 @@ int main(int argc, char** argv)
             tm.localConfigure(fileName, runNumber);
             tm.run();
             tm.analyze();
-            tm.draw(runNumber);
+            tm.draw();
         }
         else if(whichCalib == "thradj")
         {
@@ -454,7 +483,7 @@ int main(int argc, char** argv)
             ta.localConfigure(fileName, runNumber);
             ta.run();
             ta.analyze();
-            ta.draw(runNumber);
+            ta.draw();
         }
         else if(whichCalib == "injdelay")
         {
@@ -469,7 +498,7 @@ int main(int argc, char** argv)
             id.localConfigure(fileName, runNumber);
             id.run();
             id.analyze();
-            id.draw(runNumber);
+            id.draw();
         }
         else if(whichCalib == "clockdelay")
         {
@@ -484,7 +513,7 @@ int main(int argc, char** argv)
             cd.localConfigure(fileName, runNumber);
             cd.run();
             cd.analyze();
-            cd.draw(runNumber);
+            cd.draw();
         }
         else if(whichCalib == "physics")
         {
@@ -504,8 +533,10 @@ int main(int argc, char** argv)
                 ph.Stop();
             }
             else
+            {
                 ph.analyze(true);
-            ph.draw();
+                ph.draw();
+            }
         }
         else if(whichCalib == "eudaq")
         {
@@ -536,6 +567,40 @@ int main(int argc, char** argv)
             LOG(WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
             exit(EXIT_FAILURE);
 #endif
+        }
+        else if((whichCalib == "prbstime") || (whichCalib == "prbsframes"))
+        {
+            // #################
+            // # Run PRBS test #
+            // #################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Pseudo Random Bit Sequence test @@@" << RESET;
+
+            if(cmd.argument(0) == "")
+            {
+                LOG(ERROR) << BOLDRED
+                           << "Neither the time (to be given with -t <TIME IN SECONDS>) nor the number of frames (to be given with -n <NUMBER OF FRAMES>) was specified for the PRBS test. Abort."
+                           << RESET;
+                exit(EXIT_FAILURE);
+            }
+
+            unsigned long long frames_or_time = strtoull(cmd.argument(0).c_str(), NULL, 0);
+            bool               given_time     = false;
+            if(whichCalib == "prbstime") given_time = true;
+
+            for(const auto cBoard: *mySysCntr.fDetectorContainer)
+                for(const auto cOpticalGroup: *cBoard)
+                    for(const auto cHybrid: *cOpticalGroup)
+                        for(const auto cChip: *cHybrid)
+                        {
+                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 2, true);
+                            LOG(INFO) << GREEN << "PRBS test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                      << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
+                                      << ((static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getId()])->RunPRBStest(given_time, frames_or_time, cHybrid->getId(), cChip->getId()) == true)
+                                              ? "PASSED"
+                                              : "NOT PASSED")
+                                      << RESET;
+                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 1, true);
+                        }
         }
         else
         {

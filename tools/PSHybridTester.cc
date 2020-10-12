@@ -164,10 +164,10 @@ void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fCicInterface->SelectMux(cCic, cPhyPort);
             } // hybrid
-        }     // module
+        }     // hybrid
         // check output
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4);
@@ -205,7 +205,7 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", cPattern);
             } // chip
         }     // hybrid
-    }         // module
+    }         // opticalGroup
     // now capture output on pogo sockets
     // this->SSAOutputsPogoDebug(pBoard, false);
     this->SSAOutputsPogoScope(pBoard, false);
@@ -250,7 +250,7 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
        */
             } // chip
         }     // hybrid
-    }         // module
+    }         // opticalGroup
     // now capture output on pogo sockets
     // this->SSAOutputsPogoDebug(pBoard, true);
     this->SSAOutputsPogoScope(pBoard, true);
@@ -443,8 +443,8 @@ void PSHybridTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string>
     pCounters.resize(cIndices.size());
     for(auto cIndex: cIndices)
     {
-        char cBuffer[19];
-        sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
+        char cBuffer[20];
+        sprintf(cBuffer, "debug_blk_counter%02d", (cIndex & 0x63)); // max value can be 99, to avoid GCC 8 warning
         std::string cRegName = cBuffer;
         uint32_t    cCounter = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
         pCounters.push_back(cCounter);
@@ -500,8 +500,8 @@ void PSHybridTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string
     pCounters.resize(cIndices.size());
     for(auto cIndex: cIndices)
     {
-        char cBuffer[19];
-        sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
+        char cBuffer[20];
+        sprintf(cBuffer, "debug_blk_counter%02d", (cIndex & 0x63)); // max value can be 99, to avoid GCC 8 warning
         std::string cRegName = cBuffer;
         uint32_t    cCounter = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
         pCounters.push_back(cCounter);
@@ -526,7 +526,7 @@ void PSHybridTester::CheckFastCommands(const std::string& pFastCommand, uint8_t 
     for(auto cBoard: *fDetectorContainer) { this->CheckFastCommands(cBoard, pFastCommand, pDuartion); }
 }
 // State machine control functions
-void PSHybridTester::Start(int currentRun)
+void PSHybridTester::Running()
 {
     LOG(INFO) << BOLDBLUE << "Starting PS Hybrid tester" << RESET;
     Initialise();
