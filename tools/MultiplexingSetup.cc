@@ -19,7 +19,7 @@ void MultiplexingSetup::Initialise()
     for(auto cBoard: *fDetectorContainer)
     {
         auto cBeBoard = static_cast<BeBoard*>(cBoard);
-        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
+        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         fBeBoardInterface->setBoard(theBoardId);
         bool cSetupScanned = (fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
         // if its not been scanned.. then send a reset 
@@ -124,7 +124,7 @@ std::map<int, std::vector<int>> MultiplexingSetup::getAvailableCards(bool filter
 }
 
 // State machine control functions
-void MultiplexingSetup::Running()
+void MultiplexingSetup::Start(int currentRun)
 {
     LOG(INFO) << "Starting Multiplexing set-up";
     Initialise();
