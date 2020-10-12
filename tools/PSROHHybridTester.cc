@@ -661,12 +661,12 @@ void PSROHHybridTester::TestULInternalPattern(uint32_t pPattern)
             clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
             LOG(INFO) << BOLDGREEN << "Internal LpGBT pattern generation" << RESET;
             // make sure serializer source is 0
-            //clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "ULDataSource0", 0);
+            clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "ULDataSource0", 0);
             clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern);
             std::this_thread::sleep_for(std::chrono::milliseconds(4000));
-
+            
             D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
             LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
             cFWInterface->StubDebug(true, 6);

@@ -218,19 +218,21 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             LOG(INFO) << BOLDBLUE << "Now going to configure chips on Board " << int(cBoard->getId()) << RESET;
 
             // CIC start-up
+            bool cLPGBT = false;
             for(auto cOpticalGroup: *cBoard)
             {
                 uint8_t cLinkId = cOpticalGroup->getId();
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
+                    cLPGBT = true;
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     // To be uncommented if crate is used
                     //clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
-                    //clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", false);
+                    clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", false);
                     //clpGBTInterface->WriteReg(cOpticalGroup->flpGBT, 0x0ef, 0x6, false);
                     //
-                    clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
+                    //clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                     clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
                     uint8_t cPUSMStatus = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "PUSMStatus");
                     uint16_t cIter = 0, cMaxIter = 2000;
@@ -246,9 +248,16 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     //clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", true);
                 }
                 
-	        //bool cGBTlock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
-	        //if ( cGBTlock )
-	       	//    LOG (INFO) << BOLDGREEN << "Link locked.." << RESET;
+            }	       	
+            if(cLPGBT)
+            {
+	        bool cGBTlock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
+	        if ( cGBTlock )
+	          LOG (INFO) << BOLDGREEN << "Link locked.." << RESET;
+	    }
+            for(auto cOpticalGroup: *cBoard)
+            {
+                uint8_t cLinkId = cOpticalGroup->getId();
                 LOG(INFO) << BOLDMAGENTA << "CIC start-up seqeunce for hybrids on link " << +cLinkId << RESET;
                 for(auto cHybrid: *cOpticalGroup)
                 {

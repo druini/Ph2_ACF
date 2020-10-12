@@ -16,6 +16,7 @@
 #include "../Utils/D19cSSAEvent.h"
 #include "D19cFpgaConfig.h"
 #include "GbtInterface.h"
+#include "D19clpGBTInterface.h"
 #include <chrono>
 #include <time.h>
 #include <uhal/uhal.hpp>
@@ -803,21 +804,21 @@ void D19cFWInterface::ConfigureBoard ( const BeBoard* pBoard )
           //this->SetI2CAddressTable();
         }
         
-        bool cWithLPGBT=false;
+        bool cLPGBT=false;
         for(auto cOpticalGroup : *pBoard)
         {
-            Chip* clpGBT = static_cast<Chip*>(cOpticalGroup->flpGBT);
-            if( clpGBT != NULL )
-                cWithLPGBT = true;
+            if( cOpticalGroup->flpGBT != nullptr )
+                cLPGBT = true;
         }
-        if( cWithLPGBT )
+        if( cLPGBT )
         {
-
+/*
             LOG (INFO) << BOLDBLUE << "Link lock check.." << RESET;
+
             bool cGBTlock = LinkLock(pBoard);
             if ( cGBTlock )
                 LOG (INFO) << BOLDGREEN << "Link locked.." << RESET;
-
+*/
         }
         else
         {
