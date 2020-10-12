@@ -39,34 +39,11 @@ class D19clpGBTInterface : public lpGBTInterface
     // ######################################
     // # LpGBT block configuration functions#
     // ######################################
-    /*!
-     * \brief Sets the flag used to select which lpGBT configuration interface to use
-     * \param pChip : pointer to Chip object
-     * \param pMode : configuration interface ["serial" / "i2c"]
-     */
+    //Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(Ph2_HwDescription::Chip* pChip, const std::string& pMode, bool pToggle);
-
-    /*!
-     * \brief Configures the lpGBT Rx Groups
-     * \param pChip      : pointer to Chip object
-     * \param pGroups    : Rx Groups vector
-     * \param pChannels  : Rx Channels vector
-     * \param pDataRate  : Data Rate
-     * \param pTrackMode : Phase Tracking Mode
-     */
+    //Configures the lpGBT Rx Groups
     void ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate = 0, uint8_t pTrackMode = 0);
-
-    /*!
-     * \brief Configure lpGBT Rx Channels
-     * \param pChip     : pointer to Chip object
-     * \param pGroups   : Rx Groups vector
-     * \param pChannels : Rx Channels vector
-     * \param pEqual    : Equalization control
-     * \param pTerm     : 100 Ohm termination
-     * \param pAcBias   : Common mode generation
-     * \param pInvert   : Channel invertion
-     * \param pPhase    : Channel phase selection
-     */
+    //Configure lpGBT Rx Channels
     void ConfigureRxChannels(Ph2_HwDescription::Chip*    pChip,
                              const std::vector<uint8_t>& pGroups,
                              const std::vector<uint8_t>& pChannels,
@@ -75,27 +52,9 @@ class D19clpGBTInterface : public lpGBTInterface
                              uint8_t                     pAcBias = 0,
                              uint8_t                     pInvert = 0,
                              uint8_t                     pPhase  = 12);
-
-    /*!
-     * \brief Configure lpGBT Tx Groups
-     * \param pChip     : pointer to Chip object
-     * \param pGroups   : Tx Groups vector
-     * \param pChannels : Tx Channels vector
-     * \param pDataRate : Data Rate
-     */
+    //Configure lpGBT Tx Groups
     void ConfigureTxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate = 0);
-
-    /*!
-     * \brief Configure lpGBT Tx Channels
-     * \param pChip         : pointer to Chip object
-     * \param pGroups       : Tx Groups vector
-     * \param pChannels     : Tx Channels vector
-     * \param pDriveStr     : Driving strenght
-     * \param pPreEmphMode  : Pre-Emphasis mode
-     * \param pPreEmphStr   : Pre-Emphasis strength
-     * \param pPreEmphWidth : Width of the pre-emphasis pulse
-     * \param pInvert       : Channel inversion
-     */
+    //Configure lpGBT Tx Channels
     void ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
                              const std::vector<uint8_t>& pGroups,
                              const std::vector<uint8_t>& pChannels,
@@ -104,18 +63,7 @@ class D19clpGBTInterface : public lpGBTInterface
                              uint8_t                     pPreEmphStr   = 0,
                              uint8_t                     pPreEmphWidth = 0,
                              uint8_t                     pInvert       = 0);
-
-    /*!
-     * \brief Configure lpGBT Clocks
-     * \param pChip         : pointer to Chip object
-     * \param pClock        : Clocks vector
-     * \param pFreq         : Frequency
-     * \param pDriveStr     : Driving strength
-     * \param pInvert       : Clock inversion
-     * \param pPreEmphWidth : Width of the pre-emphasis pulse
-     * \param pPreEmphMode  : Pre-Emphasis mode
-     * \param pPreEmphStr   : Pre-Emphasis strength
-     */
+    //Configure lpGBT Clocks
     void ConfigureClocks(Ph2_HwDescription::Chip*    pChip,
                          const std::vector<uint8_t>& pClock,
                          uint8_t                     pFreq         = 0,
@@ -124,184 +72,65 @@ class D19clpGBTInterface : public lpGBTInterface
                          uint8_t                     pPreEmphWidth = 0,
                          uint8_t                     pPreEmphMode  = 0,
                          uint8_t                     pPreEmphStr   = 0);
-
-    /*!
-     * \brief Configure lpGBT High Speed Link Tx and Rx polarity
-     * \param pChip       : pointer to Chip object
-     * \param pTxPolarity : Tx polarity
-     * \param pRxPolarity : Rx polarity
-     */
+    //Configure lpGBT High Speed Link Tx and Rx polarity
     void ConfigureHighSpeedPolarity(Ph2_HwDescription::Chip* pChip, uint8_t pOutPolarity = 1, uint8_t pInPolarity = 0);
-
-    /*!
-     * \brief Configure lpGBT Data Player pattern
-     * \param pChip    : pointer to Chip object
-     * \param pPattern : Data player pattern
-     */
+    //Configure lpGBT Data Player pattern
     void ConfigureDPPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
-
-    /*!
-     * \brief Configure lpGBT Rx Pseudo-Random Binary Sequence
-     * \param pChip     : pointer to Chip object
-     * \param pGroups   : Rx Groups vector
-     * \param pChannels : Rx Channels vector
-     * \param pEnable   : Enable Pseudo-Random Binary Sequence
-     */
+    //Configure lpGBT Rx Pseudo-Random Binary Sequence
     void ConfigureRxPRBS(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, bool pEnable = false);
-
-    /*!
-     * \brief Configure lpGBT Rx Groups data source
-     * \param pChip   : pointer to Chip object
-     * \param pGroups : Rx Groups vector
-     * \param pSource : Rx data source
-     */
+    //Configure lpGBT Rx Groups data source
     void ConfigureRxSource(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource = 0);
-
-    /*!
-     * \brief Configure lpGBT Tx Groups data source
-     * \param pChip   : pointer to Chip object
-     * \param pGroups : Tx Groups vector
-     * \param pSource : Tx data source
-     */
+    //Configure lpGBT Tx Groups data source
     void ConfigureTxSource(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource = 0);
-
-    /*!
-     * \brief Configure lpGBT Rx channels phase
-     * \param pChip    : pointer to Chip object
-     * \param pGroup   : Rx Groups vector
-     * \param pChannel : Rx Channels vector
-     * \param pPhase   : Rx phase selection
-     */
+    //Configure lpGBT Rx channels phase
     void ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase = 0);
-
-    /*!
-     * \brief Configure lpGBT Phase Shifter
-     * \param pChip     : pointer to Chip object
-     * \param pClocks   : Clocks vector
-     * \param pFreq     : Frequency
-     * \param pDriveStr : Driving strength
-     * \param pEnFTune  : Enable fine deskewing
-     * \param pDelay    : Clock delay
-     */
+    //Configure lpGBT Phase Shifter
     void ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq = 0, uint8_t pDriveStr = 0, uint8_t pEnFTune = 0, uint16_t pDelay = 0);
 
     // ####################################
     // # LpGBT specific routine functions #
     // ####################################
-
-    /*!
-     * \brief lpGBT Rx Groups(Channels) phase training
-     * \param pChip   : pointer to Chip object
-     * \param pGroups : Rx Groups vector
-     */
+    //lpGBT Rx Groups(Channels) phase training
     void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
-
-    /*!
-     * \brief lpGBT Rx Groups(Channels) phase alignment
-     * \param pChip     : pointer to Chip object
-     * \param pGroups   : Rx Groups vector
-     * \param pChannels : Rx Channels vector
-     */
+    //lpGBT Rx Groups(Channels) phase alignment
     void PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
 
-    // LpGBT block status functions
-
-    /*!
-     * \brief Print out lpGBT chip mode (data rate, FEC, transmission mode)
-     * \param pChip : pointer to Chip object
-     */
+    // ##############################################
+    // # LpGBT Block Status functions               #
+    // ##############################################
+    //Print out lpGBT chip mode (data rate, FEC, transmission mode)
     void PrintChipMode(Ph2_HwDescription::Chip* pChip);
-
-    /*!
-     * \brief Get lpGBT Rx Group Delay-Locked-Loop state machine
-     * \param pChip  : pointer to Chip object
-     * \param pGroup : Rx Groups vector
-     */
+    //Get lpGBT Rx Group Delay-Locked-Loop state machine
     uint8_t GetRxDllStatus(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
-
-    /*!
-     * \brief Get lpGBT Rx Channel phase
-     * \param pChip    : pointer to Chip object
-     * \param pGroup   : Rx Groups vector
-     * \param pChannel : Rx Channels vector
-     */
+    //Get lpGBT Rx Channel phase
     uint8_t GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
-
-    /*!
-     * \brief Get lpGBT Rx locking status
-     * \param pChip  : pointer to Chip object
-     * \param pGroup : Rx Groups vector
-     */
+    //Get lpGBT Rx locking status
     bool IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels);
-
-    /*!
-     * \brief Get lpGBT Power Up State Machine status
-     * \param pChip : pointer to Chip object
-     */
+    //Get lpGBT Power Up State Machine status
     bool IslpGBTReady(Ph2_HwDescription::Chip* pChip);
 
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
     // ##############################################
-    /*!
-     * \brief Reset I2C Masters
-     * \param pChip    : pointer to Chip object
-     * \param pMasters : I2C Masters vector
-     */
+    //Reset I2C Masters
     void ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
-
-    /*!
-     * \brief Configure lpGBT I2C Master
-     * \param pChip         : pointer to Chip object
-     * \param pMaster       : I2C Master
-     * \param pNBytes       : Number of bytes
-     * \param pSCLDriveMode : SCL drive strength
-     */
+    //Configure lpGBT I2C Master
     void ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq = 0, uint8_t pNBytes = 1, uint8_t pSCLDriveMode = 0);
-
-    /*!
-     * \brief I2C Write transaction using the lpGBT I2C Master
-     * \param pChip         : pointer to Chip object
-     * \param pMaster       : I2C Master
-     * \param pSlaveAddress : Slave address
-     * \param pData         : Data
-     * \param pNBytes       : Number of bytes
-     */
+    //I2C Write transaction using the lpGBT I2C Master
     bool WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes = 1);
-
-    /*!
-     * \brief I2C Read transaction using the lpGBT I2C Master
-     * \param pChip         : pointer to Chip object
-     * \param pMaster       : I2C Master
-     * \param pSlaveAddress : Slave address
-     * \param pNBytes       : Number of bytes
-     */
+    //I2C Read transaction using the lpGBT I2C Master
     uint32_t ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes = 1);
-
-    /*!
-     * \brief Get lpGBT I2C Master status
-     * \param pChip   : pointer to Chip object
-     * \param pMaster : I2C Master
-     */
+    //Get lpGBT I2C Master status
     uint8_t GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
 
     // ###########################
     // # LpGBT ADC-DAC functions #
     // ###########################
+    //configure ADC
     void ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect = 0, uint8_t pADCCoreDiffEnable = 0);
-    /*!
-     * \brief Read lpGBT ADC
-     * \param pChip     : pointer to Chip object
-     * \param pADCInput : ADC input
-     */
+    //brief Read single ended lpGBT ADC
     uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInput);
-
-    /*!
-     * \brief Read lpGBT differential ADC
-     * \param pChip      : pointer to Chip object
-     * \param pADCInputP : ADC input positive
-     * \param pADCInputN : ADC input negative
-     */
+    //Read lpGBT differential ADC
     uint16_t ReadADCDiff(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN);
 
     // ###############################
@@ -321,7 +150,6 @@ class D19clpGBTInterface : public lpGBTInterface
     // mpa read/write
     bool     mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack=true);
     uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pRegisterAddress);
-    bool i2cWrite(Ph2_HwDescription::Chip* pChip, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadBack);
 
   private:
     std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},

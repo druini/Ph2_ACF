@@ -1,5 +1,4 @@
-/*!
-  \file                  D19clpGBTInterface.cc
+/*!  \file                  D19clpGBTInterface.cc
   \brief                 Interface to access and control the low-power Gigabit Transceiver chip
   \author                Younes Otarid
   \version               1.0
@@ -21,59 +20,341 @@ namespace Ph2_HwInterface
 {
 bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
+
     LOG(INFO) << BOLDBLUE << "Configuring lpGBT" << RESET;
     this->setBoard(pChip->getBeBoardId());
-
-    // Load register map from configuration file
-     
-    ChipRegMap clpGBTRegMap = pChip->getRegMap();
-    for(const auto& cRegItem: clpGBTRegMap)
-    {
-        if(cRegItem.second.fAddress < 0x13c)
-        {
-            LOG(INFO) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec << "]"
-                      << RESET;
-            this->WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
-        }
-    }
-
-    // Additional configurations (could eventually be moved to configuration file)
+     //Load register map from configuration file
+     ChipRegMap clpGBTRegMap = pChip->getRegMap();
+     for(const auto& cRegItem: clpGBTRegMap)
+     {
+         if(cRegItem.second.fAddress < 0x13c)
+         {
+             LOG(INFO) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec << "]"
+                       << RESET;
+             this->WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+         }
+     }
     // Configure High Speed Link Tx Rx Polarity
-    this->ConfigureHighSpeedPolarity(pChip, 0, 1);
+    this->ConfigureHighSpeedPolarity(pChip, 1, 0);
+
+    //#FIXME YOUNES BLOCK PLEASE DON'T MODIFY
     // Clocks
     std::vector<uint8_t> cClocks         = {1, 6, 11, 26};
-    uint8_t              cFreq = 4, cDriveStr = 7, cInvert = 0;
-    uint8_t              cPreEmphWidth = 0, cPreEmphMode = 1, cPreEmphStr = 3;
-    this->ConfigureClocks(pChip, cClocks, cFreq, cDriveStr, cInvert, cPreEmphWidth, cPreEmphMode, cPreEmphStr);
+    uint8_t              cClkFreq = 4, cClkDriveStr = 7, cClkInvert = 0;
+    uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 1, cClkPreEmphStr = 3;
+    this->ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     //Tx Groups and Channels
-    std::vector<uint8_t> cGroups = {0, 1, 2, 3}, cChannels = {0};
-    uint8_t              cDataRate = 3;
-    cDriveStr = 7, cPreEmphMode = 1, cPreEmphStr = 4;
-    cPreEmphWidth = 0, cInvert = 1;
-    this->ConfigureTxSource(pChip, cGroups, 0); // 0 --> link data, 3 --> constant pattern
-    this->ConfigureTxGroups(pChip, cGroups, cChannels, cDataRate);
-    for(const auto& cGroup: cGroups)
+    std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
+    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 1;
+    this->ConfigureTxSource(pChip, cTxGroups, 0); // 0 --> link data, 3 --> constant pattern
+    this->ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
+    for(const auto& cGroup: cTxGroups)
     {
-      cInvert = (cGroup % 2 == 0) ? 1 : 0;
-      for(const auto& cChannel: cChannels)
-       this->ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cDriveStr, cPreEmphMode, cPreEmphStr, cPreEmphWidth, cInvert);
+      cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
+      for(const auto& cChannel: cTxChannels)
+        this->ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
     }
     // Rx configuration and Phase Align 
-    this->PhaseAlignRx(pChip, {0, 1, 2, 3, 4, 5, 6}, {0, 2});
-    this->ConfigureRxPRBS(pChip, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
+    // Configure Rx Groups
+    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
+    uint8_t cRxDataRate = 2, cRxTrackMode = 0;
+    this->ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
+    // Configure Rx Channels
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 12;
+    for(const auto& cGroup: cRxGroups)
+    {
+        for(const auto cChannel: cRxChannels)
+        {
+            if(cGroup == 0 && cChannel == 0)
+                cRxInvert = 1;
+            else if(cGroup == 1 && cChannel == 0)
+                cRxInvert = 1;
+            else if(cGroup == 3 && cChannel == 2)
+                cRxInvert = 1;
+            else if(cGroup == 2)
+                cRxInvert = 0;
+            this->ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+        }
+    }
+    this->ConfigureRxPRBS(pChip, cRxGroups, cRxChannels, true);
+    this->PhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    this->ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, 0);
     // Reset I2C Masters
     this->ResetI2C(pChip, {0, 1, 2});
-    // setting GPIO levels 
-/*
-    this->WriteChipReg(pChip, "PIODirH", 0x12);
-    this->WriteChipReg(pChip, "PIODirL", 0x4B);
-    this->WriteChipReg(pChip, "PIOOutH", 0xFF);
-    this->WriteChipReg(pChip, "PIOOutL", 0xFF);
-*/
+    // setting GPIO levels Uncomment this for Skeleton test
+    //this->WriteChipReg(pChip, "PIODirH", 0x12);
+    //this->WriteChipReg(pChip, "PIODirL", 0x4B);
+    //this->WriteChipReg(pChip, "PIOOutH", 0xFF);
+    //this->WriteChipReg(pChip, "PIOOutL", 0xFF);
+    
     this->WriteChipReg(pChip, "POWERUP2", 0x06);
-    this->WriteChipReg(pChip, "ULDataSource0", 6);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+/*
+    // LET'S  USE BERT 
+    this->WriteChipReg(pChip, "BERTSource", ( 1 << 4 ) | 5); //channel 2, data rate == 2 [640] 
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    uint8_t cDuration = 3; // 2**(5+2*cDuration) clock cycles
+    uint8_t cSkipDisable = 1; 
+    this->WriteChipReg(pChip,"BERTConfig", ( cDuration << 4) | (cSkipDisable << 1) | (1 << 0) ); 
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    uint8_t cBERTStatus = this->ReadChipReg( pChip, "BERTStatus"); 
+    uint8_t cAllZeros  = (cBERTStatus & (0x1 << 2)) >> 2;
+    if ( cAllZeros ) 
+    {
+	LOG (INFO) << BOLDBLUE << "All zeros at input..." <<RESET;
+	exit(0);
+    }
+    else
+    {
+	while( (cBERTStatus & 0x1) != 0x1)  
+    	{
+	   LOG (INFO) << BOLDBLUE << "BERT not done ... status is :  " << std::bitset<3>(cBERTStatus) << RESET;
+	   std::this_thread::sleep_for(std::chrono::milliseconds(100));
+           cBERTStatus = this->ReadChipReg( pChip, "BERTStatus"); 
+    	}  
+    }
+    LOG (INFO) << BOLDBLUE << "Reading BERT counters ...." << RESET;
+    uint64_t cReg0 = this->ReadChipReg( pChip, "BERTResult0");
+    uint64_t cReg1 = this->ReadChipReg( pChip, "BERTResult1");
+    uint64_t cReg2 = this->ReadChipReg( pChip, "BERTResult2");
+    uint64_t cReg3 = this->ReadChipReg( pChip, "BERTResult3");
+    uint64_t cReg4 = this->ReadChipReg( pChip, "BERTResult4");
+    uint64_t cErrors = (cReg4 << 32) | (cReg3 << 24) | (cReg2 << 16) | (cReg1 << 8) | cReg0; 
+    uint32_t cBitsRxd = std::pow(2,5 + cDuration*2)*16; //640 Mbps is 16 bits per 40 MHz clock cycle 
+    LOG (INFO) << BOLDBLUE << "BERT counter0: " << +cReg0 << RESET;
+    LOG (INFO) << BOLDBLUE << "BERT counter1: " << +cReg1 << RESET;
+    LOG (INFO) << BOLDBLUE << "BERT counter2: " << +cReg2 << RESET;
+    LOG (INFO) << BOLDBLUE << "BERT counter3: " << +cReg3 << RESET;
+    LOG (INFO) << BOLDBLUE << "BERT counter4: " << +cReg4 << RESET;
+    LOG (INFO) << BOLDBLUE << "Test received : " << +cBitsRxd << " bits." << RESET;
+    LOG (INFO) << BOLDBLUE << "Of which : " << +cErrors << " bits were in error." << RESET;
+    // stop BERT
+    this->WriteChipReg( pChip,"BERTConfig",( cDuration << 4) | (cSkipDisable << 1) | (0 << 0) ); 
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    if( cErrors != 0 ) exit(0);
 
-    return true;
+    //LET'S USE BERT WITH CONSTANT PATTERN
+    this->ConfigureRxSource(pChip, cRxGroups, 4);
+    this->WriteChipReg(pChip, "DPDataPattern0" , 0xCC);
+    this->WriteChipReg(pChip, "DPDataPattern1" , 0xCC);
+    this->WriteChipReg(pChip, "DPDataPattern2" , 0xCC);
+    this->WriteChipReg(pChip, "DPDataPattern3" , 0xCC);
+
+    this->WriteChipReg(pChip, "BERTDataPattern0" , 0xCC);
+    this->WriteChipReg(pChip, "BERTDataPattern1" , 0xCC);
+    this->WriteChipReg(pChip, "BERTDataPattern2" , 0xCC);
+    this->WriteChipReg(pChip, "BERTDataPattern3" , 0xCC);
+    uint8_t cFineSource = 4; 
+    //pattern checker 
+    //hard coded for now 
+    for( auto cTestGroup : cRxGroups) 
+    {
+        LOG (INFO) << BOLDBLUE << "Rx Group " << +cTestGroup << RESET;
+        uint8_t cCoarseSource = cTestGroup+1; 
+        this->WriteChipReg( pChip,"BERTSource",( cCoarseSource << 4 ) |  cFineSource ); //data against constant pattern 
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        this->WriteChipReg( pChip,"BERTConfig",( cDuration << 4) | (cSkipDisable << 1) | (1 << 0) ); 
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        uint8_t cBERTStatus = this->ReadChipReg( pChip, "BERTStatus"); 
+        uint8_t cAllZeros  = (cBERTStatus & (0x1 << 2)) >> 2;
+        if ( cAllZeros ) 
+        {
+        	LOG (INFO) << BOLDBLUE << "All zeros at input..." <<RESET;
+        	continue;
+        }
+        else
+        {
+    	   while( (cBERTStatus & 0x1) != 0x1)  
+           {
+        	   LOG (INFO) << BOLDBLUE << "BERT not done ... status is :  " << std::bitset<3>(cBERTStatus) << RESET;
+        	   std::this_thread::sleep_for(std::chrono::milliseconds(100));
+               cBERTStatus = this->ReadChipReg( pChip, "BERTStatus"); 
+           }  
+        }
+        LOG (INFO) << BOLDBLUE << "Reading BERT counters ...." << RESET;
+        uint64_t cReg0 = this->ReadChipReg( pChip, "BERTResult0");
+        uint64_t cReg1 = this->ReadChipReg( pChip, "BERTResult1");
+        uint64_t cReg2 = this->ReadChipReg( pChip, "BERTResult2");
+        uint64_t cReg3 = this->ReadChipReg( pChip, "BERTResult3");
+        uint64_t cReg4 = this->ReadChipReg( pChip, "BERTResult4");
+        uint64_t cErrors = (cReg4 << 32) | (cReg3 << 24) | (cReg2 << 16) | (cReg1 << 8) | cReg0; 
+        uint32_t cBitsRxd = std::pow(2,5 + cDuration*2)*16; //640 Mbps is 16 bits per 40 MHz clock cycle 
+        LOG (INFO) << BOLDBLUE << "BERT counter0: " << +cReg0 << RESET;
+        LOG (INFO) << BOLDBLUE << "BERT counter1: " << +cReg1 << RESET;
+        LOG (INFO) << BOLDBLUE << "BERT counter2: " << +cReg2 << RESET;
+        LOG (INFO) << BOLDBLUE << "BERT counter3: " << +cReg3 << RESET;
+        LOG (INFO) << BOLDBLUE << "BERT counter4: " << +cReg4 << RESET;
+        LOG (INFO) << BOLDBLUE << "Test received : " << +cBitsRxd << " bits." << RESET;
+        LOG (INFO) << BOLDBLUE << "Of which : " << +cErrors << " bits were in error." << RESET;
+        // stop BERT
+        this->WriteChipReg( pChip,"BERTConfig",( cDuration << 4) | (cSkipDisable << 1) | (0 << 0) ); 
+    }
+
+    //this->ConfigureRxPRBS(pChip, cRxGroups, cRxChannels, false);
+    //this->WriteChipReg(pChip, "DataPath", 0x0);//0x7
+    //this->WriteChipReg(pChip, "ULDataSource0", 12);
+    //this->ConfigureRxSource(pChip, cRxGroups, 4);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    //this->ConfigureDPPattern(pChip, 0xAAAAAAAA);
+*/
+    //#FIXME END OF YOUNES BLOCK PLEASE DON'T MODIFY
+    
+
+
+    //#FIXME SARAH BLOCK PLEASE DON'T MODIFY
+/*
+    // PLL config 
+    this->WriteReg( pChip,0x020, 0xc8);// CLKGConfig0
+    this->WriteReg( pChip,0x025, 0x55);// CLKGCDRPropCur
+    this->WriteReg( pChip,0x026, 0x55);// CLKGCDRIntCur
+    
+    this->WriteReg( pChip,0x021, 0x38); // CLKGConfig1
+    this->WriteReg( pChip,0x027, 0x55); // CLKGCDRFFPropCur
+    this->WriteReg( pChip,0x028, 0x0f); // CLKGFLLIntCur
+    this->WriteReg( pChip,0x02f, 0xA); // FAMaxHeaderFoundCount
+    this->WriteReg( pChip,0x030, 0xA); // FAMaxHeaderFoundCountAfterNF
+    this->WriteReg( pChip,0x031, 0xA); // FAMaxHeaderNotFoundCount
+    this->WriteReg( pChip,0x032, 0xA); // FAFAMaxSkipCycleCountAfterNF
+
+    // check PUSM 
+    this->WriteReg( pChip, 0x0ef, 1 << 1 );
+    uint8_t cPUSMStatus = this->ReadChipReg(pChip, "PUSMStatus");
+    uint16_t cIter = 0, cMaxIter = 2000;
+    while(cPUSMStatus < 13 && cIter < cMaxIter)
+    {
+        LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +cPUSMStatus << RESET;
+        cPUSMStatus = this->ReadChipReg(pChip, "PUSMStatus");
+        cIter++;
+    }
+    if( cIter >= cMaxIter ) 
+    {
+       LOG (INFO) << BOLDRED << "PUSM : " << +cPUSMStatus << RESET;
+       exit(0);
+    }
+
+    // Set high-speed Uplink Driver current:
+    this->WriteReg( pChip,0x039, 1 << 5);// # bit 7: enable pre-emphasis, bits 0:6: high-speed line driver modulation current -> 32*137uA
+    //
+    this->WriteReg( pChip,0x01f,0x55);// # from quickstart
+    this->WriteReg( pChip,0x034, 1 << 6 | 1 << 4 | 1 << 2); // EPRXDllConfig
+    this->WriteReg( pChip,0x033, 5 << 4 | 1 << 2 | 1); //PSDllConfig
+
+    // check PUSM 
+    this->WriteReg( pChip, 0x0ef, 6);
+    cPUSMStatus = this->ReadChipReg(pChip, "PUSMStatus");
+    cIter = 0;
+    while(cPUSMStatus != 18 && cIter < cMaxIter)
+    {
+	   LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +cPUSMStatus << RESET;
+       cPUSMStatus = this->ReadChipReg(pChip, "PUSMStatus");
+	   cIter++;
+    }
+    if( cIter >= cMaxIter ) 
+    {
+       LOG (INFO) << BOLDRED << "PUSM : " << +cPUSMStatus << RESET;
+       exit(0);
+    }
+    LOG (INFO) << BOLDGREEN << "PUSM : " << +cPUSMStatus << RESET;
+    // Configure Rx Groups
+    uint8_t cDataRate = 2, cTrackMode = 0;
+    std::vector<uint8_t> cRxGroups = {0}, cRxChannels = {0,2}; 
+    this->ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cDataRate, cTrackMode);
+    uint8_t cLocation = 1; // 300, 125, 70 
+    this->WriteChipReg( pChip, "EPRXEq10Control", (cLocation << 4) | (cLocation << 0) );
+    this->WriteChipReg( pChip, "EPRXEq32Control", (cLocation << 4) | (cLocation << 0) );
+    this->WriteChipReg( pChip, "EPRXEq54Control", (cLocation << 4) | (cLocation << 0) );
+    this->WriteChipReg( pChip, "EPRXEq6Control",  (cLocation << 4) | (cLocation << 0) );
+    // generate PRBS7 at input of receiver 
+    this->ConfigureRxPRBS(pChip, cRxGroups, cRxChannels, false);
+    // set data source back to constant pattern 
+    uint8_t cSource = 1; // 4 - constant pattern, 5 - constant pattern inverted 
+    this->WriteChipReg(pChip, "ULDataSource0" , 12); // serializer input 
+    this->WriteChipReg(pChip, "ULDataSource1" , ( 0 << 6 ) | ( cSource << 3 ) | ( cSource << 0) ); //1,0
+    this->WriteChipReg(pChip, "ULDataSource2" , ( cSource << 3 ) | ( cSource << 0) );//3,2
+    this->WriteChipReg(pChip, "ULDataSource3" , ( cSource << 3 ) | ( cSource << 0) );//5,4
+    this->WriteChipReg(pChip, "ULDataSource4" , ( cSource << 0) );//6 
+    
+    //this->ConfigureRxSource(pChip, cRxGroups, 5);
+    this->WriteChipReg(pChip, "DPDataPattern0" , 0xCC);
+    this->WriteChipReg(pChip, "DPDataPattern1" , 0xCC);
+    this->WriteChipReg(pChip, "DPDataPattern2" , 0xCC);
+    this->WriteChipReg(pChip, "DPDataPattern3" , 0xCC);
+    //this->ConfigureDPPattern(pChip, 0xAAAAAAAA );
+    
+    //BERT
+    this->WriteChipReg(pChip, "BERTDataPattern0" , 0xCC);
+    this->WriteChipReg(pChip, "BERTDataPattern1" , 0xCC);
+    this->WriteChipReg(pChip, "BERTDataPattern2" , 0xCC);
+    this->WriteChipReg(pChip, "BERTDataPattern3" , 0xCC);
+    // set data source back to PRBS
+    //this->ConfigureRxSource(pChip, cRxGroups, 1);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    //LOG (INFO) << BOLDBLUE << "Checking with internal lpGBT pattern checker..." << RESET;
+    
+    uint8_t cFineSource = 4; 
+    uint8_t cDuration = 3; // 2**(5+2*cDuration) clock cycles
+    uint8_t cSkipDisable=1; 
+    // Configure Rx Channels
+    uint8_t cEqual = 1, cTerm = 1, cAcBias = 1, cInvert = 0 , cPhase = 12;
+    this->ConfigureRxChannels(pChip, cRxGroups, cRxChannels, cEqual, cTerm, cAcBias, cInvert, cPhase);
+    //pattern checker 
+    //hard coded for now 
+    for( auto cTestGroup : cRxGroups) 
+    {
+        LOG (INFO) << BOLDBLUE << "Rx Group " << +cTestGroup << RESET;
+        uint8_t cCoarseSource = cTestGroup+1; 
+        this->WriteChipReg( pChip,"BERTSource",( cCoarseSource << 4 ) |  cFineSource ); //data against constant pattern 
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        this->WriteChipReg( pChip,"BERTConfig",( cDuration << 4) | (cSkipDisable << 1) | (1 << 0) ); 
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        uint8_t cBERTStatus = this->ReadChipReg( pChip, "BERTStatus"); 
+        uint8_t cAllZeros  = (cBERTStatus & (0x1 << 2)) >> 2;
+        if ( cAllZeros ) 
+        {
+        	LOG (INFO) << BOLDBLUE << "All zeros at input..." <<RESET;
+        	continue;
+        }
+        else
+        {
+    	   while( (cBERTStatus & 0x1) != 0x1)  
+           {
+        	   LOG (INFO) << BOLDBLUE << "BERT not done ... status is :  " << std::bitset<3>(cBERTStatus) << RESET;
+        	   std::this_thread::sleep_for(std::chrono::milliseconds(100));
+               cBERTStatus = this->ReadChipReg( pChip, "BERTStatus"); 
+           }  
+        }
+        LOG (INFO) << BOLDBLUE << "Reading BERT counters ...." << RESET;
+        uint64_t cReg0 = this->ReadChipReg( pChip, "BERTResult0");
+        uint64_t cReg1 = this->ReadChipReg( pChip, "BERTResult1");
+        uint64_t cReg2 = this->ReadChipReg( pChip, "BERTResult2");
+        uint64_t cReg3 = this->ReadChipReg( pChip, "BERTResult3");
+        uint64_t cReg4 = this->ReadChipReg( pChip, "BERTResult4");
+        uint64_t cErrors = (cReg4 << 32) | (cReg3 << 24) | (cReg2 << 16) | (cReg1 << 8) | cReg0; 
+        uint32_t cBitsRxd = std::pow(2,5 + cDuration*2)*16; //640 Mbps is 16 bits per 40 MHz clock cycle 
+        LOG (INFO) << BOLDBLUE << "BERT counter0: " << +cReg0 << RESET;
+        LOG (INFO) << BOLDBLUE << "BERT counter1: " << +cReg1 << RESET;
+        LOG (INFO) << BOLDBLUE << "BERT counter2: " << +cReg2 << RESET;
+        LOG (INFO) << BOLDBLUE << "BERT counter3: " << +cReg3 << RESET;
+        LOG (INFO) << BOLDBLUE << "BERT counter4: " << +cReg4 << RESET;
+        LOG (INFO) << BOLDBLUE << "Test received : " << +cBitsRxd << " bits." << RESET;
+        LOG (INFO) << BOLDBLUE << "Of which : " << +cErrors << " bits were in error." << RESET;
+        // stop BERT
+        this->WriteChipReg( pChip,"BERTConfig",( cDuration << 4) | (cSkipDisable << 1) | (0 << 0) ); 
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        cReg0 = this->ReadChipReg( pChip, "BERTResult0");
+        cReg1 = this->ReadChipReg( pChip, "BERTResult1");
+        cReg2 = this->ReadChipReg( pChip, "BERTResult2");
+        cReg3 = this->ReadChipReg( pChip, "BERTResult3");
+        cReg4 = this->ReadChipReg( pChip, "BERTResult4");
+        LOG (DEBUG) << BOLDBLUE << "After stopping test...BERT counter0: " << +cReg0 << RESET;
+        LOG (DEBUG) << BOLDBLUE << "After stopping test...BERT counter1: " << +cReg1 << RESET;
+        LOG (DEBUG) << BOLDBLUE << "After stopping test...BERT counter2: " << +cReg2 << RESET;
+        LOG (DEBUG) << BOLDBLUE << "After stopping test...BERT counter3: " << +cReg3 << RESET;
+        LOG (DEBUG) << BOLDBLUE << "After stopping test...BERT counter4: " << +cReg4 << RESET;
+    }
+*/
+    //#FIXME END OF SARAH BLOCK PLEASE DON'T MODIFY
+   return true;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -397,39 +678,13 @@ void D19clpGBTInterface::PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std:
 void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
     // Phase Align Rx Channels
-    // Configure Rx Groups
-    uint8_t cDataRate = 2, cTrackMode = 1;
-    this->ConfigureRxGroups(pChip, pGroups, pChannels, cDataRate, cTrackMode);
-
-    // Configure Rx Channels
-    uint8_t cEqual = 0, cTerm = 1, cAcBias = 0, cInvert = 0, cPhase = 12;
-    for(const auto& cGroup: pGroups)
-    {
-        for(const auto cChannel: pChannels)
-        {
-            if(cGroup == 0 && cChannel == 0)
-                cInvert = 1;
-            else if(cGroup == 1 && cChannel == 0)
-                cInvert = 1;
-            else if(cGroup == 3 && cChannel == 2)
-                cInvert = 1;
-            else if(cGroup == 2)
-                cInvert = 1;
-            else
-                cInvert = 0;
-            this->ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cEqual, cTerm, cAcBias, cInvert, cPhase);
-        }
-    }
-
+    // Turn ON PRBS for channels 0,2
+    this->ConfigureRxPRBS(pChip, pGroups, pChannels, true);
+    // Find Phase
     // Configure Rx Phase Shifter
     uint16_t cDelay = 0x00;
-    uint8_t  cFreq = 4, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
+    uint8_t  cFreq = 5, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
     this->ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
-
-    // Find Phase
-    // Turn ON PRBS for channels 0,2
-    this->ConfigureRxSource(pChip, pGroups, 1);
-    this->ConfigureRxPRBS(pChip, pGroups, pChannels, true);
     // Phase Train channels 0,2
     this->PhaseTrainRx(pChip, pGroups);
     for(const auto& cGroup: pGroups)
@@ -449,9 +704,7 @@ void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std:
             this->ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
         }
     }
-    // Set back track mode to fixed phase (TrackMode = 0)
-    //this->ConfigureRxSource(pChip, pGroups, 0);
-    this->ConfigureRxGroups(pChip, pGroups, pChannels, cDataRate, 0);
+    this->ConfigureRxGroups(pChip, pGroups, pChannels, 2, 0);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -462,22 +715,22 @@ void D19clpGBTInterface::PrintChipMode(Ph2_HwDescription::Chip* pChip)
 {
     switch((this->ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4)
     {
-    case 0: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Off" << RESET; break;
-    case 1: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex TX" << RESET; break;
-    case 2: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex RX" << RESET; break;
-    case 3: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Transceiver" << RESET; break;
-    case 4: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Off" << RESET; break;
-    case 5: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex TX" << RESET; break;
-    case 6: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex RX" << RESET; break;
-    case 7: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Transceiver" << RESET; break;
-    case 8: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Off" << RESET; break;
-    case 9: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex TX" << RESET; break;
-    case 10: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex RX" << RESET; break;
-    case 11: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Transceiver" << RESET; break;
-    case 12: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Off" << RESET; break;
-    case 13: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex TX" << RESET; break;
-    case 14: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex RX" << RESET; break;
-    case 15: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Transceiver" << RESET; break;
+      case 0: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Off" << RESET; break;
+      case 1: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex TX" << RESET; break;
+      case 2: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex RX" << RESET; break;
+      case 3: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Transceiver" << RESET; break;
+      case 4: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Off" << RESET; break;
+      case 5: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex TX" << RESET; break;
+      case 6: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex RX" << RESET; break;
+      case 7: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Transceiver" << RESET; break;
+      case 8: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Off" << RESET; break;
+      case 9: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex TX" << RESET; break;
+      case 10: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex RX" << RESET; break;
+      case 11: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Transceiver" << RESET; break;
+      case 12: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Off" << RESET; break;
+      case 13: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex TX" << RESET; break;
+      case 14: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex RX" << RESET; break;
+      case 15: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Transceiver" << RESET; break;
     }
 }
 
@@ -768,7 +1021,7 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, const std
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack)
 {
-    bool cWriteStatus = this->WriteI2C(pChip, (pFeId == 1) ? 2 : 0, 0x60, (pRegisterValue << 8) | pRegisterAddress, 2);
+    bool cWriteStatus = this->WriteI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x60, (pRegisterValue << 8) | pRegisterAddress, 2);
     if(pReadBack && cWriteStatus)
     {
         bool cWriteSuccess = ( this->cicRead(pChip, pFeId, pRegisterAddress) == pRegisterValue );
@@ -785,18 +1038,18 @@ bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
 
 uint32_t D19clpGBTInterface::cicRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pRegisterAddress)
 {
-    this->WriteI2C(pChip, ( pFeId == 1) ? 2 : 0, 0x60, pRegisterAddress << 8, 2);
-    uint32_t cReadBack  = this->ReadI2C(pChip, (pFeId == 1) ? 2 : 0, 0x60, 1);
+    this->WriteI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x60, pRegisterAddress << 8, 2);
+    uint32_t cReadBack  = this->ReadI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x60, 1);
     LOG(INFO) << BOLDBLUE << "Readback 0x" << std::hex << +cReadBack << std::dec << " from register 0x" << std::hex << +pRegisterAddress << RESET;
     return cReadBack;
 }
 
 bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack)
 {
-    bool cWriteStatus = this->WriteI2C(pChip, (pFeId == 1) ? 2 : 0, 0x20 | (1 + pChipId), pRegisterAddress << 8 | pRegisterValue, 2);
+    bool cWriteStatus = this->WriteI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x20 | (1 + pChipId), pRegisterAddress << 8 | pRegisterValue, 2);
     if(pReadBack && cWriteStatus)
     { 
-        bool cWriteSuccess = ( this->ssaRead(pChip, (pFeId == 1) ? 2 : 0, 0x20 | (1 + pChipId), pRegisterAddress) == pRegisterValue );
+        bool cWriteSuccess = ( this->ssaRead(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x20 | (1 + pChipId), pRegisterAddress) == pRegisterValue );
         if(!cWriteSuccess)
         {
             LOG(INFO) << BOLDRED << "SSA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
@@ -809,18 +1062,18 @@ bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
 
 uint32_t D19clpGBTInterface::ssaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pRegisterAddress)
 {
-    this->WriteI2C(pChip, (pFeId == 1) ? 2 : 0, 0x20 | (1 + pChipId), pRegisterAddress << 8, 2);
-    uint32_t cReadBack = this->ReadI2C(pChip, (pFeId == 1) ? 2 : 0, 0x20 | (1 + pChipId), 1);
+    this->WriteI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x20 | (1 + pChipId), pRegisterAddress << 8, 2);
+    uint32_t cReadBack = this->ReadI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x20 | (1 + pChipId), 1);
     LOG(INFO) << BOLDBLUE << "Readback 0x" << std::hex << +cReadBack << std::dec << " from register 0x" << std::hex << +pRegisterAddress << RESET;
     return cReadBack;
 }
 
 bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack)
 {
-    bool cWriteStatus = this->WriteI2C(pChip, (pFeId == 1) ? 2 : 0, 0x00 | (1 + pChipId), pRegisterAddress << 8 | pRegisterValue, 2);
+    bool cWriteStatus = this->WriteI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x00 | (1 + pChipId), pRegisterAddress << 8 | pRegisterValue, 2);
     if(pReadBack && cWriteStatus)
     { 
-        bool cWriteSuccess = ( this->ssaRead(pChip, (pFeId == 1) ? 2 : 0, 0x00 | (1 + pChipId), pRegisterAddress) == pRegisterValue );
+        bool cWriteSuccess = ( this->ssaRead(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x00 | (1 + pChipId), pRegisterAddress) == pRegisterValue );
         if(!cWriteSuccess)
         {
             LOG(INFO) << BOLDRED << "SSA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
@@ -833,28 +1086,9 @@ bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
 
 uint32_t D19clpGBTInterface::mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pRegisterAddress)
 {
-    this->WriteI2C(pChip, (pFeId == 1) ? 2 : 0, 0x00 | (1 + pChipId), pRegisterAddress << 8, 2);
-    uint32_t cReadBack = this->ReadI2C(pChip, (pFeId = 1) ? 2 : 0, 0x00 | (1 + pChipId), 1);
+    this->WriteI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x00 | (1 + pChipId), pRegisterAddress << 8, 2);
+    uint32_t cReadBack = this->ReadI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x00 | (1 + pChipId), 1);
     LOG(INFO) << BOLDBLUE << "Readback 0x" << std::hex << +cReadBack << std::dec << " from register 0x" << std::hex << +pRegisterAddress << RESET;
     return cReadBack;
 }
-
-bool D19clpGBTInterface::i2cWrite(Ph2_HwDescription::Chip* pChip, const std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadBack)
-{
-/*
-  std::map<uint8_t, std::vector<uint32_t>> cI2CWordsVector;
-  cI2CWordsVector.clear();
-  auto cVecSendIter = pVecSend.begin();
-  while(cVecSendIter < pVecSend.end())
-  {
-    uint32_t cWord = *cVecSendIter;
-    uint8_t cFeId = (cWord & (0xF << 23)) >> 23;
-    cI2CWordsVector[(cFeId == 1) ? 2 : 0].push_back(cWord);
-    cVecSendIter++;
-  }
-  auto cI2CWordsVectorIter = cI2CWordsVector.begin();
- */ 
- return true;
-}  
-
 } // namespace Ph2_HwInterface // namespace Ph2_HwInterface
