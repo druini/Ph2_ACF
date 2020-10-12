@@ -339,6 +339,11 @@ bool RD53FWInterface::CheckChipCommunication()
         LOG(ERROR) << BOLDRED << "\t--> Some data lanes are enabled but inactive" << RESET;
         return false;
     }
+    else if(chips_en == 0)
+    {
+        LOG(ERROR) << BOLDRED << "\t--> No data lane is enabled: aborting" << RESET;
+        exit(EXIT_FAILURE);
+    }
 
     LOG(INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
     return true;
