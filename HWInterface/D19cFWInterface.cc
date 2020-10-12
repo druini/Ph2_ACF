@@ -4144,4 +4144,54 @@ void D19cFWInterface::Align_out()
     }
 }
 
+void D19cFWInterface::ResetOptoLink(Ph2_HwDescription::Chip* pChip)  
+{
+    //this->WriteReg("fc7_daq_ctrl.optical_block.ic.reset", 0x1);
+    //this->WriteReg("fc7_daq_ctrl.optical_block.ic.reset", 0x0);
+    std::vector<std::pair<std::string, uint32_t>> cVecReg;
+    cVecReg.push_back({"fc7_daq_ctrl.optical_block.ic", 0x00});
+    cVecReg.push_back({"fc7_daq_cnfg.optical_block.ic", 0x00});
+    cVecReg.push_back({"fc7_daq_cnfg.optical_block.gbtx", 0x00});
+    this->WriteStackReg(cVecReg);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
+bool D19cFWInterface::WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop)  
+{
+    ResetOptoLink(pChip);
+    // Config transaction register
+    this->WriteReg("fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress);
+    this->WriteReg("fc7_daq_cnfg.optical_block.gbtx.data", pData);
+    this->WriteReg("fc7_daq_cnfg.optical_block.ic.register", pAddress);
+    // Perform transaction
+    this->WriteReg("fc7_daq_ctrl.optical_block.ic.write", 0x01);
+    this->WriteReg("fc7_daq_ctrl.optical_block.ic.write", 0x00);
+    //
+    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_write", 0x01);
+    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_write", 0x00);
+    //Reset
+    return true;
+}
+    
+uint32_t D19cFWInterface::ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress)  
+{
+    ResetOptoLink(pChip);
+    // Config transaction register
+    this->WriteReg("fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress);
+    this->WriteReg("fc7_daq_cnfg.optical_block.ic.register", pAddress);
+    this->WriteReg("fc7_daq_cnfg.optical_block.ic.nwords", 0x01);
+    // Perform transaction
+    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_read", 0x01);
+    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_read", 0x00);
+    //
+    this->WriteReg("fc7_daq_ctrl.optical_block.ic.read", 0x01);
+    this->WriteReg("fc7_daq_ctrl.optical_block.ic.read", 0x00);
+    //
+    uint32_t cReadBack = this->ReadReg("fc7_daq_stat.optical_block.ic.data");
+    // reset
+    return cReadBack;
+
+}
+
+
 } // namespace Ph2_HwInterface
