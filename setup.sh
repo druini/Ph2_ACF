@@ -104,7 +104,7 @@ export CompileForShep=false
 export CompileWithEUDAQ=false
 
 # Compile with TC_USB library
-expoer CompileWithTCUSB=false
+export CompileWithTCUSB=false
 
 # Clang-format command
 alias formatAll="find ${BASE_DIR} -iname *.h -o -iname *.cc | xargs /opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format -i"

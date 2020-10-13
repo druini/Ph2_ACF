@@ -778,7 +778,7 @@ bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
         {
             //test cic read
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            LOG(INFO) << BOLDRED << "FEId1 readback from address 0x0005= " << clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x0005) << RESET;
+            LOG(INFO) << BOLDRED << "FEId1 readback from address 0x0005= " << clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x05) << RESET;
             LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1001 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1001) << RESET;
 /*
             for(const auto cMaster: pMasters)
