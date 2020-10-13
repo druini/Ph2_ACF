@@ -151,6 +151,12 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         {
                             LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
                             fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+                            if(cFirstOpticalGroup->flpGBT != nullptr)
+                            {   
+                                auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+                                (static_cast<SSAInterface*>(fReadoutChipInterface))->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT );
+                            }
+
                         }
                         else if(cChipType == FrontEndType::MPA)
                         {
@@ -227,7 +233,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
                     //clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", true);
                 }
-                
             }	       	
 /*
             if(cLPGBT)
@@ -240,6 +245,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             for(auto cOpticalGroup: *cBoard)
             {
                 uint8_t cLinkId = cOpticalGroup->getId();
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
                 LOG(INFO) << BOLDMAGENTA << "CIC start-up seqeunce for hybrids on link " << +cLinkId << RESET;
                 for(auto cHybrid: *cOpticalGroup)
                 {

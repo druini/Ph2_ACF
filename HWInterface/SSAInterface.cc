@@ -24,6 +24,13 @@ SSAInterface::SSAInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface
 SSAInterface::~SSAInterface() {}
 //
 
+//#FIXME temporary fix to use 1/2 PS skeleton
+void SSAInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT *pLpGBT)
+{
+    flpGBTInterface = pLpGBTInterface;
+    flpGBT = pLpGBT;
+}
+
 bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize)
 {
     setBoard(pSSA->getBeBoardId());
