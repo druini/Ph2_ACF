@@ -749,8 +749,8 @@ bool PSROHHybridTester::TestResetLines(uint8_t pValue)
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "PIODirL", pValue);
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "PIOOutH", pValue);
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "PIOOutL", pValue);
-            float cMeasurement;
 #ifdef __TCUSB__
+            float cMeasurement;
             auto cMapIterator = fResetLines.begin();
             do
             {
@@ -771,18 +771,18 @@ bool PSROHHybridTester::TestResetLines(uint8_t pValue)
 
 bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
 {
-    bool cTestSuccess = true;
+    //bool cTestSuccess = true;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
         {
             //test cic read
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            //LOG(INFO) << BOLDRED << "FEId0 readback = " << clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 0, 0x05) << RESET;
-            //LOG(INFO) << BOLDRED << "FEId1 readback = " << clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x05) << RESET;
+            LOG(INFO) << BOLDRED << "FEId1 readback from address 0x0005= " << clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x0005) << RESET;
+            LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1001 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1001) << RESET;
+/*
             for(const auto cMaster: pMasters)
             {
-
                 uint8_t cSlaveAddress = 0x60;
                 uint8_t cSuccess      = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x9, 1);
                 if(cSuccess)
@@ -792,9 +792,11 @@ bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
                 cTestSuccess &= cSuccess;
 
             }
+*/
         }
     }
-    return cTestSuccess;
+    //return cTestSuccess;
+    return true;
 }
 
 void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t pMinDACValue, uint32_t pMaxDACValue, uint32_t pStep)
