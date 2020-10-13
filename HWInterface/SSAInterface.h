@@ -46,6 +46,8 @@ class SSAInterface : public ReadoutChipInterface
     Ph2_HwDescription::lpGBT *flpGBT = nullptr;
     uint8_t                        ReadChipId(Ph2_HwDescription::Chip* pChip);
     bool                           WriteReg(Ph2_HwDescription::Chip* pCbc, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
+    bool                           WriteRegs(Ph2_HwDescription::Chip* pSSA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs , bool pVerifLoop = true);
+    uint16_t                       ReadReg(Ph2_HwDescription::Chip* pCbc, uint16_t pRegisterAddress, bool pVerifLoop = true);
     bool                           WriteChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
     bool                           ConfigureAmux(Ph2_HwDescription::Chip* pChip, const std::string& pRegister);
     std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0},
