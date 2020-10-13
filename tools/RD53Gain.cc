@@ -213,7 +213,7 @@ void Gain::draw(bool saveData)
 
     if(doDisplay == true) myApp->Run(true);
 
-    this->CloseResultFile();
+    if(saveData == true) this->CloseResultFile();
 #endif
 
     // #####################
