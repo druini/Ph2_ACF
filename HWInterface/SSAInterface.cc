@@ -34,6 +34,24 @@ void SSAInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT *pLpGBT)
 bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize)
 {
     setBoard(pSSA->getBeBoardId());
+    std::vector<uint32_t> cVec;
+    ChipRegMap            cSSARegMap = pSSA->getRegMap();
+    // for some reason this makes block write work
+    // otherwise need to configure one by one which
+    // takes forever
+    std::map<uint16_t, ChipRegItem> cMap;
+    cMap.clear(); 
+    for(auto& cRegInMap: cSSARegMap) { cMap[cRegInMap.second.fAddress] = cRegInMap.second; }
+    std::vector<std::pair<uint16_t,uint16_t>> cRegs;
+    for(auto& cRegItem: cMap) {     
+        std::pair<uint16_t,uint16_t> cReg; 
+        cReg.first = cRegItem.second.fAddress; 
+        cReg.second = cRegItem.second.fValue; 
+        cRegs.push_back( cReg );
+    } // loop over map
+    return this->WriteRegs(pSSA, cRegs  , pVerifLoop );
+/*
+    setBoard(pSSA->getBeBoardId());
     // uint8_t cWriteAttempts = 0 ;
     std::vector<uint32_t> cVec;
     ChipRegMap            cSSARegMap = pSSA->getRegMap();
@@ -65,17 +83,17 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
             if(cRegInMap.second.fValue != cRegItem.fValue)
             {
                 throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
-                /*if( this->WriteChipSingleReg ( pSSA, cRegInMap.first, cRegInMap.second.fValue, pVerifLoop) )
-                {
-                    LOG (INFO) << BOLDRED << "Initial write to register failed " << cRegInMap.first
-                        << " should be set to " << +cRegInMap.second.fValue
-                        << " found to be " << +cRegItem.fValue
-                        << BOLDGREEN
-                        << " but single register write afterwards worked "
-                        <<  RESET;
-                }
-                else
-                throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);*/
+                //if( this->WriteChipSingleReg ( pSSA, cRegInMap.first, cRegInMap.second.fValue, pVerifLoop) )
+                //{
+                //    LOG (INFO) << BOLDRED << "Initial write to register failed " << cRegInMap.first
+                //        << " should be set to " << +cRegInMap.second.fValue
+                //        << " found to be " << +cRegItem.fValue
+                //        << BOLDGREEN
+                //        << " but single register write afterwards worked "
+                //        <<  RESET;
+                //}
+                //else
+                //throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
             }
             cIndx++;
         }
@@ -84,6 +102,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
     LOG(INFO) << BOLDGREEN << "Wrote: " << +fRegisterCount << " resgisters in SSA" << +pSSA->getId() << " config." << RESET;
 #endif
     return cSuccess;
+*/
 }
 // bool SSAInterface::ConfigureChip ( Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize )
 // {
@@ -312,7 +331,8 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     }
     else
     {
-        cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getId(), pChip->getId(), pRegisterAddress, pRegisterValue,  pVerifLoop);
+        //FIXME the FeId is hard coded for now, need to get the FeId info here
+        cSuccess = flpGBTInterface->ssaWrite(flpGBT, 1, pChip->getId(), pRegisterAddress, pRegisterValue,  pVerifLoop);
     }
     return cSuccess;
 }
@@ -374,7 +394,8 @@ uint16_t SSAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     }
     else
     {
-        cRegItem.fValue = flpGBTInterface->ssaRead(flpGBT, pChip->getId(), pChip->getId(), pRegisterAddress);
+        //FIXME the FeId is hard coded for now, need to get the FeId info here
+        cRegItem.fValue = flpGBTInterface->ssaRead(flpGBT, 1, pChip->getId(), pRegisterAddress);
     }
     return cRegItem.fValue & 0xFF;
     
