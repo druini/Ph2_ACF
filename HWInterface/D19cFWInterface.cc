@@ -751,8 +751,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     fIsDDR3Readout        = (ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type") == 1);
     if(fIsDDR3Readout == 1) LOG(INFO) << BOLDBLUE << "DD3 Readout .... " << RESET;
     fI2CVersion = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
+    fOptical = pBoard->ifOptical();
 
-    if(fI2CVersion >= 1)
+    if(fI2CVersion >= 1 && fOptical )
     {
         fI2CSlaveMap.clear();
         fSlaveMap.clear();
@@ -841,77 +842,6 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
     }
 
-    // if(fI2CVersion >= 1)
-    // {
-    //   fSlaveMap.clear();
-    //   // assuming only one type of CIC per board ...
-    //   for( auto cHybrid : *pBoard )
-    //   {
-    //       for (auto cFe : *cHybrid )
-    //       {
-    //         auto cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
-    //         auto& cCic = cOuterTrackerHybrid->fCic;
-    //         uint8_t cBaseAddress;
-    //         uint8_t cNBytes;
-    //         if( cCic != NULL )
-    //         {
-    //           for ( auto cChip : *cFe)
-    //           {
-    //             //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
-    //             cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x41;
-    //             cNBytes = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 2 : 1;
-    //             fSlaveMap.push_back({ static_cast<uint8_t>(cBaseAddress + cChip->getId()), cNBytes , 1, 1, 1, 1,
-    //             cChip->getId()});
-    //           }// chips
-    //           cBaseAddress = 0x60;
-    //           cNBytes=2;
-    //           fSlaveMap.push_back({ cBaseAddress, cNBytes , 1, 1, 1, 1, 8});
-    //         }
-    //         else
-    //         {
-    //           for ( auto cChip : *cFe)
-    //           {
-    //             //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
-    //             if( cChip->getFrontEndType() == FrontEndType::CBC3 )
-    //               continue;
-    //             // TO - DO .. check MPA address
-    //             cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x40;
-    //             cBaseAddress += cChip->getId();
-    //             cNBytes = 2;
-    //             LOG (INFO) << BOLDBLUE << "Adding slave with I2C address 0x"
-    //               << std::hex <<  +cBaseAddress << std::dec
-    //               << RESET;
-    //             fSlaveMap.push_back({ cBaseAddress, cNBytes , 1, 1, 1, 1, cChip->getId()});
-    //           }// chips
-    //         }
-    //       }//hybrids
-    //   }//hybrids
-    //   // and then loop over map and write
-    //   for (unsigned int ism = 0; ism < fSlaveMap.size(); ism++)
-    //   {
-    //     // setting the params
-    //     uint32_t shifted_i2c_address =  fSlaveMap[ism][0] << 25;
-    //     uint32_t shifted_register_address_nbytes = fSlaveMap[ism][1]<<10;
-    //     uint32_t shifted_data_wr_nbytes = fSlaveMap[ism][2]<<5;
-    //     uint32_t shifted_data_rd_nbytes = fSlaveMap[ism][3]<<0;
-    //     uint32_t shifted_stop_for_rd_en = fSlaveMap[ism][4]<<24;
-    //     uint32_t shifted_nack_en = fSlaveMap[ism][5]<<23;
-
-    //     // writing the item to the firmware
-    //     uint32_t final_item = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes +
-    //     shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en; std::string curreg =
-    //     "fc7_daq_cnfg.command_processor_block.i2c_address_table.slave_" + std::to_string(ism) + "_config"; LOG (INFO)
-    //     << BOLDBLUE << "Writing "
-    //       << std::bitset<32>(final_item)
-    //       << " to register "
-    //       << curreg
-    //       << RESET;
-    //     this->WriteReg(curreg, final_item);
-    //   }
-    //   //this->SetI2CAddressTable();
-    // }
-
-    fOptical = pBoard->ifOptical();
     // if optical readout .. then configure links
     if(fOptical)
     {
@@ -951,7 +881,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             {
                 auto                                          cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
                 auto&                                         cCic                = cOuterTrackerHybrid->fCic;
-                std::vector<std::pair<std::string, uint32_t>> cVecReg;
+                if( cCic == nullptr ) continue; 
+		std::vector<std::pair<std::string, uint32_t>> cVecReg;
                 // make sure CIC is receiving clock
                 // cVecReg.push_back( {"fc7_daq_cnfg.physical_interface_block.cic.clock_enable" , 1 } ) ;
                 // disable stub debug
@@ -995,9 +926,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     LOG(INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
     fNReadoutChip          = 0;
     fNHybrids              = 0;
-    uint16_t hybrid_enable = 0;
+    uint16_t hybrid_enable = 1;
     cVecReg.clear();
-    for(auto cHybrid: *pBoard)
+    /*for(auto cHybrid: *pBoard)
     {
         for(auto cFe: *cHybrid)
         {
@@ -1072,7 +1003,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                 fNHybrids += 1;
             }
         }
-    }
+    }*/
     LOG(INFO) << BOLDBLUE << +fNCic << " CICs enabled." << RESET;
     cVecReg.push_back({"fc7_daq_cnfg.global.hybrid_enable", hybrid_enable});
     LOG(INFO) << BOLDBLUE << "Setting hybrid enable register to " << std::bitset<32>(hybrid_enable) << RESET;

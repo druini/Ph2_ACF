@@ -34,9 +34,9 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
              this->WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
          }
      }
-    // Configure High Speed Link Tx Rx Polarity
-    this->ConfigureHighSpeedPolarity(pChip, 1, 0);
 */
+    // Configure High Speed Link Tx Rx Polarity
+    //this->ConfigureHighSpeedPolarity(pChip, 1, 0);
     //#FIXME YOUNES BLOCK PLEASE DON'T MODIFY
     // Clocks
     std::vector<uint8_t> cClocks         = {1, 6, 11, 26};
@@ -73,6 +73,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
                 cRxInvert = 1;
             else if(cGroup == 2)
                 cRxInvert = 0;
+
             this->ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
@@ -867,6 +868,7 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, const std
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack)
 {
+    LOG(INFO) << BOLDBLUE << "CIC Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     bool cWriteStatus = this->WriteI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x60, (pRegisterValue << 16) | (pRegisterAddress << 8), 3);
     if(pReadBack && cWriteStatus)
     {
@@ -892,6 +894,7 @@ uint32_t D19clpGBTInterface::cicRead(Ph2_HwDescription::Chip* pChip, uint8_t pFe
 
 bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack)
 {
+    LOG(INFO) << BOLDBLUE << "SSA Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     bool cWriteStatus = this->WriteI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x20 | (1 + pChipId), pRegisterValue << 16 | pRegisterAddress, 3);
     if(pReadBack && cWriteStatus)
     { 
@@ -899,7 +902,7 @@ bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
         if(!cWriteSuccess)
         {
             LOG(INFO) << BOLDRED << "SSA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
-            throw std::runtime_error(std::string("I2C readback mismatch"));
+            //throw std::runtime_error(std::string("I2C readback mismatch"));
         }
         return cWriteSuccess;
     }
@@ -910,12 +913,13 @@ uint32_t D19clpGBTInterface::ssaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFe
 {
     this->WriteI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x20 | (1 + pChipId), pRegisterAddress, 2);
     uint32_t cReadBack = this->ReadI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x20 | (1 + pChipId), 1);
-    LOG(INFO) << BOLDBLUE << "Readback 0x" << std::hex << +cReadBack << std::dec << " from register 0x" << std::hex << +pRegisterAddress << RESET;
+    LOG(INFO) << BOLDBLUE << "SSA Reading  0x" << std::hex << +cReadBack<< std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     return cReadBack;
 }
 
 bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack)
 {
+    LOG(INFO) << BOLDBLUE << "MPA Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     bool cWriteStatus = this->WriteI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x00 | (1 + pChipId), pRegisterValue << 16 | pRegisterAddress, 3);
     if(pReadBack && cWriteStatus)
     { 
