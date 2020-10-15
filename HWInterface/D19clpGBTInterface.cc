@@ -88,7 +88,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     this->WriteChipReg(pChip, "PIODirL", 0x4B);
     this->WriteChipReg(pChip, "PIOOutH", 0x12);
     this->WriteChipReg(pChip, "PIOOutL", 0x4B);
-    
+
 //    this->WriteChipReg(pChip, "POWERUP2", 0x06);
 /*
     // LET'S  USE BERT 
@@ -209,7 +209,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 
 bool D19clpGBTInterface::WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
-    LOG(INFO) << BOLDBLUE << "Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
     return this->WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
 }
 
@@ -895,7 +895,7 @@ bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
     bool cWriteStatus = this->WriteI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x20 | (1 + pChipId), pRegisterValue << 16 | pRegisterAddress, 3);
     if(pReadBack && cWriteStatus)
     { 
-        bool cWriteSuccess = ( this->ssaRead(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x20 | (1 + pChipId), pRegisterAddress) == pRegisterValue );
+        bool cWriteSuccess = ( this->ssaRead(pChip, pFeId, pChipId, pRegisterAddress) == pRegisterValue );
         if(!cWriteSuccess)
         {
             LOG(INFO) << BOLDRED << "SSA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
@@ -919,7 +919,7 @@ bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
     bool cWriteStatus = this->WriteI2C(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x00 | (1 + pChipId), pRegisterValue << 16 | pRegisterAddress, 3);
     if(pReadBack && cWriteStatus)
     { 
-        bool cWriteSuccess = ( this->ssaRead(pChip, ((pFeId%2) == 1) ? 2 : 0, 0x00 | (1 + pChipId), pRegisterAddress) == pRegisterValue );
+        bool cWriteSuccess = ( this->mpaRead(pChip, pFeId, pChipId, pRegisterAddress) == pRegisterValue );
         if(!cWriteSuccess)
         {
             LOG(INFO) << BOLDRED << "SSA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
