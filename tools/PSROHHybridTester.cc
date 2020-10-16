@@ -779,11 +779,23 @@ bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
             //test cic read
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             LOG(INFO) << BOLDRED << "CIC0 readback from address 0x0005 = " << clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x05) << RESET;
-            LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1001 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1001) << RESET;
+            LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1003 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1003) << RESET;
 
-            LOG(INFO) << BOLDRED << "SSA0 writing 0x4 to address 0x1001" << RESET;
-            clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 0, 0x1001, 0x4);
-            LOG(INFO) << BOLDRED << "SSA0 after writing 0x4 readback from address 0x1001 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1001) << RESET; 
+            for(uint8_t cValue = 0; cValue < 255; cValue++)
+            {
+              std::cout << "\n" << std::endl;
+               
+              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 0, 0x1003, cValue, false);
+              std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1003);
+              
+              /* 
+              clpGBTInterface->cicWrite(cOpticalGroup->flpGBT, 1, 0x80, cValue, true);
+              std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+              clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x80);
+              */
+             
+            }
 /*
             for(const auto cMaster: pMasters)
             {
