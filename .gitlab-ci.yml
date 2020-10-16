@@ -95,7 +95,7 @@ check_run_on_IT:
       - ci_tools/plot_hist.py
     expire_in: 1 week
 
-check_run_on_2S:
+.check_run_on_2S:
   stage: check
   needs: [run_on_2S]
   script:
