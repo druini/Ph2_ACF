@@ -108,7 +108,7 @@ check_run_on_2S:
 
 ## 2S hybrid
 run_on_2S_FNAL:
-  tag:
+  tags:
     - FNAL
   stage: run
   dependencies:
