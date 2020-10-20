@@ -117,7 +117,7 @@ bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSiz
     for(auto& cRegInMap: cCicRegMap) { cMap[cRegInMap.second.fAddress] = cRegInMap.second; }
     std::vector<std::pair<uint8_t,uint8_t>> cRegs;
     for(auto& cRegItem: cMap) {     
-        LOG (INFO) << BOLDBLUE << "Register map for CIC contains a register with address " 
+        LOG (DEBUG) << BOLDBLUE << "Register map for CIC contains a register with address " 
             << std::hex 
             << +cRegItem.second.fAddress 
             << std::dec << RESET;
@@ -139,42 +139,33 @@ bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16
     return cSuccess;
 }
 
-
-
-
-
 bool     CicInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop) { return true; }
 uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 {
     setBoard(pChip->getBeBoardId());
     ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
-
-    std::vector<uint32_t> cVecReq;
-
-    fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
-    fBoardFW->ReadChipBlockReg(cVecReq);
-
-    // bools to find the values of failed and read
-    bool    cFailed = false;
-    bool    cRead;
-    uint8_t cChipId;
-    fBoardFW->DecodeReg(cRegItem, cChipId, cVecReq[0], cRead, cFailed);
-    if(!cFailed) pChip->setReg(pRegNode, cRegItem.fValue);
-
-    return cRegItem.fValue & 0xFF;
+    return this->ReadChipReg( pChip, cRegItem ).second ;
 }
 std::pair<bool, uint16_t> CicInterface::ReadChipReg(Chip* pChip, ChipRegItem pRegItem)
 {
     setBoard(pChip->getBeBoardId());
-    std::vector<uint32_t> cVecReq;
-    fBoardFW->EncodeReg(pRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
-    fBoardFW->ReadChipBlockReg(cVecReq);
-    // bools to find the values of failed and read
-    bool    cFailed = false;
-    bool    cRead;
-    uint8_t cChipId;
-    fBoardFW->DecodeReg(pRegItem, cChipId, cVecReq[0], cRead, cFailed);
-    return std::make_pair(!cFailed, pRegItem.fValue);
+    if( flpGBTInterface == nullptr )
+    {
+        std::vector<uint32_t> cVecReq;
+        fBoardFW->EncodeReg(pRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
+        fBoardFW->ReadChipBlockReg(cVecReq);
+        // bools to find the values of failed and read
+        bool    cFailed = false;
+        bool    cRead;
+        uint8_t cChipId;
+        fBoardFW->DecodeReg(pRegItem, cChipId, cVecReq[0], cRead, cFailed);
+        return std::make_pair(!cFailed, pRegItem.fValue);
+    }
+    else
+    {
+        auto cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegItem.fAddress);
+        return std::make_pair(true, cValue);
+    }
 }
 bool CicInterface::CheckReSync(Chip* pChip)
 {
