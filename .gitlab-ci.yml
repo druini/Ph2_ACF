@@ -12,10 +12,12 @@ image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
 
 stages:
   - compile
-  - run
+  #- run
   #- check
 
 build:
+  tags:
+    - FNAL
   stage: compile
   before_script:
     - cat setup.sh | sed -e "s/source/#source/" > ci_setup.sh
@@ -30,7 +32,7 @@ build:
     expire_in: 1 week
 
 ## 2S hybrid
-run_on_2S_FNAL:
+.run_on_2S_FNAL:
   tags:
     - FNAL
   stage: run
@@ -45,7 +47,7 @@ run_on_2S_FNAL:
     - fpgaconfig -c ci_tools/D19CDescription_2CBC3_Feynman.xml -l
 
 ## 2S hybrid
-run_on_2S_STRAS:
+.run_on_2S_STRAS:
   tags:
     - Shared
   stage: run
