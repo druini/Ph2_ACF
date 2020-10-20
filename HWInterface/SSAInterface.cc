@@ -258,7 +258,6 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     }
     else
     {
-        //FIXME the FeId is hard coded for now, need to get the FeId info here
         cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress, pRegisterValue,  pVerifLoop);
     }
     return cSuccess;
