@@ -2,6 +2,8 @@
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
 #include "../tools/Tool.h"
+#include "tools/BackEndAlignment.h"
+
 
 #include "../tools/PSROHHybridTester.h"
 
@@ -56,6 +58,10 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("internal-pattern", "ip");
     cmd.defineOption("external-pattern", "Externlly Generated LpGBT Pattern using the Data Player for Control FC7", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("external-pattern", "ep");
+
+    cmd.defineOption("cic-pattern", "Externlly Generated LpGBT Pattern using CIC output", ArgvParser::NoOptionAttribute /*| ArgvParser::OptionRequires*/);
+    cmd.defineOptionAlternative("cic-pattern", "cp");
+
     // Test Reset lines
     cmd.defineOption("testReset", "Test Reset lines");
     cmd.defineOptionAlternative("testReset", "r");
@@ -184,6 +190,18 @@ int main(int argc, char* argv[])
         }
     }
 
+    if( cmd.foundOption("cic-pattern"))
+    {
+        LOG (INFO) << BOLDBLUE << "Checking back-end alignment with CIC.." << RESET;
+        // align back-end
+        BackEndAlignment cBackEndAligner;
+        cBackEndAligner.Inherit(&cBackEndTool);
+        cBackEndAligner.Align();
+        //cBackEndAligner.Start(0);
+        // reset all chip and board registers
+        // to what they were before this tool was called
+        //cBackEndAligner.Reset();
+    }
     // Test PS ROH Reset Lines
     if(cmd.foundOption("testReset"))
     {

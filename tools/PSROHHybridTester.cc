@@ -778,26 +778,62 @@ bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
         {
             //test cic read
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+            /*
             LOG(INFO) << BOLDRED << "CIC0 readback from address 0x0005 = " << clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x05) << RESET;
+            LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1001 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1001) << RESET;
+            LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1002 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1002) << RESET;
             LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1003 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1003) << RESET;
-
+            LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1004 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1004) << RESET;
+            LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1005 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1005) << RESET;
+            std::cout << "\n" << std::endl;
+            LOG(INFO) << BOLDRED << "SSA7 readback from address 0x1001 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 7, 0x1001) << RESET;
+            LOG(INFO) << BOLDRED << "SSA7 readback from address 0x1002 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 7, 0x1002) << RESET;
+            LOG(INFO) << BOLDRED << "SSA7 readback from address 0x1003 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 7, 0x1003) << RESET;
+            LOG(INFO) << BOLDRED << "SSA7 readback from address 0x1004 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 7, 0x1004) << RESET;
+            LOG(INFO) << BOLDRED << "SSA7 readback from address 0x1005 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 7, 0x1005) << RESET;
+            */
             for(uint8_t cValue = 0; cValue < 255; cValue++)
             {
+              /*
               std::cout << "\n" << std::endl;
-               
+              clpGBTInterface->cicWrite(cOpticalGroup->flpGBT, 1, 0x80, cValue);
+              clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x80);
+              */
+              LOG(INFO) << BOLDMAGENTA << "SSA0" << RESET;
+              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 0, 0x1003, cValue);
+              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1003);
+
+              LOG(INFO) << BOLDMAGENTA << "SSA1" << RESET;
+              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 1, 0x1003, cValue);
+              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 1, 0x1003);
+
+              LOG(INFO) << BOLDMAGENTA << "SSA2" << RESET;
+              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 2, 0x1003, cValue);
+              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 2, 0x1003);
+
+              LOG(INFO) << BOLDMAGENTA << "SSA3" << RESET;
               clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 3, 0x1003, cValue);
-              //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
               clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 3, 0x1003);
               
-              
-              /* 
-              clpGBTInterface->cicWrite(cOpticalGroup->flpGBT, 1, 0x80, cValue, false);
-              //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-              clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x80);
-              */    
-              
-             
+              LOG(INFO) << BOLDMAGENTA << "SSA4" << RESET;
+              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 4, 0x1003, cValue);
+              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 4, 0x1003);
+
+              LOG(INFO) << BOLDMAGENTA << "SSA5" << RESET;
+              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 5, 0x1003, cValue);
+              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 5, 0x1003);
+
+              LOG(INFO) << BOLDMAGENTA << "SSA6" << RESET;
+              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 6, 0x1003, cValue);
+              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 6, 0x1003);
+
+              LOG(INFO) << BOLDMAGENTA << "SSA7" << RESET;
+              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 7, 0x1003, cValue);
+              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 7, 0x1003);
+              std::cout << "\n" << std::endl;
             }
+
+             
 /*
             for(const auto cMaster: pMasters)
             {

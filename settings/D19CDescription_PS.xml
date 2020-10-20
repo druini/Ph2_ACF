@@ -1,29 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="Async">
-    <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+     <connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+     <CDCE configure="0" clockRate="320"/>
     
-    <CDCE configure="0" clockRate="120"/>
-    <OpticalGroup Id="0" FMCId="0" >
-        <Module FeId="0" ModuleId="0" Status="1">
+    <OpticalGroup Id="0" FMCId="0">
+        <lpGBT_Files path="./settings/lpGBTFiles/" />
+        <lpGBT Id="0" configfile="CMSOT_lpGBT_manual.txt">
+          <Settings
+          />
+        </lpGBT>
+        <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
-                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="640"/>
+               <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
-	        <SSA Id="0" configfile="SSA.txt" />
-            <SSA Id="1" configfile="SSA.txt" />
+            <SSA Id="0" configfile="SSA.txt" />
+            <!--<SSA Id="1" configfile="SSA.txt" />
             <SSA Id="2" configfile="SSA.txt" />
             <SSA Id="4" configfile="SSA.txt" />
             <SSA Id="5" configfile="SSA.txt" />
             <SSA Id="6" configfile="SSA.txt" />
-            <SSA Id="7" configfile="SSA.txt" /> 
+            <SSA Id="7" configfile="SSA.txt" /> -->
             
             <CIC_Files path="./settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Module>
+            <CIC Id="8" configfile="CIC_default.txt" />
+        </Hybrid>
     </OpticalGroup>
-
+    
     <!--CONFIG-->
     <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
     <Register name="fc7_daq_cnfg">

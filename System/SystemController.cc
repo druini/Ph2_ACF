@@ -131,8 +131,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap);
                 }
-		LOG (INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;
-		if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
+		        LOG (INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;
+		        if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for FrontEnd Hybrids.." << +cFirstOpticalGroup->size() << " hybrid(s) found ..." << RESET;
                     auto cFirstHybrid = cFirstOpticalGroup->at(0);
@@ -170,8 +170,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     {   
                     	auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     	fCicInterface->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT );
+                        // link lpGBT
+                        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLpGBT( clpGBTInterface );
                     }
-
                 }
             }
         }
@@ -179,6 +180,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         {
             flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
             fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
+            
         }
     }
 
@@ -270,7 +272,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         fCicInterface->ConfigureChip(cCic);
 
                         // CIC start-up
-                        uint8_t cModeSelect = (static_cast<ReadoutChip*>(theOuterTrackerHybrid->at(0))->getFrontEndType() != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
+                        auto cFirstROC = static_cast<ReadoutChip*>(theOuterTrackerHybrid->at(0));
+			FrontEndType cType = FrontEndType::CBC3; 
+			if( cFirstROC != nullptr )  
+ 				cType = cFirstROC->getFrontEndType();
+ 			uint8_t cModeSelect = (cType != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
                         // select CIC mode
                         bool cSuccess = fCicInterface->SelectMode(cCic, cModeSelect);
                         if(!cSuccess)
@@ -294,7 +300,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         if(!bIgnoreI2c)
                         {
                             LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
-                            fReadoutChipInterface->ConfigureChip(theReadoutChip);
+                            //fReadoutChipInterface->ConfigureChip(theReadoutChip);
                         }
                         // if SSA + ASYNC
                         // make sure ROCs are configured for that
