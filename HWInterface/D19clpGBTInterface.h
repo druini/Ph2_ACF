@@ -147,7 +147,7 @@ class D19clpGBTInterface : public lpGBTInterface
     uint8_t  cbcGetPageRegister(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t cChipId){ return 0; }
     // cic read/write
     bool     cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry=true);
-    uint32_t cicRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pRegisterAddress);
+    uint32_t cicRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress);
     // ssa read/write 
     bool     ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry=false);
     uint32_t ssaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
