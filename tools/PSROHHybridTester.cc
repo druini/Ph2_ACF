@@ -785,15 +785,17 @@ bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
             {
               std::cout << "\n" << std::endl;
                
-              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 0, 0x1003, cValue, false);
-              std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1003);
+              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 3, 0x1003, cValue);
+              //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 3, 0x1003);
+              
               
               /* 
-              clpGBTInterface->cicWrite(cOpticalGroup->flpGBT, 1, 0x80, cValue, true);
-              std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+              clpGBTInterface->cicWrite(cOpticalGroup->flpGBT, 1, 0x80, cValue, false);
+              //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
               clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x80);
-              */
+              */    
+              
              
             }
 /*

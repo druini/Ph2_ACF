@@ -166,6 +166,12 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     }
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
                     fCicInterface = new CicInterface(fBeBoardFWMap);
+                    if(cFirstOpticalGroup->flpGBT != nullptr)
+                    {   
+                    	auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+                    	fCicInterface->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT );
+                    }
+
                 }
             }
         }

@@ -36,7 +36,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
      }
 */
     // Configure High Speed Link Tx Rx Polarity
-    //this->ConfigureHighSpeedPolarity(pChip, 1, 0);
+    this->ConfigureHighSpeedPolarity(pChip, 1, 0);
     //#FIXME YOUNES BLOCK PLEASE DON'T MODIFY
     // Clocks
     std::vector<uint8_t> cClocks         = {1, 6, 11, 26};
@@ -77,18 +77,18 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
             this->ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
-    /*
     this->ConfigureRxPRBS(pChip, cRxGroups, cRxChannels, true);
     this->PhaseAlignRx(pChip, cRxGroups, cRxChannels);
     this->ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, 0);
-    */
     // Reset I2C Masters
     this->ResetI2C(pChip, {0, 1, 2});
     // setting GPIO levels Uncomment this for Skeleton test
+    
     this->WriteChipReg(pChip, "PIODirH", 0x12);
     this->WriteChipReg(pChip, "PIODirL", 0x4B);
     this->WriteChipReg(pChip, "PIOOutH", 0x12);
     this->WriteChipReg(pChip, "PIOOutL", 0x4B);
+    
 
 //    this->WriteChipReg(pChip, "POWERUP2", 0x06);
 /*
@@ -210,7 +210,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 
 bool D19clpGBTInterface::WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
-    LOG(DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
+    LOG(INFO) << BOLDBLUE << "Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
     return this->WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
 }
 
@@ -245,7 +245,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     }
     if(!pVerifLoop) return true;
     // Verify success of Write
-    uint16_t cReadBack = this->ReadReg(pChip, pAddress);
+    uint8_t cReadBack = this->ReadReg(pChip, pAddress);
     uint8_t cIter = 0, cMaxIter = 10;
     while(cReadBack != pValue && cIter < cMaxIter)
     {
