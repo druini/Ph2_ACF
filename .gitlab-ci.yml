@@ -13,6 +13,7 @@ stages:
 
 build:
   stage: compile
+  before_script:
     - cat setup.sh | sed -e "s/source/#source/" > ci_setup.sh
     - source ./ci_setup.sh
   script:
