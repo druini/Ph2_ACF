@@ -4,16 +4,16 @@
 
 ## The pipeline starts when a merge request is created
 
-# workflow:
-#   rules:
-#     - if: $CI_MERGE_REQUEST_ID
+#workflow:
+  #rules:
+    #- if: $CI_MERGE_REQUEST_ID
 
 image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
 
 stages:
   - compile
   - run
-  - check
+  #- check
 
 build:
   stage: compile
@@ -21,90 +21,13 @@ build:
     - cat setup.sh | sed -e "s/source/#source/" > ci_setup.sh
     - source ./ci_setup.sh
   script:
-    - mkdir -p build; cd build
-    - cmake ..
-    - make -j4
+    - cmake -S . -B build
+    - cmake --build build -j 4
   artifacts:
     paths:
       - ci_setup.sh
-      - bin/feh_2s_test
-      - bin/commission
-      - bin/CMSITminiDAQ
+      - bin/fpgaconfig
     expire_in: 1 week
-
-## IT hybrid
-run_on_IT:
-  stage: run
-  dependencies:
-    - build    
-  before_script:
-    - printf $USER_PASS | base64 -d | kinit $USER_NAME
-    - xrdcp -r root://eosuser.cern.ch//eos/user/f/fravera/ci_repo/ci_tools .
-  script:
-    - source ./ci_setup.sh
-    - cd ci_tools
-    - cp CMSIT_RD53.txt CMSIT_RD53_default.txt
-    - CMSITminiDAQ -f CMSIT.xml -r
-    - CMSITminiDAQ -f CMSIT.xml -c pixelalive
-    - CMSITminiDAQ -f CMSIT.xml -c threqu
-    - CMSITminiDAQ -f CMSIT.xml -c scurve
-  after_script:
-    - cp ci_tools/Results/Run000000_PixelAlive.root .
-    - cp ci_tools/Results/Run000001_ThrEqualization.root .
-    - cp ci_tools/Results/Run000002_SCurve.root .
-  artifacts:
-    paths: 
-      - Run000000_PixelAlive.root
-      - Run000001_ThrEqualization.root
-      - Run000002_SCurve.root
-      - ci_tools/plot_canvas.py
-      - ci_tools/CMSIT*
-    expire_in: 1 week
-
-check_run_on_IT:
-  stage: check
-  needs: [run_on_IT]
-  script:
-    - python ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_M(0)_PixelAlive_Chip(0)" -o plots
-    - python ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_M(0)_ThrEqualization_Chip(0)" -o plots
-    - python ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_M(0)_SCurves_Chip(0)" -o plots
-  artifacts:
-    paths:
-      - plots
-    expire_in: 1 week
-
-## 2S hybrid
-.run_on_2S:
-  stage: run
-  dependencies:
-    - build
-  before_script:
-    - printf $USER_PASS | base64 -d | kinit $USER_NAME
-    - xrdcp -r root://eosuser.cern.ch//eos/user/f/fravera/ci_repo/ci_tools .
-    # - python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
-  script:
-    # - python ci_tools/status_manager.py 2s_status.txt --set_status 1
-    - source ./ci_setup.sh
-    - feh_2s_test -f ci_tools/CMS2S.xml -t -m -a --findShorts -b
-  after_script:
-    # - python ci_tools/status_manager.py 2s_status.txt --set_status 0
-    - cp Results/*/Hybrid.root .
-  artifacts:
-    paths:
-      - Hybrid.root  
-      - ci_tools/plot_hist.py
-    expire_in: 1 week
-
-.check_run_on_2S:
-  stage: check
-  needs: [run_on_2S]
-  script:
-    - python ci_tools/plot_hist.py Hybrid.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/D_B(0)_O(0)_HybridNoiseDistribution_Hybrid(0)" -o plots
-  artifacts:
-    paths:
-      - plots
-    expire_in: 1 week
-
 
 ## 2S hybrid
 run_on_2S_FNAL:
@@ -116,26 +39,18 @@ run_on_2S_FNAL:
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/f/fravera/ci_repo/ci_tools .
-    # - python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
   script:
-    # - python ci_tools/status_manager.py 2s_status.txt --set_status 1
     - source ./ci_setup.sh
-    - feh_2s_test -f ci_tools/D19CDescription_2CBC3_Feynman.xml -t -m -a --findShorts -b
-  after_script:
-    # - python ci_tools/status_manager.py 2s_status.txt --set_status 0
-    - cp Results/*/Hybrid.root .
-  artifacts:
-    paths:
-      - Hybrid.root  
-      - ci_tools/plot_hist.py
-    expire_in: 1 week
+    #- feh_2s_test -f ci_tools/D19CDescription_2CBC3_Feynman.xml -t -m -a --findShorts -b
+    - fpgaconfig -c ci_tools/D19CDescription_2CBC3_Feynman.xml -l
 
-check_run_on_2S_FNAL:
-  stage: check
-  needs: [run_on_2S_FNAL]
+## 2S hybrid
+run_on_2S_STRAS:
+  tags:
+    - Shared
+  stage: run
+  dependencies:
+    - build
   script:
-    - python ci_tools/plot_hist.py Hybrid.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/D_B(0)_O(0)_HybridNoiseDistribution_Hybrid(0)" -o plots
-  artifacts:
-    paths:
-      - plots
-    expire_in: 1 week
+    - source ./ci_setup.sh
+    - fpgaconfig -c settings/D19CDescription_Cic2.xml -l
