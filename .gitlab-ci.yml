@@ -39,7 +39,7 @@ run_on_IT:
     - build    
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
-    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
+    - xrdcp -r root://eosuser.cern.ch//eos/user/f/fravera/ci_repo/ci_tools .
   script:
     - source ./ci_setup.sh
     - cd ci_tools
@@ -80,7 +80,7 @@ run_on_2S:
     - build
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
-    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
+    - xrdcp -r root://eosuser.cern.ch//eos/user/f/fravera/ci_repo/ci_tools .
     - python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
   script:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 1
@@ -104,3 +104,38 @@ check_run_on_2S:
     paths:
       - plots
     expire_in: 1 week
+
+
+## 2S hybrid
+run_on_2S_FNAL:
+  tags:
+    - FNAL
+  stage: run
+  dependencies:
+    - build
+  before_script:
+    - printf $USER_PASS | base64 -d | kinit $USER_NAME
+    - xrdcp -r root://eosuser.cern.ch//eos/user/f/fravera/ci_repo/ci_tools .
+    - /opt/cactus/bin/controlhub_start
+  script:
+    - source ./ci_setup.sh
+    - feh_2s_test -f ci_tools/D19CDescription_2CBC3_Feynman.xml -t -m -a --findShorts -b
+  after_script:
+    - cp Results/*/Hybrid.root .
+  artifacts:
+    paths:
+      - Hybrid.root  
+      - ci_tools/plot_hist.py
+    expire_in: 1 week
+
+check_run_on_2S_FNAL:
+  stage: check
+  needs: [run_on_2S_FNAL]
+  script:
+    - python ci_tools/plot_hist.py Hybrid.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/D_B(0)_O(0)_HybridNoiseDistribution_Hybrid(0)" -o plots
+  artifacts:
+    paths:
+      - plots
+    expire_in: 1 week
+
+
