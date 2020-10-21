@@ -53,9 +53,6 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     // ###############################
     static const char* registerBlackList[] = {"HighGain_LIN",
                                               "INJECTION_SELECT_DELAY",
-                                              "CLK_DATA_DELAY_DATA_DELAY",
-                                              "CLK_DATA_DELAY_CLK_DELAY",
-                                              "CLK_DATA_DELAY_CLK_PHASE",
                                               "ADC_OFFSET_VOLT",
                                               "ADC_MAXIMUM_VOLT",
                                               "TEMPSENS_IDEAL_FACTOR"};
@@ -74,17 +71,30 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
                 // #################
                 // # Special cases #
                 // #################
-                if(cRegItem.first == "ADC_MONITOR_CONFIG")
+                if(cRegItem.first == "MONITOR_CONFIG_ADC")
                 {
                     value =
                         cRegItem.second.fValue | (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
                     regName = "MONITOR_CONFIG";
                 }
-                else if(cRegItem.first == "BG_MONITOR_CONFIG")
+                else if(cRegItem.first == "MONITOR_CONFIG_BG")
                 {
-                    value = (cRegItem.second.fValue << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize) |
+                    value = (cRegItem.second.fValue << pRD53RegMap["MONITOR_CONFIG_ADC"].fBitSize) |
                             (pRD53RegMap["MONITOR_CONFIG"].fValue &
-                             (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) - (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize)));
+                             (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) - (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["MONITOR_CONFIG_ADC"].fBitSize)));
+                    regName = "MONITOR_CONFIG";
+                }
+                if(cRegItem.first == "VOLTAGE_TRIM_DIG")
+                {
+                    value =
+                        cRegItem.second.fValue | (pRD53RegMap["VOLTAGE_TRIM"].fValue & (RD53Shared::setBits(pRD53RegMap["VOLTAGE_TRIM"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
+                    regName = "MONITOR_CONFIG";
+                }
+                else if(cRegItem.first == "VOLTAGE_TRIM_ANA")
+                {
+                    value = (cRegItem.second.fValue << pRD53RegMap["VOLTAGE_TRIM_DIG"].fBitSize) |
+                            (pRD53RegMap["VOLTAGE_TRIM"].fValue &
+                             (RD53Shared::setBits(pRD53RegMap["VOLTAGE_TRIM"].fBitSize) - (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["VOLTAGE_TRIM_DIG"].fBitSize)));
                     regName = "MONITOR_CONFIG";
                 }
                 else if(cRegItem.first == "INJECTION_SELECT_DELAY")
@@ -498,7 +508,7 @@ uint32_t RD53Interface::measureADC(ReadoutChip* pChip, uint32_t data)
 {
     const uint16_t GLOBAL_PULSE_ROUTE = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
     const uint8_t  chipID             = pChip->getId();
-    const uint16_t trimADC            = bits::pack<1, 5, 6>(true, pChip->getRegItem("BG_MONITOR_CONFIG").fValue, pChip->getRegItem("ADC_MONITOR_CONFIG").fValue);
+    const uint16_t trimADC            = bits::pack<1, 5, 6>(true, pChip->getRegItem("MONITOR_CONFIG_BG").fValue, pChip->getRegItem("MONITOR_CONFIG_ADC").fValue);
     // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should give an average VrefADC of 0.9 V
     const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GLOBAL_PULSE_ROUTE");
 

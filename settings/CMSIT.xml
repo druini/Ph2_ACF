@@ -60,10 +60,11 @@
               CLK_DATA_DELAY        =    "0"
               INJECTION_SELECT      =    "9"
 
-              VOLTAGE_TRIM          =  "528"
+              VOLTAGE_TRIM_DIG      =   "16"
+              VOLTAGE_TRIM_ANA      =   "16"
 
-              ADC_MONITOR_CONFIG    =    "5"
-              BG_MONITOR_CONFIG     =   "12"
+              MONITOR_CONFIG_ADC    =    "5"
+              MONITOR_CONFIG_BG     =   "12"
               ADC_OFFSET_VOLT       =   "63"
               ADC_MAXIMUM_VOLT      =  "839"
               TEMPSENS_IDEAL_FACTOR = "1225"
