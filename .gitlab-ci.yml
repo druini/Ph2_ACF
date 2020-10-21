@@ -36,7 +36,7 @@ run_on_2S_FNAL:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/f/fravera/ci_repo/ci_tools .
     - ping 192.168.0.7 -w 5
-    - controlhub_start
+    - ./opt/cactus/bin/controlhub_start
   script:
     - source ./ci_setup.sh
     #- feh_2s_test -f ci_tools/D19CDescription_2CBC3_Feynman.xml -t -m -a --findShorts -b
