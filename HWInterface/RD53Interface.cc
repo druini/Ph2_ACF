@@ -51,11 +51,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const char* registerBlackList[] = {"HighGain_LIN",
-                                              "INJECTION_SELECT_DELAY",
-                                              "ADC_OFFSET_VOLT",
-                                              "ADC_MAXIMUM_VOLT",
-                                              "TEMPSENS_IDEAL_FACTOR"};
+    static const char* registerBlackList[] = {"HighGain_LIN", "INJECTION_SELECT_DELAY", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR"};
 
     for(const auto& cRegItem: pRD53RegMap)
         if(cRegItem.second.fPrmptCfg == true)
@@ -86,8 +82,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
                 }
                 if(cRegItem.first == "VOLTAGE_TRIM_DIG")
                 {
-                    value =
-                        cRegItem.second.fValue | (pRD53RegMap["VOLTAGE_TRIM"].fValue & (RD53Shared::setBits(pRD53RegMap["VOLTAGE_TRIM"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
+                    value = cRegItem.second.fValue | (pRD53RegMap["VOLTAGE_TRIM"].fValue & (RD53Shared::setBits(pRD53RegMap["VOLTAGE_TRIM"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
                     regName = "MONITOR_CONFIG";
                 }
                 else if(cRegItem.first == "VOLTAGE_TRIM_ANA")
@@ -105,8 +100,8 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
                 }
                 else if(cRegItem.first == "CLK_DATA_DELAY_DATA_DELAY")
                 {
-                    value = cRegItem.second.fValue |
-                            (pRD53RegMap["CLK_DATA_DELAY"].fValue & (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
+                    value =
+                        cRegItem.second.fValue | (pRD53RegMap["CLK_DATA_DELAY"].fValue & (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
                     regName = "CLK_DATA_DELAY";
                 }
                 else if(cRegItem.first == "CLK_DATA_DELAY_CLK_DELAY")
