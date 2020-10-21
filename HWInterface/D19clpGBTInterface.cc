@@ -312,9 +312,7 @@ void D19clpGBTInterface::ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const
         // Enable Rx Groups Channels and set Data Rate and Phase Tracking mode
         uint8_t cValueEnableRx = 0;
         for(const auto cChannel: pChannels) cValueEnableRx += (1 << cChannel);
-        char cBuffer[12];
-        sprintf(cBuffer, "EPRX%iControl", cGroup);
-        std::string cRXCntrlReg(cBuffer, sizeof(cBuffer));
+        std::string cRXCntrlReg = "EPRX"+std::to_string(cGroup)+"Control";
         this->WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
     }
 }
@@ -333,9 +331,7 @@ void D19clpGBTInterface::ConfigureRxChannels(Ph2_HwDescription::Chip*    pChip,
         for(const auto& cChannel: pChannels)
         {
             // Configure Rx Channel Phase, Inversion, AcBias enabling, Termination enabling, Equalization enabling
-            char cBuffer[13];
-            sprintf(cBuffer, "EPRX%i%iChnCntr", cGroup, cChannel);
-            std::string cRXChnCntrReg(cBuffer, sizeof(cBuffer));
+            std::string cRXChnCntrReg = "EPRX"+std::to_string(cGroup)+std::to_string(cChannel)+"ChnCntr";
             this->WriteChipReg(pChip, cRXChnCntrReg, (pPhase << 4) | (pInvert << 3) | (pAcBias << 2) | (pTerm << 1) | (pEqual << 0));
         }
     }
@@ -374,18 +370,15 @@ void D19clpGBTInterface::ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
         for(const auto& cChannel: pChannels)
         {
             // Configure Tx Channel PreEmphasisStrenght, PreEmphasisMode, DriveStrength
-            char cBuffer1[13];
-            sprintf(cBuffer1, "EPTX%i%iChnCntr", cGroup, cChannel);
-            std::string cTXChnCntrl(cBuffer1, sizeof(cBuffer1));
+            std::string cTXChnCntrl = "EPTX"+std::to_string(cGroup)+std::to_string(cChannel)+"ChnCntr";
             this->WriteChipReg(pChip, cTXChnCntrl, (pPreEmphStr << 5) | (pPreEmphMode << 3) | (pDriveStr << 0));
 
             // Configure Tx Channel PreEmphasisWidth, Inversion
-            char cBuffer2[16];
+            std::string cTXChn_Cntr;
             if(cChannel == 0 || cChannel == 1)
-                sprintf(cBuffer2, "EPTX%i1_%i0ChnCntr", cGroup, cGroup);
+                cTXChn_Cntr = "EPTX"+std::to_string(cGroup)+"1_"+std::to_string(cGroup)+"0ChnCntr";
             else if(cChannel == 2 || cChannel == 3)
-                sprintf(cBuffer2, "EPTX%i3_%i2ChnCntr", cGroup, cGroup);
-            std::string cTXChn_Cntr(cBuffer2, sizeof(cBuffer2));
+                cTXChn_Cntr = "EPTX"+std::to_string(cGroup)+"3_"+std::to_string(cGroup)+"2ChnCntr";
             uint8_t     cValue_ChnCntr = this->ReadChipReg(pChip, cTXChn_Cntr);
             this->WriteChipReg(pChip, cTXChn_Cntr, (cValue_ChnCntr & ~(0x0F << 4 * (cChannel % 2))) | ((pInvert << 3 | pPreEmphWidth << 0) << 4 * (cChannel % 2)));
         }
@@ -404,13 +397,10 @@ void D19clpGBTInterface::ConfigureClocks(Ph2_HwDescription::Chip*    pChip,
     for(const auto& cClock: pClocks)
     {
         // Configure Clocks Frequency, Drive Strength, Inversion, Pre-Emphasis Width, Pre-Emphasis Mode, Pre-Emphasis Strength
-        char cBuffer1[15], cBuffer2[15];
-        sprintf(cBuffer1, "EPCLK%iChnCntrH", cClock);
-        sprintf(cBuffer2, "EPCLK%iChnCntrL", cClock);
-        std::string cClkHReg(cBuffer1, sizeof(cBuffer1));
-        std::string cClkLReg(cBuffer2, sizeof(cBuffer2));
-        this->WriteChipReg(pChip, cBuffer1, pInvert << 6 | pDriveStr << 3 | pFreq);
-        this->WriteChipReg(pChip, cBuffer2, pPreEmphStr << 5 | pPreEmphMode << 3 | pPreEmphWidth);
+        std::string cClkHReg = "EPCLK"+std::to_string(cClock)+"ChnCntrH";
+        std::string cClkLReg = "EPCLK"+std::to_string(cClock)+"ChnCntrL";
+        this->WriteChipReg(pChip, cClkHReg, pInvert << 6 | pDriveStr << 3 | pFreq);
+        this->WriteChipReg(pChip, cClkLReg, pPreEmphStr << 5 | pPreEmphMode << 3 | pPreEmphWidth);
     }
 }
 
@@ -493,9 +483,7 @@ void D19clpGBTInterface::ConfigureTxSource(Ph2_HwDescription::Chip* pChip, const
 void D19clpGBTInterface::ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase)
 {
     // Configure Rx Channel Phase
-    char cBuffer[13];
-    sprintf(cBuffer, "EPRX%i%iChnCntr", pGroup, pChannel);
-    std::string cRegName(cBuffer, sizeof(cBuffer));
+    std::string cRegName = "EPRX"+std::to_string(pGroup)+std::to_string(pChannel)+"ChnCntr";
     uint8_t     cValueChnCntr = this->ReadChipReg(pChip, cRegName);
     cValueChnCntr             = (cValueChnCntr & ~(0xF << 4)) | (pPhase << 4);
     this->WriteChipReg(pChip, cRegName, cValueChnCntr);
@@ -506,12 +494,8 @@ void D19clpGBTInterface::ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, cons
     // Configure Rx Phase Shifter
     for(const auto& cClock: pClocks)
     {
-        char cBuffer1[8], cBuffer2[9];
-        sprintf(cBuffer1, "PS%iDelay", cClock);
-        sprintf(cBuffer2, "PS%iConfig", cClock);
-        std::string cDelayReg(cBuffer1, sizeof(cBuffer1));
-        std::string cConfigReg(cBuffer2, sizeof(cBuffer2));
-
+        std::string cDelayReg = "PS"+std::to_string(cClock)+"Delay";
+        std::string cConfigReg = "PS"+std::to_string(cClock)+"Config";
         this->WriteChipReg(pChip, cConfigReg, (((pDelay & 0x100) >> 8) << 7) | pEnFTune << 6 | pDriveStr << 3 | pFreq);
         this->WriteChipReg(pChip, cDelayReg, pDelay);
     }
@@ -610,12 +594,11 @@ bool D19clpGBTInterface::IslpGBTReady(Ph2_HwDescription::Chip* pChip)
 uint8_t D19clpGBTInterface::GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel)
 {
     // Get Rx Channel Phase
-    char cBuffer[19];
+    std::string cRxPhaseReg;
     if(pChannel == 0 || pChannel == 1)
-        sprintf(cBuffer, "EPRX%iCurrentPhase10", pGroup);
+        cRxPhaseReg = "EPRX"+std::to_string(pGroup)+"CurrentPhase10";
     else if(pChannel == 3 || pChannel == 2)
-        sprintf(cBuffer, "EPRX%iCurrentPhase32", pGroup);
-    std::string cRxPhaseReg(cBuffer, sizeof(cBuffer));
+        cRxPhaseReg = "EPRX"+std::to_string(pGroup)+"CurrentPhase32";
     uint8_t     cRxPhaseRegValue = this->ReadChipReg(pChip, cRxPhaseReg);
     return ((cRxPhaseRegValue & (0x0F << 4 * (pChannel % 2))) >> 4 * (pChannel % 2));
 }
@@ -624,9 +607,7 @@ bool D19clpGBTInterface::IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGro
 {
     // Cheks if Rx channels are locked #FIXME needs to check depending on the
     // enabled channels not on all (0x0F)
-    char cBuffer[11];
-    sprintf(cBuffer, "EPRX%iLocked", pGroup);
-    std::string cRXLockedReg(cBuffer, sizeof(cBuffer));
+    std::string cRXLockedReg = "EPRX"+std::to_string(pGroup)+"Locked";
     uint8_t cChannelMask = 0x00; 
     for(auto cChannel : pChannels)
         cChannelMask += (1 << cChannel); 
@@ -636,18 +617,14 @@ bool D19clpGBTInterface::IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGro
 uint8_t D19clpGBTInterface::GetRxDllStatus(Ph2_HwDescription::Chip* pChip, uint8_t pGroup)
 {
     // Gets Rx Group Delay-Locked-Loop status
-    char cBuffer[14];
-    sprintf(cBuffer, "EPRX%iDllStatus", pGroup);
-    std::string cRXDllStatReg(cBuffer, sizeof(cBuffer));
+    std::string cRXDllStatReg = "EPRX"+std::to_string(pGroup)+"DllStatus";
     return this->ReadChipReg(pChip, cRXDllStatReg);
 }
 
 uint8_t D19clpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster)
 {
     // Gets I2C Master status
-    char cBuffer[11];
-    sprintf(cBuffer, "I2CM%iStatus", pMaster);
-    std::string cI2CStatReg(cBuffer, sizeof(cBuffer));
+    std::string cI2CStatReg = "I2CM"+std::to_string(pMaster)+"Status";
     return this->ReadChipReg(pChip, cI2CStatReg);
 }
 
@@ -671,16 +648,12 @@ void D19clpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pM
 {
     // Configures I2C Masters
     // First let's write configuration data into the I2C Master Data register
-    char cBuffer1[10];
-    sprintf(cBuffer1, "I2CM%iData0", pMaster);
-    std::string cI2CCntrlReg(cBuffer1, sizeof(cBuffer1));
+    std::string cI2CCntrlReg = "I2CM"+std::to_string(pMaster)+"Data0";
     uint8_t     cValueCntrl = (pFreq << 0) | (pNBytes << 2) | (pSCLDriveMode << 7);
     this->WriteChipReg(pChip, cI2CCntrlReg, cValueCntrl);
 
     // Now let's write Command (0x00) to the Command register to tranfer Configuration to the I2C Master Control register
-    char cBuffer2[8];
-    sprintf(cBuffer2, "I2CM%iCmd", pMaster);
-    std::string cI2CCmdReg(cBuffer2, sizeof(cBuffer2));
+    std::string cI2CCmdReg = "I2CM"+std::to_string(pMaster)+"Cmd";
     this->WriteChipReg(pChip, cI2CCmdReg, 0x00);
 }
 
@@ -691,18 +664,14 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     this->ConfigureI2C(pChip, pMaster, cFreq, ( pNBytes > 1 ) ? pNBytes : 0, 0);
 
     // Prepare Address Register
-    char cBuffer2[12];
-    sprintf(cBuffer2, "I2CM%iAddress", pMaster);
-    std::string cI2CAddressReg(cBuffer2, sizeof(cBuffer2));
     // Write Slave Address
+    std::string cI2CAddressReg = "I2CM"+std::to_string(pMaster)+"Address";
     this->WriteChipReg(pChip, cI2CAddressReg, pSlaveAddress);
 
     // Write Data to Data Register
     for(uint8_t cByte = 0; cByte < 4; cByte++)
     {
-        char cBuffer1[10];
-        sprintf(cBuffer1, "I2CM%iData%i", pMaster, cByte);
-        std::string cI2CDataReg(cBuffer1, sizeof(cBuffer1));
+        std::string cI2CDataReg = "I2CM"+std::to_string(pMaster)+"Data"+std::to_string(cByte);
         if(cByte < pNBytes)
           this->WriteChipReg(pChip, cI2CDataReg, (pData & (0xFF << 8*cByte)) >> 8*cByte);
         else
@@ -710,9 +679,7 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     }
 
     // Prepare Command Register
-    char cBuffer3[8];
-    sprintf(cBuffer3, "I2CM%iCmd", pMaster);
-    std::string cI2CCmdReg(cBuffer3, sizeof(cBuffer3));
+    std::string cI2CCmdReg = "I2CM"+std::to_string(pMaster)+"Cmd";
     // If Multi-Byte, write command to save data locally before transfer to slave
     // FIXME for now this only provides a maximum of 32 bits (4 Bytes) write
     // Write Command to launch I2C transaction
@@ -748,25 +715,18 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     uint8_t cFreq = 3;//1 MHz 
     this->ConfigureI2C(pChip, pMaster, cFreq, pNBytes, 0);
     // Prepare Address Register
-    char cBuffer1[12];
-    sprintf(cBuffer1, "I2CM%iAddress", pMaster);
-    std::string cI2CAddressReg(cBuffer1, sizeof(cBuffer1));
-
-    // Prepare Command Register
-    char cBuffer2[8];
-    sprintf(cBuffer2, "I2CM%iCmd", pMaster);
-    std::string cI2CCmdReg(cBuffer2, sizeof(cBuffer2));
+    std::string cI2CAddressReg = "I2CM"+std::to_string(pMaster)+"Address";
     // Write Slave Address
     this->WriteChipReg(pChip, cI2CAddressReg, pSlaveAddress);
 
+    // Prepare Command Register
+    std::string cI2CCmdReg = "I2CM"+std::to_string(pMaster)+"Cmd";
     // Write Read Command and then Read from Read Data Register
     // Procedure and registers depend on number on Bytes
     if(pNBytes == 1)
     {
         this->WriteChipReg(pChip, cI2CCmdReg, 0x3);
-        char cBuffer1[13];
-        sprintf(cBuffer1, "I2CM%iReadByte", pMaster);
-        std::string cI2CDataReg(cBuffer1, sizeof(cBuffer1));
+        std::string cI2CDataReg = "I2CM"+std::to_string(pMaster)+"ReadByte";
         return this->ReadChipReg(pChip, cI2CDataReg);
     }
     else
@@ -775,9 +735,7 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
         uint32_t cReadData = 0;
         for(uint8_t cByte = 0; cByte < pNBytes; cByte++)
         {
-            char cBuffer1[10];
-            sprintf(cBuffer1, "I2CM%dRead%i", pMaster, 15 - cByte);
-            std::string cI2CDataReg(cBuffer1, sizeof(cBuffer1));
+            std::string cI2CDataReg = "I2CM"+std::to_string(pMaster)+"Read"+std::to_string(15-cByte);
             cReadData |= ((uint32_t)this->ReadChipReg(pChip, cI2CDataReg) << cByte);
         }
         return cReadData;
