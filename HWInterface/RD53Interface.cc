@@ -53,10 +53,9 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     // ###############################
     static const char* registerBlackList[] = {"HighGain_LIN",
                                               "INJECTION_SELECT_DELAY",
-                                              "CLK_DATA_DELAY_CLK_DELAY",
                                               "CLK_DATA_DELAY_DATA_DELAY",
-                                              "I_MONITOR_SELECT",
-                                              "V_MONITOR_SELECT",
+                                              "CLK_DATA_DELAY_CLK_DELAY",
+                                              "CLK_DATA_DELAY_CLK_PHASE",
                                               "ADC_OFFSET_VOLT",
                                               "ADC_MAXIMUM_VOLT",
                                               "TEMPSENS_IDEAL_FACTOR"};
@@ -78,15 +77,42 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
                 if(cRegItem.first == "ADC_MONITOR_CONFIG")
                 {
                     value =
-                        cRegItem.second.fValue | (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) ^ RD53Shared::setBits(cRegItem.second.fBitSize)));
+                        cRegItem.second.fValue | (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
                     regName = "MONITOR_CONFIG";
                 }
                 else if(cRegItem.first == "BG_MONITOR_CONFIG")
                 {
                     value = (cRegItem.second.fValue << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize) |
                             (pRD53RegMap["MONITOR_CONFIG"].fValue &
-                             (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) ^ (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize)));
+                             (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) - (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize)));
                     regName = "MONITOR_CONFIG";
+                }
+                else if(cRegItem.first == "INJECTION_SELECT_DELAY")
+                {
+                    value = cRegItem.second.fValue |
+                            (pRD53RegMap["INJECTION_SELECT"].fValue & (RD53Shared::setBits(pRD53RegMap["INJECTION_SELECT"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
+                    regName = "INJECTION_SELECT";
+                }
+                else if(cRegItem.first == "CLK_DATA_DELAY_DATA_DELAY")
+                {
+                    value = cRegItem.second.fValue |
+                            (pRD53RegMap["CLK_DATA_DELAY"].fValue & (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
+                    regName = "CLK_DATA_DELAY";
+                }
+                else if(cRegItem.first == "CLK_DATA_DELAY_CLK_DELAY")
+                {
+                    value = (cRegItem.second.fValue << pRD53RegMap["CLK_DATA_DELAY_DATA_DELAY"].fBitSize) |
+                            (pRD53RegMap["CLK_DATA_DELAY"].fValue &
+                             (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["CLK_DATA_DELAY_DATA_DELAY"].fBitSize)));
+                    regName = "CLK_DATA_DELAY";
+                }
+                else if(cRegItem.first == "CLK_DATA_DELAY_CLK_PHASE")
+                {
+                    value = (cRegItem.second.fValue << (pRD53RegMap["CLK_DATA_DELAY_DATA_DELAY"].fBitSize + pRD53RegMap["CLK_DATA_DELAY_CLK_DELAY"].fBitSize)) |
+                            (pRD53RegMap["CLK_DATA_DELAY"].fValue &
+                             (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) -
+                              (RD53Shared::setBits(cRegItem.second.fBitSize) << (pRD53RegMap["CLK_DATA_DELAY_DATA_DELAY"].fBitSize + pRD53RegMap["CLK_DATA_DELAY_CLK_DELAY"].fBitSize))));
+                    regName = "CLK_DATA_DELAY";
                 }
 
                 RD53Interface::WriteChipReg(pChip, regName, value, true);

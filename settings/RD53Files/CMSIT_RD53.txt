@@ -197,15 +197,15 @@ SELF_TRIGGER_ENABLE       0x89          0b0000                  0b0000          
 *-------------------------------------------------------------------------------------------------------
 HighGain_LIN              0xA0          0b1                     0b1                                 1
 INJECTION_SELECT_DELAY    0xA1          0b0000                  0b0000                              4
-CLK_DATA_DELAY_CLK_DELAY  0xA2          0b0000                  0b0000                              4
-CLK_DATA_DELAY_DATA_DELAY 0xA3          0b0000                  0b0000                              4
-I_MONITOR_SELECT          0xA4          0x00                    0x00                                6
-V_MONITOR_SELECT          0xA5          0x00                    0x00                                7
-ADC_MONITOR_CONFIG        0xA6          0d5                     0d5                                 6
-BG_MONITOR_CONFIG         0xA7          0d12                    0d12                                5
-ADC_OFFSET_VOLT           0xA8          0d63                    0d63                               16
-ADC_MAXIMUM_VOLT          0xA9          0d839                   0d839                              16
-TEMPSENS_IDEAL_FACTOR     0xAA          0d1225                  0d1225                             16
+CLK_DATA_DELAY_DATA_DELAY 0xA2          0b0000                  0b0000                              4
+CLK_DATA_DELAY_CLK_DELAY  0xA3          0b0000                  0b0000                              4
+CLK_DATA_DELAY_CLK_PHASE  0xA4          0b0                     0b0                                 1
+ADC_MONITOR_CONFIG        0xA5          0d5                     0d5                                 6
+BG_MONITOR_CONFIG         0xA6          0d12                    0d12                                5
+
+ADC_OFFSET_VOLT           0xA7          0d63                    0d63                               16
+ADC_MAXIMUM_VOLT          0xA8          0d839                   0d839                              16
+TEMPSENS_IDEAL_FACTOR     0xA9          0d1225                  0d1225                             16
 
 *-------------------------------------------------------------------------------------------------------
 PIXELCONFIGURATION
