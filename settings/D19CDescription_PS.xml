@@ -12,7 +12,7 @@
         </lpGBT>
         <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
-               <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
+               <!-- <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/> -->
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
@@ -24,8 +24,8 @@
             <SSA Id="6" configfile="SSA.txt" />
             <SSA Id="7" configfile="SSA.txt" /> -->
             
-            <CIC_Files path="./settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" />
+            <!-- <CIC_Files path="./settings/CicFiles/" />
+            <CIC Id="8" configfile="CIC_default.txt" /> -->
         </Hybrid>
     </OpticalGroup>
     

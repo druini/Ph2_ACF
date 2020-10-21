@@ -50,7 +50,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     this->ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
     {
-      //cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
+      cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
       for(const auto& cChannel: cTxChannels)
         this->ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
     }

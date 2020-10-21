@@ -60,15 +60,15 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
 bool SSAInterface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerifLoop)
 {
     // for now always with asynchronous mode
-    uint8_t cValue=1;
-    uint8_t cRegValue       = (cValue << 4) | (cValue << 2) | (1 << 0);
-    bool    cEnableAnalogue = WriteChipSingleReg(pChip, "ENFLAGS", cRegValue, false);
-    bool    cEnableFECal    = WriteChipSingleReg(pChip, "FE_Calibration", 1, pVerifLoop);
-    cRegValue               = ReadChipReg(pChip, "ReadoutMode");
-    cRegValue               = (cRegValue & 0x4) | (1);
-    bool cReadoutMode       = WriteChipSingleReg(pChip, "ReadoutMode", cRegValue, pVerifLoop);
-    return cEnableAnalogue && cEnableFECal && cReadoutMode;
-    //return this->WriteChipReg(pChip, "AnalogueAsync", 1);
+    // uint8_t cValue=1;
+    // uint8_t cRegValue       = (cValue << 4) | (cValue << 2) | (1 << 0);
+    // bool    cEnableAnalogue = WriteChipSingleReg(pChip, "ENFLAGS", cRegValue, false);
+    // bool    cEnableFECal    = WriteChipSingleReg(pChip, "FE_Calibration", 1, pVerifLoop);
+    // cRegValue               = ReadChipReg(pChip, "ReadoutMode");
+    // cRegValue               = (cRegValue & 0x4) | (1);
+    // bool cReadoutMode       = WriteChipSingleReg(pChip, "ReadoutMode", cRegValue, pVerifLoop);
+    // return cEnableAnalogue && cEnableFECal && cReadoutMode;
+    return this->WriteChipReg(pChip, "AnalogueAsync", 1);
 }
 bool SSAInterface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop) { return this->WriteChipReg(pChip, "InjectedCharge", injectionAmplitude, pVerifLoop); }
 
