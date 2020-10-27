@@ -4,9 +4,9 @@
 
 ## The pipeline starts when a merge request is created
 
-# workflow:
-#   rules:
-#     - if: $CI_MERGE_REQUEST_ID
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
 
 image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
 
@@ -74,20 +74,20 @@ check_run_on_IT:
     expire_in: 1 week
 
 ## 2S hybrid
-.run_on_2S:
+run_on_2S:
   stage: run
   dependencies:
     - build
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/f/fravera/ci_repo/ci_tools .
-    # - python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
+    - python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
   script:
-    # - python ci_tools/status_manager.py 2s_status.txt --set_status 1
+    - python ci_tools/status_manager.py 2s_status.txt --set_status 1
     - source ./ci_setup.sh
     - feh_2s_test -f ci_tools/CMS2S.xml -t -m -a --findShorts -b
   after_script:
-    # - python ci_tools/status_manager.py 2s_status.txt --set_status 0
+    - python ci_tools/status_manager.py 2s_status.txt --set_status 0
     - cp Results/*/Hybrid.root .
   artifacts:
     paths:
@@ -95,7 +95,7 @@ check_run_on_IT:
       - ci_tools/plot_hist.py
     expire_in: 1 week
 
-.check_run_on_2S:
+check_run_on_2S:
   stage: check
   needs: [run_on_2S]
   script:
@@ -116,13 +116,11 @@ run_on_2S_FNAL:
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/f/fravera/ci_repo/ci_tools .
-    # - python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
+    - /opt/cactus/bin/controlhub_start
   script:
-    # - python ci_tools/status_manager.py 2s_status.txt --set_status 1
     - source ./ci_setup.sh
     - feh_2s_test -f ci_tools/D19CDescription_2CBC3_Feynman.xml -t -m -a --findShorts -b
   after_script:
-    # - python ci_tools/status_manager.py 2s_status.txt --set_status 0
     - cp Results/*/Hybrid.root .
   artifacts:
     paths:
@@ -139,3 +137,5 @@ check_run_on_2S_FNAL:
     paths:
       - plots
     expire_in: 1 week
+
+
