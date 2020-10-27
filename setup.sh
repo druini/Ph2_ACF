@@ -85,12 +85,12 @@ export PowerSupplyFlag='-D__POWERSUPPLY__'
 ################
 
 # Stand-alone application, without data streaming
-export CompileForHerd=false
-export CompileForShep=false
+# export CompileForHerd=false
+# export CompileForShep=false
 
 # Stand-alone application, with data streaming
-# export CompileForHerd=true
-# export CompileForShep=true
+export CompileForHerd=true
+export CompileForShep=true
 
 # Herd application
 # export CompileForHerd=true

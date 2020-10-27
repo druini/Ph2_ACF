@@ -430,15 +430,17 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
 
     // switch off SEH
     LOG(INFO) << BOLDRED << "Please switch off the SEH... press any key to continue once you have done so..." << RESET;
-    do
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while(std::cin.get() != '\n');
+    // do
+    // {
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    // } while(std::cin.get() != '\n');
+    system("/home/modtest/Programming/power_supply/bin/TurnOff -c /home/modtest/Programming/power_supply/config/config.xml ");
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
     // resync CDCE
     // this->syncCDCE();
     // reset GBT-FPGA
     this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     // reset GBT-FPGA
     // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
     // std::this_thread::sleep_for (std::chrono::milliseconds (500) );
@@ -447,11 +449,13 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     bool cLinksLocked = true;
     // tell user to switch on SEH
     LOG(INFO) << BOLDRED << "Please switch on the SEH... press any key to continue once you have done so..." << RESET;
-    do
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while(std::cin.get() != '\n');
-
+    // do
+    // {
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    // } while(std::cin.get() != '\n');
+    system("/home/modtest/Programming/power_supply/bin/TurnOn -c /home/modtest/Programming/power_supply/config/config.xml ");
+    std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
+    
     for(auto cLinkId: cLinkIds)
     {
         // reset here for good measure
