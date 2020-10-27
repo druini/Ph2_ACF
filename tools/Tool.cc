@@ -1261,7 +1261,6 @@ class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
         {
             fTool->setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)), fDacName, fDacList->at(dacIt));
             setDataContainer(fDetectorDataContainerVector->at(dacIt));
-            std::cout<<"MeasureBeBoardDataPerGroup "<<dacIt<<std::endl;
             MeasureBeBoardDataPerGroup::operator()();
         }
     }
