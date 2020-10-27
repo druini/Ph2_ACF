@@ -68,7 +68,7 @@ void verifyImageName(const string& strImage, const vector<string>& lstNames)
 
 int main(int argc, char* argv[])
 {
-    std::string loggerConfigFile = std::getenv("BASE_DIR");
+    std::string loggerConfigFile = std::getenv("PH2ACF_BASE_DIR");
     loggerConfigFile += "/settings/logger.conf";
     el::Configurations conf(loggerConfigFile);
     el::Loggers::reconfigureAllLoggers(conf);
