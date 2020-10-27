@@ -140,6 +140,8 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
             cBeBoard->setEventType(EventType::ZS);
         else if(cEventTypeString == "Async")
             cBeBoard->setEventType(EventType::SSAAS);
+        else if(cEventTypeString == "MPAAS")
+            cBeBoard->setEventType(EventType::MPAAS);
         else
             cBeBoard->setEventType(EventType::VR);
     }

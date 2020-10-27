@@ -714,7 +714,8 @@ void Tool::setFWTestPulse()
             else
             {
                 LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10" << RESET;
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+                //cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             break;
@@ -901,16 +902,13 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
 {
     // int minDAC = 0x0;
     DetectorDataContainer* outputDataContainer = fDetectorDataContainer;
-
     ReadoutChip* cChip = fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0); // assumption: one BeBoard has only one type of chip;
-
     bool localDAC = cChip->isDACLocal(dacName);
-    // if(localDAC)	LOG (INFO) << BOLDBLUE << "ISLOCALDAC!!!!!!" <<  RESET;
-
     uint8_t numberOfBits = cChip->getNumberOfBits(dacName);
+    int bitmin=0;
+    //if (dacName=="ThDAC_ALL")bitmin=3;
     LOG(INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
     bool occupanyDirectlyProportionalToDAC;
-
     DetectorDataContainer* previousStepOccupancyContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *previousStepOccupancyContainer);
     DetectorDataContainer* currentStepOccupancyContainer = new DetectorDataContainer();
@@ -931,7 +929,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
         ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *previousDacList, allZeroRegister);
         ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *currentDacList, allOneRegister);
     }
-    LOG(INFO) << BOLDBLUE << "Setting all bits of registers " << dacName << "  to  " << +allZeroRegister << RESET;
+    LOG(INFO) << BOLDBLUE << "Setting all bits of registers " << dacName << "  to  " << +allZeroRegister <<"localDAC "<<localDAC<< RESET;
     if(localDAC)
         setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList);
     else
@@ -962,7 +960,9 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
     }
     // LOG (INFO) << BOLDBLUE << "START " << RESET;
 
-    for(int iBit = numberOfBits - 1; iBit >= 0; --iBit)
+    
+
+    for(int iBit = numberOfBits - 1; iBit >= bitmin; --iBit)
     {
         LOG(INFO) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
         for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
@@ -1148,7 +1148,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
     groupScan->setNumberOfEvents(numberOfEvents);
     groupScan->setDetectorContainer(fDetectorContainer);
     groupScan->setNumberOfEventsPerBurst(numberOfEventsPerBurst);
-
+    //std::cout<<"groupScan "<<std::endl;
     if(fChannelGroupHandler == nullptr)
     {
         std::cout << __PRETTY_FUNCTION__ << " fChannelGroupHandler was not initialized!!! Aborting..." << std::endl;
@@ -1168,7 +1168,6 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
                     }
                 }
             }
-
             groupScan->setGroup(group);
             (*groupScan)();
             // this->sendData();
@@ -1225,7 +1224,6 @@ class MeasureBeBoardDataPerGroup : public ScanBase
         {
             uint32_t currentNumberOfEvents = uint32_t(fNumberOfEventsPerBurst);
             if(burstNumbers == 1) currentNumberOfEvents = lastBurstNumberOfEvents;
-
             fTool->ReadNEvents(fDetectorContainer->at(fBoardIndex), currentNumberOfEvents);
             // Loop over Events from this Acquisition
             const std::vector<Event*>& events = fTool->GetEvents(fDetectorContainer->at(fBoardIndex));
@@ -1265,6 +1263,7 @@ class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
         {
             fTool->setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->at(fBoardIndex)), fDacName, fDacList->at(dacIt));
             setDataContainer(fDetectorDataContainerVector->at(dacIt));
+            std::cout<<"MeasureBeBoardDataPerGroup "<<dacIt<<std::endl;
             MeasureBeBoardDataPerGroup::operator()();
         }
     }
