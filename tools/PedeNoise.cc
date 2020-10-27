@@ -379,7 +379,6 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
             fDetectorDataContainer                       = theOccupancyContainer;
             fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
-            std::cout<<" fEventsPerPoint "<<fEventsPerPoint<<" fNEventsPerBurst "<<fNEventsPerBurst<<std::endl;
             if(cWithCBC) this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint, fNEventsPerBurst);
             if(cWithSSA) this->setDacAndMeasureData("Bias_THDAC", cValue, fEventsPerPoint, fNEventsPerBurst);
             if(cWithMPA) this->setDacAndMeasureData("ThDAC_ALL", cValue, fEventsPerPoint, fNEventsPerBurst);

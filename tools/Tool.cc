@@ -905,8 +905,6 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
     ReadoutChip* cChip = fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0); // assumption: one BeBoard has only one type of chip;
     bool localDAC = cChip->isDACLocal(dacName);
     uint8_t numberOfBits = cChip->getNumberOfBits(dacName);
-    int bitmin=0;
-    //if (dacName=="ThDAC_ALL")bitmin=3;
     LOG(INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
     bool occupanyDirectlyProportionalToDAC;
     DetectorDataContainer* previousStepOccupancyContainer = new DetectorDataContainer();
@@ -929,7 +927,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
         ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *previousDacList, allZeroRegister);
         ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *currentDacList, allOneRegister);
     }
-    LOG(INFO) << BOLDBLUE << "Setting all bits of registers " << dacName << "  to  " << +allZeroRegister <<"localDAC "<<localDAC<< RESET;
+    LOG(INFO) << BOLDBLUE << "Setting all bits of registers " << dacName << "  to  " << +allZeroRegister << RESET;
     if(localDAC)
         setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList);
     else
@@ -962,7 +960,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
 
     
 
-    for(int iBit = numberOfBits - 1; iBit >= bitmin; --iBit)
+    for(int iBit = numberOfBits - 1; iBit >= 0; --iBit)
     {
         LOG(INFO) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
         for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
