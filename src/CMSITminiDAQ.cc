@@ -138,7 +138,7 @@ int main(int argc, char** argv)
     fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
     if(fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
     fileRunNumberIn.close();
-    system(std::string("mkdir " + std::string(RD53Shared::RESULTDIR)).c_str());
+    system(std::string("mkdir -p " + std::string(RD53Shared::RESULTDIR)).c_str());
 
     // ####################
     // # Retrieve options #
