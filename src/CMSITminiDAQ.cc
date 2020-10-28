@@ -582,10 +582,18 @@ int main(int argc, char** argv)
 
             if(cmd.argument(0) == "")
             {
+              if(whichCalib == "prbstime"){
                 LOG(ERROR) << BOLDRED
-                           << "Neither the time (to be given with -t <TIME IN SECONDS>) nor the number of frames (to be given with -n <NUMBER OF FRAMES>) was specified for the PRBS test. Abort."
-                           << RESET;
-                exit(EXIT_FAILURE);
+                  << "failed to specify duration of PRBS test; use \"-c prbstime <TIME IN SECONDS>\". Abort."
+                  << RESET;
+              }
+              else if(whichCalib == "prbsframes"){
+                LOG(ERROR) << BOLDRED
+                  << "failed to specify number of frames for PRBS test; use \"-c prbsframes <NUMBER OF FRAMES>\". Abort."
+                  << RESET;
+              }
+
+              exit(EXIT_FAILURE);
             }
 
             unsigned long long frames_or_time = strtoull(cmd.argument(0).c_str(), NULL, 0);
