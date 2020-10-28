@@ -1794,8 +1794,12 @@ bool RD53FWInterface::RunPRBStest(bool given_time, unsigned long long frames_or_
     unsigned time_per_step =
         std::min(std::max((unsigned)time2run / n_prints, (unsigned)1), (unsigned)3600); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
-    // Reset counter
-    WriteStackReg({{"user.ctrl_regs.PRBS_checker.reset_cntr", 1}, {"user.ctrl_regs.PRBS_checker.reset_cntr", 0}});
+    WriteStackReg({
+      // Select hybrid and chip
+      {"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id}, {"user.ctrl_regs.PRBS_checker.chip_address", chip_id},
+
+      // Reset counter
+      {"user.ctrl_regs.PRBS_checker.reset_cntr", 1}, {"user.ctrl_regs.PRBS_checker.reset_cntr", 0}});
 
     // Set PRBS frames to run
     uint32_t lowFrames, highFrames;
@@ -1838,11 +1842,7 @@ bool RD53FWInterface::RunPRBStest(bool given_time, unsigned long long frames_or_
 
         // Stop PRBS
         {"user.ctrl_regs.PRBS_checker.stop_checker", 1},
-        {"user.ctrl_regs.PRBS_checker.stop_checker", 0},
-
-        // Select hybrid and chip
-        {"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
-        {"user.ctrl_regs.PRBS_checker.chip_address", chip_id}});
+        {"user.ctrl_regs.PRBS_checker.stop_checker", 0}});
 
     // Read PRBS frame counter
     uint32_t PRBScntrLO   = ReadReg("user.stat_regs.prbs_frame_cntr_low");
