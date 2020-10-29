@@ -3,8 +3,8 @@
 
 MPAChannelGroupHandler::MPAChannelGroupHandler()
 {
-    allChannelGroup_     = new ChannelGroup<NMPACHANNELS, 1>();
-    currentChannelGroup_ = new ChannelGroup<NMPACHANNELS, 1>();
+    allChannelGroup_     = new ChannelGroup<120, 16>();
+    currentChannelGroup_ = new ChannelGroup<120, 16>();
 }
 
 MPAChannelGroupHandler::~MPAChannelGroupHandler()
