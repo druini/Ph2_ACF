@@ -68,15 +68,11 @@ void D19cMPAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
                     auto& cChipCounterData = cHybridCounterData[cRocIndex];
                     for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                     {
-                        if(cChnl % 2 != 0)
-                        {
                             auto cWord = *(cDataIterator);
-                            cChipCounterData.push_back((cWord & 0xFFFF));
-                            cChipCounterData.push_back((cWord & (0xFFFF << 16)) >> 16);
+                            cChipCounterData.push_back(cWord);
                             LOG(DEBUG) << BOLDBLUE << "ROC#" << +cRocIndex << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
                             cDataIterator++;
-                        } //
-                    }     // chnl loop
+                    }     
                     cRocIndex++;
                 } //[if MPA]
             }     // chips
@@ -98,7 +94,7 @@ void D19cMPAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const
 
                 for(ChannelContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {
-                    if(cTestChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += hVec[i]; }
+                    if(cTestChannelGroup->isChannelEnabled(i)) channel->fOccupancy += hVec[i]; 
                 }
             }
         }

@@ -1681,6 +1681,7 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
 }
 void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pData, bool cFast = true)
 {
+
     // get event type
     EventType cEventType = pBoard->getEventType();
     if(cEventType == EventType::MPAAS)
@@ -1759,15 +1760,17 @@ void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                             for(int i = 0; i < 2040; i++)
                             {
                                 pData.push_back(ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data") - 1);
-                                // all+=pData[i];
+                                LOG(DEBUG) << BOLDBLUE << "pData "<<i<<" "<< pData[i] << RESET;
+                                        
                             }
                             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+
                             ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
                         }
                     }
                     else
                     {
-                        LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from SSA" << +cChip->getId() << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from MPA" << +cChip->getId() << RESET;
                         bool                  cWrite = false;
                         std::vector<uint32_t> cVec;
                         cVec.clear();
@@ -2180,6 +2183,7 @@ void D19cFWInterface::ReadASEvent(BeBoard* pBoard, std::vector<uint32_t>& pData)
 }
 bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 {
+
     bool pFailed        = false;
     auto cNevents       = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
@@ -2192,6 +2196,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     bool                                          cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents * (cMultiplicity + 1)});
+
     if(cAsync && cTriggerSource == 3)
     {
         this->ReconfigureTriggerFSM(cVecReg);
@@ -2354,7 +2359,6 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // try again
         this->ReadNEvents(pBoard, pNEvents, pData);
     }
-
     if(fSaveToFile) fFileHandler->setData(pData);
 }
 
@@ -3306,7 +3310,7 @@ void D19cFWInterface::PSInterfaceBoard_SetSlaveMap()
 void D19cFWInterface::PSInterfaceBoard_ConfigureI2CMaster(uint32_t pEnabled = 1, uint32_t pFrequency = 4)
 {
     // wait for all commands to be executed
-    std::chrono::milliseconds cWait(fWait_us);
+    std::chrono::microseconds cWait(fWait_us);
     while(!ReadReg("fc7_daq_stat.command_processor_block.i2c.command_fifo.empty")) { std::this_thread::sleep_for(cWait); }
 
     if(pEnabled > 0)
@@ -3329,7 +3333,7 @@ void D19cFWInterface::PSInterfaceBoard_ConfigureI2CMaster(uint32_t pEnabled = 1,
 
 void D19cFWInterface::PSInterfaceBoard_SendI2CCommand(uint32_t slave_id, uint32_t board_id, uint32_t read, uint32_t register_address, uint32_t data)
 {
-    std::chrono::milliseconds cWait(fWait_us);
+    std::chrono::microseconds cWait(fWait_us);
 
     uint32_t shifted_command_type     = 1 << 31;
     uint32_t shifted_word_id_0        = 0;
@@ -3371,7 +3375,7 @@ void D19cFWInterface::PSInterfaceBoard_SendI2CCommand(uint32_t slave_id, uint32_
 
 uint32_t D19cFWInterface::PSInterfaceBoard_SendI2CCommand_READ(uint32_t slave_id, uint32_t board_id, uint32_t read, uint32_t register_address, uint32_t data)
 {
-    std::chrono::milliseconds cWait(fWait_us);
+    std::chrono::microseconds cWait(fWait_us);
 
     uint32_t shifted_command_type     = 1 << 31;
     uint32_t shifted_word_id_0        = 0;
@@ -3511,13 +3515,13 @@ void D19cFWInterface::PSInterfaceBoard_PowerOn(uint8_t mpaid, uint8_t ssaid)
     LOG(INFO) << "Interface Board Power ON";
 
     PSInterfaceBoard_ConfigureI2CMaster(1, SLOW);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     PSInterfaceBoard_SendI2CCommand(powerenable, 0, write, 0, 0x00); // There is an inverter! Be Careful!
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
 void D19cFWInterface::SSAEqualizeDACs(uint8_t pChipId)
@@ -3630,7 +3634,7 @@ void D19cFWInterface::PSInterfaceBoard_PowerOn_MPA(float VDDPST, float DVDD, flo
     uint32_t                  i2cmux  = 0;
     uint32_t                  pcf8574 = 1;
     uint32_t                  dac7678 = 4;
-    std::chrono::milliseconds cWait(100);
+    std::chrono::milliseconds cWait(10);
     this->getBoardInfo();
     this->PSInterfaceBoard_PowerOn(0, 0);
     PSInterfaceBoard_SetSlaveMap();
