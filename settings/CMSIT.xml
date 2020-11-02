@@ -70,7 +70,7 @@
               TEMPSENS_IDEAL_FACTOR = "1225"
               />
           <!--
-              Monitoring: ADC_MONITOR_CONFIG, BG_MONITOR_CONFIG, ADC_OFFSET_VOLT, ADC_MAXIMUM_VOLT, TEMPSENS_IDEAL_FACTOR
+              Monitoring: MONITOR_CONFIG_ADC, MONITOR_CONFIG_BG, ADC_OFFSET_VOLT, ADC_MAXIMUM_VOLT, TEMPSENS_IDEAL_FACTOR
               CLK_DATA_DELAY: [8] clk phase; [7:4] clk delay; [3:0] data delay
           -->
         </RD53>
