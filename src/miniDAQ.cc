@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
     const char* cDirectory = "Data";
     mkdir(cDirectory, 777);
     int cRunNumber = 0;
-    getRunNumber("${BASE_DIR}", cRunNumber);
+    getRunNumber("${PH2ACF_BASE_DIR}", cRunNumber);
     cOutputFile    = "Data/" + string_format("run_%04d.raw", cRunNumber);
     pEventsperVcth = (cmd.foundOption("events")) ? convertAnyInt(cmd.optionValue("events").c_str()) : 10;
 

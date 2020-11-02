@@ -34,16 +34,16 @@ export ZMQ_HEADER_PATH=/usr/include/zmq.hpp
 ###########
 # Ph2_ACF #
 ###########
-export BASE_DIR=$(pwd)
+export PH2ACF_BASE_DIR=$(pwd)
 
 ####################
 # External Plugins #
 ####################
 export AMC13DIR=$CACTUSINCLUDE/amc13
-export ANTENNADIR=$BASE_DIR/../CMSPh2_AntennaDriver
-export USBINSTDIR=$BASE_DIR/../Ph2_USBInstDriver
-export EUDAQDIR=$BASE_DIR/../eudaq
-export POWERSUPPLYDIR=$BASE_DIR/../power_supply
+export ANTENNADIR=$PH2ACF_BASE_DIR/../CMSPh2_AntennaDriver
+export USBINSTDIR=$PH2ACF_BASE_DIR/../Ph2_USBInstDriver
+export EUDAQDIR=$PH2ACF_BASE_DIR/../eudaq
+export POWERSUPPLYDIR=$PH2ACF_BASE_DIR/../power_supply
 
 ###########
 # ANTENNA #
@@ -63,8 +63,8 @@ export EUDAQLIB=$EUDAQDIR/lib
 ##########
 # System #
 ##########
-export PATH=$BASE_DIR/bin:$PATH
-export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$BASE_DIR/RootWeb/lib:$CACTUSLIB:$BASE_DIR/lib:$EUDAQLIB:/opt/rh/llvm-toolset-7.0/root/usr/lib64:$LD_LIBRARY_PATH
+export PATH=$PH2ACF_BASE_DIR/bin:$PATH
+export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$PH2ACF_BASE_DIR/RootWeb/lib:$CACTUSLIB:$PH2ACF_BASE_DIR/lib:$EUDAQLIB:/opt/rh/llvm-toolset-7.0/root/usr/lib64:$LD_LIBRARY_PATH
 
 #########
 # Flags #
@@ -104,6 +104,6 @@ export CompileForShep=false
 export CompileWithEUDAQ=false
 
 # Clang-format command
-alias formatAll="find ${BASE_DIR} -iname *.h -o -iname *.cc | xargs /opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format -i"
+alias formatAll="find ${PH2ACF_BASE_DIR} -iname *.h -o -iname *.cc | xargs /opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format -i"
 
 echo "=== DONE ==="
