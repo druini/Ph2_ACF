@@ -8,9 +8,9 @@
  */
 
 #include "CicInterface.h"
-#include "D19clpGBTInterface.h"
 #include "BeBoardFWInterface.h"
 #include "D19cFWInterface.h"
+#include "D19clpGBTInterface.h"
 #include "ReadoutChipInterface.h"
 
 #define DEV_FLAG 0
@@ -31,20 +31,19 @@ CicInterface::CicInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoard
 
 CicInterface::~CicInterface() {}
 
-
 //#FIXME temporary fix to use 1/2 PS skeleton
-void CicInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT *pLpGBT)
+void CicInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT* pLpGBT)
 {
     flpGBTInterface = pLpGBTInterface;
-    flpGBT = pLpGBT;
+    flpGBT          = pLpGBT;
 }
 
 bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop)
 {
-    bool cSuccess=false;
+    bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
     // write
-    if( flpGBTInterface == nullptr )
+    if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
         ChipRegItem           cRegItem;
@@ -53,52 +52,50 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
         cRegItem.fValue   = pRegisterValue & 0xFF;
         fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVec, pVerifLoop, true);
         uint8_t cWriteAttempts = 0;
-        cSuccess = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
     }
     else
     {
-        cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), pRegisterAddress, pRegisterValue,  pVerifLoop);
+        cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), pRegisterAddress, pRegisterValue, pVerifLoop);
     }
     return cSuccess;
 }
 
-bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, uint8_t>> pRegs , bool pVerifLoop )
+bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop)
 {
     setBoard(pChip->getBeBoardId());
-    bool cSuccess=true;
-    if( flpGBTInterface == nullptr )
+    bool cSuccess = true;
+    if(flpGBTInterface == nullptr)
     {
-        std::vector<uint32_t> cVec; cVec.clear();
+        std::vector<uint32_t> cVec;
+        cVec.clear();
         for(const auto& cReg: pRegs)
         {
-            ChipRegItem           cRegItem;
+            ChipRegItem cRegItem;
             cRegItem.fPage    = 0x00;
             cRegItem.fAddress = cReg.first;
             cRegItem.fValue   = cReg.second & 0xFF;
             fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVec, pVerifLoop, true);
-    #ifdef COUNT_FLAG
+#ifdef COUNT_FLAG
             fRegisterCount++;
-    #endif
+#endif
         }
         uint8_t cWriteAttempts = 0;
-        cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
-    #ifdef COUNT_FLAG
+        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+#ifdef COUNT_FLAG
         fTransactionCount++;
-    #endif
+#endif
     }
     else
     {
         for(const auto& cReg: pRegs)
         {
-            LOG (INFO) << BOLDBLUE << "Writing CIC register with address " 
-            << std::hex 
-            << +cReg.first
-            << std::dec << RESET;
-            cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(),  cReg.first, cReg.second,  pVerifLoop);
-            if( !cSuccess ) continue;
-        #ifdef COUNT_FLAG
+            LOG(INFO) << BOLDBLUE << "Writing CIC register with address " << std::hex << +cReg.first << std::dec << RESET;
+            cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, pVerifLoop);
+            if(!cSuccess) continue;
+#ifdef COUNT_FLAG
             fRegisterCount++;
-        #endif
+#endif
         }
     }
     return cSuccess;
@@ -113,20 +110,18 @@ bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSiz
     // otherwise need to configure one by one which
     // takes forever
     std::map<uint8_t, ChipRegItem> cMap;
-    cMap.clear(); 
+    cMap.clear();
     for(auto& cRegInMap: cCicRegMap) { cMap[cRegInMap.second.fAddress] = cRegInMap.second; }
-    std::vector<std::pair<uint8_t,uint8_t>> cRegs;
-    for(auto& cRegItem: cMap) {     
-        LOG (DEBUG) << BOLDBLUE << "Register map for CIC contains a register with address " 
-            << std::hex 
-            << +cRegItem.second.fAddress 
-            << std::dec << RESET;
-        std::pair<uint8_t,uint8_t> cReg; 
-        cReg.first = cRegItem.second.fAddress; 
-        cReg.second = cRegItem.second.fValue; 
-        cRegs.push_back( cReg );
+    std::vector<std::pair<uint8_t, uint8_t>> cRegs;
+    for(auto& cRegItem: cMap)
+    {
+        LOG(DEBUG) << BOLDBLUE << "Register map for CIC contains a register with address " << std::hex << +cRegItem.second.fAddress << std::dec << RESET;
+        std::pair<uint8_t, uint8_t> cReg;
+        cReg.first  = cRegItem.second.fAddress;
+        cReg.second = cRegItem.second.fValue;
+        cRegs.push_back(cReg);
     } // loop over map
-    return this->WriteRegs(pCic, cRegs  , pVerifLoop );
+    return this->WriteRegs(pCic, cRegs, pVerifLoop);
 }
 
 bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
@@ -135,7 +130,7 @@ bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16
     std::vector<uint32_t> cVec;
     ChipRegItem           cRegItem = pChip->getRegItem(pRegNode);
     cRegItem.fValue                = pValue;
-    bool cSuccess = this->WriteReg(pChip, cRegItem.fAddress ,cRegItem.fValue , pVerifLoop);
+    bool cSuccess                  = this->WriteReg(pChip, cRegItem.fAddress, cRegItem.fValue, pVerifLoop);
     return cSuccess;
 }
 
@@ -144,12 +139,12 @@ uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 {
     setBoard(pChip->getBeBoardId());
     ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
-    return this->ReadChipReg( pChip, cRegItem ).second ;
+    return this->ReadChipReg(pChip, cRegItem).second;
 }
 std::pair<bool, uint16_t> CicInterface::ReadChipReg(Chip* pChip, ChipRegItem pRegItem)
 {
     setBoard(pChip->getBeBoardId());
-    if( flpGBTInterface == nullptr )
+    if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVecReq;
         fBoardFW->EncodeReg(pRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);

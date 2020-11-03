@@ -1379,7 +1379,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
 {
     if(fDoBoardBroadcast == false)
     {
-	LOG (INFO) << BOLDBLUE << "Not broadcasting.." << RESET;
+        LOG(INFO) << BOLDBLUE << "Not broadcasting.." << RESET;
         for(auto cOpticalGroup: *pBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -1392,10 +1392,10 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
         }
     }
     else
-   {
-	LOG (INFO) << BOLDBLUE << "Broadcasting to chips on board.." << RESET;
+    {
+        LOG(INFO) << BOLDBLUE << "Broadcasting to chips on board.." << RESET;
         fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
-   }
+    }
 }
 
 // set same local dac for all BeBoard

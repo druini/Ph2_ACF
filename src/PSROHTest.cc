@@ -4,7 +4,6 @@
 #include "../tools/Tool.h"
 #include "tools/BackEndAlignment.h"
 
-
 #include "../tools/PSROHHybridTester.h"
 
 #ifdef __USE_ROOT__
@@ -71,7 +70,7 @@ int main(int argc, char* argv[])
     // test ADC channels
     cmd.defineOption("testADC", "Test LpGBT ADCs on ROH");
     cmd.defineOptionAlternative("testADC", "a");
-    // test optical r/w 
+    // test optical r/w
     cmd.defineOption("optical", "Test LpGBT read/write through optical link");
     cmd.defineOptionAlternative("optical", "o");
     // clock test
@@ -190,17 +189,17 @@ int main(int argc, char* argv[])
         }
     }
 
-    if( cmd.foundOption("cic-pattern"))
+    if(cmd.foundOption("cic-pattern"))
     {
-        LOG (INFO) << BOLDBLUE << "Checking back-end alignment with CIC.." << RESET;
+        LOG(INFO) << BOLDBLUE << "Checking back-end alignment with CIC.." << RESET;
         // align back-end
         BackEndAlignment cBackEndAligner;
         cBackEndAligner.Inherit(&cBackEndTool);
         cBackEndAligner.Align();
-        //cBackEndAligner.Start(0);
+        // cBackEndAligner.Start(0);
         // reset all chip and board registers
         // to what they were before this tool was called
-        //cBackEndAligner.Reset();
+        // cBackEndAligner.Reset();
     }
     // Test PS ROH Reset Lines
     if(cmd.foundOption("testReset"))
@@ -233,8 +232,7 @@ int main(int argc, char* argv[])
         cBackEndROHHybridTester.TestADC(cADCs, 0, 1000, 20);
     }
 
-    if(cmd.foundOption("optical"))
-        cBackEndROHHybridTester.TestOpticalRW();
+    if(cmd.foundOption("optical")) cBackEndROHHybridTester.TestOpticalRW();
 
     // Test Fast Commands
     if(cDebug)
@@ -307,13 +305,13 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
         cControlROHHybridTester.ClearBRAM(std::string("test"));
     }
-/*
-    D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(cBackEndTool.fBeBoardInterface->getFirmwareInterface());
-    LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-    cFWInterface->StubDebug(true, 6);
-    LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-    cFWInterface->L1ADebug();
-*/
+    /*
+        D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(cBackEndTool.fBeBoardInterface->getFirmwareInterface());
+        LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
+        cFWInterface->StubDebug(true, 6);
+        LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
+        cFWInterface->L1ADebug();
+    */
     // Save Result File
     cBackEndTool.SaveResults();
     cBackEndTool.WriteRootFile();

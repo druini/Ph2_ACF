@@ -666,7 +666,7 @@ void PSROHHybridTester::TestULInternalPattern(uint32_t pPattern)
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern);
             std::this_thread::sleep_for(std::chrono::milliseconds(4000));
-            
+
             D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
             LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
             cFWInterface->StubDebug(true, 6);
@@ -726,9 +726,8 @@ void PSROHHybridTester::PrepareFCMDTest(uint8_t pSource, uint8_t pPattern)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            D19clpGBTInterface*  clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            if(pSource == 3) 
-              clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
+            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+            if(pSource == 3) clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, pSource); // 0 --> link data, 3 --> constant pattern
         }
     }
@@ -751,7 +750,7 @@ bool PSROHHybridTester::TestResetLines(uint8_t pValue)
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "PIOOutL", pValue);
 #ifdef __TCUSB__
             float cMeasurement;
-            auto cMapIterator = fResetLines.begin();
+            auto  cMapIterator = fResetLines.begin();
             do
             {
                 clpGBTInterface->fTC_PSROH.adc_get(cMapIterator->second, cMeasurement);
@@ -771,70 +770,26 @@ bool PSROHHybridTester::TestResetLines(uint8_t pValue)
 
 bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
 {
-    //bool cTestSuccess = true;
+    bool cTestSuccess = true;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            //test cic read
+            // test cic read
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             /*
-            LOG(INFO) << BOLDRED << "CIC0 readback from address 0x0005 = " << clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x05) << RESET;
-            LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1001 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1001) << RESET;
-            LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1002 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1002) << RESET;
-            LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1003 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1003) << RESET;
-            LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1004 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1004) << RESET;
-            LOG(INFO) << BOLDRED << "SSA0 readback from address 0x1005 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1005) << RESET;
-            std::cout << "\n" << std::endl;
-            LOG(INFO) << BOLDRED << "SSA7 readback from address 0x1001 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 7, 0x1001) << RESET;
-            LOG(INFO) << BOLDRED << "SSA7 readback from address 0x1002 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 7, 0x1002) << RESET;
-            LOG(INFO) << BOLDRED << "SSA7 readback from address 0x1003 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 7, 0x1003) << RESET;
-            LOG(INFO) << BOLDRED << "SSA7 readback from address 0x1004 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 7, 0x1004) << RESET;
-            LOG(INFO) << BOLDRED << "SSA7 readback from address 0x1005 value =  " << clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 7, 0x1005) << RESET;
-            */
             for(uint8_t cValue = 0; cValue < 255; cValue++)
             {
-              /*
+
               std::cout << "\n" << std::endl;
               clpGBTInterface->cicWrite(cOpticalGroup->flpGBT, 1, 0x80, cValue);
               clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x80);
-              */
+
               LOG(INFO) << BOLDMAGENTA << "SSA0" << RESET;
-              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 0, 0x1003, cValue);
-              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 0, 0x1003);
-
-              LOG(INFO) << BOLDMAGENTA << "SSA1" << RESET;
-              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 1, 0x1003, cValue);
-              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 1, 0x1003);
-
-              LOG(INFO) << BOLDMAGENTA << "SSA2" << RESET;
-              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 2, 0x1003, cValue);
-              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 2, 0x1003);
-
-              LOG(INFO) << BOLDMAGENTA << "SSA3" << RESET;
-              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 3, 0x1003, cValue);
-              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 3, 0x1003);
-              
-              LOG(INFO) << BOLDMAGENTA << "SSA4" << RESET;
-              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 4, 0x1003, cValue);
-              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 4, 0x1003);
-
-              LOG(INFO) << BOLDMAGENTA << "SSA5" << RESET;
-              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 5, 0x1003, cValue);
-              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 5, 0x1003);
-
-              LOG(INFO) << BOLDMAGENTA << "SSA6" << RESET;
-              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 6, 0x1003, cValue);
-              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 6, 0x1003);
-
-              LOG(INFO) << BOLDMAGENTA << "SSA7" << RESET;
-              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 1, 7, 0x1003, cValue);
-              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 1, 7, 0x1003);
-              std::cout << "\n" << std::endl;
+              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 0, 0, 0x1003, cValue);
+              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 0, 0, 0x1003);
             }
-
-             
-/*
+            */
             for(const auto cMaster: pMasters)
             {
                 uint8_t cSlaveAddress = 0x60;
@@ -844,13 +799,10 @@ bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
                 else
                     LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED" << RESET;
                 cTestSuccess &= cSuccess;
-
             }
-*/
         }
     }
-    //return cTestSuccess;
-    return true;
+    return cTestSuccess;
 }
 
 void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t pMinDACValue, uint32_t pMaxDACValue, uint32_t pStep)
@@ -920,12 +872,12 @@ void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t 
 void PSROHHybridTester::TestOpticalRW(uint32_t pNTries)
 {
     this->PrepareFCMDTest(0);
-    for(auto cBoard : *fDetectorContainer)
+    for(auto cBoard: *fDetectorContainer)
     {
-        for(auto cOpticalGroup : *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            uint8_t cValue = 0x01;
+            uint8_t             cValue          = 0x01;
             for(uint32_t cTry = 0; cTry < pNTries; cTry++)
             {
                 cValue++;

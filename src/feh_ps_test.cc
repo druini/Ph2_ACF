@@ -119,12 +119,12 @@ int main(int argc, char* argv[])
     cHybridTester.CreateResultDirectory(cDirectory);
     cHybridTester.InitResultFile(cResultfile);
     // set voltage  on PS FEH
-    //cHybridTester.SetHybridVoltage();
+    // cHybridTester.SetHybridVoltage();
     // LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
     // cHybridTester.CheckHybridCurrents();
     // check voltage on PS FEH
-    //cHybridTester.CheckHybridVoltages();
-    //LOG(INFO) << outp.str();
+    // cHybridTester.CheckHybridVoltages();
+    // LOG(INFO) << outp.str();
     // select CIC readout
     // cHybridTester.SelectCIC(true);
     cHybridTester.ConfigureHw();
@@ -143,11 +143,11 @@ int main(int argc, char* argv[])
         // align back-end
         BackEndAlignment cBackEndAligner;
         cBackEndAligner.Inherit(&cHybridTester);
-        cBackEndAligner.Align(); 
-	//cBackEndAligner.Start(0);
+        cBackEndAligner.Align();
+        // cBackEndAligner.Start(0);
         // reset all chip and board registers
         // to what they were before this tool was called
-        //cBackEndAligner.Reset();
+        // cBackEndAligner.Reset();
 
         // Check if data player is running
         if(cDPInterfacer.IsRunning(cInterface))
