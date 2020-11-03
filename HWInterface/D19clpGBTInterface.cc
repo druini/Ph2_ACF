@@ -420,7 +420,7 @@ void D19clpGBTInterface::PrintChipMode(Ph2_HwDescription::Chip* pChip)
     }
 }
 
-bool D19clpGBTInterface::GetPUSMStatus(Ph2_HwDescription::Chip* pChip)
+uint8_t D19clpGBTInterface::GetPUSMStatus(Ph2_HwDescription::Chip* pChip)
 {
     return ReadChipReg(pChip, "PUSMStatus");
 }

@@ -111,7 +111,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // Get lpGBT Rx locking status
     bool IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels);
     // Get lpGBT Power Up State Machine status
-    bool GetPUSMStatus(Ph2_HwDescription::Chip* pChip);
+    uint8_t GetPUSMStatus(Ph2_HwDescription::Chip* pChip);
 
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
