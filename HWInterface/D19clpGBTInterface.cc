@@ -22,9 +22,6 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 {
     LOG(INFO) << BOLDBLUE << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
-    
-    //Load register map from configuration file
-    ChipRegMap clpGBTRegMap = pChip->getRegMap();
     for(const auto& cRegItem: clpGBTRegMap)
     {
         if(cRegItem.second.fAddress < 0x13c)
@@ -33,7 +30,6 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
             WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
         }
     }
-    //Apply configuration for PS-ROH 5G
     ConfigurePSROH(pChip, 5);
     return true;
 }
@@ -655,11 +651,11 @@ void D19clpGBTInterface::ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std
     uint8_t cOutL      = ReadChipReg(pChip, "PIOOutL");
     uint8_t cDriveStrH = ReadChipReg(pChip, "PIODriveStrengthH");
     uint8_t cDriveStrL = ReadChipReg(pChip, "PIODriveStrengthL");
-    uint8_t cPullEnH   = ReadChipReg(pChip, "PIOPullEnH");
-    uint8_t cPullEnL   = ReadChipReg(pChip, "PIOPullEnL");
+    uint8_t cPullEnH   = ReadChipReg(pChip, "PIOPullEnaH");
+    uint8_t cPullEnL   = ReadChipReg(pChip, "PIOPullEnaL");
     uint8_t cUpDownH   = ReadChipReg(pChip, "PIOUpDownH");
     uint8_t cUpDownL   = ReadChipReg(pChip, "PIOUpDownL");
-    for(auto cGPIO: pGPIOs)
+    for(auto cGPIO : pGPIOs)
     {
         if(cGPIO < 8)
         {
@@ -671,11 +667,11 @@ void D19clpGBTInterface::ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std
         }
         else
         {
-            cDirH |= (pDir << cGPIO);
-            cOutH |= (pOut << cGPIO);
-            cDriveStrH |= (pDriveStr << cGPIO);
-            cPullEnH |= (pPullEn << cGPIO);
-            cUpDownH |= (pUpDown << cGPIO);
+            cDirH |= (pDir << (cGPIO - 8));
+            cOutH |= (pOut << (cGPIO - 8));
+            cDriveStrH |= (pDriveStr << (cGPIO - 8));
+            cPullEnH |= (pPullEn << (cGPIO - 8));
+            cUpDownH |= (pUpDown << (cGPIO - 8));
         }
     }
     WriteChipReg(pChip, "PIODirL", cDirL);
@@ -684,8 +680,8 @@ void D19clpGBTInterface::ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std
     WriteChipReg(pChip, "PIOOutH", cOutH);
     WriteChipReg(pChip, "PIODriveStrengthL", cDriveStrL);
     WriteChipReg(pChip, "PIODriveStrengthH", cDriveStrH);
-    WriteChipReg(pChip, "PIOPullEnL", cPullEnL);
-    WriteChipReg(pChip, "PIOPullEnH", cPullEnH);
+    WriteChipReg(pChip, "PIOPullEnaL", cPullEnL);
+    WriteChipReg(pChip, "PIOPullEnaH", cPullEnH);
     WriteChipReg(pChip, "PIOUpDownL", cUpDownL);
     WriteChipReg(pChip, "PIOUpDownH", cUpDownH);
 }
@@ -840,8 +836,8 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t 
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // setting GPIO levels Uncomment this for Skeleton test
-    ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 0, 0, 0, 0);
-    /*
+    ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
+    /* 
     WriteChipReg(pChip, "PIODirH", 0x12);
     WriteChipReg(pChip, "PIODirL", 0x4B);
     WriteChipReg(pChip, "PIOOutH", 0x12);
@@ -852,8 +848,8 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     WriteChipReg(pChip, "PIOOutH", 0x12);
     WriteChipReg(pChip, "PIOOutL", 0x4B);
-    WriteChipReg(pChip, "POWERUP2", 0x06);
     */
+    WriteChipReg(pChip, "POWERUP2", 0x06);
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
