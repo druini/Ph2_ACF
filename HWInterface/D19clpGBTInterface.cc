@@ -26,7 +26,8 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     {
         if(cRegItem.second.fAddress < 0x13c)
         {
-            LOG(INFO) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec << "]" << RESET;
+            LOG(INFO) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec << "]"
+                      << RESET;
             WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
         }
     }
@@ -414,10 +415,7 @@ void D19clpGBTInterface::PrintChipMode(Ph2_HwDescription::Chip* pChip)
     }
 }
 
-uint8_t D19clpGBTInterface::GetPUSMStatus(Ph2_HwDescription::Chip* pChip)
-{
-    return ReadChipReg(pChip, "PUSMStatus");
-}
+uint8_t D19clpGBTInterface::GetPUSMStatus(Ph2_HwDescription::Chip* pChip) { return ReadChipReg(pChip, "PUSMStatus"); }
 
 uint8_t D19clpGBTInterface::GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel)
 {
@@ -655,7 +653,7 @@ void D19clpGBTInterface::ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std
     uint8_t cPullEnL   = ReadChipReg(pChip, "PIOPullEnaL");
     uint8_t cUpDownH   = ReadChipReg(pChip, "PIOUpDownH");
     uint8_t cUpDownL   = ReadChipReg(pChip, "PIOUpDownL");
-    for(auto cGPIO : pGPIOs)
+    for(auto cGPIO: pGPIOs)
     {
         if(cGPIO < 8)
         {
@@ -837,7 +835,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t 
     ResetI2C(pChip, {0, 1, 2});
     // setting GPIO levels Uncomment this for Skeleton test
     ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
-    /* 
+    /*
     WriteChipReg(pChip, "PIODirH", 0x12);
     WriteChipReg(pChip, "PIODirL", 0x4B);
     WriteChipReg(pChip, "PIOOutH", 0x12);

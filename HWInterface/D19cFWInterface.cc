@@ -455,7 +455,7 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     } while(std::cin.get() != '\n');
     // system("/home/modtest/Programming/power_supply/bin/TurnOn -c /home/modtest/Programming/power_supply/config/config.xml ");
     // std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
-    
+
     for(auto cLinkId: cLinkIds)
     {
         // reset here for good measure
@@ -1685,7 +1685,6 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
 }
 void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pData, bool cFast = true)
 {
-
     // get event type
     EventType cEventType = pBoard->getEventType();
     if(cEventType == EventType::MPAAS)
@@ -1764,8 +1763,7 @@ void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                             for(int i = 0; i < 2040; i++)
                             {
                                 pData.push_back(ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data") - 1);
-                                LOG(DEBUG) << BOLDBLUE << "pData "<<i<<" "<< pData[i] << RESET;
-                                        
+                                LOG(DEBUG) << BOLDBLUE << "pData " << i << " " << pData[i] << RESET;
                             }
                             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
@@ -2187,7 +2185,6 @@ void D19cFWInterface::ReadASEvent(BeBoard* pBoard, std::vector<uint32_t>& pData)
 }
 bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 {
-
     bool pFailed        = false;
     auto cNevents       = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source

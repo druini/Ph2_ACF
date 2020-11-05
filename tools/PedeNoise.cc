@@ -6,9 +6,9 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/EmptyContainer.h"
+#include "../Utils/MPAChannelGroupHandler.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/SSAChannelGroupHandler.h"
-#include "../Utils/MPAChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include <math.h>
 
@@ -52,8 +52,8 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     initializeRecycleBin();
 
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
-    //For async only -- to fix
-    if(cWithMPA or cWithSSA)fChannelGroupHandler->setChannelGroupParameters(16, 120);
+    // For async only -- to fix
+    if(cWithMPA or cWithSSA) fChannelGroupHandler->setChannelGroupParameters(16, 120);
     fAllChan = pAllChan;
 
     fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
@@ -136,10 +136,10 @@ void PedeNoise::reloadStubLogic()
 
 void PedeNoise::sweepSCurves()
 {
-    uint16_t cStartValue=0;
-    if (cWithSSA) cStartValue=40;
-    if (cWithMPA) cStartValue=50;
-    bool     originalAllChannelFlag = this->fAllChan;
+    uint16_t cStartValue = 0;
+    if(cWithSSA) cStartValue = 40;
+    if(cWithMPA) cStartValue = 50;
+    bool originalAllChannelFlag = this->fAllChan;
 
     if(fPulseAmplitude != 0 && originalAllChannelFlag && cWithCBC)
     {
@@ -153,7 +153,7 @@ void PedeNoise::sweepSCurves()
         if(cWithSSA)
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
         else if(cWithMPA)
-            {
+        {
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC0", fPulseAmplitude);
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC1", fPulseAmplitude);
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC2", fPulseAmplitude);
@@ -161,7 +161,7 @@ void PedeNoise::sweepSCurves()
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC4", fPulseAmplitude);
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC5", fPulseAmplitude);
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC6", fPulseAmplitude);
-            }
+        }
         else
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
     }
@@ -189,10 +189,9 @@ void PedeNoise::sweepSCurves()
     if(fPulseAmplitude != 0)
     {
         this->enableTestPulse(false);
-        if(cWithSSA)
-            setSameGlobalDac("InjectedCharge", 0);
+        if(cWithSSA) setSameGlobalDac("InjectedCharge", 0);
         if(cWithMPA)
-            {
+        {
             setSameGlobalDac("CalDAC0", 0);
             setSameGlobalDac("CalDAC1", 0);
             setSameGlobalDac("CalDAC2", 0);
@@ -200,7 +199,7 @@ void PedeNoise::sweepSCurves()
             setSameGlobalDac("CalDAC4", 0);
             setSameGlobalDac("CalDAC5", 0);
             setSameGlobalDac("CalDAC6", 0);
-            }
+        }
         else
             setSameGlobalDac("TestPulsePotNodeSel", 0);
 
@@ -250,13 +249,13 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
     auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
     // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
-    LOG(INFO) << "6 "  ;
+    LOG(INFO) << "6 ";
     for(auto board: theOccupancyContainer)
     {
         if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
     }
 #endif
-    LOG(INFO) << "7 "  ;
+    LOG(INFO) << "7 ";
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -361,7 +360,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
     int      cMinBreakCount = 5;
     uint16_t cValue         = pStartValue;
     uint16_t cMaxValue      = (1 << 10) - 1;
-    //uint16_t cMinValue      = 0;
+    // uint16_t cMinValue      = 0;
     if(cWithSSA) cMaxValue = (1 << 8) - 1;
     if(cWithMPA) cMaxValue = (1 << 8) - 1;
     float              cFirstLimit = (cWithCBC) ? 0 : 1;
@@ -560,7 +559,6 @@ void PedeNoise::setThresholdtoNSigma(BoardContainer* board, uint32_t pNSigma)
                     LOG(INFO) << "Changing Threshold on ROC " << +cROCId << " back to the pedestal at " << +cPedestal;
                 ThresholdVisitor cThresholdVisitor(fReadoutChipInterface, cValue);
                 static_cast<ReadoutChip*>(chip)->accept(cThresholdVisitor);
-
             }
         }
     }

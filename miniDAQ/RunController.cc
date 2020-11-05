@@ -7,8 +7,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char** argv)
 {
     std::string loggerConfigFile;
-    if(std::getenv("PH2ACF_BASE_DIR") == nullptr)
-        throw std::runtime_error("No PH2ACF_BASE_DIR environment variables have been set. You need to source some settings file!");
+    if(std::getenv("PH2ACF_BASE_DIR") == nullptr) throw std::runtime_error("No PH2ACF_BASE_DIR environment variables have been set. You need to source some settings file!");
 
     loggerConfigFile = std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf";
     el::Configurations conf(loggerConfigFile);
