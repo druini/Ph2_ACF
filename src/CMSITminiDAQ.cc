@@ -187,7 +187,7 @@ int main(int argc, char** argv)
         else if(runControllerPid == 0)
         {
             char* argv[] = {(char*)"RunController", NULL};
-            execv((std::string(getenv("BASE_DIR")) + "/bin/RunController").c_str(), argv);
+            execv((std::string(getenv("PH2ACF_BASE_DIR")) + "/bin/RunController").c_str(), argv);
             LOG(ERROR) << BOLDRED << "I can't run RunController, error occured" << RESET;
             exit(EXIT_FAILURE);
         }

@@ -5,6 +5,7 @@
 #include "../Utils/DataContainer.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/SSAChannelGroupHandler.h"
+#include "../Utils/MPAChannelGroupHandler.h"
 
 // initialize the static member
 
@@ -27,10 +28,16 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
     cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+    cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
 
     if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
     if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
+    if(cWithMPA) fChannelGroupHandler = new MPAChannelGroupHandler();
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    //For async only -- to fix
+    if(cWithMPA)fChannelGroupHandler->setChannelGroupParameters(16, 120);
+    
+
     this->fAllChan = pAllChan;
 
     fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
@@ -40,8 +47,10 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fEventsPerPoint              = findValueInSettings("Nevents", 10);
     fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     fTargetOffset                = 0x7F;
+    if(cWithSSA or cWithMPA) fTargetOffset = 0xF;
+
+
     fTargetVcth                  = 0x0;
-    if(cWithSSA) fTargetOffset = 0xF;
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
 
     if(fTestPulseAmplitude == 0)
@@ -102,6 +111,16 @@ void PedestalEqualization::FindVplus()
         {
             if(cWithSSA)
                 setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fTestPulseAmplitude);
+            else if(cWithMPA)
+            {
+                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC0", fTestPulseAmplitude);
+                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC1", fTestPulseAmplitude);
+                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC2", fTestPulseAmplitude);
+                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC3", fTestPulseAmplitude);
+                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC4", fTestPulseAmplitude);
+                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC5", fTestPulseAmplitude);
+                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC6", fTestPulseAmplitude);
+            }
             else
                 setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
         }
@@ -115,23 +134,22 @@ void PedestalEqualization::FindVplus()
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
     LOG(INFO) << BOLDBLUE << "Identifying optimal Vplus for ROC..." << RESET;
-
     if(cWithCBC) setSameDac("VCth", fTargetVcth);
     if(cWithSSA) setSameDac("Bias_THDAC", fTargetVcth);
-
+    if(cWithMPA) setSameDac("ThDAC_ALL", fTargetVcth);
     bool originalAllChannelFlag = this->fAllChan;
     this->SetTestAllChannels(true);
-
     if(cWithCBC) setSameLocalDac("ChannelOffset", fTargetOffset);
     if(cWithSSA) setSameLocalDac("ThresholdTrim", fTargetOffset);
-
+    if(cWithMPA) setSameLocalDac("ThresholdTrim", fTargetOffset);
     if(cWithCBC) this->bitWiseScan("VCth", fEventsPerPoint, 0.56, fNEventsPerBurst);
     if(cWithSSA) this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56, fNEventsPerBurst);
-
+    if(cWithMPA) this->bitWiseScan("ThDAC_ALL", fEventsPerPoint, 0.56, fNEventsPerBurst);
     dumpConfigFiles();
 
     if(cWithCBC) setSameLocalDac("ChannelOffset", 0xFF);
     if(cWithSSA) setSameLocalDac("ThresholdTrim", 0xFF);
+    if(cWithMPA) setSameLocalDac("ThresholdTrim", 0xFF);
 
     DetectorDataContainer theVcthContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theVcthContainer);
@@ -152,6 +170,7 @@ void PedestalEqualization::FindVplus()
                     uint16_t     tmpVthr = 0;
                     if(cWithCBC) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
                     if(cWithSSA) tmpVthr = theChip->getReg("Bias_THDAC");
+                    if(cWithMPA) tmpVthr = theChip->getReg("ThDAC0");
 
                     chip->getSummary<uint16_t>() = tmpVthr;
 
@@ -177,6 +196,7 @@ void PedestalEqualization::FindVplus()
 
     if(cWithCBC) setSameDac("VCth", fTargetVcth);
     if(cWithSSA) setSameDac("Bias_THDAC", fTargetVcth);
+    if(cWithMPA) setSameDac("ThDAC_ALL", fTargetVcth);
 
     LOG(INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
     this->SetTestAllChannels(originalAllChannelFlag);
@@ -189,9 +209,11 @@ void PedestalEqualization::FindOffsets()
 
     uint32_t NCH = NCHANNELS;
     if(cWithSSA) NCH = NSSACHANNELS;
+    if(cWithMPA) NCH = NMPACHANNELS;
 
     if(cWithCBC) setSameDac("VCth", fTargetVcth);
     if(cWithSSA) setSameDac("Bias_THDAC", fTargetVcth);
+    if(cWithMPA) setSameDac("ThDAC_ALL", fTargetVcth);
 
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
@@ -199,7 +221,7 @@ void PedestalEqualization::FindOffsets()
 
     if(cWithCBC) this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56, fNEventsPerBurst);
     if(cWithSSA) this->bitWiseScan("ThresholdTrim", fEventsPerPoint, 0.56, fNEventsPerBurst);
-
+    if(cWithMPA) this->bitWiseScan("ThresholdTrim", fEventsPerPoint, 0.56, fNEventsPerBurst);
     dumpConfigFiles();
     DetectorDataContainer theOffsetsCointainer;
     ContainerFactory::copyAndInitChannel<uint8_t>(*fDetectorContainer, theOffsetsCointainer);
@@ -229,8 +251,10 @@ void PedestalEqualization::FindOffsets()
                     for(auto& channel: *chip->getChannelContainer<uint8_t>()) // for on channel - begin
                     {
                         char charRegName[20];
+
                         if(cWithCBC) sprintf(charRegName, "Channel%03d", channelNumber++);
                         if(cWithSSA) sprintf(charRegName, "THTRIMMING_S%d", channelNumber++);
+                        if(cWithMPA) sprintf(charRegName, "TrimDAC_P%d", channelNumber++);
                         std::string cRegName = charRegName;
                         channel = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()))->getReg(cRegName);
                         cMeanOffset += channel;

@@ -158,7 +158,10 @@ int main(int argc, char* argv[])
         // cPedeNoise.sweepSCurves (225);
         // cPedeNoise.sweepSCurves (205);
 
-        cPedeNoise.Validate();
+
+        //Crashes with high event numbers, need to make as a setting
+        if(cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA)cPedeNoise.Validate(1,1);
+        else cPedeNoise.Validate();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         cPedeNoise.resetPointers();

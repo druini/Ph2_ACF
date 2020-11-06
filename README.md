@@ -208,6 +208,12 @@ For more information on the firmware, please check the doc directory of https://
 
     ii. click the `Allow shared Runners` button
 
+3. Enable specific Runners (if not enabled)
+
+    i. from `settings > CI/CD` expand the `Runners` section
+
+    ii. in the section `Available specific runners` click button `Enable for this project` for the Ph2_ACF runner with the `FNAL`
+
 
 ### clang-format (required to submit merge requests!!!)
 1. install 7.0 llvm toolset:

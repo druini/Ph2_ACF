@@ -47,14 +47,14 @@ class MPA : public ReadoutChip
 
     bool isDACLocal(const std::string& dacName) override
     {
-        if(dacName.find("TrimDAC_P", 0, 9) != std::string::npos)
+        if((dacName.find("TrimDAC", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim", 0, 9) != std::string::npos))
             return true;
         else
             return false;
     }
     uint8_t getNumberOfBits(const std::string& dacName) override
     {
-        if(dacName.find("TrimDAC_P", 0, 9) != std::string::npos)
+        if((dacName.find("TrimDAC_P", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim", 0, 9) != std::string::npos))
             return 5;
         else
             return 8;

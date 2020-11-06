@@ -284,6 +284,7 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
                                     // only count stubs where the match is perfect
                                     cNStubs += (cMatchedHits == (int)cExpectedHits.size()) ? 1 : 0;
                                 }
+
                                 //
                                 if(cStubs.size() > 0)
                                     LOG(INFO) << BOLDGREEN << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
@@ -292,9 +293,16 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
                                     LOG(INFO) << BOLDRED << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
                                               << " and " << +cHits.size() << " hits of which .. " << +cMatchedHits << " match the stubs!" << RESET;
                             }
-                            else
+                           else if(cChip->getFrontEndType() == FrontEndType::SSA)
                             {
-                                // TO_BE IMPLEMENTED
+                                auto                 cStubs                = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                                cNStubs = cStubs.size();
+                                
+                            }
+                           else if(cChip->getFrontEndType() == FrontEndType::MPA)
+                            {
+                                auto                 cStubs                = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                                cNStubs = cStubs.size();
                             }
                         } // chip
                     }     // hybrid
