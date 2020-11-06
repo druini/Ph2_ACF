@@ -87,13 +87,6 @@ void readBinaryData(std::string binaryFile, SystemController& mySysCntr, std::ve
 
 int main(int argc, char** argv)
 {
-    // ########################
-    // # Configure the logger #
-    // ########################
-    el::Configurations conf("../settings/logger.conf");
-    conf.set(el::Level::Global, el::ConfigurationType::Format, "|%thread|%levshort| %msg");
-    el::Loggers::reconfigureAllLoggers(conf);
-
     // #############################
     // # Initialize command parser #
     // #############################
@@ -103,12 +96,12 @@ int main(int argc, char** argv)
 
     cmd.setHelpOption("h", "help", "Print this help page");
 
-    cmd.defineOption("file", "Hardware description file. Default value: CMSIT.xml", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("file", "Hardware description file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("file", "f");
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clockdelay physics eudaq prbstime prbsframes]. Default: pixelalive",
+                     "injdelay clockdelay physics eudaq prbstime prbsframes]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -121,7 +114,7 @@ int main(int argc, char** argv)
     cmd.defineOption("sup", "Run in producer(Middleware) - consumer(DQM) mode.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("sup", "s");
 
-    cmd.defineOption("eudaqRunCtr", "EUDA-IT run control address. Defaut: tcp://localhost:44000", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("eudaqRunCtr", "EUDA-IT run control address [e.g. tcp://localhost:44000]", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
@@ -150,8 +143,8 @@ int main(int argc, char** argv)
     // ####################
     // # Retrieve options #
     // ####################
-    std::string configFile = cmd.foundOption("file") == true ? cmd.optionValue("file") : "CMSIT.xml";
-    std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "pixelalive";
+    std::string configFile = cmd.foundOption("file") == true ? cmd.optionValue("file") : "";
+    std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "";
     std::string binaryFile = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
     bool        program    = cmd.foundOption("prog") == true ? true : false;
     bool        supervisor = cmd.foundOption("sup") == true ? true : false;
@@ -161,6 +154,18 @@ int main(int argc, char** argv)
     else if(cmd.foundOption("replay") == true)
         RegManager::enableReplay(cmd.optionValue("replay"));
     std::string eudaqRunCtr = cmd.foundOption("eudaqRunCtr") == true ? cmd.optionValue("eudaqRunCtr") : "tcp://localhost:44000";
+
+    // ########################
+    // # Configure the logger #
+    // ########################
+    std::string        fileName("logs/CMSITminiDAQ" + RD53Shared::fromInt2Str(runNumber));
+    if(whichCalib != "") fileName += "_" + whichCalib;
+    fileName += ".log";
+    el::Configurations conf("../settings/logger.conf");
+    conf.set(el::Level::Global, el::ConfigurationType::Format, "|%thread|%levshort| %msg");
+    conf.set(el::Level::Global, el::ConfigurationType::Filename, fileName);
+    el::Loggers::reconfigureAllLoggers(conf);
+    // el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Filename, fileName);
 
     // ######################
     // # Supervisor section #

@@ -339,6 +339,11 @@ bool RD53FWInterface::CheckChipCommunication()
         LOG(ERROR) << BOLDRED << "\t--> Some data lanes are enabled but inactive" << RESET;
         return false;
     }
+    else if(chips_en == 0)
+    {
+        LOG(ERROR) << BOLDRED << "\t--> No data lane is enabled: aborting" << RESET;
+        exit(EXIT_FAILURE);
+    }
 
     LOG(INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
     return true;
@@ -1243,8 +1248,8 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
         if(enableAutozero == true)
         {
             RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
-            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime;
-            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime    = 0;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger  = 0;
         }
     }
     else
