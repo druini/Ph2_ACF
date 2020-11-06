@@ -158,7 +158,7 @@ int main(int argc, char** argv)
     // ########################
     // # Configure the logger #
     // ########################
-    std::string        fileName("logs/CMSITminiDAQ" + RD53Shared::fromInt2Str(runNumber));
+    std::string fileName("logs/CMSITminiDAQ" + RD53Shared::fromInt2Str(runNumber));
     if(whichCalib != "") fileName += "_" + whichCalib;
     fileName += ".log";
     el::Configurations conf("../settings/logger.conf");
