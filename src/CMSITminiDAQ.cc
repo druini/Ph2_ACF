@@ -105,23 +105,23 @@ int main(int argc, char** argv)
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
-    cmd.defineOption("binary", "Binary file to decode.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("binary", "Binary file to decode", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("binary", "b");
 
-    cmd.defineOption("prog", "Program the system components.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOption("prog", "Just program the system components", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("prog", "p");
 
-    cmd.defineOption("sup", "Run in producer(Middleware) - consumer(DQM) mode.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOption("sup", "Run in producer(Middleware) - consumer(DQM) mode", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("sup", "s");
 
-    cmd.defineOption("eudaqRunCtr", "EUDA-IT run control address [e.g. tcp://localhost:44000]", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("eudaqRunCtr", "EUDAQ-IT run control address [e.g. tcp://localhost:44000]", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
 
-    cmd.defineOption("capture", "Capture communication with board (extension .raw).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("capture", "Capture communication with board (extension .raw)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption("replay", "Replay previously captured communication (extension .raw).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("replay", "Replay previously captured communication (extension .raw)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
     if(result != CommandLineProcessing::ArgvParser::NoParserError)
