@@ -44,12 +44,12 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
 bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
     setBoard(pMPA->getBeBoardId());
-    //need to or success 
-    if (pRegNode=="ThDAC_ALL")
-        {
+    // need to or success
+    if(pRegNode == "ThDAC_ALL")
+    {
         this->Set_threshold(pMPA, pValue);
         return true;
-        }
+    }
     ChipRegItem cRegItem = pMPA->getRegItem(pRegNode);
     cRegItem.fValue      = pValue & 0xFF;
     std::vector<uint32_t> cVec;
@@ -127,30 +127,25 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
     assert(localRegValues.size() == pMPA->getNumberOfChannels());
     std::string dacTemplate;
 
-    if(dacName == "TrimDAC_P")
-        dacTemplate = "TrimDAC_P%d";
+    if(dacName == "TrimDAC_P") dacTemplate = "TrimDAC_P%d";
     if(dacName == "ThresholdTrim")
         dacTemplate = "TrimDAC_P%d";
     else
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    ChannelGroup<NMPACHANNELS, 1> channelToEnable;
-    std::vector<uint32_t> cVec;
+    ChannelGroup<NMPACHANNELS, 1>                 channelToEnable;
+    std::vector<uint32_t>                         cVec;
     cVec.clear();
     bool cSuccess = true;
 
-
-     for(uint16_t iChannel = 0; iChannel < pMPA->getNumberOfChannels(); ++iChannel)
-     {
-                char dacName1[20];
-                sprintf(dacName1, dacTemplate.c_str(), 1 + iChannel);
-                LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1 << " to " << (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F) << RESET;
-                cSuccess = cSuccess && this->WriteChipReg(pMPA, dacName1, (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F), pVerifLoop);
-            
-        
+    for(uint16_t iChannel = 0; iChannel < pMPA->getNumberOfChannels(); ++iChannel)
+    {
+        char dacName1[20];
+        sprintf(dacName1, dacTemplate.c_str(), 1 + iChannel);
+        LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1 << " to " << (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F) << RESET;
+        cSuccess = cSuccess && this->WriteChipReg(pMPA, dacName1, (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F), pVerifLoop);
     }
     return cSuccess;
-    
 }
 
 bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSize)
@@ -233,8 +228,6 @@ uint32_t MPAInterface::Pix_read(ReadoutChip* cMPA, ChipRegItem cRegItem, uint32_
 
     return rep;
 }
-
-
 
 Stubs MPAInterface::Format_stubs(std::vector<std::vector<uint8_t>> rawstubs)
 {
