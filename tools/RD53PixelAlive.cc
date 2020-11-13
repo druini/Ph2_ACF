@@ -183,14 +183,11 @@ void PixelAlive::draw(bool saveData)
     histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
     PixelAlive::fillHisto();
     histos->process();
-
-    if(saveData == true)
-    {
-        this->WriteRootFile();
-        this->CloseResultFile();
-    }
+    if(saveData == true) this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
+
+    if(saveData == true) this->CloseResultFile();
 #endif
 }
 

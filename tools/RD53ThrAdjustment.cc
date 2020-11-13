@@ -166,9 +166,10 @@ void ThrAdjustment::draw()
     PixelAlive::draw(false);
 
     this->WriteRootFile();
-    this->CloseResultFile();
 
     if(doDisplay == true) myApp->Run(true);
+
+    this->CloseResultFile();
 #endif
 }
 
