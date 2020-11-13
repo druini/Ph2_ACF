@@ -105,23 +105,23 @@ int main(int argc, char** argv)
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
-    cmd.defineOption("binary", "Binary file to decode.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("binary", "Binary file to decode", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("binary", "b");
 
-    cmd.defineOption("prog", "Program the system components.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOption("prog", "Just program the system components", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("prog", "p");
 
-    cmd.defineOption("sup", "Run in producer(Middleware) - consumer(DQM) mode.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOption("sup", "Run in producer(Middleware) - consumer(DQM) mode", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("sup", "s");
 
-    cmd.defineOption("eudaqRunCtr", "EUDA-IT run control address [e.g. tcp://localhost:44000]", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("eudaqRunCtr", "EUDAQ-IT run control address [e.g. tcp://localhost:44000]", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
 
-    cmd.defineOption("capture", "Capture communication with board (extension .raw).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("capture", "Capture communication with board (extension .raw)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption("replay", "Replay previously captured communication (extension .raw).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("replay", "Replay previously captured communication (extension .raw)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
     if(result != CommandLineProcessing::ArgvParser::NoParserError)
@@ -161,7 +161,7 @@ int main(int argc, char** argv)
     std::string fileName("logs/CMSITminiDAQ" + RD53Shared::fromInt2Str(runNumber));
     if(whichCalib != "") fileName += "_" + whichCalib;
     fileName += ".log";
-    el::Configurations conf("../settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     conf.set(el::Level::Global, el::ConfigurationType::Format, "|%thread|%levshort| %msg");
     conf.set(el::Level::Global, el::ConfigurationType::Filename, fileName);
     el::Loggers::reconfigureAllLoggers(conf);
@@ -187,7 +187,7 @@ int main(int argc, char** argv)
         else if(runControllerPid == 0)
         {
             char* argv[] = {(char*)"RunController", NULL};
-            execv((std::string(getenv("PH2ACF_BASE_DIR")) + "/bin/RunController").c_str(), argv);
+            execv((std::string(std::getenv("PH2ACF_BASE_DIR")) + "/bin/RunController").c_str(), argv);
             LOG(ERROR) << BOLDRED << "I can't run RunController, error occured" << RESET;
             exit(EXIT_FAILURE);
         }
@@ -314,11 +314,6 @@ int main(int argc, char** argv)
             LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
             mySysCntr.Configure(configFile);
             LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
-            if(program == true)
-            {
-                LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
-                exit(EXIT_SUCCESS);
-            }
         }
 
         std::cout << std::endl;
@@ -607,7 +602,7 @@ int main(int argc, char** argv)
                             mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 1, true);
                         }
         }
-        else
+        else if(program == false)
         {
             LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
             exit(EXIT_FAILURE);
