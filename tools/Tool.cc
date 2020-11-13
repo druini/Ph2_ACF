@@ -714,7 +714,7 @@ void Tool::setFWTestPulse()
             else
             {
                 LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10" << RESET;
-                //cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+                // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
@@ -902,11 +902,11 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
 {
     // int minDAC = 0x0;
     DetectorDataContainer* outputDataContainer = fDetectorDataContainer;
-    ReadoutChip* cChip = fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0); // assumption: one BeBoard has only one type of chip;
-    bool localDAC = cChip->isDACLocal(dacName);
-    uint8_t numberOfBits = cChip->getNumberOfBits(dacName);
+    ReadoutChip*           cChip               = fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0); // assumption: one BeBoard has only one type of chip;
+    bool                   localDAC            = cChip->isDACLocal(dacName);
+    uint8_t                numberOfBits        = cChip->getNumberOfBits(dacName);
     LOG(INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
-    bool occupanyDirectlyProportionalToDAC;
+    bool                   occupanyDirectlyProportionalToDAC;
     DetectorDataContainer* previousStepOccupancyContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *previousStepOccupancyContainer);
     DetectorDataContainer* currentStepOccupancyContainer = new DetectorDataContainer();
@@ -957,8 +957,6 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
         currentDacList                    = tmpPointer;
     }
     // LOG (INFO) << BOLDBLUE << "START " << RESET;
-
-    
 
     for(int iBit = numberOfBits - 1; iBit >= 0; --iBit)
     {
@@ -1146,7 +1144,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
     groupScan->setNumberOfEvents(numberOfEvents);
     groupScan->setDetectorContainer(fDetectorContainer);
     groupScan->setNumberOfEventsPerBurst(numberOfEventsPerBurst);
-    //std::cout<<"groupScan "<<std::endl;
+    // std::cout<<"groupScan "<<std::endl;
     if(fChannelGroupHandler == nullptr)
     {
         std::cout << __PRETTY_FUNCTION__ << " fChannelGroupHandler was not initialized!!! Aborting..." << std::endl;

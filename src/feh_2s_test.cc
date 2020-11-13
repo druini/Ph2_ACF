@@ -357,7 +357,7 @@ int main(int argc, char* argv[])
     cTool.WriteRootFile();
     cTool.CloseResultFile();
     cTool.Destroy();
-    
+
     // system("/home/modtest/Programming/power_supply/bin/TurnOff -c /home/modtest/Programming/power_supply/config/config.xml ");
 
     if(!batchMode) cApp.Run();
