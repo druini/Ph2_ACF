@@ -217,11 +217,11 @@ void ClockDelay::draw()
     histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
     ClockDelay::fillHisto();
     histos->process();
-
     this->WriteRootFile();
-    this->CloseResultFile();
 
     if(doDisplay == true) myApp->Run(true);
+
+    this->CloseResultFile();
 #endif
 }
 

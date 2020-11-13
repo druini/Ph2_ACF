@@ -295,23 +295,22 @@ void TCPServerBase::broadcast(const std::vector<uint16_t>& message)
 //==============================================================================
 void TCPServerBase::pingActiveClients()
 {
-	for(auto it = fConnectedClients.begin(); it != fConnectedClients.end(); it++)
-	{
-		try
-		{
-			dynamic_cast<TCPTransmitterSocket*>(it->second)->send("", 0, true);
-		}
-		catch(const std::exception& e)
-		{
-			// std::cout << __PRETTY_FUNCTION__ << "I don't think that this error is possible because I close the socket when I get disconnected...if you see this then you should contact Lorenzo Uplegger" << std::endl;
-			// std::cout << __PRETTY_FUNCTION__ << "This should only happen with the TCPSubscribeServer because it doesn't keep track of the connected clients..." << std::endl;
-			// std::cout << __PRETTY_FUNCTION__ << "Error: " << e.what() << std::endl;
-            if(fConnectedClientsFuture.find(it->first) != fConnectedClientsFuture.end())
-                fConnectedClientsFuture.erase(fConnectedClientsFuture.find(it->first));
-			delete it->second;
-			fConnectedClients.erase(it--);
-		}
-	}
+    for(auto it = fConnectedClients.begin(); it != fConnectedClients.end(); it++)
+    {
+        try
+        {
+            dynamic_cast<TCPTransmitterSocket*>(it->second)->send("", 0, true);
+        }
+        catch(const std::exception& e)
+        {
+            // std::cout << __PRETTY_FUNCTION__ << "I don't think that this error is possible because I close the socket when I get disconnected...if you see this then you should contact Lorenzo
+            // Uplegger" << std::endl; std::cout << __PRETTY_FUNCTION__ << "This should only happen with the TCPSubscribeServer because it doesn't keep track of the connected clients..." << std::endl;
+            // std::cout << __PRETTY_FUNCTION__ << "Error: " << e.what() << std::endl;
+            if(fConnectedClientsFuture.find(it->first) != fConnectedClientsFuture.end()) fConnectedClientsFuture.erase(fConnectedClientsFuture.find(it->first));
+            delete it->second;
+            fConnectedClients.erase(it--);
+        }
+    }
 }
 
 //========================================================================================================================

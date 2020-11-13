@@ -44,6 +44,12 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
 bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
     setBoard(pMPA->getBeBoardId());
+    // need to or success
+    if(pRegNode == "ThDAC_ALL")
+    {
+        this->Set_threshold(pMPA, pValue);
+        return true;
+    }
     ChipRegItem cRegItem = pMPA->getRegItem(pRegNode);
     cRegItem.fValue      = pValue & 0xFF;
     std::vector<uint32_t> cVec;
@@ -120,57 +126,26 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
     setBoard(pMPA->getBeBoardId());
     assert(localRegValues.size() == pMPA->getNumberOfChannels());
     std::string dacTemplate;
-    bool        isMask = false;
 
-    if(dacName == "TrimDAC_P")
+    if(dacName == "TrimDAC_P") dacTemplate = "TrimDAC_P%d";
+    if(dacName == "ThresholdTrim")
         dacTemplate = "TrimDAC_P%d";
-    else if(dacName == "Mask")
-        isMask = true;
     else
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
-
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    // std::vector<uint32_t> listOfChannelToUnMask;
-    ChannelGroup<NMPACHANNELS, 1> channelToEnable;
-
-    std::vector<uint32_t> cVec;
+    ChannelGroup<NMPACHANNELS, 1>                 channelToEnable;
+    std::vector<uint32_t>                         cVec;
     cVec.clear();
-    for(uint8_t iChannel = 0; iChannel < pMPA->getNumberOfChannels(); ++iChannel)
+    bool cSuccess = true;
+
+    for(uint16_t iChannel = 0; iChannel < pMPA->getNumberOfChannels(); ++iChannel)
     {
-        if(isMask)
-        {
-            if(localRegValues.getChannel<uint16_t>(iChannel))
-            {
-                channelToEnable.enableChannel(iChannel);
-                // listOfChannelToUnMask.emplace_back(iChannel);
-            }
-        }
-        else
-        {
-            char dacName1[20];
-
-            sprintf(dacName1, dacTemplate.c_str(), iChannel + 1);
-            // fBoardFW->EncodeReg ( cRegItem, pMPA->getHybridId(), pMPA->getId(), cVec, pVerifLoop, true );
-            // #ifdef COUNT_FLAG
-            //     fRegisterCount++;
-            // #endif
-            cRegVec.emplace_back(dacName1, localRegValues.getChannel<uint16_t>(iChannel));
-        }
+        char dacName1[20];
+        sprintf(dacName1, dacTemplate.c_str(), 1 + iChannel);
+        LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1 << " to " << (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F) << RESET;
+        cSuccess = cSuccess && this->WriteChipReg(pMPA, dacName1, (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F), pVerifLoop);
     }
-
-    if(isMask) { return maskChannelsGroup(pMPA, &channelToEnable, pVerifLoop); }
-    else
-    {
-        // uint8_t cWriteAttempts = 0 ;
-        // bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
-        // #ifdef COUNT_FLAG
-        //     fTransactionCount++;
-        // #endif
-        // return cSuccess;
-        // fReadoutChipInterface->WriteChipReg(theChip, "THTRIMMING_S" + std::to_string(istrip), THtowrite);
-
-        return WriteChipMultReg(pMPA, cRegVec, pVerifLoop);
-    }
+    return cSuccess;
 }
 
 bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSize)

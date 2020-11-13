@@ -166,11 +166,11 @@ void GainOptimization::draw()
     histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
     GainOptimization::fillHisto();
     histos->process();
-
     this->WriteRootFile();
-    this->CloseResultFile();
 
     if(doDisplay == true) myApp->Run(true);
+
+    this->CloseResultFile();
 #endif
 }
 
