@@ -39,8 +39,9 @@
 // # Default values #
 // ##################
 #define RUNNUMBER 0
-#define SETBATCH 0 // Set batch mode when running supervisor
+#define SETBATCH  0 // Set batch mode when running supervisor
 #define FILERUNNUMBER "./RunNumber.txt"
+#define BASEDIR       "PH2ACF_BASE_DIR"
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -161,7 +162,7 @@ int main(int argc, char** argv)
     std::string fileName("logs/CMSITminiDAQ" + RD53Shared::fromInt2Str(runNumber));
     if(whichCalib != "") fileName += "_" + whichCalib;
     fileName += ".log";
-    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv(BASEDIR)) + "/settings/logger.conf");
     conf.set(el::Level::Global, el::ConfigurationType::Format, "|%thread|%levshort| %msg");
     conf.set(el::Level::Global, el::ConfigurationType::Filename, fileName);
     el::Loggers::reconfigureAllLoggers(conf);
@@ -187,7 +188,7 @@ int main(int argc, char** argv)
         else if(runControllerPid == 0)
         {
             char* argv[] = {(char*)"RunController", NULL};
-            execv((std::string(std::getenv("PH2ACF_BASE_DIR")) + "/bin/RunController").c_str(), argv);
+            execv((std::string(std::getenv(BASEDIR)) + "/bin/RunController").c_str(), argv);
             LOG(ERROR) << BOLDRED << "I can't run RunController, error occured" << RESET;
             exit(EXIT_FAILURE);
         }
