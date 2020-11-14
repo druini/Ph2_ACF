@@ -153,7 +153,12 @@ void Physics::run()
     {
         RD53FWInterface::decodedEvents.clear();
         Physics::analyze();
-        genericEvtConverter(RD53FWInterface::decodedEvents);
+        std::unique_lock<std::mutex> theGuard(theMtx, std::defer_lock);
+        if(theGuard.try_lock() == true)
+        {
+            genericEvtConverter(RD53FWInterface::decodedEvents);
+            theGuard.unlock();
+        }
         std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
         numberOfEventsPerRun += RD53FWInterface::decodedEvents.size();
     }
