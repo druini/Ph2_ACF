@@ -149,16 +149,14 @@ void Physics::initializeFiles(const std::string fileRes_, int currentRun)
 
 void Physics::run()
 {
+    std::unique_lock<std::mutex> theGuard(theMtx, std::defer_lock);
     while(this->fKeepRunning == true)
     {
         RD53FWInterface::decodedEvents.clear();
         Physics::analyze();
-        std::unique_lock<std::mutex> theGuard(theMtx, std::defer_lock);
-        if(theGuard.try_lock() == true)
-        {
-            genericEvtConverter(RD53FWInterface::decodedEvents);
-            theGuard.unlock();
-        }
+        theGuard.lock();
+        genericEvtConverter(RD53FWInterface::decodedEvents);
+        theGuard.unlock();
         std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
         numberOfEventsPerRun += RD53FWInterface::decodedEvents.size();
     }
