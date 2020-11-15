@@ -8,6 +8,8 @@
 */
 
 #include "SystemController.h"
+#include "../tools/CBCMonitor.h"
+#include "../Utils/DetecorMonitorConfig.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -49,6 +51,17 @@ void SystemController::Inherit(const SystemController* pController)
 
 void SystemController::Destroy()
 {
+    if(fDetectorMonitor != nullptr)
+    {
+        fDetectorMonitor->stopMonitoring();
+        while(fMonitorFuture.wait_for(std::chrono::milliseconds(250)) != std::future_status::ready)
+        {
+            LOG(INFO) << "Waiting for monitoring to be completed...";
+        }
+        delete fDetectorMonitor;
+        fDetectorMonitor = nullptr;
+    }
+    
     this->closeFileHandler();
 
     delete fBeBoardInterface;
@@ -171,6 +184,23 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     }
 
     if(fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
+
+    DetectorMonitorConfig theDetectorMonitorConfig;
+    std::string monitoringType = fParser.parseMonitor(pFilename, theDetectorMonitorConfig, os, pIsFile);
+
+    if(monitoringType != "None")
+    {
+        if(monitoringType == "2S") fDetectorMonitor = new CBCMonitor(theDetectorMonitorConfig);
+        // else if(monitoringType == "IT") fDetectorMonitor = new ITMonitor();
+        else
+        {
+            LOG(ERROR) << "Unrecognized monitor type, Aborting";
+            abort();
+        }
+        
+        fDetectorMonitor->Inherit(this);
+        fMonitorFuture   = std::async(std::launch::async, std::ref(*fDetectorMonitor));
+    }
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os, bool pIsFile) { this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile); }
