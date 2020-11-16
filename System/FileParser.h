@@ -21,7 +21,7 @@
 #include "../Utils/Exception.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"
-#include "../Utils/DetecorMonitorConfig.h"
+#include "../Utils/DetectorMonitorConfig.h"
 
 #include "pugixml.hpp"
 #include <iostream>

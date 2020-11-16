@@ -2,7 +2,7 @@
 #define DETECTOR_MONITOR_H
 
 #include "../System/SystemController.h"
-#include "../Utils/DetecorMonitorConfig.h"
+#include "../Utils/DetectorMonitorConfig.h"
 
 class DetectorMonitor : public Ph2_System::SystemController
 {

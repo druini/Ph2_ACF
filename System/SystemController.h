@@ -39,7 +39,6 @@
 #include "../Utils/FileHandler.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"
-#include "../Utils/DetecorMonitorConfig.h"
 #include "FileParser.h"
 
 #include <future>
