@@ -1,5 +1,6 @@
 #include <cstdlib>
-#include <cstring>
+#include <string>
+#include <vector>
 #include <inttypes.h>
 
 #include "../HWDescription/BeBoard.h"
@@ -18,7 +19,6 @@ using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 using namespace CommandLineProcessing;
-using namespace std;
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -36,7 +36,7 @@ class AcqVisitor : public HwInterfaceVisitor
     }
 };
 
-void verifyImageName(const string& strImage, const vector<string>& lstNames)
+void verifyImageName(const std::string& strImage, const std::vector<std::string>& lstNames)
 {
     if(lstNames.empty())
     {
@@ -118,10 +118,10 @@ int main(int argc, char* argv[])
     std::string        cHWFile = (cmd.foundOption("config")) ? cmd.optionValue("config") : "settings/HWDescription_2CBC.xml";
     std::ostringstream cStr;
     cSystemController.InitializeHw(cHWFile, cStr);
-    BeBoard*       pBoard   = cSystemController.fDetectorContainer->at(0);
-    vector<string> lstNames = cSystemController.fBeBoardInterface->getFpgaConfigList(pBoard);
+    BeBoard*                 pBoard   = cSystemController.fDetectorContainer->at(0);
+    std::vector<std::string> lstNames = cSystemController.fBeBoardInterface->getFpgaConfigList(pBoard);
     std::string    cFWFile;
-    string         strImage("1");
+    std::string    strImage("1");
 
     if(cmd.foundOption("list"))
     {
@@ -200,7 +200,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            LOG(INFO) << progress << "%  " << cSystemController.fBeBoardInterface->GetConfiguringFpga(pBoard)->getProgressString() << "                 \r" << flush;
+            LOG(INFO) << progress << "%  " << cSystemController.fBeBoardInterface->GetConfiguringFpga(pBoard)->getProgressString() << "                 \r" << std::flush;
             sleep(1);
         }
     }
