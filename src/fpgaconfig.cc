@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <cstring>
 #include <inttypes.h>
 
@@ -68,9 +69,14 @@ void verifyImageName(const string& strImage, const vector<string>& lstNames)
 
 int main(int argc, char* argv[])
 {
-    std::string loggerConfigFile = std::getenv("PH2ACF_BASE_DIR");
-    loggerConfigFile += "/settings/logger.conf";
-    el::Configurations conf(loggerConfigFile);
+    auto* baseDirChar_p = std::getenv("PH2ACF_BASE_DIR");
+    if(baseDirChar_p == nullptr)
+    {
+        LOG(ERROR) << "Error, the environment variable PH2ACF_BASE_DIR is not initialized (hint: source setup.sh)";
+        exit(1);
+    }
+
+    el::Configurations conf(std::string(baseDirChar_p)+"/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     SystemController cSystemController;
