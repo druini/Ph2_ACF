@@ -369,13 +369,13 @@ struct LatencyVisitor : public HwDescriptionVisitor
             {
                 std::vector<std::pair<std::string, uint16_t>> cRegVec;
 
-                cRegVec.emplace_back("L1-Latency_LSB", (0x00FF & fLatency) >> 0 );
+                cRegVec.emplace_back("L1-Latency_LSB", (0x00FF & fLatency) >> 0);
                 cRegVec.emplace_back("L1-Latency_MSB", (0x0100 & fLatency) >> 8);
                 fInterface->WriteChipMultReg(&pCbc, cRegVec);
             }
             else
             {
-                fLatency = fInterface->ReadChipReg(&pCbc, "L1-Latency_LSB")|(fInterface->ReadChipReg(&pCbc, "L1-Latency_MSB")<<8);
+                fLatency = fInterface->ReadChipReg(&pCbc, "L1-Latency_LSB") | (fInterface->ReadChipReg(&pCbc, "L1-Latency_MSB") << 8);
             }
         }
 
@@ -385,13 +385,13 @@ struct LatencyVisitor : public HwDescriptionVisitor
             {
                 std::vector<std::pair<std::string, uint16_t>> cRegVec;
 
-                cRegVec.emplace_back("L1Offset_1_ALL", (0x00FF & fLatency) >> 0 );
+                cRegVec.emplace_back("L1Offset_1_ALL", (0x00FF & fLatency) >> 0);
                 cRegVec.emplace_back("L1Offset_2_ALL", (0x0100 & fLatency) >> 8);
                 fInterface->WriteChipMultReg(&pCbc, cRegVec);
             }
             else
             {
-                fLatency = fInterface->ReadChipReg(&pCbc, "L1Offset_1_R1")|(fInterface->ReadChipReg(&pCbc, "L1Offset_2_R1")<<8);
+                fLatency = fInterface->ReadChipReg(&pCbc, "L1Offset_1_R1") | (fInterface->ReadChipReg(&pCbc, "L1Offset_2_R1") << 8);
             }
         }
 
