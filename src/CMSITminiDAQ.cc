@@ -138,7 +138,7 @@ int main(int argc, char** argv)
     fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
     if(fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
     fileRunNumberIn.close();
-    system(std::string("mkdir " + std::string(RD53Shared::RESULTDIR)).c_str());
+    system(std::string("mkdir -p " + std::string(RD53Shared::RESULTDIR)).c_str());
 
     // ####################
     // # Retrieve options #
@@ -577,10 +577,18 @@ int main(int argc, char** argv)
 
             if(cmd.argument(0) == "")
             {
+              if(whichCalib == "prbstime"){
                 LOG(ERROR) << BOLDRED
-                           << "Neither the time (to be given with -t <TIME IN SECONDS>) nor the number of frames (to be given with -n <NUMBER OF FRAMES>) was specified for the PRBS test. Abort."
-                           << RESET;
-                exit(EXIT_FAILURE);
+                  << "failed to specify duration of PRBS test; use \"-c prbstime <TIME IN SECONDS>\". Abort."
+                  << RESET;
+              }
+              else if(whichCalib == "prbsframes"){
+                LOG(ERROR) << BOLDRED
+                  << "failed to specify number of frames for PRBS test; use \"-c prbsframes <NUMBER OF FRAMES>\". Abort."
+                  << RESET;
+              }
+
+              exit(EXIT_FAILURE);
             }
 
             unsigned long long frames_or_time = strtoull(cmd.argument(0).c_str(), NULL, 0);
@@ -611,10 +619,9 @@ int main(int argc, char** argv)
         // ###########################
         // # Copy configuration file #
         // ###########################
-        std::string fName2Add(std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_");
-        std::string output(RD53Shared::composeFileName(configFile, fName2Add));
-        std::string command("cp " + configFile + " " + output);
-        system(command.c_str());
+        auto const configFileBasename = configFile.substr(configFile.find_last_of("/\\")+1);
+        auto const outputConfigFile = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + configFileBasename;
+        system(("cp " + configFile + " " + outputConfigFile).c_str());
 
         // #####################
         // # Update run number #

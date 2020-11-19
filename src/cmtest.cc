@@ -119,10 +119,11 @@ int main(int argc, char* argv[])
     cPedeNoise.writeObjects();
 
     // Set Vcth to pedestal, or overload with manual setting
-    std::vector<double_t> cNoiseV;
-    ThresholdVisitor      cVisitor(cTool.fReadoutChipInterface, 0);
-    HybridContainer*      cFe = cPedeNoise.fDetectorContainer->at(0)->at(0)->at(0);
-    int                   i   = 0;
+    std::vector<double> cNoiseV;
+    ThresholdVisitor    cVisitor(cTool.fReadoutChipInterface, 0);
+    HybridContainer*    cFe = cPedeNoise.fDetectorContainer->at(0)->at(0)->at(0);
+    int                 i   = 0;
+
     for(auto cCbc: *cFe)
     {
         uint16_t cPedestal = 0;  // round (cPedeNoise.getPedestal (cCbc) );
