@@ -39,7 +39,7 @@
 // # Default values #
 // ##################
 #define RUNNUMBER 0
-#define SETBATCH 0 // Set batch mode when running supervisor
+#define SETBATCH  0 // Set batch mode when running supervisor
 #define FILERUNNUMBER "./RunNumber.txt"
 
 INITIALIZE_EASYLOGGINGPP
@@ -577,18 +577,13 @@ int main(int argc, char** argv)
 
             if(cmd.argument(0) == "")
             {
-              if(whichCalib == "prbstime"){
-                LOG(ERROR) << BOLDRED
-                  << "failed to specify duration of PRBS test; use \"-c prbstime <TIME IN SECONDS>\". Abort."
-                  << RESET;
-              }
-              else if(whichCalib == "prbsframes"){
-                LOG(ERROR) << BOLDRED
-                  << "failed to specify number of frames for PRBS test; use \"-c prbsframes <NUMBER OF FRAMES>\". Abort."
-                  << RESET;
-              }
+                if(whichCalib == "prbstime") { LOG(ERROR) << BOLDRED << "Failed to specify duration of PRBS test; use \"-c prbstime <TIME IN SECONDS>\"" << RESET; }
+                else if(whichCalib == "prbsframes")
+                {
+                    LOG(ERROR) << BOLDRED << "Failed to specify number of frames for PRBS test; use \"-c prbsframes <NUMBER OF FRAMES>\"" << RESET;
+                }
 
-              exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
             }
 
             unsigned long long frames_or_time = strtoull(cmd.argument(0).c_str(), NULL, 0);
@@ -619,8 +614,8 @@ int main(int argc, char** argv)
         // ###########################
         // # Copy configuration file #
         // ###########################
-        auto const configFileBasename = configFile.substr(configFile.find_last_of("/\\")+1);
-        auto const outputConfigFile = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + configFileBasename;
+        const auto configFileBasename = configFile.substr(configFile.find_last_of("/\\") + 1);
+        const auto outputConfigFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + configFileBasename;
         system(("cp " + configFile + " " + outputConfigFile).c_str());
 
         // #####################

@@ -242,7 +242,7 @@ void RD53::saveRegMap(const std::string& fName2Add)
 {
     const int Nspaces = 26;
 
-    std::string   output = RD53Shared::composeFileName(configFileName, fName2Add);
+    std::string   output = RD53::getFileName(fName2Add);
     std::ofstream file(output.c_str(), std::ios::out | std::ios::trunc);
 
     if(file)
