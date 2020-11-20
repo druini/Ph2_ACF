@@ -14,6 +14,10 @@ void LatencyScan::Initialize(uint32_t pStartLatency, uint32_t pLatencyRange)
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
+    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+    cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
+    cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+    cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
 
     for(auto cBoard: *fDetectorContainer)
     {
@@ -149,7 +153,6 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLaten
             //  Set a Latency Value on all FEs
             cVisitor.setLatency(cLat);
             this->accept(cVisitor);
-
             ReadNEvents(theBoard, fNevents);
 
             const std::vector<Event*>& events = GetEvents(theBoard);
@@ -166,7 +169,17 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLaten
     // analyze the Histograms
     std::map<HybridContainer*, uint8_t> cLatencyMap;
 
-    updateHists("hybrid_latency", true);
+
+    for(auto cFe: fHybridHistMap)
+    {
+        TH1F*   cTmpHist           = dynamic_cast<TH1F*>(getHist(cFe.first, "hybrid_latency"));
+        uint8_t cHitLatency       = static_cast<uint8_t>(cTmpHist->GetXaxis()->GetBinUpEdge(cTmpHist->GetMaximumBin()));
+        cLatencyMap[cFe.first] = cHitLatency;
+
+        LOG(INFO) << "Hit Latency FE " << +cFe.first->getId() << ": " << +cHitLatency << " clock cycles!";
+    }
+
+
 
     return cLatencyMap;
 }
@@ -195,19 +208,25 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
                     bool  cMaskOthers = (cCic != NULL) ? true : false;
                     for(auto cChip: *cHybrid)
                     {
-                        auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                        if(cMaskOthers && cChip->getId() == 0)
-                        {
-                            if(cChip->getFrontEndType() == FrontEndType::CBC3)
+
+
+                        if ((cChip->getFrontEndType() == FrontEndType::CBC3))  
                             {
-                                uint8_t cFirstSeed = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 0) / 2.))); // in half strips
-                                cReadoutChipInterface->injectStubs(cChip, {cFirstSeed}, {0}, false);
+                                auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
+                                if(cMaskOthers && cChip->getId() == 0)
+                                {
+                                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                                    {
+                                        uint8_t cFirstSeed = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 0) / 2.))); // in half strips
+                                        cReadoutChipInterface->injectStubs(cChip, {cFirstSeed}, {0}, false);
+                                    }
+                                }
+                                else if(cMaskOthers && cChip->getFrontEndType() == FrontEndType::CBC3)
+                                {
+                                    fReadoutChipInterface->WriteChipReg(cChip, "TestPulse", (int)0);
+                                }
                             }
-                        }
-                        else if(cMaskOthers && cChip->getFrontEndType() == FrontEndType::CBC3)
-                        {
-                            fReadoutChipInterface->WriteChipReg(cChip, "TestPulse", (int)0);
-                        }
+
                     } // roc
                 }     // hybrid
             }         // hybrid
@@ -229,8 +248,8 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
             auto&    cMatchesThisBoard = cMatchedEvents->at(cBoard->getIndex());
             // Take Data for all Hybrids
             // here set the stub latency
-            for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
 
+            for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
             this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
             const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
             // Loop over Events from this Acquisition
@@ -301,8 +320,9 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
                             }
                            else if(cChip->getFrontEndType() == FrontEndType::MPA)
                             {
+                                auto                 cHits                 = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                                 auto                 cStubs                = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                                cNStubs = cStubs.size();
+                                cNStubs += cStubs.size();
                             }
                         } // chip
                     }     // hybrid

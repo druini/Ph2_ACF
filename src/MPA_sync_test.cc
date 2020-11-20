@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
                 std::this_thread::sleep_for(ShortWait);
                 uint32_t gpix = theMPA->PNglobal(std::pair<uint32_t, uint32_t>(row, col));
                 //theMPAInterface->Disable_pixel(cMPA, 0);
-                theMPAInterface->WriteChipReg(cMPA, "ENFLAGS_ALL", 0x0);
+                theMPAInterface->WriteChipReg(cMPA, "ENFLAGS_ALL", 0x57);
                 theMPAInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix), 0x57);
                 //theMPAInterface->WriteChipReg(cMPA, "ClusterCut_P" + std::to_string(gpix), 0x57);
                 std::cout << row << "," << col <<","<<gpix<< std::endl;
@@ -146,20 +146,20 @@ int main(int argc, char* argv[])
 
 
 
-                //for(size_t ilat = 0; ilat <1000; ilat++)
-                //{
+                for(size_t ilat = 0; ilat <1000; ilat++)
+                {
                 //ilat=28;
-                //std::cout <<"ilat "<< ilat << std::endl;
-                /*for(size_t rr = 1; rr < 17; rr++) 
-                    {
-                    theMPAInterface->WriteChipReg(cMPA, "L1Offset_1_R"+ std::to_string(rr), (0x00FF & ilat) >> 0 );
-                    theMPAInterface->WriteChipReg(cMPA, "L1Offset_2_R"+ std::to_string(rr), (0x0100 & ilat) >> 8);
-                    }*/
+                std::cout <<"ilat "<< ilat << std::endl;
+                //for(size_t rr = 1; rr < 17; rr++) 
+                  //  {
+                  //  theMPAInterface->WriteChipReg(cMPA, "L1Offset_1_ALL", (0x00FF & ilat) >> 0 );
+                   // theMPAInterface->WriteChipReg(cMPA, "L1Offset_2_ALL", (0x0100 & ilat) >> 8);
+                   // }
 
                  //theMPAInterface->WriteChipReg(cMPA, "PhaseShift", ilat);                  
                 theMPAInterface->WriteChipReg(cMPA, "L1Offset_1_ALL", (0x00FF & 56) >> 0 );
                 theMPAInterface->WriteChipReg(cMPA, "L1Offset_2_ALL", (0x0100 & 56) >> 8);
-                cTool.fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", 28);
+                cTool.fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", ilat);
 
 
 
@@ -246,7 +246,13 @@ int main(int argc, char* argv[])
                     { 
                         //std::cout << clus << std::endl; 
                         std::vector<PCluster> clus = static_cast<D19cMPAEvent*>(ev)->GetPixelClusters(0,0);
-                        nevtot+=clus.size();
+                        //nevtot+=clus.size();
+                        nevtot+= static_cast<D19cMPAEvent*>(ev)->GetNHits(0, 0);
+
+
+
+                        std::cout << "GetNStubs -- " << +static_cast<D19cMPAEvent*>(ev)->GetNStubs(0,0) << std::endl;
+
                         std::vector<Stub> stubs = static_cast<D19cMPAEvent*>(ev)->StubVector(0,0);
                         nstub+=stubs.size();
                         //std::cout << "pclus "<< std::endl; 
@@ -270,7 +276,7 @@ int main(int argc, char* argv[])
                     }
                     if (nevtot!=0)std::cout<<"nevtot "<< nevtot << std::endl; 
                     if (nstub!=0)std::cout <<"nstub "<< nstub << std::endl; 
-                //}
+                }
 
                 npixtot += 1;
             }

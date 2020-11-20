@@ -384,7 +384,7 @@ struct LatencyVisitor : public HwDescriptionVisitor
             if(fOption == 'w')
             {
                 std::vector<std::pair<std::string, uint16_t>> cRegVec;
-
+                LOG(INFO) << "fLatency "<<fLatency;
                 cRegVec.emplace_back("L1Offset_1_ALL", (0x00FF & fLatency) >> 0 );
                 cRegVec.emplace_back("L1Offset_2_ALL", (0x0100 & fLatency) >> 8);
                 fInterface->WriteChipMultReg(&pCbc, cRegVec);

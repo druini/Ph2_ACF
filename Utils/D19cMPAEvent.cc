@@ -58,6 +58,8 @@ void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::ve
     std::set<uint16_t> HybridIds;
     while(index < list.size())
     {
+        uint16_t toadd=((0x00000FFF & list.at(index))) * 4;
+        if (toadd==0)break;
         uint16_t cSPLeading = ((0xF0000000 & list.at(index)) >> 28);
         if(cSPLeading != 0x5 and cSPLeading != 0xA) break;
         uint16_t fHID = ((0x00FF0000 & list.at(index)) >> 16);
@@ -66,15 +68,16 @@ void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::ve
             fMaxHybrids += 1;
             HybridIds.insert(fHID);
         }
-        index += ((0x00000FFF & list.at(index))) * 4;
+
+        index += toadd;
+
     }
-    // for (auto L : list) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
+    //for (auto L : list) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
     // Not sure about dsize...
     // fEventSize = 4*((0x0000FFFF & list.at (0)) - (0x000000FF & list.at (1)));
     fEventSize = 4 * (0x0000FFFF & list.at(0));
     // std::cout<<fEventSize<<","<<list.size()<<std::endl;
     if(fEventSize != list.size()) LOG(ERROR) << "Incorrect event size";
-
     uint16_t cLeading = ((0xFFFF0000 & list.at(0)) >> 16);
     if(cLeading != 0xFFFF) LOG(ERROR) << "Incorrect leading bits";
 
@@ -83,7 +86,6 @@ void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::ve
     uint32_t data_offset    = address_offset;
 
     // iterating through the first hybrid chips
-
     for(uint8_t pFeId = 0; pFeId < fMaxHybrids; pFeId++)
     {
         for(uint8_t pMPAId = 0; pMPAId < pNMPA; pMPAId++)
@@ -100,7 +102,6 @@ void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::ve
 
             cSsize_32_MPA        = ((0x00000FFF & list.at(data_offset + cL1size_32_MPA))) * 4;
             uint8_t cSLeadingMPA = ((0xF0000000 & list.at(data_offset + cL1size_32_MPA)) >> 28);
-            // uint16_t cSdelay =         ((0x00FFF000 & list.at (data_offset+cL1size_32_MPA))>>12);
 
             uint8_t cSyncBit1 = ((0x00008000 & list.at(data_offset + cL1size_32_MPA + 1)) >> 15);
             uint8_t cSyncBit2 = ((0x00004000 & list.at(data_offset + cL1size_32_MPA + 1)) >> 14);
@@ -401,7 +402,6 @@ uint16_t D19cMPAEvent::GetStubDataDelay(uint8_t pFeId, uint8_t pMPAId) const
     return (0x00FFF000 & lvec.at(cL1size_32_MPA));
 }
 
-// Very untested
 std::vector<Stub> D19cMPAEvent::StubVector(uint8_t pFeId, uint8_t pMPAId) const
 {
     std::vector<Stub> cStubVec;
@@ -442,6 +442,18 @@ std::vector<Stub> D19cMPAEvent::StubVector(uint8_t pFeId, uint8_t pMPAId) const
 
     return cStubVec;
 }
+
+uint8_t D19cMPAEvent::GetNStubs(uint8_t pFeId, uint8_t pMPAId) const
+{
+    std::vector<Stub> cStubVec;
+    // here create stubs and return the vector
+
+    std::vector<uint32_t> lvec           = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    uint16_t              cL1size_32_MPA = (0x00000FFF & lvec.at(0)) * 4;
+    return (lvec.at(cL1size_32_MPA + 1) & 0x7) ;
+     
+}
+
 
 void D19cMPAEvent::print(std::ostream& os) const
 {
@@ -491,7 +503,10 @@ std::vector<uint32_t> D19cMPAEvent::GetHits(uint8_t pFeId, uint8_t pMPAId) const
 
 std::string D19cMPAEvent::DataHexString(uint8_t pFeId, uint8_t pMPAId) const { return ""; }
 
-bool D19cMPAEvent::StubBit(uint8_t pFeId, uint8_t pMPAId) const { return false; }
+bool D19cMPAEvent::StubBit(uint8_t pFeId, uint8_t pMPAId) const 
+{ 
+    return (GetNStubs( pFeId,  pMPAId)>0) ; 
+}
 
 SLinkEvent D19cMPAEvent::GetSLinkEvent(BeBoard* pBoard) const
 {

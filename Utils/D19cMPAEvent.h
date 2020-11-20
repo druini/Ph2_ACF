@@ -88,6 +88,8 @@ class D19cMPAEvent : public Event
      * \param pMPAId : MPA Id
      * \return vector with hit channels
      */
+    uint8_t GetNStubs(uint8_t pFeId, uint8_t pMPAId) const;
+
     std::vector<uint32_t> GetHits(uint8_t pFeId, uint8_t pMPAId) const override;
     /*!
      * \brief Function to get pipeline address
