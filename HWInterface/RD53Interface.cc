@@ -445,10 +445,11 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const char* observableN
 {
     this->setBoard(pChip->getBeBoardId());
 
-    const float measError = 4.0; // Current or Voltage measurement error due to MONITOR_CONFIG resolution [%]
-    float       value;
-    bool        isCurrentNotVoltage;
-    uint32_t    voltageObservable(0), currentObservable(0), observable;
+    const float        measError         = 4.0; // Current or Voltage measurement error due to MONITOR_CONFIG resolution [%]
+    const unsigned int actualVoltRescale = 2;   // Voltage scale factor: measured voltage is 1/2 of actual voltage in order to measure values which are greater than ADC swing (which is ~0.9 V)
+    float              value;
+    bool               isCurrentNotVoltage;
+    uint32_t           voltageObservable(0), currentObservable(0), observable;
 
     const std::unordered_map<std::string, uint32_t> currentMultiplexer = {
         {"Iref", 0x00},          {"IBIASP1_SYNC", 0x01}, {"IBIASP2_SYNC", 0x02},  {"IBIAS_DISC_SYNC", 0x03}, {"IBIAS_SF_SYNC", 0x04},  {"ICTRL_SYNCT_SYNC", 0x05}, {"IBIAS_KRUM_SYNC", 0x06},
@@ -491,7 +492,7 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const char* observableN
     }
     else
     {
-        value = measureVoltageCurrent(pChip, observable, isCurrentNotVoltage);
+        value = measureVoltageCurrent(pChip, observable, isCurrentNotVoltage) * (isCurrentNotVoltage == true ? 1 : actualVoltRescale);
         LOG(INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE
                   << (isCurrentNotVoltage == true ? " uA" : " V") << std::setprecision(-1) << RESET;
     }
