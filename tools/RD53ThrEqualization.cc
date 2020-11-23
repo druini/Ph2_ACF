@@ -155,6 +155,7 @@ void ThrEqualization::run()
     // # Run threshold equalization #
     // ##############################
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
+    if(frontEnd == &RD53::DIFF) TDACsize *=2;
 
     this->fDetectorDataContainer = &theOccContainer;
     ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *this->fDetectorDataContainer);
