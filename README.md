@@ -24,6 +24,7 @@ Use the guide (https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/I
 More informations can be found at https://indico.cern.ch/event/842824/attachments/1920624/3177632/PreparingFC7.pdf
 
 
+<hr>
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
 + Last change made to this section: 06/11/2020
