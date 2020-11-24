@@ -843,18 +843,6 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t 
     ResetI2C(pChip, {0, 1, 2});
     // setting GPIO levels Uncomment this for Skeleton test
     ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
-    /* 
-    WriteChipReg(pChip, "PIODirH", 0x12);
-    WriteChipReg(pChip, "PIODirL", 0x4B);
-    WriteChipReg(pChip, "PIOOutH", 0x12);
-    WriteChipReg(pChip, "PIOOutL", 0x4B);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    WriteChipReg(pChip, "PIOOutH", 0x00);
-    WriteChipReg(pChip, "PIOOutL", 0x00);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    WriteChipReg(pChip, "PIOOutH", 0x12);
-    WriteChipReg(pChip, "PIOOutL", 0x4B);
-    */
     WriteChipReg(pChip, "POWERUP2", 0x06);
 }
 
