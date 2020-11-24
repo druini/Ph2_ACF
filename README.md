@@ -22,9 +22,8 @@
 Use the guide (https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/IPAddress_Tutorial.md) to find the MAC address of the FC7 (Wireshark option) and to set the proper IP.
 
 More informations can be found at https://indico.cern.ch/event/842824/attachments/1920624/3177632/PreparingFC7.pdf
-
-
 <hr>
+
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
