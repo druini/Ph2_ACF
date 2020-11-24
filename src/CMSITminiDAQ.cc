@@ -1,6 +1,6 @@
 /*!
   \file                  CMSITminiDAQ.cc
-  \brief                 Mini DAQ to test RD53 readout
+  \brief                 Mini DAQ to test RD53 readout chip
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -63,7 +63,7 @@ void interruptHandler(int handler)
     exit(EXIT_FAILURE);
 }
 
-void readBinaryData(std::string binaryFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
+void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
 {
     unsigned int          errors = 0;
     std::vector<uint32_t> data;
@@ -83,7 +83,8 @@ void readBinaryData(std::string binaryFile, SystemController& mySysCntr, std::ve
             errors++;
         }
 
-    LOG(INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(3) << BOLDYELLOW << 1. * errors / decodedEvents.size() * 100. << "%" << std::setprecision(-1) << RESET;
+    LOG(INFO) << GREEN << "Percentage of corrupted events: " << BOLDYELLOW << std::setprecision(3) << BOLDYELLOW << 1. * errors / decodedEvents.size() * 100. << "%" << std::setprecision(-1) << RESET;
+    mySysCntr.closeFileHandler();
 }
 
 int main(int argc, char** argv)
