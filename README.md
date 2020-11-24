@@ -67,6 +67,7 @@ A detailed manual about the firmware can be found here: https://gitlab.cern.ch/c
 9. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
 10. Run the command: `CMSITminiDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
 11. Run the command: `CMSITminiDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSITminiDAQ --help` for help)
+**N.B.:** Skeleton/template file to build your own IT mini DAQ can be found in **`src/templateCMSIR_miniDAQ.cc`**
 
 **Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):**
 - Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
@@ -173,8 +174,6 @@ else
 fi
 ```
 **N.B.:** steps **4** and **5** are meant to measure the so called "in-time threshold", to be compared with the threshold measured at step **3**, which is the so called "absoulte threshold"
-
-Skeleton/template file to build your own IT mini DAQ can be found in **`src/templateCMSIR_miniDAQ.cc`**
 ### ~=-=~ End of Inner-Tracker section ~=-=~
 <hr>
 
