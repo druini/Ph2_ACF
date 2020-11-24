@@ -25,6 +25,7 @@ More informations can be found at https://indico.cern.ch/event/842824/attachment
 
 
 <hr>
+
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
 + Last change made to this section: 06/11/2020
