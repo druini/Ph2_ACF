@@ -173,6 +173,8 @@ else
 fi
 ```
 **N.B.:** steps **4** and **5** are meant to measure the so called "in-time threshold", to be compared with the threshold measured at step **3**, which is the so called "absoulte threshold"
+
+Skeleton/template file to build your own IT mini DAQ can be found in **`src/templateCMSIR_miniDAQ.cc`**
 ### ~=-=~ End of Inner-Tracker section ~=-=~
 <hr>
 
