@@ -46,7 +46,8 @@ using namespace Ph2_HwInterface;
 
 void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
 {
-    unsigned int          errors = 0;
+    const unsigned int    wordDataSize = 32;
+    unsigned int          errors       = 0;
     std::vector<uint32_t> data;
 
     LOG(INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
@@ -62,9 +63,12 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
         {
             LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
             errors++;
+            RD53FWInterface::PrintEvents({decodedEvents[i]});
         }
 
     LOG(INFO) << GREEN << "Percentage of corrupted events: " << BOLDYELLOW << std::setprecision(3) << BOLDYELLOW << 1. * errors / decodedEvents.size() * 100. << "%" << std::setprecision(-1) << RESET;
+    int avgEventSize = data.size() / decodedEvents.size();
+    LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN << " events" << RESET;
     mySysCntr.closeFileHandler();
 }
 
@@ -122,15 +126,16 @@ int main(int argc, char** argv)
     // ###############
     Physics ph;
     ph.Inherit(&mySysCntr);
-    ph.localConfigure(fileName, -1);
     if(doReadBinary == false)
     {
+        ph.localConfigure(fileName, -1);
         ph.Start(runNumber);
         usleep(ARBITRARYDELAY);
         ph.Stop();
     }
     else
     {
+        ph.localConfigure(fileName, runNumber);
         ph.analyze(true);
         ph.draw();
     }

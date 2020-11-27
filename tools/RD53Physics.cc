@@ -196,17 +196,13 @@ void Physics::analyze(bool doReadBinary)
         else
         {
             dataSize = 1;
-            std::vector<uint32_t> data;
-            SystemController::DecodeData(cBoard, data, dataSize, cBoard->getBoardType());
+            SystemController::DecodeData(cBoard, {}, 0, cBoard->getBoardType());
         }
 
         if(dataSize != 0)
         {
             Physics::fillDataContainer(cBoard);
             Physics::sendBoardData(cBoard);
-            double avgEventSize = static_cast<double>(dataSize) / RD53FWInterface::decodedEvents.size();
-            LOG(INFO) << BOLDMAGENTA << ">>> Average event size: " << BOLDYELLOW << std::setprecision(0) << avgEventSize * 32 << std::setprecision(-1) << BOLDMAGENTA << " bits over " << BOLDYELLOW
-                      << RD53FWInterface::decodedEvents.size() << BOLDMAGENTA << " events <<<" << RESET;
         }
     }
 }

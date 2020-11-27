@@ -518,7 +518,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         fEventList.clear();
         if(RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEventsMultiThreads(pData, RD53FWInterface::decodedEvents);
         RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
-        for(auto i = 0u; i < RD53FWInterface::decodedEvents.size(); i++) fEventList.push_back(&RD53FWInterface::decodedEvents[i]);
+        for(auto& evt: RD53FWInterface::decodedEvents) fEventList.push_back(&evt);
     }
     else if(pType == BoardType::D19C)
     {
