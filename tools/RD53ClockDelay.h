@@ -32,7 +32,11 @@ class ClockDelay : public PixelAlive
     void   run();
     void   draw();
     void   analyze();
-    size_t getNumberIterations() { return PixelAlive::getNumberIterations() * (stopValue - startValue); }
+    size_t getNumberIterations()
+    {
+        return PixelAlive::getNumberIterations() *
+               (stopValue - startValue + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+    }
     void   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
