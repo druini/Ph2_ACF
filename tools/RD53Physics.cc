@@ -217,72 +217,69 @@ void Physics::fillHisto()
 #endif
 }
 
-void Physics::fillDataContainer(BeBoard* cBoard)
+void Physics::fillDataContainer(BeBoard* theBoard)
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const auto cBoard = theOccContainer.at(theBoard->getIndex());
 
     // ###################
     // # Clear container #
     // ###################
-    Physics::clearContainers();
+    Physics::clearContainers(theBoard);
 
     // ###################
     // # Fill containers #
     // ###################
-    const std::vector<Event*>& events = SystemController::GetEvents(cBoard);
-    for(const auto& event: events) event->fillDataContainer(theOccContainer.at(cBoard->getIndex()), theChnGroupHandler->allChannelGroup());
+    const std::vector<Event*>& events = SystemController::GetEvents(theBoard);
+    for(const auto& event: events) event->fillDataContainer(cBoard, theChnGroupHandler->allChannelGroup());
 
     // ######################################
     // # Copy register values for streaming #
     // ######################################
-    for(const auto cBoard: theOccContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
+    for(const auto cOpticalGroup: *cBoard)
+        for(const auto cHybrid: *cOpticalGroup)
+            for(const auto cChip: *cHybrid)
+            {
+                for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.size(); i++)
                 {
-                    for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.size(); i++)
-                    {
-                        int deltaBCID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i - 1];
-                        deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
-                        if(deltaBCID >= int(BCIDsize))
-                            LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
-                        else
-                            theBCIDContainer.at(cBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
-                                ->getSummary<GenericDataArray<BCIDsize>>()
-                                .data[deltaBCID]++;
-                    }
-                    cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.clear();
-
-                    for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.size(); i++)
-                    {
-                        int deltaTrgID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i - 1];
-                        deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
-                        if(deltaTrgID >= int(TrgIDsize))
-                            LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
-                        else
-                            theTrgIDContainer.at(cBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
-                                ->getSummary<GenericDataArray<TrgIDsize>>()
-                                .data[deltaTrgID]++;
-                    }
-                    cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.clear();
+                    int deltaBCID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i - 1];
+                    deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
+                    if(deltaBCID >= int(BCIDsize))
+                        LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
+                    else
+                        theBCIDContainer.at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->at(cChip->getIndex())
+                            ->getSummary<GenericDataArray<BCIDsize>>()
+                            .data[deltaBCID]++;
                 }
+
+                for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.size(); i++)
+                {
+                    int deltaTrgID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i - 1];
+                    deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
+                    if(deltaTrgID >= int(TrgIDsize))
+                        LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
+                    else
+                        theTrgIDContainer.at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->at(cChip->getIndex())
+                            ->getSummary<GenericDataArray<TrgIDsize>>()
+                            .data[deltaTrgID]++;
+                }
+            }
 
     // #######################
     // # Normalize container #
     // #######################
-    for(const auto cBoard: theOccContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++) cChip->getChannel<OccupancyAndPh>(row, col).normalize(events.size(), true);
+    for(const auto cOpticalGroup: *cBoard)
+        for(const auto cHybrid: *cOpticalGroup)
+            for(const auto cChip: *cHybrid)
+                for(auto row = 0u; row < RD53::nRows; row++)
+                    for(auto col = 0u; col < RD53::nCols; col++) cChip->getChannel<OccupancyAndPh>(row, col).normalize(events.size(), true);
 }
 
 void Physics::chipErrorReport()
@@ -332,33 +329,36 @@ void Physics::saveChipRegisters(int currentRun)
                 }
 }
 
-void Physics::clearContainers()
+void Physics::clearContainers(BeBoard* theBoard)
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const auto cBoard = theOccContainer.at(theBoard->getIndex());
 
     // ####################
     // # Clear containers #
     // ####################
-    for(const auto cBoard: theOccContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
-                        {
-                            cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy   = 0;
-                            cChip->getChannel<OccupancyAndPh>(row, col).fPh          = 0;
-                            cChip->getChannel<OccupancyAndPh>(row, col).fPhError     = 0;
-                            cChip->getChannel<OccupancyAndPh>(row, col).readoutError = false;
-                        }
+    for(const auto cOpticalGroup: *cBoard)
+        for(const auto cHybrid: *cOpticalGroup)
+            for(const auto cChip: *cHybrid)
+            {
+                for(auto row = 0u; row < RD53::nRows; row++)
+                    for(auto col = 0u; col < RD53::nCols; col++)
+                    {
+                        cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy   = 0;
+                        cChip->getChannel<OccupancyAndPh>(row, col).fPh          = 0;
+                        cChip->getChannel<OccupancyAndPh>(row, col).fPhError     = 0;
+                        cChip->getChannel<OccupancyAndPh>(row, col).readoutError = false;
+                    }
 
-                    for(auto i = 0u; i < BCIDsize; i++)
-                        theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
-                    for(auto i = 0u; i < TrgIDsize; i++)
-                        theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
-                }
+                cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.clear();
+                cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.clear();
+
+                for(auto i = 0u; i < BCIDsize; i++)
+                    theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
+                for(auto i = 0u; i < TrgIDsize; i++)
+                    theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
+            }
 }
 
 void Physics::monitor()

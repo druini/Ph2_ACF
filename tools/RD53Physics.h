@@ -72,7 +72,7 @@ class Physics : public Tool
 
     void fillHisto();
     void chipErrorReport();
-    void clearContainers();
+    void clearContainers(Ph2_HwDescription::BeBoard* cBoard);
 
   protected:
     struct RD53dummyEvtConverter
