@@ -42,6 +42,7 @@
 #define SETBATCH  0 // Set batch mode when running supervisor
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR       "PH2ACF_BASE_DIR"
+#define ARBITRARYDELAY 120e6 // [us]
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -260,9 +261,9 @@ int main(int argc, char** argv)
                 {
                     LOG(INFO) << BOLDBLUE << "Supervisor sending stop" << RESET;
 
-                    usleep(2e6);
+                    usleep(ARBITRARYDELAY);
                     theMiddlewareInterface.stop();
-                    usleep(2e6);
+                    usleep(ARBITRARYDELAY);
                     theDQMInterface.stopProcessingData();
 
                     stateMachineStatus = STOPPED;
@@ -531,7 +532,7 @@ int main(int argc, char** argv)
             if(binaryFile == "")
             {
                 ph.Start(runNumber);
-                usleep(2e6);
+                usleep(ARBITRARYDELAY);
                 ph.Stop();
             }
             else

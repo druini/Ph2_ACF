@@ -76,7 +76,7 @@ class FileParser
     void parseSettingsxml(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile);
 
     void parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os);
-    void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
+    void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseSLink(pugi::xml_node pSLinkNode, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseHybridContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::ostream& os, Ph2_HwDescription::BeBoard* pBoard);
