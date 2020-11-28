@@ -153,6 +153,7 @@ class RD53 : public ReadoutChip
     void    enablePixel(unsigned int row, unsigned int col, bool enable);
     void    injectPixel(unsigned int row, unsigned int col, bool inject);
     void    setTDAC(unsigned int row, unsigned int col, uint8_t TDAC);
+    void    resetTDAC();
     uint8_t getTDAC(unsigned int row, unsigned int col);
     uint8_t getChipLane() const { return myChipLane; }
 

@@ -191,6 +191,8 @@
     <Setting name="TargetThr">       2000 </Setting>
     <Setting name="TargetOcc">       1e-6 </Setting>
 
+    <Setting name="ThrEquResetTDAC">    0 </Setting>
+
     <Setting name="DoFast">             0 </Setting>
     <Setting name="DisplayHisto">       0 </Setting>
     <Setting name="UpdateChipCfg">      1 </Setting>

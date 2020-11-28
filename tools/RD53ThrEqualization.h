@@ -62,6 +62,7 @@ class ThrEqualization : public PixelAlive
     size_t nEvtsBurst;
     size_t startValue;
     size_t stopValue;
+    bool   resetTDAC;
     size_t nHITxCol;
     bool   doFast;
 

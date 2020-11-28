@@ -212,6 +212,9 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, uint32_t nEven
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACDACcontainer);
     ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer);
 
+    // #########################
+    // # Initialize containers #
+    // #########################
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -353,6 +356,9 @@ std::shared_ptr<DetectorDataContainer> ThrAdjustment::bitWiseScanGlobal_MeasureT
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *bestDACcontainer);
     ContainerFactory::copyAndInitChip<OccupancyAndPh>(*fDetectorContainer, bestContainer);
 
+    // #########################
+    // # Initialize containers #
+    // #########################
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
