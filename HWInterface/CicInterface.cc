@@ -90,7 +90,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
     {
         for(const auto& cReg: pRegs)
         {
-            LOG(INFO) << BOLDBLUE << "Writing CIC register with address " << std::hex << +cReg.first << std::dec << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Writing CIC register with address " << std::hex << +cReg.first << std::dec << RESET;
             cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, pVerifLoop);
             if(!cSuccess) continue;
 #ifdef COUNT_FLAG

@@ -36,6 +36,22 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
              }
          }
     */
+   
+    /*
+    uint8_t cValue = ReadChipReg(pChip, "ROM");
+    LOG(INFO) << BOLDYELLOW << "Reading from register ROM value 0x" << std::hex << +cValue << std::dec << RESET;
+    WriteChipReg(pChip, "USERID0", 0xca, false);
+    WriteChipReg(pChip, "USERID1", 0xfe, false);
+    WriteChipReg(pChip, "USERID2", 0xca, false);
+    WriteChipReg(pChip, "USERID3", 0xfe, false);
+    LOG(INFO) << BOLDYELLOW << "Reading from USERID0 value 0x" << std::hex << ReadChipReg(pChip, "USERID0") << std::dec << RESET;
+    LOG(INFO) << BOLDYELLOW << "Reading from USERID1 value 0x" << std::hex << ReadChipReg(pChip, "USERID1") << std::dec << RESET;
+    LOG(INFO) << BOLDYELLOW << "Reading from USERID2 value 0x" << std::hex << ReadChipReg(pChip, "USERID2") << std::dec << RESET;
+    LOG(INFO) << BOLDYELLOW << "Reading from USERID3 value 0x" << std::hex << ReadChipReg(pChip, "USERID3") << std::dec << RESET;
+    */
+    
+    
+    //PrintChipMode(pChip);
     ConfigurePSROH(pChip, 5);
     return true;
 }
@@ -68,7 +84,21 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     }
     // Now pick one configuration mode
     if(fUseOpticalLink)
-        fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+    {
+        if(fUseCPB)
+        {
+            //Use new Command Processor Block
+            uint8_t cWorkerId = 16, cFunctionId = 3;
+            std::vector<uint32_t> cCommandVector;
+            cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pAddress << 0);
+            cCommandVector.push_back(pValue << 0);
+            fBoardFW->WriteCommandCPB(pChip, cCommandVector);
+            fBoardFW->ReadReplyCPB(pChip, 10, true);
+        }
+        else
+            //Use standard uDTC IC block
+            fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+    }
     else
     {
         // use PS-ROH test card USB interface
@@ -84,7 +114,22 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     {
         // Now pick one configuration mode
         if(fUseOpticalLink)
-            fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+        {
+            if(fUseCPB)
+            {
+/*
+                std::vector<uint32_t> cCommandVector;
+                uint8_t cWorkerId = 16, cFunctionId = 3;
+                cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pAddress << 0);
+                cCommandVector.push_back(pValue << 0);
+                fBoardFW->WriteCommandCPB(pChip, cCommandVector);
+                fBoardFW->ReadReplyCPB(pChip, 10);
+*/
+            }
+            else
+                //Use standard uDTC IC block
+                fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+        }
         else
         {
             // use PS-ROH test card USB interface
@@ -107,7 +152,19 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
 {
     setBoard(pChip->getBeBoardId());
     uint16_t cReadBack = 0;
-    if(fUseOpticalLink) { cReadBack = fBoardFW->ReadOptoLinkRegister(pChip, pAddress); }
+    if(fUseOpticalLink) { 
+        if(fUseCPB)
+        {
+            uint8_t cWorkerId = 16, cFunctionId = 2;
+            std::vector<uint32_t> cCommandVector;
+            cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pAddress << 0);
+            fBoardFW->WriteCommandCPB(pChip, cCommandVector);
+            auto cReplyVector = fBoardFW->ReadReplyCPB(pChip, 10);
+            cReadBack = cReplyVector[7] & 0xFF;
+        }
+        else
+            cReadBack = fBoardFW->ReadOptoLinkRegister(pChip, pAddress);
+    }
     else
     {
 // use PS-ROH test card USB interface
@@ -843,30 +900,18 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t 
     ResetI2C(pChip, {0, 1, 2});
     // setting GPIO levels Uncomment this for Skeleton test
     ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
-    /* 
-    WriteChipReg(pChip, "PIODirH", 0x12);
-    WriteChipReg(pChip, "PIODirL", 0x4B);
-    WriteChipReg(pChip, "PIOOutH", 0x12);
-    WriteChipReg(pChip, "PIOOutL", 0x4B);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    WriteChipReg(pChip, "PIOOutH", 0x00);
-    WriteChipReg(pChip, "PIOOutL", 0x00);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    WriteChipReg(pChip, "PIOOutH", 0x12);
-    WriteChipReg(pChip, "PIOOutL", 0x4B);
-    */
     WriteChipReg(pChip, "POWERUP2", 0x06);
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
 {
-    LOG(INFO) << BOLDBLUE << "CIC Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "CIC Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
     WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, (pRegisterValue << 16) | cInvertedRegister, 3);
     if(pRetry)
     {
         uint8_t cReadBack = cicRead(pChip, pFeId, pRegisterAddress);
-        uint8_t cIter = 0, cMaxIter = 10;
+        uint8_t cIter = 0, cMaxIter = 1;
         while(cReadBack != pRegisterValue && cIter < cMaxIter)
         {
             WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, (pRegisterValue << 16) | cInvertedRegister, 3);
@@ -887,19 +932,19 @@ uint32_t D19clpGBTInterface::cicRead(Ph2_HwDescription::Chip* pChip, uint8_t pFe
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
     WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, cInvertedRegister, 2);
     uint8_t cReadBack = ReadI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, 1);
-    LOG(INFO) << BOLDYELLOW << "CIC Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "CIC Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     return cReadBack;
 }
 
 bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
 {
-    LOG(INFO) << BOLDBLUE << "SSA Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "SSA Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
     WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x20 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
     if(pRetry)
     {
         uint8_t cReadBack = ssaRead(pChip, pFeId, pChipId, pRegisterAddress);
-        uint8_t cIter = 0, cMaxIter = 10;
+        uint8_t cIter = 0, cMaxIter = 1;
         while(cReadBack != pRegisterValue && cIter < cMaxIter)
         {
             WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x20 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
@@ -920,7 +965,7 @@ uint32_t D19clpGBTInterface::ssaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFe
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
     WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x20 + pChipId, cInvertedRegister, 2);
     uint8_t cReadBack = ReadI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x20 + pChipId, 1);
-    LOG(INFO) << BOLDYELLOW << "SSA Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "SSA Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     return cReadBack;
 }
 

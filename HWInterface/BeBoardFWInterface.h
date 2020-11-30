@@ -272,7 +272,12 @@ class BeBoardFWInterface : public RegManager
     virtual void     ResetOptoLink(Ph2_HwDescription::Chip* pChip)                                                                     = 0;
     virtual bool     WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) = 0;
     virtual uint32_t ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress)                                           = 0;
-
+    //functions for new Command Processor Block
+    
+    virtual void     ResetCPB(Ph2_HwDescription::Chip* pChip) = 0;
+    virtual void     WriteCommandCPB(Ph2_HwDescription::Chip* pChip, const std::vector<uint32_t>& pData) = 0;
+    virtual std::vector<uint32_t> ReadReplyCPB(Ph2_HwDescription::Chip* pChip, uint8_t pNWords, bool pDryRead = false) = 0;
+    
   protected:
     uint32_t fBlockSize{0};
     uint32_t fNPackets{0};

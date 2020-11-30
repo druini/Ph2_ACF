@@ -4427,4 +4427,53 @@ uint32_t D19cFWInterface::ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, u
     return cReadBack;
 }
 
+//Functions for new Command Processor Block
+void D19cFWInterface::ResetCPB(Ph2_HwDescription::Chip* pChip)
+{
+    this->WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 0x01);
+    this->WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 0x01);
+    this->WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 0x01);
+}
+
+void D19cFWInterface::WriteCommandCPB(Ph2_HwDescription::Chip* pChip, const std::vector<uint32_t>& pData)
+{
+    this->WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", pData);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+}
+
+std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(Ph2_HwDescription::Chip* pChip, uint8_t pNWords, bool pDryRead)
+{
+    std::vector<uint32_t> cReplyVector = this->ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", pNWords);
+    if(!pDryRead)
+    {
+        uint8_t cIter = 0, cMaxIter = 10;
+        while(((cReplyVector[0] & 0xFFFF) == 0xFF02 || ((cReplyVector[0] & 0xFFFF0000) >> 16) == 0x0000) && cIter<cMaxIter)
+        {
+            std::vector<uint32_t> cCommandVector;
+            //Soft reset the GBT-SC worker
+            uint8_t cWorkerId = 0, cFunctionId = 2;
+            cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
+            this->WriteCommandCPB(pChip, cCommandVector);
+            //User GBT-SC worker 
+            cCommandVector.clear();
+            uint8_t cFifoIndex = 0;
+            for(auto cReplyWord : cReplyVector)
+            {
+                LOG(DEBUG) << BOLDWHITE << "Read from FIFO index " << +cFifoIndex << " value 0x" << std::hex << +cReplyWord << std::dec << RESET;
+                cFifoIndex++;
+            }
+            //std::cout << "\n" << std::endl;
+            if((cReplyVector[0] & 0xFFFF) == 0xFF02)
+                this->ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 1);
+            cReplyVector.clear();
+            cReplyVector = this->ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", pNWords);
+            cIter++;
+        }
+        if(cIter >= cMaxIter)
+            throw std::runtime_error(std::string("Command Processor Block not properly responding"));
+    }
+    return cReplyVector;
+}
+
+
 } // namespace Ph2_HwInterface
