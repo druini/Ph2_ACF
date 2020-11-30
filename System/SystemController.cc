@@ -295,7 +295,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         if(!bIgnoreI2c)
                         {
                             LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
-                            // fReadoutChipInterface->ConfigureChip(theReadoutChip);
+                            fReadoutChipInterface->ConfigureChip(theReadoutChip);
                         }
                         // if SSA + ASYNC
                         // make sure ROCs are configured for that

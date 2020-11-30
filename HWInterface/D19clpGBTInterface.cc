@@ -117,14 +117,6 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
         {
             if(fUseCPB)
             {
-/*
-                std::vector<uint32_t> cCommandVector;
-                uint8_t cWorkerId = 16, cFunctionId = 3;
-                cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pAddress << 0);
-                cCommandVector.push_back(pValue << 0);
-                fBoardFW->WriteCommandCPB(pChip, cCommandVector);
-                fBoardFW->ReadReplyCPB(pChip, 10);
-*/
             }
             else
                 //Use standard uDTC IC block

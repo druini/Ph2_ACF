@@ -4446,7 +4446,7 @@ std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(Ph2_HwDescription::Chip* pCh
     std::vector<uint32_t> cReplyVector = this->ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", pNWords);
     if(!pDryRead)
     {
-        uint8_t cIter = 0, cMaxIter = 10;
+        uint8_t cIter = 0, cMaxIter = 50;
         while(((cReplyVector[0] & 0xFFFF) == 0xFF02 || ((cReplyVector[0] & 0xFFFF0000) >> 16) == 0x0000) && cIter<cMaxIter)
         {
             std::vector<uint32_t> cCommandVector;
