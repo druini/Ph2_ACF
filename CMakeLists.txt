@@ -75,12 +75,16 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # compiler options to avoid warnings promoted to errors
 
     set (GCC_NOERROR_FLAGS " -Wno-error=unused-result    -Wno-error=deprecated-declarations")
+    set (GCC_4_NOERROR_FLAGS "-Wno-error=overflow -Wno-error=unused-variable -Wno-error=unused-but-set-variable")
     set (GCC_6_NOERROR_FLAGS "-Wno-error=misleading-indentation")
     set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow")
     set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
 
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
       EXECUTE_PROCESS( COMMAND gcc -dumpversion OUTPUT_VARIABLE GCC_VERSION )
+      if(GCC_VERSION VERSION_LESS 6)
+        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_4_NOERROR_FLAGS}")
+      endif()
       if(NOT (GCC_VERSION VERSION_LESS 6))
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_6_NOERROR_FLAGS}")
       endif()
