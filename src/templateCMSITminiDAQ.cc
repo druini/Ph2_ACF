@@ -68,7 +68,8 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
 
     LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
     int avgEventSize = data.size() / decodedEvents.size();
-    LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN << " events" << RESET;
+    LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN << " events"
+              << RESET;
     mySysCntr.closeFileHandler();
 }
 
@@ -81,7 +82,7 @@ int main(int argc, char** argv)
     const bool        doReset      = false;
     const bool        doReadBinary = false;
 
-    SystemController mySysCntr;
+    SystemController  mySysCntr;
     std::stringstream outp;
     mySysCntr.InitializeHw(configFile, outp, true, false);
     mySysCntr.InitializeSettings(configFile, outp);

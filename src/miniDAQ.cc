@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
 
         if(cN + cPacketSize >= pEventsperVcth) cTool.fBeBoardInterface->Stop(pBoard);
 
-        const std::vector<Event*>& events = cTool.GetEvents(pBoard);
+        const std::vector<Event*>& events = cTool.GetEvents();
         std::vector<DQMEvent*>     cDQMEvents;
 
         for(auto& ev: events)

@@ -1222,7 +1222,7 @@ class MeasureBeBoardDataPerGroup : public ScanBase
             if(burstNumbers == 1) currentNumberOfEvents = lastBurstNumberOfEvents;
             fTool->ReadNEvents(fDetectorContainer->at(fBoardIndex), currentNumberOfEvents);
             // Loop over Events from this Acquisition
-            const std::vector<Event*>& events = fTool->GetEvents(fDetectorContainer->at(fBoardIndex));
+            const std::vector<Event*>& events = fTool->GetEvents();
             for(auto& event: events) event->fillDataContainer((fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
             --burstNumbers;
         }

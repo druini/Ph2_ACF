@@ -220,7 +220,7 @@ void Physics::fillDataContainer(BeBoard* theBoard)
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
-    const auto cBoard = theOccContainer.at(theBoard->getIndex());
+    const auto   cBoard    = theOccContainer.at(theBoard->getIndex());
 
     // ###################
     // # Clear container #
@@ -230,7 +230,7 @@ void Physics::fillDataContainer(BeBoard* theBoard)
     // ###################
     // # Fill containers #
     // ###################
-    const std::vector<Event*>& events = SystemController::GetEvents(theBoard);
+    const std::vector<Event*>& events = SystemController::GetEvents();
     for(const auto& event: events) event->fillDataContainer(cBoard, theChnGroupHandler->allChannelGroup());
 
     // ######################################
@@ -332,7 +332,7 @@ void Physics::clearContainers(BeBoard* theBoard)
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
-    const auto cBoard = theOccContainer.at(theBoard->getIndex());
+    const auto   cBoard    = theOccContainer.at(theBoard->getIndex());
 
     // ####################
     // # Clear containers #

@@ -39,9 +39,9 @@
 // # Default values #
 // ##################
 #define RUNNUMBER 0
-#define SETBATCH  0 // Set batch mode when running supervisor
+#define SETBATCH 0 // Set batch mode when running supervisor
 #define FILERUNNUMBER "./RunNumber.txt"
-#define BASEDIR       "PH2ACF_BASE_DIR"
+#define BASEDIR "PH2ACF_BASE_DIR"
 #define ARBITRARYDELAY 2e6 // [us]
 
 INITIALIZE_EASYLOGGINGPP
@@ -88,7 +88,8 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
 
     LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
     int avgEventSize = data.size() / decodedEvents.size();
-    LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN << " events" << RESET;
+    LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN << " events"
+              << RESET;
     mySysCntr.closeFileHandler();
 }
 

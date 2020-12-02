@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
             cTool.fReadoutChipInterface->WriteChipReg(theSSA, "Bias_THDAC", thd);
         }
         cTool.ReadNEvents(pBoard, 500);
-        const std::vector<Event*>& eventVector = cTool.GetEvents(pBoard);
+        const std::vector<Event*>& eventVector = cTool.GetEvents();
         for(auto& event: eventVector) // for on events - begin
         {
             LOG(INFO) << BOLDRED << "L1N: " << static_cast<D19cSSAEvent*>(event)->GetL1Number() << RESET;

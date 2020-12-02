@@ -524,7 +524,6 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     {
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();
-        fCurrentEvent = 0;
 
         if(pNevents == 0) { LOG(INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET; }
         else

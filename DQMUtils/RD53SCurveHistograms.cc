@@ -25,7 +25,7 @@ void SCurveHistograms::book(TFile* theOutputFile, const DetectorContainer& theDe
     stopValue  = this->findValueInSettings(settingsMap, "VCalHstop");
     offset     = this->findValueInSettings(settingsMap, "VCalMED");
 
-    auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue - offset, stopValue - offset, 2*nEvents + 1, 0, 2 + 1. / nEvents);
+    auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue - offset, stopValue - offset, 2 * nEvents + 1, 0, 2 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "#DeltaVCal", "Efficiency");
 
     auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
