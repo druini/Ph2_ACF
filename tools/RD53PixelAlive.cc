@@ -27,6 +27,7 @@ void PixelAlive::ConfigureCalibration()
     nHITxCol       = this->findValueInSettings("nHITxCol");
     doFast         = this->findValueInSettings("DoFast");
     thrOccupancy   = this->findValueInSettings("TargetOcc");
+    unstuckPixels  = this->findValueInSettings("UnstuckPixels");
     doDisplay      = this->findValueInSettings("DisplayHisto");
     doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings("SaveBinaryData");
@@ -247,8 +248,12 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                       ->at(cChip->getIndex())
                                                       ->getChannel<OccupancyAndPh>(row, col)
                                                       .fOccupancy;
-                                static_cast<RD53*>(cChip)->enablePixel(row, col, injType == INJtype::None ? occupancy <= thrOccupancy : occupancy >= thrOccupancy);
-                                if((*static_cast<RD53*>(cChip)->getPixelsMask())[col].Enable[row] == false) nMaskedPixelsPerCalib++;
+                                bool enable = (injType == INJtype::None ? occupancy <= thrOccupancy : occupancy >= thrOccupancy);
+                                if(unstuckPixels == false)
+                                    static_cast<RD53*>(cChip)->enablePixel(row, col, enable);
+                                else if(enable == false)
+                                    static_cast<RD53*>(cChip)->setTDAC(row, col, 0);
+                                if(enable == false) nMaskedPixelsPerCalib++;
                             }
 
                     LOG(INFO) << BOLDBLUE << "\t--> Number of potentially masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
