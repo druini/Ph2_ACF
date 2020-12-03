@@ -349,6 +349,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                     LOG(INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << std::fixed << std::setprecision(1)
                               << theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>()
                               << std::setprecision(-1) << RESET;
+                    RD53Shared::resetDefaultFloat();
                 }
 
     return theThresholdAndNoiseContainer;

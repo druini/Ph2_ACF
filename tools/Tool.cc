@@ -1198,7 +1198,7 @@ class MeasureBeBoardDataPerGroup : public ScanBase
 
     void operator()() override
     {
-        uint16_t burstNumbers;
+        uint32_t burstNumbers;
         uint32_t lastBurstNumberOfEvents;
         if(fNumberOfEventsPerBurst <= 0)
         {

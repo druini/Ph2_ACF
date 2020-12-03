@@ -223,18 +223,40 @@ void ThrEqualization::draw()
 
 void ThrEqualization::analyze()
 {
+    const float  maxTDACdistance = 2;
+    const size_t TDACcenter      = RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2;
+
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
+                    float avgTDAC = 0;
+                    int   counter = 0;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
+                            {
                                 static_cast<RD53*>(cChip)->setTDAC(
                                     row, col, theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col));
+
+                                avgTDAC += theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                                counter++;
+                            }
+
+                    avgTDAC /= counter;
+
+                    // ###########################
+                    // # Check TDAC distribution #
+                    // ###########################
+                    if(fabs(avgTDAC - TDACcenter) > maxTDACdistance)
+                    {
+                        LOG(WARNING) << BOLDRED << "Average TDAC distribution not centered around " << BOLDYELLOW << TDACcenter << BOLDRED << " (i.e. " << std::setprecision(1) << BOLDYELLOW << avgTDAC
+                                     << BOLDRED << " - center > " << BOLDYELLOW << maxTDACdistance << BOLDRED << ") for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
+                                     << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "]" << std::setprecision(-1) << RESET;
+                    }
 
                     static_cast<RD53*>(cChip)->copyMaskToDefault();
                 }

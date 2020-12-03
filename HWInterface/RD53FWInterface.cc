@@ -687,20 +687,10 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 {
     uint32_t nWordsInMemoryOld, nWordsInMemory = 0;
 
-    // ########################################
-    // # Wait until we have something in DDR3 #
-    // ########################################
-    if(HANDSHAKE_EN == true)
-        while(ReadReg("user.stat_regs.readout4.readout_req") == 0)
-        {
-            LOG(ERROR) << BOLDRED << "Waiting for readout request, FSM status: " << BOLDYELLOW << ReadReg("user.stat_regs.readout4.fsm_status") << RESET;
-            usleep(READOUTSLEEP);
-        }
-    nWordsInMemory = ReadReg("user.stat_regs.words_to_read");
-
     // #############################################
     // # Wait for a stable number of words to read #
     // #############################################
+    nWordsInMemory = ReadReg("user.stat_regs.words_to_read");
     do
     {
         nWordsInMemoryOld = nWordsInMemory;
@@ -1138,14 +1128,6 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
                                {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, 8, 0)}});
 
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
-
-    // #############################
-    // # Configuring readout block #
-    // #############################
-    RegManager::WriteStackReg({
-        {"user.ctrl_regs.readout_block.data_handshake_en", HANDSHAKE_EN},
-        {"user.ctrl_regs.readout_block.l1a_timeout_value", L1A_TIMEOUT},
-    });
 }
 
 void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays, bool enableAutozero)
@@ -1259,6 +1241,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
               << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject +
                                     RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime))
               << std::setprecision(-1) << " Hz" << RESET;
+    RD53Shared::resetDefaultFloat();
 
     // ##############################
     // # Download the configuration #

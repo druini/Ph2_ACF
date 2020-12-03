@@ -363,6 +363,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                     LOG(INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW << std::fixed << std::setprecision(4)
                               << theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << std::setprecision(-1)
                               << RESET;
+                    RD53Shared::resetDefaultFloat();
                 }
 
     return theGainAndInterceptContainer;

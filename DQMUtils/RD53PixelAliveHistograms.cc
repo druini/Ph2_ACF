@@ -19,11 +19,10 @@ void PixelAliveHistograms::book(TFile* theOutputFile, const DetectorContainer& t
     // #######################
     // # Retrieve parameters #
     // #######################
-    nEvents = this->findValueInSettings(settingsMap, "nEvents");
-
-    size_t ToTsize   = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
-    size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    nEvents                = this->findValueInSettings(settingsMap, "nEvents");
+    const size_t ToTsize   = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
     auto hOcc1D = CanvasContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, 1 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Efficiency", "Entries");

@@ -36,12 +36,6 @@
 #define NBIT_FWVER 16        // Number of bits for the firmware version
 #define IPBUS_FASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 
-// #################
-// # READOUT BLOCK #
-// #################
-#define HANDSHAKE_EN false
-#define L1A_TIMEOUT 4000
-
 namespace RD53FWEvtEncoder
 {
 // ################
