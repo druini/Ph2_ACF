@@ -194,6 +194,8 @@ void GainOptimization::fillHisto()
 
 void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
 {
+    std::vector<uint16_t> commandList;
+
     uint16_t init;
     uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
 
@@ -231,24 +233,31 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid)
-                    {
-                        midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                            (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
-                             maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) /
-                            2;
+                  {
+                      commandList.clear();
+                      int hybridId = cHybrid->getId();
 
-                        this->fReadoutChipInterface->WriteChipReg(
-                            static_cast<RD53*>(cChip),
-                            regName,
-                            midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
-                            true);
+                      for(const auto cChip: *cHybrid)
+                      {
+                          midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                              (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
+                               maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) /
+                              2;
 
-                        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
-                                  << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW
-                                  << midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << BOLDMAGENTA
-                                  << " <<<" << RESET;
-                    }
+                          static_cast<RD53Interface*>(this->fReadoutChipInterface)
+                              ->PackChipCommands(static_cast<RD53*>(cChip),
+                                                 regName,
+                                                 midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
+                                                 commandList);
+
+                          LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
+                                    << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW
+                                    << midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << BOLDMAGENTA
+                                    << " <<<" << RESET;
+                      }
+
+                      static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendCommandsPack(commandList, hybridId);
+                  }
 
         // ################
         // # Run analysis #
@@ -316,14 +325,18 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
+            {
+                commandList.clear();
+                int hybridId = cHybrid->getId();
+
                 for(const auto cChip: *cHybrid)
                     if(bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() != 0)
                     {
-                        this->fReadoutChipInterface->WriteChipReg(
-                            static_cast<RD53*>(cChip),
-                            regName,
-                            bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
-                            true);
+                        static_cast<RD53Interface*>(this->fReadoutChipInterface)
+                            ->PackChipCommands(static_cast<RD53*>(cChip),
+                                               regName,
+                                               bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
+                                               commandList);
 
                         LOG(INFO) << BOLDMAGENTA << ">>> Best " << BOLDYELLOW << regName << BOLDMAGENTA << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                   << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] = " << BOLDYELLOW
@@ -333,6 +346,9 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                     else
                         LOG(WARNING) << BOLDRED << ">>> Best " << BOLDYELLOW << regName << BOLDRED << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                      << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "] was not found <<<" << RESET;
+
+                static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendCommandsPack(commandList, hybridId);
+            }
 
     // ################
     // # Run analysis #

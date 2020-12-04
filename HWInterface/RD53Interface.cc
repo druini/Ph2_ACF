@@ -437,6 +437,13 @@ void RD53Interface::ReadChipAllLocalReg(ReadoutChip* pChip, const std::string& r
         for(auto col = 0u; col < RD53::nCols; col++) pValue.getChannel<uint16_t>(row, col) = pRD53->getTDAC(row, col);
 }
 
+void RD53Interface::PackChipCommands(Chip* pChip, const std::string& pRegNode, uint16_t data, std::vector<uint16_t>& commandList)
+{
+    RD53Cmd::WrReg(pChip->getId(), pChip->getRegItem(pRegNode).fAddress, data).appendTo(commandList);
+}
+
+void RD53Interface::SendCommandsPack(const std::vector<uint16_t>& commandList, int hybridId) { static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, hybridId); }
+
 // ###########################
 // # Dedicated to minitoring #
 // ###########################
