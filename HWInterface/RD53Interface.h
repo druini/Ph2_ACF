@@ -39,8 +39,8 @@ class RD53Interface : public ReadoutChipInterface
     bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true) override;
     bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override;
 
-    void     PackChipCommands(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t data, std::vector<uint16_t>& commandList);
-    void     SendCommandsPack(const std::vector<uint16_t>& commandList, int hybridId);
+    void PackChipCommands(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t data, std::vector<uint16_t>& commandList);
+    void SendCommandsPack(const std::vector<uint16_t>& commandList, int hybridId);
 
   private:
     std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& pRegNode);
