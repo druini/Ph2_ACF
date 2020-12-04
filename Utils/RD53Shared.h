@@ -10,11 +10,11 @@
 #ifndef RD53Shared_H
 #define RD53Shared_H
 
-#include <iomanip>
-#include <sstream>
 #include <cmath>
-#include <thread>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
+#include <thread>
 
 namespace RD53Shared
 {

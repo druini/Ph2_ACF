@@ -614,7 +614,7 @@ int main(int argc, char** argv)
                             mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 1, true);
                         }
         }
-        else if(program == false)
+        else if((program == false) && (whichCalib != ""))
         {
             LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
             exit(EXIT_FAILURE);

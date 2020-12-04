@@ -296,6 +296,7 @@ class RD53FWInterface : public BeBoardFWInterface
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
     bool               singleChip;
+    unsigned int       auroraSpeed;
     uint16_t           enabledHybrids;
 };
 

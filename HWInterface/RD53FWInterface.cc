@@ -152,7 +152,11 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ##############################
     // # AURORA lock on data stream #
     // ##############################
-    while(RD53FWInterface::CheckChipCommunication() == false) RD53FWInterface::InitHybridByHybrid(pBoard);
+    if(RD53FWInterface::CheckChipCommunication() == false)
+    {
+        RD53FWInterface::InitHybridByHybrid(pBoard);
+        RD53FWInterface::CheckChipCommunication();
+    }
 }
 
 void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
@@ -321,8 +325,8 @@ bool RD53FWInterface::CheckChipCommunication()
     // ###############################
     // # Check RD53 AURORA registers #
     // ###############################
-    unsigned int speed_flag = ReadReg("user.stat_regs.aurora_rx.speed");
-    LOG(INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (speed_flag == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
+    auroraSpeed = ReadReg("user.stat_regs.aurora_rx.speed");
+    LOG(INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
 
     // ########################################
     // # Check communication with the chip(s) #
@@ -356,9 +360,9 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
     for(const auto cOpticalGroup: *pBoard)
         for(const auto cHybrid: *cOpticalGroup)
         {
-            // #############################
-            // # Check if all lanes are up #
-            // #############################
+            // #################################
+            // # Check if all lanes are active #
+            // #################################
             const uint32_t hybrid_id         = cHybrid->getId();
             const uint32_t chips_en_to_check = RD53FWInterface::GetHybridEnabledChips(cHybrid);
             const uint32_t channel_up        = ReadReg("user.stat_regs.aurora_rx_channel_up");
@@ -384,12 +388,20 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
 
                 for(unsigned int i = 0; i < MAXATTEMPTS; i++)
                 {
+                    // ###########################
+                    // # Set proper AURORA speed #
+                    // ###########################
+                    if(auroraSpeed == 0)
+                        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::CDRCONFIG_ADDR, RD53Constants::CDRCONFIG_1Gbit).getFrames(), -1);
+                    else
+                        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::CDRCONFIG_ADDR, RD53Constants::CDRCONFIG_640Mbit).getFrames(), -1);
+
                     RD53FWInterface::WriteChipCommand(initSequence, hybrid_id);
                     usleep(DEEPSLEEP);
 
-                    // #############################
-                    // # Check if all lanes are up #
-                    // #############################
+                    // #################################
+                    // # Check if all lanes are active #
+                    // #################################
                     lanes_up            = false;
                     uint32_t channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
 
@@ -408,7 +420,7 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
                 if(lanes_up == true) break;
             }
 
-            if(lanes_up == false) LOG(ERROR) << BOLDRED << "Not all data lanes are up for hybrid: " << BOLDYELLOW << hybrid_id << RESET;
+            if(lanes_up == false) LOG(ERROR) << BOLDRED << "Not all data lanes are active for hybrid: " << BOLDYELLOW << hybrid_id << RESET;
         }
 }
 
