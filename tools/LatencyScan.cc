@@ -14,10 +14,6 @@ void LatencyScan::Initialize(uint32_t pStartLatency, uint32_t pLatencyRange)
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
-    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-    cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-    cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
 
     for(auto cBoard: *fDetectorContainer)
     {
@@ -395,33 +391,7 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
             {
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    for(auto cHybrid: *cOpticalGroup) { cNStubs += countStubs(cHybrid, cEvent, "hybrid_stub_latency", cLat); 
-
-
-
-        std::vector<PCluster> pclus = static_cast<D19cMPAEvent*>(cEvent)->GetPixelClusters(cHybrid->getId(), 1);
-        pclus.size();
-
-        std::vector<SCluster> sclus = static_cast<D19cMPAEvent*>(cEvent)->GetStripClusters(cHybrid->getId(), 1);
-        sclus.size();
-
-        std::vector<Stub> stubs = static_cast<D19cMPAEvent*>(cEvent)->StubVector(cHybrid->getId(), 1);
-        stubs.size();
-
-
-        //std::cout << "pclus "<<pclus.size()<< " sclus "<< sclus.size() <<" stubs "<<stubs.size()<<std::endl; 
-        /*for( auto& pc: pclus)  
-                            {
-                             std::cout << "pclus fAddress "<<unsigned(pc.fAddress) << " fZpos "<<unsigned(pc.fZpos) <<  " fWidth "<<unsigned(pc.fWidth)<<std::endl<< std::endl;
-                            }
-
-        for( auto& sc: sclus)  
-                            {
-                             std::cout << "sclus fAddress "<<unsigned(sc.fAddress)<< " fWidth "<<unsigned(sc.fWidth)<< std::endl;
-                            }*/
- 
-
-}
+                    for(auto cHybrid: *cOpticalGroup) { cNStubs += countStubs(cHybrid, cEvent, "hybrid_stub_latency", cLat); }
                 }
             }
             LOG(INFO) << "Stub Latency " << +cLat << " Stubs " << cNStubs << " Events " << cEvents.size();
