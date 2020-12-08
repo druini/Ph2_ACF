@@ -144,7 +144,6 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLaten
     // //Fabio - clean END
 
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
-
     for(auto pBoard: *fDetectorContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
@@ -154,7 +153,6 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLaten
             cVisitor.setLatency(cLat);
             this->accept(cVisitor);
             ReadNEvents(theBoard, fNevents);
-
             const std::vector<Event*>& events = GetEvents(theBoard);
             countHitsLat(theBoard, events, "hybrid_latency", cLat, pStartLatency);
             // done counting hits for all FE's, now update the Histograms
@@ -168,7 +166,6 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLaten
 
     // analyze the Histograms
     std::map<HybridContainer*, uint8_t> cLatencyMap;
-
 
     for(auto cFe: fHybridHistMap)
     {
@@ -391,7 +388,6 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
             // Take Data for all Hybrids
             // here set the stub latency
             for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
-
             this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
             const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
             // Loop over Events from this Acquisition
@@ -399,7 +395,33 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
             {
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    for(auto cHybrid: *cOpticalGroup) { cNStubs += countStubs(cHybrid, cEvent, "hybrid_stub_latency", cLat); }
+                    for(auto cHybrid: *cOpticalGroup) { cNStubs += countStubs(cHybrid, cEvent, "hybrid_stub_latency", cLat); 
+
+
+
+        std::vector<PCluster> pclus = static_cast<D19cMPAEvent*>(cEvent)->GetPixelClusters(cHybrid->getId(), 1);
+        pclus.size();
+
+        std::vector<SCluster> sclus = static_cast<D19cMPAEvent*>(cEvent)->GetStripClusters(cHybrid->getId(), 1);
+        sclus.size();
+
+        std::vector<Stub> stubs = static_cast<D19cMPAEvent*>(cEvent)->StubVector(cHybrid->getId(), 1);
+        stubs.size();
+
+
+        //std::cout << "pclus "<<pclus.size()<< " sclus "<< sclus.size() <<" stubs "<<stubs.size()<<std::endl; 
+        /*for( auto& pc: pclus)  
+                            {
+                             std::cout << "pclus fAddress "<<unsigned(pc.fAddress) << " fZpos "<<unsigned(pc.fZpos) <<  " fWidth "<<unsigned(pc.fWidth)<<std::endl<< std::endl;
+                            }
+
+        for( auto& sc: sclus)  
+                            {
+                             std::cout << "sclus fAddress "<<unsigned(sc.fAddress)<< " fWidth "<<unsigned(sc.fWidth)<< std::endl;
+                            }*/
+ 
+
+}
                 }
             }
             LOG(INFO) << "Stub Latency " << +cLat << " Stubs " << cNStubs << " Events " << cEvents.size();
@@ -580,7 +602,9 @@ int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventV
                 for(auto cCbc: *cFe)
                 {
                     // now loop the channels for this particular event and increment a counter
-                    cHitCounter += cEvent->GetNHits(cFe->getId(), cCbc->getId());
+                    if (cCbc->getFrontEndType() == FrontEndType::MPA) cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNPixelClusters(cFe->getId(), cCbc->getId());
+                    else if (cCbc->getFrontEndType() == FrontEndType::SSA) cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(cFe->getId(), static_cast<SSA*> (cCbc)->getPartid());
+                    else cHitCounter += cEvent->GetNHits(cFe->getId(), cCbc->getId());
                 }
 
                 // now I have the number of hits in this particular event for all CBCs and the TDC value
@@ -614,8 +638,8 @@ int LatencyScan::countStubs(Hybrid* pFe, const Event* pEvent, std::string pHistN
     for(auto cCbc: *pFe)
     {
         if(pEvent->StubBit(pFe->getId(), cCbc->getId())) cStubCounter += pEvent->StubVector(pFe->getId(), cCbc->getId()).size();
-    }
 
+    }
     int   cBin        = cTmpHist->FindBin(pParameter);
     float cBinContent = cTmpHist->GetBinContent(cBin);
     cBinContent += cStubCounter;

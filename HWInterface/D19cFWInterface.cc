@@ -3703,6 +3703,164 @@ void D19cFWInterface::PSInterfaceBoard_PowerOn_MPA(float VDDPST, float DVDD, flo
     PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
 }
 
+
+
+
+void D19cFWInterface::PSInterfaceBoard_PowerOn_MPASSA(float VDDPST, float DVDD, float AVDD, float VBG, float VBF, uint8_t mpaid, uint8_t ssaid)
+{
+
+    this->getBoardInfo();
+    this->PSInterfaceBoard_PowerOn(0, 0);
+
+
+
+
+    uint32_t write   = 0;
+    uint32_t SLOW    = 2;
+    uint32_t i2cmux  = 0;
+    uint32_t pcf8574 = 1;
+    uint32_t dac7678 = 4;
+    std::this_thread::sleep_for(std::chrono::milliseconds(750));
+    PSInterfaceBoard_SetSlaveMap();
+    PSInterfaceBoard_ConfigureI2CMaster(1, SLOW);
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
+    float Vc = 0.0003632813;
+
+
+
+
+    LOG(INFO) << "mpa vdd on";
+
+    float Vlimit = 1.32;
+    if(VDDPST > Vlimit) VDDPST = Vlimit;
+    float    diffvoltage = 1.5 - VDDPST;
+    uint32_t setvoltage  = int(round(diffvoltage / Vc));
+    if(setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+
+
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);           // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x34, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+
+    LOG(INFO) << "ssa vdd on";
+
+    Vlimit = 1.32;
+    if(VDDPST > Vlimit) VDDPST = Vlimit;
+    diffvoltage = 1.5 - VDDPST;
+    setvoltage  = int(round(diffvoltage / Vc));
+    if(setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01); // to SCO on PCA9646
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x33, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+
+
+    LOG(INFO) << "mpa vddD on";
+    Vlimit = 1.2;
+    if(DVDD > Vlimit) DVDD = Vlimit;
+    diffvoltage = 1.5 - DVDD;
+    setvoltage  = int(round(diffvoltage / Vc));
+    if(setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);           // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x30, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+    LOG(INFO) << "ssa vddD on";
+    Vlimit = 1.32;
+    if(DVDD > Vlimit) DVDD = Vlimit;
+    diffvoltage = 1.5 - DVDD;
+    setvoltage  = int(round(diffvoltage / Vc));
+    if(setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01); // to SCO on PCA9646
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x31, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+
+    LOG(INFO) << "mpa vddA on";
+    Vlimit = 1.32;
+    if(AVDD > Vlimit) AVDD = Vlimit;
+    diffvoltage = 1.5 - AVDD;
+    setvoltage  = int(round(diffvoltage / Vc));
+    if(setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);           // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x32, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    LOG(INFO) << "ssa vddA on";
+    Vlimit = 1.32;
+    if(AVDD > Vlimit) AVDD = Vlimit;
+    diffvoltage = 1.5 - AVDD;
+    setvoltage  = int(round(diffvoltage / Vc));
+    if(setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01); // to SCO on PCA9646
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x35, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+
+
+
+
+    LOG(INFO) << "mpa VBG on";
+    Vlimit = 0.5;
+    if(VBG > Vlimit) VBG = Vlimit;
+    float Vc2  = 4095 / 1.5;
+    setvoltage = int(round(VBG * Vc2));
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);           // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x36, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    /*LOG(INFO) << "ssa VBG on";
+    Vlimit = 1.32;
+    if(VBG > Vlimit) VBG = Vlimit;
+    Vc2  = 4095 / 1.5;
+    setvoltage = int(round(VBG * Vc2));
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01); // to SCO on PCA9646
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x36, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));*/
+
+    LOG(INFO) << "ssa VBF on";
+    Vlimit = 0.5;
+    if(VBF > Vlimit) VBF = Vlimit;
+    setvoltage = int(round(VBF * Vc2));
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01); // to SCO on PCA9646
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x37, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, 145); // set reset bit
+
+
+    /*LOG(INFO) << "mpa enable";
+    //uint32_t val2 = (mpaid << 5) + 16;
+    uint32_t val2 = (mpaid << 5) + (ssaid << 1) + 1; // reset bit for MPA
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);  // route to 2nd PCF8574
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, val2); // set reset bit
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));*/
+
+    // disable the i2c master at the end (first set the mux to the chip
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x04);
+    PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
+
+}
+
+
+
 void D19cFWInterface::PSInterfaceBoard_PowerOff_SSA(uint8_t mpaid, uint8_t ssaid)
 {
     uint32_t                  write   = 0;

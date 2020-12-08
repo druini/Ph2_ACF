@@ -82,6 +82,8 @@ int main(int argc, char* argv[])
     if(batchMode)
         gROOT->SetBatch(true);
     BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
+    pBoard->setFrontEndType(FrontEndType::MPA);
+
 
 
     // cTool.StartHttpServer();
@@ -106,6 +108,48 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDRED << "INIT" << RESET;
     cLatencyScan.Initialize(0, 100);
     LOG(INFO) << BOLDRED << "Scan" << RESET;
+    pBoard->setFrontEndType(FrontEndType::MPA);
+
+    std::vector<int>rows{5,74,51,98,20};
+    std::vector<int>cols{1};
+
+    for(auto cOpticalGroup: *pBoard)
+            {
+                for(auto cFe: *cOpticalGroup)
+                {
+     
+                    for(auto cChip: *cFe)
+                    {           
+                        if (cChip->getFrontEndType() == FrontEndType::MPA) 
+                            {
+                            static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Set_calibration(cChip, 50);
+                            static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Set_threshold(cChip, 100);
+                            static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Activate_sync(cChip);
+                            //static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0x57);
+                            static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                            static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ClusterCut_ALL",2);
+                            for(auto rr: rows)
+                                {
+                                for(auto cc: cols)
+                                    {
+                                    auto pngl=static_cast<MPA*>(cChip)->PNglobal(std::pair<uint32_t, uint32_t>{cc,rr} );
+                                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_P"+std::to_string(pngl),0x57);
+     
+                                    }
+                                }
+                            }
+                        if (cChip->getFrontEndType() == FrontEndType::SSA) 
+                            {
+                            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS", 0);
+                            }
+                    }
+
+                }   
+            }
+        
+
+
+    auto hitlatmpa=cLatencyScan.ScanLatency(30, 50);
 
 
     for(auto cOpticalGroup: *pBoard)
@@ -115,52 +159,109 @@ int main(int argc, char* argv[])
      
                     for(auto cChip: *cFe)
                     {           
-                        static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Set_calibration(cChip, 200);
-                        static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Set_threshold(cChip, 200);
-                        static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Activate_sync(cChip);
-                        static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Activate_pp(cChip);
-                        static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ClusterCut_ALL",1);
+                        if (cChip->getFrontEndType() == FrontEndType::MPA) 
+                            {
+                            static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0);
+                            }
+                        if (cChip->getFrontEndType() == FrontEndType::SSA) 
+                            {
+                            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "FE_Calibration", 1);
+                            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS", 0);
+                            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "Bias_CALDAC", 120);
+                            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "Bias_THDAC", 60);
+
+                            for(auto rr: rows)
+                                {
+                                    static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_S"+std::to_string(rr+1),19);
+                                }
+                            
+                            }
+                    }
+
+                }   
+            }
+
+    cLatencyScan.Initialize(0, 100);
+    auto hitlatssa=cLatencyScan.ScanLatency(30, 50);
+
+
+    for(auto cOpticalGroup: *pBoard)
+            {
+                for(auto cFe: *cOpticalGroup)
+                {
+      
+                for(auto cChip: *cFe)
+                    {           
+                    if (cChip->getFrontEndType() == FrontEndType::MPA) 
+                            {
+                            uint8_t hitlmpa=hitlatmpa[cFe];
+                            LOG(INFO) << BOLDRED << "Hit max " <<+hitlmpa<< RESET;
+                            static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "L1Offset_1_ALL", (0x00FF & hitlmpa) >> 0 );
+                            static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "L1Offset_2_ALL",(0x0100 & hitlmpa) >> 8);
+                            }
+                       
+                    if (cChip->getFrontEndType() == FrontEndType::SSA) 
+                            {
+                            uint8_t hitlssa=hitlatssa[cFe];
+                            LOG(INFO) << BOLDRED << "Hit max " <<+hitlssa<< RESET;
+                            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "L1-Latency_LSB", (0x00FF & hitlssa) >> 0 );
+                            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "L1-Latency_MSB",(0x0100 & hitlssa) >> 8);
+                            }
                     }
 
                 }   
             }
         
-
-
-
-    auto hitlat=cLatencyScan.ScanLatency(50, 10);
-
-    LatencyVisitor cVisitor(cTool.fReadoutChipInterface, 0);
-
-
-    for(auto cOpticalGroup: *pBoard)
-            {
-                for(auto cFe: *cOpticalGroup)
+    
+    for(size_t irt = 0; irt <10; irt++)
+    {
+        LOG(INFO) << BOLDRED << "RetimePix " << irt<< RESET;
+        bool found=false;
+        for(auto cOpticalGroup: *pBoard)
                 {
-                
-                uint8_t hitl=hitlat[cFe];
-                LOG(INFO) << BOLDRED << "Hit max " <<+hitl<< RESET;
-                cVisitor.setLatency(hitl);
-                cTool.accept(cVisitor);
+                    for(auto cFe: *cOpticalGroup)
+                    {
+         
+                        for(auto cChip: *cFe)
+                        {           
+                            if (cChip->getFrontEndType() == FrontEndType::MPA) 
+                                {
+                                static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Activate_ps(cChip);
+                                static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                                static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ClusterCut_ALL",4);
+                                static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "RetimePix", irt);
+                                for(auto rr: rows)
+                                    {
+                                    for(auto cc: cols)
+                                        {
+                                        auto pngl=static_cast<MPA*>(cChip)->PNglobal(std::pair<uint32_t, uint32_t>{cc,rr} );
+                                        static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_P"+std::to_string(pngl),0x57);
+                                        }
+                                    }
+                                
+                                }
+                        }
+                    }   
+                }
+
+        auto stublat=cLatencyScan.ScanStubLatency(0, 50);
+
+        for(auto cOpticalGroup: *pBoard)
+            {
+            for(auto cFe: *cOpticalGroup)
+                {
+                if (stublat[cFe]!=0) 
+                    {
+                    found=true;
+                    LOG(INFO) << BOLDRED << "Stub max " <<unsigned(stublat[cFe])<<" RetimePix " << irt<< RESET;
+                    cTool.fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", stublat[cFe]);
+                    }
                 }   
             }
-        
 
-
-
-
-    auto stublat=cLatencyScan.ScanStubLatency(0, 60);
-
-    for(auto cOpticalGroup: *pBoard)
-            {
-                for(auto cFe: *cOpticalGroup)
-                {
-                
-                LOG(INFO) << BOLDRED << "Stub max " <<+stublat[cFe]<< RESET;
-                }   
-            }
-        
-
+        if (found) break;
+    }
+     
 
     LOG(INFO) << BOLDRED << "Done" << RESET;
 

@@ -437,7 +437,7 @@ uint32_t SystemController::ReadData(BeBoard* pBoard, std::vector<uint32_t>& pDat
 void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents)
 {
     std::vector<uint32_t> cData;
-    return this->ReadNEvents(pBoard, pNEvents, cData, true);
+    this->ReadNEvents(pBoard, pNEvents, cData, true);
 }
 
 void SystemController::ReadNEvents(uint32_t pNEvents)
@@ -452,7 +452,6 @@ void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vect
     uint32_t cMultiplicity = 0;
     if(fBeBoardInterface->getBoardType(pBoard) == BoardType::D19C) cMultiplicity = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     pNEvents = pNEvents * (cMultiplicity + 1);
-
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
 }
 
@@ -481,8 +480,8 @@ void SystemController::ReadASEvent(BeBoard* pBoard, uint32_t pNMsec, uint32_t pu
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(pBoard->getFrontEndType() == FrontEndType::MPA) static_cast<MPAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
-                    if(pBoard->getFrontEndType() == FrontEndType::SSA) static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+                    if(cChip->getFrontEndType() == FrontEndType::MPA) static_cast<MPAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+                    if(cChip->getFrontEndType() == FrontEndType::SSA) static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
                 }
             }
         }
@@ -528,25 +527,26 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
             LOG(DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
             fEventSize      = static_cast<uint32_t>((pData.size()) / pNevents);
+            //uint32_t nmpa = 0;
             uint32_t maxind = 0;
 
-            if(pBoard->getFrontEndType() == FrontEndType::SSA)
-            {
-                uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-                if(fEventType == EventType::SSAAS) nSSA = pData.size() / 120;
 
-                for(auto opticalGroup: *pBoard)
-                {
+                //if(fEventType == EventType::SSAAS) 
+                 //   {
+                 //   uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+                 //   nSSA = pData.size() / 120;
+                 //   }
+
+
+            for(auto opticalGroup: *pBoard)
+            {
                     for(auto hybrid: *opticalGroup)
                     {
-                        for(auto chip: *hybrid)
-                        {
-                            // LOG (INFO) << BOLDBLUE <<chip->getId()+hybrid->getId()*nSSA <<RESET;
-                            maxind = std::max(maxind, uint32_t(chip->getId() + hybrid->getId() * nSSA));
-                        }
+
+                            maxind = std::max(maxind, uint32_t(hybrid->size()));
+          
+                        
                     }
-                }
-                // LOG (INFO) << BOLDBLUE << "maxind " << maxind << RESET;
             }
 
             if(fEventType == EventType::SSAAS) { fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
@@ -577,18 +577,11 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                         }
                         else if(pBoard->getFrontEndType() == FrontEndType::SSA)
                         {
-                            // LOG (INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
-                            // auto cL1Counter0 = (cEvent[4+2] & (0xF<<16)) >> 16;
-                            // auto cL1Counter1 = (cEvent[4+8+4+2] & (0xF<<16)) >> 16;
-                            // LOG (INFO) << BOLDBLUE << "L1A counter chip0 : " << cL1Counter0 << RESET;
-                            // LOG (INFO) << BOLDBLUE << "L1A counter chip1 : " << cL1Counter1 << RESET;
-                            // for(auto cWord : cEvent )
-                            //   LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
-                            fEventList.push_back(new D19cSSAEvent(pBoard, maxind + 1, fNFe, cEvent));
+                            fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNFe, cEvent));
                         }
                         else if(pBoard->getFrontEndType() == FrontEndType::MPA)
                         {
-                            fEventList.push_back(new D19cMPAEvent(pBoard, maxind + 1, fNFe, cEvent));
+                            fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNFe, cEvent));
                         }
                         cEventIndex++;
                     }

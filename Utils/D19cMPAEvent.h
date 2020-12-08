@@ -179,7 +179,7 @@ class D19cMPAEvent : public Event
 
     uint32_t DivideBy2RoundUp(uint32_t value) const;
 
-    uint32_t GetCluster(std::vector<uint32_t> lvec, uint8_t nclus, uint8_t cClusterSize, uint8_t deltaword) const;
+    uint32_t GetCluster(std::vector<uint32_t> lvec, uint8_t nclus, uint8_t cClusterSize, uint32_t nbits) const;
 
     void                    print(std::ostream& out) const override;
     static constexpr size_t encodeVectorIndex(const uint8_t pFeId, const uint8_t pSSAId, const uint8_t numberOfSSAs) { return pSSAId + pFeId * numberOfSSAs; }
