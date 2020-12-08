@@ -36,7 +36,7 @@ build:
 run_on_IT:
   stage: run
   dependencies:
-    - build    
+    - build
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
@@ -53,7 +53,7 @@ run_on_IT:
     - cp ci_tools/Results/Run000001_ThrEqualization.root .
     - cp ci_tools/Results/Run000002_SCurve.root .
   artifacts:
-    paths: 
+    paths:
       - Run000000_PixelAlive.root
       - Run000001_ThrEqualization.root
       - Run000002_SCurve.root
@@ -65,9 +65,9 @@ check_run_on_IT:
   stage: check
   needs: [run_on_IT]
   script:
-    - python ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_M(0)_PixelAlive_Chip(0)" -o plots
-    - python ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_M(0)_ThrEqualization_Chip(0)" -o plots
-    - python ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_M(0)_SCurves_Chip(0)" -o plots
+    - python ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_PixelAlive_Chip(0)" -o plots
+    - python ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_ThrEqualization_Chip(0)" -o plots
+    - python ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_SCurves_Chip(0)" -o plots
   artifacts:
     paths:
       - plots
@@ -91,7 +91,7 @@ run_on_2S:
     - cp Results/*/Hybrid.root .
   artifacts:
     paths:
-      - Hybrid.root  
+      - Hybrid.root
       - ci_tools/plot_hist.py
     expire_in: 1 week
 
@@ -104,7 +104,6 @@ check_run_on_2S:
     paths:
       - plots
     expire_in: 1 week
-
 
 ## 2S hybrid
 run_on_2S_FNAL:
@@ -124,7 +123,7 @@ run_on_2S_FNAL:
     - cp Results/*/Hybrid.root .
   artifacts:
     paths:
-      - Hybrid.root  
+      - Hybrid.root
       - ci_tools/plot_hist.py
     expire_in: 1 week
 
@@ -137,5 +136,3 @@ check_run_on_2S_FNAL:
     paths:
       - plots
     expire_in: 1 week
-
-

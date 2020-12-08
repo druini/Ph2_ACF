@@ -202,15 +202,21 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                    clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
+                    // To be uncommented if crate is used
+                    // clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
+                    clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", false);
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
-                    if(clpGBTInterface->IslpGBTReady(cOpticalGroup->flpGBT))
-                        LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
-                    else
+                    // clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
+                    uint8_t  cPUSMStatus = clpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
+                    uint16_t cIter = 0, cMaxIter = 2000;
+                    while(cPUSMStatus != 18 && cIter < cMaxIter)
                     {
-                        LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY]" << RESET;
-                        exit(0);
+                        LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +cPUSMStatus << RESET;
+                        cPUSMStatus = clpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
+                        cIter++;
                     }
+                    if(cPUSMStatus != 18) exit(0);
+                    LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
                 }
                 uint8_t cLinkId = cOpticalGroup->getId();
                 LOG(INFO) << BOLDMAGENTA << "CIC start-up seqeunce for hybrids on link " << +cLinkId << RESET;

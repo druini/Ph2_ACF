@@ -47,7 +47,7 @@ struct CombinedCalibration : public Tool
         Tool::CreateResultDirectory("Results", false, false);
     }
 
-    bool GetRunningStatus() override {return runningCompleted;}
+    bool GetRunningStatus() override { return runningCompleted; }
 
     void Stop() override
     {

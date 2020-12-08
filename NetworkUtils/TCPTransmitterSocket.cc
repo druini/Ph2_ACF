@@ -66,22 +66,13 @@ void TCPTransmitterSocket::send(char const* buffer, std::size_t size, bool force
 }
 
 //========================================================================================================================
-void TCPTransmitterSocket::send(const std::string& buffer)
-{
-    send(&buffer.at(0), buffer.size());
-}
+void TCPTransmitterSocket::send(const std::string& buffer) { send(&buffer.at(0), buffer.size()); }
 
 //========================================================================================================================
-void TCPTransmitterSocket::send(const std::vector<char>& buffer)
-{
-    send(&buffer.at(0), buffer.size());
-}
+void TCPTransmitterSocket::send(const std::vector<char>& buffer) { send(&buffer.at(0), buffer.size()); }
 
 //==============================================================================
-void TCPTransmitterSocket::send(const std::vector<uint16_t>& buffer)
-{
-    send((const char*)&buffer.at(0), buffer.size());
-}
+void TCPTransmitterSocket::send(const std::vector<uint16_t>& buffer) { send((const char*)&buffer.at(0), buffer.size()); }
 
 //========================================================================================================================
 void TCPTransmitterSocket::setSendTimeout(unsigned int timeoutSeconds, unsigned int timeoutMicroSeconds)

@@ -374,7 +374,7 @@ struct LatencyVisitor : public HwDescriptionVisitor
             }
             else
             {
-                fLatency = fInterface->ReadChipReg(&pCbc, "L1-Latency_LSB")|(fInterface->ReadChipReg(&pCbc, "L1-Latency_MSB")<<8);
+                fLatency = fInterface->ReadChipReg(&pCbc, "L1-Latency_LSB") | (fInterface->ReadChipReg(&pCbc, "L1-Latency_MSB") << 8);
             }
         }
 
@@ -389,7 +389,7 @@ struct LatencyVisitor : public HwDescriptionVisitor
             }
             else
             {
-                fLatency = fInterface->ReadChipReg(&pCbc, "L1Offset_1_R1")|(fInterface->ReadChipReg(&pCbc, "L1Offset_2_R1")<<8);
+                fLatency = fInterface->ReadChipReg(&pCbc, "L1Offset_1_R1") | (fInterface->ReadChipReg(&pCbc, "L1Offset_2_R1") << 8);
             }
         }
 

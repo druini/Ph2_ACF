@@ -305,13 +305,12 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
                                     LOG(INFO) << BOLDRED << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
                                               << " and " << +cHits.size() << " hits of which .. " << +cMatchedHits << " match the stubs!" << RESET;
                             }
-                           else if(cChip->getFrontEndType() == FrontEndType::SSA)
+                            else if(cChip->getFrontEndType() == FrontEndType::SSA)
                             {
-                                auto                 cStubs                = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                                cNStubs = cStubs.size();
-                                
+                                auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                                cNStubs     = cStubs.size();
                             }
-                           else if(cChip->getFrontEndType() == FrontEndType::MPA)
+                            else if(cChip->getFrontEndType() == FrontEndType::MPA)
                             {
                                 auto                 cHits                 = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                                 auto                 cStubs                = cEvent->StubVector(cHybrid->getId(), cChip->getId());

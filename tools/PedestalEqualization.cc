@@ -3,9 +3,9 @@
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/DataContainer.h"
+#include "../Utils/MPAChannelGroupHandler.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/SSAChannelGroupHandler.h"
-#include "../Utils/MPAChannelGroupHandler.h"
 
 // initialize the static member
 
@@ -34,9 +34,8 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
     if(cWithMPA) fChannelGroupHandler = new MPAChannelGroupHandler();
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
-    //For async only -- to fix
-    if(cWithMPA)fChannelGroupHandler->setChannelGroupParameters(16, 120);
-    
+    // For async only -- to fix
+    if(cWithMPA) fChannelGroupHandler->setChannelGroupParameters(16, 120);
 
     this->fAllChan = pAllChan;
 
@@ -49,8 +48,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fTargetOffset                = 0x7F;
     if(cWithSSA or cWithMPA) fTargetOffset = 0xF;
 
-
-    fTargetVcth                  = 0x0;
+    fTargetVcth = 0x0;
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
 
     if(fTestPulseAmplitude == 0)
