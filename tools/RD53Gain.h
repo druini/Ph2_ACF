@@ -19,8 +19,8 @@
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53GainHistograms.h"
 #include "TApplication.h"
+#include "../DQMUtils/RD53GainHistograms.h"
 #endif
 
 // ###################

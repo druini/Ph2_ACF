@@ -18,8 +18,8 @@
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53PixelAliveHistograms.h"
 #include "TApplication.h"
+#include "../DQMUtils/RD53PixelAliveHistograms.h"
 #endif
 
 // #########################

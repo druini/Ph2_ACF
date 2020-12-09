@@ -781,55 +781,57 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 // ##########################################
 // # Use of OpenMP (compiler flag -fopenmp) #
 // ##########################################
-uint16_t RD53FWInterface::DecodeEventsMultiThreads (const std::vector<uint32_t>& data,
-std::vector<RD53FWInterface::Event>& events)
+uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
 {
-  // ######################
-  // # Consistency checks #
-  // ######################
-  if (data.size() == 0) return RD53FWEvtEncoder::EMPTY;
+    // ######################
+    // # Consistency checks #
+    // ######################
+    if(data.size() == 0) return RD53FWEvtEncoder::EMPTY;
 
+    uint16_t evtStatus = RD53FWEvtEncoder::GOOD;
 
-  uint16_t evtStatus = RD53FWEvtEncoder::GOOD;
-
-  std::vector<size_t> eventStart;
-  for (auto i = 0u; i < data.size(); i++)
-    if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) eventStart.push_back(i);
-  if (eventStart.size() == 0) return RD53FWEvtEncoder::NOHEADER;
-  const auto nEvents = ceil(static_cast<double>(eventStart.size()) / omp_get_max_threads());
-  eventStart.push_back(data.size());
-
-
-  // ######################
-  // # Unpack data vector #
-  // ######################
-  #pragma omp parallel
-    {
-      std::vector<RD53FWInterface::Event> vecEvents;
-      std::vector<size_t>                 vecEventStart;
-
-      if (eventStart.begin() + nEvents * omp_get_thread_num() < eventStart.end())
+    std::vector<size_t> eventStart;
+    size_t              i = 0u;
+    while(i < data.size())
+        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
         {
-          auto firstEvent = eventStart.begin() + nEvents * omp_get_thread_num();
-          auto lastEvent  = firstEvent + nEvents + 1 < eventStart.end() ? firstEvent + nEvents + 1 : eventStart.end();
-          std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart));
+            eventStart.push_back(i);
+            i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
+        }
+        else
+            i++;
+    if(eventStart.size() == 0) return RD53FWEvtEncoder::NOHEADER;
+    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / omp_get_max_threads());
+    eventStart.push_back(data.size());
 
-          uint16_t status = RD53FWInterface::DecodeEvents(data, vecEvents, vecEventStart);
+    // ######################
+    // # Unpack data vector #
+    // ######################
+#pragma omp parallel
+    {
+        std::vector<RD53FWInterface::Event> vecEvents;
+        std::vector<size_t>                 vecEventStart;
 
-          #pragma omp atomic
-          evtStatus |= status;
+        if(eventStart.begin() + nEvents * omp_get_thread_num() < eventStart.end())
+        {
+            auto firstEvent = eventStart.begin() + nEvents * omp_get_thread_num();
+            auto lastEvent  = firstEvent + nEvents + 1 < eventStart.end() ? firstEvent + nEvents + 1 : eventStart.end();
+            std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart));
 
+            uint16_t status = RD53FWInterface::DecodeEvents(data, vecEvents, vecEventStart);
 
-          // #####################
-          // # Pack event vector #
-          // #####################
-          #pragma omp critical
-          std::move(vecEvents.begin(), vecEvents.end(), std::back_inserter(events));
+#pragma omp atomic
+            evtStatus |= status;
+
+            // #####################
+            // # Pack event vector #
+            // #####################
+#pragma omp critical
+            std::move(vecEvents.begin(), vecEvents.end(), std::back_inserter(events));
         }
     }
 
-
-  return evtStatus;
+    return evtStatus;
 }
 */
 uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
@@ -847,8 +849,15 @@ uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& 
     std::vector<std::vector<size_t>>                 vecEventStart(RD53Shared::NTHREADS);
 
     std::vector<size_t> eventStart;
-    for(auto i = 0u; i < data.size(); i++)
-        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) eventStart.push_back(i);
+    size_t              i = 0u;
+    while(i < data.size())
+        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
+        {
+            eventStart.push_back(i);
+            i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
+        }
+        else
+            i++;
     if(eventStart.size() == 0) return RD53FWEvtEncoder::NOHEADER;
     const auto nEvents = ceil(static_cast<double>(eventStart.size()) / RD53Shared::NTHREADS);
     eventStart.push_back(data.size());
@@ -856,8 +865,7 @@ uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& 
     // ######################
     // # Unpack data vector #
     // ######################
-    auto i = 0u;
-    for(; i < RD53Shared::NTHREADS - 1; i++)
+    for(i = 0u; i < RD53Shared::NTHREADS - 1; i++)
     {
         auto firstEvent = eventStart.begin() + nEvents * i;
         if(firstEvent + nEvents + 1 > eventStart.end() - 1) break;
@@ -894,9 +902,9 @@ void RD53FWInterface::DecodeEventsWrapper(const std::vector<uint32_t>& data, std
 
 uint16_t RD53FWInterface::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStartExt)
 {
-    uint16_t             evtStatus = RD53FWEvtEncoder::GOOD;
     std::vector<size_t>  eventStartLocal;
     std::vector<size_t>& refEventStart = const_cast<std::vector<size_t>&>(eventStartExt);
+    uint16_t             evtStatus     = RD53FWEvtEncoder::GOOD;
     const size_t         maxL1Counter  = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
     // ######################
@@ -906,8 +914,15 @@ uint16_t RD53FWInterface::DecodeEvents(const std::vector<uint32_t>& data, std::v
 
     if(eventStartExt.size() == 0)
     {
-        for(auto i = 0u; i < data.size(); i++)
-            if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) eventStartLocal.push_back(i);
+        size_t i = 0u;
+        while(i < data.size())
+            if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
+            {
+                eventStartLocal.push_back(i);
+                i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
+            }
+            else
+                i++;
         if(eventStartLocal.size() == 0) return RD53FWEvtEncoder::NOHEADER;
         eventStartLocal.push_back(data.size());
         refEventStart = eventStartLocal;
@@ -1011,7 +1026,7 @@ RD53FWInterface::Event::Event(const uint32_t* data, size_t n)
     // ######################
     // # Consistency checks #
     // ######################
-    if(n < 4)
+    if(n < RD53FWEvtEncoder::EVT_HEADER_SIZE)
     {
         evtStatus = RD53FWEvtEncoder::INCOMPLETE;
         return;
@@ -1142,7 +1157,7 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
 }
 
-void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays, bool enableAutozero)
+void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, uint32_t nTRIGxEvent, size_t injType, uint32_t nClkDelays, bool enableAutozero)
 // ############################
 // # injType == 0 --> None    #
 // # injType == 1 --> Analog  #
@@ -1176,9 +1191,9 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
         // #######################################
         // # Configuration for digital injection #
         // #######################################
-        RD53::CalCmd calcmd_first(1, 0, 2, 0, 0);
+        RD53::CalCmd calcmd_first(1, 2, 8, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
-        RD53::CalCmd calcmd_second(0, 0, 2, 0, 0);
+        RD53::CalCmd calcmd_second(0, 0, 0, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
@@ -1197,7 +1212,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
         // ######################################
         // # Configuration for analog injection #
         // ######################################
-        RD53::CalCmd calcmd_first(1, 0, 2, 0, 0);
+        RD53::CalCmd calcmd_first(1, 0, 0, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
         RD53::CalCmd calcmd_second(0, 0, 2, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);

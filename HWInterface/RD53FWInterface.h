@@ -41,15 +41,16 @@ namespace RD53FWEvtEncoder
 // ################
 // # Event header #
 // ################
-const uint16_t EVT_HEADER     = 0xFFFF;
-const uint8_t  NBIT_EVTHEAD   = 16; // Number of bits for the Error Code
-const uint8_t  NBIT_BLOCKSIZE = 16; // Number of bits for the Block Size
-const uint8_t  NBIT_TRIGID    = 16; // Number of bits for the TLU Trigger ID
-const uint8_t  NBIT_FMTVER    = 8;  // Number of bits for the Format Version
-const uint8_t  NBIT_DUMMY     = 8;  // Number of bits for the Dummy Size
-const uint8_t  NBIT_TDC       = 8;  // Number of bits for the TDC
-const uint8_t  NBIT_L1ACNT    = 24; // Number of bits for the L1A Counter (Event number)
-const uint8_t  NBIT_BXCNT     = 32; // Number of bits for the BX Counter
+const uint16_t EVT_HEADER      = 0xFFFF;
+const uint16_t EVT_HEADER_SIZE = 4;  // Number of words in event header
+const uint8_t  NBIT_EVTHEAD    = 16; // Number of bits for the Error Code
+const uint8_t  NBIT_BLOCKSIZE  = 16; // Number of bits for the Block Size
+const uint8_t  NBIT_TRIGID     = 16; // Number of bits for the TLU Trigger ID
+const uint8_t  NBIT_FMTVER     = 8;  // Number of bits for the Format Version
+const uint8_t  NBIT_DUMMY      = 8;  // Number of bits for the Dummy Size
+const uint8_t  NBIT_TDC        = 8;  // Number of bits for the TDC
+const uint8_t  NBIT_L1ACNT     = 24; // Number of bits for the L1A Counter (Event number)
+const uint8_t  NBIT_BXCNT      = 32; // Number of bits for the BX Counter
 
 // ###############
 // # Chip header #
@@ -183,7 +184,7 @@ class RD53FWInterface : public BeBoardFWInterface
         uint32_t delay_after_ecr         = 0;
         uint32_t delay_after_autozero    = 0; // @TMP@
         uint32_t delay_after_inject      = 0;
-        uint16_t delay_after_trigger     = 0;
+        uint32_t delay_after_trigger     = 0;
         uint32_t delay_after_prime       = 0;
     };
 
@@ -205,7 +206,7 @@ class RD53FWInterface : public BeBoardFWInterface
     };
 
     void ConfigureFromXML(const Ph2_HwDescription::BeBoard* pBoard);
-    void SetAndConfigureFastCommands(const Ph2_HwDescription::BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0, bool enableAutozero = false);
+    void SetAndConfigureFastCommands(const Ph2_HwDescription::BeBoard* pBoard, uint32_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0, bool enableAutozero = false);
 
     struct DIO5Config
     {

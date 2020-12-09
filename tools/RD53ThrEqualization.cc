@@ -33,7 +33,6 @@ void ThrEqualization::ConfigureCalibration()
     nEvtsBurst     = this->findValueInSettings("nEvtsBurst");
     startValue     = this->findValueInSettings("VCalHstart");
     stopValue      = this->findValueInSettings("VCalHstop");
-    resetTDAC      = this->findValueInSettings("ThrEquResetTDAC");
     nHITxCol       = this->findValueInSettings("nHITxCol");
     doFast         = this->findValueInSettings("DoFast");
     doDisplay      = this->findValueInSettings("DisplayHisto");
@@ -306,22 +305,6 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
                     bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()               = 0;
                     bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fOccupancy = 0;
                 }
-
-    // ##############
-    // # Reset TDAC #
-    // ##############
-    if(resetTDAC == true)
-        for(const auto cBoard: *fDetectorContainer)
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid)
-                    {
-                        static_cast<RD53*>(cChip)->resetTDAC();
-                        this->fReadoutChipInterface->ReadChipAllLocalReg(
-                            static_cast<RD53*>(cChip), regName, *theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
-                        this->fReadoutChipInterface->WriteChipAllLocalReg(
-                            static_cast<RD53*>(cChip), regName, *theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
-                    }
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {

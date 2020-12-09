@@ -19,8 +19,8 @@
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53SCurveHistograms.h"
 #include "TApplication.h"
+#include "../DQMUtils/RD53SCurveHistograms.h"
 #endif
 
 // #####################

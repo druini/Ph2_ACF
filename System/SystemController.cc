@@ -286,6 +286,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             size_t injType     = SystemController::findValueInSettings("INJtype");
             size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
             size_t colStart    = SystemController::findValueInSettings("COLstart");
+            bool   resetMask   = SystemController::findValueInSettings("ResetMask");
+            bool   resetTDAC   = SystemController::findValueInSettings("ResetTDAC");
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, nClkDelays, colStart < RD53::LIN.colStart);
             LOG(INFO) << GREEN << "Configured FSM fast command block" << RESET;
 
@@ -319,12 +321,15 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     LOG(INFO) << GREEN << "Initializing communication to Hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
-                    for(const auto cRD53: *cHybrid)
+                    for(const auto cChip: *cHybrid)
                     {
-                        LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cRD53->getId() << RESET;
-                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cRD53));
-                        LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
-                        // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cRD53), 0);
+                        LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
+                        if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
+                        if(resetTDAC == true) static_cast<RD53*>(cChip)->resetTDAC();
+                        static_cast<RD53*>(cChip)->copyMaskToDefault();
+                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cChip));
+                        LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+                        // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
                     }
                 }
             }
