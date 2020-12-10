@@ -4,7 +4,8 @@
 #include "../tools/Tool.h"
 #include "tools/BackEndAlignment.h"
 
-#include "../tools/PSROHHybridTester.h"
+#include "../tools/PSROHTester.h"
+#include "../tools/LpGBTTester.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
@@ -100,7 +101,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("debug", "Run debug", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("debug", "d");
     // scope
-    cmd.defineOption("scopeFastCommand", "Scope fast commands [de-serialized]");
+    cmd.defineOption("scope-fcmd", "Scope fast commands [de-serialized]");
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -146,7 +147,8 @@ int main(int argc, char* argv[])
     // Timer t;
 
     // Initialize and Configure Back-End (Optical) FC7
-    Tool              cBackEndTool;
+    Tool              cBackEndTool, cControlTool;
+
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing Back-End (Optical) FC7" << RESET;
     cBackEndTool.InitializeHw(cBackEndHWFile, outp);
@@ -157,13 +159,13 @@ int main(int argc, char* argv[])
     cBackEndTool.InitResultFile(cResultfile);
     LOG(INFO) << BOLDYELLOW << "Configuring Back-End (Optical) FC7" << RESET;
     cBackEndTool.ConfigureHw();
-    // Initialize BackEnd Hybrid Tester
-    PSROHHybridTester cBackEndROHHybridTester;
-    cBackEndROHHybridTester.Inherit(&cBackEndTool);
 
-    // Initialize and Configure Control (Electrical) FC7
-    Tool              cControlTool;
-    PSROHHybridTester cControlROHHybridTester;
+    // Initialize BackEnd & Control LpGBT Tester
+    LpGBTTester cBackEndLpGBTTester;
+    cBackEndLpGBTTester.Inherit(&cBackEndTool);
+
+    LpGBTTester cControlLpGBTTester;
+    PSROHTester cControlROHTester;
     if(cmd.foundOption("control-file"))
     {
         LOG(INFO) << BOLDYELLOW << "Initializing Control (Electrical) FC7" << RESET;
@@ -175,17 +177,21 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDYELLOW << "Configuring Control (Electrical) FC7" << RESET;
         cControlTool.ConfigureHw();
         // Initialize Control Hybrid Tester
-        cControlROHHybridTester.Inherit(&cControlTool);
+        cControlROHTester.Inherit(&cControlTool);
+        cControlLpGBTTester.Inherit(&cControlTool);
     }
 
     if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
     {
-        if(cmd.foundOption("internal-pattern") && cmd.foundOption("backend-file")) { cBackEndROHHybridTester.TestULInternalPattern(cInternalPattern32); }
-
-        if(cmd.foundOption("external-pattern") && cmd.foundOption("control-file"))
+        if(cmd.foundOption("internal-pattern") && cmd.foundOption("backend-file")) 
+        { 
+            cControlLpGBTTester.InjectULInternalPattern(cInternalPattern32);
+            cBackEndLpGBTTester.CheckULPattern(false); 
+        }
+        else if(cmd.foundOption("external-pattern") && cmd.foundOption("control-file"))
         {
-            cControlROHHybridTester.InjectExternalPattern(cExternalPattern);
-            cBackEndROHHybridTester.TestULExternalPattern();
+            cControlLpGBTTester.InjectULExternalPattern(cExternalPattern);
+            cBackEndLpGBTTester.CheckULPattern(true); 
         }
     }
 
@@ -204,14 +210,16 @@ int main(int argc, char* argv[])
     // Test PS ROH Reset Lines
     if(cmd.foundOption("testReset"))
     {
-        std::vector<uint8_t> cLevels{0x00, 0xFF};
+        std::vector<std::pair<string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
+        std::vector<uint8_t> cGPIOs = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
         for(auto cLevel: cLevels)
         {
-            bool cStatus = cBackEndROHHybridTester.TestResetLines(cLevel);
+            cControlLpGBTTester.SetGPIOLevel(cGPIOs, cLevel.second);
+            bool cStatus = cControlROHTester.TestResetLines(cLevel.second);
             if(cStatus)
-                LOG(INFO) << BOLDBLUE << "Set levels to " << +cLevel << " : test " << BOLDGREEN << " passed." << RESET;
+                LOG(INFO) << BOLDBLUE << "Set levels to " << cLevel.first << " : test " << BOLDGREEN << " passed." << RESET;
             else
-                LOG(INFO) << BOLDBLUE << "Set levels to " << +cLevel << " : test " << BOLDRED << " failed." << RESET;
+                LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
         }
     }
 
@@ -219,7 +227,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testI2C"))
     {
         std::vector<uint8_t> cMasters = {0, 2};
-        bool                 cStatus  = cBackEndROHHybridTester.TestI2CMaster(cMasters);
+        bool                 cStatus  = cControlLpGBTTester.TestI2CMaster(cMasters);
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDGREEN << " passed" << RESET;
         else
@@ -229,81 +237,77 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testADC"))
     {
         std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
-        cBackEndROHHybridTester.TestADC(cADCs, 0, 1000, 20);
+        cControlLpGBTTester.TestADC(cADCs, 0, 1000, 20);
     }
-
-    if(cmd.foundOption("optical")) cBackEndROHHybridTester.TestOpticalRW();
 
     // Test Fast Commands
     if(cDebug)
     {
         LOG(INFO) << "Start debugging" << RESET;
-        cControlROHHybridTester.PSROHInputsDebug();
+        cControlROHTester.PSROHInputsDebug();
     }
 
     if(cClockTest)
     {
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
-        cControlROHHybridTester.CheckClocks();
+        cControlROHTester.CheckClocks();
     }
 
-    if(cmd.foundOption("scopeFastCommand"))
+    if(cmd.foundOption("scope-fcmd"))
     {
         if(cmd.foundOption("fcmd-pattern"))
-            cBackEndROHHybridTester.PrepareFCMDTest(3, cFCMDPattern);
-        else
-            cBackEndROHHybridTester.PrepareFCMDTest(0);
-        cControlROHHybridTester.FastCommandScope();
+            cControlLpGBTTester.InjectDLInternalPattern(cFCMDPattern);
+        cControlROHTester.FastCommandScope();
     }
 
     if(cFCMDTest && !cFCMDTestStartPattern.empty() && !cFCMDTestUserFileName.empty())
     {
         LOG(INFO) << BOLDBLUE << "Fast command test" << RESET;
-        cControlROHHybridTester.CheckFastCommands(cFCMDTestStartPattern, cFCMDTestUserFileName);
+        cControlROHTester.CheckFastCommands(cFCMDTestStartPattern, cFCMDTestUserFileName);
     }
 
     if(cmd.foundOption("bramfcmd-check") && !cBRAMFCMDLine.empty())
     {
         LOG(INFO) << BOLDBLUE << "Access to written data in BRAM" << RESET;
-        cControlROHHybridTester.CheckFastCommandsBRAM(cBRAMFCMDLine);
+        cControlROHTester.CheckFastCommandsBRAM(cBRAMFCMDLine);
     }
 
     if(cmd.foundOption("bramreffcmd-write") && !cBRAMFCMDFileName.empty())
     {
         LOG(INFO) << BOLDBLUE << "Write reference patterns to BRAM" << RESET;
-        cControlROHHybridTester.WritePatternToBRAM(cBRAMFCMDFileName);
+        cControlROHTester.WritePatternToBRAM(cBRAMFCMDFileName);
     }
 
     if(cmd.foundOption("convert-userfile") && !cConvertUserFileName.empty())
     {
         LOG(INFO) << BOLDBLUE << "Convert user file to fw compliant format" << RESET;
-        cControlROHHybridTester.UserFCMDTranslate(cConvertUserFileName);
+        cControlROHTester.UserFCMDTranslate(cConvertUserFileName);
     }
 
     if(cmd.foundOption("read-ref-bram"))
     {
         int cAddr = std::atoi(cRefBRAMAddr.c_str());
         LOG(INFO) << BOLDBLUE << "Read single ref FCMD BRAM address: " << cmd.optionValue("read-ref-bram") << RESET;
-        cControlROHHybridTester.ReadRefAddrBRAM(cAddr);
+        cControlROHTester.ReadRefAddrBRAM(cAddr);
     }
 
     if(cmd.foundOption("read-check-bram"))
     {
         int cAddr = std::atoi(cCheckBRAMAddr.c_str());
         LOG(INFO) << BOLDBLUE << "Read single check FCMD BRAM address: " << cmd.optionValue("read-check-bram") << RESET;
-        cControlROHHybridTester.ReadCheckAddrBRAM(cAddr);
+        cControlROHTester.ReadCheckAddrBRAM(cAddr);
     }
 
     if(cmd.foundOption("clear-ref-bram"))
     {
         LOG(INFO) << BOLDBLUE << "Flushing ref BRAM!" << RESET;
-        cControlROHHybridTester.ClearBRAM(std::string("ref"));
+        cControlROHTester.ClearBRAM(std::string("ref"));
     }
 
     if(cmd.foundOption("clear-check-bram"))
     {
         LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
-        cControlROHHybridTester.ClearBRAM(std::string("test"));
+        cControlROHTester.ClearBRAM(std::string("test"));
     }
     /*
         D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(cBackEndTool.fBeBoardInterface->getFirmwareInterface());
