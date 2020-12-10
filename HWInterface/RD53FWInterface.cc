@@ -184,13 +184,16 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
 }
 
 void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hybridId)
-// #############################################
-// # hybridId < 0 --> broadcast to all hybrids #
-// #############################################
 {
-    size_t n32bitWords = (data.size() / 2) + (data.size() % 2);
-    bool   retry;
-    int    nAttempts = 0;
+    std::vector<uint32_t> commandList;
+
+    RD53FWInterface::ComposeAndPackChipCommands(data, hybridId, commandList);
+    RD53FWInterface::SendChipCommandsPack(commandList);
+}
+
+void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList)
+{
+    const size_t n32bitWords = (data.size() / 2) + (data.size() % 2);
 
     // #####################
     // # Check if all good #
@@ -198,25 +201,29 @@ void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hy
     if(ReadReg("user.stat_regs.slow_cmd.error_flag") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
     if(ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false) LOG(ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
 
-    // #######################
-    // # Load command vector #
-    // #######################
-    std::vector<uint32_t> stackRegisters;
-    stackRegisters.reserve(n32bitWords + 1);
+    // ##########
+    // # Header #
+    // ##########
+    commandList.emplace_back(bits::pack<6, 10, 4, 12>(HEADEAR_WRTCMD, (hybridId < 0 ? enabledHybrids : 1 << hybridId), 0, n32bitWords));
 
-    // Header
-    stackRegisters.emplace_back(bits::pack<6, 10, 4, 12>(HEADEAR_WRTCMD, (hybridId < 0 ? enabledHybrids : 1 << hybridId), 0, n32bitWords));
-
-    // Commands
-    for(auto i = 1u; i < data.size(); i += 2) stackRegisters.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
+    // ############
+    // # Commands #
+    // ############
+    for(auto i = 1u; i < data.size(); i += 2) commandList.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
 
     // If data.size() is not even, add a sync command
-    if(data.size() % 2 != 0) stackRegisters.emplace_back(bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
+    if(data.size() % 2 != 0) commandList.emplace_back(bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
+}
+
+void RD53FWInterface::SendChipCommandsPack(const std::vector<uint32_t>& commandList)
+{
+    int  nAttempts = 0;
+    bool retry;
 
     // ###############################
     // # Send command(s) to the chip #
     // ###############################
-    RegManager::WriteBlockReg("user.ctrl_regs.Slow_cmd_fifo_din", stackRegisters);
+    RegManager::WriteBlockReg("user.ctrl_regs.Slow_cmd_fifo_din", commandList);
     RegManager::WriteStackReg({{"user.ctrl_regs.Slow_cmd.dispatch_packet", 1}, {"user.ctrl_regs.Slow_cmd.dispatch_packet", 0}});
 
     // ####################################
@@ -1191,7 +1198,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, uint32_
         // #######################################
         // # Configuration for digital injection #
         // #######################################
-        RD53::CalCmd calcmd_first(1, 2, 8, 0, 0);
+        RD53::CalCmd calcmd_first(1, 2, 10, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
         RD53::CalCmd calcmd_second(0, 0, 0, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
@@ -1214,7 +1221,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, uint32_
         // ######################################
         RD53::CalCmd calcmd_first(1, 0, 0, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
-        RD53::CalCmd calcmd_second(0, 0, 2, 0, 0);
+        RD53::CalCmd calcmd_second(0, 0, 1, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);

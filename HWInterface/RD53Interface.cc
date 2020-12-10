@@ -437,12 +437,20 @@ void RD53Interface::ReadChipAllLocalReg(ReadoutChip* pChip, const std::string& r
         for(auto col = 0u; col < RD53::nCols; col++) pValue.getChannel<uint16_t>(row, col) = pRD53->getTDAC(row, col);
 }
 
-void RD53Interface::PackChipCommands(Chip* pChip, const std::string& pRegNode, uint16_t data, std::vector<uint16_t>& commandList)
+  void RD53Interface::PackChipCommands(Chip* pChip, const std::string& pRegNode, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
 {
-    RD53Cmd::WrReg(pChip->getId(), pChip->getRegItem(pRegNode).fAddress, data).appendTo(commandList);
+    RD53Cmd::WrReg(pChip->getId(), pChip->getRegItem(pRegNode).fAddress, data).appendTo(chipCommandList);
+    if(updateReg == true) pChip->setReg(pRegNode, data);
 }
 
-void RD53Interface::SendCommandsPack(const std::vector<uint16_t>& commandList, int hybridId) { static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, hybridId); }
+void RD53Interface::SendChipCommandsPack(const std::vector<uint16_t>& chipCommandList, int hybridId) { static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(chipCommandList, hybridId); }
+
+void RD53Interface::PackHybridCommands(const std::vector<uint16_t>& chipCommandList, int hybridId, std::vector<uint32_t>& hybridCommandList)
+{
+    static_cast<RD53FWInterface*>(fBoardFW)->ComposeAndPackChipCommands(chipCommandList, hybridId, hybridCommandList);
+}
+
+void RD53Interface::SendHybridCommandsPack(const std::vector<uint32_t>& hybridCommandList) { static_cast<RD53FWInterface*>(fBoardFW)->SendChipCommandsPack(hybridCommandList); }
 
 // ###########################
 // # Dedicated to minitoring #
