@@ -283,20 +283,20 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
                             {
                                 for(auto i = 1u; i < dacList.size(); i++)
-                                    measurements[i] = fabs(detectorContainerVector[i]
-                                                               ->at(cBoard->getIndex())
-                                                               ->at(cOpticalGroup->getIndex())
-                                                               ->at(cHybrid->getIndex())
-                                                               ->at(cChip->getIndex())
-                                                               ->getChannel<OccupancyAndPh>(row, col)
-                                                               .fOccupancy -
-                                                           detectorContainerVector[i - 1]
-                                                               ->at(cBoard->getIndex())
-                                                               ->at(cOpticalGroup->getIndex())
-                                                               ->at(cHybrid->getIndex())
-                                                               ->at(cChip->getIndex())
-                                                               ->getChannel<OccupancyAndPh>(row, col)
-                                                               .fOccupancy);
+                                    measurements[i - 1] = fabs(detectorContainerVector[i]
+                                                                   ->at(cBoard->getIndex())
+                                                                   ->at(cOpticalGroup->getIndex())
+                                                                   ->at(cHybrid->getIndex())
+                                                                   ->at(cChip->getIndex())
+                                                                   ->getChannel<OccupancyAndPh>(row, col)
+                                                                   .fOccupancy -
+                                                               detectorContainerVector[i - 1]
+                                                                   ->at(cBoard->getIndex())
+                                                                   ->at(cOpticalGroup->getIndex())
+                                                                   ->at(cHybrid->getIndex())
+                                                                   ->at(cChip->getIndex())
+                                                                   ->getChannel<OccupancyAndPh>(row, col)
+                                                                   .fOccupancy);
 
                                 SCurve::computeStats(measurements, offset, nHits, mean, rms);
 
