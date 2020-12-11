@@ -976,7 +976,7 @@ void RD53FWInterface::Event::fillDataContainer(BoardDataContainer* boardContaine
     for(const auto& cOpticalGroup: *boardContainer)
         for(const auto& cHybrid: *cOpticalGroup)
             for(const auto& cChip: *cHybrid)
-                if(RD53FWInterface::Event::isHittedChip(cHybrid->getId(), cChip->getId(), chipIndx) == true)
+                if((evtStatus == RD53FWEvtEncoder::GOOD) && (RD53FWInterface::Event::isHittedChip(cHybrid->getId(), cChip->getId(), chipIndx) == true))
                 {
                     if(vectorRequired == true)
                     {
@@ -1164,7 +1164,7 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
 }
 
-void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, uint32_t nTRIGxEvent, size_t injType, uint32_t nClkDelays, bool enableAutozero)
+void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, const uint32_t nTRIGxEvent, const size_t injType, const uint32_t injLatency, const uint32_t nClkDelays, const bool enableAutozero)
 // ############################
 // # injType == 0 --> None    #
 // # injType == 1 --> Analog  #
@@ -1205,7 +1205,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, uint32_
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = INJdelay::AfterInjectCal;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = (injLatency == 0 ? (uint32_t)INJdelay::AfterInjectCal : injLatency);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = INJdelay::BeforePrimeCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
 
@@ -1226,7 +1226,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, uint32_
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = INJdelay::AfterInjectCal;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = (injLatency == 0 ? (uint32_t)INJdelay::AfterInjectCal : injLatency);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = INJdelay::BeforePrimeCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
 
@@ -1709,7 +1709,7 @@ float RD53FWInterface::ReadHybridVoltage(int hybridId)
     usleep(DEEPSLEEP);
 
     auto value = calcVoltage(senseVDD, senseGND);
-    LOG(INFO) << BOLDBLUE << "\t--> Hybrid voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V (corresponds to VOUT_dig_ShuLDO of the chip)" << std::setprecision(-1) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Hybrid voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V (corresponds to half VOUT_dig_ShuLDO of the chip)" << std::setprecision(-1) << RESET;
 
     return value;
 }

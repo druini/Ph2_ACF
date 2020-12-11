@@ -284,11 +284,12 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ###################
             size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
             size_t injType     = SystemController::findValueInSettings("INJtype");
+            size_t injLatency  = SystemController::findValueInSettings("InjLatency");
             size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
             size_t colStart    = SystemController::findValueInSettings("COLstart");
             bool   resetMask   = SystemController::findValueInSettings("ResetMask");
             bool   resetTDAC   = SystemController::findValueInSettings("ResetTDAC");
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, nClkDelays, colStart < RD53::LIN.colStart);
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
             LOG(INFO) << GREEN << "Configured FSM fast command block" << RESET;
 
             // ########################

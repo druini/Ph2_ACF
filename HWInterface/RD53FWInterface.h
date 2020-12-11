@@ -211,7 +211,7 @@ class RD53FWInterface : public BeBoardFWInterface
     };
 
     void ConfigureFromXML(const Ph2_HwDescription::BeBoard* pBoard);
-    void SetAndConfigureFastCommands(const Ph2_HwDescription::BeBoard* pBoard, uint32_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0, bool enableAutozero = false);
+    void SetAndConfigureFastCommands(const Ph2_HwDescription::BeBoard* pBoard, const uint32_t nTRIGxEvent, const size_t injType, const uint32_t injLatency = 0, const uint32_t nClkDelays = 0, const bool enableAutozero = false);
 
     struct DIO5Config
     {
