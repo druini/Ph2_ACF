@@ -147,19 +147,18 @@
   </BeBoard>
 
   <Settings>
-    <!--
-        === Calibration parameters ===
-        INJtype       = 0: no injection;                             INJtype         = 1: analog;                      INJtype = 2: digital
-        ResetMask     = 0: do not reenable masked pixels;            ResetMask       = 1: enable all pixels
-        ResetTDAC     = 0: do not reset TDAC;                        ResetTDAC       = 1: reset TDAC to range midpoint
-        DoFast        = 0: run on all pixels in the selected region; DoFast          = 1: run on a subset
-        DisplayHisto  = 0: don't display;                            DisplayHisto    = 1: display
-        UpdateChipCfg = 0: don't update;                             UpdateChipCfg   = 1: update
+    <!-- === Calibration parameters ===
+         INJtype       = 0: no injection;                             INJtype         = 1: analog;                      INJtype = 2: digital
+         ResetMask     = 0: do not enable masked pixels;              ResetMask       = 1: enable all pixels
+         ResetTDAC     = 0: do not reset TDAC;                        ResetTDAC       = 1: reset TDAC to range midpoint
+         DoFast        = 0: run on all pixels in the selected region; DoFast          = 1: run on a subset
+         DisplayHisto  = 0: don't display;                            DisplayHisto    = 1: display
+         UpdateChipCfg = 0: don't update;                             UpdateChipCfg   = 1: update
 
-        TargetCharge  (thradj):           average charge (electrons) corresponding to ToT point = max value - 1
-        TargetOcc     (thrmin):           average pixel occupancy
-        TargetOcc     (pixelalive/noise): per pixel occupancy threhold below/above which pixels are masked
-        UnstuckPixels (pixelalive) = 0: do not try to unstuck pixels; UnstuckPixels = 1: set TDAC to 0 to unstuck pixels
+         TargetCharge  (thradj):           average charge (electrons) corresponding to ToT point = max value - 1
+         TargetOcc     (thrmin):           average pixel occupancy
+         TargetOcc     (pixelalive/noise): per pixel occupancy threhold below/above which pixels are masked
+         UnstuckPixels (pixelalive) = 0: do not try to unstuck pixels; UnstuckPixels = 1: set TDAC to 0 to unstuck pixels
     -->
     <Setting name="nEvents">          100 </Setting>
     <Setting name="nEvtsBurst">       100 </Setting>

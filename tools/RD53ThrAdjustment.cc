@@ -251,10 +251,11 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, uint32_t nEven
                             2;
 
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackChipCommands(static_cast<RD53*>(cChip),
+                            ->PackChipCommands(cChip,
                                                regName,
                                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
-                                               chipCommandList, true);
+                                               chipCommandList,
+                                               true);
 
                         LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                   << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW
@@ -334,16 +335,18 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, uint32_t nEven
                     if(bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() != 0)
                     {
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackChipCommands(static_cast<RD53*>(cChip),
+                            ->PackChipCommands(cChip,
                                                regName,
                                                bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
-                                               chipCommandList, true);
+                                               chipCommandList,
+                                               true);
 
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackChipCommands(static_cast<RD53*>(cChip),
+                            ->PackChipCommands(cChip,
                                                "VCAL_HIGH",
                                                bestDACDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
-                                               chipCommandList, true);
+                                               chipCommandList,
+                                               true);
 
                         LOG(INFO) << BOLDMAGENTA << ">>> Best " << BOLDYELLOW << regName << BOLDMAGENTA << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                   << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] = " << BOLDYELLOW
@@ -426,10 +429,11 @@ std::shared_ptr<DetectorDataContainer> ThrAdjustment::bitWiseScanGlobal_MeasureT
                             2;
 
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackChipCommands(static_cast<RD53*>(cChip),
+                            ->PackChipCommands(cChip,
                                                regName,
                                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
-                                               chipCommandList, true);
+                                               chipCommandList,
+                                               true);
 
                         LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                   << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW

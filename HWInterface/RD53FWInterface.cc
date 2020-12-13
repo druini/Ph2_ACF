@@ -1164,7 +1164,12 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
 }
 
-void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, const uint32_t nTRIGxEvent, const size_t injType, const uint32_t injLatency, const uint32_t nClkDelays, const bool enableAutozero)
+void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
+                                                  const uint32_t nTRIGxEvent,
+                                                  const size_t   injType,
+                                                  const uint32_t injLatency,
+                                                  const uint32_t nClkDelays,
+                                                  const bool     enableAutozero)
 // ############################
 // # injType == 0 --> None    #
 // # injType == 1 --> Analog  #
@@ -1709,7 +1714,8 @@ float RD53FWInterface::ReadHybridVoltage(int hybridId)
     usleep(DEEPSLEEP);
 
     auto value = calcVoltage(senseVDD, senseGND);
-    LOG(INFO) << BOLDBLUE << "\t--> Hybrid voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V (corresponds to half VOUT_dig_ShuLDO of the chip)" << std::setprecision(-1) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Hybrid voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V (corresponds to half VOUT_dig_ShuLDO of the chip)" << std::setprecision(-1)
+              << RESET;
 
     return value;
 }
