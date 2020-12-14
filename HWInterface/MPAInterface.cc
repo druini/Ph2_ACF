@@ -127,8 +127,9 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
     assert(localRegValues.size() == pMPA->getNumberOfChannels());
     std::string dacTemplate;
 
-    if(dacName == "TrimDAC_P") dacTemplate = "TrimDAC_P%d";
-    if(dacName == "ThresholdTrim")
+    if(dacName == "TrimDAC_P")
+        dacTemplate = "TrimDAC_P%d";
+    else if(dacName == "ThresholdTrim")
         dacTemplate = "TrimDAC_P%d";
     else
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
@@ -164,10 +165,12 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
 #endif
         // LOG (INFO) << BOLDRED << "Write "<<cRegItem.first<< RESET;
         fBoardFW->EncodeReg(cRegItem.second, pMPA->getHybridId(), pMPA->getId(), cVec, pVerifLoop, true);
+
         bool cSuccess = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
         if(cSuccess)
         {
             auto cReadBack = ReadChipReg(pMPA, cRegItem.first);
+            //LOG(INFO) << BOLDRED << cRegItem.first<<" "<<cReadBack<<","<<cRegItem.second.fValue << RESET;
             if(cReadBack != cRegItem.second.fValue)
             {
                 std::size_t found  = (cRegItem.first).find("ReadCounter");
@@ -367,7 +370,7 @@ void MPAInterface::Activate_pp(Chip* pMPA) { this->WriteChipReg(pMPA, "ECM", 0x8
 
 void MPAInterface::Activate_ss(Chip* pMPA) { this->WriteChipReg(pMPA, "ECM", 0x41); }
 
-void MPAInterface::Activate_ps(Chip* pMPA) { this->WriteChipReg(pMPA, "ECM", 0x8); }
+void MPAInterface::Activate_ps(Chip* pMPA, uint8_t win) { this->WriteChipReg(pMPA, "ECM", win); }
 
 void MPAInterface::Pix_Smode(ReadoutChip* pMPA, uint32_t p, std::string smode = "edge")
 {

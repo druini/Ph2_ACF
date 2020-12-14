@@ -1216,7 +1216,7 @@ void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
             uint32_t cN       = 1;
             uint32_t cNthAcq  = 0;
 
-            this->Start(theBoard);
+            this->StartBoard(theBoard);
 
             while(cN <= fTotalEvents)
             {
@@ -1239,7 +1239,7 @@ void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
                 cNthAcq++;
             }
 
-            this->Stop(theBoard);
+            this->StopBoard(theBoard);
 
             /*Here the reconstruction of histograms happens*/
             for(uint16_t channel_id = 1; channel_id < fNCbc * 127 + 1; channel_id++)

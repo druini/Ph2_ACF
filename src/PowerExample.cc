@@ -43,6 +43,6 @@ int main(int argc, char* argv[])
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
-    IB->PSInterfaceBoard_PowerOn_SSA(1.25, 1.25, 1.25, 0.3, 0.0, 145);
+    IB->PSInterfaceBoard_PowerOn_MPASSA(1.25, 1.25, 1.25, 0.3, 0.3, 1, 0);
     IB->ReadPower_SSA();
 }
