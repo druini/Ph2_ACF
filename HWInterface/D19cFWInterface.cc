@@ -455,9 +455,9 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             bool cGBTxLocked = true;
             // read back status register
-            LOG(DEBUG) << BOLDBLUE << "GBT Link Status..." << RESET;
+            LOG(INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
             uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
-            LOG(DEBUG) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
+            LOG(INFO) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
             std::vector<std::string> cStates = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
             uint8_t                  cIndex  = 1;
             for(auto cState: cStates)
@@ -465,9 +465,9 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
                 uint8_t cStatus = (cLinkStatus >> (3 - cIndex)) & 0x1;
                 cGBTxLocked &= (cStatus == 1);
                 if(cStatus == 1)
-                    LOG(DEBUG) << BOLDBLUE << "\t... " << cState << BOLDGREEN << "\t : LOCKED" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDGREEN << "\t : LOCKED" << RESET;
                 else
-                    LOG(DEBUG) << BOLDBLUE << "\t... " << cState << BOLDRED << "\t : FAILED" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDRED << "\t : FAILED" << RESET;
                 cIndex++;
             }
             cLinksLocked = cLinksLocked && cGBTxLocked;

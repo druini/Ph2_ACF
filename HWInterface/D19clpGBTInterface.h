@@ -97,7 +97,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // lpGBT Rx Groups(Channels) phase training
     void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
     // lpGBT Rx Groups(Channels) phase alignment
-    void PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    void PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pRate);
 
     // ################################
     // # LpGBT Block Status functions #
@@ -196,6 +196,8 @@ class D19clpGBTInterface : public lpGBTInterface
                                                    {"VDDA", 13},
                                                    {"TEMP", 14},
                                                    {"VREF/2", 15}};
+
+    std::map<uint8_t, std::string> fPUSMStatusMap = {{0, "ARESET"},{1, "RESET"},{2, "WAIT_VDD_STABLE"},{3, "WAIT_VDD_HIGHER_THAN_0V90"},{4, "FUSE_SAMPLING"},{5, "UPDATE_FROM_FUSES"},{6, "WAIT_FOR_PLL_CONFIG"},{7, "WAIT_POWER_GOOD"},{8, "RESETOUT"},{9, "I2C_TRANS"},{10, "RESET_PLL"},{11, "WAIT_PLL_LOCK"},{12, "INIT_SCRAM"},{13, "PAUSE_FOR_DLL_CONFIG"},{14, "RESET_DLLS"},{15, "WAIT_DLL_LOCK"},{16, "RESET_LOGIC_USING_DLL"},{17, "WAIT_CHNS_LOCKED"},{18, "READY"}};
 
     std::map<uint8_t, std::string> fI2CStatusMap = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
 

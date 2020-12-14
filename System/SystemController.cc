@@ -209,43 +209,43 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             LOG(INFO) << BOLDBLUE << "Now going to configure chips on Board " << int(cBoard->getId()) << RESET;
 
             // CIC start-up
-            // bool cLPGBT = false;
-            bool cGBTlock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
-            if(cGBTlock) LOG(INFO) << BOLDGREEN << "Link locked.." << RESET;
+            bool cLPGBT = false;
+            //bool cGBTlock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
+            //if(cGBTlock) LOG(INFO) << BOLDGREEN << "Link locked.." << RESET;
             for(auto cOpticalGroup: *cBoard)
             {
                 uint8_t cLinkId = cOpticalGroup->getId();
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
-                    // cLPGBT = true;
+                    cLPGBT = true;
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     // To be uncommented if crate is used
-                    // clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
-                    clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", false);
+                     clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
+                    //clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", false);
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
-                    // clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
+                     clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
                     uint8_t  cPUSMStatus = clpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
-                    uint16_t cIter = 0, cMaxIter = 2000;
+                    uint16_t cIter = 0, cMaxIter = 200;
                     while(cPUSMStatus != 18 && cIter < cMaxIter)
                     {
-                        LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +cPUSMStatus << RESET;
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                        LOG(INFO) << BOLDRED << "lpGBT NOT READY" << RESET;
                         cPUSMStatus = clpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
                         cIter++;
                     }
                     if(cPUSMStatus != 18) exit(0);
-                    LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
                     // clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", true);
                 }
             }
-            /*
-                        if(cLPGBT)
-                        {
-                      bool cGBTlock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
-                      if ( cGBTlock )
-                        LOG (INFO) << BOLDGREEN << "Link locked.." << RESET;
-                    }
-            */
+            //Check lpGBT Link Lock 
+            if(cLPGBT)
+            {
+              bool cGBTlock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
+              if ( cGBTlock )
+                LOG (INFO) << BOLDGREEN << "Link locked.." << RESET;
+            }
+    
             for(auto cOpticalGroup: *cBoard)
             {
                 uint8_t cLinkId = cOpticalGroup->getId();
