@@ -33,11 +33,9 @@ void LpGBTTester::InjectULInternalPattern(uint32_t pPattern)
       D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
       clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
       LOG(INFO) << BOLDGREEN << "Internal LpGBT pattern generation" << RESET;
-      // make sure serializer source is 0
-      clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "ULDataSource0", 0);
       clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
       clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
   }
 }
@@ -63,7 +61,7 @@ void LpGBTTester::InjectULExternalPattern(uint8_t pPattern)
         LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
     LOG(INFO) << BOLDGREEN << "Electrical FC7 pattern generation" << RESET;
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
 void LpGBTTester::CheckULPattern(bool pIsExternal)
@@ -81,7 +79,7 @@ void LpGBTTester::CheckULPattern(bool pIsExternal)
       }
 
       D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-      cFWInterface->selectLink(cOpticalGroup->getId());
+      //cFWInterface->selectLink(cOpticalGroup->getId());
       LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
       cFWInterface->StubDebug(true, 6);
       LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
@@ -200,7 +198,8 @@ void LpGBTTester::SetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t pLeve
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         LOG(INFO) << BOLDBLUE << "Setting GPIO output to all 0s." << RESET;
-        clpGBTInterface->ConfigureGPIO(cOpticalGroup->flpGBT, pGPIOs, pLevel, pLevel, 0, 0, 0);
+        clpGBTInterface->ConfigureGPIO(cOpticalGroup->flpGBT, pGPIOs, 1, pLevel, 0, 0, 0);
     }
   }
 }
+

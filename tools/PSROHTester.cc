@@ -1,4 +1,7 @@
 #include "PSROHTester.h"
+#ifdef __TCUSB__
+#include "USB_a.h"
+#endif
 
 #include <fstream>
 #include <iostream>
@@ -633,6 +636,29 @@ void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vect
     for(auto cBoard: *fDetectorContainer) { this->CheckHybridOutputs(cBoard, pInputs, pCounters); }
 }
 
+bool PSROHTester::TestResetLines(uint8_t pLevel)
+{
+    bool cValid = true;
+#ifdef __TCUSB__
+    TC_PSROH cTC_PSROH;
+    float cMeasurement;
+    auto  cMapIterator = fResetLines.begin();
+    do
+    {
+        cTC_PSROH.adc_get(cMapIterator->second, cMeasurement);
+        float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
+        // cValid = cValid && (cDifference_mV <= 100 );
+        if(cDifference_mV > 100)
+            LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
+        else
+            LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
+        cMapIterator++;
+    } while(cMapIterator != fResetLines.end());
+#endif
+    return cValid;
+}
+
+
 void PSROHTester::Start(int currentRun)
 {
     LOG(INFO) << BOLDBLUE << "Starting PS ROH Tester" << RESET;
@@ -650,27 +676,5 @@ void PSROHTester::Stop()
 void PSROHTester::Pause() {}
 
 void PSROHTester::Resume() {}
-
-bool PSROHTester::TestResetLines(uint8_t pLevel)
-{
-    bool cValid = true;
-    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-#ifdef __TCUSB__
-    float cMeasurement;
-    auto  cMapIterator = fResetLines.begin();
-    do
-    {
-        clpGBTInterface->fTC_PSROH.adc_get(cMapIterator->second, cMeasurement);
-        float cDifference_mV = std::fabs((pLevel / 0xFF) * 1200 - cMeasurement);
-        // cValid = cValid && (cDifference_mV <= 100 );
-        if(cDifference_mV > 100)
-            LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
-        else
-            LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
-        cMapIterator++;
-    } while(cMapIterator != fResetLines.end());
-#endif
-    return cValid;
-}
 
 

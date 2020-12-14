@@ -161,11 +161,10 @@ int main(int argc, char* argv[])
     cBackEndTool.ConfigureHw();
 
     // Initialize BackEnd & Control LpGBT Tester
-    LpGBTTester cBackEndLpGBTTester;
-    cBackEndLpGBTTester.Inherit(&cBackEndTool);
+    LpGBTTester cLpGBTTester;
+    cLpGBTTester.Inherit(&cBackEndTool);
 
-    LpGBTTester cControlLpGBTTester;
-    PSROHTester cControlROHTester;
+    PSROHTester cROHTester;
     if(cmd.foundOption("control-file"))
     {
         LOG(INFO) << BOLDYELLOW << "Initializing Control (Electrical) FC7" << RESET;
@@ -177,21 +176,20 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDYELLOW << "Configuring Control (Electrical) FC7" << RESET;
         cControlTool.ConfigureHw();
         // Initialize Control Hybrid Tester
-        cControlROHTester.Inherit(&cControlTool);
-        cControlLpGBTTester.Inherit(&cControlTool);
+        cROHTester.Inherit(&cControlTool);
     }
 
     if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
     {
         if(cmd.foundOption("internal-pattern") && cmd.foundOption("backend-file")) 
         { 
-            cControlLpGBTTester.InjectULInternalPattern(cInternalPattern32);
-            cBackEndLpGBTTester.CheckULPattern(false); 
+            cLpGBTTester.InjectULInternalPattern(cInternalPattern32);
+            cLpGBTTester.CheckULPattern(false); 
         }
         else if(cmd.foundOption("external-pattern") && cmd.foundOption("control-file"))
         {
-            cControlLpGBTTester.InjectULExternalPattern(cExternalPattern);
-            cBackEndLpGBTTester.CheckULPattern(true); 
+            cLpGBTTester.InjectULExternalPattern(cExternalPattern);
+            cLpGBTTester.CheckULPattern(true); 
         }
     }
 
@@ -214,8 +212,8 @@ int main(int argc, char* argv[])
         std::vector<uint8_t> cGPIOs = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
         for(auto cLevel: cLevels)
         {
-            cControlLpGBTTester.SetGPIOLevel(cGPIOs, cLevel.second);
-            bool cStatus = cControlROHTester.TestResetLines(cLevel.second);
+            cLpGBTTester.SetGPIOLevel(cGPIOs, cLevel.second);
+            bool cStatus = cROHTester.TestResetLines(cLevel.second);
             if(cStatus)
                 LOG(INFO) << BOLDBLUE << "Set levels to " << cLevel.first << " : test " << BOLDGREEN << " passed." << RESET;
             else
@@ -227,7 +225,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testI2C"))
     {
         std::vector<uint8_t> cMasters = {0, 2};
-        bool                 cStatus  = cControlLpGBTTester.TestI2CMaster(cMasters);
+        bool                 cStatus  = cLpGBTTester.TestI2CMaster(cMasters);
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDGREEN << " passed" << RESET;
         else
@@ -237,77 +235,77 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testADC"))
     {
         std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
-        cControlLpGBTTester.TestADC(cADCs, 0, 1000, 20);
+        cLpGBTTester.TestADC(cADCs, 0, 1000, 20);
     }
 
     // Test Fast Commands
     if(cDebug)
     {
         LOG(INFO) << "Start debugging" << RESET;
-        cControlROHTester.PSROHInputsDebug();
+        cROHTester.PSROHInputsDebug();
     }
 
     if(cClockTest)
     {
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
-        cControlROHTester.CheckClocks();
+        cROHTester.CheckClocks();
     }
 
     if(cmd.foundOption("scope-fcmd"))
     {
         if(cmd.foundOption("fcmd-pattern"))
-            cControlLpGBTTester.InjectDLInternalPattern(cFCMDPattern);
-        cControlROHTester.FastCommandScope();
+            cLpGBTTester.InjectDLInternalPattern(cFCMDPattern);
+        cROHTester.FastCommandScope();
     }
 
     if(cFCMDTest && !cFCMDTestStartPattern.empty() && !cFCMDTestUserFileName.empty())
     {
         LOG(INFO) << BOLDBLUE << "Fast command test" << RESET;
-        cControlROHTester.CheckFastCommands(cFCMDTestStartPattern, cFCMDTestUserFileName);
+        cROHTester.CheckFastCommands(cFCMDTestStartPattern, cFCMDTestUserFileName);
     }
 
     if(cmd.foundOption("bramfcmd-check") && !cBRAMFCMDLine.empty())
     {
         LOG(INFO) << BOLDBLUE << "Access to written data in BRAM" << RESET;
-        cControlROHTester.CheckFastCommandsBRAM(cBRAMFCMDLine);
+        cROHTester.CheckFastCommandsBRAM(cBRAMFCMDLine);
     }
 
     if(cmd.foundOption("bramreffcmd-write") && !cBRAMFCMDFileName.empty())
     {
         LOG(INFO) << BOLDBLUE << "Write reference patterns to BRAM" << RESET;
-        cControlROHTester.WritePatternToBRAM(cBRAMFCMDFileName);
+        cROHTester.WritePatternToBRAM(cBRAMFCMDFileName);
     }
 
     if(cmd.foundOption("convert-userfile") && !cConvertUserFileName.empty())
     {
         LOG(INFO) << BOLDBLUE << "Convert user file to fw compliant format" << RESET;
-        cControlROHTester.UserFCMDTranslate(cConvertUserFileName);
+        cROHTester.UserFCMDTranslate(cConvertUserFileName);
     }
 
     if(cmd.foundOption("read-ref-bram"))
     {
         int cAddr = std::atoi(cRefBRAMAddr.c_str());
         LOG(INFO) << BOLDBLUE << "Read single ref FCMD BRAM address: " << cmd.optionValue("read-ref-bram") << RESET;
-        cControlROHTester.ReadRefAddrBRAM(cAddr);
+        cROHTester.ReadRefAddrBRAM(cAddr);
     }
 
     if(cmd.foundOption("read-check-bram"))
     {
         int cAddr = std::atoi(cCheckBRAMAddr.c_str());
         LOG(INFO) << BOLDBLUE << "Read single check FCMD BRAM address: " << cmd.optionValue("read-check-bram") << RESET;
-        cControlROHTester.ReadCheckAddrBRAM(cAddr);
+        cROHTester.ReadCheckAddrBRAM(cAddr);
     }
 
     if(cmd.foundOption("clear-ref-bram"))
     {
         LOG(INFO) << BOLDBLUE << "Flushing ref BRAM!" << RESET;
-        cControlROHTester.ClearBRAM(std::string("ref"));
+        cROHTester.ClearBRAM(std::string("ref"));
     }
 
     if(cmd.foundOption("clear-check-bram"))
     {
         LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
-        cControlROHTester.ClearBRAM(std::string("test"));
+        cROHTester.ClearBRAM(std::string("test"));
     }
     /*
         D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(cBackEndTool.fBeBoardInterface->getFirmwareInterface());
