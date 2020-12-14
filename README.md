@@ -26,11 +26,11 @@ More informations can be found at https://indico.cern.ch/event/842824/attachment
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 06/11/2020
++ Last change made to this section: 14/12/2020
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `master` / `IT-v3.9.8`
+- Software git branch / tag : `master` / `IT-v3.9.9`
 - Firmware tag: `3.4`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
