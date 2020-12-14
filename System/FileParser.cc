@@ -182,7 +182,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
         if(std::string(cBeBoardRegNode.name()) == "Register")
         {
             std::string cNameString;
-            uint32_t    cValue;
+            double      cValue;
             this->parseRegister(cBeBoardRegNode, cNameString, cValue, cBeBoard, os);
         }
     }
@@ -303,7 +303,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
     }
 }
 
-void FileParser::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, BeBoard* pBoard, std::ostream& os)
+void FileParser::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue, BeBoard* pBoard, std::ostream& os)
 {
     if(std::string(pRegisterNode.name()) == "Register")
     {
@@ -324,7 +324,7 @@ void FileParser::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttri
             if(!pAttributeString.empty()) pAttributeString += ".";
 
             pAttributeString += pRegisterNode.attribute("name").value();
-            pValue = convertAnyInt(pRegisterNode.first_child().value());
+            pValue = convertAnyDouble(pRegisterNode.first_child().value());
             os << GREEN << "|\t|\t|"
                << "----" << pAttributeString << ": " << BOLDYELLOW << pValue << RESET << std::endl;
             pBoard->setReg(pAttributeString, pValue);

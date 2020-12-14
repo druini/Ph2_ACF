@@ -1,6 +1,6 @@
 /*!
   \file                  CMSITminiDAQ.cc
-  \brief                 Mini DAQ to test RD53 readout
+  \brief                 Mini DAQ to test RD53 readout chip
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -39,8 +39,10 @@
 // # Default values #
 // ##################
 #define RUNNUMBER 0
-#define SETBATCH  0 // Set batch mode when running supervisor
+#define SETBATCH 0 // Set batch mode when running supervisor
 #define FILERUNNUMBER "./RunNumber.txt"
+#define BASEDIR "PH2ACF_BASE_DIR"
+#define ARBITRARYDELAY 2e6 // [us]
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -62,9 +64,10 @@ void interruptHandler(int handler)
     exit(EXIT_FAILURE);
 }
 
-void readBinaryData(std::string binaryFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
+void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
 {
-    unsigned int          errors = 0;
+    const unsigned int    wordDataSize = 32;
+    unsigned int          errors       = 0;
     std::vector<uint32_t> data;
 
     LOG(INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
@@ -80,9 +83,14 @@ void readBinaryData(std::string binaryFile, SystemController& mySysCntr, std::ve
         {
             LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
             errors++;
+            RD53FWInterface::PrintEvents({decodedEvents[i]});
         }
 
-    LOG(INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(3) << BOLDYELLOW << 1. * errors / decodedEvents.size() * 100. << "%" << std::setprecision(-1) << RESET;
+    LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
+    int avgEventSize = data.size() / decodedEvents.size();
+    LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN << " events"
+              << RESET;
+    mySysCntr.closeFileHandler();
 }
 
 int main(int argc, char** argv)
@@ -161,7 +169,7 @@ int main(int argc, char** argv)
     std::string fileName("logs/CMSITminiDAQ" + RD53Shared::fromInt2Str(runNumber));
     if(whichCalib != "") fileName += "_" + whichCalib;
     fileName += ".log";
-    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv(BASEDIR)) + "/settings/logger.conf");
     conf.set(el::Level::Global, el::ConfigurationType::Format, "|%thread|%levshort| %msg");
     conf.set(el::Level::Global, el::ConfigurationType::Filename, fileName);
     el::Loggers::reconfigureAllLoggers(conf);
@@ -187,7 +195,7 @@ int main(int argc, char** argv)
         else if(runControllerPid == 0)
         {
             char* argv[] = {(char*)"RunController", NULL};
-            execv((std::string(std::getenv("PH2ACF_BASE_DIR")) + "/bin/RunController").c_str(), argv);
+            execv((std::string(std::getenv(BASEDIR)) + "/bin/RunController").c_str(), argv);
             LOG(ERROR) << BOLDRED << "I can't run RunController, error occured" << RESET;
             exit(EXIT_FAILURE);
         }
@@ -258,9 +266,9 @@ int main(int argc, char** argv)
                 {
                     LOG(INFO) << BOLDBLUE << "Supervisor sending stop" << RESET;
 
-                    usleep(2e6);
+                    usleep(ARBITRARYDELAY);
                     theMiddlewareInterface.stop();
-                    usleep(2e6);
+                    usleep(ARBITRARYDELAY);
                     theDQMInterface.stopProcessingData();
 
                     stateMachineStatus = STOPPED;
@@ -525,15 +533,16 @@ int main(int argc, char** argv)
             std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
             Physics     ph;
             ph.Inherit(&mySysCntr);
-            ph.localConfigure(fileName, -1);
             if(binaryFile == "")
             {
+                ph.localConfigure(fileName, -1);
                 ph.Start(runNumber);
-                usleep(2e6);
+                usleep(ARBITRARYDELAY);
                 ph.Stop();
             }
             else
             {
+                ph.localConfigure(fileName, runNumber);
                 ph.analyze(true);
                 ph.draw();
             }
@@ -605,7 +614,7 @@ int main(int argc, char** argv)
                             mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 1, true);
                         }
         }
-        else if(program == false)
+        else if((program == false) && (whichCalib != ""))
         {
             LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
             exit(EXIT_FAILURE);

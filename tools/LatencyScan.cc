@@ -93,7 +93,7 @@ void LatencyScan::MeasureTriggerTDC()
 
         ReadNEvents(theBoard, fNevents);
 
-        const std::vector<Event*>& events = GetEvents(theBoard);
+        const std::vector<Event*>& events = GetEvents();
 
         for(auto& cEvent: events)
         {
@@ -152,7 +152,7 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLaten
 
             ReadNEvents(theBoard, fNevents);
 
-            const std::vector<Event*>& events = GetEvents(theBoard);
+            const std::vector<Event*>& events = GetEvents();
             countHitsLat(theBoard, events, "hybrid_latency", cLat, pStartLatency);
             // done counting hits for all FE's, now update the Histograms
             updateHists("hybrid_latency", false);
@@ -232,7 +232,7 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
             for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
 
             this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
-            const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+            const std::vector<Event*>& cEvents = this->GetEvents();
             // Loop over Events from this Acquisition
             for(auto& cEvent: cEvents)
             {
@@ -372,7 +372,7 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
             for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
 
             this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
-            const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+            const std::vector<Event*>& cEvents = this->GetEvents();
             // Loop over Events from this Acquisition
             for(auto& cEvent: cEvents)
             {
@@ -447,7 +447,7 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
                         continue;
                     }
 
-                    const std::vector<Event*>& events = GetEvents(theBoard);
+                    const std::vector<Event*>& events = GetEvents();
                     cNevents += events.size();
                     for(auto cOpticalGroup: *pBoard)
                     {

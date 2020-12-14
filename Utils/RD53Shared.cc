@@ -33,3 +33,5 @@ size_t RD53Shared::countBitsOne(size_t num)
     }
     return count;
 }
+
+void RD53Shared::resetDefaultFloat() { std::cout.setf(std::ios_base::fmtflags(0), std::ios_base::floatfield); }

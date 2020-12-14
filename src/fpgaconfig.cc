@@ -1,7 +1,7 @@
 #include <cstdlib>
+#include <inttypes.h>
 #include <string>
 #include <vector>
-#include <inttypes.h>
 
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Chip.h"
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    el::Configurations conf(std::string(baseDirChar_p)+"/settings/logger.conf");
+    el::Configurations conf(std::string(baseDirChar_p) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     SystemController cSystemController;
@@ -120,8 +120,8 @@ int main(int argc, char* argv[])
     cSystemController.InitializeHw(cHWFile, cStr);
     BeBoard*                 pBoard   = cSystemController.fDetectorContainer->at(0);
     std::vector<std::string> lstNames = cSystemController.fBeBoardInterface->getFpgaConfigList(pBoard);
-    std::string    cFWFile;
-    std::string    strImage("1");
+    std::string              cFWFile;
+    std::string              strImage("1");
 
     if(cmd.foundOption("list"))
     {

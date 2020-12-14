@@ -380,6 +380,11 @@ void RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixel
 
 void RD53::setTDAC(unsigned int row, unsigned int col, uint8_t TDAC) { fPixelsMask[col].TDAC[row] = TDAC; }
 
+void RD53::resetTDAC()
+{
+    for(auto col = 0u; col < fPixelsMask.size(); col++) fPixelsMask[col].TDAC.fill(RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
+}
+
 uint8_t RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask[col].TDAC[row]; }
 
 uint32_t RD53::getNumberOfChannels() const { return nRows * nCols; }

@@ -12,6 +12,7 @@
 
 #include <cmath>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <thread>
 
@@ -27,6 +28,7 @@ const size_t NTHREADS      = round(std::thread::hardware_concurrency() / 2.); //
 std::string fromInt2Str(int val);
 std::string composeFileName(const std::string& configFileName, const std::string& fName2Add);
 size_t      countBitsOne(size_t num);
+void        resetDefaultFloat();
 
 constexpr size_t setBits(size_t nBit2Set) { return (1 << nBit2Set) - 1; }
 } // namespace RD53Shared
