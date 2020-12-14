@@ -187,10 +187,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
 
     for(const auto cBoard: *fDetectorContainer)
     {
-        uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
-
         if(cBoard->getBoardType() != BoardType::RD53)
         {
+            uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
+
             // setting up back-end board
             fBeBoardInterface->ConfigureBoard(cBoard);
             LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
@@ -518,6 +518,9 @@ void SystemController::SetFuture(const BeBoard* pBoard, const std::vector<uint32
 
 void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
 {
+    // ####################
+    // # Decoding IT data #
+    // ####################
     if(pType == BoardType::RD53)
     {
         fEventList.clear();
@@ -525,6 +528,9 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
         for(auto& evt: RD53FWInterface::decodedEvents) fEventList.push_back(&evt);
     }
+    // ####################
+    // # Decoding OT data #
+    // ####################
     else if(pType == BoardType::D19C)
     {
         for(auto& pevt: fEventList) delete pevt;
@@ -537,27 +543,19 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             uint32_t  fNFe       = pBoard->getNFe();
             uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
             LOG(DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
-            fEventSize      = static_cast<uint32_t>((pData.size()) / pNevents);
-            //uint32_t nmpa = 0;
+            fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
+            // uint32_t nmpa = 0;
             uint32_t maxind = 0;
 
-
-                //if(fEventType == EventType::SSAAS) 
-                 //   {
-                 //   uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-                 //   nSSA = pData.size() / 120;
-                 //   }
-
+            // if(fEventType == EventType::SSAAS)
+            //   {
+            //   uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+            //   nSSA = pData.size() / 120;
+            //   }
 
             for(auto opticalGroup: *pBoard)
             {
-                    for(auto hybrid: *opticalGroup)
-                    {
-
-                            maxind = std::max(maxind, uint32_t(hybrid->size()));
-          
-                        
-                    }
+                for(auto hybrid: *opticalGroup) { maxind = std::max(maxind, uint32_t(hybrid->size())); }
             }
 
             if(fEventType == EventType::SSAAS) { fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
@@ -573,7 +571,6 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 {
                     uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
                     auto     cEnd       = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
-              
                     // retrieve chunck of data vector belonging to this event
                     if(cEnd - cEventIterator == cEventSize)
                     {
