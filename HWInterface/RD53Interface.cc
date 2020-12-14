@@ -291,7 +291,7 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, bo
     const uint16_t                   PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
     const uint8_t                    highGain        = pRD53->getRegItem("HighGain_LIN").fValue;
     const uint8_t                    chipID          = pRD53->getId();
-    std::vector<perColumnPixelData>& mask            = doDefault ? *pRD53->getPixelsMaskDefault() : *pRD53->getPixelsMask();
+    std::vector<perColumnPixelData>& mask            = doDefault == true ? *pRD53->getPixelsMaskDefault() : *pRD53->getPixelsMask();
 
     // ##########################
     // # Disable default config #
