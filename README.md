@@ -19,9 +19,9 @@
 8. Once the previous command is done, you can list the SD card: `./imgtool /dev/sd_card_name list` - there should be a GoldenImage.bin, with 20MB block size
 9. Insert the SD card into the FC7
 
-Use the guide (https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/IPAddress_Tutorial.md) to find the MAC address of the FC7 (Wireshark option) and to set the proper IP.
-
+Use the guide (https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/IPAddress_Tutorial.md) to find the MAC address of the FC7 (Wireshark option) and to set the proper IP <br/>
 More informations can be found at https://indico.cern.ch/event/842824/attachments/1920624/3177632/PreparingFC7.pdf
+<hr>
 
 
 ## Middleware for the Inner-Tracker (IT) system
@@ -67,6 +67,8 @@ A detailed manual about the firmware can be found here: https://gitlab.cern.ch/c
 9. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
 10. Run the command: `CMSITminiDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
 11. Run the command: `CMSITminiDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSITminiDAQ --help` for help)
+
+**N.B.:** a skeleton/template file to build your own IT mini DAQ can be found in `src/templateCMSITminiDAQ.cc`
 
 **Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):**
 - Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
