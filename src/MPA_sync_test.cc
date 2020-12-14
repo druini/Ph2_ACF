@@ -209,6 +209,7 @@ int main(int argc, char* argv[])
                         std::cout<<"counts"<<cpix<<" "<<(cRP2*256) + cRP1<<std::endl;
                         }*/
                     const std::vector<Event*>& events = cTool.GetEvents();
+
                     // const std::vector<Event*> &eventVector = cTool.GetEvents();
                     int nev    = 0;
                     int nevtot = 0;
