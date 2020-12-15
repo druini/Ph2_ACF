@@ -200,7 +200,9 @@ class D19clpGBTInterface : public lpGBTInterface
 
     std::map<uint8_t, std::string> fPUSMStatusMap = {{0, "ARESET"},{1, "RESET"},{2, "WAIT_VDD_STABLE"},{3, "WAIT_VDD_HIGHER_THAN_0V90"},{4, "FUSE_SAMPLING"},{5, "UPDATE_FROM_FUSES"},{6, "WAIT_FOR_PLL_CONFIG"},{7, "WAIT_POWER_GOOD"},{8, "RESETOUT"},{9, "I2C_TRANS"},{10, "RESET_PLL"},{11, "WAIT_PLL_LOCK"},{12, "INIT_SCRAM"},{13, "PAUSE_FOR_DLL_CONFIG"},{14, "RESET_DLLS"},{15, "WAIT_DLL_LOCK"},{16, "RESET_LOGIC_USING_DLL"},{17, "WAIT_CHNS_LOCKED"},{18, "READY"}};
 
-    // OT specific objects
+    // ###################################
+    // # Outer Tracker specific objects  #
+    // ###################################
     bool fUseOpticalLink = true;
 #ifdef __TCUSB__
     std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
