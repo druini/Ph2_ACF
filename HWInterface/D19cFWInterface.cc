@@ -465,9 +465,9 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
                 uint8_t cStatus = (cLinkStatus >> (3 - cIndex)) & 0x1;
                 cGBTxLocked &= (cStatus == 1);
                 if(cStatus == 1)
-                    LOG(DEBUG) << BOLDBLUE << "\t... " << cState << BOLDGREEN << "\t : LOCKED" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDGREEN << "\t : LOCKED" << RESET;
                 else
-                    LOG(DEBUG) << BOLDBLUE << "\t... " << cState << BOLDRED << "\t : FAILED" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDRED << "\t : FAILED" << RESET;
                 cIndex++;
             }
             cLinksLocked = cLinksLocked && cGBTxLocked;
@@ -479,7 +479,7 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
         }
         else
         {
-            LOG(INFO) << BOLDRED << "Resetting lpGBT link .. no lock" << RESET;
+            LOG(DEBUG) << BOLDRED << "Resetting lpGBT link .. no lock" << RESET;
             // reset lpGBT core
             this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
             std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -4381,14 +4381,11 @@ void D19cFWInterface::Align_out()
 
 void D19cFWInterface::ResetOptoLink(Ph2_HwDescription::Chip* pChip)
 {
-    // this->WriteReg("fc7_daq_ctrl.optical_block.ic.reset", 0x1);
-    // this->WriteReg("fc7_daq_ctrl.optical_block.ic.reset", 0x0);
-    std::vector<std::pair<std::string, uint32_t>> cVecReg;
-    cVecReg.push_back({"fc7_daq_ctrl.optical_block.ic", 0x00});
-    cVecReg.push_back({"fc7_daq_cnfg.optical_block.ic", 0x00});
-    cVecReg.push_back({"fc7_daq_cnfg.optical_block.gbtx", 0x00});
-    this->WriteStackReg(cVecReg);
-    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //cVecReg.push_back({"fc7_daq_ctrl.optical_block.ic.reset", 0x1});
+    //cVecReg.push_back({"fc7_daq_ctrl.optical_block.ic.reset", 0x0});
+    this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic", 0x00},
+                         {"fc7_daq_cnfg.optical_block.ic", 0x00}, 
+                         {"fc7_daq_cnfg.optical_block.gbtx", 0x00}});
 }
 
 bool D19cFWInterface::WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop)
@@ -4396,15 +4393,16 @@ bool D19cFWInterface::WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint
     // Reset
     ResetOptoLink(pChip);
     // Config transaction register
-    this->WriteReg("fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress);
-    this->WriteReg("fc7_daq_cnfg.optical_block.gbtx.data", pData);
-    this->WriteReg("fc7_daq_cnfg.optical_block.ic.register", pAddress);
+    std::vector<std::pair<std::string, uint32_t>> cVecReg;
+    this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, 
+                         {"fc7_daq_cnfg.optical_block.gbtx.data", pData}, 
+                         {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
     // Perform transaction
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.write", 0x01);
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.write", 0x00);
+    this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.write", 0x01}, 
+                         {"fc7_daq_ctrl.optical_block.ic.write", 0x00}});
     //
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_write", 0x01);
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_write", 0x00);
+    this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.start_write", 0x01}, 
+                         {"fc7_daq_ctrl.optical_block.ic.start_write", 0x00}});
     return true;
 }
 
@@ -4413,16 +4411,15 @@ uint32_t D19cFWInterface::ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, u
     // Reset
     ResetOptoLink(pChip);
     // Config transaction register
-    this->WriteReg("fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress);
-    this->WriteReg("fc7_daq_cnfg.optical_block.ic.register", pAddress);
-    this->WriteReg("fc7_daq_cnfg.optical_block.ic.nwords", 0x01);
+    this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress},
+                         {"fc7_daq_cnfg.optical_block.ic.register", pAddress}, 
+                         {"fc7_daq_cnfg.optical_block.ic.nwords", 0x01}});
     // Perform transaction
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_read", 0x01);
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_read", 0x00);
+    this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.start_read", 0x01},
+                        {"fc7_daq_ctrl.optical_block.ic.start_read", 0x00}});
     //
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.read", 0x01);
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.read", 0x00);
-    //
+    this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.read", 0x01}, 
+                        {"fc7_daq_ctrl.optical_block.ic.read", 0x00}});
     uint32_t cReadBack = this->ReadReg("fc7_daq_stat.optical_block.ic.data");
     return cReadBack;
 }
