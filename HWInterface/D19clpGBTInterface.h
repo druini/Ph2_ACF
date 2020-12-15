@@ -42,8 +42,6 @@ class D19clpGBTInterface : public lpGBTInterface
     // #######################################
     // # LpGBT block configuration functions #
     // #######################################
-    // Sets the flag used to select which lpGBT configuration interface to use
-    void SetConfigMode(Ph2_HwDescription::Chip* pChip, const std::string& pMode, bool pToggle);
     // Configures the lpGBT Rx Groups
     void ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode);
     // Configure lpGBT Rx Channels
@@ -158,6 +156,8 @@ class D19clpGBTInterface : public lpGBTInterface
     // ###################################
     // # Outer Tracker specific funtions #
     // ###################################
+    // Sets the flag used to select which lpGBT configuration interface to use
+    void SetConfigMode(Ph2_HwDescription::Chip* pChip, const std::string& pMode, bool pToggle);
     // configure PS-ROH
     void ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t pRate);
     // cbc read/write
