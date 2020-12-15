@@ -35,7 +35,7 @@ class D19clpGBTInterface : public lpGBTInterface
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
     // R/W functions using register address
-    bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop = false);
+    bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop = true);
     uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
 
@@ -47,7 +47,6 @@ class D19clpGBTInterface : public lpGBTInterface
     // Configures the lpGBT Rx Groups
     void ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode);
     // Configure lpGBT Rx Channels
-
     void ConfigureRxChannels(Ph2_HwDescription::Chip*    pChip,
                              const std::vector<uint8_t>& pGroups,
                              const std::vector<uint8_t>& pChannels,
@@ -97,7 +96,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // lpGBT Rx Groups(Channels) phase training
     void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
     // lpGBT Rx Groups(Channels) phase alignment
-    void PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    void PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pRate);
 
     // ################################
     // # LpGBT Block Status functions #
@@ -199,8 +198,10 @@ class D19clpGBTInterface : public lpGBTInterface
 
     std::map<uint8_t, std::string> fI2CStatusMap = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
 
+    std::map<uint8_t, std::string> fPUSMStatusMap = {{0, "ARESET"},{1, "RESET"},{2, "WAIT_VDD_STABLE"},{3, "WAIT_VDD_HIGHER_THAN_0V90"},{4, "FUSE_SAMPLING"},{5, "UPDATE_FROM_FUSES"},{6, "WAIT_FOR_PLL_CONFIG"},{7, "WAIT_POWER_GOOD"},{8, "RESETOUT"},{9, "I2C_TRANS"},{10, "RESET_PLL"},{11, "WAIT_PLL_LOCK"},{12, "INIT_SCRAM"},{13, "PAUSE_FOR_DLL_CONFIG"},{14, "RESET_DLLS"},{15, "WAIT_DLL_LOCK"},{16, "RESET_LOGIC_USING_DLL"},{17, "WAIT_CHNS_LOCKED"},{18, "READY"}};
+
     // OT specific objects
-    bool fUseOpticalLink = false;
+    bool fUseOpticalLink = true;
 #ifdef __TCUSB__
     std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
