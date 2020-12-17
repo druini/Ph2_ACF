@@ -1969,13 +1969,13 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                                     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCntrlReg).fAddress << 0);
                                     cCommandVector.push_back(cValueCntrl << 0);
                                     WriteCommandCPB(clpGBT, cCommandVector);
-                                    ReadReplyCPB(clpGBT, 10);
-                                    cCommandVector.clear(), cReplyVector.clear();
-                                    // check write
-                                    //uint8_t cReadBack = ReadOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCntrlReg).fAddress);
-                                    cWorkerId = 16, cFunctionId = 2;
-                                    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCntrlReg).fAddress << 0);
-                                    WriteCommandCPB(clpGBT, cCommandVector);
+                                    // ReadReplyCPB(clpGBT, 10);
+                                    // cCommandVector.clear(), cReplyVector.clear();
+                                    // // check write
+                                    // //uint8_t cReadBack = ReadOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCntrlReg).fAddress);
+                                    // cWorkerId = 16, cFunctionId = 2;
+                                    // cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCntrlReg).fAddress << 0);
+                                    // WriteCommandCPB(clpGBT, cCommandVector);
                                     cReplyVector = ReadReplyCPB(clpGBT, 10);
                                     cReadBack = cReplyVector[7] & 0xFF;
                                     cCommandVector.clear(), cReplyVector.clear();
@@ -1998,12 +1998,12 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                                     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg0).fAddress << 0);
                                     cCommandVector.push_back(0x0 << 0);
                                     WriteCommandCPB(clpGBT, cCommandVector);
-                                    ReadReplyCPB(clpGBT, 10);
-                                    cCommandVector.clear(), cReplyVector.clear();
-                                    // check write
-                                    cWorkerId = 16, cFunctionId = 2;
-                                    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg0).fAddress << 0);
-                                    WriteCommandCPB(clpGBT, cCommandVector);
+                                    // ReadReplyCPB(clpGBT, 10);
+                                    // cCommandVector.clear(), cReplyVector.clear();
+                                    // // check write
+                                    // cWorkerId = 16, cFunctionId = 2;
+                                    // cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg0).fAddress << 0);
+                                    // WriteCommandCPB(clpGBT, cCommandVector);
                                     cReplyVector = ReadReplyCPB(clpGBT, 10);
                                     cReadBack = cReplyVector[7] & 0xFF;
                                     cCommandVector.clear(), cReplyVector.clear();
@@ -2030,12 +2030,12 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                                     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CAddressReg).fAddress << 0);
                                     cCommandVector.push_back(cSlaveAddress << 0);
                                     WriteCommandCPB(clpGBT, cCommandVector);
-                                    ReadReplyCPB(clpGBT, 10);
-                                    cCommandVector.clear(), cReplyVector.clear();
-                                    // check write
-                                    cWorkerId = 16, cFunctionId = 2;
-                                    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CAddressReg).fAddress << 0);
-                                    WriteCommandCPB(clpGBT, cCommandVector);
+                                    // ReadReplyCPB(clpGBT, 10);
+                                    // cCommandVector.clear(), cReplyVector.clear();
+                                    // // check write
+                                    // cWorkerId = 16, cFunctionId = 2;
+                                    // cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CAddressReg).fAddress << 0);
+                                    // WriteCommandCPB(clpGBT, cCommandVector);
                                     cReplyVector = ReadReplyCPB(clpGBT, 10);
                                     cReadBack = cReplyVector[7] & 0xFF;
                                     cCommandVector.clear(), cReplyVector.clear();
@@ -2064,12 +2064,12 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                                             cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CDataReg).fAddress << 0);
                                             cCommandVector.push_back((cInvertedRegister & (0xFF << 8 * cByte)) >> 8 * cByte << 0);
                                             WriteCommandCPB(clpGBT, cCommandVector);
-                                            ReadReplyCPB(clpGBT, 10);
-                                            cCommandVector.clear(), cReplyVector.clear();
-                                            // check write
-                                            cWorkerId = 16, cFunctionId = 2;
-                                            cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CDataReg).fAddress << 0);
-                                            WriteCommandCPB(clpGBT, cCommandVector);
+                                            // ReadReplyCPB(clpGBT, 10);
+                                            // cCommandVector.clear(), cReplyVector.clear();
+                                            // // check write
+                                            // cWorkerId = 16, cFunctionId = 2;
+                                            // cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CDataReg).fAddress << 0);
+                                            // WriteCommandCPB(clpGBT, cCommandVector);
                                             cReplyVector = ReadReplyCPB(clpGBT, 10);
                                             cReadBack = cReplyVector[7] & 0xFF;
                                             cCommandVector.clear(), cReplyVector.clear();
@@ -2106,12 +2106,12 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                                             cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CDataReg).fAddress << 0);
                                             cCommandVector.push_back(0x00 << 0);
                                             WriteCommandCPB(clpGBT, cCommandVector);
-                                            ReadReplyCPB(clpGBT, 10);
-                                            cCommandVector.clear(), cReplyVector.clear();
-                                            // check write
-                                            cWorkerId = 16, cFunctionId = 2;
-                                            cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CDataReg).fAddress << 0);
-                                            WriteCommandCPB(clpGBT, cCommandVector);
+                                            // ReadReplyCPB(clpGBT, 10);
+                                            // cCommandVector.clear(), cReplyVector.clear();
+                                            // // check write
+                                            // cWorkerId = 16, cFunctionId = 2;
+                                            // cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CDataReg).fAddress << 0);
+                                            // WriteCommandCPB(clpGBT, cCommandVector);
                                             cReplyVector = ReadReplyCPB(clpGBT, 10);
                                             cReadBack = cReplyVector[7] & 0xFF;
                                             cCommandVector.clear(), cReplyVector.clear();
@@ -2133,12 +2133,12 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                                         cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg1).fAddress << 0);
                                         cCommandVector.push_back(0x2 << 0);
                                         WriteCommandCPB(clpGBT, cCommandVector);
-                                        ReadReplyCPB(clpGBT, 10);
-                                        cCommandVector.clear(), cReplyVector.clear();
-                                        // check write
-                                        cWorkerId = 16, cFunctionId = 2;
-                                        cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg1).fAddress << 0);
-                                        WriteCommandCPB(clpGBT, cCommandVector);
+                                        // ReadReplyCPB(clpGBT, 10);
+                                        // cCommandVector.clear(), cReplyVector.clear();
+                                        // // check write
+                                        // cWorkerId = 16, cFunctionId = 2;
+                                        // cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg1).fAddress << 0);
+                                        // WriteCommandCPB(clpGBT, cCommandVector);
                                         cReplyVector = ReadReplyCPB(clpGBT, 10);
                                         cReadBack = cReplyVector[7] & 0xFF;
                                         cCommandVector.clear(), cReplyVector.clear();
@@ -2163,12 +2163,12 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                                         cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg1).fAddress << 0);
                                         cCommandVector.push_back(0x8 << 0);
                                         WriteCommandCPB(clpGBT, cCommandVector);
-                                        ReadReplyCPB(clpGBT, 10);
-                                        cCommandVector.clear(), cReplyVector.clear();
-                                        // check write
-                                        cWorkerId = 16, cFunctionId = 2;
-                                        cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg1).fAddress << 0);
-                                        WriteCommandCPB(clpGBT, cCommandVector);
+                                        // ReadReplyCPB(clpGBT, 10);
+                                        // cCommandVector.clear(), cReplyVector.clear();
+                                        // // check write
+                                        // cWorkerId = 16, cFunctionId = 2;
+                                        // cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg1).fAddress << 0);
+                                        // WriteCommandCPB(clpGBT, cCommandVector);
                                         cReplyVector = ReadReplyCPB(clpGBT, 10);
                                         cReadBack = cReplyVector[7] & 0xFF;
                                         cCommandVector.clear(), cReplyVector.clear();
@@ -2189,12 +2189,12 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                                         cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg1).fAddress << 0);
                                         cCommandVector.push_back(0xc << 0);
                                         WriteCommandCPB(clpGBT, cCommandVector);
-                                        ReadReplyCPB(clpGBT, 10);
-                                        cCommandVector.clear(), cReplyVector.clear();
-                                        // check write
-                                        cWorkerId = 16, cFunctionId = 2;
-                                        cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg1).fAddress << 0);
-                                        WriteCommandCPB(clpGBT, cCommandVector);
+                                        // ReadReplyCPB(clpGBT, 10);
+                                        // cCommandVector.clear(), cReplyVector.clear();
+                                        // // check write
+                                        // cWorkerId = 16, cFunctionId = 2;
+                                        // cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg1).fAddress << 0);
+                                        // WriteCommandCPB(clpGBT, cCommandVector);
                                         cReplyVector = ReadReplyCPB(clpGBT, 10);
                                         cReadBack = cReplyVector[7] & 0xFF;
                                         cCommandVector.clear(), cReplyVector.clear();
@@ -2251,12 +2251,12 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                                     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCntrlReg).fAddress << 0);
                                     cCommandVector.push_back(cValueCntrl << 0);
                                     WriteCommandCPB(clpGBT, cCommandVector);
-                                    ReadReplyCPB(clpGBT, 10);
-                                    cCommandVector.clear(), cReplyVector.clear();
-                                    // check write
-                                    cWorkerId = 16, cFunctionId = 2;
-                                    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCntrlReg).fAddress << 0);
-                                    WriteCommandCPB(clpGBT, cCommandVector);
+                                    // ReadReplyCPB(clpGBT, 10);
+                                    // cCommandVector.clear(), cReplyVector.clear();
+                                    // // check write
+                                    // cWorkerId = 16, cFunctionId = 2;
+                                    // cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCntrlReg).fAddress << 0);
+                                    // WriteCommandCPB(clpGBT, cCommandVector);
                                     cReplyVector = ReadReplyCPB(clpGBT, 10);
                                     cReadBack = cReplyVector[7] & 0xFF;
                                     cCommandVector.clear(), cReplyVector.clear();
@@ -2280,12 +2280,12 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                                     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg2).fAddress << 0);
                                     cCommandVector.push_back(0x0 << 0);
                                     WriteCommandCPB(clpGBT, cCommandVector);
-                                    ReadReplyCPB(clpGBT, 10);
-                                    cCommandVector.clear(), cReplyVector.clear();
-                                    // check write
-                                    cWorkerId = 16, cFunctionId = 2;
-                                    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg2).fAddress << 0);
-                                    WriteCommandCPB(clpGBT, cCommandVector);
+                                    // ReadReplyCPB(clpGBT, 10);
+                                    // cCommandVector.clear(), cReplyVector.clear();
+                                    // // check write
+                                    // cWorkerId = 16, cFunctionId = 2;
+                                    // cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg2).fAddress << 0);
+                                    // WriteCommandCPB(clpGBT, cCommandVector);
                                     cReplyVector = ReadReplyCPB(clpGBT, 10);
                                     cReadBack = cReplyVector[7] & 0xFF;
                                     cCommandVector.clear(), cReplyVector.clear();
@@ -2313,12 +2313,12 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                                     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CAddressReg).fAddress << 0);
                                     cCommandVector.push_back(cSlaveAddress << 0);
                                     WriteCommandCPB(clpGBT, cCommandVector);
-                                    ReadReplyCPB(clpGBT, 10);
-                                    cCommandVector.clear(), cReplyVector.clear();
-                                    // check write
-                                    cWorkerId = 16, cFunctionId = 2;
-                                    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CAddressReg).fAddress << 0);
-                                    WriteCommandCPB(clpGBT, cCommandVector);
+                                    // ReadReplyCPB(clpGBT, 10);
+                                    // cCommandVector.clear(), cReplyVector.clear();
+                                    // // check write
+                                    // cWorkerId = 16, cFunctionId = 2;
+                                    // cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CAddressReg).fAddress << 0);
+                                    // WriteCommandCPB(clpGBT, cCommandVector);
                                     cReplyVector = ReadReplyCPB(clpGBT, 10);
                                     cReadBack = cReplyVector[7] & 0xFF;
                                     cCommandVector.clear(), cReplyVector.clear();
@@ -2344,12 +2344,12 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                                         cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg3).fAddress << 0);
                                         cCommandVector.push_back(0x3 << 0);
                                         WriteCommandCPB(clpGBT, cCommandVector);
-                                        ReadReplyCPB(clpGBT, 10);
-                                        cCommandVector.clear(), cReplyVector.clear();
-                                        // check write
-                                        cWorkerId = 16, cFunctionId = 2;
-                                        cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg3).fAddress << 0);
-                                        WriteCommandCPB(clpGBT, cCommandVector);
+                                        // ReadReplyCPB(clpGBT, 10);
+                                        // cCommandVector.clear(), cReplyVector.clear();
+                                        // // check write
+                                        // cWorkerId = 16, cFunctionId = 2;
+                                        // cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg3).fAddress << 0);
+                                        // WriteCommandCPB(clpGBT, cCommandVector);
                                         cReplyVector = ReadReplyCPB(clpGBT, 10);
                                         cReadBack = cReplyVector[7] & 0xFF;
                                         cCommandVector.clear(), cReplyVector.clear();
@@ -2372,12 +2372,12 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                                         cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg3).fAddress << 0);
                                         cCommandVector.push_back(0xD << 0);
                                         WriteCommandCPB(clpGBT, cCommandVector);
-                                        ReadReplyCPB(clpGBT, 10);
-                                        cCommandVector.clear(), cReplyVector.clear();
-                                        // check write
-                                        cWorkerId = 16, cFunctionId = 2;
-                                        cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg3).fAddress << 0);
-                                        WriteCommandCPB(clpGBT, cCommandVector);
+                                        // ReadReplyCPB(clpGBT, 10);
+                                        // cCommandVector.clear(), cReplyVector.clear();
+                                        // // check write
+                                        // cWorkerId = 16, cFunctionId = 2;
+                                        // cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | clpGBT->getRegItem(cI2CCmdReg3).fAddress << 0);
+                                        // WriteCommandCPB(clpGBT, cCommandVector);
                                         cReplyVector = ReadReplyCPB(clpGBT, 10);
                                         cReadBack = cReplyVector[7] & 0xFF;
                                         cCommandVector.clear(), cReplyVector.clear();
