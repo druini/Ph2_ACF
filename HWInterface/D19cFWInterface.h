@@ -742,7 +742,7 @@ class D19cFWInterface : public BeBoardFWInterface
     //functions for new Command Processor Block
     void     ResetCPB(Ph2_HwDescription::Chip* pChip) override;
     void     WriteCommandCPB(Ph2_HwDescription::Chip* pChip, const std::vector<uint32_t>& pData) override;
-    std::vector<uint32_t> ReadReplyCPB(Ph2_HwDescription::Chip* pChip, uint8_t pNWords, bool pDryRead) override;
+    std::vector<uint32_t> ReadReplyCPB(Ph2_HwDescription::Chip* pChip, uint8_t pNWords, bool pDryRead = false) override;
     
 };
 } // namespace Ph2_HwInterface

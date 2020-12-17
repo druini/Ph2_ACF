@@ -224,7 +224,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     // clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
                     clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", false);
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
-                    // clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
+                    clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
                     uint8_t  cPUSMStatus = clpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
                     uint16_t cIter = 0, cMaxIter = 2000;
                     while(cPUSMStatus != 18 && cIter < cMaxIter)

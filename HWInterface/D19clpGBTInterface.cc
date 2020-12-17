@@ -36,22 +36,6 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
              }
          }
     */
-   
-    /*
-    uint8_t cValue = ReadChipReg(pChip, "ROM");
-    LOG(INFO) << BOLDYELLOW << "Reading from register ROM value 0x" << std::hex << +cValue << std::dec << RESET;
-    WriteChipReg(pChip, "USERID0", 0xca, false);
-    WriteChipReg(pChip, "USERID1", 0xfe, false);
-    WriteChipReg(pChip, "USERID2", 0xca, false);
-    WriteChipReg(pChip, "USERID3", 0xfe, false);
-    LOG(INFO) << BOLDYELLOW << "Reading from USERID0 value 0x" << std::hex << ReadChipReg(pChip, "USERID0") << std::dec << RESET;
-    LOG(INFO) << BOLDYELLOW << "Reading from USERID1 value 0x" << std::hex << ReadChipReg(pChip, "USERID1") << std::dec << RESET;
-    LOG(INFO) << BOLDYELLOW << "Reading from USERID2 value 0x" << std::hex << ReadChipReg(pChip, "USERID2") << std::dec << RESET;
-    LOG(INFO) << BOLDYELLOW << "Reading from USERID3 value 0x" << std::hex << ReadChipReg(pChip, "USERID3") << std::dec << RESET;
-    */
-    
-    
-    //PrintChipMode(pChip);
     ConfigurePSROH(pChip, 5);
     return true;
 }
@@ -62,15 +46,22 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 
 bool D19clpGBTInterface::WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
-    LOG(DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "\t Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
     return WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
 }
 
-uint16_t D19clpGBTInterface::ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) { return ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress); }
+uint16_t D19clpGBTInterface::ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) 
+{ 
+    uint8_t cReadBack = ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress);
+    LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << cReadBack << std::dec << " from " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
+    return cReadBack;
+}
 
 bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop)
 {
     setBoard(pChip->getBeBoardId());
+    uint8_t cReadBack = 0;
+    // uint16_t cAddressInReply = 0; 
     // Make sure the value is not > 8 bits
     if(pValue > 0xFF)
     {
@@ -90,14 +81,22 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
             //Use new Command Processor Block
             uint8_t cWorkerId = 16, cFunctionId = 3;
             std::vector<uint32_t> cCommandVector;
+            cCommandVector.clear();
             cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pAddress << 0);
             cCommandVector.push_back(pValue << 0);
             fBoardFW->WriteCommandCPB(pChip, cCommandVector);
-            fBoardFW->ReadReplyCPB(pChip, 10, true);
+            //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            //fBoardFW->ReadReplyCPB(pChip, 10, true);
+            std::vector<uint32_t> cReplyVector = fBoardFW->ReadReplyCPB(pChip, 10);
+            cReadBack = cReplyVector[7] & 0xFF;
+            // cAddressInReply = (cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF) << 0;
         }
         else
+        {
             //Use standard uDTC IC block
             fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+            cReadBack = ReadReg(pChip, pAddress);
+        }
     }
     else
     {
@@ -108,8 +107,9 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     }
     if(!pVerifLoop) return true;
     // Verify success of Write
-    uint8_t cReadBack = ReadReg(pChip, pAddress);
-    uint8_t cIter = 0, cMaxIter = 10;
+    //cReadBack = ReadReg(pChip, pAddress);
+    uint8_t cIter = 0, cMaxIter = 50;
+    //while((cReadBack != pValue || cAddressInReply != pAddress) && cIter < cMaxIter)
     while(cReadBack != pValue && cIter < cMaxIter)
     {
         // Now pick one configuration mode
@@ -117,10 +117,23 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
         {
             if(fUseCPB)
             {
+		        fBoardFW->ResetCPB(pChip);                
+                //Use new Command Processor Block
+                uint8_t cWorkerId = 16, cFunctionId = 3;
+                std::vector<uint32_t> cCommandVector;
+                cCommandVector.clear();
+                cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pAddress << 0);
+                cCommandVector.push_back(pValue << 0);
+                fBoardFW->WriteCommandCPB(pChip, cCommandVector);
+                std::vector<uint32_t> cReplyVector = fBoardFW->ReadReplyCPB(pChip, 10);
+                cReadBack = cReplyVector[7] & 0xFF;
             }
             else
+            {
                 //Use standard uDTC IC block
                 fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+                cReadBack = ReadReg(pChip, pAddress);
+            }
         }
         else
         {
@@ -129,10 +142,10 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
             fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
 #endif
         }
-        cReadBack = ReadReg(pChip, pAddress);
+        //cReadBack = ReadReg(pChip, pAddress);
         cIter++;
     }
-    if(cReadBack != pValue)
+    if(cIter == cMaxIter)
     {
         LOG(INFO) << BOLDRED << "REGISTER WRITE MISMATCH" << RESET;
         throw std::runtime_error(std::string("lpGBT register write mismatch"));
@@ -149,9 +162,26 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
         {
             uint8_t cWorkerId = 16, cFunctionId = 2;
             std::vector<uint32_t> cCommandVector;
+            cCommandVector.clear();
             cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pAddress << 0);
             fBoardFW->WriteCommandCPB(pChip, cCommandVector);
+            //std::this_thread::sleep_for(std::chrono::milliseconds(10));
             auto cReplyVector = fBoardFW->ReadReplyCPB(pChip, 10);
+            // uint16_t cAddressInReply = (cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF) << 0;
+            // uint8_t cIter = 0, cMaxIter = 10;
+            // while(cAddressInReply != pAddress && cIter<cMaxIter)
+            // {
+            //     cReplyVector.clear();
+            //     fBoardFW->ResetCPB(pChip);
+            //     //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            //     fBoardFW->WriteCommandCPB(pChip, cCommandVector);
+            //     //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            //     cReplyVector = fBoardFW->ReadReplyCPB(pChip, 10);
+            //     cAddressInReply = (cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF) << 0;
+            //     cIter++;
+            // }
+            // if(cIter == cMaxIter)
+            //     throw std::runtime_error(std::string("D19clpGBTInterface::ReadReg : Command Processor Block not properly responding"));
             cReadBack = cReplyVector[7] & 0xFF;
         }
         else
@@ -164,6 +194,7 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
         cReadBack = fTC_PSROH.read_i2c(pAddress);
 #endif
     }
+    LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pAddress << std::dec << "]" << RESET;
     return cReadBack;
 }
 
@@ -574,7 +605,7 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
         WriteChipReg(pChip, cI2CCmdReg, 0xC);
     }
     // wait until the transaction is done
-    uint8_t cMaxIter = 10, cIter = 0;
+    uint8_t cMaxIter = 100, cIter = 0;
     bool    cSuccess = false;
     do
     {
@@ -903,7 +934,7 @@ bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
     if(pRetry)
     {
         uint8_t cReadBack = cicRead(pChip, pFeId, pRegisterAddress);
-        uint8_t cIter = 0, cMaxIter = 1;
+        uint8_t cIter = 0, cMaxIter = 10;
         while(cReadBack != pRegisterValue && cIter < cMaxIter)
         {
             WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, (pRegisterValue << 16) | cInvertedRegister, 3);
@@ -936,7 +967,7 @@ bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
     if(pRetry)
     {
         uint8_t cReadBack = ssaRead(pChip, pFeId, pChipId, pRegisterAddress);
-        uint8_t cIter = 0, cMaxIter = 1;
+        uint8_t cIter = 0, cMaxIter = 10;
         while(cReadBack != pRegisterValue && cIter < cMaxIter)
         {
             WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x20 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
