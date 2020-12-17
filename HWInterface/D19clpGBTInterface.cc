@@ -61,7 +61,6 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
 {
     setBoard(pChip->getBeBoardId());
     uint8_t cReadBack = 0;
-    // uint16_t cAddressInReply = 0; 
     // Make sure the value is not > 8 bits
     if(pValue > 0xFF)
     {
@@ -85,11 +84,8 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
             cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pAddress << 0);
             cCommandVector.push_back(pValue << 0);
             fBoardFW->WriteCommandCPB(pChip, cCommandVector);
-            //std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            //fBoardFW->ReadReplyCPB(pChip, 10, true);
             std::vector<uint32_t> cReplyVector = fBoardFW->ReadReplyCPB(pChip, 10);
             cReadBack = cReplyVector[7] & 0xFF;
-            // cAddressInReply = (cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF) << 0;
         }
         else
         {
@@ -107,9 +103,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     }
     if(!pVerifLoop) return true;
     // Verify success of Write
-    //cReadBack = ReadReg(pChip, pAddress);
     uint8_t cIter = 0, cMaxIter = 50;
-    //while((cReadBack != pValue || cAddressInReply != pAddress) && cIter < cMaxIter)
     while(cReadBack != pValue && cIter < cMaxIter)
     {
         // Now pick one configuration mode
@@ -142,7 +136,6 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
             fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
 #endif
         }
-        //cReadBack = ReadReg(pChip, pAddress);
         cIter++;
     }
     if(cIter == cMaxIter)
@@ -165,23 +158,7 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
             cCommandVector.clear();
             cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pAddress << 0);
             fBoardFW->WriteCommandCPB(pChip, cCommandVector);
-            //std::this_thread::sleep_for(std::chrono::milliseconds(10));
             auto cReplyVector = fBoardFW->ReadReplyCPB(pChip, 10);
-            // uint16_t cAddressInReply = (cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF) << 0;
-            // uint8_t cIter = 0, cMaxIter = 10;
-            // while(cAddressInReply != pAddress && cIter<cMaxIter)
-            // {
-            //     cReplyVector.clear();
-            //     fBoardFW->ResetCPB(pChip);
-            //     //std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            //     fBoardFW->WriteCommandCPB(pChip, cCommandVector);
-            //     //std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            //     cReplyVector = fBoardFW->ReadReplyCPB(pChip, 10);
-            //     cAddressInReply = (cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF) << 0;
-            //     cIter++;
-            // }
-            // if(cIter == cMaxIter)
-            //     throw std::runtime_error(std::string("D19clpGBTInterface::ReadReg : Command Processor Block not properly responding"));
             cReadBack = cReplyVector[7] & 0xFF;
         }
         else
