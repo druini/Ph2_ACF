@@ -279,7 +279,7 @@ uint16_t getPixelConfig(const std::vector<perColumnPixelData>& mask, uint16_t ro
             bits::pack<1, 4, 1, 1, 1>(mask[col + 1].TDAC[row] > 15, abs(15 - mask[col + 1].TDAC[row]), mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
             bits::pack<1, 4, 1, 1, 1>(mask[col + 0].TDAC[row] > 15, abs(15 - mask[col + 0].TDAC[row]), mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
 }
-
+/*
 void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop)
 {
     this->setBoard(pRD53->getBeBoardId());
@@ -296,7 +296,8 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, bo
     // ##########################
     // # Disable default config #
     // ##########################
-    RD53Interface::WriteChipReg(pRD53, "PIX_DEFAULT_CONFIG", 0x0, pVerifLoop);
+    // RD53Interface::WriteChipReg(pRD53, "PIX_DEFAULT_CONFIG", 0x0, pVerifLoop);
+    RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_DEFAULT_CONFIGL").fAddress, 0x02).appendTo(commandList);
 
     // ############
     // # PIX_MODE #
@@ -310,9 +311,12 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, bo
 
     if(doSparse == true)
     {
-        RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x27, pVerifLoop);
-        RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x00, pVerifLoop);
-        RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x00, pVerifLoop);
+        RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_MODE").fAddress, 0x27).appendTo(commandList);
+        RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_PORTAL").fAddress, 0x00).appendTo(commandList);
+        RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_MODE").fAddress, 0x00).appendTo(commandList);
+        // RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x27, pVerifLoop);
+        // RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x00, pVerifLoop);
+        // RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x00, pVerifLoop);
 
         uint16_t data;
 
@@ -336,15 +340,16 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, bo
 
                 if(commandList.size() > RD53Constants::FIELDS_SHORTCMD * NPIXCMD)
                 {
-                    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
-                    commandList.clear();
+                    // static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+                    // commandList.clear();
                 }
             }
         }
     }
     else
     {
-        RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x8, false);
+        RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_MODE").fAddress, 0x8).appendTo(commandList);
+        // RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x8, false);
 
         std::vector<uint16_t> data;
 
@@ -365,14 +370,109 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, bo
 
                 if((commandList.size() > RD53Constants::FIELDS_LONGCMD * NPIXCMD) || (row == (RD53::nRows - 1)))
                 {
-                    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
-                    commandList.clear();
+                    // static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+                    // commandList.clear();
                 }
             }
         }
     }
 
     if(commandList.size() != 0) static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+}
+*/
+void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop)
+{
+  this->setBoard(pRD53->getBeBoardId());
+
+  std::vector<uint16_t> commandList;
+
+  const uint16_t                   REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;
+  const uint16_t                   REGION_ROW_ADDR = pRD53->getRegItem("REGION_ROW").fAddress;
+  const uint16_t                   PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
+  const uint8_t                    highGain        = pRD53->getRegItem("HighGain_LIN").fValue;
+  const uint8_t                    chipID          = pRD53->getId();
+  std::vector<perColumnPixelData>& mask            = doDefault == true ? *pRD53->getPixelsMaskDefault() : *pRD53->getPixelsMask();
+
+  // ##########################
+  // # Disable default config #
+  // ##########################
+  RD53Interface::WriteChipReg(pRD53, "PIX_DEFAULT_CONFIG", 0x0, pVerifLoop);
+
+  // ############
+  // # PIX_MODE #
+  // ############
+  // bit[5]: enable broadcast
+  // bit[4]: enable auto-col
+  // bit[3]: enable auto-row
+  // bit[2]: broadcast to SYNC FE
+  // bit[1]: broadcast to LIN FE
+  // bit[0]: broadcast to DIFF FE
+
+  if(doSparse == true)
+  {
+      RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x27, pVerifLoop);
+      RD53Interface::WriteChipReg(pRD53, "PIX_PORTAL", 0x00, pVerifLoop);
+      RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x00, pVerifLoop);
+
+      uint16_t data;
+
+      for(auto col = 0u; col < RD53::nCols; col += 2)
+      {
+          if((std::find(mask[col].Enable.begin(), mask[col].Enable.end(), true) == mask[col].Enable.end()) &&
+             (std::find(mask[col + 1].Enable.begin(), mask[col].Enable.end(), true) == mask[col + 1].Enable.end()))
+              continue;
+
+          RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
+
+          for(auto row = 0u; row < RD53::nRows; row++)
+          {
+              if((mask[col].Enable[row] == true) || (mask[col + 1].Enable[row] == true))
+              {
+                  data = getPixelConfig(mask, row, col, highGain);
+
+                  RD53Cmd::WrReg(chipID, REGION_ROW_ADDR, row).appendTo(commandList);
+                  RD53Cmd::WrReg(chipID, PIX_PORTAL_ADDR, data).appendTo(commandList);
+              }
+
+              if(commandList.size() > RD53Constants::FIELDS_SHORTCMD * NPIXCMD)
+              {
+                  static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+                  commandList.clear();
+              }
+          }
+      }
+  }
+  else
+  {
+      RD53Interface::WriteChipReg(pRD53, "PIX_MODE", 0x8, false);
+
+      std::vector<uint16_t> data;
+
+      for(auto col = 0u; col < RD53::nCols; col += 2)
+      {
+          RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
+          RD53Cmd::WrReg(chipID, REGION_ROW_ADDR, 0x0).appendTo(commandList);
+
+          for(auto row = 0u; row < RD53::nRows; row++)
+          {
+              data.push_back(getPixelConfig(mask, row, col, highGain));
+
+              if((row % RD53Constants::NREGIONS_LONGCMD) == (RD53Constants::NREGIONS_LONGCMD - 1))
+              {
+                  RD53Cmd::WrRegLong(chipID, PIX_PORTAL_ADDR, data).appendTo(commandList);
+                  data.clear();
+              }
+
+              if((commandList.size() > RD53Constants::FIELDS_LONGCMD * NPIXCMD) || (row == (RD53::nRows - 1)))
+              {
+                  static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+                  commandList.clear();
+              }
+          }
+      }
+  }
+
+  if(commandList.size() != 0) static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
 }
 
 bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
