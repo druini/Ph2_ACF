@@ -29,12 +29,19 @@
 // #############
 #define DEEPSLEEP 100000     // [microseconds]
 #define READOUTSLEEP 50      // [microseconds]
-#define MAXATTEMPTS 20       // Maximum number of attempts
 #define NWORDS_DDR3 4        // Number of IPbus words in a DDR3 word
 #define NLANE_HYBRID 4       // Number of lanes per hybrid
 #define HEADEAR_WRTCMD 0xFF  // Header of chip write command sequence
 #define NBIT_FWVER 16        // Number of bits for the firmware version
 #define IPBUS_FASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
+
+// #######################
+// # FW useful constants #
+// #######################
+namespace RD53FWconstants
+{
+const uint8_t MAXATTEMPTS = 20; // Maximum number of attempts
+}
 
 namespace RD53FWEvtEncoder
 {
@@ -238,10 +245,10 @@ class RD53FWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty) override;
-    void     ResetOptoLink(Ph2_HwDescription::Chip* pChip) override;
-    bool     WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress) override;
+    void     StatusOptoLink(uint32_t& isReady, uint32_t& isFIFOempty) override;
+    void     ResetOptoLink() override;
+    bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
+    uint32_t ReadOptoLinkRegister(uint32_t pAddress) override;
 
     // ###########################################
     // # Member functions to handle the firmware #

@@ -307,13 +307,23 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 // ########################
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
-                    // @TMP@
-                    // RD53lpGBTInterface *clpGBTInterface = static_cast<RD53lpGBTInterface*>(flpGBTInterface);
-                    // clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
-                    // if(clpGBTInterface->IslpGBTReady(cOpticalGroup->flpGBT))
-                    //    LOG(ERROR) << BOLDRED << "lpGBT chip NOT configured" << RESET;
-                    // else
-                    //    LOG(INFO) << GREEN << "lpGBT chip configured" << RESET;
+                    // @TMP@ : to be verified where to put this
+                    uint32_t isReady;
+                    uint32_t isFIFOempty;
+                    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetOptoLink();
+                    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(isReady, isFIFOempty);
+
+                    RD53lpGBTInterface* lpGBTInterface = static_cast<RD53lpGBTInterface*>(flpGBTInterface);
+                    uint8_t             PUSMStatus     = lpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
+                    unsigned int        nAttempts      = 0;
+                    while((PUSMStatus != 18) && (nAttempts < RD53lpGBTconstants::MAXATTEMPTS))
+                    {
+                        LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +PUSMStatus << RESET;
+                        PUSMStatus = lpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
+                        nAttempts++;
+                    }
+                    if(PUSMStatus != 18) exit(EXIT_FAILURE);
+                    LOG(INFO) << GREEN << "lpGBT chip configured" << RESET;
                 }
 
                 // ############################

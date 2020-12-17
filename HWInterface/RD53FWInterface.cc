@@ -229,12 +229,12 @@ void RD53FWInterface::SendChipCommandsPack(const std::vector<uint32_t>& commandL
     // ####################################
     // # Check if commands were dispached #
     // ####################################
-    while(((retry = !ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched")) == true) && (nAttempts < MAXATTEMPTS))
+    while(((retry = !ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched")) == true) && (nAttempts < RD53FWconstants::MAXATTEMPTS))
     {
         nAttempts++;
         usleep(READOUTSLEEP);
     }
-    if(retry == true) LOG(ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ")" << RESET;
+    if(retry == true) LOG(ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << RD53FWconstants::MAXATTEMPTS << BOLDRED << ")" << RESET;
 }
 
 std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(ReadoutChip* pChip)
@@ -393,7 +393,7 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
 
                 std::vector<uint16_t> initSequence = RD53FWInterface::GetInitSequence(this->singleChip == true ? 4 : seq);
 
-                for(unsigned int i = 0; i < MAXATTEMPTS; i++)
+                for(unsigned int i = 0; i < RD53FWconstants::MAXATTEMPTS; i++)
                 {
                     // ###########################
                     // # Set proper AURORA speed #
@@ -771,11 +771,11 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
             continue;
         }
 
-    } while((retry == true) && (nAttempts < MAXATTEMPTS));
+    } while((retry == true) && (nAttempts < RD53FWconstants::MAXATTEMPTS));
 
     if(retry == true)
     {
-        LOG(ERROR) << BOLDRED << "Reached maximum number of attempts (" << BOLDYELLOW << MAXATTEMPTS << BOLDRED << ") without success" << RESET;
+        LOG(ERROR) << BOLDRED << "Reached maximum number of attempts (" << BOLDYELLOW << RD53FWconstants::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
     }
 
@@ -1316,22 +1316,20 @@ void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
 // ############################
 // # Read/Write Optical Group #
 // ############################
-void RD53FWInterface::StatusOptoLink(Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty)
+void RD53FWInterface::StatusOptoLink(uint32_t& isReady, uint32_t& isFIFOempty)
 {
     isReady     = ReadReg("user.stat_regs.lpgbt_1.ic_tx_ready");
     isFIFOempty = ReadReg("user.stat_regs.lpgbt_1.ic_rx_empty");
 }
 
-void RD53FWInterface::ResetOptoLink(Chip* pChip)
+void RD53FWInterface::ResetOptoLink()
 {
     RegManager::WriteStackReg({{"user.ctrl_regs.Optical_link.ic_tx_reset", 0x01}, {"user.ctrl_regs.Optical_link.ic_rx_reset", 0x01}});
-
     usleep(DEEPSLEEP);
-
     RegManager::WriteStackReg({{"user.ctrl_regs.Optical_link.ic_tx_reset", 0x00}, {"user.ctrl_regs.Optical_link.ic_rx_reset", 0x00}});
 }
 
-bool RD53FWInterface::WriteOptoLinkRegister(Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop)
+bool RD53FWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop)
 {
     const uint8_t lpGBTAddress = 0x70;
 
@@ -1348,7 +1346,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(Chip* pChip, uint32_t pAddress, uint
 
     if(pVerifLoop == true)
     {
-        uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(pChip, pAddress);
+        uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(pAddress);
         if(cReadBack != pData)
         {
             LOG(ERROR) << BOLDRED << "[RD53FWInterface::WriteOpticalLinkRegiser] Register readback failure for register 0x" << BOLDYELLOW << std::hex << pAddress << std::dec << RESET;
@@ -1359,7 +1357,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(Chip* pChip, uint32_t pAddress, uint
     return true;
 }
 
-uint32_t RD53FWInterface::ReadOptoLinkRegister(Chip* pChip, uint32_t pAddress)
+uint32_t RD53FWInterface::ReadOptoLinkRegister(uint32_t pAddress)
 {
     const uint8_t lpGBTAddress = 0x70;
 
