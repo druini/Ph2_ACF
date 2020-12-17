@@ -1,5 +1,16 @@
-#ifndef LpGBTTester_h__
-#define LpGBTTester_h__
+/*!
+
+        \file                   OTHybridTester.h
+        \brief                  Base class for all hybrids test using a testcard 
+        \author                 Younes OTARID
+        \version                1.0
+        \date                   17/12/2020
+        Support :               mail to : younes.otarid@cern.ch
+
+ */
+
+#ifndef OTHybridTester_h__
+#define OTHybridTester_h__
 
 #include "Tool.h"
 #include "../HWInterface/DPInterface.h"
@@ -13,27 +24,20 @@
 #include "TTree.h"
 #endif
 
-#ifdef __TCUSB__
-#include "USB_a.h"
-#endif
-
 #include <map>
 #include <string>
 
 using namespace Ph2_HwDescription;
 
-class LpGBTTester : public Tool
+class OTHybridTester : public Tool 
 {
   public:
-    LpGBTTester();
-    ~LpGBTTester();
+    OTHybridTester();
+    ~OTHybridTester();
 
-    void Initialise();
-    void Start(int currentRun);
-    void Stop();
-    void Pause();
-    void Resume();
-
+    // ###################################
+    // # LpGBT related functions #
+    // ###################################
     //Test lpGBT Up Link with internal pattern
     void InjectULInternalPattern(uint32_t pPattern);
     //Test lpGBT Up Link with external pattern
@@ -49,5 +53,9 @@ class LpGBTTester : public Tool
     //Set GPIO level
     void SetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
 
+  private:
+
+  protected:
 };
+
 #endif

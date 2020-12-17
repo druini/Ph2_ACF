@@ -1,38 +1,19 @@
 /*!
- *
- * \file PSROHTester_h__.h
- * \brief PSROHTester_h__ class, PSROHTester_h__ of the hardware
- *
- * \Support : inna.makarenko@cern.ch
- * \Support : younes.otarid@cern.ch
- *
- */
 
-#ifndef PSROHTester_h__
+        \file                   PSROHTester.h
+        \brief                  Class for PS-ROH hybrids test using a testcard 
+        \author                 Younes OTARID
+        \version                1.0
+        \date                   17/12/2020
+        Support :               mail to : younes.otarid@cern.ch
+
+ */#ifndef PSROHTester_h__
 #define PSROHTester_h__
-
-#include "../HWInterface/DPInterface.h"
-#include "Tool.h"
-
-#ifdef __USE_ROOT__
-#include "TAxis.h"
-#include "TGraph.h"
-#include "TMultiGraph.h"
-#include "TObject.h"
-#include "TString.h"
-#include "TTree.h"
-#endif
-
-#ifdef __TCUSB__
-#include "USB_a.h"
-#endif
-
-#include <map>
-#include <string>
+#include "OTHybridTester.h"
 
 using namespace Ph2_HwDescription;
 
-class PSROHTester : public Tool
+class PSROHTester : public OTHybridTester
 {
   public:
     PSROHTester();
