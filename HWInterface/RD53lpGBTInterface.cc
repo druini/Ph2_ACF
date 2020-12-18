@@ -16,6 +16,25 @@ namespace Ph2_HwInterface
 // ###################################
 // # LpGBT register access functions #
 // ###################################
+bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    ChipRegMap& lpGBTRegMap = pChip->getRegMap();
+    for(const auto& cRegItem: lpGBTRegMap)
+      if(cRegItem.second.fAddress < 0x13C) RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+
+    uint8_t      PUSMStatus = RD53lpGBTInterface::GetPUSMStatus(pChip);
+    unsigned int nAttempts  = 0;
+    while((PUSMStatus != 18) && (nAttempts < RD53lpGBTconstants::MAXATTEMPTS))
+    {
+        PUSMStatus = RD53lpGBTInterface::GetPUSMStatus(pChip);
+        nAttempts++;
+    }
+    if(PUSMStatus != 18) return false;
+
+    return true;
+}
 
 bool RD53lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
@@ -30,12 +49,13 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
 
     if(pValue > 0xFF)
     {
-        LOG(ERROR) << "LpGBT registers are 8 bits, impossible to write " << pValue << " to address " << pAddress << RESET;
+        LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pValue << BOLDRED << " to address " << BOLDYELLOW << pAddress << RESET;
         return false;
     }
-    if(pAddress >= 0x13c)
+
+    if(pAddress >= 0x13C)
     {
-        LOG(ERROR) << "LpGBT read-write registers end at 0x13c ... impossible to write to " << pAddress << RESET;
+        LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
         return false;
     }
 
@@ -52,7 +72,8 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
         nAttempts++;
     }
 
-    if(cReadBack != pValue) { throw std::runtime_error(std::string("lpGBT register write mismatch")); }
+    if(cReadBack != pValue) { throw std::runtime_error(std::string("lpGBT register write/read mismatch")); }
+
     return true;
 }
 
@@ -72,7 +93,6 @@ bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pa
 // #######################################
 // # LpGBT block configuration functions #
 // #######################################
-
 void RD53lpGBTInterface::ConfigureRxGroups(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode)
 {
     for(const auto& cGroup: pGroups)
@@ -119,6 +139,7 @@ void RD53lpGBTInterface::ConfigureTxGroups(Chip* pChip, const std::vector<uint8_
             cEnableTxReg = "EPTX10Enable";
         else if(cGroup == 2 || cGroup == 3)
             cEnableTxReg = "EPTX32Enable";
+
         uint8_t cValueEnableTx = RD53lpGBTInterface::ReadChipReg(pChip, cEnableTxReg);
         for(const auto cChannel: pChannels) cValueEnableTx += (1 << (cChannel + 4 * (cGroup % 2)));
         RD53lpGBTInterface::WriteChipReg(pChip, cEnableTxReg, cValueEnableTx);
@@ -148,6 +169,7 @@ void RD53lpGBTInterface::ConfigureTxChannels(Chip*                       pChip,
                 cTXChn_Cntr = "EPTX" + std::to_string(cGroup) + "1_" + std::to_string(cGroup) + "0ChnCntr";
             else if(cChannel == 2 || cChannel == 3)
                 cTXChn_Cntr = "EPTX" + std::to_string(cGroup) + "3_" + std::to_string(cGroup) + "2ChnCntr";
+
             uint8_t cValue_ChnCntr = RD53lpGBTInterface::ReadChipReg(pChip, cTXChn_Cntr);
             RD53lpGBTInterface::WriteChipReg(pChip, cTXChn_Cntr, (cValue_ChnCntr & ~(0x0F << 4 * (cChannel % 2))) | ((pInvert << 3 | pPreEmphWidth << 0) << 4 * (cChannel % 2)));
         }
@@ -175,7 +197,7 @@ void RD53lpGBTInterface::ConfigureClocks(Chip*                       pChip,
 
 void RD53lpGBTInterface::ConfigureHighSpeedPolarity(Chip* pChip, uint8_t pOutPolarity, uint8_t pInPolarity)
 {
-    // Configure Highr Speed Link Rx and Tx polarity
+    // Configure High Speed Link Rx and Tx polarity
     uint8_t cPolarity = (pOutPolarity << 7 | pInPolarity << 6);
     RD53lpGBTInterface::WriteChipReg(pChip, "ChipConfig", cPolarity);
 }
@@ -216,11 +238,11 @@ void RD53lpGBTInterface::ConfigureRxSource(Chip* pChip, const std::vector<uint8_
     for(const auto& cGroup: pGroups)
     {
         if(pSource == 0)
-            LOG(INFO) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to NORMAL " << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to NORMAL " << RESET;
         else if(pSource == 1)
-            LOG(INFO) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to PRBS7 " << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to PRBS7 " << RESET;
         else if(pSource == 4 || pSource == 5)
-            LOG(INFO) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to Constant Pattern" << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to Constant Pattern" << RESET;
 
         std::string cRxSourceReg;
         if(cGroup == 0 || cGroup == 1)
@@ -242,13 +264,13 @@ void RD53lpGBTInterface::ConfigureTxSource(Chip* pChip, const std::vector<uint8_
     for(const auto& cGroup: pGroups)
     {
         if(pSource == 0)
-            LOG(INFO) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to NORMAL " << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to NORMAL " << RESET;
         else if(pSource == 1)
-            LOG(INFO) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to PRBS7 " << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to PRBS7 " << RESET;
         else if(pSource == 2)
-            LOG(INFO) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to Binary counter " << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to Binary counter " << RESET;
         else if(pSource == 3)
-            LOG(INFO) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to Constant Pattern" << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to Constant Pattern" << RESET;
 
         uint8_t cULDataSrcValue = RD53lpGBTInterface::ReadChipReg(pChip, "ULDataSource5");
         cULDataSrcValue         = (cULDataSrcValue & ~(0x3 << (2 * cGroup))) | (pSource << (2 * cGroup));
@@ -278,7 +300,6 @@ void RD53lpGBTInterface::ConfigurePhShifter(Chip* pChip, const std::vector<uint8
 // ####################################
 // # LpGBT specific routine functions #
 // ####################################
-
 void RD53lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGroups)
 {
     for(const auto& cGroup: pGroups)
@@ -314,18 +335,18 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
     for(const auto& cGroup: pGroups)
     {
         // Wait until channels lock
-        LOG(INFO) << BOLDMAGENTA << "Phase Aligning Rx Group " << +cGroup << RESET;
+        LOG(INFO) << GREEN << "Phase Aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
         do
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         } while(!IsRxLocked(pChip, cGroup, pChannels));
-        LOG(INFO) << BOLDBLUE << "    Group " << +cGroup << BOLDGREEN << " LOCKED" << RESET;
+        LOG(INFO) << GREEN << "Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " LOCKED" << RESET;
 
         // Set new phase to channels 0,2
         for(const auto cChannel: pChannels)
         {
             uint8_t cCurrPhase = RD53lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-            LOG(INFO) << BOLDBLUE << "    Channel " << +cChannel << " phase is " << +cCurrPhase << RESET;
+            LOG(INFO) << GREEN << "Channel " << BOLDYELLOW << +cChannel << RESET << GREEN << " phase is " << BOLDYELLOW << +cCurrPhase << RESET;
             RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
         }
     }
@@ -339,27 +360,26 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
 // ################################
 // # LpGBT Block Status functions #
 // ################################
-
 void RD53lpGBTInterface::PrintChipMode(Chip* pChip)
 {
     switch((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4)
     {
-    case 0: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Off" << RESET; break;
-    case 1: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex TX" << RESET; break;
-    case 2: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex RX" << RESET; break;
-    case 3: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Transceiver" << RESET; break;
-    case 4: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Off" << RESET; break;
-    case 5: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex TX" << RESET; break;
-    case 6: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex RX" << RESET; break;
-    case 7: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Transceiver" << RESET; break;
-    case 8: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Off" << RESET; break;
-    case 9: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex TX" << RESET; break;
-    case 10: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex RX" << RESET; break;
-    case 11: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Transceiver" << RESET; break;
-    case 12: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Off" << RESET; break;
-    case 13: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex TX" << RESET; break;
-    case 14: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex RX" << RESET; break;
-    case 15: LOG(INFO) << BOLDGREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Transceiver" << RESET; break;
+    case 0: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Off" << RESET; break;
+    case 1: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex TX" << RESET; break;
+    case 2: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex RX" << RESET; break;
+    case 3: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Transceiver" << RESET; break;
+    case 4: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Off" << RESET; break;
+    case 5: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex TX" << RESET; break;
+    case 6: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex RX" << RESET; break;
+    case 7: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Transceiver" << RESET; break;
+    case 8: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Off" << RESET; break;
+    case 9: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex TX" << RESET; break;
+    case 10: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex RX" << RESET; break;
+    case 11: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Transceiver" << RESET; break;
+    case 12: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Off" << RESET; break;
+    case 13: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex TX" << RESET; break;
+    case 14: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex RX" << RESET; break;
+    case 15: LOG(INFO) << GREEN << "lpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Transceiver" << RESET; break;
     }
 }
 
@@ -391,79 +411,9 @@ uint8_t RD53lpGBTInterface::GetRxDllStatus(Chip* pChip, uint8_t pGroup)
     return RD53lpGBTInterface::ReadChipReg(pChip, cRXDllStatReg);
 }
 
-// ###########################
-// # LpGBT ADC-DAC functions #
-// ###########################
-
-void RD53lpGBTInterface::ConfigureADC(Chip* pChip, uint8_t pGainSelect, uint8_t pADCEnable) { RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", pADCEnable << 2 | pGainSelect); }
-
-uint16_t RD53lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInput)
-{
-    // Read (converted) data from ADC Input with VREF/2 as negative Input
-    uint8_t cADCInput = fADCInputMap[pADCInput];
-    uint8_t cVREF     = fADCInputMap["VREF/2"];
-    LOG(INFO) << BOLDBLUE << "Reading ADC value from " << pADCInput << RESET;
-    // Select ADC Input
-    RD53lpGBTInterface::WriteChipReg(pChip, "ADCSelect", cADCInput << 4 | cVREF << 0);
-    // Enable ADC Input
-    RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", 1 << 2);
-    // Enable Internal VREF
-    RD53lpGBTInterface::WriteChipReg(pChip, "VREFCNTR", 1 << 7);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    // Start ADC conversion
-    RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", 1 << 7 | 1 << 2);
-    // Check conversion status
-    unsigned int nAttempts = 0;
-    bool         cSuccess  = false;
-    do
-    {
-        LOG(INFO) << BOLDBLUE << "Waiting for ADC conversion to end" << RESET;
-        uint8_t cStatus = RD53lpGBTInterface::ReadChipReg(pChip, "ADCStatusH");
-        cSuccess        = (((cStatus & 0x40) >> 6) == 1);
-        nAttempts++;
-    } while((nAttempts < RD53lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
-    // Read ADC value
-    uint8_t cADCvalue1 = RD53lpGBTInterface::ReadChipReg(pChip, "ADCStatusH") & 0x3;
-    uint8_t cADCvalue2 = RD53lpGBTInterface::ReadChipReg(pChip, "ADCStatusL");
-    // Clear ADC conversion bit (#FIXME disable ADC Input as well ??)
-    RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", 0 << 7 | 1 << 2);
-    return (cADCvalue1 << 8 | cADCvalue2);
-}
-
-uint16_t RD53lpGBTInterface::ReadADCDiff(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN)
-{
-    // Read differential (converted) data on two ADC inputs
-    uint8_t cADCInputP = fADCInputMap[pADCInputP];
-    uint8_t cADCInputN = fADCInputMap[pADCInputN];
-    LOG(INFO) << BOLDBLUE << "Reading ADC value from " << pADCInputP << RESET;
-    // Select ADC Input
-    RD53lpGBTInterface::WriteChipReg(pChip, "ADCSelect", cADCInputP << 4 | cADCInputN << 0);
-    // Enable ADC Input
-    RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", 1 << 2);
-    // Start ADC conversion
-    RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", 1 << 7 | 1 << 2);
-    // Check conversion status
-    unsigned int nAttempts = 0;
-    bool         cSuccess  = false;
-    do
-    {
-        LOG(INFO) << BOLDBLUE << "Waiting for ADC conversion to end" << RESET;
-        uint8_t cStatus = RD53lpGBTInterface::ReadChipReg(pChip, "ADCStatusH");
-        cSuccess        = (((cStatus & 0x40) >> 6) == 1);
-        nAttempts++;
-    } while((nAttempts < RD53lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
-    // Read ADC value
-    uint8_t cADCvalue1 = RD53lpGBTInterface::ReadChipReg(pChip, "ADCStatusH") & 0x3;
-    uint8_t cADCvalue2 = RD53lpGBTInterface::ReadChipReg(pChip, "ADCStatusL");
-    // Clear ADC conversion bit (#FIXME disable ADC Input as well ??)
-    RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", 0 << 7 | 1 << 2);
-    return (cADCvalue1 << 8 | cADCvalue2);
-}
-
 // ########################
 // # LpGBT GPIO functions #
 // ########################
-
 void RD53lpGBTInterface::ConfigureGPIO(Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir, uint8_t pOut, uint8_t pDriveStr, uint8_t pPullEn, uint8_t pUpDown)
 {
     uint8_t cDirH      = RD53lpGBTInterface::ReadChipReg(pChip, "PIODirH");
@@ -477,7 +427,7 @@ void RD53lpGBTInterface::ConfigureGPIO(Chip* pChip, const std::vector<uint8_t>& 
     uint8_t cUpDownH   = RD53lpGBTInterface::ReadChipReg(pChip, "PIOUpDownH");
     uint8_t cUpDownL   = RD53lpGBTInterface::ReadChipReg(pChip, "PIOUpDownL");
 
-    for(auto cGPIO : pGPIOs)
+    for(auto cGPIO: pGPIOs)
     {
         if(cGPIO < 8)
         {
@@ -509,10 +459,88 @@ void RD53lpGBTInterface::ConfigureGPIO(Chip* pChip, const std::vector<uint8_t>& 
     RD53lpGBTInterface::WriteChipReg(pChip, "PIOUpDownL", cUpDownL);
 }
 
+// ###########################
+// # LpGBT ADC-DAC functions #
+// ###########################
+void RD53lpGBTInterface::ConfigureADC(Chip* pChip, uint8_t pGainSelect, uint8_t pADCEnable) { RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", pADCEnable << 2 | pGainSelect); }
+
+uint16_t RD53lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInput)
+{
+    // Read (converted) data from ADC Input with VREF/2 as negative Input
+    uint8_t cADCInput = fADCInputMap[pADCInput];
+    uint8_t cVREF     = fADCInputMap["VREF/2"];
+
+    LOG(INFO) << GREEN << "Reading ADC value from " << BOLDYELLOW << pADCInput << RESET;
+
+    // Select ADC Input
+    RD53lpGBTInterface::WriteChipReg(pChip, "ADCSelect", cADCInput << 4 | cVREF << 0);
+    // Enable ADC Input
+    RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", 1 << 2);
+    // Enable Internal VREF
+    RD53lpGBTInterface::WriteChipReg(pChip, "VREFCNTR", 1 << 7);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    // Start ADC conversion
+    RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", 1 << 7 | 1 << 2);
+
+    // Check conversion status
+    unsigned int nAttempts = 0;
+    bool         cSuccess  = false;
+    do
+    {
+        LOG(INFO) << GREEN << "Waiting for ADC conversion to end" << RESET;
+
+        uint8_t cStatus = RD53lpGBTInterface::ReadChipReg(pChip, "ADCStatusH");
+        cSuccess        = (((cStatus & 0x40) >> 6) == 1);
+        nAttempts++;
+    } while((nAttempts < RD53lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
+
+    // Read ADC value
+    uint8_t cADCvalue1 = RD53lpGBTInterface::ReadChipReg(pChip, "ADCStatusH") & 0x3;
+    uint8_t cADCvalue2 = RD53lpGBTInterface::ReadChipReg(pChip, "ADCStatusL");
+    // Clear ADC conversion bit (#FIXME disable ADC Input as well ??)
+    RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", 0 << 7 | 1 << 2);
+
+    return (cADCvalue1 << 8 | cADCvalue2);
+}
+
+uint16_t RD53lpGBTInterface::ReadADCDiff(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN)
+{
+    // Read differential (converted) data on two ADC inputs
+    uint8_t cADCInputP = fADCInputMap[pADCInputP];
+    uint8_t cADCInputN = fADCInputMap[pADCInputN];
+
+    LOG(INFO) << GREEN << "Reading ADC value from " << BOLDYELLOW << pADCInputP << RESET;
+
+    // Select ADC Input
+    RD53lpGBTInterface::WriteChipReg(pChip, "ADCSelect", cADCInputP << 4 | cADCInputN << 0);
+    // Enable ADC Input
+    RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", 1 << 2);
+    // Start ADC conversion
+    RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", 1 << 7 | 1 << 2);
+
+    // Check conversion status
+    unsigned int nAttempts = 0;
+    bool         cSuccess  = false;
+    do
+    {
+        LOG(INFO) << GREEN << "Waiting for ADC conversion to end" << RESET;
+        uint8_t cStatus = RD53lpGBTInterface::ReadChipReg(pChip, "ADCStatusH");
+        cSuccess        = (((cStatus & 0x40) >> 6) == 1);
+        nAttempts++;
+    } while((nAttempts < RD53lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
+
+    // Read ADC value
+    uint8_t cADCvalue1 = RD53lpGBTInterface::ReadChipReg(pChip, "ADCStatusH") & 0x3;
+    uint8_t cADCvalue2 = RD53lpGBTInterface::ReadChipReg(pChip, "ADCStatusL");
+    // Clear ADC conversion bit (#FIXME disable ADC Input as well ??)
+    RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", 0 << 7 | 1 << 2);
+
+    return (cADCvalue1 << 8 | cADCvalue2);
+}
+
 // #####################
 // # LpGBT BERT Tester #
 // #####################
-
 void RD53lpGBTInterface::ConfigureBERT(Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, bool pStart)
 {
     if(pStart == true)
@@ -544,32 +572,42 @@ uint64_t RD53lpGBTInterface::GetBERTErrors(Chip* pChip)
 float RD53lpGBTInterface::PerformBERTest(Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern)
 {
     if(pPattern == 0)
-        LOG(INFO) << BOLDMAGENTA << "Performing BER test with PRBS" << RESET;
+        LOG(INFO) << GREEN << "Performing BER test with PRBS" << RESET;
     else
     {
-        LOG(INFO) << BOLDMAGENTA << "Performing BER test with Constant Pattern" << RESET;
+        LOG(INFO) << GREEN << "Performing BER test with Constant Pattern" << RESET;
+
         RD53lpGBTInterface::ConfigureDPPattern(pChip, pPattern);
         RD53lpGBTInterface::ConfigureBERTPattern(pChip, pPattern);
     }
     RD53lpGBTInterface::ConfigureBERT(pChip, pCoarseSource, pFineSource, pMeasTime, pSkipDisable, true);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
     uint8_t cBERTStatus = RD53lpGBTInterface::GetBERTStatus(pChip);
     bool    cAllZeros   = ((cBERTStatus & (0x1 << 2)) >> 2) == 1;
-    if(cAllZeros == true) throw std::runtime_error(std::string("BERT : All zeros at input"));
+
+    if(cAllZeros == true) throw std::runtime_error(std::string("BERT: All zeros at input"));
+
     while((cBERTStatus & 0x1) != 1)
     {
-        LOG(INFO) << BOLDBLUE << "BERT still running ... status is : " << std::bitset<3>(cBERTStatus) << RESET;
+        LOG(INFO) << GREEN << "BERT still running ... status is: " << BOLDYELLOW << std::bitset<3>(cBERTStatus) << RESET;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         cBERTStatus = RD53lpGBTInterface::GetBERTStatus(pChip);
     }
-    LOG(INFO) << BOLDBLUE << "Reading BERT counter" << RESET;
+
+    LOG(INFO) << GREEN << "Reading BERT counter" << RESET;
+
     uint64_t cErrors      = RD53lpGBTInterface::GetBERTErrors(pChip);
     uint32_t cBitsChecked = std::pow(2, 5 + pMeasTime * 2) * 16; // # @TMP@ : currently hard coded for 640MHz
-    LOG(INFO) << BOLDBLUE << "Bits checked  : " << +cBitsChecked << " bits" << RESET;
-    LOG(INFO) << BOLDBLUE << "Bits in error : " << +cErrors << " bits" << RESET;
+
+    LOG(INFO) << GREEN << "Bits checked : " << BOLDYELLOW << +cBitsChecked << RESET << GREEN << " bits" << RESET;
+    LOG(INFO) << GREEN << "Bits in error: " << BOLDYELLOW << +cErrors << RESET << GREEN << " bits" << RESET;
+
     RD53lpGBTInterface::ConfigureBERT(pChip, pCoarseSource, pFineSource, pMeasTime, pSkipDisable, false);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    LOG(INFO) << "BER test done !" << RESET;
+
+    LOG(INFO) << "BER test done" << RESET;
+
     return float(cErrors) / cBitsChecked;
 }
 } // namespace Ph2_HwInterface

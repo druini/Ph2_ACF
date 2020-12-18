@@ -128,7 +128,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
                 if(cFirstOpticalGroup->flpGBT != nullptr)
                 {
-                    LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for LpGBT" << RESET;
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap);
                 }
 
@@ -297,33 +297,32 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ########################
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ConfigureFromXML(cBoard);
 
+            // ######################
+            // # Reset optical link #
+            // ######################
+            uint32_t isReady;
+            uint32_t isFIFOempty;
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetOptoLink();
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(isReady, isFIFOempty);
+            if(isReady == true)
+                LOG(INFO) << GREEN << "Optical link status: " << BOLDYELLOW << "ready" << RESET;
+            else
+                LOG(WARNING) << GREEN << "Optical link status: " << BOLDRED << "not ready" << RESET;
+
             // ###################
             // # Configure chips #
             // ###################
             for(auto cOpticalGroup: *cBoard)
             {
                 // ########################
-                // # Configure lpGBT chip #
+                // # Configure LpGBT chip #
                 // ########################
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
-                    // @TMP@ : to be verified where to put this
-                    uint32_t isReady;
-                    uint32_t isFIFOempty;
-                    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetOptoLink();
-                    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(isReady, isFIFOempty);
-
-                    RD53lpGBTInterface* lpGBTInterface = static_cast<RD53lpGBTInterface*>(flpGBTInterface);
-                    uint8_t             PUSMStatus     = lpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
-                    unsigned int        nAttempts      = 0;
-                    while((PUSMStatus != 18) && (nAttempts < RD53lpGBTconstants::MAXATTEMPTS))
-                    {
-                        LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +PUSMStatus << RESET;
-                        PUSMStatus = lpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
-                        nAttempts++;
-                    }
-                    if(PUSMStatus != 18) exit(EXIT_FAILURE);
-                    LOG(INFO) << GREEN << "lpGBT chip configured" << RESET;
+                    if(static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ConfigureChip(cOpticalGroup->flpGBT) == true)
+                        LOG(INFO) << GREEN << "LpGBT chip configured" << RESET;
+                    else
+                        LOG(ERROR) << BOLDRED << "LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ")" << RESET;
                 }
 
                 // ############################
