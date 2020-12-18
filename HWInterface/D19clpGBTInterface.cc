@@ -36,7 +36,22 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
              }
          }
     */
+    // To be uncommented if crate is used
+    // clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
+    SetConfigMode(pChip, "serial", false);
+    PrintChipMode(pChip);
     ConfigurePSROH(pChip, 5);
+    uint8_t  cPUSMStatus = GetPUSMStatus(pChip);
+    uint16_t cIter = 0, cMaxIter = 2000;
+    while(cPUSMStatus != 18 && cIter < cMaxIter)
+    {
+    LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +cPUSMStatus << RESET;
+    cPUSMStatus = GetPUSMStatus(pChip);
+    cIter++;
+    }
+    if(cPUSMStatus != 18) exit(0);
+    LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
+    // clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", true);
     return true;
 }
 
@@ -76,23 +91,9 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     if(fUseOpticalLink)
     {
         if(fUseCPB)
-        {
-            //Use new Command Processor Block
-            uint8_t cWorkerId = 16, cFunctionId = 3;
-            std::vector<uint32_t> cCommandVector;
-            cCommandVector.clear();
-            cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pAddress << 0);
-            cCommandVector.push_back(pValue << 0);
-            fBoardFW->WriteCommandCPB(pChip, cCommandVector);
-            std::vector<uint32_t> cReplyVector = fBoardFW->ReadReplyCPB(pChip, 10);
-            cReadBack = cReplyVector[7] & 0xFF;
-        }
+            return fBoardFW->WriteLpGBTRegister(pAddress, pValue, pVerifLoop);
         else
-        {
-            //Use standard uDTC IC block
-            fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
-            cReadBack = ReadReg(pChip, pAddress);
-        }
+            return fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
     }
     else
     {
@@ -101,47 +102,24 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
         fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
 #endif
     }
-    if(!pVerifLoop) return true;
+    return true;
+    //FIXME USB interface needs verification loop here or library ? 
+    if(!pVerifLoop) 
     // Verify success of Write
-    uint8_t cIter = 0, cMaxIter = 50;
-    while(cReadBack != pValue && cIter < cMaxIter)
+    if(!fUseOpticalLink)
     {
-        // Now pick one configuration mode
-        if(fUseOpticalLink)
+        uint8_t cIter = 0, cMaxIter = 50;
+        while(cReadBack != pValue && cIter < cMaxIter)
         {
-            if(fUseCPB)
-            {
-		        fBoardFW->ResetCPB(pChip);                
-                //Use new Command Processor Block
-                uint8_t cWorkerId = 16, cFunctionId = 3;
-                std::vector<uint32_t> cCommandVector;
-                cCommandVector.clear();
-                cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pAddress << 0);
-                cCommandVector.push_back(pValue << 0);
-                fBoardFW->WriteCommandCPB(pChip, cCommandVector);
-                std::vector<uint32_t> cReplyVector = fBoardFW->ReadReplyCPB(pChip, 10);
-                cReadBack = cReplyVector[7] & 0xFF;
-            }
-            else
-            {
-                //Use standard uDTC IC block
-                fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
-                cReadBack = ReadReg(pChip, pAddress);
-            }
-        }
-        else
-        {
+            // Now pick one configuration mode
             // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-            fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
+            cReadBack = fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
 #endif
+            cIter++;
         }
-        cIter++;
-    }
-    if(cIter == cMaxIter)
-    {
-        LOG(INFO) << BOLDRED << "REGISTER WRITE MISMATCH" << RESET;
-        throw std::runtime_error(std::string("lpGBT register write mismatch"));
+        if(cIter == cMaxIter)
+            throw std::runtime_error(std::string("lpGBT register write mismatch"));
     }
     return true;
 }
@@ -149,30 +127,20 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
 uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress)
 {
     setBoard(pChip->getBeBoardId());
-    uint16_t cReadBack = 0;
     if(fUseOpticalLink) { 
         if(fUseCPB)
-        {
-            uint8_t cWorkerId = 16, cFunctionId = 2;
-            std::vector<uint32_t> cCommandVector;
-            cCommandVector.clear();
-            cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pAddress << 0);
-            fBoardFW->WriteCommandCPB(pChip, cCommandVector);
-            auto cReplyVector = fBoardFW->ReadReplyCPB(pChip, 10);
-            cReadBack = cReplyVector[7] & 0xFF;
-        }
+            return fBoardFW->ReadLpGBTRegister(pAddress);
         else
-            cReadBack = fBoardFW->ReadOptoLinkRegister(pChip, pAddress);
+            return fBoardFW->ReadOptoLinkRegister(pChip, pAddress);
     }
     else
     {
 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-        cReadBack = fTC_PSROH.read_i2c(pAddress);
+        return fTC_PSROH.read_i2c(pAddress);
 #endif
     }
-    LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pAddress << std::dec << "]" << RESET;
-    return cReadBack;
+    return 0;
 }
 
 bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerifLoop)
