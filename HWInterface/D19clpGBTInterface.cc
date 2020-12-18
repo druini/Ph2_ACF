@@ -34,7 +34,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
              WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
          }
      }
-    ConfigurePSROH(pChip, 10);
+    ConfigurePSROH(pChip, 5);
     return true;
 }
 
@@ -540,8 +540,8 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     } while(cIter < cMaxIter && !cSuccess);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "I2C Transaction FAILED" << RESET;
-        throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
+        //LOG(INFO) << BOLDRED << "I2C Transaction FAILED" << RESET;
+        //throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
     }
     return cSuccess;
 }

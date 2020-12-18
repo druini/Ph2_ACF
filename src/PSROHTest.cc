@@ -159,12 +159,12 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
     {
-        if(cmd.foundOption("internal-pattern") && cmd.foundOption("backend-file")) 
+        if(cmd.foundOption("internal-pattern")) 
         { 
             cPSROHTester.InjectULInternalPattern(cInternalPattern32);
             cPSROHTester.CheckULPattern(false); 
         }
-        else if(cmd.foundOption("external-pattern") && cmd.foundOption("control-file"))
+        else if(cmd.foundOption("external-pattern"))
         {
             cPSROHTester.InjectULExternalPattern(cExternalPattern);
             cPSROHTester.CheckULPattern(true); 

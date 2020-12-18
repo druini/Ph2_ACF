@@ -90,7 +90,7 @@ bool OTHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
   bool cTestSuccess = true;
   for(auto cBoard: *fDetectorContainer)
   {
-    if(cBoard->getId() == 0) continue; 
+    if(cBoard->getId() == 50) continue; 
     for(auto cOpticalGroup: *cBoard)
     {
       D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
@@ -114,7 +114,6 @@ void OTHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t pMi
 #ifdef __USE_ROOT__
   for(auto cBoard: *fDetectorContainer)
   {
-    if(cBoard->getId() == 0) continue; 
     if(cBoard->getId() == 50) continue; 
     for(auto cOpticalGroup: *cBoard)
     {
