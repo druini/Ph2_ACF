@@ -27,7 +27,7 @@ THISROOTSH=${ROOTSYS}/bin/thisroot.sh
 unset THISROOTSH
 
 if ! command -v root &> /dev/null; then
-  printf "%s\n" ">> ERROR -- CERN ROOT is not available; please install it before using Ph2_ACF (see README)."
+  printf "%s\n" ">> ERROR -- CERN ROOT is not available; please install it before using Ph2_ACF (see README)"
   return 1
 fi
 
