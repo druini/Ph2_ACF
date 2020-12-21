@@ -28,7 +28,6 @@
 // #############
 // # CONSTANTS #
 // #############
-#define DEEPSLEEP 100000     // [microseconds]
 #define READOUTSLEEP 50      // [microseconds]
 #define NWORDS_DDR3 4        // Number of IPbus words in a DDR3 word
 #define NLANE_HYBRID 4       // Number of lanes per hybrid
@@ -253,7 +252,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // ###################################
     void     ResetOptoLinkSlowControl();
     void     StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady);
-    void     ResetOptoLink() override {}
+    void     ResetOptoLink() override;
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
     bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
     uint32_t ReadOptoLinkRegister(uint32_t pAddress) override;

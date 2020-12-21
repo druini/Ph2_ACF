@@ -10,6 +10,7 @@
 #ifndef RD53lpGBTInterface_H
 #define RD53lpGBTInterface_H
 
+#include "../Utils/RD53Shared.h"
 #include "lpGBTInterface.h"
 
 // ##########################
@@ -17,7 +18,7 @@
 // ##########################
 namespace RD53lpGBTconstants
 {
-const uint8_t MAXATTEMPTS  = 100;  // Maximum number of attempts
+const uint8_t MAXATTEMPTS  = 10;   // Maximum number of attempts
 const uint8_t LPGBTADDRESS = 0x70; // LpGBT chip address
 }
 

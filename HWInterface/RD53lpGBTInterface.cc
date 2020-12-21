@@ -20,23 +20,38 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
 {
     this->setBoard(pChip->getBeBoardId());
 
+    // #########################
+    // # Configure PLL and DLL #
+    // #########################
+    RD53lpGBTInterface::WriteChipReg(pChip, "LDConfigH", 1 << 5, false); // bit 7: enable pre-emphasis, bits 0:6: high-speed line driver modulation current -> 32*137uA
+    RD53lpGBTInterface::WriteChipReg(pChip, "EPRXLOCKFILTER", 0x55, false);
+    RD53lpGBTInterface::WriteChipReg(pChip, "EPRXDllConfig", 1 << 6 | 1 << 4 | 1 << 2, false);
+    RD53lpGBTInterface::WriteChipReg(pChip, "PSDllConfig", 5 << 4 | 1 << 2 | 1, false);
+    RD53lpGBTInterface::WriteChipReg(pChip, "POWERUP2", 1 << 2 | 1 << 1, false);
+
     uint8_t      PUSMStatus = RD53lpGBTInterface::GetPUSMStatus(pChip);
     unsigned int nAttempts  = 0;
     while((PUSMStatus != 18) && (nAttempts < RD53lpGBTconstants::MAXATTEMPTS))
     {
         PUSMStatus = RD53lpGBTInterface::GetPUSMStatus(pChip);
+        usleep(RD53Shared::DEEPSLEEP);
         nAttempts++;
     }
 
-    if(PUSMStatus != 18) return false;
+    if(PUSMStatus != 18)
+    {
+        LOG(ERROR) << BOLDRED << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[PUSMStatus] << RESET;
+        return false;
+    }
 
     // ###############################
     // # In case of not efused LpGBT #
     // ###############################
     ChipRegMap& lpGBTRegMap = pChip->getRegMap();
     for(const auto& cRegItem: lpGBTRegMap)
-        // if((cRegItem.second.fAddress < 0x13C) && (cRegItem.second.fPrmptCfg == true)) RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
-      if(cRegItem.second.fAddress < 0x13C) RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue); // @TMP@
+        if((cRegItem.second.fAddress < 0x13C) && (cRegItem.second.fPrmptCfg == true)) RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+
+    RD53lpGBTInterface::PrintChipMode(pChip);
 
     return true;
 }
@@ -364,22 +379,22 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
  {
      switch((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4)
      {
-     case 0: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Off" << RESET; break;
-     case 1: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex TX" << RESET; break;
-     case 2: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex RX" << RESET; break;
-     case 3: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Transceiver" << RESET; break;
-     case 4: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Off" << RESET; break;
-     case 5: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex TX" << RESET; break;
-     case 6: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex RX" << RESET; break;
-     case 7: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 5Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Transceiver" << RESET; break;
-     case 8: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Off" << RESET; break;
-     case 9: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex TX" << RESET; break;
-     case 10: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Simplex RX" << RESET; break;
-     case 11: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC5 __ lpGBT Mode : Transceiver" << RESET; break;
-     case 12: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Off" << RESET; break;
-     case 13: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex TX" << RESET; break;
-    case 14: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Simplex RX" << RESET; break;
-    case 15: LOG(INFO) << GREEN << "LpGBT CHIP INFO __ Tx Data Rate : 10Gbps __ TxEncoding : FEC12 __ lpGBT Mode : Transceiver" << RESET; break;
+     case 0: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 5Gbps; TxEncoding = FEC5; LpGBT Mode = Off" << RESET; break;
+     case 1: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 5Gbps; TxEncoding = FEC5; LpGBT Mode = Simplex TX" << RESET; break;
+     case 2: LOG(INFO) << GREEN << "LpGBT CHIP INFO; Tx Data Rate = 5Gbps; TxEncoding = FEC5; LpGBT Mode = Simplex RX" << RESET; break;
+     case 3: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 5Gbps; TxEncoding = FEC5; LpGBT Mode = Transceiver" << RESET; break;
+     case 4: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 5Gbps; TxEncoding = FEC12; LpGBT Mode = Off" << RESET; break;
+     case 5: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 5Gbps; TxEncoding = FEC12; LpGBT Mode = Simplex TX" << RESET; break;
+     case 6: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 5Gbps; TxEncoding = FEC12; LpGBT Mode = Simplex RX" << RESET; break;
+     case 7: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 5Gbps; TxEncoding = FEC12; LpGBT Mode = Transceiver" << RESET; break;
+     case 8: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 10Gbps; TxEncoding = FEC5; LpGBT Mode = Off" << RESET; break;
+     case 9: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 10Gbps; TxEncoding = FEC5; LpGBT Mode = Simplex TX" << RESET; break;
+     case 10: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 10Gbps; TxEncoding = FEC5; LpGBT Mode = Simplex RX" << RESET; break;
+     case 11: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 10Gbps; TxEncoding = FEC5; LpGBT Mode = Transceiver" << RESET; break;
+     case 12: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 10Gbps; TxEncoding = FEC12; LpGBT Mode = Off" << RESET; break;
+     case 13: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 10Gbps; TxEncoding = FEC12; LpGBT Mode = Simplex TX" << RESET; break;
+     case 14: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 10Gbps; TxEncoding = FEC12; LpGBT Mode = Simplex RX" << RESET; break;
+     case 15: LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = 10Gbps; TxEncoding = FEC12; LpGBT Mode = Transceiver" << RESET; break;
     }
 }
 

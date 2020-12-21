@@ -110,15 +110,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ##################
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
-    usleep(DEEPSLEEP);
-
-    // ##############################
-    // # Initialize clock generator #
-    // ##############################
-    LOG(INFO) << GREEN << "Initializing clock generator (CDCE62005)..." << RESET;
-    RD53FWInterface::InitializeClockGenerator("320");
-    RD53FWInterface::ReadClockGenerator();
-    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+    usleep(RD53Shared::DEEPSLEEP);
 
     // ################################
     // # Enabling hybrids and chips   #
@@ -140,6 +132,24 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
     if(cVecReg.size() != 0) RegManager::WriteStackReg(cVecReg);
 
+    // ###################################
+    // # Reset optical link slow control #
+    // ###################################
+    uint32_t txIsReady, rxIsReady;
+    RD53FWInterface::ResetOptoLinkSlowControl();
+    RD53FWInterface::StatusOptoLinkSlowControl(txIsReady, rxIsReady);
+
+    // ##############################
+    // # Initialize clock generator #
+    // ##############################
+    LOG(INFO) << GREEN << "Initializing clock generator (CDCE62005)..." << RESET;
+    if((txIsReady == true) && (rxIsReady == true))
+        RD53FWInterface::InitializeClockGenerator("320");
+    else
+        RD53FWInterface::InitializeClockGenerator("160");
+    RD53FWInterface::ReadClockGenerator();
+    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
     // ###########################
     // # Print clock measurement #
     // ###########################
@@ -151,14 +161,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ######################
     // # Reset optical link #
     // ######################
-    uint32_t txIsReady;
-    uint32_t rxIsReady;
-    uint32_t txStatus;
-    uint32_t rxStatus;
-    uint32_t mgtStatus;
-    RD53FWInterface::ResetOptoLinkSlowControl();
-    RD53FWInterface::StatusOptoLinkSlowControl(txIsReady, rxIsReady);
-    RD53FWInterface::StatusOptoLink(txStatus, rxStatus, mgtStatus);
+    RD53FWInterface::ResetOptoLink();
 }
 
 void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
@@ -404,7 +407,7 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
                         RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::CDRCONFIG_ADDR, RD53Constants::CDRCONFIG_640Mbit).getFrames(), -1);
 
                     RD53FWInterface::WriteChipCommand(initSequence, hybrid_id);
-                    usleep(DEEPSLEEP);
+                    usleep(RD53Shared::DEEPSLEEP);
 
                     // #################################
                     // # Check if all lanes are active #
@@ -510,7 +513,7 @@ void RD53FWInterface::TurnOnFMC()
 {
     RegManager::WriteStackReg({{"system.ctrl_2.fmc_l12_pwr_en", 1}, {"system.ctrl_2.fmc_l8_pwr_en", 1}, {"system.ctrl_2.fmc_pg_c2m", 1}});
 
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
 }
 
 void RD53FWInterface::ResetBoard()
@@ -534,7 +537,7 @@ void RD53FWInterface::ResetBoard()
     WriteReg("user.ctrl_regs.reset_reg.fmc_pll_rst", 1);
     WriteReg("user.ctrl_regs.reset_reg.cmd_rst", 0);
 
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
 
     WriteReg("user.ctrl_regs.reset_reg.i2c_rst", 0);
     WriteReg("user.ctrl_regs.reset_reg.aurora_pma_rst", 1);
@@ -544,7 +547,7 @@ void RD53FWInterface::ResetBoard()
     // # DDR3 #
     // ########
     LOG(INFO) << YELLOW << "Waiting for DDR3 calibration..." << RESET;
-    while(ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done") == false) usleep(DEEPSLEEP);
+    while(ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done") == false) usleep(RD53Shared::DEEPSLEEP);
 
     LOG(INFO) << BOLDBLUE << "\t--> DDR3 calibration done" << RESET;
 }
@@ -1319,7 +1322,7 @@ void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
 void RD53FWInterface::ResetOptoLinkSlowControl()
 {
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_reset", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_rx_reset", 0x1}});
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_reset", 0x0}, {"user.ctrl_regs.lpgbt_1.ic_rx_reset", 0x0}});
 }
 
@@ -1339,18 +1342,22 @@ void RD53FWInterface::StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& r
         LOG(WARNING) << GREEN << "Optical link rx slow control status: " << BOLDRED << "not ready" << RESET;
 }
 
+void RD53FWInterface::ResetOptoLink()
+{
+    RegManager::WriteReg("user.ctrl_regs.lpgbt_1.mgt_reset", 0x1);
+    usleep(RD53Shared::DEEPSLEEP);
+    RegManager::WriteReg("user.ctrl_regs.lpgbt_1.mgt_reset", 0x0);
+}
+
 void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)
 {
     txStatus  = ReadReg("user.stat_regs.lpgbt_fpga.tx_ready");
     rxStatus  = ReadReg("user.stat_regs.lpgbt_fpga.rx_ready");
     mgtStatus = ReadReg("user.stat_regs.lpgbt_fpga.mgt_ready");
 
-    LOG(INFO) << GREEN << "Optical link tx status: 0x" << BOLDYELLOW << std::hex << std::uppercase << txStatus << RESET << GREEN << " i.e.: " << BOLDYELLOW << std::bitset<20>(txStatus) << std::dec
-              << RESET;
-    LOG(INFO) << GREEN << "Optical link rx status: 0x" << BOLDYELLOW << std::hex << std::uppercase << rxStatus << RESET << GREEN << " i.e.: " << BOLDYELLOW << std::bitset<20>(rxStatus) << std::dec
-              << RESET;
-    LOG(INFO) << GREEN << "Optical link mgt status: 0x" << BOLDYELLOW << std::hex << std::uppercase << mgtStatus << RESET << GREEN << " i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << std::dec
-              << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip tx:  " << BOLDYELLOW << txStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(txStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip rx:  " << BOLDYELLOW << rxStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(rxStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << mgtStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
 }
 
 bool RD53FWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop)
@@ -1566,7 +1573,7 @@ bool RD53FWInterface::I2cCmdAckWait(int nAttempts)
     {
         status = ReadReg("user.stat_regs.global_reg.i2c_acq_err");
         if(status == I2CcmdAckGOOD) return true;
-        usleep(DEEPSLEEP);
+        usleep(RD53Shared::DEEPSLEEP);
     }
 
     return false;
@@ -1577,23 +1584,23 @@ void RD53FWInterface::WriteI2C(std::vector<uint32_t>& data)
     const uint16_t I2CwriteREQ = 0x1;
 
     WriteReg("ctrl.board.i2c_req", 0); // Disable
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
     WriteReg("ctrl.board.i2c_reset", 1);
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
     WriteReg("ctrl.board.i2c_reset", 0);
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
     WriteReg("ctrl.board.i2c_fifo_rx_dsel", 1);
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
     WriteReg("ctrl.board.i2c_req", I2CwriteREQ);
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
 
     /* bool outcome = */ RegManager::WriteBlockReg("ctrl.board.i2c_fifo_tx", data);
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
 
     if(I2cCmdAckWait(20) == false) throw Exception("[RD53FWInterface::WriteI2C] I2C transaction error");
 
     WriteReg("ctrl.board.i2c_req", 0); // Disable
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
 }
 
 void RD53FWInterface::ReadI2C(std::vector<uint32_t>& data)
@@ -1601,18 +1608,18 @@ void RD53FWInterface::ReadI2C(std::vector<uint32_t>& data)
     const uint16_t I2CreadREQ = 0x03;
 
     WriteReg("ctrl.board.i2c_req", 0); // Disable
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
     WriteReg("ctrl.board.i2c_reset", 1);
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
     WriteReg("ctrl.board.i2c_reset", 0);
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
     WriteReg("ctrl.board.i2c_fifo_rx_dsel", 1);
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
     WriteReg("ctrl.board.i2c_req", I2CreadREQ);
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
 
     uint32_t sizeI2Cfifo = ReadReg("stat.board.i2c_fifo_rx_dcnt");
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
 
     int size2read = 0;
     if(sizeI2Cfifo > data.size())
@@ -1624,7 +1631,7 @@ void RD53FWInterface::ReadI2C(std::vector<uint32_t>& data)
         size2read = sizeI2Cfifo;
 
     data = RegManager::ReadBlockReg("ctrl.board.i2c_fifo_rx", size2read);
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
 
     if(RD53FWInterface::I2cCmdAckWait(20) == false) throw Exception("[RD53FWInterface::ReadI2C] I2C transaction error");
 
@@ -1722,11 +1729,11 @@ void RD53FWInterface::ConfigureClockSi5324()
 float RD53FWInterface::ReadHybridTemperature(int hybridId)
 {
     WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
     uint32_t sensor1 = ReadReg("user.stat_regs.i2c_block_1.NTC1");
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
     uint32_t sensor2 = ReadReg("user.stat_regs.i2c_block_1.NTC2");
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
 
     auto value = calcTemperature(sensor1, sensor2);
     LOG(INFO) << BOLDBLUE << "\t--> Hybrid temperature: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
@@ -1737,11 +1744,11 @@ float RD53FWInterface::ReadHybridTemperature(int hybridId)
 float RD53FWInterface::ReadHybridVoltage(int hybridId)
 {
     WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
     uint32_t senseVDD = ReadReg("user.stat_regs.i2c_block_2.vdd_sense");
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
     uint32_t senseGND = ReadReg("user.stat_regs.i2c_block_2.gnd_sense");
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
 
     auto value = calcVoltage(senseVDD, senseGND);
     LOG(INFO) << BOLDBLUE << "\t--> Hybrid voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V (corresponds to half VOUT_dig_ShuLDO of the chip)" << std::setprecision(-1)

@@ -276,7 +276,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // # Configuring Inner Tracker hardware #
             // ######################################
             LOG(INFO) << BOLDBLUE << "\t--> Found an Inner Tracker board" << RESET;
-            LOG(INFO) << GREEN << "Configuring Board: " << RESET << BOLDYELLOW << +cBoard->getId() << RESET;
+            LOG(INFO) << GREEN << "Configuring Board: " << BOLDYELLOW << +cBoard->getId() << RESET;
             fBeBoardInterface->ConfigureBoard(cBoard);
 
             // ###################
@@ -306,10 +306,17 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     LOG(INFO) << GREEN << "Initializing communication to low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
 
                     if(static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ConfigureChip(cOpticalGroup->flpGBT) == true)
-                        LOG(INFO) << GREEN << "LpGBT chip configured" << RESET;
+                        LOG(INFO) << BOLDBLUE << "\t--> LpGBT chip configured" << RESET;
                     else
-                        LOG(ERROR) << BOLDRED << "LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ")" << RESET;
+                        LOG(ERROR) << BOLDRED << "\t--> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ")" << RESET;
                 }
+
+            // #######################
+            // # Status optical link #
+            // #######################
+            uint32_t txStatus, rxStatus, mgtStatus;
+            LOG(INFO) << GREEN << "Checking status of the optical links" << RESET;
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(txStatus, rxStatus, mgtStatus);
 
             // ####################################
             // # Check AURORA lock on data stream #

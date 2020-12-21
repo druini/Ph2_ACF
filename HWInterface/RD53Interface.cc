@@ -150,7 +150,7 @@ void RD53Interface::InitRD53Aurora(ReadoutChip* pChip, int nActiveLanes)
         RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
         RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), 0x4));
 
-        usleep(DEEPSLEEP);
+        usleep(RD53Shared::DEEPSLEEP);
     } while(RD53Interface::ReadRD53Reg(pChip, "VCAL_HIGH").size() == 0);
     RD53Interface::sendCommand(pChip, RD53Cmd::ECR());
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
@@ -178,7 +178,7 @@ void RD53Interface::InitRD53Aurora(ReadoutChip* pChip, int nActiveLanes)
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, true); // 0x30 = reset Aurora AND Serializer
     RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), 0x01));
 
-    usleep(DEEPSLEEP);
+    usleep(RD53Shared::DEEPSLEEP);
 }
 
 bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerifLoop)
