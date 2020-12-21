@@ -116,7 +116,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // # Initialize clock generator #
     // ##############################
     LOG(INFO) << GREEN << "Initializing clock generator (CDCE62005)..." << RESET;
-    RD53FWInterface::InitializeClockGenerator("320");
+    RD53FWInterface::InitializeClockGenerator("160");
     RD53FWInterface::ReadClockGenerator();
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
