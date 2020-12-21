@@ -63,7 +63,6 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor << BOLDBLUE << " -- date (yy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/"
               << cFWday << BOLDBLUE << " -- time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
 
-    std::stringstream myString;
     RD53FWInterface::ChipReset();
     RD53FWInterface::ChipReSync();
     RD53FWInterface::ResetFastCmdBlk();
@@ -85,7 +84,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
             else if(it.first.find("ext_clk_en") != std::string::npos)
             {
                 cfgDIO5.enable     = it.second;
-                cfgDIO5.ch_out_en  = 0x00;
+                cfgDIO5.ch_out_en  = 0x0;
                 cfgDIO5.ext_clk_en = it.second;
             }
             else
@@ -94,7 +93,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::External)
                 {
                     cfgDIO5.enable    = true;
-                    cfgDIO5.ch_out_en = 0x00;
+                    cfgDIO5.ch_out_en = 0x0;
                 }
                 else if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::TLU)
                 {
@@ -148,6 +147,14 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t gtxClk   = ReadReg("user.stat_regs.gtx_refclk_rate");
     LOG(INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz" << RESET;
     LOG(INFO) << GREEN << "GTX receiver clock frequency (should be ~160 MHz): " << BOLDYELLOW << gtxClk / 1000. << " MHz" << RESET;
+
+    // ######################
+    // # Reset optical link #
+    // ######################
+    uint32_t isReady;
+    uint32_t isFIFOempty;
+    RD53FWInterface::ResetOptoLink();
+    RD53FWInterface::StatusOptoLink(isReady, isFIFOempty);
 
     // ##############################
     // # AURORA lock on data stream #
@@ -1320,29 +1327,32 @@ void RD53FWInterface::StatusOptoLink(uint32_t& isReady, uint32_t& isFIFOempty)
 {
     isReady     = ReadReg("user.stat_regs.lpgbt_1.ic_tx_ready");
     isFIFOempty = ReadReg("user.stat_regs.lpgbt_1.ic_rx_empty");
+
+    if(isReady == true)
+        LOG(INFO) << GREEN << "Optical link status: " << BOLDYELLOW << "ready" << RESET;
+    else
+        LOG(WARNING) << GREEN << "Optical link status: " << BOLDRED << "not ready" << RESET;
 }
 
 void RD53FWInterface::ResetOptoLink()
 {
-    RegManager::WriteStackReg({{"user.ctrl_regs.Optical_link.ic_tx_reset", 0x01}, {"user.ctrl_regs.Optical_link.ic_rx_reset", 0x01}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_reset", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_rx_reset", 0x1}});
     usleep(DEEPSLEEP);
-    RegManager::WriteStackReg({{"user.ctrl_regs.Optical_link.ic_tx_reset", 0x00}, {"user.ctrl_regs.Optical_link.ic_rx_reset", 0x00}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_reset", 0x0}, {"user.ctrl_regs.lpgbt_1.ic_rx_reset", 0x0}});
 }
 
 bool RD53FWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop)
 {
-    const uint8_t lpGBTAddress = 0x70;
-
     // Config
     RegManager::WriteStackReg({{"user.ctrl_regs.Optical_link_cnfg1.ic_tx_fifo_din", pData},
-                               {"user.ctrl_regs.Optical_link_cnfg1.ic_chip_addr_tx", lpGBTAddress},
+          {"user.ctrl_regs.Optical_link_cnfg1.ic_chip_addr_tx", RD53lpGBTconstants::LPGBTADDRESS},
                                {"user.ctrl_regs.Optical_link_cnfg2.ic_reg_addr_tx", pAddress}});
 
     // Perform operation
-    RegManager::WriteStackReg({{"user.ctrl_regs.Optical_link.ic_tx_fifo_wr_en", 0x01},
-                               {"user.ctrl_regs.Optical_link.ic_tx_fifo_wr_en", 0x00},
-                               {"user.ctrl_regs.Optical_link.ic_send_wr_cmd", 0x01},
-                               {"user.ctrl_regs.Optical_link.ic_send_wr_cmd", 0x00}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.Optical_link.ic_tx_fifo_wr_en", 0x1},
+                               {"user.ctrl_regs.Optical_link.ic_tx_fifo_wr_en", 0x0},
+                               {"user.ctrl_regs.Optical_link.ic_send_wr_cmd", 0x1},
+                               {"user.ctrl_regs.Optical_link.ic_send_wr_cmd", 0x0}});
 
     if(pVerifLoop == true)
     {
@@ -1359,22 +1369,18 @@ bool RD53FWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, b
 
 uint32_t RD53FWInterface::ReadOptoLinkRegister(uint32_t pAddress)
 {
-    const uint8_t lpGBTAddress = 0x70;
-
     // Config
-    RegManager::WriteStackReg({{"user.ctrl_regs.Optical_link_cnfg1.ic_chip_addr_tx", lpGBTAddress},
-                               {"user.ctrl_regs.Optical_link_cnfg2.ic_reg_addr_tx", pAddress},
-                               {"user.ctrl_regs.Optical_link_cnfg2.ic_nb_of_words_to_read_tx", 0x01}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.Optical_link_cnfg1.ic_chip_addr_tx", RD53lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.Optical_link_cnfg2.ic_reg_addr_tx", pAddress}});
 
     // Perform operation
     RegManager::WriteStackReg(
-        {{"user.ctrl_regs.Optical_link_cnfg2.ic_nb_of_words_to_read_tx", 0x01}, {"user.ctrl_regs.Optical_link.ic_send_rd_cmd", 0x01}, {"user.ctrl_regs.Optical_link.ic_send_rd_cmd", 0x00}});
+        {{"user.ctrl_regs.Optical_link_cnfg2.ic_nb_of_words_to_read_tx", 0x1}, {"user.ctrl_regs.Optical_link.ic_send_rd_cmd", 0x1}, {"user.ctrl_regs.Optical_link.ic_send_rd_cmd", 0x0}});
 
     // Actual readback one word at a time
-    uint32_t chipAddrRx  = ReadReg("user.stat_regs.lpgbt_1.ic_chip_addr_rx"); // Should be the same as lpGBTAddress
+    uint32_t chipAddrRx  = ReadReg("user.stat_regs.lpgbt_1.ic_chip_addr_rx"); // Should be the same as RD53lpGBTconstants::LPGBTADDRESS
     uint32_t regAddrRx   = ReadReg("user.stat_regs.lpgbt_2.ic_reg_addr_rx");
     uint32_t nWords2Read = ReadReg("user.stat_regs.lpgbt_2.ic_nb_of_words_rx");
-    RegManager::WriteStackReg({{"user.ctrl_regs.Optical_link.ic_rx_fifo_rd_en", 0x01}, {"user.ctrl_regs.Optical_link.ic_rx_fifo_rd_en", 0x00}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.Optical_link.ic_rx_fifo_rd_en", 0x1}, {"user.ctrl_regs.Optical_link.ic_rx_fifo_rd_en", 0x0}});
     uint32_t cRead         = ReadReg("user.stat_regs.lpgbt_1.ic_rx_fifo_dout");
     uint32_t isRxFIFOempty = ReadReg("user.stat_regs.lpgbt_1.ic_rx_empty");
 
@@ -1526,8 +1532,8 @@ std::vector<RD53FWInterface::Event> RD53FWInterface::decodedEvents;
 // ################################################
 bool RD53FWInterface::I2cCmdAckWait(unsigned int nAttempts)
 {
-    const uint16_t I2CcmdAckGOOD = 0x01;
-    uint16_t       status        = 0x02; // 0x02 = I2CcmdAckBAD
+    const uint16_t I2CcmdAckGOOD = 0x1;
+    uint16_t       status        = 0x2; // 0x2 = I2CcmdAckBAD
     uint16_t       cLoop         = 0;
 
     while(++cLoop < nAttempts)
@@ -1542,7 +1548,7 @@ bool RD53FWInterface::I2cCmdAckWait(unsigned int nAttempts)
 
 void RD53FWInterface::WriteI2C(std::vector<uint32_t>& data)
 {
-    const uint16_t I2CwriteREQ = 0x01;
+    const uint16_t I2CwriteREQ = 0x1;
 
     WriteReg("ctrl.board.i2c_req", 0); // Disable
     usleep(DEEPSLEEP);

@@ -297,18 +297,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ########################
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ConfigureFromXML(cBoard);
 
-            // ######################
-            // # Reset optical link #
-            // ######################
-            uint32_t isReady;
-            uint32_t isFIFOempty;
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetOptoLink();
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(isReady, isFIFOempty);
-            if(isReady == true)
-                LOG(INFO) << GREEN << "Optical link status: " << BOLDYELLOW << "ready" << RESET;
-            else
-                LOG(WARNING) << GREEN << "Optical link status: " << BOLDRED << "not ready" << RESET;
-
             // ###################
             // # Configure chips #
             // ###################

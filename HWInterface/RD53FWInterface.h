@@ -18,6 +18,7 @@
 #include "../Utils/RD53RunProgress.h"
 #include "../Utils/RD53Shared.h"
 #include "../Utils/easylogging++.h"
+#include "RD53lpGBTInterface.h"
 #include "BeBoardFWInterface.h"
 #include "D19cFpgaConfig.h"
 #include <uhal/uhal.hpp>
