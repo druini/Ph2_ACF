@@ -268,7 +268,7 @@ class BeBoardFWInterface : public RegManager
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    virtual void     StatusOptoLink(uint32_t& isReady, uint32_t& isFIFOempty)                          = 0;
+    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)       = 0;
     virtual void     ResetOptoLink()                                                                   = 0;
     virtual bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) = 0;
     virtual uint32_t ReadOptoLinkRegister(uint32_t pAddress)                                           = 0;

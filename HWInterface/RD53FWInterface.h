@@ -111,6 +111,11 @@ class RD53FWInterface : public BeBoardFWInterface
     void     ChipReset() override;
     void     ChipReSync() override;
 
+    // ####################################
+    // # Check AURORA lock on data stream #
+    // ####################################
+    void CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
+
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
     // #############################################
@@ -243,14 +248,13 @@ class RD53FWInterface : public BeBoardFWInterface
 
     FastCommandsConfig* getLocalCfgFastCmd() { return &localCfgFastCmd; }
 
-    // ############################
-    // # Read/Write Optical Group #
-    // ############################
-    void     StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady);
+    // ###################################
+    // # Read/Write Status Optical Group #
+    // ###################################
     void     ResetOptoLinkSlowControl();
-    void     StatusOptoLink2(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus);
-    void     StatusOptoLink(uint32_t& isReady, uint32_t& isFIFOempty) override {}
+    void     StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady);
     void     ResetOptoLink() override {}
+    void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
     bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
     uint32_t ReadOptoLinkRegister(uint32_t pAddress) override;
 
@@ -274,7 +278,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // ################################################
     // # I2C block for programming peripheral devices #
     // ################################################
-    bool I2cCmdAckWait(unsigned int trials);
+    bool I2cCmdAckWait(int nAttempts);
     void WriteI2C(std::vector<uint32_t>& data);
     void ReadI2C(std::vector<uint32_t>& data);
     void ConfigureClockSi5324();
@@ -303,7 +307,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void                  ConfigureFastCommands(const FastCommandsConfig* config = nullptr);
     void                  ConfigureDIO5(const DIO5Config* config);
     void                  SendBoardCommand(const std::string& cmd_reg);
-    bool                  CheckChipCommunication();
     void                  InitHybridByHybrid(const Ph2_HwDescription::BeBoard* pBoard);
     std::vector<uint16_t> GetInitSequence(const unsigned int type);
     uint32_t              GetHybridEnabledChips(const Ph2_HwDescription::Hybrid* pHybrid);

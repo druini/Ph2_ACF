@@ -297,25 +297,29 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ########################
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ConfigureFromXML(cBoard);
 
-            // ###################
-            // # Configure chips #
-            // ###################
+            // ########################
+            // # Configure LpGBT chip #
+            // ########################
             for(auto cOpticalGroup: *cBoard)
-            {
-                // ########################
-                // # Configure LpGBT chip #
-                // ########################
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
+                    LOG(INFO) << GREEN << "Initializing communication to low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
+
                     if(static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ConfigureChip(cOpticalGroup->flpGBT) == true)
                         LOG(INFO) << GREEN << "LpGBT chip configured" << RESET;
                     else
-                        LOG(ERROR) << BOLDRED << "LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ")" << RESET;
+                        LOG(ERROR) << BOLDRED << "LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ")" << RESET;
                 }
 
-                // ############################
-                // # Configure frontend chips #
-                // ############################
+            // ####################################
+            // # Check AURORA lock on data stream #
+            // ####################################
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard);
+
+            // ############################
+            // # Configure frontend chips #
+            // ############################
+            for(auto cOpticalGroup: *cBoard)
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     LOG(INFO) << GREEN << "Initializing communication to Hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
@@ -330,7 +334,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
                     }
                 }
-            }
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
         }
