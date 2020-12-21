@@ -315,7 +315,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // # Status optical link #
             // #######################
             uint32_t txStatus, rxStatus, mgtStatus;
-            LOG(INFO) << GREEN << "Checking status of the optical links" << RESET;
+            LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(txStatus, rxStatus, mgtStatus);
 
             // ####################################

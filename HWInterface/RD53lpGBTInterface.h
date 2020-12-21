@@ -177,6 +177,8 @@ class RD53lpGBTInterface : public lpGBTInterface
                                                      {16, "RESET_LOGIC_USING_DLL"},
                                                      {17, "WAIT_CHNS_LOCKED"},
                                                      {18, "READY"}};
+
+    std::map<std::string, uint8_t> revertedPUSMStatusMap;
 };
 } // namespace Ph2_HwInterface
 #endif

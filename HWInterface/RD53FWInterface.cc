@@ -1469,21 +1469,21 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
     const uint32_t writeSPI(0x8FA38014);    // Write to SPI
     const uint32_t writeEEPROM(0x8FA38014); // Write to EEPROM
     uint32_t       SPIregSettings[] = {
-        0xEB840320, 0xEB020321, 0xEB840302, 0xEB840303, 0xEB140334, 0x013C0CB5, 0x33041BE6, 0xBD800DF7, 0x20009978, 0xEB840302
-        // 0xEB020320, // OUT0 --> This clock is not used, but it can be used as another GBT clock (160 MHz, LVDS, phase
-        //             // shift 0 deg)
-        // 0xEB020321, // OUT1 --> GBT clock reference: 160 MHz, LVDS, phase shift 0 deg (0xEB820321: 320 MHz, LVDS, phase
-        //             // shift 0 deg)
-        // 0xEB840302, // OUT2 --> DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
-        // 0xEB840303, // OUT3 --> Not used (240 MHz, LVDS, phase shift 0 deg)
-        // 0xEB140334, // OUT4 --> Not used (40 MHz, LVDS, R4.1 = 1, ph4adjc = 0)
-        // 0x10000E75, // Reference selection: 0x10000E75 primary reference, 0x10000EB5 secondary reference
-        // 0x030E02E6, // VCO selection: 0xyyyyyyEy select VCO1 if CDCE reference is 40 MHz, 0xyyyyyyFy select VCO2 if CDCE
-        //             // reference is > 40 MHz
-        // // VCO1, PS = 4, FD = 12, FB = 1, ChargePump 50 uA, Internal Filter, R6.20 = 0, AuxOut = enable, AuxOut = OUT2
-        // 0xBD800DF7, // RC network parameters: C2 = 473.5 pF, R2 = 98.6 kOhm, C1 = 0 pF, C3 = 0 pF, R3 = 5 kOhm etc,
-        //             // SEL_DEL2 = 1, SEL_DEL1 = 1
-        // 0x80001808  // Sync command configuration
+        // 0xEB840320, 0xEB020321, 0xEB840302, 0xEB840303, 0xEB140334, 0x013C0CB5, 0x33041BE6, 0xBD800DF7, 0x20009978
+        0xEB020320, // OUT0 --> This clock is not used, but it can be used as another GBT clock (160 MHz, LVDS, phase
+                    // shift 0 deg)
+        0xEB020321, // OUT1 --> GBT clock reference: 160 MHz, LVDS, phase shift 0 deg (0xEB820321: 320 MHz, LVDS, phase
+                    // shift 0 deg)
+        0xEB840302, // OUT2 --> DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
+        0xEB840303, // OUT3 --> Not used (240 MHz, LVDS, phase shift 0 deg)
+        0xEB140334, // OUT4 --> Not used (40 MHz, LVDS, R4.1 = 1, ph4adjc = 0)
+        0x10000E75, // Reference selection: 0x10000E75 primary reference, 0x10000EB5 secondary reference
+        0x030E02E6, // VCO selection: 0xyyyyyyEy select VCO1 if CDCE reference is 40 MHz, 0xyyyyyyFy select VCO2 if CDCE
+                    // reference is > 40 MHz
+        // VCO1, PS = 4, FD = 12, FB = 1, ChargePump 50 uA, Internal Filter, R6.20 = 0, AuxOut = enable, AuxOut = OUT2
+        0xBD800DF7, // RC network parameters: C2 = 473.5 pF, R2 = 98.6 kOhm, C1 = 0 pF, C3 = 0 pF, R3 = 5 kOhm etc,
+                    // SEL_DEL2 = 1, SEL_DEL1 = 1
+        0x80001808  // Sync command configuration
     };
 
     // 0xyy8403yy --> 240 MHz, LVDS, phase shift   0 deg

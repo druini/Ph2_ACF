@@ -20,25 +20,33 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
 {
     this->setBoard(pChip->getBeBoardId());
 
+    // #####################
+    // # Make reverted map #
+    // #####################
+    for(auto& ele: fPUSMStatusMap) revertedPUSMStatusMap[ele.second] = ele.first;
+
     // #########################
     // # Configure PLL and DLL #
     // #########################
-    RD53lpGBTInterface::WriteChipReg(pChip, "LDConfigH", 1 << 5, false); // bit 7: enable pre-emphasis, bits 0:6: high-speed line driver modulation current -> 32*137uA
+    RD53lpGBTInterface::WriteChipReg(pChip, "LDConfigH", 1 << 5, false);
     RD53lpGBTInterface::WriteChipReg(pChip, "EPRXLOCKFILTER", 0x55, false);
     RD53lpGBTInterface::WriteChipReg(pChip, "EPRXDllConfig", 1 << 6 | 1 << 4 | 1 << 2, false);
     RD53lpGBTInterface::WriteChipReg(pChip, "PSDllConfig", 5 << 4 | 1 << 2 | 1, false);
     RD53lpGBTInterface::WriteChipReg(pChip, "POWERUP2", 1 << 2 | 1 << 1, false);
 
+    // #####################
+    // # Check PUSM status #
+    // #####################
     uint8_t      PUSMStatus = RD53lpGBTInterface::GetPUSMStatus(pChip);
     unsigned int nAttempts  = 0;
-    while((PUSMStatus != 18) && (nAttempts < RD53lpGBTconstants::MAXATTEMPTS))
+    while((PUSMStatus != revertedPUSMStatusMap["READY"]) && (nAttempts < RD53lpGBTconstants::MAXATTEMPTS))
     {
         PUSMStatus = RD53lpGBTInterface::GetPUSMStatus(pChip);
         usleep(RD53Shared::DEEPSLEEP);
         nAttempts++;
     }
 
-    if(PUSMStatus != 18)
+    if(PUSMStatus != revertedPUSMStatusMap["READY"])
     {
         LOG(ERROR) << BOLDRED << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[PUSMStatus] << RESET;
         return false;
