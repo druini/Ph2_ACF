@@ -246,8 +246,11 @@ class RD53FWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    void     StatusOptoLink(uint32_t& isReady, uint32_t& isFIFOempty) override;
-    void     ResetOptoLink() override;
+    void     StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady);
+    void     ResetOptoLinkSlowControl();
+    void     StatusOptoLink2(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus);
+    void     StatusOptoLink(uint32_t& isReady, uint32_t& isFIFOempty) override {}
+    void     ResetOptoLink() override {}
     bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
     uint32_t ReadOptoLinkRegister(uint32_t pAddress) override;
 
@@ -308,7 +311,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // ###################
     // # Clock generator #
     // ###################
-    void InitializeClockGenerator(bool doStoreInEEPROM = false);
+    void InitializeClockGenerator(const std::string& refClockRate = "160", bool doStoreInEEPROM = false);
     void ReadClockGenerator();
 
     FastCommandsConfig localCfgFastCmd;
