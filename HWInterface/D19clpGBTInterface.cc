@@ -22,18 +22,36 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 {
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
-    
-    // //Load register map from configuration file
-    // ChipRegMap clpGBTRegMap = pChip->getRegMap();
-    // for(const auto& cRegItem: clpGBTRegMap)
-    // {
-    //     if(cRegItem.second.fAddress < 0x13c)
-    //     {
-    //         LOG(INFO) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec << "]" << RESET;
-    //         WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
-    //     }
-    // }
+    /*
+         //Load register map from configuration file
+         ChipRegMap clpGBTRegMap = pChip->getRegMap();
+         for(const auto& cRegItem: clpGBTRegMap)
+         {
+             if(cRegItem.second.fAddress < 0x13c)
+             {
+                 LOG(INFO) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec <<
+       "]"
+                           << RESET;
+                 WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+             }
+         }
+    */
+    // To be uncommented if crate is used
+    // clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
+    SetConfigMode(pChip, "serial", false);
+    PrintChipMode(pChip);
     ConfigurePSROH(pChip, 5);
+    uint8_t  cPUSMStatus = GetPUSMStatus(pChip);
+    uint16_t cIter = 0, cMaxIter = 2000;
+    while(cPUSMStatus != 18 && cIter < cMaxIter)
+    {
+    LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +cPUSMStatus << RESET;
+    cPUSMStatus = GetPUSMStatus(pChip);
+    cIter++;
+    }
+    if(cPUSMStatus != 18) exit(0);
+    LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
+    // clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", true);
     return true;
 }
 
@@ -43,20 +61,21 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 
 bool D19clpGBTInterface::WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
-    LOG(DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "\t Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
     return WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
 }
 
-uint16_t D19clpGBTInterface::ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode)
+uint16_t D19clpGBTInterface::ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) 
 { 
-    uint8_t cReadBack = ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress); 
-    LOG(DEBUG) << BOLDYELLOW << "Reading 0x" << std::hex << +cReadBack << std::dec << " from " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
+    uint8_t cReadBack = ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress);
+    LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << cReadBack << std::dec << " from " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
     return cReadBack;
 }
 
 bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop)
 {
     setBoard(pChip->getBeBoardId());
+    uint8_t cReadBack = 0;
     // Make sure the value is not > 8 bits
     if(pValue > 0xFF)
     {
@@ -70,7 +89,12 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     }
     // Now pick one configuration mode
     if(fUseOpticalLink)
-        fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+    {
+        if(fUseCPB)
+            return fBoardFW->WriteLpGBTRegister(pAddress, pValue, pVerifLoop);
+        else
+            return fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+    }
     else
     {
         // use PS-ROH test card USB interface
@@ -78,31 +102,24 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
         fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
 #endif
     }
-    if(!pVerifLoop) return true;
+    return true;
+    //FIXME USB interface needs verification loop here or library ? 
+    if(!pVerifLoop) 
     // Verify success of Write
-    uint8_t cReadBack = ReadReg(pChip, pAddress);
-    uint8_t cIter = 0, cMaxIter = 10;
-    while(cReadBack != pValue && cIter < cMaxIter)
+    if(!fUseOpticalLink)
     {
-        // Now pick one configuration mode
-        if(fUseOpticalLink)
-        {   
-            fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
-        }
-        else
+        uint8_t cIter = 0, cMaxIter = 50;
+        while(cReadBack != pValue && cIter < cMaxIter)
         {
+            // Now pick one configuration mode
             // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-            fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
+            cReadBack = fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
 #endif
+            cIter++;
         }
-        cReadBack = ReadReg(pChip, pAddress);
-        cIter++;
-    }
-    if(cReadBack != pValue)
-    {
-        LOG(INFO) << BOLDRED << "REGISTER WRITE MISMATCH" << RESET;
-        throw std::runtime_error(std::string("lpGBT register write mismatch"));
+        if(cIter == cMaxIter)
+            throw std::runtime_error(std::string("lpGBT register write mismatch"));
     }
     return true;
 }
@@ -110,17 +127,20 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
 uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress)
 {
     setBoard(pChip->getBeBoardId());
-    uint16_t cReadBack = 0;
-    if(fUseOpticalLink) { cReadBack = fBoardFW->ReadOptoLinkRegister(pChip, pAddress); }
+    if(fUseOpticalLink) { 
+        if(fUseCPB)
+            return fBoardFW->ReadLpGBTRegister(pAddress);
+        else
+            return fBoardFW->ReadOptoLinkRegister(pChip, pAddress);
+    }
     else
     {
 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-        cReadBack = fTC_PSROH.read_i2c(pAddress);
+        return fTC_PSROH.read_i2c(pAddress);
 #endif
     }
-    LOG(DEBUG) << BOLDYELLOW << "Reading 0x" << std::hex << +cReadBack << " from [0x" << std::hex << +pAddress << std::dec << "]" << RESET;
-    return cReadBack;
+    return 0;
 }
 
 bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerifLoop)
@@ -537,7 +557,7 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
         WriteChipReg(pChip, cI2CCmdReg, 0xC);
     }
     // wait until the transaction is done
-    uint8_t cMaxIter = 10, cIter = 0;
+    uint8_t cMaxIter = 100, cIter = 0;
     bool    cSuccess = false;
     do
     {

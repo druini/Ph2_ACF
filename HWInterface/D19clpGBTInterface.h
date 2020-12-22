@@ -20,12 +20,16 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap) : lpGBTInterface(pBoardMap) {}
-
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap) : lpGBTInterface(pBoardMap) {
 #ifdef __TCUSB__
-    TC_PSROH fTC_PSROH;
+      fTC_PSROH = new TC_PSROH();
 #endif
-
+    }
+    ~D19clpGBTInterface() {
+#ifdef __TCUSB__
+      delete fTC_PSROH;
+#endif
+    }
     // ###################################
     // # LpGBT register access functions #
     // ###################################
@@ -198,13 +202,11 @@ class D19clpGBTInterface : public lpGBTInterface
 
     std::map<uint8_t, std::string> fI2CStatusMap = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
 
-    std::map<uint8_t, std::string> fPUSMStatusMap = {{0, "ARESET"},{1, "RESET"},{2, "WAIT_VDD_STABLE"},{3, "WAIT_VDD_HIGHER_THAN_0V90"},{4, "FUSE_SAMPLING"},{5, "UPDATE_FROM_FUSES"},{6, "WAIT_FOR_PLL_CONFIG"},{7, "WAIT_POWER_GOOD"},{8, "RESETOUT"},{9, "I2C_TRANS"},{10, "RESET_PLL"},{11, "WAIT_PLL_LOCK"},{12, "INIT_SCRAM"},{13, "PAUSE_FOR_DLL_CONFIG"},{14, "RESET_DLLS"},{15, "WAIT_DLL_LOCK"},{16, "RESET_LOGIC_USING_DLL"},{17, "WAIT_CHNS_LOCKED"},{18, "READY"}};
-
-    // ###################################
-    // # Outer Tracker specific objects  #
-    // ###################################
+    // OT specific objects
     bool fUseOpticalLink = true;
+    bool fUseCPB = true;
 #ifdef __TCUSB__
+    TC_PSROH* fTC_PSROH;
     std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
                                                                 {"L_SSA", TC_PSROH::measurement::L_SSA_RST},

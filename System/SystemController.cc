@@ -220,22 +220,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 {
                     //cLPGBT = true;
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                    // To be uncommented if crate is used
-                    //clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
-                    clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", false);
-                    clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
-                    uint8_t  cPUSMStatus = clpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
-                    uint16_t cIter = 0, cMaxIter = 200;
-                    while(cPUSMStatus != 18 && cIter < cMaxIter)
-                    {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                        LOG(INFO) << BOLDRED << "lpGBT NOT READY" << RESET;
-                        cPUSMStatus = clpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
-                        cIter++;
-                    }
-                    if(cPUSMStatus != 18) exit(0);
-                    // clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", true);
                 }
             }
             /*
@@ -295,7 +280,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         if(!bIgnoreI2c)
                         {
                             LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
-                            // fReadoutChipInterface->ConfigureChip(theReadoutChip);
+                            fReadoutChipInterface->ConfigureChip(theReadoutChip);
                         }
                         // if SSA + ASYNC
                         // make sure ROCs are configured for that

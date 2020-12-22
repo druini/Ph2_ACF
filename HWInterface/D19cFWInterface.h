@@ -735,10 +735,22 @@ class D19cFWInterface : public BeBoardFWInterface
     // # Read/Write Optical Group #
     // ############################
     uint8_t  flpGBTAddress = 0x70;
+    //Functions for standard uDTC
     void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty) override {}
     void     ResetOptoLink(Ph2_HwDescription::Chip* pChip) override;
-    bool     WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
+    bool     WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pValue, bool pVerifLoop = false) override;
     uint32_t ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress) override;
+    // ##########################################
+
+    // # Read/Write new Command Processor Block #
+    // ##########################################
+    //functions for new Command Processor Block
+    void     ResetCPB() override;
+    void     WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override;
+    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override;
+    //function to read/write lpGBT registers
+    bool WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
+    uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override;
 };
 } // namespace Ph2_HwInterface
 
