@@ -1,4 +1,4 @@
-#include "PSROHHybridTester.h"
+#include "PSROHTester.h"
 
 #include <fstream>
 #include <iostream>
@@ -15,18 +15,22 @@ using namespace Ph2_System;
 
 // initialize the static member
 
-PSROHHybridTester::PSROHHybridTester() : Tool() {}
+PSROHTester::PSROHTester() : OTHybridTester() {}
 
-PSROHHybridTester::~PSROHHybridTester() {}
+PSROHTester::~PSROHTester() {}
 
-void PSROHHybridTester::Initialise()
+void PSROHTester::Initialise()
 {
     // reset I2C
     // fc7_daq_ctrl
-    for(auto pBoard: *fDetectorContainer) { fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.i2c_slave_reset", 0x01); }
+    for(auto cBoard: *fDetectorContainer)
+    { 
+			if(cBoard->getId() != 50) continue;	
+      fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.i2c_slave_reset", 0x01); 
+    }
 }
 
-void PSROHHybridTester::UserFCMDTranslate(const std::string& userFilename = "fcmd_file.txt")
+void PSROHTester::UserFCMDTranslate(const std::string& userFilename = "fcmd_file.txt")
 {
     const std::string cUserFilenameFull    = "fcmd_files/user_files/" + userFilename;
     const std::string cRefFCMDFilenameFull = "fcmd_files/" + userFilename;
@@ -64,7 +68,7 @@ void PSROHHybridTester::UserFCMDTranslate(const std::string& userFilename = "fcm
     cRefFCMDHandle.close();
 }
 
-void PSROHHybridTester::ClearBRAM(BeBoard* pBoard, const std::string& sBRAMToReset)
+void PSROHTester::ClearBRAM(BeBoard* pBoard, const std::string& sBRAMToReset)
 {
     std::string cRegNameData;
     std::string cRegNameAddr;
@@ -91,12 +95,16 @@ void PSROHHybridTester::ClearBRAM(BeBoard* pBoard, const std::string& sBRAMToRes
     }
 }
 
-void PSROHHybridTester::ClearBRAM(const std::string& sBramToReset)
+void PSROHTester::ClearBRAM(const std::string& sBramToReset)
 {
-    for(auto pBoard: *fDetectorContainer) { this->ClearBRAM(pBoard, sBramToReset); }
+    for(auto cBoard: *fDetectorContainer)
+		{ 
+			if(cBoard->getId() != 50) continue;	
+			this->ClearBRAM(cBoard, sBramToReset); 
+		}
 }
 
-void PSROHHybridTester::WritePatternToBRAM(BeBoard* pBoard, const std::string& filename = "fcmd_file.txt")
+void PSROHTester::WritePatternToBRAM(BeBoard* pBoard, const std::string& filename = "fcmd_file.txt")
 {
     //        this -> UserFCMDTranslate(filename);
     this->ClearBRAM("ref");
@@ -203,12 +211,16 @@ void PSROHHybridTester::WritePatternToBRAM(BeBoard* pBoard, const std::string& f
     }
 }
 
-void PSROHHybridTester::WritePatternToBRAM(const std::string& sFileName = "fcmd_file.txt")
+void PSROHTester::WritePatternToBRAM(const std::string& sFileName = "fcmd_file.txt")
 {
-    for(auto pBoard: *fDetectorContainer) { this->WritePatternToBRAM(pBoard, sFileName); }
+    for(auto cBoard: *fDetectorContainer) 
+		{ 
+			if(cBoard->getId() != 50) continue;	
+			this->WritePatternToBRAM(cBoard, sFileName); 
+		}
 }
 
-void PSROHHybridTester::CheckFastCommandsBRAM(BeBoard* pBoard, const std::string& sFCMDLine)
+void PSROHTester::CheckFastCommandsBRAM(BeBoard* pBoard, const std::string& sFCMDLine)
 {
     std::string                     cOutputErrorsFileName = sFCMDLine;
     std::ofstream                   cBRAMErrorsFileHandle(cOutputErrorsFileName);
@@ -239,12 +251,16 @@ void PSROHHybridTester::CheckFastCommandsBRAM(BeBoard* pBoard, const std::string
     }
 }
 
-void PSROHHybridTester::CheckFastCommandsBRAM(const std::string& sFCMDLine)
+void PSROHTester::CheckFastCommandsBRAM(const std::string& sFCMDLine)
 {
-    for(auto pBoard: *fDetectorContainer) { this->CheckFastCommandsBRAM(pBoard, sFCMDLine); }
+    for(auto cBoard: *fDetectorContainer) 
+		{ 
+			if(cBoard->getId() != 50) continue;	
+			this->CheckFastCommandsBRAM(cBoard, sFCMDLine); 
+		}
 }
 
-void PSROHHybridTester::CheckFastCommands(BeBoard* pBoard, const std::string& sFastCommand, const std::string& filename = "fcmd_file.txt")
+void PSROHTester::CheckFastCommands(BeBoard* pBoard, const std::string& sFastCommand, const std::string& filename = "fcmd_file.txt")
 {
     this->ClearBRAM("test");
     this->WritePatternToBRAM(pBoard, filename);
@@ -345,12 +361,16 @@ void PSROHHybridTester::CheckFastCommands(BeBoard* pBoard, const std::string& sF
     LOG(INFO) << GREEN << "============================" << RESET;
 }
 
-void PSROHHybridTester::CheckFastCommands(const std::string& sFastCommand, const std::string& filename = "fcmd_file.txt")
+void PSROHTester::CheckFastCommands(const std::string& sFastCommand, const std::string& filename = "fcmd_file.txt")
 {
-    for(auto pBoard: *fDetectorContainer) { this->CheckFastCommands(pBoard, sFastCommand, filename); }
+    for(auto cBoard: *fDetectorContainer) 
+		{ 
+			if(cBoard->getId() != 50) continue;	
+			this->CheckFastCommands(cBoard, sFastCommand, filename); 
+		}
 }
 
-void PSROHHybridTester::ReadRefAddrBRAM(BeBoard* pBoard, int iRefBRAMAddr)
+void PSROHTester::ReadRefAddrBRAM(BeBoard* pBoard, int iRefBRAMAddr)
 {
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.fe_for_ps_roh_fcmd_test.ref_data_bram_addr", iRefBRAMAddr);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -366,12 +386,16 @@ void PSROHHybridTester::ReadRefAddrBRAM(BeBoard* pBoard, int iRefBRAMAddr)
     int cRefCICrFCMDBRAMData = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_for_ps_roh_cic_fcmd_test.fe_for_ps_roh_fcmd_CIC_r_ref");
     LOG(INFO) << BOLDGREEN << "CIC r " << cRefCICrFCMDBRAMData << RESET;
 }
-void PSROHHybridTester::ReadRefAddrBRAM(int iRefBRAMAddr)
+void PSROHTester::ReadRefAddrBRAM(int iRefBRAMAddr)
 {
-    for(auto pBoard: *fDetectorContainer) { this->ReadRefAddrBRAM(pBoard, iRefBRAMAddr); }
+    for(auto cBoard: *fDetectorContainer) 
+		{ 
+			if(cBoard->getId() != 50) continue;	
+			this->ReadRefAddrBRAM(cBoard, iRefBRAMAddr); 
+		}
 }
 
-void PSROHHybridTester::ReadCheckAddrBRAM(BeBoard* pBoard, int iCheckBRAMAddr)
+void PSROHTester::ReadCheckAddrBRAM(BeBoard* pBoard, int iCheckBRAMAddr)
 {
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.fe_for_ps_roh_fcmd_check.test_data_bram_addr", iCheckBRAMAddr);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -388,12 +412,16 @@ void PSROHHybridTester::ReadCheckAddrBRAM(BeBoard* pBoard, int iCheckBRAMAddr)
     LOG(INFO) << BOLDGREEN << "CIC r " << cCheckCICrFCMDBRAMData << RESET;
 }
 
-void PSROHHybridTester::ReadCheckAddrBRAM(int iCheckBRAMAddr)
+void PSROHTester::ReadCheckAddrBRAM(int iCheckBRAMAddr)
 {
-    for(auto pBoard: *fDetectorContainer) { this->ReadCheckAddrBRAM(pBoard, iCheckBRAMAddr); }
+    for(auto cBoard: *fDetectorContainer) 
+		{ 
+			if(cBoard->getId() != 50) continue;	
+			this->ReadCheckAddrBRAM(cBoard, iCheckBRAMAddr); 
+		}
 }
 
-void PSROHHybridTester::CheckClocks(BeBoard* pBoard)
+void PSROHTester::CheckClocks(BeBoard* pBoard)
 {
     // clk test
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x01);
@@ -466,11 +494,15 @@ void PSROHHybridTester::CheckClocks(BeBoard* pBoard)
     LOG(INFO) << GREEN << "============================" << RESET;
 }
 
-void PSROHHybridTester::CheckClocks()
+void PSROHTester::CheckClocks()
 {
-    for(auto pBoard: *fDetectorContainer) { this->CheckClocks(pBoard); }
+    for(auto cBoard: *fDetectorContainer) 
+		{ 
+			if(cBoard->getId() != 50) continue;	
+			this->CheckClocks(cBoard); 
+		}
 }
-void PSROHHybridTester::FastCommandScope(BeBoard* pBoard)
+void PSROHTester::FastCommandScope(BeBoard* pBoard)
 {
     uint32_t cSSA_L = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_l");
     uint32_t cSSA_R = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_r");
@@ -482,11 +514,15 @@ void PSROHHybridTester::FastCommandScope(BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "Scoped output on CIC_L : " << std::bitset<32>(cCIC_L) << RESET;
     LOG(INFO) << BOLDBLUE << "Scoped output on CIC_R : " << std::bitset<32>(cCIC_R) << RESET;
 }
-void PSROHHybridTester::FastCommandScope()
+void PSROHTester::FastCommandScope()
 {
-    for(auto cBoard: *fDetectorContainer) { this->FastCommandScope(cBoard); }
+    for(auto cBoard: *fDetectorContainer) 
+		{ 
+			if(cBoard->getId() != 50) continue;	
+			this->FastCommandScope(cBoard); 
+		}
 }
-void PSROHHybridTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
+void PSROHTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
     uint32_t             cRegisterValue = 0;
     std::vector<uint8_t> cIndices(0);
@@ -521,12 +557,16 @@ void PSROHHybridTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::stri
         pCounters.push_back(cCounter);
     }
 }
-void PSROHHybridTester::CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
+void PSROHTester::CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
-    for(auto cBoard: *fDetectorContainer) { this->CheckHybridInputs(cBoard, pInputs, pCounters); }
+    for(auto cBoard: *fDetectorContainer)
+		{ 
+			if(cBoard->getId() != 50) continue;	
+			this->CheckHybridInputs(cBoard, pInputs, pCounters); 
+		}
 }
 
-void PSROHHybridTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters)
+void PSROHTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters)
 {
     uint32_t             cRegisterValue = 0;
     std::vector<uint8_t> cIndices(0);
@@ -562,16 +602,16 @@ void PSROHHybridTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::str
     }
 }
 
-void PSROHHybridTester::PSROHInputsDebug()
+void PSROHTester::PSROHInputsDebug()
 {
-    for(auto pBoard: *fDetectorContainer)
+    for(auto cBoard: *fDetectorContainer)
     {
-        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.debug_blk_input", 0x00003FFF);
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.debug_blk_input", 0x00003FFF);
         // start
         LOG(INFO) << BOLDBLUE << "Do you want to start test? [y/n]" << RESET;
         char Answer;
         std::cin >> Answer;
-        if(Answer == 'y') { fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.start_input", 1); }
+        if(Answer == 'y') { fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.start_input", 1); }
         else if(Answer == 'n')
         {
             exit(1);
@@ -585,10 +625,10 @@ void PSROHHybridTester::PSROHInputsDebug()
         LOG(INFO) << BOLDBLUE << "Do you want to stop test? [y/n]" << RESET;
         std::cin >> Answer;
         while(Answer != 'y') { LOG(INFO) << BOLDBLUE << "Do you want to stop test? " << RESET; }
-        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.stop_input", 1);
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.stop_input", 1);
         std::this_thread::sleep_for(std::chrono::microseconds(100));
         // results
-        LOG(INFO) << BOLDBLUE << "Input lines debug done:" << fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.input_lines_debug_done");
+        LOG(INFO) << BOLDBLUE << "Input lines debug done:" << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.input_lines_debug_done");
         LOG(INFO) << BOLDBLUE << "Results for line:" << RESET;
         std::vector<std::string> RegisterTable = {{"fc7_daq_stat.physical_interface_block.debug_blk_counter00"},
                                                   {"fc7_daq_stat.physical_interface_block.debug_blk_counter01"},
@@ -622,258 +662,60 @@ void PSROHHybridTester::PSROHInputsDebug()
 
         for(const auto& RegName: RegisterTable)
         {
-            auto result = fBeBoardInterface->ReadBoardReg(pBoard, RegName.c_str());
+            auto result = fBeBoardInterface->ReadBoardReg(cBoard, RegName.c_str());
             LOG(INFO) << BOLDBLUE << std::setw(20) << RegisterAlias[RegName] << std::setw(10) << result << RESET;
         }
     }
 }
 
-void PSROHHybridTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
+void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
-    for(auto cBoard: *fDetectorContainer) { this->CheckHybridOutputs(cBoard, pInputs, pCounters); }
+    for(auto cBoard: *fDetectorContainer) 
+		{ 
+			if(cBoard->getId() != 50) continue;	
+			this->CheckHybridOutputs(cBoard, pInputs, pCounters); 
+		}
 }
 
-void PSROHHybridTester::Start(int currentRun)
+bool PSROHTester::TestResetLines(uint8_t pLevel)
 {
-    LOG(INFO) << BOLDBLUE << "Starting PS ROH Hybrid tester" << RESET;
+    bool cValid = true;
+#ifdef __TCUSB__
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    float cMeasurement;
+    auto  cMapIterator = fResetLines.begin();
+    do
+    {
+        clpGBTInterface->fTC_PSROH.adc_get(cMapIterator->second, cMeasurement);
+        float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
+        // cValid = cValid && (cDifference_mV <= 100 );
+        if(cDifference_mV > 100)
+            LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
+        else
+            LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
+        cMapIterator++;
+    } while(cMapIterator != fResetLines.end());
+#endif
+    return cValid;
+}
+
+
+void PSROHTester::Start(int currentRun)
+{
+    LOG(INFO) << BOLDBLUE << "Starting PS ROH Tester" << RESET;
     Initialise();
 }
 
-void PSROHHybridTester::Stop()
+void PSROHTester::Stop()
 {
-    LOG(INFO) << BOLDBLUE << "Stopping PS ROH Hybrid tester" << RESET;
+    LOG(INFO) << BOLDBLUE << "Stopping PS ROH Tester" << RESET;
     // writeObjects();
     dumpConfigFiles();
     Destroy();
 }
 
-void PSROHHybridTester::Pause() {}
+void PSROHTester::Pause() {}
 
-void PSROHHybridTester::Resume() {}
+void PSROHTester::Resume() {}
 
-void PSROHHybridTester::TestULInternalPattern(uint32_t pPattern)
-{
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
-            LOG(INFO) << BOLDGREEN << "Internal LpGBT pattern generation" << RESET;
-            // make sure serializer source is 0
-            clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "ULDataSource0", 0);
-            clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern);
-            std::this_thread::sleep_for(std::chrono::milliseconds(4000));
 
-            D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-            LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-            cFWInterface->StubDebug(true, 6);
-            LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-            cFWInterface->L1ADebug();
-        }
-    }
-}
-
-void PSROHHybridTester::InjectExternalPattern(uint8_t pPattern)
-{
-    DPInterface         cDPInterfacer;
-    BeBoardFWInterface* pInterface = dynamic_cast<BeBoardFWInterface*>(fBeBoardFWMap.find(0)->second);
-
-    // Check if Emulator is running
-    if(cDPInterfacer.IsRunning(pInterface, 1))
-    {
-        LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
-        cDPInterfacer.Stop(pInterface);
-    }
-
-    // Configure and Start DataPlayer
-    cDPInterfacer.Configure(pInterface, pPattern);
-    cDPInterfacer.Start(pInterface, 1);
-    if(cDPInterfacer.IsRunning(pInterface, 1))
-        LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
-    else
-        LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
-
-    LOG(INFO) << BOLDGREEN << "Electrical FC7 pattern generation" << RESET;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-}
-
-void PSROHHybridTester::TestULExternalPattern()
-{
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 1, 2, 3}, false);
-            clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-
-            D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-            LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-            cFWInterface->StubDebug(true, 6);
-            LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-            cFWInterface->L1ADebug();
-        }
-    }
-}
-
-void PSROHHybridTester::PrepareFCMDTest(uint8_t pSource, uint8_t pPattern)
-{
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            if(pSource == 3) clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
-            clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, pSource); // 0 --> link data, 3 --> constant pattern
-        }
-    }
-}
-
-bool PSROHHybridTester::TestResetLines(uint8_t pValue)
-{
-    bool cValid = true;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            LOG(INFO) << BOLDBLUE << "Setting GPIO output to all 0s." << RESET;
-
-            clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "PIODirH", pValue);
-            clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "PIODirL", pValue);
-            clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "PIOOutH", pValue);
-            clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "PIOOutL", pValue);
-#ifdef __TCUSB__
-            float cMeasurement;
-            auto  cMapIterator = fResetLines.begin();
-            do
-            {
-                clpGBTInterface->fTC_PSROH.adc_get(cMapIterator->second, cMeasurement);
-                float cDifference_mV = std::fabs((pValue / 0xFF) * 1200 - cMeasurement);
-                // cValid = cValid && (cDifference_mV <= 100 );
-                if(cDifference_mV > 100)
-                    LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
-                else
-                    LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
-                cMapIterator++;
-            } while(cMapIterator != fResetLines.end());
-#endif
-        }
-    }
-    return cValid;
-}
-
-bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
-{
-    bool cTestSuccess = true;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            for(const auto cMaster: pMasters)
-            {
-                uint8_t cSlaveAddress = 0x60;
-                uint8_t cSuccess      = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x9, 1);
-                if(cSuccess)
-                    LOG(INFO) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED" << RESET;
-                else
-                    LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED" << RESET;
-                cTestSuccess &= cSuccess;
-            }
-        }
-    }
-    return cTestSuccess;
-}
-
-void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t pMinDACValue, uint32_t pMaxDACValue, uint32_t pStep)
-{
-#ifdef __USE_ROOT__
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            // Create TTree for DAC to ADC conversion in lpGBT
-            auto cDACtoADCTree = new TTree("tDACtoADC", "DAC to ADC conversion in lpGBT");
-            // Create variables for TTree branches
-            int              cADCId = -1;
-            std::vector<int> cDACValVect;
-            std::vector<int> cADCValVect;
-            // Create TTree Branches
-            cDACtoADCTree->Branch("Id", &cADCId);
-            cDACtoADCTree->Branch("DAC", &cDACValVect);
-            cDACtoADCTree->Branch("ADC", &cADCValVect);
-
-            // Create TCanvas & TMultiGraph
-            auto cDACtoADCCanvas = new TCanvas("cDACtoADC", "DAC to ADC conversion", 500, 500);
-            auto cObj            = gROOT->FindObject("mgDACtoADC");
-            if(cObj) delete cObj;
-            auto cDACtoADCMultiGraph = new TMultiGraph();
-            cDACtoADCMultiGraph->SetName("mgDACtoADC");
-            cDACtoADCMultiGraph->SetTitle("lpGBT - DAC to ADC conversion");
-
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            LOG(INFO) << BOLDMAGENTA << "Testing ADC channels" << RESET;
-            for(const auto& cADC: pADCs)
-            {
-                cDACValVect.clear(), cADCValVect.clear();
-                // uint32_t cNValues = (cMaxDAC-cMinDAC)/cStep;
-                cADCId = cADC[3] - '0';
-                for(int cDACValue = pMinDACValue; cDACValue <= (int)pMaxDACValue; cDACValue += pStep)
-                {
-#ifdef __TCUSB__
-                    clpGBTInterface->fTC_PSROH.dac_output(cDACValue);
-#endif
-                    int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
-                    LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- ADC value = " << +cADCValue << RESET;
-                    cDACValVect.push_back(cDACValue);
-                    cADCValVect.push_back(cADCValue);
-                }
-                cDACtoADCTree->Fill();
-                auto cDACtoADCGraph = new TGraph(cDACValVect.size(), cDACValVect.data(), cADCValVect.data());
-                cDACtoADCGraph->SetName(Form("gADC%i", cADCId));
-                cDACtoADCGraph->SetTitle(Form("ADC%i", cADCId));
-                cDACtoADCGraph->SetLineColor(cADCId + 1);
-                cDACtoADCGraph->SetFillColor(0);
-                cDACtoADCGraph->SetLineWidth(3);
-                cDACtoADCMultiGraph->Add(cDACtoADCGraph);
-            }
-            fResultFile->cd();
-            cDACtoADCTree->Write();
-            cDACtoADCMultiGraph->Draw("AL");
-            cDACtoADCMultiGraph->GetXaxis()->SetTitle("DAC");
-            cDACtoADCMultiGraph->GetYaxis()->SetTitle("ADC");
-            cDACtoADCCanvas->BuildLegend(0, .2, .8, .9);
-            cDACtoADCMultiGraph->Write();
-        }
-    }
-#endif
-}
-
-void PSROHHybridTester::TestOpticalRW(uint32_t pNTries)
-{
-    //this->PrepareFCMDTest(0);
-    /*
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            uint8_t             cValue          = 0x01;
-            for(uint32_t cTry = 0; cTry < pNTries; cTry++)
-            {
-                cValue++;
-                if(cValue == 254) cValue = 0x01;
-                clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "I2CM0Data0", cValue);
-            }
-        }
-    }
-    */
-    
-    
-}

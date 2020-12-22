@@ -23,17 +23,16 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
     /*
-         //Load register map from configuration file
-         ChipRegMap clpGBTRegMap = pChip->getRegMap();
-         for(const auto& cRegItem: clpGBTRegMap)
+     //Load register map from configuration file
+     ChipRegMap clpGBTRegMap = pChip->getRegMap();
+     for(const auto& cRegItem: clpGBTRegMap)
+     {
+         if(cRegItem.second.fAddress < 0x13c)
          {
-             if(cRegItem.second.fAddress < 0x13c)
-             {
-                 LOG(INFO) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec <<
-       "]"
-                           << RESET;
-                 WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
-             }
+             LOG(INFO) << BOLDBLUE << "\tWriting 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec <<
+   "]"
+                       << RESET;
+             WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
          }
     */
     // To be uncommented if crate is used
@@ -569,8 +568,8 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     } while(cIter < cMaxIter && !cSuccess);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "I2C Transaction FAILED" << RESET;
-        throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
+        //LOG(INFO) << BOLDRED << "I2C Transaction FAILED" << RESET;
+        //throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
     }
     return cSuccess;
 }
@@ -850,7 +849,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t 
     uint8_t              cRxDataRate = 2, cRxTrackMode = 0;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 5;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)

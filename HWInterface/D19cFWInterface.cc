@@ -427,6 +427,7 @@ void D19cFWInterface::powerAllFMCs(bool pEnable)
 
 bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
 {
+    if(pBoard->getId() == 50) return true;
     // reset lpGBT core
     this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -455,9 +456,9 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             bool cGBTxLocked = true;
             // read back status register
-            LOG(DEBUG) << BOLDBLUE << "GBT Link Status..." << RESET;
+            LOG(INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
             uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
-            LOG(DEBUG) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
+            LOG(INFO) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
             std::vector<std::string> cStates = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
             uint8_t                  cIndex  = 1;
             for(auto cState: cStates)
