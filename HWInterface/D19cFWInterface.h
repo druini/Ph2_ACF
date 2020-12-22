@@ -87,6 +87,7 @@ namespace Ph2_HwInterface
 {
 class D19cFpgaConfig;
 class D19cSSAEvent;
+class D19clpGBTInterface;
 /*!
  * \class Cbc3Fc7FWInterface
  *
@@ -127,8 +128,9 @@ class D19cFWInterface : public BeBoardFWInterface
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
 
     // some useful stuff
-    int  fResetAttempts;
-    void Align_out();
+    int                 fResetAttempts;
+    void                Align_out();
+    D19clpGBTInterface* fLocalLpGBTInterface;
 
   public:
     /*!
@@ -410,10 +412,12 @@ class D19cFWInterface : public BeBoardFWInterface
     // Optical readout specific functions - d19c [temporary]
     void                       setGBTxPhase(uint32_t pPhase) { fGBTphase = pPhase; }
     void                       configureLink(const Ph2_HwDescription::BeBoard* pBoard);
+    bool                       LinkLock(const Ph2_HwDescription::BeBoard* pBoard);
     bool                       GBTLock(const Ph2_HwDescription::BeBoard* pBoard);
     std::pair<uint16_t, float> readADC(std::string pValueToRead = "AMUX_L", bool pApplyCorrection = false);
     void                       setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
     void                       setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
+    void                       LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface);
 
     // CDCE
     void configureCDCE_old(uint16_t pClockRate = 120);

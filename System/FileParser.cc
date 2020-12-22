@@ -281,6 +281,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         }
         else if(static_cast<std::string>(theChild.name()) == "lpGBT")
         {
+            pBoard->setOptical(true);
             std::string fileName = cFilePath + expandEnvironmentVariables(theChild.attribute("configfile").value());
             os << BOLDBLUE << "|\t|----" << theChild.name() << " -->cFile: " << BOLDYELLOW << fileName << RESET << std::endl;
             lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, fileName);

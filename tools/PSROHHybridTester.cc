@@ -775,21 +775,7 @@ bool PSROHHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            // test cic read
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            /*
-            for(uint8_t cValue = 0; cValue < 255; cValue++)
-            {
-
-              std::cout << "\n" << std::endl;
-              clpGBTInterface->cicWrite(cOpticalGroup->flpGBT, 1, 0x80, cValue);
-              clpGBTInterface->cicRead(cOpticalGroup->flpGBT, 1, 0x80);
-
-              LOG(INFO) << BOLDMAGENTA << "SSA0" << RESET;
-              clpGBTInterface->ssaWrite(cOpticalGroup->flpGBT, 0, 0, 0x1003, cValue);
-              clpGBTInterface->ssaRead(cOpticalGroup->flpGBT, 0, 0, 0x1003);
-            }
-            */
             for(const auto cMaster: pMasters)
             {
                 uint8_t cSlaveAddress = 0x60;

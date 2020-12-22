@@ -8,8 +8,8 @@
 
 #ifndef __CICINTERFACE_H__
 #define __CICINTERFACE_H__
-
 #include "ChipInterface.h"
+#include "D19clpGBTInterface.h"
 
 /*!
  * \namespace Ph2_HwInterface
@@ -33,6 +33,8 @@ class CicInterface : public ChipInterface
      * \brief Destructor of the CICInterface Class
      */
     ~CicInterface();
+    void LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
+
     /*!
      * \brief Configure the Cic with the Cic Config File
      * \param pCic: pointer to CIC object
@@ -98,6 +100,13 @@ class CicInterface : public ChipInterface
     // return information on phase aligners
     std::vector<std::bitset<6>> getFeStates() { return fFeStates; }
     std::vector<std::bitset<4>> getPortStates() { return fPortStates; }
+
+  private:
+    D19clpGBTInterface*       flpGBTInterface = nullptr;
+    Ph2_HwDescription::lpGBT* flpGBT          = nullptr;
+
+    bool WriteReg(Ph2_HwDescription::Chip* pCic, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true);
+    bool WriteRegs(Ph2_HwDescription::Chip* pCic, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop = true);
 
   protected:
     bool                        ReadOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, std::vector<std::vector<uint8_t>>& pPhaseTaps);

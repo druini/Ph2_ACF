@@ -119,12 +119,12 @@ int main(int argc, char* argv[])
     cHybridTester.CreateResultDirectory(cDirectory);
     cHybridTester.InitResultFile(cResultfile);
     // set voltage  on PS FEH
-    cHybridTester.SetHybridVoltage();
+    // cHybridTester.SetHybridVoltage();
     // LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
     // cHybridTester.CheckHybridCurrents();
     // check voltage on PS FEH
-    cHybridTester.CheckHybridVoltages();
-    LOG(INFO) << outp.str();
+    // cHybridTester.CheckHybridVoltages();
+    // LOG(INFO) << outp.str();
     // select CIC readout
     // cHybridTester.SelectCIC(true);
     cHybridTester.ConfigureHw();
@@ -143,10 +143,11 @@ int main(int argc, char* argv[])
         // align back-end
         BackEndAlignment cBackEndAligner;
         cBackEndAligner.Inherit(&cHybridTester);
-        cBackEndAligner.Start(0);
+        cBackEndAligner.Align();
+        // cBackEndAligner.Start(0);
         // reset all chip and board registers
         // to what they were before this tool was called
-        cBackEndAligner.Reset();
+        // cBackEndAligner.Reset();
 
         // Check if data player is running
         if(cDPInterfacer.IsRunning(cInterface))
@@ -157,19 +158,19 @@ int main(int argc, char* argv[])
 
         // Configure and Start DataPlayer
         // to send phase alignment pattern
-        uint8_t cPhaseAlignmentPattern = 0x55;
-        cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
-        cDPInterfacer.Start(cInterface);
-        if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
-        else
-            LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
+        // uint8_t cPhaseAlignmentPattern = 0x55;
+        // cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
+        // cDPInterfacer.Start(cInterface);
+        // if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
+        // else
+        //     LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
         // align CIC inputs
-        CicFEAlignment cCicAligner;
-        cCicAligner.Inherit(&cHybridTester);
-        cCicAligner.PhaseAlignmentMPA(100);
-        cDPInterfacer.Stop(cInterface);
-        cDPInterfacer.CheckNPatterns(cInterface);
+        // CicFEAlignment cCicAligner;
+        // cCicAligner.Inherit(&cHybridTester);
+        // cCicAligner.PhaseAlignmentMPA(100);
+        // cDPInterfacer.Stop(cInterface);
+        // cDPInterfacer.CheckNPatterns(cInterface);
 
         // // still needs to be de-bugged!!
         // // does not work yet
