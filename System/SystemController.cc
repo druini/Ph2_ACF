@@ -218,7 +218,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
-                    //cLPGBT = true;
+                    cLPGBT = true;
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                 }

@@ -36,17 +36,17 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
          }
     */
     // To be uncommented if crate is used
-    // clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
-    SetConfigMode(pChip, "serial", false);
+    SetConfigMode(pChip, "i2c", false);
+    // SetConfigMode(pChip, "serial", false);
     PrintChipMode(pChip);
     ConfigurePSROH(pChip, 5);
     uint8_t  cPUSMStatus = GetPUSMStatus(pChip);
     uint16_t cIter = 0, cMaxIter = 2000;
     while(cPUSMStatus != 18 && cIter < cMaxIter)
     {
-    LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +cPUSMStatus << RESET;
-    cPUSMStatus = GetPUSMStatus(pChip);
-    cIter++;
+        LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +cPUSMStatus << RESET;
+        cPUSMStatus = GetPUSMStatus(pChip);
+        cIter++;
     }
     if(cPUSMStatus != 18) exit(0);
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
@@ -415,6 +415,8 @@ void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std:
             ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
         }
     }
+    // Set back Rx groups to Fixed Phase tracking mode
+    ConfigureRxGroups(pChip, pGroups, pChannels, 2, 0);
     // Set back Rx source to Normal data
     ConfigureRxSource(pChip, pGroups, 0);
     // Turn off PRBS for channels 0,2
@@ -846,10 +848,10 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t 
     // Rx configuration and Phase Align
     // Configure Rx Groups
     std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
-    uint8_t              cRxDataRate = 2, cRxTrackMode = 0;
+    uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 5;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 5;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)

@@ -202,8 +202,8 @@ class D19clpGBTInterface : public lpGBTInterface
     // ###################################
     // # Outer Tracker specific objects  #
     // ###################################
-    bool fUseOpticalLink = true;
-    bool fUseCPB = true;
+    bool fUseOpticalLink = false;
+    bool fUseCPB = false;
 #ifdef __TCUSB__
     std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
