@@ -276,7 +276,7 @@ int main(int argc, char* argv[])
                 }
             }
             cExtra.ReadNEvents(theBoard, 1);
-            const std::vector<Event*>& cEvents = cExtra.GetEvents(theBoard);
+            const std::vector<Event*>& cEvents = cExtra.GetEvents();
             uint32_t                   cN      = 0;
             for(auto& cEvent: cEvents)
             {

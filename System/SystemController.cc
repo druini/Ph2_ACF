@@ -217,10 +217,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
 
     for(const auto cBoard: *fDetectorContainer)
     {
-        uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
-
         if(cBoard->getBoardType() != BoardType::RD53)
         {
+            uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
+
             // setting up back-end board
             fBeBoardInterface->ConfigureBoard(cBoard);
             LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
@@ -314,9 +314,12 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ###################
             size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
             size_t injType     = SystemController::findValueInSettings("INJtype");
+            size_t injLatency  = SystemController::findValueInSettings("InjLatency");
             size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
             size_t colStart    = SystemController::findValueInSettings("COLstart");
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, nClkDelays, colStart < RD53::LIN.colStart);
+            bool   resetMask   = SystemController::findValueInSettings("ResetMask");
+            bool   resetTDAC   = SystemController::findValueInSettings("ResetTDAC");
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
             LOG(INFO) << GREEN << "Configured FSM fast command block" << RESET;
 
             // ########################
@@ -349,12 +352,15 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     LOG(INFO) << GREEN << "Initializing communication to Hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
-                    for(const auto cRD53: *cHybrid)
+                    for(const auto cChip: *cHybrid)
                     {
-                        LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cRD53->getId() << RESET;
-                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cRD53));
-                        LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
-                        // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cRD53), 0);
+                        LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
+                        if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
+                        if(resetTDAC == true) static_cast<RD53*>(cChip)->resetTDAC();
+                        static_cast<RD53*>(cChip)->copyMaskToDefault();
+                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cChip));
+                        LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+                        // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
                     }
                 }
             }
@@ -488,7 +494,6 @@ void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vect
     uint32_t cMultiplicity = 0;
     if(fBeBoardInterface->getBoardType(pBoard) == BoardType::D19C) cMultiplicity = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     pNEvents = pNEvents * (cMultiplicity + 1);
-
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
 }
 
@@ -517,8 +522,8 @@ void SystemController::ReadASEvent(BeBoard* pBoard, uint32_t pNMsec, uint32_t pu
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(pBoard->getFrontEndType() == FrontEndType::MPA) static_cast<MPAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
-                    if(pBoard->getFrontEndType() == FrontEndType::SSA) static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+                    if(cChip->getFrontEndType() == FrontEndType::MPA) static_cast<MPAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+                    if(cChip->getFrontEndType() == FrontEndType::SSA) static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
                 }
             }
         }
@@ -543,18 +548,23 @@ void SystemController::SetFuture(const BeBoard* pBoard, const std::vector<uint32
 
 void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
 {
+    // ####################
+    // # Decoding IT data #
+    // ####################
     if(pType == BoardType::RD53)
     {
         fEventList.clear();
         if(RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEventsMultiThreads(pData, RD53FWInterface::decodedEvents);
         RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
-        for(auto i = 0u; i < RD53FWInterface::decodedEvents.size(); i++) fEventList.push_back(&RD53FWInterface::decodedEvents[i]);
+        for(auto& evt: RD53FWInterface::decodedEvents) fEventList.push_back(&evt);
     }
+    // ####################
+    // # Decoding OT data #
+    // ####################
     else if(pType == BoardType::D19C)
     {
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();
-        fCurrentEvent = 0;
 
         if(pNevents == 0) { LOG(INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET; }
         else
@@ -563,26 +573,19 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             uint32_t  fNFe       = pBoard->getNFe();
             uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
             LOG(DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
-            fEventSize      = static_cast<uint32_t>((pData.size()) / pNevents);
+            fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
+            // uint32_t nmpa = 0;
             uint32_t maxind = 0;
 
-            if(pBoard->getFrontEndType() == FrontEndType::SSA)
-            {
-                uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-                if(fEventType == EventType::SSAAS) nSSA = pData.size() / 120;
+            // if(fEventType == EventType::SSAAS)
+            //   {
+            //   uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+            //   nSSA = pData.size() / 120;
+            //   }
 
-                for(auto opticalGroup: *pBoard)
-                {
-                    for(auto hybrid: *opticalGroup)
-                    {
-                        for(auto chip: *hybrid)
-                        {
-                            // LOG (INFO) << BOLDBLUE <<chip->getId()+hybrid->getId()*nSSA <<RESET;
-                            maxind = std::max(maxind, uint32_t(chip->getId() + hybrid->getId() * nSSA));
-                        }
-                    }
-                }
-                // LOG (INFO) << BOLDBLUE << "maxind " << maxind << RESET;
+            for(auto opticalGroup: *pBoard)
+            {
+                for(auto hybrid: *opticalGroup) { maxind = std::max(maxind, uint32_t(hybrid->size())); }
             }
 
             if(fEventType == EventType::SSAAS) { fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
@@ -598,6 +601,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 {
                     uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
                     auto     cEnd       = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
+
                     // retrieve chunck of data vector belonging to this event
                     if(cEnd - cEventIterator == cEventSize)
                     {
@@ -612,18 +616,11 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                         }
                         else if(pBoard->getFrontEndType() == FrontEndType::SSA)
                         {
-                            // LOG (INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
-                            // auto cL1Counter0 = (cEvent[4+2] & (0xF<<16)) >> 16;
-                            // auto cL1Counter1 = (cEvent[4+8+4+2] & (0xF<<16)) >> 16;
-                            // LOG (INFO) << BOLDBLUE << "L1A counter chip0 : " << cL1Counter0 << RESET;
-                            // LOG (INFO) << BOLDBLUE << "L1A counter chip1 : " << cL1Counter1 << RESET;
-                            // for(auto cWord : cEvent )
-                            //   LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
-                            fEventList.push_back(new D19cSSAEvent(pBoard, maxind + 1, fNFe, cEvent));
+                            fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNFe, cEvent));
                         }
                         else if(pBoard->getFrontEndType() == FrontEndType::MPA)
                         {
-                            fEventList.push_back(new D19cMPAEvent(pBoard, maxind + 1, fNFe, cEvent));
+                            fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNFe, cEvent));
                         }
                         cEventIndex++;
                     }

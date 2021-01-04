@@ -337,7 +337,7 @@ int main(int argc, char* argv[])
         cOpenFinder.Inherit(&cTool);
         cOpenFinder.Initialise(cOfp);
         LOG(INFO) << BOLDBLUE << "Starting open finding measurement [antenna potentiometer set to 0x" << std::hex << cOfp.potentiometer << std::dec << " written to the potentiometer" << RESET;
-        cOpenFinder.FindOpens();
+        cOpenFinder.FindOpens2S();
         // TODO: write this one from cLatencyScan.writeObjects();
         // cOpenFinder.writeObjects();
 #endif

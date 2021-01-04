@@ -149,6 +149,7 @@ int main(int argc, char* argv[])
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
         cCicAligner.Start(0);
+        cCicAligner.waitForRunToBeCompleted();
         // reset all chip and board registers
         // to what they were before this tool was called
         cCicAligner.Reset();
@@ -169,7 +170,7 @@ int main(int argc, char* argv[])
 
         if(cN + cPacketSize >= pEventsperVcth) cTool.fBeBoardInterface->Stop(pBoard);
 
-        const std::vector<Event*>& events = cTool.GetEvents(pBoard);
+        const std::vector<Event*>& events = cTool.GetEvents();
         std::vector<DQMEvent*>     cDQMEvents;
 
         for(auto& ev: events)
