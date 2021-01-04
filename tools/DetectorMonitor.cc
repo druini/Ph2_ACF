@@ -1,11 +1,8 @@
 #include "DetectorMonitor.h"
-#include "thread"
 #include "chrono"
+#include "thread"
 
-DetectorMonitor::DetectorMonitor(DetectorMonitorConfig theDetectorMonitorConfig)
-: fDetectorMonitorConfig(theDetectorMonitorConfig)
-{
-}
+DetectorMonitor::DetectorMonitor(DetectorMonitorConfig theDetectorMonitorConfig) : fDetectorMonitorConfig(theDetectorMonitorConfig) {}
 
 void DetectorMonitor::operator()()
 {

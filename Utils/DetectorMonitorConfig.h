@@ -1,19 +1,16 @@
 #ifndef DETECTOR_MONITOR_CONFIG_H
 #define DETECTOR_MONITOR_CONFIG_H
 
-#include <vector>
+#include <algorithm>
 #include <string>
-#include <algorithm> 
+#include <vector>
 
 struct DetectorMonitorConfig
 {
     std::vector<std::string> fMonitorElementList;
-    int fSleepTimeMs;
+    int                      fSleepTimeMs;
 
-    bool isElementToMonitor(std::string theElement)
-    {
-        return (find(fMonitorElementList.begin(), fMonitorElementList.end(), theElement) != fMonitorElementList.end());
-    }
+    bool isElementToMonitor(std::string theElement) { return (find(fMonitorElementList.begin(), fMonitorElementList.end(), theElement) != fMonitorElementList.end()); }
 };
 
 #endif

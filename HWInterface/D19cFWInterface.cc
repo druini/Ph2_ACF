@@ -455,7 +455,7 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     } while(std::cin.get() != '\n');
     // system("/home/modtest/Programming/power_supply/bin/TurnOn -c /home/modtest/Programming/power_supply/config/config.xml ");
     // std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
-    
+
     for(auto cLinkId: cLinkIds)
     {
         // reset here for good measure

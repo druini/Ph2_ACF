@@ -5,13 +5,13 @@
 
 class CBCMonitor : public DetectorMonitor
 {
-    public:
-        CBCMonitor(DetectorMonitorConfig theDetectorMonitorConfig);
+  public:
+    CBCMonitor(DetectorMonitorConfig theDetectorMonitorConfig);
 
-    private:
-        virtual void runMonitor() override;
-        void runTemperatureMonitor();
-        bool doMonitorTemperature {false};
+  private:
+    virtual void runMonitor() override;
+    void         runTemperatureMonitor();
+    bool         doMonitorTemperature{false};
 };
 
 #endif

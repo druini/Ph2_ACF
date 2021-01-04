@@ -1028,9 +1028,8 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
     }
 }
 
-std::string FileParser::parseMonitor (const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile)
+std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile)
 {
-
     if(pIsFile && pFilename.find(".xml") != std::string::npos)
         return parseMonitorxml(pFilename, theDetectorMonitorConfig, os, pIsFile);
     else if(!pIsFile)
@@ -1040,7 +1039,7 @@ std::string FileParser::parseMonitor (const std::string& pFilename, DetectorMoni
     return "None";
 }
 
-std::string FileParser::parseMonitorxml (const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile)
+std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile)
 {
     pugi::xml_document     doc;
     pugi::xml_parse_result result;
@@ -1061,7 +1060,7 @@ std::string FileParser::parseMonitorxml (const std::string& pFilename, DetectorM
         return "None";
     }
 
-    if (!bool(doc.child("MonitoringSettings")))
+    if(!bool(doc.child("MonitoringSettings")))
     {
         os << BOLDYELLOW << "Monitoring not defined in " << pFilename << RESET << std::endl;
         os << BOLDYELLOW << "No monitoring will be run" << RESET << std::endl;
@@ -1076,7 +1075,7 @@ std::string FileParser::parseMonitorxml (const std::string& pFilename, DetectorM
     for(pugi::xml_node monitorElement = theMonitorNode.child("Enable"); monitorElement; monitorElement = monitorElement.next_sibling())
     {
         std::string monitorElementName = monitorElement.attribute("name").value();
-        if(atoi(monitorElement.first_child().value())>0) 
+        if(atoi(monitorElement.first_child().value()) > 0)
         {
             theDetectorMonitorConfig.fMonitorElementList.emplace_back(std::move(monitorElementName));
             os << BOLDRED << "Monitoring:" << RESET << " -- " << BOLDCYAN << monitorElementName << RESET << std::endl;
@@ -1085,9 +1084,7 @@ std::string FileParser::parseMonitorxml (const std::string& pFilename, DetectorM
 
     if(theDetectorMonitorConfig.fMonitorElementList.size() == 0) return "None";
     return theMonitorNode.attribute("type").value();
-
 }
-
 
 // ########################
 

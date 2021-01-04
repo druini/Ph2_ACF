@@ -13,10 +13,7 @@
 // using namespace ots;
 
 //========================================================================================================================
-TCPServerBase::TCPServerBase(unsigned int serverPort, unsigned int maxNumberOfClients) 
-: fMaxNumberOfClients(maxNumberOfClients)
-, fServerPort(serverPort)
-, fAccept(true)
+TCPServerBase::TCPServerBase(unsigned int serverPort, unsigned int maxNumberOfClients) : fMaxNumberOfClients(maxNumberOfClients), fServerPort(serverPort), fAccept(true)
 {
     // CANNOT GO IN THE CONSTRUCTOR OR IT MIGHT START BEFORE THE CHILD CLASS CONSTRUCTOR IS FULLY CONSTRUCTED
     // THIS MIGHT RESULT IN THE CALL OF THE VIRTUAL TCPServerBase::acceptConnections
@@ -41,34 +38,34 @@ TCPServerBase::~TCPServerBase(void)
 //========================================================================================================================
 void TCPServerBase::startAccept(void)
 {
-//	__COUT__ << "Begin startAccept" << std::endl;
-	int opt = 1;  // SO_REUSEADDR - man socket(7)
-	if(::setsockopt(getSocketId(), SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int)) == -1)
-	{
-		close();
-		throw std::runtime_error(std::string("Setsockopt: ") + strerror(errno));
-	}
+    //	__COUT__ << "Begin startAccept" << std::endl;
+    int opt = 1; // SO_REUSEADDR - man socket(7)
+    if(::setsockopt(getSocketId(), SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int)) == -1)
+    {
+        close();
+        throw std::runtime_error(std::string("Setsockopt: ") + strerror(errno));
+    }
 
-	struct sockaddr_in serverAddr;
-	bzero((char*)&serverAddr, sizeof(serverAddr));
-	serverAddr.sin_family      = AF_INET;
-	serverAddr.sin_port        = htons(fServerPort);
-	serverAddr.sin_addr.s_addr = INADDR_ANY;
+    struct sockaddr_in serverAddr;
+    bzero((char*)&serverAddr, sizeof(serverAddr));
+    serverAddr.sin_family      = AF_INET;
+    serverAddr.sin_port        = htons(fServerPort);
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
 
-	if(::bind(getSocketId(), (struct sockaddr*)&serverAddr, sizeof(serverAddr)) != 0)
-	{
-		close();
-		throw std::runtime_error(std::string("Bind: ") + strerror(errno));
-	}
-    //freeaddrinfo(serverAddr); // all done with this structure
+    if(::bind(getSocketId(), (struct sockaddr*)&serverAddr, sizeof(serverAddr)) != 0)
+    {
+        close();
+        throw std::runtime_error(std::string("Bind: ") + strerror(errno));
+    }
+    // freeaddrinfo(serverAddr); // all done with this structure
 
-	if(::listen(getSocketId(), fMaxConnectionBacklog) != 0)
-	{
-		close();
-		throw std::runtime_error(std::string("Listen: ") + strerror(errno));
-	}
-	fAccept = true;
-	fAcceptFuture = std::async(std::launch::async, &TCPServerBase::acceptConnections, this);
+    if(::listen(getSocketId(), fMaxConnectionBacklog) != 0)
+    {
+        close();
+        throw std::runtime_error(std::string("Listen: ") + strerror(errno));
+    }
+    fAccept       = true;
+    fAcceptFuture = std::async(std::launch::async, &TCPServerBase::acceptConnections, this);
 }
 
 // An accepts waits for a connection and returns the opened socket number
