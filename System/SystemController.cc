@@ -53,13 +53,17 @@ void SystemController::Destroy()
 {
     if(fDetectorMonitor != nullptr)
     {
+        LOG(INFO) << BOLDRED << "Destroying monitoring" << RESET;
         fDetectorMonitor->stopMonitoring();
         while(fMonitorFuture.wait_for(std::chrono::milliseconds(250)) != std::future_status::ready) { LOG(INFO) << "Waiting for monitoring to be completed..."; }
         delete fDetectorMonitor;
         fDetectorMonitor = nullptr;
+        LOG(INFO) << BOLDRED << "Monitoring destroyed" << RESET;
     }
 
     this->closeFileHandler();
+
+    LOG(INFO) << BOLDRED << "Destroying interfaces" << RESET;
 
     delete fBeBoardInterface;
     fBeBoardInterface = nullptr;
@@ -80,6 +84,8 @@ void SystemController::Destroy()
 
     delete fNetworkStreamer;
     fNetworkStreamer = nullptr;
+    LOG(INFO) << BOLDRED << "Interfaces destroyed" << RESET;
+
 }
 
 void SystemController::addFileHandler(const std::string& pFilename, char pOption)
