@@ -36,7 +36,6 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
          }
     }
     // To be uncommented if crate is used
-    //SetConfigMode(pChip, pChip->getReg("useOpticalLink"), pChip->getReg("useCPB"), pChip->getReg("toggleTC"));
     PrintChipMode(pChip);
     ConfigurePSROH(pChip);
     uint8_t  cPUSMStatus = GetPUSMStatus(pChip);
