@@ -9,11 +9,11 @@
     <!--<connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
     <CDCE configure="0" clockRate="320"/>
     
-    <OpticalGroup Id="0" FMCId="0">
+    <OpticalGroup Id="0" FMCId="0" >
+        <lpGBT_Interface useOpticalLink="0" useCPB="0"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
-          <Settings
-          />
+          <Settings />
         </lpGBT>
     </OpticalGroup>
 
@@ -127,7 +127,7 @@
   <!--##############
     ELECTRICAL FC7 
   ###############-->
-  <BeBoard Id="50" boardType="D19C" eventType="SSA">
+  <BeBoard Id="1" boardType="D19C" eventType="SSA">
         <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.13:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
         <!--  <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  -->
 

@@ -20,7 +20,7 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap) : lpGBTInterface(pBoardMap) {}
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB) {}
 
 #ifdef __TCUSB__
     TC_PSROH fTC_PSROH;
@@ -92,7 +92,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // # LpGBT specific routine functions #
     // ####################################
     // lpGBT Rx Groups(Channels) phase training
-    void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
+    void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain=false);
     // lpGBT Rx Groups(Channels) phase alignment
     void PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pRate);
 
@@ -101,6 +101,8 @@ class D19clpGBTInterface : public lpGBTInterface
     // ################################
     // Print out lpGBT chip mode (data rate, FEC, transmission mode)
     void PrintChipMode(Ph2_HwDescription::Chip* pChip);
+    // Get lpGBT Chip Rate
+    uint8_t GetChipRate(Ph2_HwDescription::Chip* pChip);
     // Get lpGBT Rx Group Delay-Locked-Loop state machine
     uint8_t GetRxDllStatus(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
     // Get lpGBT Rx Channel phase
@@ -157,9 +159,9 @@ class D19clpGBTInterface : public lpGBTInterface
     // # Outer Tracker specific funtions #
     // ###################################
     // Sets the flag used to select which lpGBT configuration interface to use
-    void SetConfigMode(Ph2_HwDescription::Chip* pChip, const std::string& pMode, bool pToggle);
+    void SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC=false);
     // configure PS-ROH
-    void ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t pRate);
+    void ConfigurePSROH(Ph2_HwDescription::Chip* pChip);
     // cbc read/write
     bool cbcWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pPage, uint8_t pRegistergAddress, uint8_t pRegisterValue, bool pReadBack = true, bool pSetPage = false)
     {
@@ -202,8 +204,8 @@ class D19clpGBTInterface : public lpGBTInterface
     // ###################################
     // # Outer Tracker specific objects  #
     // ###################################
-    bool fUseOpticalLink = false;
-    bool fUseCPB = false;
+    bool fUseOpticalLink = true;
+    bool fUseCPB = true;
 #ifdef __TCUSB__
     std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},

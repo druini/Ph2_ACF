@@ -274,6 +274,11 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
     {
         if(static_cast<std::string>(theChild.name()) == "Hybrid")
             this->parseHybridContainer(theChild, theOpticalGroup, os, pBoard);
+        else if(static_cast<std::string>(theChild.name()) == "lpGBT_Interface")
+        {
+            pBoard->setUseOpticalLink(convertAnyInt(theChild.attribute("useOpticalLink").value()));
+            pBoard->setUseCPB(convertAnyInt(theChild.attribute("useCPB").value()));
+        }
         else if(static_cast<std::string>(theChild.name()) == "lpGBT_Files")
         {
             cFilePath = expandEnvironmentVariables(theChild.attribute("path").value());
@@ -290,7 +295,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             pugi::xml_node clpGBTSettings = theChild.child("Settings");
             if(clpGBTSettings != nullptr)
             {
-                os << BOLDCYAN << "|\t|\t|----lpGBT settingse" << RESET << std::endl;
+                os << BOLDCYAN << "|\t|\t|----lpGBT settings" << RESET << std::endl;
 
                 for(const pugi::xml_attribute& attr: clpGBTSettings.attributes())
                 {
