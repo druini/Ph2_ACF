@@ -29,6 +29,7 @@ SystemController::SystemController()
     , fWriteHandlerEnabled(false)
     , fStreamerEnabled(false)
     , fNetworkStreamer(nullptr) // This is the server listening port
+    , fDetectorMonitor(nullptr)
 {
 }
 
