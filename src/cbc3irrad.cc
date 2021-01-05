@@ -371,7 +371,7 @@ int main(int argc, char* argv[])
                 else
                     cTool.ReadNEvents(pBoard, cAcqSize);
 
-                const std::vector<Event*>& events = cTool.GetEvents(pBoard);
+                const std::vector<Event*>& events = cTool.GetEvents();
 
                 for(auto& ev: events)
                 {

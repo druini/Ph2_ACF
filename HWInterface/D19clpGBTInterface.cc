@@ -22,7 +22,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 {
     LOG(INFO) << BOLDBLUE << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
-    //Load register map from configuration file
+    // Load register map from configuration file
     ChipRegMap clpGBTRegMap = pChip->getRegMap();
     for(const auto& cRegItem: clpGBTRegMap)
     {

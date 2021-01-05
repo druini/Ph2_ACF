@@ -42,9 +42,9 @@ class MPA : public ReadoutChip
 
     using MPARegPair = std::pair<std::string, ChipRegItem>;
     uint8_t fPartnerId;
-    uint8_t getPartid() {return fPartnerId;}
-    void loadfRegMap(const std::string& filename) override;
-    void saveRegMap(const std::string& filename) override;
+    uint8_t getPartid() { return fPartnerId; }
+    void    loadfRegMap(const std::string& filename) override;
+    void    saveRegMap(const std::string& filename) override;
 
     bool isDACLocal(const std::string& dacName) override
     {
@@ -61,13 +61,13 @@ class MPA : public ReadoutChip
             return 8;
     }
 
-    // row, col starts at index 0, global pix number starts at number 1 
+    // row, col starts at index 0, global pix number starts at number 1
 
-    std::pair<uint32_t, uint32_t> PNlocal(const uint32_t PN) { return std::pair<uint32_t, uint32_t>((PN+1) / 120 , ((PN+1) % 120) - 2 ); }
+    std::pair<uint32_t, uint32_t> PNlocal(const uint32_t PN) { return std::pair<uint32_t, uint32_t>((PN + 1) / 120, ((PN + 1) % 120) - 2); }
 
     uint32_t getNumberOfChannels() const override { return NMPACHANNELS; }
 
-    uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first) * 120 + (PC.second) +1; }
+    uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first) * 120 + (PC.second) + 1; }
 };
 
 struct MPARegItemComparer
