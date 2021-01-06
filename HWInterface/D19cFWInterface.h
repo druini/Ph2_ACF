@@ -119,6 +119,8 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t fI2CVersion;
     // optical readout
     bool                       fOptical       = false;
+    bool                       fUseOpticalLink= false;
+    bool                       fUseCPB        = false;
     bool                       fConfigureCDCE = false;
     std::map<uint8_t, uint8_t> fRxPolarity;
     std::map<uint8_t, uint8_t> fTxPolarity;

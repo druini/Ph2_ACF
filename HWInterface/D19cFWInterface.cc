@@ -437,7 +437,7 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
     // check links are up
     std::vector<std::string> cStates      = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
     bool                     cLinksLocked = true;
-    uint8_t                  cMaxAttempts = 100;
+    uint8_t                  cMaxAttempts = 10;
     uint8_t                  cAttempCount = 0;
     do
     {
@@ -761,6 +761,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     if(fIsDDR3Readout == 1) LOG(INFO) << BOLDBLUE << "DD3 Readout .... " << RESET;
     fI2CVersion = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
     fOptical    = pBoard->ifOptical();
+    fUseOpticalLink = pBoard->ifUseOpticalLink();
 
     if(fI2CVersion >= 1 && fOptical)
     {
@@ -863,6 +864,16 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
         // now configure SCA + GBTx
         configureLink(pBoard);
+    }
+    if(fUseOpticalLink) 
+    {
+        LOG(INFO) << BOLDBLUE << "Configuring optical link.." << RESET;
+        bool clpGBTlock = LinkLock(pBoard);
+        if(!clpGBTlock)
+        {
+            LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
+            exit(0);
+        }
     }
 
     // resetting hard
