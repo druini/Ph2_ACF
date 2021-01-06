@@ -26,11 +26,11 @@ More informations can be found at https://indico.cern.ch/event/842824/attachment
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 09/10/2020
++ Last change made to this section: 06/11/2020
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `master` / `IT-v3.9.7`
+- Software git branch / tag : `master` / `IT-v3.9.8`
 - Firmware tag: `3.4`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
@@ -172,7 +172,7 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
-**N.B.:** steps **4** and **5** are meant to measure the so called "in-time threhsold", to be compared with the threshold measured at step **3**, which is the so called "absoulte threshold"
+**N.B.:** steps **4** and **5** are meant to measure the so called "in-time threshold", to be compared with the threshold measured at step **3**, which is the so called "absoulte threshold"
 ### ~=-=~ End of Inner-Tracker section ~=-=~
 <hr>
 
@@ -207,6 +207,12 @@ For more information on the firmware, please check the doc directory of https://
     i. from `settings > CI/CD` expand the `Runners` section
 
     ii. click the `Allow shared Runners` button
+
+3. Enable specific Runners (if not enabled)
+
+    i. from `settings > CI/CD` expand the `Runners` section
+
+    ii. in the section `Available specific runners` click button `Enable for this project` for the Ph2_ACF runner with the `FNAL`
 
 
 ### clang-format (required to submit merge requests!!!)

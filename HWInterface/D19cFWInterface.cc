@@ -427,6 +427,7 @@ void D19cFWInterface::powerAllFMCs(bool pEnable)
 
 bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
 {
+    if(pBoard->getId() == 50) return true;
     // reset lpGBT core
     this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -455,9 +456,9 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             bool cGBTxLocked = true;
             // read back status register
-            LOG(DEBUG) << BOLDBLUE << "GBT Link Status..." << RESET;
+            LOG(INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
             uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
-            LOG(DEBUG) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
+            LOG(INFO) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
             std::vector<std::string> cStates = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
             uint8_t                  cIndex  = 1;
             for(auto cState: cStates)
@@ -465,9 +466,9 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
                 uint8_t cStatus = (cLinkStatus >> (3 - cIndex)) & 0x1;
                 cGBTxLocked &= (cStatus == 1);
                 if(cStatus == 1)
-                    LOG(DEBUG) << BOLDBLUE << "\t... " << cState << BOLDGREEN << "\t : LOCKED" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDGREEN << "\t : LOCKED" << RESET;
                 else
-                    LOG(DEBUG) << BOLDBLUE << "\t... " << cState << BOLDRED << "\t : FAILED" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDRED << "\t : FAILED" << RESET;
                 cIndex++;
             }
             cLinksLocked = cLinksLocked && cGBTxLocked;
@@ -479,7 +480,7 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
         }
         else
         {
-            LOG(INFO) << BOLDRED << "Resetting lpGBT link .. no lock" << RESET;
+            LOG(DEBUG) << BOLDRED << "Resetting lpGBT link .. no lock" << RESET;
             // reset lpGBT core
             this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
             std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -506,11 +507,13 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     } while(std::cin.get() != '\n');
+    // system("/home/modtest/Programming/power_supply/bin/TurnOff -c /home/modtest/Programming/power_supply/config/config.xml ");
+    // std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
     // resync CDCE
     // this->syncCDCE();
     // reset GBT-FPGA
     this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     // reset GBT-FPGA
     // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
     // std::this_thread::sleep_for (std::chrono::milliseconds (500) );
@@ -523,6 +526,8 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     } while(std::cin.get() != '\n');
+    // system("/home/modtest/Programming/power_supply/bin/TurnOn -c /home/modtest/Programming/power_supply/config/config.xml ");
+    // std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
 
     for(auto cLinkId: cLinkIds)
     {
@@ -1762,15 +1767,16 @@ void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                             for(int i = 0; i < 2040; i++)
                             {
                                 pData.push_back(ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data") - 1);
-                                // all+=pData[i];
+                                LOG(DEBUG) << BOLDBLUE << "pData " << i << " " << pData[i] << RESET;
                             }
                             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+
                             ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
                         }
                     }
                     else
                     {
-                        LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from SSA" << +cChip->getId() << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from MPA" << +cChip->getId() << RESET;
                         bool                  cWrite = false;
                         std::vector<uint32_t> cVec;
                         cVec.clear();
@@ -2363,6 +2369,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     bool                                          cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents * (cMultiplicity + 1)});
+
     if(cAsync && cTriggerSource == 3)
     {
         this->ReconfigureTriggerFSM(cVecReg);
@@ -2525,7 +2532,6 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // try again
         this->ReadNEvents(pBoard, pNEvents, pData);
     }
-
     if(fSaveToFile) fFileHandler->setData(pData);
 }
 
@@ -3477,7 +3483,7 @@ void D19cFWInterface::PSInterfaceBoard_SetSlaveMap()
 void D19cFWInterface::PSInterfaceBoard_ConfigureI2CMaster(uint32_t pEnabled = 1, uint32_t pFrequency = 4)
 {
     // wait for all commands to be executed
-    std::chrono::milliseconds cWait(fWait_us);
+    std::chrono::microseconds cWait(fWait_us);
     while(!ReadReg("fc7_daq_stat.command_processor_block.i2c.command_fifo.empty")) { std::this_thread::sleep_for(cWait); }
 
     if(pEnabled > 0)
@@ -3500,7 +3506,7 @@ void D19cFWInterface::PSInterfaceBoard_ConfigureI2CMaster(uint32_t pEnabled = 1,
 
 void D19cFWInterface::PSInterfaceBoard_SendI2CCommand(uint32_t slave_id, uint32_t board_id, uint32_t read, uint32_t register_address, uint32_t data)
 {
-    std::chrono::milliseconds cWait(fWait_us);
+    std::chrono::microseconds cWait(fWait_us);
 
     uint32_t shifted_command_type     = 1 << 31;
     uint32_t shifted_word_id_0        = 0;
@@ -3542,7 +3548,7 @@ void D19cFWInterface::PSInterfaceBoard_SendI2CCommand(uint32_t slave_id, uint32_
 
 uint32_t D19cFWInterface::PSInterfaceBoard_SendI2CCommand_READ(uint32_t slave_id, uint32_t board_id, uint32_t read, uint32_t register_address, uint32_t data)
 {
-    std::chrono::milliseconds cWait(fWait_us);
+    std::chrono::microseconds cWait(fWait_us);
 
     uint32_t shifted_command_type     = 1 << 31;
     uint32_t shifted_word_id_0        = 0;
@@ -3682,13 +3688,13 @@ void D19cFWInterface::PSInterfaceBoard_PowerOn(uint8_t mpaid, uint8_t ssaid)
     LOG(INFO) << "Interface Board Power ON";
 
     PSInterfaceBoard_ConfigureI2CMaster(1, SLOW);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     PSInterfaceBoard_SendI2CCommand(powerenable, 0, write, 0, 0x00); // There is an inverter! Be Careful!
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
 void D19cFWInterface::SSAEqualizeDACs(uint8_t pChipId)
@@ -3801,7 +3807,7 @@ void D19cFWInterface::PSInterfaceBoard_PowerOn_MPA(float VDDPST, float DVDD, flo
     uint32_t                  i2cmux  = 0;
     uint32_t                  pcf8574 = 1;
     uint32_t                  dac7678 = 4;
-    std::chrono::milliseconds cWait(100);
+    std::chrono::milliseconds cWait(10);
     this->getBoardInfo();
     this->PSInterfaceBoard_PowerOn(0, 0);
     PSInterfaceBoard_SetSlaveMap();
@@ -3865,6 +3871,164 @@ void D19cFWInterface::PSInterfaceBoard_PowerOn_MPA(float VDDPST, float DVDD, flo
     PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x04);
     PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
 }
+
+
+
+
+void D19cFWInterface::PSInterfaceBoard_PowerOn_MPASSA(float VDDPST, float DVDD, float AVDD, float VBG, float VBF, uint8_t mpaid, uint8_t ssaid)
+{
+
+    this->getBoardInfo();
+    this->PSInterfaceBoard_PowerOn(0, 0);
+
+
+
+
+    uint32_t write   = 0;
+    uint32_t SLOW    = 2;
+    uint32_t i2cmux  = 0;
+    uint32_t pcf8574 = 1;
+    uint32_t dac7678 = 4;
+    std::this_thread::sleep_for(std::chrono::milliseconds(750));
+    PSInterfaceBoard_SetSlaveMap();
+    PSInterfaceBoard_ConfigureI2CMaster(1, SLOW);
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
+    float Vc = 0.0003632813;
+
+
+
+
+    LOG(INFO) << "mpa vdd on";
+
+    float Vlimit = 1.32;
+    if(VDDPST > Vlimit) VDDPST = Vlimit;
+    float    diffvoltage = 1.5 - VDDPST;
+    uint32_t setvoltage  = int(round(diffvoltage / Vc));
+    if(setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+
+
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);           // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x34, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+
+    LOG(INFO) << "ssa vdd on";
+
+    Vlimit = 1.32;
+    if(VDDPST > Vlimit) VDDPST = Vlimit;
+    diffvoltage = 1.5 - VDDPST;
+    setvoltage  = int(round(diffvoltage / Vc));
+    if(setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01); // to SCO on PCA9646
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x33, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+
+
+    LOG(INFO) << "mpa vddD on";
+    Vlimit = 1.2;
+    if(DVDD > Vlimit) DVDD = Vlimit;
+    diffvoltage = 1.5 - DVDD;
+    setvoltage  = int(round(diffvoltage / Vc));
+    if(setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);           // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x30, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+    LOG(INFO) << "ssa vddD on";
+    Vlimit = 1.32;
+    if(DVDD > Vlimit) DVDD = Vlimit;
+    diffvoltage = 1.5 - DVDD;
+    setvoltage  = int(round(diffvoltage / Vc));
+    if(setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01); // to SCO on PCA9646
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x31, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+
+    LOG(INFO) << "mpa vddA on";
+    Vlimit = 1.32;
+    if(AVDD > Vlimit) AVDD = Vlimit;
+    diffvoltage = 1.5 - AVDD;
+    setvoltage  = int(round(diffvoltage / Vc));
+    if(setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);           // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x32, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    LOG(INFO) << "ssa vddA on";
+    Vlimit = 1.32;
+    if(AVDD > Vlimit) AVDD = Vlimit;
+    diffvoltage = 1.5 - AVDD;
+    setvoltage  = int(round(diffvoltage / Vc));
+    if(setvoltage > 4095) setvoltage = 4095;
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01); // to SCO on PCA9646
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x35, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+
+
+
+
+    LOG(INFO) << "mpa VBG on";
+    Vlimit = 0.5;
+    if(VBG > Vlimit) VBG = Vlimit;
+    float Vc2  = 4095 / 1.5;
+    setvoltage = int(round(VBG * Vc2));
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01);           // to SCO on PCA9646
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x36, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    /*LOG(INFO) << "ssa VBG on";
+    Vlimit = 1.32;
+    if(VBG > Vlimit) VBG = Vlimit;
+    Vc2  = 4095 / 1.5;
+    setvoltage = int(round(VBG * Vc2));
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01); // to SCO on PCA9646
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x36, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));*/
+
+    LOG(INFO) << "ssa VBF on";
+    Vlimit = 0.5;
+    if(VBF > Vlimit) VBF = Vlimit;
+    setvoltage = int(round(VBF * Vc2));
+    setvoltage = setvoltage << 4;
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x01); // to SCO on PCA9646
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    PSInterfaceBoard_SendI2CCommand(dac7678, 0, write, 0x37, setvoltage); // tx to DAC C
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, 145); // set reset bit
+
+
+    /*LOG(INFO) << "mpa enable";
+    //uint32_t val2 = (mpaid << 5) + 16;
+    uint32_t val2 = (mpaid << 5) + (ssaid << 1) + 1; // reset bit for MPA
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x02);  // route to 2nd PCF8574
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    PSInterfaceBoard_SendI2CCommand(pcf8574, 0, write, 0, val2); // set reset bit
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));*/
+
+    // disable the i2c master at the end (first set the mux to the chip
+    PSInterfaceBoard_SendI2CCommand(i2cmux, 0, write, 0, 0x04);
+    PSInterfaceBoard_ConfigureI2CMaster(0, SLOW);
+
+}
+
+
 
 void D19cFWInterface::PSInterfaceBoard_PowerOff_SSA(uint8_t mpaid, uint8_t ssaid)
 {
@@ -4254,7 +4418,6 @@ void D19cFWInterface::ResetOptoLink(Ph2_HwDescription::Chip* pChip)
     this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic", 0x00},
                          {"fc7_daq_cnfg.optical_block.ic", 0x00}, 
                          {"fc7_daq_cnfg.optical_block.gbtx", 0x00}});
-
 }
 
 bool D19cFWInterface::WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pValue, bool pVerifLoop)
@@ -4301,16 +4464,15 @@ uint32_t D19cFWInterface::ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, u
     // Reset
     ResetOptoLink(pChip);
     // Config transaction register
-    this->WriteReg("fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress);
-    this->WriteReg("fc7_daq_cnfg.optical_block.ic.register", pAddress);
-    this->WriteReg("fc7_daq_cnfg.optical_block.ic.nwords", 0x01);
+    this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress},
+                         {"fc7_daq_cnfg.optical_block.ic.register", pAddress}, 
+                         {"fc7_daq_cnfg.optical_block.ic.nwords", 0x01}});
     // Perform transaction
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_read", 0x01);
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_read", 0x00);
+    this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.start_read", 0x01},
+                        {"fc7_daq_ctrl.optical_block.ic.start_read", 0x00}});
     //
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.read", 0x01);
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.read", 0x00);
-    //
+    this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.read", 0x01}, 
+                        {"fc7_daq_ctrl.optical_block.ic.read", 0x00}});
     uint32_t cReadBack = this->ReadReg("fc7_daq_stat.optical_block.ic.data");
     LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pAddress << std::dec << "]" << RESET;
     return cReadBack;

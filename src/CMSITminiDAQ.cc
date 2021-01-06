@@ -87,13 +87,6 @@ void readBinaryData(std::string binaryFile, SystemController& mySysCntr, std::ve
 
 int main(int argc, char** argv)
 {
-    // ########################
-    // # Configure the logger #
-    // ########################
-    el::Configurations conf("../settings/logger.conf");
-    conf.set(el::Level::Global, el::ConfigurationType::Format, "|%thread|%levshort| %msg");
-    el::Loggers::reconfigureAllLoggers(conf);
-
     // #############################
     // # Initialize command parser #
     // #############################
@@ -103,32 +96,32 @@ int main(int argc, char** argv)
 
     cmd.setHelpOption("h", "help", "Print this help page");
 
-    cmd.defineOption("file", "Hardware description file. Default value: CMSIT.xml", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("file", "Hardware description file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("file", "f");
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clockdelay physics eudaq prbstime prbsframes]. Default: pixelalive",
+                     "injdelay clockdelay physics eudaq prbstime prbsframes]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
-    cmd.defineOption("binary", "Binary file to decode.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("binary", "Binary file to decode", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("binary", "b");
 
-    cmd.defineOption("prog", "Program the system components.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOption("prog", "Just program the system components", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("prog", "p");
 
-    cmd.defineOption("sup", "Run in producer(Middleware) - consumer(DQM) mode.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOption("sup", "Run in producer(Middleware) - consumer(DQM) mode", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("sup", "s");
 
-    cmd.defineOption("eudaqRunCtr", "EUDA-IT run control address. Defaut: tcp://localhost:44000", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("eudaqRunCtr", "EUDAQ-IT run control address [e.g. tcp://localhost:44000]", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
 
-    cmd.defineOption("capture", "Capture communication with board (extension .raw).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("capture", "Capture communication with board (extension .raw)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption("replay", "Replay previously captured communication (extension .raw).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("replay", "Replay previously captured communication (extension .raw)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
     if(result != CommandLineProcessing::ArgvParser::NoParserError)
@@ -150,8 +143,8 @@ int main(int argc, char** argv)
     // ####################
     // # Retrieve options #
     // ####################
-    std::string configFile = cmd.foundOption("file") == true ? cmd.optionValue("file") : "CMSIT.xml";
-    std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "pixelalive";
+    std::string configFile = cmd.foundOption("file") == true ? cmd.optionValue("file") : "";
+    std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "";
     std::string binaryFile = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
     bool        program    = cmd.foundOption("prog") == true ? true : false;
     bool        supervisor = cmd.foundOption("sup") == true ? true : false;
@@ -161,6 +154,18 @@ int main(int argc, char** argv)
     else if(cmd.foundOption("replay") == true)
         RegManager::enableReplay(cmd.optionValue("replay"));
     std::string eudaqRunCtr = cmd.foundOption("eudaqRunCtr") == true ? cmd.optionValue("eudaqRunCtr") : "tcp://localhost:44000";
+
+    // ########################
+    // # Configure the logger #
+    // ########################
+    std::string fileName("logs/CMSITminiDAQ" + RD53Shared::fromInt2Str(runNumber));
+    if(whichCalib != "") fileName += "_" + whichCalib;
+    fileName += ".log";
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
+    conf.set(el::Level::Global, el::ConfigurationType::Format, "|%thread|%levshort| %msg");
+    conf.set(el::Level::Global, el::ConfigurationType::Filename, fileName);
+    el::Loggers::reconfigureAllLoggers(conf);
+    // el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Filename, fileName);
 
     // ######################
     // # Supervisor section #
@@ -182,7 +187,7 @@ int main(int argc, char** argv)
         else if(runControllerPid == 0)
         {
             char* argv[] = {(char*)"RunController", NULL};
-            execv((std::string(getenv("BASE_DIR")) + "/bin/RunController").c_str(), argv);
+            execv((std::string(std::getenv("PH2ACF_BASE_DIR")) + "/bin/RunController").c_str(), argv);
             LOG(ERROR) << BOLDRED << "I can't run RunController, error occured" << RESET;
             exit(EXIT_FAILURE);
         }
@@ -309,11 +314,6 @@ int main(int argc, char** argv)
             LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
             mySysCntr.Configure(configFile);
             LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
-            if(program == true)
-            {
-                LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
-                exit(EXIT_SUCCESS);
-            }
         }
 
         std::cout << std::endl;
@@ -602,7 +602,7 @@ int main(int argc, char** argv)
                             mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 1, true);
                         }
         }
-        else
+        else if(program == false)
         {
             LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
             exit(EXIT_FAILURE);

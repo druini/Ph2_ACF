@@ -78,7 +78,7 @@ class MPAInterface : public ReadoutChipInterface
     void                  Activate_sync(Ph2_HwDescription::Chip* pMPA);
     void                  Activate_pp(Ph2_HwDescription::Chip* pMPA);
     void                  Activate_ss(Ph2_HwDescription::Chip* pMPA);
-    void                  Activate_ps(Ph2_HwDescription::Chip* pMPA);
+    void                  Activate_ps(Ph2_HwDescription::Chip* pMPA, uint8_t win=8);
 
     void Enable_pix_counter(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
     void Enable_pix_sync(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
