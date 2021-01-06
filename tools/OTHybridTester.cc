@@ -27,23 +27,28 @@ void OTHybridTester::InjectULInternalPattern(uint32_t pPattern)
 void OTHybridTester::InjectULExternalPattern(uint8_t pPattern)
 {
   DPInterface         cDPInterfacer;
-  BeBoardFWInterface* pInterface = dynamic_cast<BeBoardFWInterface*>(fBeBoardFWMap.find(50)->second);
-  // Check if Emulator is running
-  if(cDPInterfacer.IsRunning(pInterface, 1))
+  for(auto cBoard : *fDetectorContainer)
   {
-    LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
-    cDPInterfacer.Stop(pInterface);
-  }
-  // Configure and Start DataPlayer
-  cDPInterfacer.Configure(pInterface, pPattern);
-  cDPInterfacer.Start(pInterface, 1);
-  if(cDPInterfacer.IsRunning(pInterface, 1))
-    LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
-  else
-    LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
+      if(cBoard->at(0)->flpGBT != nullptr) continue;
+      BeBoardFWInterface* pInterface = dynamic_cast<BeBoardFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
+      // Check if Emulator is running
+      if(cDPInterfacer.IsRunning(pInterface, 1))
+      {
+        LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+        cDPInterfacer.Stop(pInterface);
+      }
+      // Configure and Start DataPlayer
+      cDPInterfacer.Configure(pInterface, pPattern);
+      cDPInterfacer.Start(pInterface, 1);
+      if(cDPInterfacer.IsRunning(pInterface, 1))
+        LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+      else
+        LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
-  LOG(INFO) << BOLDGREEN << "Electrical FC7 pattern generation" << RESET;
-  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      LOG(INFO) << BOLDGREEN << "Electrical FC7 pattern generation" << RESET;
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      return;
+  }
 }
 
 void OTHybridTester::CheckULPattern(bool pIsExternal)
