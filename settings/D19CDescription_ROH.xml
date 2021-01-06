@@ -133,6 +133,7 @@
 
         <CDCE configure="0" clockRate="320"/> 
          <OpticalGroup Id="0" FMCId="0" >
+            <lpGBT_Interface useOpticalLink="0" useCPB="0"/>
          </OpticalGroup> 
 
     <!--CONFIG-->
