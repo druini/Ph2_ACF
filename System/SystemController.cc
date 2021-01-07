@@ -303,7 +303,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             for(auto cOpticalGroup: *cBoard)
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
-                    LOG(INFO) << GREEN << "Initializing communication to low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
+                    LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
 
                     if(static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ConfigureChip(cOpticalGroup->flpGBT) == true)
                         LOG(INFO) << BOLDBLUE << "\t--> LpGBT chip configured" << RESET;

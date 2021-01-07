@@ -1,6 +1,6 @@
 /*!
   \file                  RD53lpGBTInterface.cc
-  \brief                 Interface to access and control the low-power Gigabit Transceiver chip
+  \brief                 Interface to access and control the Low-power Gigabit Transceiver chip
   \author                Mauro DINARDO
   \version               1.0
   \date                  03/03/20
@@ -51,13 +51,14 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
         LOG(ERROR) << BOLDRED << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[PUSMStatus] << RESET;
         return false;
     }
+    LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[PUSMStatus] << RESET;
 
     // ###############################
     // # In case of not efused LpGBT #
     // ###############################
-    ChipRegMap& lpGBTRegMap = pChip->getRegMap();
-    for(const auto& cRegItem: lpGBTRegMap)
-        if((cRegItem.second.fAddress < 0x13C) && (cRegItem.second.fPrmptCfg == true)) RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+    // ChipRegMap& lpGBTRegMap = pChip->getRegMap();
+    // for(const auto& cRegItem: lpGBTRegMap)
+    //     if((cRegItem.second.fAddress < 0x13C) && (cRegItem.second.fPrmptCfg == true)) RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
 
     RD53lpGBTInterface::PrintChipMode(pChip);
 

@@ -1,6 +1,6 @@
 /*!
   \file                  RD53lpGBTInterface.h
-  \brief                 Interface to access and control the low-power Gigabit Transceiver chip
+  \brief                 Interface to access and control the Low-power Gigabit Transceiver chip
   \author                Mauro DINARDO
   \version               1.0
   \date                  03/03/20
