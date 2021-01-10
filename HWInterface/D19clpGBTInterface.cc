@@ -963,7 +963,7 @@ bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
 {
     LOG(DEBUG) << BOLDBLUE << "MPA Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x00 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
+    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x40 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
     if(pRetry)
     {
         uint8_t cReadBack = mpaRead(pChip, pFeId, pChipId, pRegisterAddress);
@@ -986,7 +986,7 @@ bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
 uint32_t D19clpGBTInterface::mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress)
 {
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x00 + pChipId, cInvertedRegister, 2);
+    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x40 + pChipId, cInvertedRegister, 2);
     uint32_t cReadBack = ReadI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x00 + pChipId, 1);
     LOG(DEBUG) << BOLDYELLOW << "MPA Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     return cReadBack;
