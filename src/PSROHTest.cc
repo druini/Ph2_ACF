@@ -161,13 +161,13 @@ int main(int argc, char* argv[])
     {
         if(cmd.foundOption("internal-pattern")) 
         { 
-            cPSROHTester.InjectULInternalPattern(cInternalPattern32);
-            cPSROHTester.CheckULPattern(false); 
+            cPSROHTester.LpGBTInjectULInternalPattern(cInternalPattern32);
+            cPSROHTester.LpGBTCheckULPattern(false); 
         }
         else if(cmd.foundOption("external-pattern"))
         {
-            cPSROHTester.InjectULExternalPattern(cExternalPattern);
-            cPSROHTester.CheckULPattern(true); 
+            cPSROHTester.LpGBTInjectULExternalPattern(cExternalPattern);
+            cPSROHTester.LpGBTCheckULPattern(true); 
         }
     }
 
@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
         std::vector<uint8_t> cGPIOs = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
         for(auto cLevel: cLevels)
         {
-            cPSROHTester.SetGPIOLevel(cGPIOs, cLevel.second);
+            cPSROHTester.LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
             bool cStatus = cPSROHTester.TestResetLines(cLevel.second);
             if(cStatus)
                 LOG(INFO) << BOLDBLUE << "Set levels to " << cLevel.first << " : test " << BOLDGREEN << " passed." << RESET;
@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testI2C"))
     {
         std::vector<uint8_t> cMasters = {0, 2};
-        bool                 cStatus  = cPSROHTester.TestI2CMaster(cMasters);
+        bool                 cStatus  = cPSROHTester.LpGBTTestI2CMaster(cMasters);
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDGREEN << " passed" << RESET;
         else
@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testADC"))
     {
         std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
-        cPSROHTester.TestADC(cADCs, 0, 1000, 20);
+        cPSROHTester.LpGBTTestADC(cADCs, 0, 1000, 20);
     }
 
     // Test Fast Commands
@@ -232,7 +232,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("scope-fcmd"))
     {
         if(cmd.foundOption("fcmd-pattern"))
-            cPSROHTester.InjectDLInternalPattern(cFCMDPattern);
+            cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
         cPSROHTester.FastCommandScope();
     }
 

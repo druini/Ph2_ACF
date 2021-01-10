@@ -7,7 +7,7 @@ using namespace Ph2_System;
 OTHybridTester::OTHybridTester() : Tool() {}
 OTHybridTester::~OTHybridTester() {}
 
-void OTHybridTester::InjectULInternalPattern(uint32_t pPattern)
+void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
 {
   for(auto cBoard : *fDetectorContainer)
   {
@@ -24,7 +24,7 @@ void OTHybridTester::InjectULInternalPattern(uint32_t pPattern)
   }
 }
 
-void OTHybridTester::InjectULExternalPattern(uint8_t pPattern)
+void OTHybridTester::LpGBTInjectULExternalPattern(uint8_t pPattern)
 {
   DPInterface         cDPInterfacer;
   for(auto cBoard : *fDetectorContainer)
@@ -51,7 +51,7 @@ void OTHybridTester::InjectULExternalPattern(uint8_t pPattern)
   }
 }
 
-void OTHybridTester::CheckULPattern(bool pIsExternal)
+void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
 {
   for(auto cBoard : *fDetectorContainer)
   {
@@ -76,7 +76,7 @@ void OTHybridTester::CheckULPattern(bool pIsExternal)
   }
 }
 
-void OTHybridTester::InjectDLInternalPattern(uint8_t pPattern)
+void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
 {
   for(auto cBoard: *fDetectorContainer)
   {
@@ -91,7 +91,7 @@ void OTHybridTester::InjectDLInternalPattern(uint8_t pPattern)
   }
 }
 
-bool OTHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
+bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
 {
   bool cTestSuccess = true;
   for(auto cBoard: *fDetectorContainer)
@@ -115,7 +115,7 @@ bool OTHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
   return cTestSuccess;
 }
 
-void OTHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t pMinDACValue, uint32_t pMaxDACValue, uint32_t pStep)
+void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDACValue, uint32_t pMaxDACValue, uint32_t pStep)
 {
 #ifdef __USE_ROOT__
   for(auto cBoard: *fDetectorContainer)
@@ -180,7 +180,7 @@ void OTHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t pMi
 #endif
 }
 
-void OTHybridTester::SetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t pLevel)
+void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t pLevel)
 {
   for(auto cBoard: *fDetectorContainer)
   {
