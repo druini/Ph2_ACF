@@ -28,8 +28,8 @@ void RD53FWInterface::setFileHandler(FileHandler* pHandler)
 
 uint32_t RD53FWInterface::getBoardInfo()
 {
-    uint32_t cVersionMajor = ReadReg("user.stat_regs.usr_ver.usr_ver_major");
-    uint32_t cVersionMinor = ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
+    uint32_t cVersionMajor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_major");
+    uint32_t cVersionMinor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
     uint32_t cVersionWord  = ((cVersionMajor << NBIT_FWVER) | cVersionMinor);
     return cVersionWord;
 }
@@ -50,15 +50,15 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ########################
     // # Print firmware infos #
     // ########################
-    uint32_t cVersionMajor = ReadReg("user.stat_regs.usr_ver.usr_ver_major");
-    uint32_t cVersionMinor = ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
+    uint32_t cVersionMajor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_major");
+    uint32_t cVersionMinor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
 
-    uint32_t cFWyear    = ReadReg("user.stat_regs.fw_date.year");
-    uint32_t cFWmonth   = ReadReg("user.stat_regs.fw_date.month");
-    uint32_t cFWday     = ReadReg("user.stat_regs.fw_date.day");
-    uint32_t cFWhour    = ReadReg("user.stat_regs.fw_date.hour");
-    uint32_t cFWminute  = ReadReg("user.stat_regs.fw_date.minute");
-    uint32_t cFWseconds = ReadReg("user.stat_regs.fw_date.seconds");
+    uint32_t cFWyear    = RegManager::ReadReg("user.stat_regs.fw_date.year");
+    uint32_t cFWmonth   = RegManager::ReadReg("user.stat_regs.fw_date.month");
+    uint32_t cFWday     = RegManager::ReadReg("user.stat_regs.fw_date.day");
+    uint32_t cFWhour    = RegManager::ReadReg("user.stat_regs.fw_date.hour");
+    uint32_t cFWminute  = RegManager::ReadReg("user.stat_regs.fw_date.minute");
+    uint32_t cFWseconds = RegManager::ReadReg("user.stat_regs.fw_date.seconds");
 
     LOG(INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor << BOLDBLUE << " -- date (yy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/"
               << cFWday << BOLDBLUE << " -- time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
@@ -119,7 +119,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // # 2 = double chip hybrid       #
     // # 4 = quad chip hybrid         #
     // ################################
-    this->singleChip     = ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
+    this->singleChip     = RegManager::ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
     this->enabledHybrids = 0;
     uint32_t chips_en    = 0;
     for(const auto cOpticalGroup: *pBoard)
@@ -153,8 +153,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ###########################
     // # Print clock measurement #
     // ###########################
-    uint32_t inputClk = ReadReg("user.stat_regs.clkin_rate");
-    uint32_t gtxClk   = ReadReg("user.stat_regs.gtx_refclk_rate");
+    uint32_t inputClk = RegManager::ReadReg("user.stat_regs.clkin_rate");
+    uint32_t gtxClk   = RegManager::ReadReg("user.stat_regs.gtx_refclk_rate");
     LOG(INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz" << RESET;
     LOG(INFO) << GREEN << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz" << RESET;
 
@@ -203,8 +203,8 @@ void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& da
     // #####################
     // # Check if all good #
     // #####################
-    if(ReadReg("user.stat_regs.slow_cmd.error_flag") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
-    if(ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false) LOG(ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
+    if(RegManager::ReadReg("user.stat_regs.slow_cmd.error_flag") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
+    if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false) LOG(ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
 
     // ##########
     // # Header #
@@ -234,7 +234,7 @@ void RD53FWInterface::SendChipCommandsPack(const std::vector<uint32_t>& commandL
     // ####################################
     // # Check if commands were dispached #
     // ####################################
-    while(((retry = !ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched")) == true) && (nAttempts < RD53FWconstants::MAXATTEMPTS))
+    while(((retry = !RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched")) == true) && (nAttempts < RD53FWconstants::MAXATTEMPTS))
     {
         nAttempts++;
         usleep(READOUTSLEEP);
@@ -255,11 +255,11 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
     // #####################
     // # Read the register #
     // #####################
-    if(ReadReg("user.stat_regs.Register_Rdback.fifo_full") == true) LOG(ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
+    if(RegManager::ReadReg("user.stat_regs.Register_Rdback.fifo_full") == true) LOG(ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
 
-    while(ReadReg("user.stat_regs.Register_Rdback.fifo_empty") == false)
+    while(RegManager::ReadReg("user.stat_regs.Register_Rdback.fifo_empty") == false)
     {
-        uint32_t readBackData = ReadReg("user.stat_regs.Register_Rdback_fifo");
+        uint32_t readBackData = RegManager::ReadReg("user.stat_regs.Register_Rdback_fifo");
 
         uint16_t lane, address, value;
         std::tie(lane, address, value) = bits::unpack<6, 10, 16>(readBackData);
@@ -279,7 +279,7 @@ void RD53FWInterface::PrintFWstatus()
     // #################################
     // # Check clock generator locking #
     // #################################
-    if(ReadReg("user.stat_regs.global_reg.clk_gen_lock") == 1)
+    if(RegManager::ReadReg("user.stat_regs.global_reg.clk_gen_lock") == 1)
         LOG(INFO) << BOLDBLUE << "\t--> Clock generator is " << BOLDYELLOW << "locked" << RESET;
     else
         LOG(ERROR) << BOLDRED << "\t--> Clock generator is not locked" << RESET;
@@ -287,46 +287,46 @@ void RD53FWInterface::PrintFWstatus()
     // ############################
     // # Check I2C initialization #
     // ############################
-    if(ReadReg("user.stat_regs.global_reg.i2c_init") == 1)
+    if(RegManager::ReadReg("user.stat_regs.global_reg.i2c_init") == 1)
         LOG(INFO) << BOLDBLUE << "\t--> I2C " << BOLDYELLOW << "initialized" << RESET;
     else
     {
         LOG(ERROR) << BOLDRED << "I2C not initialized" << RESET;
-        uint32_t status = ReadReg("user.stat_regs.global_reg.i2c_init_err");
+        uint32_t status = RegManager::ReadReg("user.stat_regs.global_reg.i2c_init_err");
         LOG(ERROR) << BOLDRED << "\t--> I2C initialization status: " << BOLDYELLOW << status << RESET;
     }
 
-    if(ReadReg("user.stat_regs.global_reg.i2c_acq_err") == 1) LOG(INFO) << GREEN << "I2C ack error during analog readout (for KSU FMC only)" << RESET;
+    if(RegManager::ReadReg("user.stat_regs.global_reg.i2c_acq_err") == 1) LOG(INFO) << GREEN << "I2C ack error during analog readout (for KSU FMC only)" << RESET;
 
     // ############################################################
     // # Check status registers associated wih fast command block #
     // ############################################################
-    uint32_t fastCMDReg = ReadReg("user.stat_regs.fast_cmd.trigger_source_o");
+    uint32_t fastCMDReg = RegManager::ReadReg("user.stat_regs.fast_cmd.trigger_source_o");
     LOG(INFO) << GREEN << "Fast command block trigger source: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency)"
               << RESET;
 
-    fastCMDReg = ReadReg("user.stat_regs.fast_cmd.trigger_state");
+    fastCMDReg = RegManager::ReadReg("user.stat_regs.fast_cmd.trigger_state");
     LOG(INFO) << GREEN << "Fast command block trigger state: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (0=idle, 2=running)" << RESET;
 
-    fastCMDReg = ReadReg("user.stat_regs.fast_cmd.if_configured");
+    fastCMDReg = RegManager::ReadReg("user.stat_regs.fast_cmd.if_configured");
     LOG(INFO) << GREEN << "Fast command block check if configuraiton registers have been set: " << BOLDYELLOW << (fastCMDReg == true ? "configured" : "not configured") << RESET;
 
-    fastCMDReg = ReadReg("user.stat_regs.fast_cmd.error_code");
+    fastCMDReg = RegManager::ReadReg("user.stat_regs.fast_cmd.error_code");
     LOG(INFO) << GREEN << "Fast command block error code (0=no error): " << BOLDYELLOW << fastCMDReg << RESET;
 
     // ###########################
     // # Check trigger registers #
     // ###########################
-    uint32_t trigReg = ReadReg("user.stat_regs.trigger_cntr");
+    uint32_t trigReg = RegManager::ReadReg("user.stat_regs.trigger_cntr");
     LOG(INFO) << GREEN << "Trigger counter: " << BOLDYELLOW << trigReg << RESET;
 
     // ##########################
     // # Check hybrid registers #
     // ##########################
-    uint32_t hybrid = ReadReg("user.stat_regs.aurora_rx.Module_type");
+    uint32_t hybrid = RegManager::ReadReg("user.stat_regs.aurora_rx.Module_type");
     LOG(INFO) << GREEN << "Hybrid type: " << BOLDYELLOW << hybrid << RESET << GREEN " (1=single chip, 2=double chip, 4=quad chip)" << RESET;
 
-    hybrid = ReadReg("user.stat_regs.aurora_rx.Nb_of_modules");
+    hybrid = RegManager::ReadReg("user.stat_regs.aurora_rx.Nb_of_modules");
     LOG(INFO) << GREEN << "Number of hybrids which can be potentially readout: " << BOLDYELLOW << hybrid << RESET;
 }
 
@@ -337,16 +337,16 @@ void RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
   // ###############################
   // # Check RD53 AURORA registers #
   // ###############################
-  auroraSpeed = ReadReg("user.stat_regs.aurora_rx.speed");
+  auroraSpeed = RegManager::ReadReg("user.stat_regs.aurora_rx.speed");
   LOG(INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
 
   // ########################################
   // # Check communication with the chip(s) #
   // ########################################
-  uint32_t chips_en = ReadReg("user.ctrl_regs.Chips_en");
+  uint32_t chips_en = RegManager::ReadReg("user.ctrl_regs.Chips_en");
   LOG(INFO) << BOLDBLUE << "\t--> Total number of required data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<20>(chips_en) << RESET;
 
-  uint32_t channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
+  uint32_t channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
   LOG(INFO) << BOLDBLUE << "\t--> Total number of active data lanes:   " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<20>(channel_up) << RESET;
 
   if(chips_en & ~channel_up)
@@ -375,7 +375,7 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
             // #################################
             const uint32_t hybrid_id         = cHybrid->getId();
             const uint32_t chips_en_to_check = RD53FWInterface::GetHybridEnabledChips(cHybrid);
-            const uint32_t channel_up        = ReadReg("user.stat_regs.aurora_rx_channel_up");
+            const uint32_t channel_up        = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
 
             if((channel_up & chips_en_to_check) == chips_en_to_check)
             {
@@ -413,7 +413,7 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
                     // # Check if all lanes are active #
                     // #################################
                     lanes_up            = false;
-                    uint32_t channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
+                    uint32_t channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
 
                     LOG(INFO) << BOLDBLUE << "\t--> Total number of active data lanes for tentative n. " << BOLDYELLOW << i << BOLDBLUE << ": " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up)
                               << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<20>(channel_up) << RESET;
@@ -521,33 +521,37 @@ void RD53FWInterface::ResetBoard()
     // #######
     // # Set #
     // #######
-    WriteReg("user.ctrl_regs.reset_reg.aurora_rst", 0);
-    WriteReg("user.ctrl_regs.reset_reg.aurora_pma_rst", 0);
-    WriteReg("user.ctrl_regs.reset_reg.global_rst", 1);
-    WriteReg("user.ctrl_regs.reset_reg.clk_gen_rst", 1);
-    WriteReg("user.ctrl_regs.reset_reg.fmc_pll_rst", 0);
-    WriteReg("user.ctrl_regs.reset_reg.cmd_rst", 1);
-    WriteReg("user.ctrl_regs.reset_reg.i2c_rst", 1);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.aurora_rst", 0);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.aurora_pma_rst", 0);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.global_rst", 1);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.clk_gen_rst", 1);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.fmc_pll_rst", 0);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.cmd_rst", 1);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.i2c_rst", 1);
+
+    RegManager::WriteReg("user.ctrl_regs.lpgbt_1.mgt_reset", 0x1); // @TMP@
 
     // #########
     // # Reset #
     // #########
-    WriteReg("user.ctrl_regs.reset_reg.global_rst", 0);
-    WriteReg("user.ctrl_regs.reset_reg.clk_gen_rst", 0);
-    WriteReg("user.ctrl_regs.reset_reg.fmc_pll_rst", 1);
-    WriteReg("user.ctrl_regs.reset_reg.cmd_rst", 0);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.global_rst", 0);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.clk_gen_rst", 0);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.fmc_pll_rst", 1);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.cmd_rst", 0);
 
     usleep(RD53Shared::DEEPSLEEP);
 
-    WriteReg("user.ctrl_regs.reset_reg.i2c_rst", 0);
-    WriteReg("user.ctrl_regs.reset_reg.aurora_pma_rst", 1);
-    WriteReg("user.ctrl_regs.reset_reg.aurora_rst", 1);
+    RegManager::WriteReg("user.ctrl_regs.lpgbt_1.mgt_reset", 0x0); // @TMP@
+
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.i2c_rst", 0);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.aurora_pma_rst", 1);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.aurora_rst", 1);
 
     // ########
     // # DDR3 #
     // ########
     LOG(INFO) << YELLOW << "Waiting for DDR3 calibration..." << RESET;
-    while(ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done") == false) usleep(RD53Shared::DEEPSLEEP);
+    while(RegManager::ReadReg("user.stat_regs.readout1.ddr3_initial_calibration_done") == false) usleep(RD53Shared::DEEPSLEEP);
 
     LOG(INFO) << BOLDBLUE << "\t--> DDR3 calibration done" << RESET;
 }
@@ -556,7 +560,7 @@ void RD53FWInterface::ResetFastCmdBlk()
 {
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.ipb_reset");
 
-    WriteReg("user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration", IPBUS_FASTDURATION);
+    RegManager::WriteReg("user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration", IPBUS_FASTDURATION);
 }
 
 void RD53FWInterface::ResetSlowCmdBlk()
@@ -712,13 +716,13 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     // #############################################
     // # Wait for a stable number of words to read #
     // #############################################
-    nWordsInMemory = ReadReg("user.stat_regs.words_to_read");
+    nWordsInMemory = RegManager::ReadReg("user.stat_regs.words_to_read");
     do
     {
         nWordsInMemoryOld = nWordsInMemory;
         usleep(READOUTSLEEP);
-    } while(((nWordsInMemory = ReadReg("user.stat_regs.words_to_read")) != nWordsInMemoryOld) && (pWait == true));
-    // auto nTriggersReceived = ReadReg("user.stat_regs.trigger_cntr");
+    } while(((nWordsInMemory = RegManager::ReadReg("user.stat_regs.words_to_read")) != nWordsInMemoryOld) && (pWait == true));
+    // auto nTriggersReceived = RegManager::ReadReg("user.stat_regs.trigger_cntr");
 
     // #############
     // # Read DDR3 #
@@ -749,7 +753,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // # Readout sequence #
         // ####################
         RD53FWInterface::Start();
-        while(ReadReg("user.stat_regs.trigger_cntr") < pNEvents * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration)) usleep(READOUTSLEEP);
+        while(RegManager::ReadReg("user.stat_regs.trigger_cntr") < pNEvents * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration)) usleep(READOUTSLEEP);
         RD53FWInterface::ReadData(pBoard, false, pData, pWait);
         RD53FWInterface::Stop();
 
@@ -1296,9 +1300,9 @@ void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
 {
     const uint8_t fiftyOhmEnable = 0x12;
 
-    if(ReadReg("user.stat_regs.stat_dio5.dio5_not_ready") == true) LOG(ERROR) << BOLDRED << "DIO5 not ready" << RESET;
+    if(RegManager::ReadReg("user.stat_regs.stat_dio5.dio5_not_ready") == true) LOG(ERROR) << BOLDRED << "DIO5 not ready" << RESET;
 
-    if(ReadReg("user.stat_regs.stat_dio5.dio5_error") == true) LOG(ERROR) << BOLDRED << "DIO5 is in error" << RESET;
+    if(RegManager::ReadReg("user.stat_regs.stat_dio5.dio5_error") == true) LOG(ERROR) << BOLDRED << "DIO5 is in error" << RESET;
 
     RegManager::WriteStackReg({{"user.ctrl_regs.ext_tlu_reg1.dio5_en", (uint32_t)cfg->enable},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en", (uint32_t)cfg->ch_out_en},
@@ -1328,8 +1332,8 @@ void RD53FWInterface::ResetOptoLinkSlowControl()
 
 void RD53FWInterface::StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady)
 {
-    txIsReady = ReadReg("user.stat_regs.lpgbt_sc_1.tx_ready");
-    rxIsReady = ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
+    txIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.tx_ready");
+    rxIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
 
     if(txIsReady == true)
         LOG(INFO) << GREEN << "Optical link tx slow control status: " << BOLDYELLOW << "ready" << RESET;
@@ -1351,9 +1355,9 @@ void RD53FWInterface::ResetOptoLink()
 
 void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)
 {
-    txStatus  = ReadReg("user.stat_regs.lpgbt_fpga.tx_ready");
-    rxStatus  = ReadReg("user.stat_regs.lpgbt_fpga.rx_ready");
-    mgtStatus = ReadReg("user.stat_regs.lpgbt_fpga.mgt_ready");
+    txStatus  = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.tx_ready");
+    rxStatus  = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.rx_ready");
+    mgtStatus = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.mgt_ready");
 
     LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip tx:  " << BOLDYELLOW << txStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(txStatus) << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip rx:  " << BOLDYELLOW << rxStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(rxStatus) << RESET;
@@ -1395,12 +1399,12 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(uint32_t pAddress)
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_2.ic_nb_of_words_to_read", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_send_rd_cmd", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_send_rd_cmd", 0x0}});
 
     // Actual readback one word at a time
-    uint32_t chipAddrRx  = ReadReg("user.stat_regs.lpgbt_sc_1.rx_chip_addr"); // Should be the same as RD53lpGBTconstants::LPGBTADDRESS
-    uint32_t regAddrRx   = ReadReg("user.stat_regs.lpgbt_sc_2.reg_addr_rx");
-    uint32_t nWords2Read = ReadReg("user.stat_regs.lpgbt_sc_2.nb_of_words_rx");
+    uint32_t chipAddrRx  = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_chip_addr"); // Should be the same as RD53lpGBTconstants::LPGBTADDRESS
+    uint32_t regAddrRx   = RegManager::ReadReg("user.stat_regs.lpgbt_sc_2.reg_addr_rx");
+    uint32_t nWords2Read = RegManager::ReadReg("user.stat_regs.lpgbt_sc_2.nb_of_words_rx");
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x0}});
-    uint32_t cRead         = ReadReg("user.stat_regs.lpgbt_sc_1.rx_fifo_dout");
-    bool     isRxFIFOempty = ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
+    uint32_t cRead         = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_fifo_dout");
+    bool     isRxFIFOempty = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
 
     LOG(INFO) << GREEN << std::hex << "Chip address 0x" << BOLDYELLOW << std::uppercase << chipAddrRx << RESET << GREEN << ". Reg address 0x" << BOLDYELLOW << std::uppercase << regAddrRx << RESET
               << GREEN << ". Nb of words received 0x" << BOLDYELLOW << std::uppercase << nWords2Read << RESET << GREEN << ". FIFO readback data 0x" << BOLDYELLOW << std::uppercase << cRead << RESET
@@ -1470,20 +1474,21 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
     const uint32_t writeEEPROM(0x8FA38014); // Write to EEPROM
     uint32_t       SPIregSettings[] = {
         // 0xEB840320, 0xEB020321, 0xEB840302, 0xEB840303, 0xEB140334, 0x013C0CB5, 0x33041BE6, 0xBD800DF7, 0x20009978
-        0xEB020320, // OUT0 --> This clock is not used, but it can be used as another GBT clock (160 MHz, LVDS, phase
+        // @TMP@
+        0xeb840320, // 0xEB020320, // OUT0 --> This clock is not used, but it can be used as another GBT clock (160 MHz, LVDS, phase
                     // shift 0 deg)
-        0xEB020321, // OUT1 --> GBT clock reference: 160 MHz, LVDS, phase shift 0 deg (0xEB820321: 320 MHz, LVDS, phase
-                    // shift 0 deg)
-        0xEB840302, // OUT2 --> DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
-        0xEB840303, // OUT3 --> Not used (240 MHz, LVDS, phase shift 0 deg)
-        0xEB140334, // OUT4 --> Not used (40 MHz, LVDS, R4.1 = 1, ph4adjc = 0)
-        0x10000E75, // Reference selection: 0x10000E75 primary reference, 0x10000EB5 secondary reference
-        0x030E02E6, // VCO selection: 0xyyyyyyEy select VCO1 if CDCE reference is 40 MHz, 0xyyyyyyFy select VCO2 if CDCE
-                    // reference is > 40 MHz
+        0xeb020321, // 0xEB020321, // OUT1 --> GBT clock reference: 160 MHz, LVDS, phase shift 0 deg (0xEB820321: 320 MHz, LVDS, phase
+        // shift 0 deg)
+        0xeb840302, // 0xEB840302, // OUT2 --> DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
+        0xeb840303, // 0xEB840303, // OUT3 --> Not used (240 MHz, LVDS, phase shift 0 deg)
+        0xeb140334, // 0xEB140334, // OUT4 --> Not used (40 MHz, LVDS, R4.1 = 1, ph4adjc = 0)
+        0x113c0cf5, // 0x10000E75, // Reference selection: 0x10000E75 primary reference, 0x10000EB5 secondary reference
+        0x33041be6, // 0x030E02E6, // VCO selection: 0xyyyyyyEy select VCO1 if CDCE reference is 40 MHz, 0xyyyyyyFy select VCO2 if CDCE
+        // reference is > 40 MHz
         // VCO1, PS = 4, FD = 12, FB = 1, ChargePump 50 uA, Internal Filter, R6.20 = 0, AuxOut = enable, AuxOut = OUT2
-        0xBD800DF7, // RC network parameters: C2 = 473.5 pF, R2 = 98.6 kOhm, C1 = 0 pF, C3 = 0 pF, R3 = 5 kOhm etc,
-                    // SEL_DEL2 = 1, SEL_DEL1 = 1
-        0x80001808  // Sync command configuration
+        0xbd800df7, // 0xBD800DF7, // RC network parameters: C2 = 473.5 pF, R2 = 98.6 kOhm, C1 = 0 pF, C3 = 0 pF, R3 = 5 kOhm etc,
+        // SEL_DEL2 = 1, SEL_DEL1 = 1
+        0x20009978, // 0x80001808  // Sync command configuration
     };
 
     // 0xyy8403yy --> 240 MHz, LVDS, phase shift   0 deg
@@ -1510,11 +1515,11 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
 
     for(const auto value: SPIregSettings)
     {
-        WriteReg("system.spi.tx_data", value);
-        WriteReg("system.spi.command", writeSPI);
+        RegManager::WriteReg("system.spi.tx_data", value);
+        RegManager::WriteReg("system.spi.command", writeSPI);
 
-        ReadReg("system.spi.rx_data"); // Dummy read
-        ReadReg("system.spi.rx_data"); // Dummy read
+        RegManager::ReadReg("system.spi.rx_data"); // Dummy read
+        RegManager::ReadReg("system.spi.rx_data"); // Dummy read
     }
 
     // ############################################################################
@@ -1527,11 +1532,11 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
     // #########################
     if(doStoreInEEPROM == true)
     {
-        WriteReg("system.spi.tx_data", writeEEPROM);
-        WriteReg("system.spi.command", writeSPI);
+        RegManager::WriteReg("system.spi.tx_data", writeEEPROM);
+        RegManager::WriteReg("system.spi.command", writeSPI);
 
-        ReadReg("system.spi.rx_data"); // Dummy read
-        ReadReg("system.spi.rx_data"); // Dummy read
+        RegManager::ReadReg("system.spi.rx_data"); // Dummy read
+        RegManager::ReadReg("system.spi.rx_data"); // Dummy read
     }
 }
 
@@ -1542,13 +1547,13 @@ void RD53FWInterface::ReadClockGenerator()
 
     for(const auto value: SPIreadCommands)
     {
-        WriteReg("system.spi.tx_data", value);
-        WriteReg("system.spi.command", writeSPI);
+        RegManager::WriteReg("system.spi.tx_data", value);
+        RegManager::WriteReg("system.spi.command", writeSPI);
 
-        WriteReg("system.spi.tx_data", 0xAAAAAAAA); // Dummy write
-        WriteReg("system.spi.command", writeSPI);
+        RegManager::WriteReg("system.spi.tx_data", 0xAAAAAAAA); // Dummy write
+        RegManager::WriteReg("system.spi.command", writeSPI);
 
-        uint32_t          readback = ReadReg("system.spi.rx_data");
+        uint32_t          readback = RegManager::ReadReg("system.spi.rx_data");
         std::stringstream myString("");
         myString << std::right << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << readback << std::dec;
         LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << RESET;
@@ -1571,7 +1576,7 @@ bool RD53FWInterface::I2cCmdAckWait(int nAttempts)
 
     while(++cLoop < nAttempts)
     {
-        status = ReadReg("user.stat_regs.global_reg.i2c_acq_err");
+        status = RegManager::ReadReg("user.stat_regs.global_reg.i2c_acq_err");
         if(status == I2CcmdAckGOOD) return true;
         usleep(RD53Shared::DEEPSLEEP);
     }
@@ -1583,15 +1588,15 @@ void RD53FWInterface::WriteI2C(std::vector<uint32_t>& data)
 {
     const uint16_t I2CwriteREQ = 0x1;
 
-    WriteReg("ctrl.board.i2c_req", 0); // Disable
+    RegManager::WriteReg("ctrl.board.i2c_req", 0); // Disable
     usleep(RD53Shared::DEEPSLEEP);
-    WriteReg("ctrl.board.i2c_reset", 1);
+    RegManager::WriteReg("ctrl.board.i2c_reset", 1);
     usleep(RD53Shared::DEEPSLEEP);
-    WriteReg("ctrl.board.i2c_reset", 0);
+    RegManager::WriteReg("ctrl.board.i2c_reset", 0);
     usleep(RD53Shared::DEEPSLEEP);
-    WriteReg("ctrl.board.i2c_fifo_rx_dsel", 1);
+    RegManager::WriteReg("ctrl.board.i2c_fifo_rx_dsel", 1);
     usleep(RD53Shared::DEEPSLEEP);
-    WriteReg("ctrl.board.i2c_req", I2CwriteREQ);
+    RegManager::WriteReg("ctrl.board.i2c_req", I2CwriteREQ);
     usleep(RD53Shared::DEEPSLEEP);
 
     /* bool outcome = */ RegManager::WriteBlockReg("ctrl.board.i2c_fifo_tx", data);
@@ -1599,7 +1604,7 @@ void RD53FWInterface::WriteI2C(std::vector<uint32_t>& data)
 
     if(I2cCmdAckWait(20) == false) throw Exception("[RD53FWInterface::WriteI2C] I2C transaction error");
 
-    WriteReg("ctrl.board.i2c_req", 0); // Disable
+    RegManager::WriteReg("ctrl.board.i2c_req", 0); // Disable
     usleep(RD53Shared::DEEPSLEEP);
 }
 
@@ -1607,18 +1612,18 @@ void RD53FWInterface::ReadI2C(std::vector<uint32_t>& data)
 {
     const uint16_t I2CreadREQ = 0x03;
 
-    WriteReg("ctrl.board.i2c_req", 0); // Disable
+    RegManager::WriteReg("ctrl.board.i2c_req", 0); // Disable
     usleep(RD53Shared::DEEPSLEEP);
-    WriteReg("ctrl.board.i2c_reset", 1);
+    RegManager::WriteReg("ctrl.board.i2c_reset", 1);
     usleep(RD53Shared::DEEPSLEEP);
-    WriteReg("ctrl.board.i2c_reset", 0);
+    RegManager::WriteReg("ctrl.board.i2c_reset", 0);
     usleep(RD53Shared::DEEPSLEEP);
-    WriteReg("ctrl.board.i2c_fifo_rx_dsel", 1);
+    RegManager::WriteReg("ctrl.board.i2c_fifo_rx_dsel", 1);
     usleep(RD53Shared::DEEPSLEEP);
-    WriteReg("ctrl.board.i2c_req", I2CreadREQ);
+    RegManager::WriteReg("ctrl.board.i2c_req", I2CreadREQ);
     usleep(RD53Shared::DEEPSLEEP);
 
-    uint32_t sizeI2Cfifo = ReadReg("stat.board.i2c_fifo_rx_dcnt");
+    uint32_t sizeI2Cfifo = RegManager::ReadReg("stat.board.i2c_fifo_rx_dcnt");
     usleep(RD53Shared::DEEPSLEEP);
 
     int size2read = 0;
@@ -1635,7 +1640,7 @@ void RD53FWInterface::ReadI2C(std::vector<uint32_t>& data)
 
     if(RD53FWInterface::I2cCmdAckWait(20) == false) throw Exception("[RD53FWInterface::ReadI2C] I2C transaction error");
 
-    WriteReg("ctrl.board.i2c_req", 0); // Disable
+    RegManager::WriteReg("ctrl.board.i2c_req", 0); // Disable
 }
 
 void RD53FWInterface::ConfigureClockSi5324()
@@ -1728,11 +1733,11 @@ void RD53FWInterface::ConfigureClockSi5324()
 
 float RD53FWInterface::ReadHybridTemperature(int hybridId)
 {
-    WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
+    RegManager::WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
     usleep(RD53Shared::DEEPSLEEP);
-    uint32_t sensor1 = ReadReg("user.stat_regs.i2c_block_1.NTC1");
+    uint32_t sensor1 = RegManager::ReadReg("user.stat_regs.i2c_block_1.NTC1");
     usleep(RD53Shared::DEEPSLEEP);
-    uint32_t sensor2 = ReadReg("user.stat_regs.i2c_block_1.NTC2");
+    uint32_t sensor2 = RegManager::ReadReg("user.stat_regs.i2c_block_1.NTC2");
     usleep(RD53Shared::DEEPSLEEP);
 
     auto value = calcTemperature(sensor1, sensor2);
@@ -1743,11 +1748,11 @@ float RD53FWInterface::ReadHybridTemperature(int hybridId)
 
 float RD53FWInterface::ReadHybridVoltage(int hybridId)
 {
-    WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
+    RegManager::WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
     usleep(RD53Shared::DEEPSLEEP);
-    uint32_t senseVDD = ReadReg("user.stat_regs.i2c_block_2.vdd_sense");
+    uint32_t senseVDD = RegManager::ReadReg("user.stat_regs.i2c_block_2.vdd_sense");
     usleep(RD53Shared::DEEPSLEEP);
-    uint32_t senseGND = ReadReg("user.stat_regs.i2c_block_2.gnd_sense");
+    uint32_t senseGND = RegManager::ReadReg("user.stat_regs.i2c_block_2.gnd_sense");
     usleep(RD53Shared::DEEPSLEEP);
 
     auto value = calcVoltage(senseVDD, senseGND);
@@ -1884,15 +1889,15 @@ bool RD53FWInterface::RunPRBStest(bool given_time, unsigned long long frames_or_
         sleep(time_per_step);
 
         // Read frame counters to check progress
-        uint32_t cntr_lo       = ReadReg("user.stat_regs.prbs_frame_cntr_low");
-        uint32_t cntr_hi       = ReadReg("user.stat_regs.prbs_frame_cntr_high");
+        uint32_t cntr_lo       = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
+        uint32_t cntr_hi       = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
         auto     current_frame = bits::pack<32, 32>(cntr_hi, cntr_lo);
 
         // Print progress and intermediate BER information
         float percent_done = (float)current_frame / frames2run * 100;
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << (unsigned)time_per_step * (idx + 1) << RESET << GREEN << "s (" << BOLDYELLOW << std::setprecision(0) << percent_done << RESET
                   << GREEN << "% done)" << RESET;
-        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << ReadReg("user.stat_regs.prbs_ber_cntr") << RESET;
+        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << RegManager::ReadReg("user.stat_regs.prbs_ber_cntr") << RESET;
         if(given_time == true)
             run_done = ((unsigned)time_per_step * (idx + 1) >= time2run);
         else
@@ -1904,17 +1909,17 @@ bool RD53FWInterface::RunPRBStest(bool given_time, unsigned long long frames_or_
     WriteStackReg({{"user.ctrl_regs.PRBS_checker.stop_checker", 1}, {"user.ctrl_regs.PRBS_checker.stop_checker", 0}});
 
     // Read PRBS frame counter
-    uint32_t PRBScntrLO   = ReadReg("user.stat_regs.prbs_frame_cntr_low");
-    uint32_t PRBScntrHI   = ReadReg("user.stat_regs.prbs_frame_cntr_high");
+    uint32_t PRBScntrLO   = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
+    uint32_t PRBScntrHI   = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
     auto     frameCounter = bits::pack<32, 32>(PRBScntrHI, PRBScntrLO);
     LOG(INFO) << BOLDGREEN << "===== PRBS test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
 
     // Read PRBS BER counter
-    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << ReadReg("user.stat_regs.prbs_ber_cntr") << RESET;
+    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << RegManager::ReadReg("user.stat_regs.prbs_ber_cntr") << RESET;
     LOG(INFO) << BOLDGREEN << "===== End of summary =====" << RESET;
 
-    return !ReadReg("user.stat_regs.prbs_ber_cntr");
+    return !RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
 }
 
 } // namespace Ph2_HwInterface
