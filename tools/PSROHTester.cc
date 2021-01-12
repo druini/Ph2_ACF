@@ -686,27 +686,6 @@ void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vect
 		}
 }
 
-bool PSROHTester::TestResetLines(uint8_t pLevel)
-{
-    bool cValid = true;
-#ifdef __TCUSB__
-    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-    float cMeasurement;
-    auto  cMapIterator = fResetLines.begin();
-    do
-    {
-        clpGBTInterface->fTC_PSROH.adc_get(cMapIterator->second, cMeasurement);
-        float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
-        // cValid = cValid && (cDifference_mV <= 100 );
-        if(cDifference_mV > 100)
-            LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
-        else
-            LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
-        cMapIterator++;
-    } while(cMapIterator != fResetLines.end());
-#endif
-    return cValid;
-}
 
 
 void PSROHTester::Start(int currentRun)

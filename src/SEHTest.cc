@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
         for(auto cLevel: cLevels)
         {
             cSEHTester.LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
-            bool cStatus = cSEHTester.TestResetLines(cLevel.second);
+            bool cStatus = cSEHTester.LpGBTTestResetLines(cLevel.second);
             if(cStatus)
                 LOG(INFO) << BOLDBLUE << "Set levels to " << cLevel.first << " : test " << BOLDGREEN << " passed." << RESET;
             else

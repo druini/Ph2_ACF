@@ -686,27 +686,6 @@ void SEHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vector
 		}
 }
 
-bool SEHTester::TestResetLines(uint8_t pLevel)
-{
-    bool cValid = true;
-#ifdef __TCUSB__
-    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-    float cMeasurement;
-    auto  cMapIterator = fResetLines.begin();
-    do
-    {
-        clpGBTInterface->fTC_2SSEH.read_reset(cMapIterator->second, cMeasurement);
-        float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
-        // cValid = cValid && (cDifference_mV <= 100 );
-        if(cDifference_mV > 100)
-            LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
-        else
-            LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
-        cMapIterator++;
-    } while(cMapIterator != fResetLines.end());
-#endif
-    return cValid;
-}
 
 
 void SEHTester::Start(int currentRun)

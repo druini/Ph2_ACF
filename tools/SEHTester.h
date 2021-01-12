@@ -39,7 +39,7 @@ class SEHTester : public OTHybridTester
     void CheckFastCommandsBRAM(const std::string& sFastCommandLine);
     void WritePatternToBRAM(const std::string& sFileName);
     void FastCommandScope();
-    bool TestResetLines(uint8_t pLevel);
+    
 
   private:
     void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
@@ -56,12 +56,6 @@ class SEHTester : public OTHybridTester
     void CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
     // void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string & pFastCommand ,  uint8_t pDuartion=1);
 
-#ifdef __TCUSB__
-    std::map<std::string, TC_2SSEH::resetMeasurement> fResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
-                                                                {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
-                                                                {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
-                                                                {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
-#endif
 
     std::map<std::string, uint8_t> fInputDebugMap = {{"l_fcmd_cic", 0},
                                                      {"r_fcmd_cic", 1},

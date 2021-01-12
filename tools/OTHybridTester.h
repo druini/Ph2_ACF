@@ -52,10 +52,27 @@ class OTHybridTester : public Tool
     void LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep);
     //Set GPIO level
     void LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
+    bool LpGBTTestResetLines(uint8_t pLevel);
+    
 
   private:
+  #ifdef __TCUSB__
+    std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
+                                                                {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
+                                                                {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
+                                                                {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
+                                                                
+    std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
+                                                                {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
+                                                                {"L_SSA", TC_PSROH::measurement::L_SSA_RST},
+                                                                {"R_MPA", TC_PSROH::measurement::R_MPA_RST},
+                                                                {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
+                                                                {"R_SSA", TC_PSROH::measurement::R_SSA_RST}};
+
+#endif
 
   protected:
+  
 };
 
 #endif
