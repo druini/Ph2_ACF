@@ -135,12 +135,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(PH2_POWERSUPPLY_FOUND)
 
     # Ph2_TCUSB [USB control of hybrids]
-    if ($ENV{CompileWithTCUSB})
       find_package(PH2_TCUSB)  
       if(PH2_TCUSB_FOUND)
         message(STATUS "    Building the TestCards USB components")
       endif(PH2_TCUSB_FOUND)
-    endif($ENV{CompileWithTCUSB})
+    
 
     # EUDAQ
     if ($ENV{CompileWithEUDAQ})

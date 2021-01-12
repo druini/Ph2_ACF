@@ -13,6 +13,7 @@
 #include "lpGBTInterface.h"
 #ifdef __TCUSB__
 #include "USB_a.h"
+#include "USB_libusb.h"
 #endif
 
 namespace Ph2_HwInterface
@@ -24,6 +25,7 @@ class D19clpGBTInterface : public lpGBTInterface
 
 #ifdef __TCUSB__
     TC_PSROH fTC_PSROH;
+    TC_2SSEH fTC_2SSEH;
 #endif
 
     // ###################################
