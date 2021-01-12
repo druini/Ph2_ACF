@@ -48,6 +48,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     if(cPUSMStatus != 18) exit(0);
     ConfigurePSROH(pChip);
+    Configure2SSEH(pChip);
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
     return true;
 }
@@ -97,6 +98,8 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
         // use PS-ROH test card USB interface
 #ifdef __TCUSB__
         fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
+        // use 2S_SEH test card USB interface
+        fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
 #endif
     }
     return true;
@@ -112,6 +115,8 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
             // use PS-ROH test card USB interface
 #ifdef __TCUSB__
             cReadBack = fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
+            // Dont really see the point here. Write_i2c does not return a read back???
+            cReadBack = fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
 #endif
             cIter++;
         }
@@ -135,6 +140,7 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
         return fTC_PSROH.read_i2c(pAddress);
+        return fTC_2SSEH.read_i2c(pAddress);
 #endif
     }
     return 0;
@@ -892,6 +898,62 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureGPIO(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1, 1, 0, 0, 0);
     ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
 }
+
+//Preliminary 
+void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
+{
+    // uint8_t cChipRate = GetChipRate(pChip);
+    LOG(INFO) << BOLDGREEN << "Applying 2S-SEH 5G lpGBT configuration" << RESET;
+    // Configure High Speed Link Tx Rx Polarity
+    ConfigureHighSpeedPolarity(pChip, 1, 0);
+    
+    // Clocks
+    std::vector<uint8_t> cClocks  = {1, 11}; //Reduced number of clocks and only 320 MHz
+    uint8_t              cClkFreq =  4 , cClkDriveStr = 7, cClkInvert = 1;
+    uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
+    ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+    // Tx Groups and Channels
+    std::vector<uint8_t> cTxGroups = {0, 2,}, cTxChannels = {0};
+    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
+    for(const auto& cGroup: cTxGroups)
+    {
+        if (cGroup==0)
+            cTxInvert=1;
+        if (cGroup==2)
+            cTxInvert=0;
+        for(const auto& cChannel: cTxChannels) ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
+    }
+    // Rx configuration and Phase Align
+    // Configure Rx Groups
+    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
+    uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
+    ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
+    // Configure Rx Channels
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 12;
+    for(const auto& cGroup: cRxGroups)
+    {
+        for(const auto cChannel: cRxChannels)
+        {
+            if(cGroup==4 && cChannel==0)
+                cRxInvert=0;
+            if(cGroup==5 && cChannel==0)
+                cRxInvert=0;
+            else 
+                cRxInvert=1;
+            if (!( (cGroup==6 && cChannel==2) || (cGroup==3 && cChannel==0)))
+                ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+        }
+    }
+    PhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    // Reset I2C Masters
+    ResetI2C(pChip, {0, 1, 2});
+    // Setting GPIO levels Uncomment this for Skeleton test
+    //ConfigureGPIO(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1, 1, 0, 0, 0);
+    //ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
+}
+
+
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
 {

@@ -61,6 +61,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         link_directories(${PH2_TCUSB_LIBRARY_DIRS})
         set(LIBS ${LIBS} usb ${PH2_TCUSB_LIBRARIES})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
+        #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{SsehTCUSBFlag}")
     endif()
     
     #last but not least, find root and link against it

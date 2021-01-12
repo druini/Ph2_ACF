@@ -61,10 +61,10 @@ int main(int argc, char* argv[])
     cmd.defineOption("testReset", "Test Reset lines");
     cmd.defineOptionAlternative("testReset", "r");
     // test I2C Masters
-    cmd.defineOption("testI2C", "Test I2C LpGBT Masters on ROH");
+    cmd.defineOption("testI2C", "Test I2C LpGBT Masters on SEH");
     cmd.defineOptionAlternative("testI2C", "i");
     // test ADC channels
-    cmd.defineOption("testADC", "Test LpGBT ADCs on ROH");
+    cmd.defineOption("testADC", "Test LpGBT ADCs on SEH");
     cmd.defineOptionAlternative("testADC", "a");
     // test optical r/w
     cmd.defineOption("optical", "Test LpGBT read/write through optical link");
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
     uint32_t          cInternalPattern32    = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
     uint8_t           cFCMDPattern          = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
 
-    cDirectory += Form("PS_ROH_%s", cHybridId.c_str());
+    cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
     TApplication cApp("Root Application", &argc, argv);
     if(batchMode)
@@ -183,11 +183,11 @@ int main(int argc, char* argv[])
         // to what they were before this tool was called
         // cBackEndAligner.Reset();
     }
-    // Test PS ROH Reset Lines
+    // Test 2S SEH Reset Lines
     if(cmd.foundOption("testReset"))
     {
         std::vector<std::pair<string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
-        std::vector<uint8_t> cGPIOs = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+        std::vector<uint8_t> cGPIOs = {0,3,6,8};
         for(auto cLevel: cLevels)
         {
             cSEHTester.LpGBTSetGPIOLevel(cGPIOs, cLevel.second);

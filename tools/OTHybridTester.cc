@@ -153,6 +153,8 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
         {
 #ifdef __TCUSB__
           clpGBTInterface->fTC_PSROH.dac_output(cDACValue);
+          // Need to confirm conversion factor for 2S-SEH
+          clpGBTInterface->fTC_2SSEH.set_AMUX(cDACValue,cDACValue);
 #endif
           int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
           LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- ADC value = " << +cADCValue << RESET;
