@@ -529,8 +529,6 @@ void RD53FWInterface::ResetBoard()
     RegManager::WriteReg("user.ctrl_regs.reset_reg.cmd_rst", 1);
     RegManager::WriteReg("user.ctrl_regs.reset_reg.i2c_rst", 1);
 
-    RegManager::WriteReg("user.ctrl_regs.lpgbt_1.mgt_reset", 0x1); // @TMP@
-
     // #########
     // # Reset #
     // #########
@@ -540,8 +538,6 @@ void RD53FWInterface::ResetBoard()
     RegManager::WriteReg("user.ctrl_regs.reset_reg.cmd_rst", 0);
 
     usleep(RD53Shared::DEEPSLEEP);
-
-    RegManager::WriteReg("user.ctrl_regs.lpgbt_1.mgt_reset", 0x0); // @TMP@
 
     RegManager::WriteReg("user.ctrl_regs.reset_reg.i2c_rst", 0);
     RegManager::WriteReg("user.ctrl_regs.reset_reg.aurora_pma_rst", 1);
@@ -795,6 +791,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 // ##########################################
 // # Use of OpenMP (compiler flag -fopenmp) #
 // ##########################################
+
 uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
 {
     // ######################
@@ -965,6 +962,7 @@ uint16_t RD53FWInterface::DecodeEvents(const std::vector<uint32_t>& data, std::v
 // ########################
 // # Event Implementation #
 // ########################
+
 void RD53FWInterface::Event::addBoardInfo2Events(const BeBoard* pBoard, std::vector<RD53FWInterface::Event>& decodedEvents)
 {
     for(auto& evt: decodedEvents)
@@ -1116,7 +1114,6 @@ RD53FWInterface::ChipFrame::ChipFrame(const uint32_t data0, const uint32_t data1
         bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_CHIPID, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
     std::tie(chip_type, frame_delay) = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
 }
-// ########################
 
 void RD53FWInterface::SendBoardCommand(const std::string& cmd_reg)
 {
@@ -1323,6 +1320,7 @@ void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
 // ###################################
 // # Read/Write Status Optical Group #
 // ###################################
+
 void RD53FWInterface::ResetOptoLinkSlowControl()
 {
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_reset", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_rx_reset", 0x1}});
@@ -1416,6 +1414,7 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(uint32_t pAddress)
 // ###########################################
 // # Member functions to handle the firmware #
 // ###########################################
+
 void RD53FWInterface::FlashProm(const std::string& strConfig, const char* fileName)
 {
     CheckIfUploading();
@@ -1464,6 +1463,7 @@ const FpgaConfig* RD53FWInterface::GetConfiguringFpga() { return (const FpgaConf
 // ###################
 // # Clock generator #
 // ###################
+
 void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, bool doStoreInEEPROM)
 // ############################
 // # refClockRate = 160 [MHz] #
@@ -1473,22 +1473,16 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
     const uint32_t writeSPI(0x8FA38014);    // Write to SPI
     const uint32_t writeEEPROM(0x8FA38014); // Write to EEPROM
     uint32_t       SPIregSettings[] = {
-        // 0xEB840320, 0xEB020321, 0xEB840302, 0xEB840303, 0xEB140334, 0x013C0CB5, 0x33041BE6, 0xBD800DF7, 0x20009978
-        // @TMP@
-        0xeb840320, // 0xEB020320, // OUT0 --> This clock is not used, but it can be used as another GBT clock (160 MHz, LVDS, phase
-                    // shift 0 deg)
-        0xeb020321, // 0xEB020321, // OUT1 --> GBT clock reference: 160 MHz, LVDS, phase shift 0 deg (0xEB820321: 320 MHz, LVDS, phase
-        // shift 0 deg)
-        0xeb840302, // 0xEB840302, // OUT2 --> DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
-        0xeb840303, // 0xEB840303, // OUT3 --> Not used (240 MHz, LVDS, phase shift 0 deg)
-        0xeb140334, // 0xEB140334, // OUT4 --> Not used (40 MHz, LVDS, R4.1 = 1, ph4adjc = 0)
-        0x113c0cf5, // 0x10000E75, // Reference selection: 0x10000E75 primary reference, 0x10000EB5 secondary reference
-        0x33041be6, // 0x030E02E6, // VCO selection: 0xyyyyyyEy select VCO1 if CDCE reference is 40 MHz, 0xyyyyyyFy select VCO2 if CDCE
-        // reference is > 40 MHz
-        // VCO1, PS = 4, FD = 12, FB = 1, ChargePump 50 uA, Internal Filter, R6.20 = 0, AuxOut = enable, AuxOut = OUT2
-        0xbd800df7, // 0xBD800DF7, // RC network parameters: C2 = 473.5 pF, R2 = 98.6 kOhm, C1 = 0 pF, C3 = 0 pF, R3 = 5 kOhm etc,
-        // SEL_DEL2 = 1, SEL_DEL1 = 1
-        0x20009978, // 0x80001808  // Sync command configuration
+        0xEB020320, // OUT0 --> This clock is not used, but it can be used as another GBT clock (160 MHz, LVDS, phase shift 0 deg)
+        0xEB020321, // OUT1 --> GBT clock reference: 160 MHz, LVDS, phase shift 0 deg (0xEB820321: 320 MHz, LVDS, phase shift 0 deg)
+        0xEB840302, // OUT2 --> DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
+        0xEB840303, // OUT3 --> Not used (240 MHz, LVDS, phase shift 0 deg)
+        0xEB140334, // OUT4 --> Not used (40 MHz, LVDS, R4.1 = 1, ph4adjc = 0)
+        0x10000E75, // Reference selection: 0x10000E75 primary reference, 0x10000EB5 secondary reference
+        0x030E02E6, // VCO selection: 0xyyyyyyEy select VCO1 if CDCE reference is 40 MHz, 0xyyyyyyFy select VCO2 if CDCE reference is > 40 MHz
+                    // VCO1, PS = 4, FD = 12, FB = 1, ChargePump 50 uA, Internal Filter, R6.20 = 0, AuxOut = enable, AuxOut = OUT2
+        0xBD800DF7, // RC network parameters: C2 = 473.5 pF, R2 = 98.6 kOhm, C1 = 0 pF, C3 = 0 pF, R3 = 5 kOhm etc, SEL_DEL1 = 1, SEL_DEL2 = 1
+        0x80001808  // Sync command configuration
     };
 
     // 0xyy8403yy --> 240 MHz, LVDS, phase shift   0 deg
@@ -1568,6 +1562,7 @@ std::vector<RD53FWInterface::Event> RD53FWInterface::decodedEvents;
 // ################################################
 // # I2C block for programming peripheral devices #
 // ################################################
+
 bool RD53FWInterface::I2cCmdAckWait(int nAttempts)
 {
     const uint16_t I2CcmdAckGOOD = 0x1;
