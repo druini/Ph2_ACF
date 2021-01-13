@@ -690,13 +690,13 @@ void SEHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vector
 
 void SEHTester::Start(int currentRun)
 {
-    LOG(INFO) << BOLDBLUE << "Starting PS ROH Tester" << RESET;
+    LOG(INFO) << BOLDBLUE << "Starting 2S SEH Tester" << RESET;
     Initialise();
 }
 
 void SEHTester::Stop()
 {
-    LOG(INFO) << BOLDBLUE << "Stopping PS ROH Tester" << RESET;
+    LOG(INFO) << BOLDBLUE << "Stopping 2S SEH Tester" << RESET;
     // writeObjects();
     dumpConfigFiles();
     Destroy();

@@ -209,11 +209,11 @@ int main(int argc, char* argv[])
         else
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDRED << " failed" << RESET;
     }
-
+    // Testing linearity of ADC and AMUX lines 
     if(cmd.foundOption("testADC"))
     {
-        std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
-        cSEHTester.LpGBTTestADC(cADCs, 0, 1000, 20);
+        std::vector<std::string> cADCs = {"ADC0", "ADC3"};
+        cSEHTester.LpGBTTestADC(cADCs, 0, 1000, 20); //DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
     }
 
     // Test Fast Commands
