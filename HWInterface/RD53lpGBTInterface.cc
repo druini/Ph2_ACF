@@ -25,6 +25,14 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // #####################
     for(auto& ele: fPUSMStatusMap) revertedPUSMStatusMap[ele.second] = ele.first;
 
+    // ###############################
+    // # In case of not efused LpGBT #
+    // ###############################
+    // @TMP@
+    // ChipRegMap& lpGBTRegMap = pChip->getRegMap();
+    // for(const auto& cRegItem: lpGBTRegMap)
+    //     if((cRegItem.second.fAddress < 0x13C) && (cRegItem.second.fPrmptCfg == true)) RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+
     // #########################
     // # Configure PLL and DLL #
     // #########################
@@ -52,13 +60,6 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
         return false;
     }
     LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[PUSMStatus] << RESET;
-
-    // ###############################
-    // # In case of not efused LpGBT #
-    // ###############################
-    // ChipRegMap& lpGBTRegMap = pChip->getRegMap();
-    // for(const auto& cRegItem: lpGBTRegMap)
-    //     if((cRegItem.second.fAddress < 0x13C) && (cRegItem.second.fPrmptCfg == true)) RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
 
     RD53lpGBTInterface::PrintChipMode(pChip);
 
@@ -625,7 +626,7 @@ float RD53lpGBTInterface::PerformBERTest(Chip* pChip, uint8_t pCoarseSource, uin
     LOG(INFO) << GREEN << "Reading BERT counter" << RESET;
 
     uint64_t cErrors      = RD53lpGBTInterface::GetBERTErrors(pChip);
-    uint32_t cBitsChecked = std::pow(2, 5 + pMeasTime * 2) * 16; // # @TMP@ : currently hard coded for 640MHz
+    uint32_t cBitsChecked = std::pow(2, 5 + pMeasTime * 2) * 16; // # @TMP@ : currently hard coded for 640 MHz
 
     LOG(INFO) << GREEN << "Bits checked : " << BOLDYELLOW << +cBitsChecked << RESET << GREEN << " bits" << RESET;
     LOG(INFO) << GREEN << "Bits in error: " << BOLDYELLOW << +cErrors << RESET << GREEN << " bits" << RESET;
