@@ -20,7 +20,7 @@ namespace RD53lpGBTconstants
 {
 const uint8_t MAXATTEMPTS  = 10;   // Maximum number of attempts
 const uint8_t LPGBTADDRESS = 0x70; // LpGBT chip address
-}
+} // namespace RD53lpGBTconstants
 
 namespace Ph2_HwInterface
 {

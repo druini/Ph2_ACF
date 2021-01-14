@@ -18,9 +18,9 @@
 #include "../Utils/RD53RunProgress.h"
 #include "../Utils/RD53Shared.h"
 #include "../Utils/easylogging++.h"
-#include "RD53lpGBTInterface.h"
 #include "BeBoardFWInterface.h"
 #include "D19cFpgaConfig.h"
+#include "RD53lpGBTInterface.h"
 #include <uhal/uhal.hpp>
 
 #include <omp.h>
@@ -29,10 +29,10 @@
 // # CONSTANTS #
 // #############
 #define READOUTSLEEP 50      // [microseconds]
-#define NWORDS_DDR3   4      // Number of IPbus words in a DDR3 word
-#define NLANE_HYBRID  4      // Number of lanes per hybrid
+#define NWORDS_DDR3 4        // Number of IPbus words in a DDR3 word
+#define NLANE_HYBRID 4       // Number of lanes per hybrid
 #define HEADEAR_WRTCMD 0xFF  // Header of chip write command sequence
-#define NBIT_FWVER   16      // Number of bits for the firmware version
+#define NBIT_FWVER 16        // Number of bits for the firmware version
 #define IPBUS_FASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 
 // #######################

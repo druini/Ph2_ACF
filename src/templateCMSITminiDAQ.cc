@@ -91,29 +91,29 @@ int main(int argc, char** argv)
     // # Reset hardware #
     // ##################
     if(doReset == true)
-      {
-	if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
-	  static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("160");
-	else
-	  static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
-	return EXIT_SUCCESS;
-      }
-    
+    {
+        if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
+            static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("160");
+        else
+            static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
+        return EXIT_SUCCESS;
+    }
+
     if(doReadBinary == true)
-      {
+    {
         // ######################################
         // # Read binary file and decode events #
         // ######################################
         readBinaryData(binaryFile, mySysCntr, RD53FWInterface::decodedEvents);
         RD53FWInterface::PrintEvents(RD53FWInterface::decodedEvents);
-      }
+    }
     else
-      {
+    {
         // #######################
         // # Initialize Hardware #
         // #######################
         mySysCntr.Configure(configFile);
-      }
+    }
 
     // ##################
     // # Run PixelAlive #

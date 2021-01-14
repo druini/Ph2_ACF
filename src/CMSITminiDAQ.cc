@@ -307,17 +307,17 @@ int main(int argc, char** argv)
             mySysCntr.InitializeHw(configFile, outp, true, false);
             mySysCntr.InitializeSettings(configFile, outp);
             if(reset == true)
-	      {
-		if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
-		  static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("160");
-		else
-		  static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
-		exit(EXIT_SUCCESS);
-	      }
+            {
+                if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
+                    static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("160");
+                else
+                    static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
+                exit(EXIT_SUCCESS);
+            }
             if(binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53FWInterface::decodedEvents);
         }
         else if(binaryFile == "")
-	  {
+        {
             // #######################
             // # Initialize Hardware #
             // #######################
