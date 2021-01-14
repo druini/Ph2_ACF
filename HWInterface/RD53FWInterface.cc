@@ -34,13 +34,28 @@ uint32_t RD53FWInterface::getBoardInfo()
     return cVersionWord;
 }
 
-void RD53FWInterface::ResetSequence()
+void RD53FWInterface::ResetSequence(const std::string& refClockRate)
 {
     LOG(INFO) << BOLDMAGENTA << "Resetting the backend board... it may take a while" << RESET;
 
     RD53FWInterface::TurnOffFMC();
     RD53FWInterface::TurnOnFMC();
     RD53FWInterface::ResetBoard();
+
+    // ##############################
+    // # Initialize clock generator #
+    // ##############################
+    RD53FWInterface::InitializeClockGenerator(refClockRate);
+
+    // ###################################
+    // # Reset optical link slow control #
+    // ###################################
+    RD53FWInterface::ResetOptoLinkSlowControl();
+
+    // ######################
+    // # Reset optical link #
+    // ######################
+    RD53FWInterface::ResetOptoLink();
 
     LOG(INFO) << BOLDMAGENTA << "Now you can start using the DAQ ... enjoy!" << RESET;
 }
@@ -132,23 +147,16 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
     if(cVecReg.size() != 0) RegManager::WriteStackReg(cVecReg);
 
-    // ###################################
-    // # Reset optical link slow control #
-    // ###################################
-    uint32_t txIsReady, rxIsReady;
-    RD53FWInterface::ResetOptoLinkSlowControl();
-    RD53FWInterface::StatusOptoLinkSlowControl(txIsReady, rxIsReady);
-
-    // ##############################
-    // # Initialize clock generator #
-    // ##############################
-    LOG(INFO) << GREEN << "Initializing clock generator (CDCE62005)..." << RESET;
-    if((txIsReady == true) && (rxIsReady == true))
-        RD53FWInterface::InitializeClockGenerator("320");
-    else
-        RD53FWInterface::InitializeClockGenerator("160");
+    // ########################
+    // # Read clock generator #
+    // ########################
     RD53FWInterface::ReadClockGenerator();
-    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
+    // #########################################
+    // # Read optical link slow control status #
+    // #########################################
+    uint32_t txIsReady, rxIsReady;
+    RD53FWInterface::StatusOptoLinkSlowControl(txIsReady, rxIsReady);
 
     // ###########################
     // # Print clock measurement #
@@ -157,11 +165,6 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t gtxClk   = RegManager::ReadReg("user.stat_regs.gtx_refclk_rate");
     LOG(INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz" << RESET;
     LOG(INFO) << GREEN << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz" << RESET;
-
-    // ######################
-    // # Reset optical link #
-    // ######################
-    RD53FWInterface::ResetOptoLink();
 }
 
 void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
@@ -1540,6 +1543,7 @@ void RD53FWInterface::ReadClockGenerator()
     const uint32_t writeSPI(0x8FA38014); // Write to SPI
     const uint32_t SPIreadCommands[] = {0x0E, 0x1E, 0x2E, 0x3E, 0x4E, 0x5E, 0x6E, 0x7E, 0x8E};
 
+    LOG(INFO) << GREEN << "Reading clock generator (CDCE62005) configuration" << RESET;
     for(const auto value: SPIreadCommands)
     {
         RegManager::WriteReg("system.spi.tx_data", value);

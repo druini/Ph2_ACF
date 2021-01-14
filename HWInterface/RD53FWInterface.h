@@ -97,7 +97,7 @@ class RD53FWInterface : public BeBoardFWInterface
     uint32_t  getBoardInfo() override;
     BoardType getBoardType() const override { return BoardType::RD53; }
 
-    void ResetSequence();
+    void ResetSequence(const std::string& refClockRate);
     void ConfigureBoard(const Ph2_HwDescription::BeBoard* pBoard) override;
 
     void Start() override;

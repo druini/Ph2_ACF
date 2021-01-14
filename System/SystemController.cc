@@ -289,8 +289,9 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             size_t colStart    = SystemController::findValueInSettings("COLstart");
             bool   resetMask   = SystemController::findValueInSettings("ResetMask");
             bool   resetTDAC   = SystemController::findValueInSettings("ResetTDAC");
+            LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
-            LOG(INFO) << GREEN << "Configured FSM fast command block" << RESET;
+	    LOG(INFO) << CYAN << "=== Done ===" << RESET;
 
             // ########################
             // # Configuring from XML #
