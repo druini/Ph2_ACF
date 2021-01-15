@@ -170,7 +170,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
         if(cSuccess)
         {
             auto cReadBack = ReadChipReg(pMPA, cRegItem.first);
-            //LOG(INFO) << BOLDRED << cRegItem.first<<" "<<cReadBack<<","<<cRegItem.second.fValue << RESET;
+            // LOG(INFO) << BOLDRED << cRegItem.first<<" "<<cReadBack<<","<<cRegItem.second.fValue << RESET;
             if(cReadBack != cRegItem.second.fValue)
             {
                 std::size_t found  = (cRegItem.first).find("ReadCounter");

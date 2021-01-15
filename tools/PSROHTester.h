@@ -1,13 +1,14 @@
 /*!
 
         \file                   PSROHTester.h
-        \brief                  Class for PS-ROH hybrids test using a testcard 
+        \brief                  Class for PS-ROH hybrids test using a testcard
         \author                 Younes OTARID
         \version                1.0
         \date                   17/12/2020
         Support :               mail to : younes.otarid@cern.ch
 
- */#ifndef PSROHTester_h__
+ */
+#ifndef PSROHTester_h__
 #define PSROHTester_h__
 #include "OTHybridTester.h"
 
@@ -39,7 +40,7 @@ class PSROHTester : public OTHybridTester
     void CheckFastCommandsBRAM(const std::string& sFastCommandLine);
     void WritePatternToBRAM(const std::string& sFileName);
     void FastCommandScope();
-    
+
   private:
     void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
     void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandPattern, const std::string& userFilename);
@@ -54,8 +55,6 @@ class PSROHTester : public OTHybridTester
     void CheckHybridInputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
     // void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string & pFastCommand ,  uint8_t pDuartion=1);
-
-
 
     std::map<std::string, uint8_t> fInputDebugMap = {{"l_fcmd_cic", 0},
                                                      {"r_fcmd_cic", 1},

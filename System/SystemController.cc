@@ -216,13 +216,13 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
-                    cIslpGBTI2C = !cBoard->ifUseOpticalLink();
+                    cIslpGBTI2C                         = !cBoard->ifUseOpticalLink();
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                 }
             }
-            //Check lpGBT Link Lock 
-            if(cIslpGBTI2C) 
+            // Check lpGBT Link Lock
+            if(cIslpGBTI2C)
             {
                 LOG(INFO) << BOLDBLUE << "Configuring optical link.." << RESET;
                 bool clpGBTlock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
@@ -232,7 +232,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     exit(0);
                 }
             }
-    
+
             for(auto cOpticalGroup: *cBoard)
             {
                 uint8_t cLinkId = cOpticalGroup->getId();
@@ -552,27 +552,19 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             uint32_t  fNFe       = pBoard->getNFe();
             uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
             LOG(DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
-            fEventSize      = static_cast<uint32_t>((pData.size()) / pNevents);
-            //uint32_t nmpa = 0;
+            fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
+            // uint32_t nmpa = 0;
             uint32_t maxind = 0;
 
-
-                //if(fEventType == EventType::SSAAS) 
-                 //   {
-                 //   uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-                 //   nSSA = pData.size() / 120;
-                 //   }
-
+            // if(fEventType == EventType::SSAAS)
+            //   {
+            //   uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+            //   nSSA = pData.size() / 120;
+            //   }
 
             for(auto opticalGroup: *pBoard)
             {
-                    for(auto hybrid: *opticalGroup)
-                    {
-
-                            maxind = std::max(maxind, uint32_t(hybrid->size()));
-          
-                        
-                    }
+                for(auto hybrid: *opticalGroup) { maxind = std::max(maxind, uint32_t(hybrid->size())); }
             }
 
             if(fEventType == EventType::SSAAS) { fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
@@ -588,7 +580,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 {
                     uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
                     auto     cEnd       = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
-              
+
                     // retrieve chunck of data vector belonging to this event
                     if(cEnd - cEventIterator == cEventSize)
                     {

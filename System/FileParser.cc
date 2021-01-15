@@ -479,7 +479,7 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
        << ", File: " << expandEnvironmentVariables(pSSAnode.attribute("configfile").value()) << RESET << std::endl;
 
     // Get ID of SSA then add to the Hybrid!
-    uint32_t    cChipId = pSSAnode.attribute("Id").as_int();
+    uint32_t    cChipId    = pSSAnode.attribute("Id").as_int();
     uint32_t    cPartnerId = pSSAnode.attribute("partid").as_int();
     std::string cFileName;
     if(!cFilePrefix.empty())
@@ -502,7 +502,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, ReadoutChip* pSSA)
 
 void FileParser::parseMPA(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::string cFilePrefix)
 { // Get ID of MPA then add to the Hybrid!
-    uint32_t    cChipId = pHybridNode.attribute("Id").as_int();
+    uint32_t    cChipId    = pHybridNode.attribute("Id").as_int();
     uint32_t    cPartnerId = pHybridNode.attribute("partid").as_int();
     std::string cFileName;
     if(!cFilePrefix.empty())

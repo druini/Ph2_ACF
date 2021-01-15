@@ -118,10 +118,10 @@ class D19cFWInterface : public BeBoardFWInterface
     // i2c version of master
     uint32_t fI2CVersion;
     // optical readout
-    bool                       fOptical       = false;
-    bool                       fUseOpticalLink= false;
-    bool                       fUseCPB        = false;
-    bool                       fConfigureCDCE = false;
+    bool                       fOptical        = false;
+    bool                       fUseOpticalLink = false;
+    bool                       fUseCPB         = false;
+    bool                       fConfigureCDCE  = false;
     std::map<uint8_t, uint8_t> fRxPolarity;
     std::map<uint8_t, uint8_t> fTxPolarity;
 
@@ -661,7 +661,7 @@ class D19cFWInterface : public BeBoardFWInterface
     void PSInterfaceBoard_PowerOn(uint8_t mpaid = 0, uint8_t ssaid = 0);
     void PSInterfaceBoard_PowerOff();
 
-    void PSInterfaceBoard_PowerOn_MPASSA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, float VBF=0.3,uint8_t mpaid = 0, uint8_t ssaid = 0);
+    void PSInterfaceBoard_PowerOn_MPASSA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, float VBF = 0.3, uint8_t mpaid = 0, uint8_t ssaid = 0);
     // MPA power on
     void PSInterfaceBoard_PowerOn_MPA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, uint8_t mpaid = 0, uint8_t ssaid = 0);
     void PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid = 0, uint8_t ssaid = 0);
@@ -736,8 +736,8 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    uint8_t  flpGBTAddress = 0x70;
-    //Functions for standard uDTC
+    uint8_t flpGBTAddress = 0x70;
+    // Functions for standard uDTC
     void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty) override {}
     void     ResetOptoLink(Ph2_HwDescription::Chip* pChip) override;
     bool     WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pValue, bool pVerifLoop = false) override;
@@ -746,12 +746,12 @@ class D19cFWInterface : public BeBoardFWInterface
 
     // # Read/Write new Command Processor Block #
     // ##########################################
-    //functions for new Command Processor Block
-    void     ResetCPB() override;
-    void     WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override;
+    // functions for new Command Processor Block
+    void                  ResetCPB() override;
+    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override;
     std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override;
-    //function to read/write lpGBT registers
-    bool WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
+    // function to read/write lpGBT registers
+    bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
     uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override;
 };
 } // namespace Ph2_HwInterface
