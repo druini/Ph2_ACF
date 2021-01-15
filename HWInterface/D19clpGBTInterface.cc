@@ -47,7 +47,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     if(cPUSMStatus != 18) exit(0);
     ConfigurePSROH(pChip);
-    Configure2SSEH(pChip);
+    //Configure2SSEH(pChip);
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
     return true;
 }
@@ -98,7 +98,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
 #ifdef __TCUSB__
         fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
         // use 2S_SEH test card USB interface
-        fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
+        // fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
 #endif
     }
     return true;
@@ -115,7 +115,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
 #ifdef __TCUSB__
                 cReadBack = fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
                 // Dont really see the point here. Write_i2c does not return a read back???
-                cReadBack = fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
+                // cReadBack = fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
 #endif
                 cIter++;
             }
@@ -139,7 +139,7 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
         return fTC_PSROH.read_i2c(pAddress);
-        return fTC_2SSEH.read_i2c(pAddress);
+        //return fTC_2SSEH.read_i2c(pAddress);
 #endif
     }
     return 0;

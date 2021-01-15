@@ -24,7 +24,7 @@ class D19clpGBTInterface : public lpGBTInterface
     D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB) {}
 
 #ifdef __TCUSB__
-    TC_2SSEH fTC_2SSEH;
+    //TC_2SSEH fTC_2SSEH;
     TC_PSROH fTC_PSROH;
 #endif
 
