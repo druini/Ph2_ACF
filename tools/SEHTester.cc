@@ -34,15 +34,13 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 #ifdef __USE_ROOT__
     // Create TTree for Iout to Iin conversion in DC/DC
     auto cIouttoIinTree = new TTree("tIouttoIinTree", "Iout to Iin conversion in DC/DC");
-    auto cEfficencyTree =new TTree("tEfficency", "DC/DC Efficency");
+    auto cEfficencyTree = new TTree("tEfficency", "DC/DC Efficency");
     // Create variables for TTree branches
-    // int                cSideId = -1;
-    std::vector<float> cIoutValVect;
-    std::vector<float> cIinValVect;
-    std::vector<float> cEfficencyValVect;
+    std::vector<float>       cIoutValVect;
+    std::vector<float>       cIinValVect;
+    std::vector<float>       cEfficencyValVect;
     std::vector<std::string> cSideValVect;
     // Create TTree Branches
-    // cIouttoInTree->Branch("side", &cSideId);
     cIouttoIinTree->Branch("Iout", &cIoutValVect);
     cIouttoIinTree->Branch("Iin", &cIinValVect);
     cIouttoIinTree->Branch("side", &cSideValVect);
@@ -50,17 +48,16 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     cEfficencyTree->Branch("Efficency", &cEfficencyValVect);
     cEfficencyTree->Branch("side", &cSideValVect);
     std::vector<std::string> pSides = {"both", "right", "left"};
-    // Create TCanvas & TMultiGraph
-    
-    auto cObj1             = gROOT->FindObject("mgIouttoIin");
-    auto cObj2             = gROOT->FindObject("mgEfficency");
+
+    auto cObj1 = gROOT->FindObject("mgIouttoIin");
+    auto cObj2 = gROOT->FindObject("mgEfficency");
     if(cObj1) delete cObj1;
     if(cObj2) delete cObj2;
-    //cIouttoIinCanvas->cd();
+
     auto cIouttoIinMultiGraph = new TMultiGraph();
     cIouttoIinMultiGraph->SetName("mgIouttoIin");
     cIouttoIinMultiGraph->SetTitle("DC/DC - Iout to Iin conversion");
-    //cEfficencyCanvas->cd();
+
     auto cEfficencyMultiGraph = new TMultiGraph();
     cEfficencyMultiGraph->SetName("mgEfficency");
     cEfficencyMultiGraph->SetTitle("DC/DC conversion efficency");
@@ -70,7 +67,9 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     {
         fTC_2SSEH.set_load1(false, false, 0);
         fTC_2SSEH.set_load2(false, false, 0);
-        cIoutValVect.clear(), cIinValVect.clear();cEfficencyValVect.clear();cSideValVect.clear();
+        cIoutValVect.clear(), cIinValVect.clear();
+        cEfficencyValVect.clear();
+        cSideValVect.clear();
 
         for(int cLoadValue = pMinLoadValue; cLoadValue <= (int)pMaxLoadValue; cLoadValue += pStep)
         {
@@ -101,21 +100,14 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
             cIoutValVect.push_back(I_P1V2_R + I_P1V2_L);
             cIinValVect.push_back(I_SEH);
             cSideValVect.push_back(cSide);
-            if (I_SEH*U_SEH==0)
-            {
-                cEfficencyValVect.push_back(-1);
-            }
+            if(I_SEH * U_SEH == 0) { cEfficencyValVect.push_back(-1); }
             else
             {
-                cEfficencyValVect.push_back((I_P1V2_R*U_P1V2_R + I_P1V2_L*U_P1V2_L)/(I_SEH*U_SEH));
+                cEfficencyValVect.push_back((I_P1V2_R * U_P1V2_R + I_P1V2_L * U_P1V2_L) / (I_SEH * U_SEH));
             }
-            
-            
-
         }
         cIouttoIinTree->Fill();
         cEfficencyTree->Fill();
-        //cIouttoIinCanvas->cd();
         auto    cIouttoIinGraph = new TGraph(cIoutValVect.size(), cIoutValVect.data(), cIinValVect.data());
         TString str             = cSide;
         cIouttoIinGraph->SetName(str);
@@ -124,9 +116,7 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
         cIouttoIinGraph->SetFillColor(0);
         cIouttoIinGraph->SetLineWidth(3);
         cIouttoIinMultiGraph->Add(cIouttoIinGraph);
-        //cEfficencyCanvas->cd();
-        auto    cEfficencyGraph = new TGraph(cIoutValVect.size(), cIoutValVect.data(), cEfficencyValVect.data());
-        //TString str             = cSide;
+        auto cEfficencyGraph = new TGraph(cIoutValVect.size(), cIoutValVect.data(), cEfficencyValVect.data());
         cEfficencyGraph->SetName(str);
         cEfficencyGraph->SetTitle(str);
         cEfficencyGraph->SetLineColor(iterator);
@@ -139,23 +129,21 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     cIouttoIinTree->Write();
     cEfficencyTree->Write();
     auto cIouttoIinCanvas = new TCanvas("tIouttoIin", "Iout to Iin conversion in DC/DC", 500, 500);
-    
-    //cIouttoIinCanvas->cd();
+
     cIouttoIinMultiGraph->Draw("AL*");
     cIouttoIinMultiGraph->GetXaxis()->SetTitle("Iout [A]");
     cIouttoIinMultiGraph->GetYaxis()->SetTitle("Iin [A]");
 
     cIouttoIinCanvas->BuildLegend();
     cIouttoIinCanvas->Write();
-    auto cEfficencyCanvas = new TCanvas("tEfficency", "DC/DC conversion efficency",500,500);
-    //cEfficencyCanvas->cd();
+    auto cEfficencyCanvas = new TCanvas("tEfficency", "DC/DC conversion efficency", 500, 500);
     cEfficencyMultiGraph->Draw("AL*");
     cEfficencyMultiGraph->GetXaxis()->SetTitle("Iout [A]");
     cEfficencyMultiGraph->GetYaxis()->SetTitle("Efficency");
 
     cEfficencyCanvas->BuildLegend();
     cEfficencyCanvas->Write();
-    
+
 #endif
 }
 

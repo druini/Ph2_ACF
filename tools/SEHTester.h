@@ -18,11 +18,11 @@
 #ifdef __USE_ROOT__
 #include "TAxis.h"
 #include "TGraph.h"
+#include "TLegend.h"
 #include "TMultiGraph.h"
 #include "TObject.h"
 #include "TString.h"
 #include "TTree.h"
-#include "TLegend.h"
 #endif
 using namespace Ph2_HwDescription;
 
