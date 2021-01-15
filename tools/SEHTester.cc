@@ -24,10 +24,163 @@ void SEHTester::Initialise()
     // reset I2C
     // fc7_daq_ctrl
     for(auto cBoard: *fDetectorContainer)
-    { 
-      if(cBoard->at(0)->flpGBT != nullptr) continue;
-      fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.i2c_slave_reset", 0x01); 
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.i2c_slave_reset", 0x01);
     }
+}
+void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep)
+{
+#ifdef __USE_ROOT__
+    // Create TTree for Iout to Iin conversion in DC/DC
+    auto cIouttoIinTree = new TTree("tIouttoIinTree", "Iout to Iin conversion in DC/DC");
+    auto cEfficencyTree =new TTree("tEfficency", "DC/DC Efficency");
+    // Create variables for TTree branches
+    // int                cSideId = -1;
+    std::vector<float> cIoutValVect;
+    std::vector<float> cIinValVect;
+    std::vector<float> cEfficencyValVect;
+    std::vector<std::string> cSideValVect;
+    // Create TTree Branches
+    // cIouttoInTree->Branch("side", &cSideId);
+    cIouttoIinTree->Branch("Iout", &cIoutValVect);
+    cIouttoIinTree->Branch("Iin", &cIinValVect);
+    cIouttoIinTree->Branch("side", &cSideValVect);
+    cEfficencyTree->Branch("Iout", &cIoutValVect);
+    cEfficencyTree->Branch("Efficency", &cEfficencyValVect);
+    cEfficencyTree->Branch("side", &cSideValVect);
+    std::vector<std::string> pSides = {"both", "right", "left"};
+    // Create TCanvas & TMultiGraph
+    
+    auto cObj1             = gROOT->FindObject("mgIouttoIin");
+    auto cObj2             = gROOT->FindObject("mgEfficency");
+    if(cObj1) delete cObj1;
+    if(cObj2) delete cObj2;
+    //cIouttoIinCanvas->cd();
+    auto cIouttoIinMultiGraph = new TMultiGraph();
+    cIouttoIinMultiGraph->SetName("mgIouttoIin");
+    cIouttoIinMultiGraph->SetTitle("DC/DC - Iout to Iin conversion");
+    //cEfficencyCanvas->cd();
+    auto cEfficencyMultiGraph = new TMultiGraph();
+    cEfficencyMultiGraph->SetName("mgEfficency");
+    cEfficencyMultiGraph->SetTitle("DC/DC conversion efficency");
+    LOG(INFO) << BOLDMAGENTA << "Testing DC/DC" << RESET;
+    int iterator = 1;
+    for(const auto& cSide: pSides)
+    {
+        fTC_2SSEH.set_load1(false, false, 0);
+        fTC_2SSEH.set_load2(false, false, 0);
+        cIoutValVect.clear(), cIinValVect.clear();cEfficencyValVect.clear();cSideValVect.clear();
+
+        for(int cLoadValue = pMinLoadValue; cLoadValue <= (int)pMaxLoadValue; cLoadValue += pStep)
+        {
+            float I_SEH;
+            float U_SEH;
+            float I_P1V2_R;
+            float I_P1V2_L;
+            float U_P1V2_R;
+            float U_P1V2_L;
+
+#ifdef __TCUSB__
+            if(cSide == "both")
+            {
+                fTC_2SSEH.set_load1(true, false, cLoadValue);
+                fTC_2SSEH.set_load2(true, false, cLoadValue);
+            }
+            if(cSide == "left") { fTC_2SSEH.set_load1(true, false, cLoadValue); }
+            if(cSide == "right") { fTC_2SSEH.set_load2(true, false, cLoadValue); }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            fTC_2SSEH.read_load(fTC_2SSEH.I_P1V2_R, I_P1V2_R);
+            fTC_2SSEH.read_load(fTC_2SSEH.I_P1V2_L, I_P1V2_L);
+            fTC_2SSEH.read_supply(fTC_2SSEH.I_SEH, I_SEH);
+            fTC_2SSEH.read_load(fTC_2SSEH.U_P1V2_R, U_P1V2_R);
+            fTC_2SSEH.read_load(fTC_2SSEH.U_P1V2_L, U_P1V2_L);
+            fTC_2SSEH.read_supply(fTC_2SSEH.U_SEH, U_SEH);
+#endif
+
+            cIoutValVect.push_back(I_P1V2_R + I_P1V2_L);
+            cIinValVect.push_back(I_SEH);
+            cSideValVect.push_back(cSide);
+            if (I_SEH*U_SEH==0)
+            {
+                cEfficencyValVect.push_back(-1);
+            }
+            else
+            {
+                cEfficencyValVect.push_back((I_P1V2_R*U_P1V2_R + I_P1V2_L*U_P1V2_L)/(I_SEH*U_SEH));
+            }
+            
+            
+
+        }
+        cIouttoIinTree->Fill();
+        cEfficencyTree->Fill();
+        //cIouttoIinCanvas->cd();
+        auto    cIouttoIinGraph = new TGraph(cIoutValVect.size(), cIoutValVect.data(), cIinValVect.data());
+        TString str             = cSide;
+        cIouttoIinGraph->SetName(str);
+        cIouttoIinGraph->SetTitle(str);
+        cIouttoIinGraph->SetLineColor(iterator);
+        cIouttoIinGraph->SetFillColor(0);
+        cIouttoIinGraph->SetLineWidth(3);
+        cIouttoIinMultiGraph->Add(cIouttoIinGraph);
+        //cEfficencyCanvas->cd();
+        auto    cEfficencyGraph = new TGraph(cIoutValVect.size(), cIoutValVect.data(), cEfficencyValVect.data());
+        //TString str             = cSide;
+        cEfficencyGraph->SetName(str);
+        cEfficencyGraph->SetTitle(str);
+        cEfficencyGraph->SetLineColor(iterator);
+        cEfficencyGraph->SetFillColor(0);
+        cEfficencyGraph->SetLineWidth(3);
+        cEfficencyMultiGraph->Add(cEfficencyGraph);
+        iterator++;
+    }
+    fResultFile->cd();
+    cIouttoIinTree->Write();
+    cEfficencyTree->Write();
+    auto cIouttoIinCanvas = new TCanvas("tIouttoIin", "Iout to Iin conversion in DC/DC", 500, 500);
+    
+    //cIouttoIinCanvas->cd();
+    cIouttoIinMultiGraph->Draw("AL*");
+    cIouttoIinMultiGraph->GetXaxis()->SetTitle("Iout [A]");
+    cIouttoIinMultiGraph->GetYaxis()->SetTitle("Iin [A]");
+
+    cIouttoIinCanvas->BuildLegend();
+    cIouttoIinCanvas->Write();
+    auto cEfficencyCanvas = new TCanvas("tEfficency", "DC/DC conversion efficency",500,500);
+    //cEfficencyCanvas->cd();
+    cEfficencyMultiGraph->Draw("AL*");
+    cEfficencyMultiGraph->GetXaxis()->SetTitle("Iout [A]");
+    cEfficencyMultiGraph->GetYaxis()->SetTitle("Efficency");
+
+    cEfficencyCanvas->BuildLegend();
+    cEfficencyCanvas->Write();
+    
+#endif
+}
+
+void SEHTester::TestCardVoltages()
+{
+    float k;
+    auto  c2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
+    do
+    {
+        fTC_2SSEH.read_supply(c2SSEHMapIterator->second, k);
+        fillSummaryTree(c2SSEHMapIterator->first, k);
+        c2SSEHMapIterator++;
+
+    } while(c2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
+    fTC_2SSEH.set_SehSupply(fTC_2SSEH.sehSupply_On);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    auto d2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
+    do
+    {
+        fTC_2SSEH.read_supply(d2SSEHMapIterator->second, k);
+        fillSummaryTree(d2SSEHMapIterator->first, k);
+        d2SSEHMapIterator++;
+
+    } while(d2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
+    fTC_2SSEH.set_SehSupply(fTC_2SSEH.sehSupply_On);
 }
 
 void SEHTester::UserFCMDTranslate(const std::string& userFilename = "fcmd_file.txt")
@@ -99,10 +252,10 @@ void SEHTester::ClearBRAM(BeBoard* pBoard, const std::string& sBRAMToReset)
 void SEHTester::ClearBRAM(const std::string& sBramToReset)
 {
     for(auto cBoard: *fDetectorContainer)
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->ClearBRAM(cBoard, sBramToReset); 
-		}
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->ClearBRAM(cBoard, sBramToReset);
+    }
 }
 
 void SEHTester::WritePatternToBRAM(BeBoard* pBoard, const std::string& filename = "fcmd_file.txt")
@@ -215,11 +368,11 @@ void SEHTester::WritePatternToBRAM(BeBoard* pBoard, const std::string& filename 
 
 void SEHTester::WritePatternToBRAM(const std::string& sFileName = "fcmd_file.txt")
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->WritePatternToBRAM(cBoard, sFileName); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->WritePatternToBRAM(cBoard, sFileName);
+    }
 }
 
 void SEHTester::CheckFastCommandsBRAM(BeBoard* pBoard, const std::string& sFCMDLine)
@@ -256,11 +409,11 @@ void SEHTester::CheckFastCommandsBRAM(BeBoard* pBoard, const std::string& sFCMDL
 
 void SEHTester::CheckFastCommandsBRAM(const std::string& sFCMDLine)
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->CheckFastCommandsBRAM(cBoard, sFCMDLine); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->CheckFastCommandsBRAM(cBoard, sFCMDLine);
+    }
 }
 
 void SEHTester::CheckFastCommands(BeBoard* pBoard, const std::string& sFastCommand, const std::string& filename = "fcmd_file.txt")
@@ -367,11 +520,11 @@ void SEHTester::CheckFastCommands(BeBoard* pBoard, const std::string& sFastComma
 
 void SEHTester::CheckFastCommands(const std::string& sFastCommand, const std::string& filename = "fcmd_file.txt")
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->CheckFastCommands(cBoard, sFastCommand, filename); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->CheckFastCommands(cBoard, sFastCommand, filename);
+    }
 }
 
 void SEHTester::ReadRefAddrBRAM(BeBoard* pBoard, int iRefBRAMAddr)
@@ -392,11 +545,11 @@ void SEHTester::ReadRefAddrBRAM(BeBoard* pBoard, int iRefBRAMAddr)
 }
 void SEHTester::ReadRefAddrBRAM(int iRefBRAMAddr)
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->ReadRefAddrBRAM(cBoard, iRefBRAMAddr); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->ReadRefAddrBRAM(cBoard, iRefBRAMAddr);
+    }
 }
 
 void SEHTester::ReadCheckAddrBRAM(BeBoard* pBoard, int iCheckBRAMAddr)
@@ -419,11 +572,11 @@ void SEHTester::ReadCheckAddrBRAM(BeBoard* pBoard, int iCheckBRAMAddr)
 
 void SEHTester::ReadCheckAddrBRAM(int iCheckBRAMAddr)
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->ReadCheckAddrBRAM(cBoard, iCheckBRAMAddr); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->ReadCheckAddrBRAM(cBoard, iCheckBRAMAddr);
+    }
 }
 
 void SEHTester::CheckClocks(BeBoard* pBoard)
@@ -502,11 +655,11 @@ void SEHTester::CheckClocks(BeBoard* pBoard)
 
 void SEHTester::CheckClocks()
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->CheckClocks(cBoard); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->CheckClocks(cBoard);
+    }
 }
 void SEHTester::FastCommandScope(BeBoard* pBoard)
 {
@@ -523,11 +676,11 @@ void SEHTester::FastCommandScope(BeBoard* pBoard)
 }
 void SEHTester::FastCommandScope()
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->FastCommandScope(cBoard); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->FastCommandScope(cBoard);
+    }
 }
 void SEHTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
@@ -568,10 +721,10 @@ void SEHTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string> pInp
 void SEHTester::CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
     for(auto cBoard: *fDetectorContainer)
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->CheckHybridInputs(cBoard, pInputs, pCounters); 
-		}
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->CheckHybridInputs(cBoard, pInputs, pCounters);
+    }
 }
 
 void SEHTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters)
@@ -679,14 +832,12 @@ void SEHTester::SEHInputsDebug()
 
 void SEHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->CheckHybridOutputs(cBoard, pInputs, pCounters); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->CheckHybridOutputs(cBoard, pInputs, pCounters);
+    }
 }
-
-
 
 void SEHTester::Start(int currentRun)
 {
@@ -705,5 +856,3 @@ void SEHTester::Stop()
 void SEHTester::Pause() {}
 
 void SEHTester::Resume() {}
-
-

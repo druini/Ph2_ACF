@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
     // Timer t;
 
     // Initialize and Configure Back-End (Optical) FC7
-    Tool              cTool;
+    Tool cTool;
 
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
@@ -150,8 +150,9 @@ int main(int argc, char* argv[])
     outp.str("");
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
+    cTool.bookSummaryTree();
     LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
-    cTool.ConfigureHw();
+    // cTool.ConfigureHw();
 
     // Initialize BackEnd & Control LpGBT Tester
     SEHTester cSEHTester;
@@ -159,15 +160,15 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
     {
-        if(cmd.foundOption("internal-pattern")) 
-        { 
+        if(cmd.foundOption("internal-pattern"))
+        {
             cSEHTester.LpGBTInjectULInternalPattern(cInternalPattern32);
-            cSEHTester.LpGBTCheckULPattern(false); 
+            cSEHTester.LpGBTCheckULPattern(false);
         }
         else if(cmd.foundOption("external-pattern"))
         {
             cSEHTester.LpGBTInjectULExternalPattern(cExternalPattern);
-            cSEHTester.LpGBTCheckULPattern(true); 
+            cSEHTester.LpGBTCheckULPattern(true);
         }
     }
 
@@ -187,7 +188,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testReset"))
     {
         std::vector<std::pair<string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
-        std::vector<uint8_t> cGPIOs = {0,3,6,8};
+        std::vector<uint8_t>                    cGPIOs  = {0, 3, 6, 8};
         for(auto cLevel: cLevels)
         {
             cSEHTester.LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
@@ -209,11 +210,11 @@ int main(int argc, char* argv[])
         else
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDRED << " failed" << RESET;
     }
-    // Testing linearity of ADC and AMUX lines 
+    // Testing linearity of ADC and AMUX lines
     if(cmd.foundOption("testADC"))
     {
         std::vector<std::string> cADCs = {"ADC0", "ADC3"};
-        cSEHTester.LpGBTTestADC(cADCs, 0, 1000, 20); //DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
+        cSEHTester.LpGBTTestADC(cADCs, 0, 1000, 20); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
     }
 
     // Test Fast Commands
@@ -231,8 +232,10 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("scope-fcmd"))
     {
-        if(cmd.foundOption("fcmd-pattern"))
-            cSEHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
+        LOG(INFO) << BOLDBLUE << "BlA" << RESET;
+        cSEHTester.TestCardVoltages();
+        cSEHTester.TestEfficency(0, 100, 5);
+        if(cmd.foundOption("fcmd-pattern")) cSEHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
         cSEHTester.FastCommandScope();
     }
 
