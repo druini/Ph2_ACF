@@ -389,7 +389,7 @@ void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std:
     uint8_t cChipRate = GetChipRate(pChip);
     // Phase Align Rx Channels
     // Set data source for channels 0,2 to PRBS
-    ConfigureRxSource(pChip, pGroups, 0);
+    ConfigureRxSource(pChip, pGroups, 1);
     // Turn ON PRBS for channels 0,2
     ConfigureRxPRBS(pChip, pGroups, pChannels, true);
     // Find Phase

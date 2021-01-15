@@ -61,7 +61,7 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
       if(pIsExternal)
       {
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-        clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 1, 2, 3}, false);
+        clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
         clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
       }
