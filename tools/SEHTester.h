@@ -59,6 +59,7 @@ class SEHTester : public OTHybridTester
     void FastCommandScope();
     void TestCardVoltages();
     void TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep);
+    void TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime);
 
   private:
     void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);

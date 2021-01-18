@@ -5,6 +5,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <sys/time.h> 
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -29,6 +30,90 @@ void SEHTester::Initialise()
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.i2c_slave_reset", 0x01);
     }
 }
+
+void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
+{
+    // time_t startTime;
+    // time(&startTime);
+
+    struct timespec startTime, timer; 
+  
+    // start timer. 
+    // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start); 
+    // clock_gettime(CLOCK_REALTIME, &start); 
+    clock_gettime(CLOCK_MONOTONIC, &startTime); 
+
+    fTC_2SSEH.set_HV(true, false, false, pHvDacValue);
+    // Create TTree for leakage current
+    auto cLeakTree = new TTree("tLeakTree", "Leakage Current");
+    // Create variables for TTree branches
+    std::vector<double> cILeakValVect;
+    std::vector<double>  cUMonValVect;
+    std::vector<double> cTimeValVect;
+    // Create TTree Branches
+    cLeakTree->Branch("ILeak", &cILeakValVect);
+    cLeakTree->Branch("UMon", &cUMonValVect);
+    cLeakTree->Branch("Time", &cTimeValVect);
+
+    //for(int cPoint = 0; cPoint <= (int)pPoints; cPoint += 1)
+    double time_taken; 
+    do
+    {
+        float ILeak;
+        float UMon;
+        // time_t timer;
+        // time(&timer);
+        clock_gettime(CLOCK_MONOTONIC, &timer); 
+
+#ifdef __TCUSB__
+        fTC_2SSEH.read_hvmon(fTC_2SSEH.Mon, UMon);
+        fTC_2SSEH.read_hvmon(fTC_2SSEH.HV_meas, ILeak);
+#endif
+        cILeakValVect.push_back(double(ILeak));
+        cUMonValVect.push_back(UMon);
+        // cTimeValVect.push_back(timer-startTime);
+        
+        time_taken = (timer.tv_sec - startTime.tv_sec) * 1e9; 
+        time_taken = (time_taken + (timer.tv_nsec - startTime.tv_nsec)) * 1e-9; 
+        cTimeValVect.push_back(time_taken);
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }while(time_taken<measurementTime);
+    cLeakTree->Fill();
+    fResultFile->cd();
+    cLeakTree->Write();
+
+    auto cleakGraph = new TGraph(cTimeValVect.size(), cTimeValVect.data(), cILeakValVect.data());
+    cleakGraph->SetName("ILeak");
+    cleakGraph->SetTitle("Leakage Current");
+    cleakGraph->SetLineColor(2);
+    cleakGraph->SetFillColor(0);
+    cleakGraph->SetLineWidth(3);
+    auto cLeakCanvas = new TCanvas("tLeak", "Bias Voltage Leakage Current", 1600, 900);
+    cleakGraph->Draw("AL*");
+    cleakGraph->GetXaxis()->SetTitle("Time [s]");
+    cleakGraph->GetYaxis()->SetTitle("Leakage Current [nA]");
+
+    // cEfficencyCanvas->BuildLegend();
+    cLeakCanvas->Write();
+
+    auto cMonGraph = new TGraph(cTimeValVect.size(), cTimeValVect.data(), cUMonValVect.data());
+    cMonGraph->SetName("Umon");
+    cMonGraph->SetTitle("Monitoring Voltage");
+    cMonGraph->SetLineColor(2);
+    cMonGraph->SetFillColor(0);
+    cMonGraph->SetLineWidth(3);
+    auto cMonCanvas = new TCanvas("tMon", "Bias Voltage Monitoring Voltage", 1600, 900);
+    cMonGraph->Draw("AL*");
+    cMonGraph->GetXaxis()->SetTitle("Time [s]");
+    cMonGraph->GetYaxis()->SetTitle("Monitoring Voltage [V]");
+
+    // cEfficencyCanvas->BuildLegend();
+    cMonCanvas->Write();
+    fTC_2SSEH.set_HV(false, false, false, 0);
+
+}
+
 void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep)
 {
 #ifdef __USE_ROOT__
@@ -115,13 +200,16 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
         cIouttoIinGraph->SetLineColor(iterator);
         cIouttoIinGraph->SetFillColor(0);
         cIouttoIinGraph->SetLineWidth(3);
+        cIouttoIinGraph->SetMarkerStyle(iterator+20);
         cIouttoIinMultiGraph->Add(cIouttoIinGraph);
+        
         auto cEfficencyGraph = new TGraph(cIoutValVect.size(), cIoutValVect.data(), cEfficencyValVect.data());
         cEfficencyGraph->SetName(str);
         cEfficencyGraph->SetTitle(str);
         cEfficencyGraph->SetLineColor(iterator);
         cEfficencyGraph->SetFillColor(0);
         cEfficencyGraph->SetLineWidth(3);
+        cEfficencyGraph->SetMarkerStyle(iterator+20);
         cEfficencyMultiGraph->Add(cEfficencyGraph);
         iterator++;
     }
@@ -130,14 +218,14 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     cEfficencyTree->Write();
     auto cIouttoIinCanvas = new TCanvas("tIouttoIin", "Iout to Iin conversion in DC/DC", 500, 500);
 
-    cIouttoIinMultiGraph->Draw("AL*");
+    cIouttoIinMultiGraph->Draw("ALP");
     cIouttoIinMultiGraph->GetXaxis()->SetTitle("Iout [A]");
     cIouttoIinMultiGraph->GetYaxis()->SetTitle("Iin [A]");
 
     cIouttoIinCanvas->BuildLegend();
     cIouttoIinCanvas->Write();
     auto cEfficencyCanvas = new TCanvas("tEfficency", "DC/DC conversion efficency", 500, 500);
-    cEfficencyMultiGraph->Draw("AL*");
+    cEfficencyMultiGraph->Draw("ALP");
     cEfficencyMultiGraph->GetXaxis()->SetTitle("Iout [A]");
     cEfficencyMultiGraph->GetYaxis()->SetTitle("Efficency");
 

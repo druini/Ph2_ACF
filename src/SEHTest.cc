@@ -97,6 +97,10 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("debug", "d");
     // scope
     cmd.defineOption("scope-fcmd", "Scope fast commands [de-serialized]");
+    // efficency
+    cmd.defineOption("eff", "Measure the DC/DC efficency");
+    // Bias voltage leakage current
+    cmd.defineOption("leak", "Measure the Bias voltage leakage current ");
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -232,11 +236,20 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("scope-fcmd"))
     {
-        LOG(INFO) << BOLDBLUE << "BlA" << RESET;
-        cSEHTester.TestCardVoltages();
-        cSEHTester.TestEfficency(0, 100, 5);
         if(cmd.foundOption("fcmd-pattern")) cSEHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
         cSEHTester.FastCommandScope();
+    }
+
+    if(cmd.foundOption("eff"))
+    {
+        LOG(INFO) << BOLDBLUE << "Efficency Test" << RESET;
+        cSEHTester.TestEfficency(0, 100, 5);
+    }
+
+    if(cmd.foundOption("leak"))
+    {
+        LOG(INFO) << BOLDBLUE << "Measuring leakage current" << RESET;
+        cSEHTester.TestLeakageCurrent(0x155, 30);
     }
 
     if(cFCMDTest && !cFCMDTestStartPattern.empty() && !cFCMDTestUserFileName.empty())
