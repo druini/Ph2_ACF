@@ -47,7 +47,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     if(cPUSMStatus != 18) exit(0);
     ConfigurePSROH(pChip);
-    //Configure2SSEH(pChip);
+    // Configure2SSEH(pChip);
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
     return true;
 }
@@ -139,7 +139,7 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
         return fTC_PSROH.read_i2c(pAddress);
-        //return fTC_2SSEH.read_i2c(pAddress);
+        // return fTC_2SSEH.read_i2c(pAddress);
 #endif
     }
     return 0;
