@@ -5,7 +5,30 @@ using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 OTHybridTester::OTHybridTester() : Tool() {}
-OTHybridTester::~OTHybridTester() {}
+
+OTHybridTester::~OTHybridTester() 
+{
+#ifdef __TCUSB__
+        if(fTC_PSROH != nullptr)
+            delete fTC_PSROH;
+#endif
+}
+
+void OTHybridTester::FindUSBHandler()
+{
+#ifdef __TCUSB__
+    bool cThereIsLpGBT = false;
+    for(auto cBoard : *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr)
+            cThereIsLpGBT = true;
+    }
+    if(!cThereIsLpGBT)
+        fTC_PSROH = new TC_PSROH();
+    else
+        fTC_PSROH = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetTCUSBHandler();
+#endif   
+}
 
 void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
 {
@@ -152,7 +175,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
         for(int cDACValue = pMinDACValue; cDACValue <= (int)pMaxDACValue; cDACValue += pStep)
         {
 #ifdef __TCUSB__
-          clpGBTInterface->fTC_PSROH.dac_output(cDACValue);
+          fTC_PSROH->dac_output(cDACValue);
 #endif
           int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
           LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- ADC value = " << +cADCValue << RESET;

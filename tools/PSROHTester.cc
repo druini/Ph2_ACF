@@ -690,12 +690,13 @@ bool PSROHTester::TestResetLines(uint8_t pLevel)
 {
     bool cValid = true;
 #ifdef __TCUSB__
-    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    //D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     float cMeasurement;
     auto  cMapIterator = fResetLines.begin();
     do
     {
-        clpGBTInterface->fTC_PSROH.adc_get(cMapIterator->second, cMeasurement);
+        //clpGBTInterface->GetTCUSBHandler()->adc_get(cMapIterator->second, cMeasurement);
+        fTC_PSROH->adc_get(cMapIterator->second, cMeasurement);
         float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
         // cValid = cValid && (cDifference_mV <= 100 );
         if(cDifference_mV > 100)

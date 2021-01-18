@@ -42,7 +42,6 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     uint16_t cIter = 0, cMaxIter = 2000;
     while(cPUSMStatus != 18 && cIter < cMaxIter)
     {
-        LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +cPUSMStatus << RESET;
         cPUSMStatus = GetPUSMStatus(pChip);
         cIter++;
     }
@@ -96,7 +95,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     {
         // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-        fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
+        fTC_PSROH->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
     }
     return true;
@@ -111,7 +110,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
             // Now pick one configuration mode
             // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-            cReadBack = fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
+            cReadBack = fTC_PSROH->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
             cIter++;
         }
@@ -134,7 +133,7 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
     {
 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-        return fTC_PSROH.read_i2c(pAddress);
+        return fTC_PSROH->read_i2c(pAddress);
 #endif
     }
     return 0;
@@ -820,7 +819,7 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUse
     {
 #ifdef __TCUSB__
         LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
-        if(pToggleTC) fTC_PSROH.toggle_SCI2C();
+        if(pToggleTC) fTC_PSROH->toggle_SCI2C();
 #endif
         LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
         fUseOpticalLink = true;
@@ -844,7 +843,6 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     LOG(INFO) << BOLDGREEN << "Applying PS-ROH-" << +cChipRate << "G lpGBT configuration" << RESET;
     // Configure High Speed Link Tx Rx Polarity
     ConfigureHighSpeedPolarity(pChip, 1, 0);
-    
     // Clocks
     std::vector<uint8_t> cClocks  = {1, 6, 11, 26};
     uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 7, cClkInvert = 1;
@@ -865,7 +863,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 12;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 7;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)
