@@ -336,6 +336,9 @@ void RD53FWInterface::PrintFWstatus()
 
 void RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 {
+    uint32_t chips_en;
+    uint32_t channel_up;
+
     LOG(INFO) << GREEN << "Checking status communication FW <----> RD53" << RESET;
 
     // ###############################
@@ -344,29 +347,32 @@ void RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     auroraSpeed = RegManager::ReadReg("user.stat_regs.aurora_rx.speed");
     LOG(INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
 
-    // ########################################
-    // # Check communication with the chip(s) #
-    // ########################################
-    uint32_t chips_en = RegManager::ReadReg("user.ctrl_regs.Chips_en");
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of required data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<20>(chips_en)
-              << RESET;
-
-    uint32_t channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of active data lanes:   " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<20>(channel_up)
-              << RESET;
-
-    if(chips_en & ~channel_up)
+    do
     {
-        LOG(ERROR) << BOLDRED << "\t--> Some data lanes are enabled but inactive" << RESET;
-        RD53FWInterface::InitHybridByHybrid(pBoard);
-    }
-    else if(chips_en == 0)
-    {
-        LOG(ERROR) << BOLDRED << "\t--> No data lane is enabled: aborting" << RESET;
-        exit(EXIT_FAILURE);
-    }
-    else
-        LOG(INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
+        // ########################################
+        // # Check communication with the chip(s) #
+        // ########################################
+        chips_en = RegManager::ReadReg("user.ctrl_regs.Chips_en");
+        LOG(INFO) << BOLDBLUE << "\t--> Total number of required data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<20>(chips_en)
+                  << RESET;
+
+        channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
+        LOG(INFO) << BOLDBLUE << "\t--> Total number of active data lanes:   " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) << BOLDBLUE << " i.e. " << BOLDYELLOW
+                  << std::bitset<20>(channel_up) << RESET;
+
+        if(chips_en & ~channel_up)
+        {
+            LOG(ERROR) << BOLDRED << "\t--> Some data lanes are enabled but inactive" << RESET;
+            RD53FWInterface::InitHybridByHybrid(pBoard);
+        }
+        else if(chips_en == 0)
+        {
+            LOG(ERROR) << BOLDRED << "\t--> No data lane is enabled: aborting" << RESET;
+            exit(EXIT_FAILURE);
+        }
+        else
+            LOG(INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
+    } while(chips_en & ~channel_up);
 }
 
 void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
