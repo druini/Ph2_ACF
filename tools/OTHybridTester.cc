@@ -55,24 +55,20 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
-        for(auto cOpticalGroup: *cBoard)
-        {
-            if(pIsExternal)
-            {
-                D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 1, 2, 3}, false);
-                clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            }
-            fBeBoardInterface->setBoard(cBoard->getId());
-            D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-            cFWInterface->selectLink(cOpticalGroup->getId());
-            LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-            cFWInterface->StubDebug(true, 6);
-            LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-            cFWInterface->L1ADebug();
-        }
+      if(pIsExternal)
+      {
+        D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+        clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
+        clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+      }
+      fBeBoardInterface->setBoard(cBoard->getId());
+      D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+      cFWInterface->selectLink(cOpticalGroup->getId());
+      LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
+      cFWInterface->StubDebug(true, 6);
+      LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
+      cFWInterface->L1ADebug();
     }
 }
 
