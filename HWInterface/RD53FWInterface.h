@@ -150,8 +150,7 @@ class RD53FWInterface : public BeBoardFWInterface
         uint32_t l1a_counter;
         uint32_t bx_counter;
 
-        std::vector<ChipFrame>                      chip_frames;
-        std::vector<Ph2_HwDescription::RD53::Event> chip_events;
+        std::vector<std::pair<ChipFrame, Ph2_HwDescription::RD53::Event>> chip_frames_events;
 
         uint16_t evtStatus;
 

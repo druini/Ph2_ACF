@@ -619,23 +619,23 @@ void RD53FWInterface::PrintEvents(const std::vector<RD53FWInterface::Event>& eve
         LOG(INFO) << BOLDGREEN << "l1a_counter     = " << evt.l1a_counter << RESET;
         LOG(INFO) << BOLDGREEN << "bx_counter      = " << evt.bx_counter << RESET;
 
-        for(auto j = 0u; j < evt.chip_events.size(); j++)
+        for(auto& frame_event: evt.chip_frames_events)
         {
             LOG(INFO) << CYAN << "------- Chip Header -------" << RESET;
-            LOG(INFO) << CYAN << "error_code      = " << evt.chip_frames[j].error_code << RESET;
-            LOG(INFO) << CYAN << "hybrid_id       = " << evt.chip_frames[j].hybrid_id << RESET;
-            LOG(INFO) << CYAN << "chip_lane       = " << evt.chip_frames[j].chip_lane << RESET;
-            LOG(INFO) << CYAN << "l1a_data_size   = " << evt.chip_frames[j].l1a_data_size << RESET;
-            LOG(INFO) << CYAN << "chip_type       = " << evt.chip_frames[j].chip_type << RESET;
-            LOG(INFO) << CYAN << "frame_delay     = " << evt.chip_frames[j].frame_delay << RESET;
+            LOG(INFO) << CYAN << "error_code      = " << frame_event.first.error_code << RESET;
+            LOG(INFO) << CYAN << "hybrid_id       = " << frame_event.first.hybrid_id << RESET;
+            LOG(INFO) << CYAN << "chip_lane       = " << frame_event.first.chip_lane << RESET;
+            LOG(INFO) << CYAN << "l1a_data_size   = " << frame_event.first.l1a_data_size << RESET;
+            LOG(INFO) << CYAN << "chip_type       = " << frame_event.first.chip_type << RESET;
+            LOG(INFO) << CYAN << "frame_delay     = " << frame_event.first.frame_delay << RESET;
 
-            LOG(INFO) << CYAN << "trigger_id      = " << evt.chip_events[j].trigger_id << RESET;
-            LOG(INFO) << CYAN << "trigger_tag     = " << evt.chip_events[j].trigger_tag << RESET;
-            LOG(INFO) << CYAN << "bc_id           = " << evt.chip_events[j].bc_id << RESET;
+            LOG(INFO) << CYAN << "trigger_id      = " << frame_event.second.trigger_id << RESET;
+            LOG(INFO) << CYAN << "trigger_tag     = " << frame_event.second.trigger_tag << RESET;
+            LOG(INFO) << CYAN << "bc_id           = " << frame_event.second.bc_id << RESET;
 
-            LOG(INFO) << BOLDYELLOW << "--- Hit Data (" << evt.chip_events[j].hit_data.size() << " hits) ---" << RESET;
+            LOG(INFO) << BOLDYELLOW << "--- Hit Data (" << frame_event.second.hit_data.size() << " hits) ---" << RESET;
 
-            for(const auto& hit: evt.chip_events[j].hit_data)
+            for(const auto& hit: frame_event.second.hit_data)
             {
                 LOG(INFO) << BOLDYELLOW << "Column: " << std::setw(3) << hit.col << std::setw(-1) << ", Row: " << std::setw(3) << hit.row << std::setw(-1) << ", ToT: " << std::setw(3) << +hit.tot
                           << std::setw(-1) << RESET;
@@ -963,8 +963,8 @@ uint16_t RD53FWInterface::DecodeEvents(const std::vector<uint32_t>& data, std::v
             evtStatus |= events.back().evtStatus;
         else
         {
-            for(auto j = 0u; j < events.back().chip_events.size(); j++)
-                if(events.back().l1a_counter % maxL1Counter != events.back().chip_events[j].trigger_id) evtStatus |= RD53FWEvtEncoder::L1A;
+            for(auto j = 0u; j < events.back().chip_frames_events.size(); j++)
+                if(events.back().l1a_counter % maxL1Counter != events.back().chip_frames_events[j].second.trigger_id) evtStatus |= RD53FWEvtEncoder::L1A;
         }
     }
 
@@ -978,10 +978,10 @@ uint16_t RD53FWInterface::DecodeEvents(const std::vector<uint32_t>& data, std::v
 void RD53FWInterface::Event::addBoardInfo2Events(const BeBoard* pBoard, std::vector<RD53FWInterface::Event>& decodedEvents)
 {
     for(auto& evt: decodedEvents)
-        for(auto& chip_frame: evt.chip_frames)
+        for(auto& frame_event: evt.chip_frames_events)
         {
-            int chip_id = RD53FWInterface::Event::lane2chipId(pBoard, 0, chip_frame.hybrid_id, chip_frame.chip_lane);
-            if(chip_id != -1) chip_frame.chip_id = chip_id;
+            int chip_id = RD53FWInterface::Event::lane2chipId(pBoard, 0, frame_event.first.hybrid_id, frame_event.first.chip_lane);
+            if(chip_id != -1) frame_event.first.chip_id = chip_id;
         }
 }
 
@@ -997,13 +997,13 @@ void RD53FWInterface::Event::fillDataContainer(BoardDataContainer* boardContaine
                 {
                     if(vectorRequired == true)
                     {
-                        cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.push_back(chip_events[chipIndx].bc_id);
-                        cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.push_back(chip_events[chipIndx].trigger_id);
+                        cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.push_back(chip_frames_events[chipIndx].second.bc_id);
+                        cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.push_back(chip_frames_events[chipIndx].second.trigger_id);
                     }
 
-                    for(const auto& hit: chip_events[chipIndx].hit_data)
+                    for(const auto& hit: chip_frames_events[chipIndx].second.hit_data)
                     {
-                        cChip->getChannel<OccupancyAndPh>(hit.row + Ph2_HwDescription::RD53::nRows * (hit.col)).fOccupancy++;
+                        cChip->getChannel<OccupancyAndPh>(hit.row + RD53::nRows * (hit.col)).fOccupancy++;
                         cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPh += float(hit.tot);
                         cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPhError += float(hit.tot * hit.tot);
                         if(cTestChannelGroup->isChannelEnabled(hit.row, hit.col) == false) cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).readoutError = true;
@@ -1013,14 +1013,13 @@ void RD53FWInterface::Event::fillDataContainer(BoardDataContainer* boardContaine
 
 bool RD53FWInterface::Event::isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const
 {
-    for(auto i = 0u; i < chip_frames.size(); i++)
-        if((hybrid_id == chip_frames[i].hybrid_id) && (chip_id == chip_frames[i].chip_id) && (chip_events[i].hit_data.size() != 0))
-        {
-            chipIndx = i;
-            return true;
-        }
+    auto it = std::find_if(chip_frames_events.begin(), chip_frames_events.end(), [&](const std::pair<ChipFrame, RD53::Event>& frame_event) {
+        return ((frame_event.first.hybrid_id == hybrid_id) && (frame_event.first.chip_id == chip_id) && (frame_event.second.hit_data.size() != 0));
+    });
 
-    return false;
+    if(it == chip_frames_events.end()) return false;
+    chipIndx = it - chip_frames_events.begin();
+    return true;
 }
 
 int RD53FWInterface::Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane)
@@ -1098,24 +1097,20 @@ RD53FWInterface::Event::Event(const uint32_t* data, size_t n)
     // ##############################
     // # Decode frame and chip data #
     // ##############################
-    chip_frames.reserve(event_sizes.size());
-    chip_events.reserve(event_sizes.size());
+    chip_frames_events.reserve(event_sizes.size());
     index = 4;
     for(auto size: event_sizes)
     {
-        chip_frames.emplace_back(data[index], data[index + 1]);
+      chip_frames_events.emplace_back(std::pair<ChipFrame, RD53::Event>(ChipFrame(data[index], data[index + 1]), RD53::Event(&data[index + 2], size - 2)));
 
-        if(chip_frames.back().error_code != 0)
+        if(chip_frames_events.back().first.error_code != 0)
         {
             evtStatus |= RD53FWEvtEncoder::FWERR;
-            chip_frames.clear();
-            chip_events.clear();
+            chip_frames_events.clear();
             return;
         }
 
-        chip_events.emplace_back(&data[index + 2], size - 2);
-
-        if(chip_events.back().evtStatus != RD53EvtEncoder::CHIPGOOD) evtStatus |= chip_events.back().evtStatus;
+        if(chip_frames_events.back().second.evtStatus != RD53EvtEncoder::CHIPGOOD) evtStatus |= chip_frames_events.back().second.evtStatus;
 
         index += size;
     }
