@@ -161,6 +161,7 @@ int main(int argc, char* argv[])
     // Initialize BackEnd & Control LpGBT Tester
     SEHTester cSEHTester;
     cSEHTester.Inherit(&cTool);
+    cSEHTester.FindUSBHandler(true);
 
     if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
     {

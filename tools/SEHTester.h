@@ -33,7 +33,7 @@ class SEHTester : public OTHybridTester
     ~SEHTester();
 
 #ifdef __TCUSB__
-    TC_2SSEH fTC_2SSEH;
+    //TC_2SSEH fTC_2SSEH;
 // TC_PSROH fTC_PSROH;
 #endif
 

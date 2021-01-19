@@ -11,10 +11,12 @@ OTHybridTester::~OTHybridTester()
 #ifdef __TCUSB__
         if(fTC_PSROH != nullptr)
             delete fTC_PSROH;
+        if(fTC_2SSEH != nullptr)
+            delete fTC_2SSEH;
 #endif
 }
 
-void OTHybridTester::FindUSBHandler()
+void OTHybridTester::FindUSBHandler(bool b2SSEH)
 {
 #ifdef __TCUSB__
     bool cThereIsLpGBT = false;
@@ -31,7 +33,13 @@ void OTHybridTester::FindUSBHandler()
         
     }
     if(!cThereIsLpGBT)
-        fTC_PSROH = new TC_PSROH();
+    {
+        if(b2SSEH){
+            fTC_2SSEH = new TC_2SSEH();
+        }else{
+            fTC_PSROH = new TC_PSROH();
+        }
+    }
     else
         fTC_PSROH = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetTCUSBHandler();
 #endif   

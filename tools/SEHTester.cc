@@ -43,7 +43,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     // clock_gettime(CLOCK_REALTIME, &start); 
     clock_gettime(CLOCK_MONOTONIC, &startTime); 
 
-    fTC_2SSEH.set_HV(true, false, false, pHvDacValue);
+    fTC_2SSEH->set_HV(true, false, false, pHvDacValue);
     // Create TTree for leakage current
     auto cLeakTree = new TTree("tLeakTree", "Leakage Current");
     // Create variables for TTree branches
@@ -66,8 +66,8 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
         clock_gettime(CLOCK_MONOTONIC, &timer); 
 
 #ifdef __TCUSB__
-        fTC_2SSEH.read_hvmon(fTC_2SSEH.Mon, UMon);
-        fTC_2SSEH.read_hvmon(fTC_2SSEH.HV_meas, ILeak);
+        fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, UMon);
+        fTC_2SSEH->read_hvmon(fTC_2SSEH->HV_meas, ILeak);
 #endif
         cILeakValVect.push_back(double(ILeak));
         cUMonValVect.push_back(UMon);
@@ -110,7 +110,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 
     // cEfficencyCanvas->BuildLegend();
     cMonCanvas->Write();
-    fTC_2SSEH.set_HV(false, false, false, 0);
+    fTC_2SSEH->set_HV(false, false, false, 0);
 
 }
 
@@ -150,8 +150,8 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     int iterator = 1;
     for(const auto& cSide: pSides)
     {
-        fTC_2SSEH.set_load1(false, false, 0);
-        fTC_2SSEH.set_load2(false, false, 0);
+        fTC_2SSEH->set_load1(false, false, 0);
+        fTC_2SSEH->set_load2(false, false, 0);
         cIoutValVect.clear(), cIinValVect.clear();
         cEfficencyValVect.clear();
         cSideValVect.clear();
@@ -168,18 +168,18 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 #ifdef __TCUSB__
             if(cSide == "both")
             {
-                fTC_2SSEH.set_load1(true, false, cLoadValue);
-                fTC_2SSEH.set_load2(true, false, cLoadValue);
+                fTC_2SSEH->set_load1(true, false, cLoadValue);
+                fTC_2SSEH->set_load2(true, false, cLoadValue);
             }
-            if(cSide == "left") { fTC_2SSEH.set_load1(true, false, cLoadValue); }
-            if(cSide == "right") { fTC_2SSEH.set_load2(true, false, cLoadValue); }
+            if(cSide == "left") { fTC_2SSEH->set_load1(true, false, cLoadValue); }
+            if(cSide == "right") { fTC_2SSEH->set_load2(true, false, cLoadValue); }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            fTC_2SSEH.read_load(fTC_2SSEH.I_P1V2_R, I_P1V2_R);
-            fTC_2SSEH.read_load(fTC_2SSEH.I_P1V2_L, I_P1V2_L);
-            fTC_2SSEH.read_supply(fTC_2SSEH.I_SEH, I_SEH);
-            fTC_2SSEH.read_load(fTC_2SSEH.U_P1V2_R, U_P1V2_R);
-            fTC_2SSEH.read_load(fTC_2SSEH.U_P1V2_L, U_P1V2_L);
-            fTC_2SSEH.read_supply(fTC_2SSEH.U_SEH, U_SEH);
+            fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_R, I_P1V2_R);
+            fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_L, I_P1V2_L);
+            fTC_2SSEH->read_supply(fTC_2SSEH->I_SEH, I_SEH);
+            fTC_2SSEH->read_load(fTC_2SSEH->U_P1V2_R, U_P1V2_R);
+            fTC_2SSEH->read_load(fTC_2SSEH->U_P1V2_L, U_P1V2_L);
+            fTC_2SSEH->read_supply(fTC_2SSEH->U_SEH, U_SEH);
 #endif
 
             cIoutValVect.push_back(I_P1V2_R + I_P1V2_L);
@@ -241,22 +241,22 @@ void SEHTester::TestCardVoltages()
     auto  c2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
     {
-        fTC_2SSEH.read_supply(c2SSEHMapIterator->second, k);
+        fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
         fillSummaryTree(c2SSEHMapIterator->first, k);
         c2SSEHMapIterator++;
 
     } while(c2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    fTC_2SSEH.set_SehSupply(fTC_2SSEH.sehSupply_On);
+    fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     auto d2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
     {
-        fTC_2SSEH.read_supply(d2SSEHMapIterator->second, k);
+        fTC_2SSEH->read_supply(d2SSEHMapIterator->second, k);
         fillSummaryTree(d2SSEHMapIterator->first, k);
         d2SSEHMapIterator++;
 
     } while(d2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    fTC_2SSEH.set_SehSupply(fTC_2SSEH.sehSupply_On);
+    fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_On);
 }
 
 void SEHTester::UserFCMDTranslate(const std::string& userFilename = "fcmd_file.txt")
