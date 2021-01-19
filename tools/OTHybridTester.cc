@@ -5,7 +5,37 @@ using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 OTHybridTester::OTHybridTester() : Tool() {}
-OTHybridTester::~OTHybridTester() {}
+
+OTHybridTester::~OTHybridTester() 
+{
+#ifdef __TCUSB__
+        if(fTC_PSROH != nullptr)
+            delete fTC_PSROH;
+#endif
+}
+
+void OTHybridTester::FindUSBHandler()
+{
+#ifdef __TCUSB__
+    bool cThereIsLpGBT = false;
+    for(auto cBoard : *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr)
+        {
+        LOG(INFO) << BOLDYELLOW << "Found lpGBT" << RESET;
+            cThereIsLpGBT = true;
+        } else{
+        LOG(INFO) << BOLDYELLOW << "Did not found lpGBT" << RESET;
+
+        }
+        
+    }
+    if(!cThereIsLpGBT)
+        fTC_PSROH = new TC_PSROH();
+    else
+        fTC_PSROH = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetTCUSBHandler();
+#endif   
+}
 
 void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
 {
@@ -55,13 +85,16 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        for(auto cOpticalGroup: *cBoard){
       if(pIsExternal)
       {
+        
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
         clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
       }
+      
       fBeBoardInterface->setBoard(cBoard->getId());
       D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
       cFWInterface->selectLink(cOpticalGroup->getId());
@@ -69,6 +102,7 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
       cFWInterface->StubDebug(true, 6);
       LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
       cFWInterface->L1ADebug();
+    }
     }
 }
 
@@ -148,9 +182,10 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 for(int cDACValue = pMinDACValue; cDACValue <= (int)pMaxDACValue; cDACValue += pStep)
                 {
 #ifdef __TCUSB__
-                    clpGBTInterface->fTC_PSROH.dac_output(cDACValue);
+                    
                     // Need to confirm conversion factor for 2S-SEH
                     // clpGBTInterface->fTC_2SSEH.set_AMUX(cDACValue, cDACValue);
+                    fTC_PSROH->dac_output(cDACValue);
 #endif
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
                     LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- ADC value = " << +cADCValue << RESET;
@@ -197,13 +232,12 @@ bool OTHybridTester::LpGBTTestResetLines(uint8_t pLevel)
 {
     bool cValid = true;
 #ifdef __TCUSB__
-    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     float               cMeasurement;
     auto                cMapIterator = fResetLines.begin();
     // auto  c2SSEHMapIterator = f2SSEHResetLines.begin();
     do
     {
-        clpGBTInterface->fTC_PSROH.adc_get(cMapIterator->second, cMeasurement);
+        fTC_PSROH->adc_get(cMapIterator->second, cMeasurement);
         // clpGBTInterface->fTC_2SSEH.read_reset(c2SSEHMapIterator->second, cMeasurement);
         float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
         // cValid = cValid && (cDifference_mV <= 100 );

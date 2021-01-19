@@ -21,12 +21,21 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB) {}
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB)
+    {
+        #ifdef __TCUSB__
+            fTC_PSROH = new TC_PSROH();
+        #endif
+    }
+ 
+    ~D19clpGBTInterface()
+    {
+        #ifdef __TCUSB__
+            if(fTC_PSROH != nullptr)
+                delete fTC_PSROH; 
+        #endif
+    } 
 
-#ifdef __TCUSB__
-    // TC_2SSEH fTC_2SSEH;
-    TC_PSROH fTC_PSROH;
-#endif
 
     // ###################################
     // # LpGBT register access functions #
@@ -160,6 +169,10 @@ class D19clpGBTInterface : public lpGBTInterface
     // ###################################
     // # Outer Tracker specific funtions #
     // ###################################
+#ifdef __TCUSB__
+    void      SetTCUSBHandler(TC_PSROH* pTC_PSROH){fTC_PSROH = pTC_PSROH;}
+    TC_PSROH* GetTCUSBHandler(){return fTC_PSROH;}
+#endif
     // Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
     // configure PS-ROH
@@ -229,7 +242,8 @@ class D19clpGBTInterface : public lpGBTInterface
     bool fUseOpticalLink = true;
     bool fUseCPB         = true;
 #ifdef __TCUSB__
-    std::map<std::string, TC_PSROH::measurement>      fResetLines    = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
+    TC_PSROH *fTC_PSROH;
+    std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
                                                                 {"L_SSA", TC_PSROH::measurement::L_SSA_RST},
                                                                 {"R_MPA", TC_PSROH::measurement::R_MPA_RST},

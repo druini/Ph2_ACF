@@ -156,6 +156,7 @@ int main(int argc, char* argv[])
     // Initialize BackEnd & Control LpGBT Tester
     PSROHTester cPSROHTester;
     cPSROHTester.Inherit(&cTool);
+    cPSROHTester.FindUSBHandler();
 
     if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
     {

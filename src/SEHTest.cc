@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.bookSummaryTree();
     LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
-    // cTool.ConfigureHw();
+    //cTool.ConfigureHw();
 
     // Initialize BackEnd & Control LpGBT Tester
     SEHTester cSEHTester;
