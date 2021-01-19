@@ -5,7 +5,7 @@
 #include <map>
 #include <sstream>
 #include <string>
-#include <sys/time.h> 
+#include <sys/time.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -36,34 +36,34 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     // time_t startTime;
     // time(&startTime);
 
-    struct timespec startTime, timer; 
-  
-    // start timer. 
-    // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start); 
-    // clock_gettime(CLOCK_REALTIME, &start); 
-    clock_gettime(CLOCK_MONOTONIC, &startTime); 
+    struct timespec startTime, timer;
+
+    // start timer.
+    // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+    // clock_gettime(CLOCK_REALTIME, &start);
+    clock_gettime(CLOCK_MONOTONIC, &startTime);
 
     fTC_2SSEH->set_HV(true, false, false, pHvDacValue);
     // Create TTree for leakage current
     auto cLeakTree = new TTree("tLeakTree", "Leakage Current");
     // Create variables for TTree branches
     std::vector<double> cILeakValVect;
-    std::vector<double>  cUMonValVect;
+    std::vector<double> cUMonValVect;
     std::vector<double> cTimeValVect;
     // Create TTree Branches
     cLeakTree->Branch("ILeak", &cILeakValVect);
     cLeakTree->Branch("UMon", &cUMonValVect);
     cLeakTree->Branch("Time", &cTimeValVect);
 
-    //for(int cPoint = 0; cPoint <= (int)pPoints; cPoint += 1)
-    double time_taken; 
+    // for(int cPoint = 0; cPoint <= (int)pPoints; cPoint += 1)
+    double time_taken;
     do
     {
         float ILeak;
         float UMon;
         // time_t timer;
         // time(&timer);
-        clock_gettime(CLOCK_MONOTONIC, &timer); 
+        clock_gettime(CLOCK_MONOTONIC, &timer);
 
 #ifdef __TCUSB__
         fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, UMon);
@@ -72,13 +72,13 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
         cILeakValVect.push_back(double(ILeak));
         cUMonValVect.push_back(UMon);
         // cTimeValVect.push_back(timer-startTime);
-        
-        time_taken = (timer.tv_sec - startTime.tv_sec) * 1e9; 
-        time_taken = (time_taken + (timer.tv_nsec - startTime.tv_nsec)) * 1e-9; 
+
+        time_taken = (timer.tv_sec - startTime.tv_sec) * 1e9;
+        time_taken = (time_taken + (timer.tv_nsec - startTime.tv_nsec)) * 1e-9;
         cTimeValVect.push_back(time_taken);
-        
+
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }while(time_taken<measurementTime);
+    } while(time_taken < measurementTime);
     cLeakTree->Fill();
     fResultFile->cd();
     cLeakTree->Write();
@@ -111,7 +111,6 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     // cEfficencyCanvas->BuildLegend();
     cMonCanvas->Write();
     fTC_2SSEH->set_HV(false, false, false, 0);
-
 }
 
 void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep)
@@ -200,16 +199,16 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
         cIouttoIinGraph->SetLineColor(iterator);
         cIouttoIinGraph->SetFillColor(0);
         cIouttoIinGraph->SetLineWidth(3);
-        cIouttoIinGraph->SetMarkerStyle(iterator+20);
+        cIouttoIinGraph->SetMarkerStyle(iterator + 20);
         cIouttoIinMultiGraph->Add(cIouttoIinGraph);
-        
+
         auto cEfficencyGraph = new TGraph(cIoutValVect.size(), cIoutValVect.data(), cEfficencyValVect.data());
         cEfficencyGraph->SetName(str);
         cEfficencyGraph->SetTitle(str);
         cEfficencyGraph->SetLineColor(iterator);
         cEfficencyGraph->SetFillColor(0);
         cEfficencyGraph->SetLineWidth(3);
-        cEfficencyGraph->SetMarkerStyle(iterator+20);
+        cEfficencyGraph->SetMarkerStyle(iterator + 20);
         cEfficencyMultiGraph->Add(cEfficencyGraph);
         iterator++;
     }

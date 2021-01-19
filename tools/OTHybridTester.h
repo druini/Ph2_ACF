@@ -35,7 +35,7 @@ class OTHybridTester : public Tool
     OTHybridTester();
     ~OTHybridTester();
 
-    void FindUSBHandler(bool b2SSEH=false);
+    void      FindUSBHandler(bool b2SSEH = false);
     TC_PSROH* GetTCUSBHandler()
     {
 #ifndef __TC_USB__

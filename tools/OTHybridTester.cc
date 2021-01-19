@@ -6,13 +6,11 @@ using namespace Ph2_System;
 
 OTHybridTester::OTHybridTester() : Tool() {}
 
-OTHybridTester::~OTHybridTester() 
+OTHybridTester::~OTHybridTester()
 {
 #ifdef __TCUSB__
-        if(fTC_PSROH != nullptr)
-            delete fTC_PSROH;
-        if(fTC_2SSEH != nullptr)
-            delete fTC_2SSEH;
+    if(fTC_PSROH != nullptr) delete fTC_PSROH;
+    if(fTC_2SSEH != nullptr) delete fTC_2SSEH;
 #endif
 }
 
@@ -20,29 +18,29 @@ void OTHybridTester::FindUSBHandler(bool b2SSEH)
 {
 #ifdef __TCUSB__
     bool cThereIsLpGBT = false;
-    for(auto cBoard : *fDetectorContainer)
+    for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT != nullptr)
         {
-        LOG(INFO) << BOLDYELLOW << "Found lpGBT" << RESET;
+            LOG(INFO) << BOLDYELLOW << "Found lpGBT" << RESET;
             cThereIsLpGBT = true;
-        } else{
-        LOG(INFO) << BOLDYELLOW << "Did not found lpGBT" << RESET;
-
         }
-        
+        else
+        {
+            LOG(INFO) << BOLDYELLOW << "Did not found lpGBT" << RESET;
+        }
     }
     if(!cThereIsLpGBT)
     {
-        if(b2SSEH){
-            fTC_2SSEH = new TC_2SSEH();
-        }else{
+        if(b2SSEH) { fTC_2SSEH = new TC_2SSEH(); }
+        else
+        {
             fTC_PSROH = new TC_PSROH();
         }
     }
     else
         fTC_PSROH = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetTCUSBHandler();
-#endif   
+#endif
 }
 
 void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
@@ -93,24 +91,24 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        for(auto cOpticalGroup: *cBoard){
-      if(pIsExternal)
-      {
-        
-        D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-        clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
-        clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-      }
-      
-      fBeBoardInterface->setBoard(cBoard->getId());
-      D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-      cFWInterface->selectLink(cOpticalGroup->getId());
-      LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-      cFWInterface->StubDebug(true, 6);
-      LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-      cFWInterface->L1ADebug();
-    }
+        for(auto cOpticalGroup: *cBoard)
+        {
+            if(pIsExternal)
+            {
+                D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+                clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
+                clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
+
+            fBeBoardInterface->setBoard(cBoard->getId());
+            D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+            cFWInterface->selectLink(cOpticalGroup->getId());
+            LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
+            cFWInterface->StubDebug(true, 6);
+            LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
+            cFWInterface->L1ADebug();
+        }
     }
 }
 
@@ -190,7 +188,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 for(int cDACValue = pMinDACValue; cDACValue <= (int)pMaxDACValue; cDACValue += pStep)
                 {
 #ifdef __TCUSB__
-                    
+
                     // Need to confirm conversion factor for 2S-SEH
                     // clpGBTInterface->fTC_2SSEH.set_AMUX(cDACValue, cDACValue);
                     fTC_PSROH->dac_output(cDACValue);
@@ -240,8 +238,8 @@ bool OTHybridTester::LpGBTTestResetLines(uint8_t pLevel)
 {
     bool cValid = true;
 #ifdef __TCUSB__
-    float               cMeasurement;
-    auto                cMapIterator = fResetLines.begin();
+    float cMeasurement;
+    auto  cMapIterator = fResetLines.begin();
     // auto  c2SSEHMapIterator = f2SSEHResetLines.begin();
     do
     {
