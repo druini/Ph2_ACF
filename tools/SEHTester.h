@@ -11,6 +11,7 @@
 #ifndef SEHTester_h__
 #define SEHTester_h__
 #include "OTHybridTester.h"
+#include "linearFitter.h"
 #ifdef __TCUSB__
 #include "USB_a.h"
 #include "USB_libusb.h"
@@ -60,6 +61,7 @@ class SEHTester : public OTHybridTester
     void TestCardVoltages();
     void TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep);
     void TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime);
+    int  exampleFit();
 
   private:
     void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
