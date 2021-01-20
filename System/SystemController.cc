@@ -319,11 +319,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(txStatus, rxStatus, mgtStatus);
 
-            // ####################################
-            // # Check AURORA lock on data stream #
-            // ####################################
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard);
-
             // ############################
             // # Configure frontend chips #
             // ############################
@@ -342,6 +337,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
                     }
                 }
+
+            // ####################################
+            // # Check AURORA lock on data stream #
+            // ####################################
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard);
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
         }

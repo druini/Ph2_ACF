@@ -35,7 +35,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     // ###################################
     // # Initializing chip communication #
     // ###################################
-    RD53Interface::InitRD53Aurora(static_cast<RD53*>(pChip));
+    RD53Interface::InitRD53DownAndUpLinks(static_cast<RD53*>(pChip));
 
     // ################################################
     // # Programming global registers from white list #
@@ -132,28 +132,23 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     return true;
 }
 
-void RD53Interface::InitRD53Aurora(ReadoutChip* pChip, int nActiveLanes)
+void RD53Interface::InitRD53DownAndUpLinks(ReadoutChip* pChip, int nActiveLanes)
 {
     this->setBoard(pChip->getBeBoardId());
 
-    // ####################################
-    // # Data stream phase initialization #
-    // ####################################
-    LOG(INFO) << GREEN << "Data-stream phase initialization..." << RESET;
-    do
-    {
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53CmdEncoder::SYNC), -1);
-
-        // ###############################################################
-        // # Enable monitoring (needed for AutoRead register monitoring) #
-        // ###############################################################
-        RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
-        RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), 0x4));
-
-        usleep(RD53Shared::DEEPSLEEP);
-    } while(RD53Interface::ReadRD53Reg(pChip, "VCAL_HIGH").size() == 0);
-    RD53Interface::sendCommand(pChip, RD53Cmd::ECR());
+    // ##################################
+    // # Down-link phase initialization #
+    // ##################################
+    LOG(INFO) << GREEN << "Down-link phase initialization..." << RESET;
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53CmdEncoder::SYNC), -1);
+    usleep(RD53Shared::DEEPSLEEP);
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
+    // ##########################
+    // # Up-link initialization #
+    // ##########################
+    LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
+    RD53Interface::sendCommand(pChip, RD53Cmd::ECR());
 
     // ##############################
     // # 1 Autora active lane       #
@@ -169,15 +164,33 @@ void RD53Interface::InitRD53Aurora(ReadoutChip* pChip, int nActiveLanes)
     // # CML_CONFIG    = 0b00001111 #
     // ##############################
 
-    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG", RD53Shared::setBits(nActiveLanes) << 2, true); // Number of active lanes [5:2]
+    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG", RD53Shared::setBits(nActiveLanes) << 2, false); // Number of active lanes [5:2]
     // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
-    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0x0F, true);         // CML_EN_LANE[3:0]: the actual number of lanes is determined by OUTPUT_CONFIG
-    RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, true); // 0x30 = reset Aurora AND Serializer
+    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0x0F, false);         // CML_EN_LANE[3:0]: the actual number of lanes is determined by OUTPUT_CONFIG
+    RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false); // 0x30 = reset Aurora AND Serializer
     RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), 0x01));
+    usleep(RD53Shared::DEEPSLEEP);
 
+    // ###############################################################
+    // # Enable monitoring (needed for AutoRead register monitoring) #
+    // ###############################################################
+    RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
+    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), 0x4));
+    usleep(RD53Shared::DEEPSLEEP);
+    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
+    // ###########################
+    // # Configure up-link clock #
+    // ###########################
+    uint32_t auroraSpeed = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
+    if(auroraSpeed == 0)
+        RD53Interface::WriteChipReg(pChip, "CDR_CONFIG", RD53Constants::CDRCONFIG_1Gbit, false);
+    else
+        RD53Interface::WriteChipReg(pChip, "CDR_CONFIG", RD53Constants::CDRCONFIG_640Mbit, false);
+    LOG(INFO) << GREEN << "Up-link speed: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
     usleep(RD53Shared::DEEPSLEEP);
 }
 

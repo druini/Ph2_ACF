@@ -339,13 +339,13 @@ void RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     uint32_t chips_en;
     uint32_t channel_up;
 
-    LOG(INFO) << GREEN << "Checking status communication FW <----> RD53" << RESET;
+    LOG(INFO) << GREEN << "Checking status communication RD53 --> FW" << RESET;
 
     // ###############################
     // # Check RD53 AURORA registers #
     // ###############################
-    auroraSpeed = RegManager::ReadReg("user.stat_regs.aurora_rx.speed");
-    LOG(INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
+    uint32_t auroraSpeed = RD53FWInterface::ReadoutSpeed();
+    LOG(INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
 
     do
     {
@@ -373,6 +373,15 @@ void RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
         else
             LOG(INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
     } while(chips_en & ~channel_up);
+}
+
+uint32_t RD53FWInterface::ReadoutSpeed()
+// ####################
+// # 0  = 1.28 Gbit/s #
+// # !0 = 640 Mbit/s  #
+// ####################
+{
+    return RegManager::ReadReg("user.stat_regs.aurora_rx.speed");
 }
 
 void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
@@ -410,14 +419,6 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
 
                 for(unsigned int i = 0; i < RD53FWconstants::MAXATTEMPTS; i++)
                 {
-                    // ###########################
-                    // # Set proper AURORA speed #
-                    // ###########################
-                    if(auroraSpeed == 0)
-                        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::CDRCONFIG_ADDR, RD53Constants::CDRCONFIG_1Gbit).getFrames(), -1);
-                    else
-                        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::CDRCONFIG_ADDR, RD53Constants::CDRCONFIG_640Mbit).getFrames(), -1);
-
                     RD53FWInterface::WriteChipCommand(initSequence, hybrid_id);
                     usleep(RD53Shared::DEEPSLEEP);
 

@@ -113,7 +113,8 @@ class RD53FWInterface : public BeBoardFWInterface
     // ####################################
     // # Check AURORA lock on data stream #
     // ####################################
-    void CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
+    void     CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
+    uint32_t ReadoutSpeed();
 
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
@@ -319,7 +320,6 @@ class RD53FWInterface : public BeBoardFWInterface
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
     bool               singleChip;
-    unsigned int       auroraSpeed;
     uint16_t           enabledHybrids;
 };
 
