@@ -15,7 +15,8 @@
 4. `sudo chmod 744 /dev/sd_card_name` - to be able to play with it
 5. `./imgtool /dev/sd_card_name format Firmware` - to format the SD card
 6. Go to the folder were you saved the sdgoldenimage.img file
-7. `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512` - to write the image to the SD card
+7. `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512` - to write the image to the SD card. Alternatively, to only copy the needed bytes: `imageName=sdgoldenimage.img; dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device coun
+t=$(ls -s --block-size=1 $imageName | awk '{print $1}')`
 8. Once the previous command is done, you can list the SD card: `./imgtool /dev/sd_card_name list` - there should be a GoldenImage.bin, with 20MB block size
 9. Insert the SD card into the FC7
 
