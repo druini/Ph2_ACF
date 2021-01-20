@@ -86,7 +86,6 @@ void SystemController::Destroy()
     delete fNetworkStreamer;
     fNetworkStreamer = nullptr;
     LOG(INFO) << BOLDRED << "Interfaces destroyed" << RESET;
-
 }
 
 void SystemController::addFileHandler(const std::string& pFilename, char pOption)

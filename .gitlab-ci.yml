@@ -18,15 +18,13 @@ stages:
 build:
   stage: compile
   before_script:
-    - cat setup.sh | sed -e "s/source/#source/" > ci_setup.sh
-    - source ./ci_setup.sh
+    - source ./setup.sh
   script:
     - mkdir -p build; cd build
     - cmake ..
     - make -j4
   artifacts:
     paths:
-      - ci_setup.sh
       - bin/feh_2s_test
       - bin/commission
       - bin/CMSITminiDAQ
@@ -41,7 +39,7 @@ run_on_IT:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
   script:
-    - source ./ci_setup.sh
+    - source ./setup.sh
     - cd ci_tools
     - cp CMSIT_RD53.txt CMSIT_RD53_default.txt
     - CMSITminiDAQ -f CMSIT.xml -r
@@ -84,11 +82,12 @@ run_on_2S:
     - python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
   script:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 1
-    - source ./ci_setup.sh
-    - feh_2s_test -f ci_tools/CMS2S.xml -t -m -a --findShorts -b
+    - source ./setup.sh
+    - cd ci_tools
+    - feh_2s_test -f CMS2S.xml -t -m -a --findShorts -b
   after_script:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 0
-    - cp Results/*/Hybrid.root .
+    - cp ci_tools/Results/*/Hybrid.root .
   artifacts:
     paths:
       - Hybrid.root
@@ -117,10 +116,11 @@ run_on_2S_FNAL:
     - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
     - /opt/cactus/bin/controlhub_start
   script:
-    - source ./ci_setup.sh
-    - feh_2s_test -f ci_tools/D19CDescription_2CBC3_Feynman.xml -t -m -a --findShorts -b
+    - source ./setup.sh
+    - cd ci_tools
+    - feh_2s_test -f D19CDescription_2CBC3_Feynman.xml -t -m -a --findShorts -b
   after_script:
-    - cp Results/*/Hybrid.root .
+    - cp ci_tools/Results/*/Hybrid.root .
   artifacts:
     paths:
       - Hybrid.root
