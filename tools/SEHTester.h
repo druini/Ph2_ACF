@@ -11,7 +11,7 @@
 #ifndef SEHTester_h__
 #define SEHTester_h__
 #include "OTHybridTester.h"
-#include "linearFitter.h"
+//
 #ifdef __TCUSB__
 #include "USB_a.h"
 #include "USB_libusb.h"
@@ -24,6 +24,7 @@
 #include "TObject.h"
 #include "TString.h"
 #include "TTree.h"
+#include "TF1.h"
 #endif
 using namespace Ph2_HwDescription;
 

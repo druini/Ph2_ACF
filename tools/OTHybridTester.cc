@@ -1,5 +1,5 @@
 #include "OTHybridTester.h"
-
+#include "linearFitter.h"
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -180,9 +180,13 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             LOG(INFO) << BOLDMAGENTA << "Testing ADC channels" << RESET;
+
+            fitter::Linear_Regression<int> cReg_Class;
+            std::vector<std::vector<int>> cfitDataVect;
+            
             for(const auto& cADC: pADCs)
             {
-                cDACValVect.clear(), cADCValVect.clear();
+                cDACValVect.clear(), cADCValVect.clear(); cfitDataVect.clear();
                 // uint32_t cNValues = (cMaxDAC-cMinDAC)/cStep;
                 cADCId = cADC[3] - '0';
                 for(int cDACValue = pMinDACValue; cDACValue <= (int)pMaxDACValue; cDACValue += pStep)
@@ -206,6 +210,16 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 cDACtoADCGraph->SetFillColor(0);
                 cDACtoADCGraph->SetLineWidth(3);
                 cDACtoADCMultiGraph->Add(cDACtoADCGraph);
+                cfitDataVect[0]=cDACValVect;
+                cfitDataVect[1]=cADCValVect;
+                cReg_Class.fit(cfitDataVect);
+                cDACtoADCGraph->Fit("pol1");
+
+                TF1 *cFit = (TF1*)cDACtoADCGraph->GetListOfFunctions()->FindObject("pol1");
+                LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0)  << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
+                LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0  << "  Parameter 2   " << cReg_Class.b_1 << RESET;
+                
+                LOG(INFO) << BOLDBLUE << "DAC value = " << ""<< " --- ADC value = " << "" << RESET;
             }
             fResultFile->cd();
             cDACtoADCTree->Write();

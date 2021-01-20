@@ -15,6 +15,7 @@
 #include "../HWInterface/DPInterface.h"
 #include "Tool.h"
 
+
 #ifdef __USE_ROOT__
 #include "TAxis.h"
 #include "TGraph.h"
@@ -22,6 +23,7 @@
 #include "TObject.h"
 #include "TString.h"
 #include "TTree.h"
+#include "TF1.h"
 #endif
 
 #include <map>

@@ -1,5 +1,5 @@
 #include "SEHTester.h"
-
+#include "linearFitter.h"
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -47,17 +47,20 @@ int SEHTester::exampleFit()
     Zint[0] = Xint;
     Zint[1] = Yint;
 
-    fitter::Linear_Regression Reg_Class;
+    fitter::Linear_Regression<float> Reg_Class;
     Reg_Class.fit(Z);
     std::cout << "\n";
     std::cout << "Estimated Coefficients:\nb_0 = { " << Reg_Class.b_0 << " }  \
           \nb_1 = { "
               << Reg_Class.b_1 << " }" << std::endl;
-    Reg_Class.fit(Zint);
+    fitter::Linear_Regression<int> Reg_Classint;
+    Reg_Classint.fit(Zint);
     std::cout << "\n";
-    std::cout << "Estimated Coefficients:\nb_0 = { " << Reg_Class.b_0 << " }  \
+    std::cout << "Estimated Coefficients:\nb_0 = { " << Reg_Classint.b_0 << " }  \
           \nb_1 = { "
-              << Reg_Class.b_1 << " }" << std::endl;
+              << Reg_Classint.b_1 << " }" << std::endl; 
+    LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Class.b_0  << "  Parameter 2   " << Reg_Class.b_1 << RESET;
+    LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Classint.b_0  << "  Parameter 2   " << Reg_Classint.b_1 << RESET;
 
     auto cGraph = new TGraph(X.size(), X.data(), Y.data());
     cGraph->Fit("pol1");
@@ -68,6 +71,12 @@ int SEHTester::exampleFit()
     cGraph->SetLineWidth(3);
     auto cCanvas = new TCanvas("test", "test", 1600, 900);
     cGraph->Draw("AL*");
+    
+    
+
+    TF1 *cFit = (TF1*)cGraph->GetListOfFunctions()->FindObject("pol1");
+    LOG(INFO) << BOLDBLUE << "Using ROOT: Parameter 1  " << cFit->GetParameter(0)  << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
+                
 
     // cEfficencyCanvas->BuildLegend();
     cCanvas->Write();
