@@ -101,6 +101,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("eff", "Measure the DC/DC efficency");
     // Bias voltage leakage current
     cmd.defineOption("leak", "Measure the Bias voltage leakage current ");
+    // Load values defining a test from file
+    cmd.defineOption("test-parameter", "Use user file with test parameters, otherwise default parameters will be used", ArgvParser::OptionRequiresValue);
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -112,25 +114,26 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    std::string       cHWFile               = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19CDescription_ROH_OFC7.xml";
-    bool              batchMode             = (cmd.foundOption("batch")) ? true : false;
-    const std::string cSSAPair              = (cmd.foundOption("ssapair")) ? cmd.optionValue("ssapair") : "";
-    std::string       cDirectory            = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    std::string       cHybridId             = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
-    bool              cDebug                = (cmd.foundOption("debug"));
-    bool              cClockTest            = (cmd.foundOption("clock-test")) ? true : false;
-    bool              cFCMDTest             = (cmd.foundOption("fcmd-test")) ? true : false;
-    std::string       cFCMDTestStartPattern = (cmd.foundOption("fcmd-test-start-pattern")) ? cmd.optionValue("fcmd-test-start-pattern") : "11000001";
-    std::string       cFCMDTestUserFileName = (cmd.foundOption("fcmd-test-userfile")) ? cmd.optionValue("fcmd-test-userfile") : "fcmd_file.txt";
-    std::string       cBRAMFCMDLine         = (cmd.foundOption("bramfcmd-check")) ? cmd.optionValue("bramfcmd-check") : "fe_for_ps_roh_fcmd_SSA_l_check";
-    std::string       cBRAMFCMDFileName     = (cmd.foundOption("bramreffcmd-write")) ? cmd.optionValue("bramreffcmd-write") : "fcmd_file.txt";
-    std::string       cConvertUserFileName  = (cmd.foundOption("convert-userfile")) ? cmd.optionValue("convert-userfile") : "fcmd_file.txt";
-    std::string       cRefBRAMAddr          = (cmd.foundOption("read-ref-bram")) ? cmd.optionValue("read-ref-bram") : "0";
-    std::string       cCheckBRAMAddr        = (cmd.foundOption("read-check-bram")) ? cmd.optionValue("read-check-bram") : "0";
-    uint8_t           cExternalPattern      = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
-    uint8_t           cInternalPattern8     = (cmd.foundOption("internal-pattern")) ? convertAnyInt(cmd.optionValue("internal-pattern").c_str()) : 0;
-    uint32_t          cInternalPattern32    = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
-    uint8_t           cFCMDPattern          = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
+    std::string       cHWFile                = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19CDescription_ROH_OFC7.xml";
+    bool              batchMode              = (cmd.foundOption("batch")) ? true : false;
+    const std::string cSSAPair               = (cmd.foundOption("ssapair")) ? cmd.optionValue("ssapair") : "";
+    std::string       cDirectory             = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    std::string       cHybridId              = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
+    bool              cDebug                 = (cmd.foundOption("debug"));
+    bool              cClockTest             = (cmd.foundOption("clock-test")) ? true : false;
+    bool              cFCMDTest              = (cmd.foundOption("fcmd-test")) ? true : false;
+    std::string       cFCMDTestStartPattern  = (cmd.foundOption("fcmd-test-start-pattern")) ? cmd.optionValue("fcmd-test-start-pattern") : "11000001";
+    std::string       cFCMDTestUserFileName  = (cmd.foundOption("fcmd-test-userfile")) ? cmd.optionValue("fcmd-test-userfile") : "fcmd_file.txt";
+    std::string       cBRAMFCMDLine          = (cmd.foundOption("bramfcmd-check")) ? cmd.optionValue("bramfcmd-check") : "fe_for_ps_roh_fcmd_SSA_l_check";
+    std::string       cBRAMFCMDFileName      = (cmd.foundOption("bramreffcmd-write")) ? cmd.optionValue("bramreffcmd-write") : "fcmd_file.txt";
+    std::string       cConvertUserFileName   = (cmd.foundOption("convert-userfile")) ? cmd.optionValue("convert-userfile") : "fcmd_file.txt";
+    std::string       cRefBRAMAddr           = (cmd.foundOption("read-ref-bram")) ? cmd.optionValue("read-ref-bram") : "0";
+    std::string       cCheckBRAMAddr         = (cmd.foundOption("read-check-bram")) ? cmd.optionValue("read-check-bram") : "0";
+    uint8_t           cExternalPattern       = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
+    uint8_t           cInternalPattern8      = (cmd.foundOption("internal-pattern")) ? convertAnyInt(cmd.optionValue("internal-pattern").c_str()) : 0;
+    uint32_t          cInternalPattern32     = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
+    uint8_t           cFCMDPattern           = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
+    std::string       cTestParameterFileName = (cmd.foundOption("test-parameter")) ? cmd.optionValue("test-parameter") : "tes.txt";
 
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
@@ -162,6 +165,15 @@ int main(int argc, char* argv[])
     SEHTester cSEHTester;
     cSEHTester.Inherit(&cTool);
     cSEHTester.FindUSBHandler(true);
+    if(cmd.foundOption("test-parameter"))
+    {
+        cSEHTester.readTestParameters(cTestParameterFileName);
+        LOG(INFO) << BOLDYELLOW << "You are using the parameters from " << cTestParameterFileName << " if provided there" << RESET;
+    }
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "You are using the default parameter set stored in fDefaultParameters" << RESET;
+    }
 
     if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
     {

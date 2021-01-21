@@ -27,7 +27,7 @@ void OTHybridTester::FindUSBHandler(bool b2SSEH)
         }
         else
         {
-            LOG(INFO) << BOLDYELLOW << "Did not found lpGBT" << RESET;
+            LOG(INFO) << BOLDYELLOW << "Did not find lpGBT" << RESET;
         }
     }
     if(!cThereIsLpGBT)

@@ -63,6 +63,7 @@ class SEHTester : public OTHybridTester
     void TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep);
     void TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime);
     int  exampleFit();
+    void readTestParameters(std::string file);
 
   private:
     void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
@@ -121,10 +122,11 @@ class SEHTester : public OTHybridTester
                                                                                              {"Temp3", TC_2SSEH::temperatureMeasurement::Temp3},
                                                                                              {"Temp_SEH", TC_2SSEH::temperatureMeasurement::Temp_SEH}};
 
-    std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
+    std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines   = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
                                                                           {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
                                                                           {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
                                                                           {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
+    std::map<std::string, float>                      fDefaultParameters = {{"Spannung", 2}, {"Strom", 0.5}};
 };
 
 #endif

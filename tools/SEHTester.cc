@@ -32,6 +32,32 @@ void SEHTester::Initialise()
     }
 }
 
+void SEHTester::readTestParameters(std::string file)
+{
+    std::ifstream myReadFile(file);
+    if(!myReadFile.is_open())
+    {
+        LOG(ERROR) << BOLDRED << "Parameter File " << file << " could not be opened. Check file path!" << RESET;
+        throw std::runtime_error(std::string("Bad parameter file"));
+    }
+    // std::map<std::string,float> myRes;
+    std::string line;
+    while(std::getline(myReadFile, line))
+    {
+        std::stringstream             ss(line);
+        std::pair<std::string, float> reg;
+        if(ss >> reg.first >> reg.second >> std::dec)
+        {
+            std::map<std::string, float>::iterator it = fDefaultParameters.find(reg.first);
+            if(it != fDefaultParameters.end()) { it->second = reg.second; }
+            else
+            {
+                fDefaultParameters.insert(reg);
+            }
+        }
+    }
+}
+
 int SEHTester::exampleFit()
 {
     std::vector<float>              X{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
