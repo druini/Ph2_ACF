@@ -18,13 +18,13 @@
 #endif
 #ifdef __USE_ROOT__
 #include "TAxis.h"
+#include "TF1.h"
 #include "TGraph.h"
 #include "TLegend.h"
 #include "TMultiGraph.h"
 #include "TObject.h"
 #include "TString.h"
 #include "TTree.h"
-#include "TF1.h"
 #endif
 using namespace Ph2_HwDescription;
 

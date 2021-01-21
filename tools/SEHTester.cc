@@ -56,10 +56,10 @@ int SEHTester::exampleFit()
     std::cout << "\n";
     std::cout << "Estimated Coefficients:\nb_0 = { " << Reg_Classint.b_0 << " }  \
           \nb_1 = { "
-              << Reg_Classint.b_1 << " }" << std::endl; 
-    LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Class.b_0  << "  Parameter 2   " << Reg_Class.b_1 << RESET;
-    LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Classint.b_0  << "  Parameter 2   " << Reg_Classint.b_1 << RESET;
-#ifdef __USE_ROOT__ 
+              << Reg_Classint.b_1 << " }" << std::endl;
+    LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Class.b_0 << "  Parameter 2   " << Reg_Class.b_1 << RESET;
+    LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Classint.b_0 << "  Parameter 2   " << Reg_Classint.b_1 << RESET;
+#ifdef __USE_ROOT__
     auto cGraph = new TGraph(X.size(), X.data(), Y.data());
     cGraph->Fit("pol1");
     cGraph->SetName("test");
@@ -69,12 +69,9 @@ int SEHTester::exampleFit()
     cGraph->SetLineWidth(3);
     auto cCanvas = new TCanvas("test", "test", 1600, 900);
     cGraph->Draw("AL*");
-    
-    
 
-    TF1 *cFit = (TF1*)cGraph->GetListOfFunctions()->FindObject("pol1");
-    LOG(INFO) << BOLDBLUE << "Using ROOT: Parameter 1  " << cFit->GetParameter(0)  << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
-                
+    TF1* cFit = (TF1*)cGraph->GetListOfFunctions()->FindObject("pol1");
+    LOG(INFO) << BOLDBLUE << "Using ROOT: Parameter 1  " << cFit->GetParameter(0) << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
 
     // cEfficencyCanvas->BuildLegend();
     cCanvas->Write();
@@ -86,7 +83,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 {
     // time_t startTime;
     // time(&startTime);
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     struct timespec startTime, timer;
 
     // start timer.
@@ -270,8 +267,8 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
         iterator++;
     }
 #ifdef __TCUSB__
-        fTC_2SSEH->set_load1(false, false, 0);
-        fTC_2SSEH->set_load2(false, false, 0);
+    fTC_2SSEH->set_load1(false, false, 0);
+    fTC_2SSEH->set_load2(false, false, 0);
 #endif
     fResultFile->cd();
     cIouttoIinTree->Write();
@@ -298,7 +295,6 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 void SEHTester::TestCardVoltages()
 {
 #ifdef __TCUSB__
-      
 
     float k;
     auto  c2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();

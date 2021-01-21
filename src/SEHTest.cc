@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("external-pattern", "Externlly Generated LpGBT Pattern using the Data Player for Control FC7", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("external-pattern", "ep");
 
-    cmd.defineOption("cic-pattern", "Externlly Generated LpGBT Pattern using CIC output", ArgvParser::NoOptionAttribute /*| ArgvParser::OptionRequires*/);
+    cmd.defineOption("cic-pattern", "Externally Generated LpGBT Pattern using CIC output", ArgvParser::NoOptionAttribute /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("cic-pattern", "cp");
 
     // Test Reset lines

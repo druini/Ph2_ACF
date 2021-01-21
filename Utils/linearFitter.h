@@ -2,16 +2,17 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <math.h>
 #include <numeric>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <math.h>
 
 namespace fitter
 {
 template <typename T>
-void estimate_coef(std::vector<T> indep_var, std::vector<T> dep_var, float& B_1, float& B_0){
+void estimate_coef(std::vector<T> indep_var, std::vector<T> dep_var, float& B_1, float& B_0)
+{
     float sumX = std::accumulate(indep_var.begin(), indep_var.end(), 0);
 
     float X_mean = sumX / (indep_var.size());
@@ -43,9 +44,7 @@ class Linear_Regression
   public:
     float b_0;
     float b_1;
-        
-    void fit(std::vector<std::vector<T>> dataset){ estimate_coef<T>(dataset[0], dataset[1], b_1, b_0); }
 
-    
+    void fit(std::vector<std::vector<T>> dataset) { estimate_coef<T>(dataset[0], dataset[1], b_1, b_0); }
 };
-} 
+} // namespace fitter
