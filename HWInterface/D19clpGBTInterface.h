@@ -144,7 +144,8 @@ class D19clpGBTInterface : public lpGBTInterface
     uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInput);
     // Read lpGBT differential ADC
     uint16_t ReadADCDiff(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN);
-
+    // configure current DAC
+    void ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput);
     // ########################
     // # LpGBT GPIO functions #
     // ########################

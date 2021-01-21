@@ -182,11 +182,12 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             LOG(INFO) << BOLDMAGENTA << "Testing ADC channels" << RESET;
 
             fitter::Linear_Regression<int> cReg_Class;
-            std::vector<std::vector<int>> cfitDataVect;
-            
+            std::vector<std::vector<int>>  cfitDataVect;
+
             for(const auto& cADC: pADCs)
             {
-                cDACValVect.clear(), cADCValVect.clear(); cfitDataVect.clear();
+                cDACValVect.clear(), cADCValVect.clear();
+                cfitDataVect.clear();
                 // uint32_t cNValues = (cMaxDAC-cMinDAC)/cStep;
                 cADCId = cADC[3] - '0';
                 for(int cDACValue = pMinDACValue; cDACValue <= (int)pMaxDACValue; cDACValue += pStep)
@@ -194,10 +195,12 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 #ifdef __TCUSB__
 
                     // Need to confirm conversion factor for 2S-SEH
-                    // clpGBTInterface->fTC_2SSEH.set_AMUX(cDACValue, cDACValue);
+                    // fTC_2SSEH->set_AMUX(cDACValue, cDACValue);
+                    // example to program current Dac for temperature sensor clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, pADCs,0);
                     fTC_PSROH->dac_output(cDACValue);
 #endif
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
+
                     LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- ADC value = " << +cADCValue << RESET;
                     cDACValVect.push_back(cDACValue);
                     cADCValVect.push_back(cADCValue);
@@ -210,16 +213,19 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 cDACtoADCGraph->SetFillColor(0);
                 cDACtoADCGraph->SetLineWidth(3);
                 cDACtoADCMultiGraph->Add(cDACtoADCGraph);
-                cfitDataVect[0]=cDACValVect;
-                cfitDataVect[1]=cADCValVect;
+                cfitDataVect[0] = cDACValVect;
+                cfitDataVect[1] = cADCValVect;
                 cReg_Class.fit(cfitDataVect);
                 cDACtoADCGraph->Fit("pol1");
 
-                TF1 *cFit = (TF1*)cDACtoADCGraph->GetListOfFunctions()->FindObject("pol1");
-                LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0)  << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
-                LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0  << "  Parameter 2   " << cReg_Class.b_1 << RESET;
-                
-                LOG(INFO) << BOLDBLUE << "DAC value = " << ""<< " --- ADC value = " << "" << RESET;
+                TF1* cFit = (TF1*)cDACtoADCGraph->GetListOfFunctions()->FindObject("pol1");
+                LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
+                LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0 << "  Parameter 2   " << cReg_Class.b_1 << RESET;
+
+                LOG(INFO) << BOLDBLUE << "DAC value = "
+                          << ""
+                          << " --- ADC value = "
+                          << "" << RESET;
             }
             fResultFile->cd();
             cDACtoADCTree->Write();

@@ -627,7 +627,24 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
 /*-------------------------------------------------------------------------*/
 /* lpGBT ADC-DAC functions                                                 */
 /*-------------------------------------------------------------------------*/
+void D19clpGBTInterface::ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput)
+{
+    // Enables current DAC without changing the voltage DAC
+    uint8_t cDACConfigH = ReadChipReg(pChip, "DACConfigH");
+    WriteChipReg(pChip, "DACConfigH", cDACConfigH | 0x40);
+    // Sets output current for the current DAC. Current = CURDACSelect * XX uA.
+    WriteChipReg(pChip, "CURDACValue", pCurrentDACOutput);
+    // Setting Nth bit in this register attaches current DAC to ADCN pin. Current source can be attached to any number of channels
+    uint8_t cCURDACCHN = 0;
+    uint8_t cADCInput;
 
+    for(auto cCurrentDACChannel: pCurrentDACChannels)
+    {
+        cADCInput = fADCInputMap[cCurrentDACChannel];
+        cCURDACCHN += 1 << cADCInput;
+        WriteChipReg(pChip, "CURDACCHN", cCURDACCHN);
+    }
+}
 void D19clpGBTInterface::ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, uint8_t pADCEnable) { WriteChipReg(pChip, "ADCConfig", pADCEnable << 2 | pGainSelect); }
 
 uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInput)
