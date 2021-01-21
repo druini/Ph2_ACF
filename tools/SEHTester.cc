@@ -38,8 +38,6 @@ int SEHTester::exampleFit()
     std::vector<float>              Y{1, 3, 2, 5, 7, 8, 8, 9, 10, 12};
     std::vector<int>                Xint{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     std::vector<int>                Yint{1, 3, 2, 5, 7, 8, 8, 9, 10, 12};
-    float                           B_1;
-    float                           B_0;
     std::vector<std::vector<float>> Z(10);
     Z[0] = X;
     Z[1] = Y;
@@ -61,7 +59,7 @@ int SEHTester::exampleFit()
               << Reg_Classint.b_1 << " }" << std::endl; 
     LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Class.b_0  << "  Parameter 2   " << Reg_Class.b_1 << RESET;
     LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Classint.b_0  << "  Parameter 2   " << Reg_Classint.b_1 << RESET;
-
+#ifdef __USE_ROOT__ 
     auto cGraph = new TGraph(X.size(), X.data(), Y.data());
     cGraph->Fit("pol1");
     cGraph->SetName("test");
@@ -80,7 +78,7 @@ int SEHTester::exampleFit()
 
     // cEfficencyCanvas->BuildLegend();
     cCanvas->Write();
-
+#endif
     return 0;
 }
 
@@ -88,15 +86,16 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 {
     // time_t startTime;
     // time(&startTime);
-
+#ifdef __USE_ROOT__ 
     struct timespec startTime, timer;
 
     // start timer.
     // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     // clock_gettime(CLOCK_REALTIME, &start);
     clock_gettime(CLOCK_MONOTONIC, &startTime);
-
+#ifdef __TCUSB__
     fTC_2SSEH->set_HV(true, false, false, pHvDacValue);
+#endif
     // Create TTree for leakage current
     auto cLeakTree = new TTree("tLeakTree", "Leakage Current");
     // Create variables for TTree branches
@@ -163,7 +162,10 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 
     // cEfficencyCanvas->BuildLegend();
     cMonCanvas->Write();
+#ifdef __TCUSB__
     fTC_2SSEH->set_HV(false, false, false, 0);
+#endif
+#endif
 }
 
 void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep)
@@ -202,8 +204,10 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     int iterator = 1;
     for(const auto& cSide: pSides)
     {
+#ifdef __TCUSB__
         fTC_2SSEH->set_load1(false, false, 0);
         fTC_2SSEH->set_load2(false, false, 0);
+#endif
         cIoutValVect.clear(), cIinValVect.clear();
         cEfficencyValVect.clear();
         cSideValVect.clear();
@@ -265,6 +269,10 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
         cEfficencyMultiGraph->Add(cEfficencyGraph);
         iterator++;
     }
+#ifdef __TCUSB__
+        fTC_2SSEH->set_load1(false, false, 0);
+        fTC_2SSEH->set_load2(false, false, 0);
+#endif
     fResultFile->cd();
     cIouttoIinTree->Write();
     cEfficencyTree->Write();
@@ -289,6 +297,9 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 
 void SEHTester::TestCardVoltages()
 {
+#ifdef __TCUSB__
+      
+
     float k;
     auto  c2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
@@ -309,6 +320,7 @@ void SEHTester::TestCardVoltages()
 
     } while(d2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
     fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_On);
+#endif
 }
 
 void SEHTester::UserFCMDTranslate(const std::string& userFilename = "fcmd_file.txt")
