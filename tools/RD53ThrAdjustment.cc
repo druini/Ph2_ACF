@@ -478,7 +478,7 @@ std::shared_ptr<DetectorDataContainer> ThrAdjustment::bitWiseScanGlobal_MeasureT
                         // ########################
                         float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fOccupancy;
 
-                        if(fabs(newValue - target) < fabs(oldValue - target))
+                        if(fabs(newValue - target) <= fabs(oldValue - target))
                         {
                             bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fOccupancy = newValue;
 
