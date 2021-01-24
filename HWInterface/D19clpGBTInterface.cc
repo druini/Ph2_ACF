@@ -46,8 +46,8 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         cIter++;
     }
     if(cPUSMStatus != 18) exit(0);
-    ConfigurePSROH(pChip);
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
+    ConfigurePSROH(pChip);
     return true;
 }
 
@@ -647,42 +647,7 @@ void D19clpGBTInterface::ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, con
      }
 }
 
-uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInput, uint8_t pGain)
-{
-    // Read (converted) data from ADC Input with VREF/2 as negative Input
-    uint8_t cADCInput = fADCInputMap[pADCInput];
-    uint8_t cVREF     = fADCInputMap["VREF/2"];
-    LOG(INFO) << BOLDBLUE << "Reading ADC value from " << pADCInput << RESET;
-    // Select ADC Input
-    WriteChipReg(pChip, "ADCSelect", cADCInput << 4 | cVREF << 0);
-    // Enable ADC Input without starting conversion
-    ConfigureADC(pChip, pGain, true, false); 
-    // Enable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 1 << 7);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    // Start ADC conversion
-    ConfigureADC(pChip, pGain, true, true); 
-    // Check conversion status
-    uint8_t cMaxIter = 100, cIter = 0;
-    bool    cSuccess = false;
-    do
-    {
-        LOG(INFO) << BOLDBLUE << "Waiting for ADC conversion to end" << RESET;
-        uint8_t cStatus = ReadChipReg(pChip, "ADCStatusH");
-        cSuccess        = (((cStatus & 0x40) >> 6) == 1);
-        cIter++;
-    } while(cIter < cMaxIter && !cSuccess);
-    if(cIter == cMaxIter)
-        throw std::runtime_error(std::string("BERT : All zeros at input"));
-    // Read ADC value
-    uint8_t cADCvalue1 = ReadChipReg(pChip, "ADCStatusH") & 0x3;
-    uint8_t cADCvalue2 = ReadChipReg(pChip, "ADCStatusL");
-    // Clear ADC conversion bit and disable ADC
-    ConfigureADC(pChip, pGain, false, false);
-    return (cADCvalue1 << 8 | cADCvalue2);
-}
-
-uint16_t D19clpGBTInterface::ReadADCDiff(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
+uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
     // Read differential (converted) data on two ADC inputs
     uint8_t cADCInputP = fADCInputMap[pADCInputP];
@@ -702,9 +667,8 @@ uint16_t D19clpGBTInterface::ReadADCDiff(Ph2_HwDescription::Chip* pChip, const s
     bool    cSuccess = false;
     do
     {
-        LOG(INFO) << BOLDBLUE << "Waiting for ADC conversion to end" << RESET;
-        uint8_t cStatus = ReadChipReg(pChip, "ADCStatusH");
-        cSuccess        = (((cStatus & 0x40) >> 6) == 1);
+        LOG(DEBUG) << BOLDBLUE << "Waiting for ADC conversion to end" << RESET;
+        cSuccess        = IsReadADCDone(pChip);
         cIter++;
     } while(cIter < cMaxIter && !cSuccess);
     if(cIter == cMaxIter)
