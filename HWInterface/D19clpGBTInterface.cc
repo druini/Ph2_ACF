@@ -728,16 +728,11 @@ bool D19clpGBTInterface::IsReadADCDone(Ph2_HwDescription::Chip* pChip)
 void D19clpGBTInterface::ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir, uint8_t pOut, uint8_t pDriveStr, uint8_t pPullEn, uint8_t pUpDown)
 {
     LOG(INFO) << BOLDMAGENTA << "Configuring GPIOs" << RESET;
-    uint8_t cDirH      = ReadChipReg(pChip, "PIODirH");
-    uint8_t cDirL      = ReadChipReg(pChip, "PIODirL");
-    uint8_t cOutH      = ReadChipReg(pChip, "PIOOutH");
-    uint8_t cOutL      = ReadChipReg(pChip, "PIOOutL");
-    uint8_t cDriveStrH = ReadChipReg(pChip, "PIODriveStrengthH");
-    uint8_t cDriveStrL = ReadChipReg(pChip, "PIODriveStrengthL");
-    uint8_t cPullEnH   = ReadChipReg(pChip, "PIOPullEnaH");
-    uint8_t cPullEnL   = ReadChipReg(pChip, "PIOPullEnaL");
-    uint8_t cUpDownH   = ReadChipReg(pChip, "PIOUpDownH");
-    uint8_t cUpDownL   = ReadChipReg(pChip, "PIOUpDownL");
+    uint8_t cDirH      = 0, cDirL      = 0; 
+    uint8_t cOutH      = 0, cOutL      = 0;
+    uint8_t cDriveStrH = 0, cDriveStrL = 0;
+    uint8_t cPullEnH   = 0, cPullEnL   = 0;
+    uint8_t cUpDownH   = 0, cUpDownL   = 0;
     for(auto cGPIO : pGPIOs)
     {
         if(cGPIO < 8)
