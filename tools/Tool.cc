@@ -160,7 +160,6 @@ void Tool::Destroy()
 
     SoftDestroy();
     LOG(INFO) << BOLDRED << "Memory objects destroyed" << RESET;
-
 }
 
 void Tool::SoftDestroy()
