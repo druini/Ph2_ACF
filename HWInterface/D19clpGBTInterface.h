@@ -143,7 +143,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // configure current DAC
     void ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput);
     // Read lpGBT ADC
-    uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain=0);
+    uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0);
     // Get ADC Read Status
     bool IsReadADCDone(Ph2_HwDescription::Chip* pChip);
 

@@ -679,13 +679,12 @@ void PSROHTester::PSROHInputsDebug()
 
 void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->CheckHybridOutputs(cBoard, pInputs, pCounters); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->CheckHybridOutputs(cBoard, pInputs, pCounters);
+    }
 }
-
 
 void PSROHTester::Start(int currentRun)
 {
