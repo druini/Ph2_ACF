@@ -45,9 +45,9 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         cIter++;
     }
     if(cPUSMStatus != 18) exit(0);
+    LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
     ConfigurePSROH(pChip);
     // Configure2SSEH(pChip);
-    LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
     return true;
 }
 
@@ -645,42 +645,31 @@ void D19clpGBTInterface::ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, con
         WriteChipReg(pChip, "CURDACCHN", cCURDACCHN);
     }
 }
-void D19clpGBTInterface::ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, uint8_t pADCEnable) { WriteChipReg(pChip, "ADCConfig", pADCEnable << 2 | pGainSelect); }
 
-uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInput)
-{
-    // Read (converted) data from ADC Input with VREF/2 as negative Input
-    uint8_t cADCInput = fADCInputMap[pADCInput];
-    uint8_t cVREF     = fADCInputMap["VREF/2"];
-    LOG(INFO) << BOLDBLUE << "Reading ADC value from " << pADCInput << RESET;
-    // Select ADC Input
-    WriteChipReg(pChip, "ADCSelect", cADCInput << 4 | cVREF << 0);
-    // Enable ADC Input
-    WriteChipReg(pChip, "ADCConfig", 1 << 2);
-    // Enable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 1 << 7);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    // Start ADC conversion
-    WriteChipReg(pChip, "ADCConfig", 1 << 7 | 1 << 2);
-    // Check conversion status
-    uint8_t cMaxIter = 100, cIter = 0;
-    bool    cSuccess = false;
-    do
-    {
-        LOG(INFO) << BOLDBLUE << "Waiting for ADC conversion to end" << RESET;
-        uint8_t cStatus = ReadChipReg(pChip, "ADCStatusH");
-        cSuccess        = (((cStatus & 0x40) >> 6) == 1);
-        cIter++;
-    } while(cIter < cMaxIter && !cSuccess);
-    // Read ADC value
-    uint8_t cADCvalue1 = ReadChipReg(pChip, "ADCStatusH") & 0x3;
-    uint8_t cADCvalue2 = ReadChipReg(pChip, "ADCStatusL");
-    // Clear ADC conversion bit (#FIXME disable ADC Input as well ??)
-    WriteChipReg(pChip, "ADCConfig", 0 << 7 | 1 << 2);
-    return (cADCvalue1 << 8 | cADCvalue2);
+void D19clpGBTInterface::ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, bool pADCEnable, bool pStartConversion) 
+{ 
+    WriteChipReg(pChip, "ADCConfig", pStartConversion << 7 | pADCEnable << 2 | pGainSelect); 
 }
 
-uint16_t D19clpGBTInterface::ReadADCDiff(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN)
+void D19clpGBTInterface::ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput)
+{
+     //Enables current DAC without changing the voltage DAC
+     uint8_t cDACConfigH = ReadChipReg(pChip, "DACConfigH");
+     WriteChipReg(pChip, "DACConfigH", cDACConfigH | 0x40);
+     // Sets output current for the current DAC. Current = CURDACSelect * XX uA.
+     WriteChipReg(pChip, "CURDACValue", pCurrentDACOutput);
+     // Setting Nth bit in this register attaches current DAC to ADCN pin. Current source can be attached to any number of channels
+     uint8_t cCURDACCHN = 0;
+     uint8_t cADCInput;
+     for(auto cCurrentDACChannel : pCurrentDACChannels)
+     {
+        cADCInput = fADCInputMap[cCurrentDACChannel];
+        cCURDACCHN += 1 << cADCInput;
+        WriteChipReg(pChip, "CURDACCHN", cCURDACCHN);
+     }
+}
+
+uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
     // Read differential (converted) data on two ADC inputs
     uint8_t cADCInputP = fADCInputMap[pADCInputP];
@@ -688,26 +677,35 @@ uint16_t D19clpGBTInterface::ReadADCDiff(Ph2_HwDescription::Chip* pChip, const s
     LOG(INFO) << BOLDBLUE << "Reading ADC value from " << pADCInputP << RESET;
     // Select ADC Input
     WriteChipReg(pChip, "ADCSelect", cADCInputP << 4 | cADCInputN << 0);
-    // Enable ADC Input
-    WriteChipReg(pChip, "ADCConfig", 1 << 2);
+    // Enable ADC Input without starting conversion
+    ConfigureADC(pChip, pGain, true, false); 
+    // Enable Internal VREF
+    WriteChipReg(pChip, "VREFCNTR", 1 << 7);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     // Start ADC conversion
-    WriteChipReg(pChip, "ADCConfig", 1 << 7 | 1 << 2);
+    ConfigureADC(pChip, pGain, true, true); 
     // Check conversion status
-    uint8_t cMaxIter = 10, cIter = 0;
+    uint8_t cMaxIter = 100, cIter = 0;
     bool    cSuccess = false;
     do
     {
-        LOG(INFO) << BOLDBLUE << "Waiting for ADC conversion to end" << RESET;
-        uint8_t cStatus = ReadChipReg(pChip, "ADCStatusH");
-        cSuccess        = (((cStatus & 0x40) >> 6) == 1);
+        LOG(DEBUG) << BOLDBLUE << "Waiting for ADC conversion to end" << RESET;
+        cSuccess        = IsReadADCDone(pChip);
         cIter++;
     } while(cIter < cMaxIter && !cSuccess);
+    if(cIter == cMaxIter)
+        throw std::runtime_error(std::string("BERT : All zeros at input"));
     // Read ADC value
     uint8_t cADCvalue1 = ReadChipReg(pChip, "ADCStatusH") & 0x3;
     uint8_t cADCvalue2 = ReadChipReg(pChip, "ADCStatusL");
-    // Clear ADC conversion bit (#FIXME disable ADC Input as well ??)
-    WriteChipReg(pChip, "ADCConfig", 0 << 7 | 1 << 2);
+    // Clear ADC conversion bit and disable ADC
+    ConfigureADC(pChip, pGain, false, false);
     return (cADCvalue1 << 8 | cADCvalue2);
+}
+
+bool D19clpGBTInterface::IsReadADCDone(Ph2_HwDescription::Chip* pChip)
+{
+    return (((ReadChipReg(pChip, "ADCStatusH") & 0x40) >> 6) == 1);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -716,17 +714,12 @@ uint16_t D19clpGBTInterface::ReadADCDiff(Ph2_HwDescription::Chip* pChip, const s
 void D19clpGBTInterface::ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir, uint8_t pOut, uint8_t pDriveStr, uint8_t pPullEn, uint8_t pUpDown)
 {
     LOG(INFO) << BOLDMAGENTA << "Configuring GPIOs" << RESET;
-    uint8_t cDirH      = ReadChipReg(pChip, "PIODirH");
-    uint8_t cDirL      = ReadChipReg(pChip, "PIODirL");
-    uint8_t cOutH      = ReadChipReg(pChip, "PIOOutH");
-    uint8_t cOutL      = ReadChipReg(pChip, "PIOOutL");
-    uint8_t cDriveStrH = ReadChipReg(pChip, "PIODriveStrengthH");
-    uint8_t cDriveStrL = ReadChipReg(pChip, "PIODriveStrengthL");
-    uint8_t cPullEnH   = ReadChipReg(pChip, "PIOPullEnaH");
-    uint8_t cPullEnL   = ReadChipReg(pChip, "PIOPullEnaL");
-    uint8_t cUpDownH   = ReadChipReg(pChip, "PIOUpDownH");
-    uint8_t cUpDownL   = ReadChipReg(pChip, "PIOUpDownL");
-    for(auto cGPIO: pGPIOs)
+    uint8_t cDirH      = 0, cDirL      = 0; 
+    uint8_t cOutH      = 0, cOutL      = 0;
+    uint8_t cDriveStrH = 0, cDriveStrL = 0;
+    uint8_t cPullEnH   = 0, cPullEnL   = 0;
+    uint8_t cUpDownH   = 0, cUpDownL   = 0;
+    for(auto cGPIO : pGPIOs)
     {
         if(cGPIO < 8)
         {

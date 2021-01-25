@@ -243,14 +243,8 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
-        for(auto cOpticalGroup: *cBoard)
-        {
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            LOG(INFO) << BOLDBLUE << "Setting GPIO output to all 0s." << RESET;
-            clpGBTInterface->ConfigureGPIO(cOpticalGroup->flpGBT, pGPIOs, 1, pLevel, 0, 0, 0);
-        }
+      D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+      clpGBTInterface->ConfigureGPIO(cOpticalGroup->flpGBT, pGPIOs, pLevel, pLevel, 0, 0, 0);
     }
 }
 
@@ -266,7 +260,7 @@ bool OTHybridTester::LpGBTTestResetLines(uint8_t pLevel)
         fTC_PSROH->adc_get(cMapIterator->second, cMeasurement);
         // clpGBTInterface->fTC_2SSEH.read_reset(c2SSEHMapIterator->second, cMeasurement);
         float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
-        // cValid = cValid && (cDifference_mV <= 100 );
+        cValid = cValid && (cDifference_mV <= 100 );
         if(cDifference_mV > 100)
             LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
         else
@@ -276,3 +270,4 @@ bool OTHybridTester::LpGBTTestResetLines(uint8_t pLevel)
 #endif
     return cValid;
 }
+
