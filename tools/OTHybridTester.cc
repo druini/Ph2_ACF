@@ -243,8 +243,11 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        for(auto cOpticalGroup: *cBoard)
+        {
       D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
       clpGBTInterface->ConfigureGPIO(cOpticalGroup->flpGBT, pGPIOs, pLevel, pLevel, 0, 0, 0);
+        }
     }
 }
 
