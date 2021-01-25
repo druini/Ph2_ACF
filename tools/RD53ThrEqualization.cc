@@ -526,7 +526,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                                                      ->getChannel<OccupancyAndPh>(row, col)
                                                      .fOccupancy;
 
-                                if(fabs(newValue - target) < fabs(oldValue - target) || (newValue == oldValue))
+                                if(fabs(newValue - target) <= fabs(oldValue - target))
                                 {
                                     bestContainer.at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
