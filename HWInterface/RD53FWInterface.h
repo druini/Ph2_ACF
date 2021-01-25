@@ -113,7 +113,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // ####################################
     // # Check AURORA lock on data stream #
     // ####################################
-    void     CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
+    bool     CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
     uint32_t ReadoutSpeed();
 
     // #############################################

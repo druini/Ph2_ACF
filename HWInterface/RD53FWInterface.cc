@@ -334,8 +334,9 @@ void RD53FWInterface::PrintFWstatus()
     LOG(INFO) << GREEN << "Number of hybrids which can be potentially readout: " << BOLDYELLOW << hybrid << RESET;
 }
 
-void RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
+bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 {
+    bool     goofFirstTime = true;
     uint32_t chips_en;
     uint32_t channel_up;
 
@@ -364,6 +365,7 @@ void RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
         {
             LOG(ERROR) << BOLDRED << "\t--> Some data lanes are enabled but inactive" << RESET;
             RD53FWInterface::InitHybridByHybrid(pBoard);
+            goofFirstTime = false;
         }
         else if(chips_en == 0)
         {
@@ -373,6 +375,8 @@ void RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
         else
             LOG(INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
     } while(chips_en & ~channel_up);
+
+    return goofFirstTime;
 }
 
 uint32_t RD53FWInterface::ReadoutSpeed()

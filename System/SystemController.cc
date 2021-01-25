@@ -291,7 +291,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             bool   resetTDAC   = SystemController::findValueInSettings("ResetTDAC");
             LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
-            LOG(INFO) << CYAN << "=== Done ===" << RESET;
+            LOG(INFO) << CYAN << "================== Done ==================" << RESET;
 
             // ########################
             // # Configuring from XML #
@@ -319,13 +319,37 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(txStatus, rxStatus, mgtStatus);
 
+            do
+            {
+                // ############################################
+                // # Configure down and up link to/from chips #
+                // ############################################
+                LOG(INFO) << CYAN << "=== Configuring chip communication ===" << RESET;
+                for(auto cOpticalGroup: *cBoard)
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        LOG(INFO) << GREEN << "Initializing chip communication of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
+                        for(const auto cChip: *cHybrid)
+                        {
+                            LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
+                            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53DownAndUpLinks(static_cast<RD53*>(cChip));
+                        }
+                    }
+                LOG(INFO) << CYAN << "================ Done ================" << RESET;
+
+                // ####################################
+                // # Check AURORA lock on data stream #
+                // ####################################
+            } while(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard) == false);
+
             // ############################
             // # Configure frontend chips #
             // ############################
+            LOG(INFO) << CYAN << "=== Configuring chip registers ===" << RESET;
             for(auto cOpticalGroup: *cBoard)
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    LOG(INFO) << GREEN << "Initializing communication to Hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
+                    LOG(INFO) << GREEN << "Configuring chip of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
                     for(const auto cChip: *cHybrid)
                     {
                         LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
@@ -337,11 +361,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
                     }
                 }
-
-            // ####################################
-            // # Check AURORA lock on data stream #
-            // ####################################
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard);
+            LOG(INFO) << CYAN << "============== Done ==============" << RESET;
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
         }

@@ -32,11 +32,6 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
 
     ChipRegMap& pRD53RegMap = pChip->getRegMap();
 
-    // ###################################
-    // # Initializing chip communication #
-    // ###################################
-    RD53Interface::InitRD53DownAndUpLinks(static_cast<RD53*>(pChip));
-
     // ################################################
     // # Programming global registers from white list #
     // ################################################
@@ -173,6 +168,11 @@ void RD53Interface::InitRD53DownAndUpLinks(ReadoutChip* pChip, int nActiveLanes)
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false); // 0x30 = reset Aurora AND Serializer
     RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), 0x01));
     usleep(RD53Shared::DEEPSLEEP);
+
+    // ##############################
+    // # Set standard AURORA output #
+    // ##############################
+    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", 1, false);
 
     // ###############################################################
     // # Enable monitoring (needed for AutoRead register monitoring) #
