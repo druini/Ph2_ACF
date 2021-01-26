@@ -45,14 +45,14 @@ void SEHTester::readTestParameters(std::string file)
     while(std::getline(myReadFile, line))
     {
         std::stringstream             ss(line);
-        std::pair<std::string, float> reg;
-        if(ss >> reg.first >> reg.second >> std::dec)
+        std::pair<std::string, float> param;
+        if(ss >> param.first >> param.second >> std::dec)
         {
-            std::map<std::string, float>::iterator it = fDefaultParameters.find(reg.first);
-            if(it != fDefaultParameters.end()) { it->second = reg.second; }
+            std::map<std::string, float>::iterator it = fDefaultParameters.find(param.first);
+            if(it != fDefaultParameters.end()) { it->second = param.second; }
             else
             {
-                fDefaultParameters.insert(reg);
+                fDefaultParameters.insert(param);
             }
         }
     }
@@ -368,7 +368,9 @@ bool SEHTester::TestFixedADCs()
                 // fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
 
                 fillSummaryTree(cADCsMapIterator->first, cADCValue * cConversionFactor);
-                float cDifference_V = std::fabs((fDefaultParameters[cADCsMapIterator->second]) - cADCValue * cConversionFactor);
+                float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
+                float mean          = sum / cADCValueVect.size();
+                float cDifference_V = std::fabs((fDefaultParameters[cADCsMapIterator->second]) - mean * cConversionFactor);
 
                 // Still hard coded threshold for imidiate boolean result, actual values are stored
                 if(cDifference_V > 0.1)

@@ -135,6 +135,7 @@ class SEHTester : public OTHybridTester
                                                                           {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
     std::map<std::string, float>                      fDefaultParameters = {{"Spannung", 2},
                                                        {"Strom", 0.5},
+                                                       {"HV", 1},
                                                        {"VMON_P1V25_L_Nominal", 0.806},
                                                        {"VMIN_Nominal", 0.49},
                                                        {"TEMPP_Nominal", 0.6},

@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
     uint8_t           cInternalPattern8      = (cmd.foundOption("internal-pattern")) ? convertAnyInt(cmd.optionValue("internal-pattern").c_str()) : 0;
     uint32_t          cInternalPattern32     = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
     uint8_t           cFCMDPattern           = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
-    std::string       cTestParameterFileName = (cmd.foundOption("test-parameter")) ? cmd.optionValue("test-parameter") : "tes.txt";
+    std::string       cTestParameterFileName = (cmd.foundOption("test-parameter")) ? cmd.optionValue("test-parameter") : "testParameters.txt";
 
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
