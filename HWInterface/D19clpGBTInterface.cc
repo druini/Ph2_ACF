@@ -23,18 +23,18 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
     SetConfigMode(pChip, fUseOpticalLink, fUseCPB);
-      //Load register map from configuration file
-      ChipRegMap clpGBTRegMap = pChip->getRegMap();
-      for(const auto& cRegItem: clpGBTRegMap)
-      {
-          if(cRegItem.second.fAddress < 0x13c)
-          {
-              LOG(INFO) << BOLDBLUE << "\tWriting 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec <<
-    "]"
-                        << RESET;
-              WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
-          }
-    }
+    //   //Load register map from configuration file
+    //   ChipRegMap clpGBTRegMap = pChip->getRegMap();
+    //   for(const auto& cRegItem: clpGBTRegMap)
+    //   {
+    //       if(cRegItem.second.fAddress < 0x13c)
+    //       {
+    //           LOG(INFO) << BOLDBLUE << "\tWriting 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec <<
+    // "]"
+    //                     << RESET;
+    //           WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+    //       }
+    // }
     // To be uncommented if crate is used
     PrintChipMode(pChip);
     WriteChipReg(pChip, "POWERUP2", 0x06);
