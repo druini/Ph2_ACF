@@ -35,13 +35,10 @@ class OTHybridTester : public Tool
     OTHybridTester();
     ~OTHybridTester();
 
-    void FindUSBHandler();
-    TC_PSROH* GetTCUSBHandler()
-    {
 #ifndef __TC_USB__
-        return fTC_PSROH;
+    void FindUSBHandler();
+    TC_PSROH* GetTCUSBHandler(){ return fTC_PSROH; }
 #endif
-    }
 
     // ###################################
     // # LpGBT related functions #

@@ -14,9 +14,9 @@ OTHybridTester::~OTHybridTester()
 #endif
 }
 
+#ifdef __TCUSB__
 void OTHybridTester::FindUSBHandler()
 {
-#ifdef __TCUSB__
     bool cThereIsLpGBT = false;
     for(auto cBoard : *fDetectorContainer)
     {
@@ -27,8 +27,8 @@ void OTHybridTester::FindUSBHandler()
         fTC_PSROH = new TC_PSROH();
     else
         fTC_PSROH = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetTCUSBHandler();
-#endif   
 }
+#endif   
 
 void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
 {
