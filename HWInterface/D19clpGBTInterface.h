@@ -20,11 +20,21 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB) {}
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB)
+    {
+        #ifdef __TCUSB__
+            fTC_PSROH = new TC_PSROH();
+        #endif
+    }
+ 
+    ~D19clpGBTInterface()
+    {
+        #ifdef __TCUSB__
+            if(fTC_PSROH != nullptr)
+                delete fTC_PSROH; 
+        #endif
+    } 
 
-#ifdef __TCUSB__
-    TC_PSROH fTC_PSROH;
-#endif
 
     // ###################################
     // # LpGBT register access functions #
@@ -130,11 +140,13 @@ class D19clpGBTInterface : public lpGBTInterface
     // # LpGBT ADC-DAC functions #
     // ###########################
     // configure ADC
-    void ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, uint8_t pADCCoreDiffEnable);
-    // brief Read single ended lpGBT ADC
-    uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInput);
-    // Read lpGBT differential ADC
-    uint16_t ReadADCDiff(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN);
+    void ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, bool pADCEnable, bool pStartConversion);
+    // configure current DAC
+    void ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput);
+    // Read lpGBT ADC
+    uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain=0);
+    // Get ADC Read Status
+    bool IsReadADCDone(Ph2_HwDescription::Chip* pChip);
 
     // ########################
     // # LpGBT GPIO functions #
@@ -158,6 +170,10 @@ class D19clpGBTInterface : public lpGBTInterface
     // ###################################
     // # Outer Tracker specific funtions #
     // ###################################
+#ifdef __TCUSB__
+    void      SetTCUSBHandler(TC_PSROH* pTC_PSROH){fTC_PSROH = pTC_PSROH;}
+    TC_PSROH* GetTCUSBHandler(){return fTC_PSROH;}
+#endif
     // Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC=false);
     // configure PS-ROH
@@ -207,6 +223,7 @@ class D19clpGBTInterface : public lpGBTInterface
     bool fUseOpticalLink = true;
     bool fUseCPB = true;
 #ifdef __TCUSB__
+    TC_PSROH *fTC_PSROH;
     std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
                                                                 {"L_SSA", TC_PSROH::measurement::L_SSA_RST},

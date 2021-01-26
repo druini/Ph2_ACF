@@ -103,11 +103,12 @@ int main(int argc, char* argv[])
         TQObject::Connect("TCanvas", "Closed()", "TApplication", &cApp, "Terminate()");
 
     std::string cResultfile = "Hybrid";
-    Timer       t;
+    Timer       t, T;
 
 #ifdef __TCUSB__
 #endif
 
+    T.start();
     std::stringstream outp;
     // hybrid testing tool
     // going to use this because it also
@@ -322,5 +323,7 @@ int main(int argc, char* argv[])
     cHybridTester.Destroy();
 
     if(!batchMode) cApp.Run();
+    T.stop();
+    T.show("Total time = ");
     return 0;
 }

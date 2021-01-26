@@ -35,27 +35,38 @@ class OTHybridTester : public Tool
     OTHybridTester();
     ~OTHybridTester();
 
+    void FindUSBHandler();
+    TC_PSROH* GetTCUSBHandler()
+    {
+#ifndef __TC_USB__
+        return fTC_PSROH;
+#endif
+    }
+
     // ###################################
     // # LpGBT related functions #
     // ###################################
     //Test lpGBT Up Link with internal pattern
-    void InjectULInternalPattern(uint32_t pPattern);
+    void LpGBTInjectULInternalPattern(uint32_t pPattern);
     //Test lpGBT Up Link with external pattern
-    void InjectULExternalPattern(uint8_t pPattern);
+    void LpGBTInjectULExternalPattern(uint8_t pPattern);
     //Check Up Link data in backend fc7
-    void CheckULPattern(bool pIsExternal = false);
+    void LpGBTCheckULPattern(bool pIsExternal = false);
     //Test lpGBT Down Link with internal pattern (Hybrid Fast Command)
-    void InjectDLInternalPattern(uint8_t pPattern);
+    void LpGBTInjectDLInternalPattern(uint8_t pPattern);
     //Test lpGBT I2C Masters
-    bool TestI2CMaster(const std::vector<uint8_t>& pMasters);
+    bool LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters);
     //Test lpGBT ADC 
-    void TestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep);
+    void LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep);
     //Set GPIO level
-    void SetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
+    void LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
 
   private:
 
   protected:
+#ifndef __TC_USB__
+    TC_PSROH* fTC_PSROH;
+#endif
 };
 
 #endif

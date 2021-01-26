@@ -5,9 +5,32 @@ using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 OTHybridTester::OTHybridTester() : Tool() {}
-OTHybridTester::~OTHybridTester() {}
 
-void OTHybridTester::InjectULInternalPattern(uint32_t pPattern)
+OTHybridTester::~OTHybridTester() 
+{
+#ifdef __TCUSB__
+        if(fTC_PSROH != nullptr)
+            delete fTC_PSROH;
+#endif
+}
+
+void OTHybridTester::FindUSBHandler()
+{
+#ifdef __TCUSB__
+    bool cThereIsLpGBT = false;
+    for(auto cBoard : *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr)
+            cThereIsLpGBT = true;
+    }
+    if(!cThereIsLpGBT)
+        fTC_PSROH = new TC_PSROH();
+    else
+        fTC_PSROH = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetTCUSBHandler();
+#endif   
+}
+
+void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
 {
   for(auto cBoard : *fDetectorContainer)
   {
@@ -24,7 +47,7 @@ void OTHybridTester::InjectULInternalPattern(uint32_t pPattern)
   }
 }
 
-void OTHybridTester::InjectULExternalPattern(uint8_t pPattern)
+void OTHybridTester::LpGBTInjectULExternalPattern(uint8_t pPattern)
 {
   DPInterface         cDPInterfacer;
   for(auto cBoard : *fDetectorContainer)
@@ -51,7 +74,7 @@ void OTHybridTester::InjectULExternalPattern(uint8_t pPattern)
   }
 }
 
-void OTHybridTester::CheckULPattern(bool pIsExternal)
+void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
 {
   for(auto cBoard : *fDetectorContainer)
   {
@@ -61,7 +84,7 @@ void OTHybridTester::CheckULPattern(bool pIsExternal)
       if(pIsExternal)
       {
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-        clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 1, 2, 3}, false);
+        clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
         clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
       }
@@ -76,7 +99,7 @@ void OTHybridTester::CheckULPattern(bool pIsExternal)
   }
 }
 
-void OTHybridTester::InjectDLInternalPattern(uint8_t pPattern)
+void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
 {
   for(auto cBoard: *fDetectorContainer)
   {
@@ -91,7 +114,7 @@ void OTHybridTester::InjectDLInternalPattern(uint8_t pPattern)
   }
 }
 
-bool OTHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
+bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
 {
   bool cTestSuccess = true;
   for(auto cBoard: *fDetectorContainer)
@@ -115,7 +138,7 @@ bool OTHybridTester::TestI2CMaster(const std::vector<uint8_t>& pMasters)
   return cTestSuccess;
 }
 
-void OTHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t pMinDACValue, uint32_t pMaxDACValue, uint32_t pStep)
+void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDACValue, uint32_t pMaxDACValue, uint32_t pStep)
 {
 #ifdef __USE_ROOT__
   for(auto cBoard: *fDetectorContainer)
@@ -152,7 +175,7 @@ void OTHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t pMi
         for(int cDACValue = pMinDACValue; cDACValue <= (int)pMaxDACValue; cDACValue += pStep)
         {
 #ifdef __TCUSB__
-          clpGBTInterface->fTC_PSROH.dac_output(cDACValue);
+          fTC_PSROH->dac_output(cDACValue);
 #endif
           int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
           LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- ADC value = " << +cADCValue << RESET;
@@ -180,7 +203,7 @@ void OTHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t pMi
 #endif
 }
 
-void OTHybridTester::SetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t pLevel)
+void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t pLevel)
 {
   for(auto cBoard: *fDetectorContainer)
   {
@@ -188,9 +211,7 @@ void OTHybridTester::SetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t pL
     for(auto cOpticalGroup: *cBoard)
     {
       D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      LOG(INFO) << BOLDBLUE << "Setting GPIO output to all 0s." << RESET;
-      clpGBTInterface->ConfigureGPIO(cOpticalGroup->flpGBT, pGPIOs, 1, pLevel, 0, 0, 0);
+      clpGBTInterface->ConfigureGPIO(cOpticalGroup->flpGBT, pGPIOs, pLevel, pLevel, 0, 0, 0);
     }
   }
 }

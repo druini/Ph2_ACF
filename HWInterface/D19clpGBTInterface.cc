@@ -23,31 +23,31 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
     SetConfigMode(pChip, fUseOpticalLink, fUseCPB);
-     //Load register map from configuration file
-     ChipRegMap clpGBTRegMap = pChip->getRegMap();
-     for(const auto& cRegItem: clpGBTRegMap)
-     {
-         if(cRegItem.second.fAddress < 0x13c)
-         {
-             LOG(INFO) << BOLDBLUE << "\tWriting 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec <<
-   "]"
-                       << RESET;
-             WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
-         }
+      //Load register map from configuration file
+      ChipRegMap clpGBTRegMap = pChip->getRegMap();
+      for(const auto& cRegItem: clpGBTRegMap)
+      {
+          if(cRegItem.second.fAddress < 0x13c)
+          {
+              LOG(INFO) << BOLDBLUE << "\tWriting 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec <<
+    "]"
+                        << RESET;
+              WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+          }
     }
     // To be uncommented if crate is used
     PrintChipMode(pChip);
-    ConfigurePSROH(pChip);
+    WriteChipReg(pChip, "POWERUP2", 0x06);
     uint8_t  cPUSMStatus = GetPUSMStatus(pChip);
     uint16_t cIter = 0, cMaxIter = 2000;
     while(cPUSMStatus != 18 && cIter < cMaxIter)
     {
-        LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +cPUSMStatus << RESET;
         cPUSMStatus = GetPUSMStatus(pChip);
         cIter++;
     }
     if(cPUSMStatus != 18) exit(0);
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
+    ConfigurePSROH(pChip);
     return true;
 }
 
@@ -95,7 +95,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     {
         // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-        fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
+        fTC_PSROH->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
     }
     return true;
@@ -110,7 +110,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
             // Now pick one configuration mode
             // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-            cReadBack = fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
+            cReadBack = fTC_PSROH->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
             cIter++;
         }
@@ -133,7 +133,7 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
     {
 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-        return fTC_PSROH.read_i2c(pAddress);
+        return fTC_PSROH->read_i2c(pAddress);
 #endif
     }
     return 0;
@@ -394,7 +394,7 @@ void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std:
     // Find Phase
     // Configure Rx Phase Shifter
     uint16_t cDelay = 0x00;
-    uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 7; // 4 --> 320 MHz || 5 --> 640 MHz
+    uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
     ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
     // Phase Train channels 0,2
     PhaseTrainRx(pChip, pGroups, true);
@@ -404,7 +404,7 @@ void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std:
         LOG(INFO) << BOLDMAGENTA << "Phase Aligning Rx Group " << +cGroup << RESET;
         do
         {
-            //LOG(DEBUG) << "Locking state Group " << +cGroup << " 0b" << std::bitset<8>(ReadChipReg(pChip, "EPRX" + std::to_string(cGroup) + "Locked")) << RESET;
+            LOG(DEBUG) << "Locking state Group " << +cGroup << " 0b" << std::bitset<8>(ReadChipReg(pChip, "EPRX" + std::to_string(cGroup) + "Locked")) << RESET;
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         } while(!IsRxLocked(pChip, cGroup, pChannels));
         LOG(INFO) << BOLDBLUE << "    Group " << +cGroup << BOLDGREEN << " LOCKED" << RESET;
@@ -624,42 +624,30 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
 /* lpGBT ADC-DAC functions                                                 */
 /*-------------------------------------------------------------------------*/
 
-void D19clpGBTInterface::ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, uint8_t pADCEnable) { WriteChipReg(pChip, "ADCConfig", pADCEnable << 2 | pGainSelect); }
-
-uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInput)
-{
-    // Read (converted) data from ADC Input with VREF/2 as negative Input
-    uint8_t cADCInput = fADCInputMap[pADCInput];
-    uint8_t cVREF     = fADCInputMap["VREF/2"];
-    LOG(INFO) << BOLDBLUE << "Reading ADC value from " << pADCInput << RESET;
-    // Select ADC Input
-    WriteChipReg(pChip, "ADCSelect", cADCInput << 4 | cVREF << 0);
-    // Enable ADC Input
-    WriteChipReg(pChip, "ADCConfig", 1 << 2);
-    // Enable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 1 << 7);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    // Start ADC conversion
-    WriteChipReg(pChip, "ADCConfig", 1 << 7 | 1 << 2);
-    // Check conversion status
-    uint8_t cMaxIter = 100, cIter = 0;
-    bool    cSuccess = false;
-    do
-    {
-        LOG(INFO) << BOLDBLUE << "Waiting for ADC conversion to end" << RESET;
-        uint8_t cStatus = ReadChipReg(pChip, "ADCStatusH");
-        cSuccess        = (((cStatus & 0x40) >> 6) == 1);
-        cIter++;
-    } while(cIter < cMaxIter && !cSuccess);
-    // Read ADC value
-    uint8_t cADCvalue1 = ReadChipReg(pChip, "ADCStatusH") & 0x3;
-    uint8_t cADCvalue2 = ReadChipReg(pChip, "ADCStatusL");
-    // Clear ADC conversion bit (#FIXME disable ADC Input as well ??)
-    WriteChipReg(pChip, "ADCConfig", 0 << 7 | 1 << 2);
-    return (cADCvalue1 << 8 | cADCvalue2);
+void D19clpGBTInterface::ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, bool pADCEnable, bool pStartConversion) 
+{ 
+    WriteChipReg(pChip, "ADCConfig", pStartConversion << 7 | pADCEnable << 2 | pGainSelect); 
 }
 
-uint16_t D19clpGBTInterface::ReadADCDiff(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN)
+void D19clpGBTInterface::ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput)
+{
+     //Enables current DAC without changing the voltage DAC
+     uint8_t cDACConfigH = ReadChipReg(pChip, "DACConfigH");
+     WriteChipReg(pChip, "DACConfigH", cDACConfigH | 0x40);
+     // Sets output current for the current DAC. Current = CURDACSelect * XX uA.
+     WriteChipReg(pChip, "CURDACValue", pCurrentDACOutput);
+     // Setting Nth bit in this register attaches current DAC to ADCN pin. Current source can be attached to any number of channels
+     uint8_t cCURDACCHN = 0;
+     uint8_t cADCInput;
+     for(auto cCurrentDACChannel : pCurrentDACChannels)
+     {
+        cADCInput = fADCInputMap[cCurrentDACChannel];
+        cCURDACCHN += 1 << cADCInput;
+        WriteChipReg(pChip, "CURDACCHN", cCURDACCHN);
+     }
+}
+
+uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
     // Read differential (converted) data on two ADC inputs
     uint8_t cADCInputP = fADCInputMap[pADCInputP];
@@ -667,26 +655,35 @@ uint16_t D19clpGBTInterface::ReadADCDiff(Ph2_HwDescription::Chip* pChip, const s
     LOG(INFO) << BOLDBLUE << "Reading ADC value from " << pADCInputP << RESET;
     // Select ADC Input
     WriteChipReg(pChip, "ADCSelect", cADCInputP << 4 | cADCInputN << 0);
-    // Enable ADC Input
-    WriteChipReg(pChip, "ADCConfig", 1 << 2);
+    // Enable ADC Input without starting conversion
+    ConfigureADC(pChip, pGain, true, false); 
+    // Enable Internal VREF
+    WriteChipReg(pChip, "VREFCNTR", 1 << 7);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     // Start ADC conversion
-    WriteChipReg(pChip, "ADCConfig", 1 << 7 | 1 << 2);
+    ConfigureADC(pChip, pGain, true, true); 
     // Check conversion status
-    uint8_t cMaxIter = 10, cIter = 0;
+    uint8_t cMaxIter = 100, cIter = 0;
     bool    cSuccess = false;
     do
     {
-        LOG(INFO) << BOLDBLUE << "Waiting for ADC conversion to end" << RESET;
-        uint8_t cStatus = ReadChipReg(pChip, "ADCStatusH");
-        cSuccess        = (((cStatus & 0x40) >> 6) == 1);
+        LOG(DEBUG) << BOLDBLUE << "Waiting for ADC conversion to end" << RESET;
+        cSuccess        = IsReadADCDone(pChip);
         cIter++;
     } while(cIter < cMaxIter && !cSuccess);
+    if(cIter == cMaxIter)
+        throw std::runtime_error(std::string("BERT : All zeros at input"));
     // Read ADC value
     uint8_t cADCvalue1 = ReadChipReg(pChip, "ADCStatusH") & 0x3;
     uint8_t cADCvalue2 = ReadChipReg(pChip, "ADCStatusL");
-    // Clear ADC conversion bit (#FIXME disable ADC Input as well ??)
-    WriteChipReg(pChip, "ADCConfig", 0 << 7 | 1 << 2);
+    // Clear ADC conversion bit and disable ADC
+    ConfigureADC(pChip, pGain, false, false);
     return (cADCvalue1 << 8 | cADCvalue2);
+}
+
+bool D19clpGBTInterface::IsReadADCDone(Ph2_HwDescription::Chip* pChip)
+{
+    return (((ReadChipReg(pChip, "ADCStatusH") & 0x40) >> 6) == 1);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -695,16 +692,11 @@ uint16_t D19clpGBTInterface::ReadADCDiff(Ph2_HwDescription::Chip* pChip, const s
 void D19clpGBTInterface::ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir, uint8_t pOut, uint8_t pDriveStr, uint8_t pPullEn, uint8_t pUpDown)
 {
     LOG(INFO) << BOLDMAGENTA << "Configuring GPIOs" << RESET;
-    uint8_t cDirH      = ReadChipReg(pChip, "PIODirH");
-    uint8_t cDirL      = ReadChipReg(pChip, "PIODirL");
-    uint8_t cOutH      = ReadChipReg(pChip, "PIOOutH");
-    uint8_t cOutL      = ReadChipReg(pChip, "PIOOutL");
-    uint8_t cDriveStrH = ReadChipReg(pChip, "PIODriveStrengthH");
-    uint8_t cDriveStrL = ReadChipReg(pChip, "PIODriveStrengthL");
-    uint8_t cPullEnH   = ReadChipReg(pChip, "PIOPullEnaH");
-    uint8_t cPullEnL   = ReadChipReg(pChip, "PIOPullEnaL");
-    uint8_t cUpDownH   = ReadChipReg(pChip, "PIOUpDownH");
-    uint8_t cUpDownL   = ReadChipReg(pChip, "PIOUpDownL");
+    uint8_t cDirH      = 0, cDirL      = 0; 
+    uint8_t cOutH      = 0, cOutL      = 0;
+    uint8_t cDriveStrH = 0, cDriveStrL = 0;
+    uint8_t cPullEnH   = 0, cPullEnL   = 0;
+    uint8_t cUpDownH   = 0, cUpDownL   = 0;
     for(auto cGPIO : pGPIOs)
     {
         if(cGPIO < 8)
@@ -819,7 +811,7 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUse
     {
 #ifdef __TCUSB__
         LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
-        if(pToggleTC) fTC_PSROH.toggle_SCI2C();
+        if(pToggleTC) fTC_PSROH->toggle_SCI2C();
 #endif
         LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
         fUseOpticalLink = true;
@@ -860,10 +852,10 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Rx configuration and Phase Align
     // Configure Rx Groups
     std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
-    uint8_t              cRxDataRate = 2, cRxTrackMode = 3;
+    uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 12;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 7;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)
@@ -889,7 +881,6 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Setting GPIO levels Uncomment this for Skeleton test
     ConfigureGPIO(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1, 1, 0, 0, 0);
     ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
-    WriteChipReg(pChip, "POWERUP2", 0x06);
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
@@ -962,7 +953,7 @@ bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
 {
     LOG(DEBUG) << BOLDBLUE << "MPA Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x00 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
+    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x40 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
     if(pRetry)
     {
         uint8_t cReadBack = mpaRead(pChip, pFeId, pChipId, pRegisterAddress);
@@ -985,7 +976,7 @@ bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
 uint32_t D19clpGBTInterface::mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress)
 {
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x00 + pChipId, cInvertedRegister, 2);
+    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x40 + pChipId, cInvertedRegister, 2);
     uint32_t cReadBack = ReadI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x00 + pChipId, 1);
     LOG(DEBUG) << BOLDYELLOW << "MPA Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     return cReadBack;
