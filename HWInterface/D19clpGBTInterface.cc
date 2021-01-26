@@ -23,18 +23,18 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
     SetConfigMode(pChip, fUseOpticalLink, fUseCPB);
-    //   //Load register map from configuration file
-    //   ChipRegMap clpGBTRegMap = pChip->getRegMap();
-    //   for(const auto& cRegItem: clpGBTRegMap)
-    //   {
-    //       if(cRegItem.second.fAddress < 0x13c)
-    //       {
-    //           LOG(INFO) << BOLDBLUE << "\tWriting 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec <<
-    // "]"
-    //                     << RESET;
-    //           WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
-    //       }
-    // }
+      //Load register map from configuration file
+      ChipRegMap clpGBTRegMap = pChip->getRegMap();
+      for(const auto& cRegItem: clpGBTRegMap)
+      {
+          if(cRegItem.second.fAddress < 0x13c)
+          {
+              LOG(INFO) << BOLDBLUE << "\tWriting 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec <<
+    "]"
+                        << RESET;
+              WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+          }
+    }
     // To be uncommented if crate is used
     PrintChipMode(pChip);
     WriteChipReg(pChip, "POWERUP2", 0x06);
@@ -880,7 +880,6 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Uncomment this for Skeleton test
     ConfigureGPIO(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1, 1, 0, 0, 0);
-    ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
