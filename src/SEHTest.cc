@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
     // Bias voltage leakage current
     cmd.defineOption("leak", "Measure the Bias voltage leakage current ");
     // Load values defining a test from file
-    cmd.defineOption("test-parameter", "Use user file with test parameters, otherwise default parameters will be used", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("test-parameter", "Use user file with test parameters, otherwise (or if file is missing it) default parameters will be used", ArgvParser::OptionRequiresValue);
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -230,6 +230,8 @@ int main(int argc, char* argv[])
     // Testing linearity of ADC and AMUX lines
     if(cmd.foundOption("testADC"))
     {
+        // cSEHTester.ToyTestFixedADCs();
+        cSEHTester.TestFixedADCs();
         std::vector<std::string> cADCs = {"ADC0", "ADC3"};
         cSEHTester.LpGBTTestADC(cADCs, 0, 1000, 20); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
     }

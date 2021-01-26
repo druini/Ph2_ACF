@@ -20,10 +20,13 @@
 #include "TAxis.h"
 #include "TF1.h"
 #include "TGraph.h"
+#include "TH2.h"
 #include "TLegend.h"
 #include "TMultiGraph.h"
 #include "TObject.h"
+#include "TRandom3.h"
 #include "TString.h"
+#include "TStyle.h"
 #include "TTree.h"
 #endif
 using namespace Ph2_HwDescription;
@@ -64,6 +67,8 @@ class SEHTester : public OTHybridTester
     void TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime);
     int  exampleFit();
     void readTestParameters(std::string file);
+    bool TestFixedADCs();
+    // bool ToyTestFixedADCs();
 
   private:
     void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
@@ -80,7 +85,7 @@ class SEHTester : public OTHybridTester
     void CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
     // void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string & pFastCommand ,  uint8_t pDuartion=1);
 
-    std::map<std::string, uint8_t> fInputDebugMap = {{"l_fcmd_cic", 0},
+    std::map<std::string, uint8_t>     fInputDebugMap = {{"l_fcmd_cic", 0},
                                                      {"r_fcmd_cic", 1},
                                                      {"l_fcmd_ssa", 2},
                                                      {"r_fcmd_ssa", 3},
@@ -95,6 +100,8 @@ class SEHTester : public OTHybridTester
                                                      {"cpg", 12},
                                                      {"bpg", 13},
                                                      {"na", 14}};
+    std::map<std::string, std::string> fADCInputMap =
+        {{"AMUX_L", "ADC0"}, {"VMON_P1V25_L", "ADC1"}, {"VMIN", "ADC2"}, {"AMUX_R", "ADC3"}, {"TEMPP", "ADC4"}, {"VTRX+_RSSI_ADC", "ADC5"}, {"PTAT_BPOL2V5", "ADC6"}, {"PTAT_BPOL12V", "ADC7"}};
 
     std::map<std::string, uint8_t> fOutputDebugMap =
         {{"cic_in_6", 0}, {"cic_in_5", 1}, {"cic_in_4", 2}, {"cic_in_3", 3}, {"cic_in_2", 4}, {"cic_in_1", 5}, {"cic_in_0", 6}, {"r_i2c_sda_i", 7}, {"l_i2c_sda_i", 8}, {"na", 9}};
@@ -126,7 +133,14 @@ class SEHTester : public OTHybridTester
                                                                           {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
                                                                           {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
                                                                           {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
-    std::map<std::string, float>                      fDefaultParameters = {{"Spannung", 2}, {"Strom", 0.5}};
+    std::map<std::string, float>                      fDefaultParameters = {{"Spannung", 2},
+                                                       {"Strom", 0.5},
+                                                       {"VMON_P1V25_L_Nominal", 0.806},
+                                                       {"VMIN_Nominal", 0.49},
+                                                       {"TEMPP_Nominal", 0.6},
+                                                       {"VTRX+_RSSI_ADC_Nominal", 0.6},
+                                                       {"PTAT_BPOL2V5_Nominal", 0.6},
+                                                       {"PTAT_BPOL12V_Nominal", 0.6}};
 };
 
 #endif
