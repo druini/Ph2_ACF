@@ -24,6 +24,10 @@
 #include "TTree.h"
 #endif
 
+#ifdef __TCUSB__
+#include "USB_a.h"
+#endif
+
 #include <map>
 #include <string>
 
@@ -35,8 +39,8 @@ class OTHybridTester : public Tool
     OTHybridTester();
     ~OTHybridTester();
 
-#ifndef __TC_USB__
     void FindUSBHandler();
+#ifdef __TCUSB__
     TC_PSROH* GetTCUSBHandler(){ return fTC_PSROH; }
 #endif
 
@@ -61,7 +65,7 @@ class OTHybridTester : public Tool
   private:
 
   protected:
-#ifndef __TC_USB__
+#ifdef __TCUSB__
     TC_PSROH* fTC_PSROH;
 #endif
 };
