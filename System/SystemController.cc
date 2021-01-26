@@ -8,6 +8,8 @@
 */
 
 #include "SystemController.h"
+#include "../Utils/DetectorMonitorConfig.h"
+#include "../tools/CBCMonitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -27,6 +29,7 @@ SystemController::SystemController()
     , fWriteHandlerEnabled(false)
     , fStreamerEnabled(false)
     , fNetworkStreamer(nullptr) // This is the server listening port
+    , fDetectorMonitor(nullptr)
 {
 }
 
@@ -49,7 +52,19 @@ void SystemController::Inherit(const SystemController* pController)
 
 void SystemController::Destroy()
 {
+    if(fDetectorMonitor != nullptr)
+    {
+        LOG(INFO) << BOLDRED << "Destroying monitoring" << RESET;
+        fDetectorMonitor->stopMonitoring();
+        while(fMonitorFuture.wait_for(std::chrono::milliseconds(250)) != std::future_status::ready) { LOG(INFO) << "Waiting for monitoring to be completed..."; }
+        delete fDetectorMonitor;
+        fDetectorMonitor = nullptr;
+        LOG(INFO) << BOLDRED << "Monitoring destroyed" << RESET;
+    }
+
     this->closeFileHandler();
+
+    LOG(INFO) << BOLDRED << "Destroying interfaces" << RESET;
 
     delete fBeBoardInterface;
     fBeBoardInterface = nullptr;
@@ -70,6 +85,7 @@ void SystemController::Destroy()
 
     delete fNetworkStreamer;
     fNetworkStreamer = nullptr;
+    LOG(INFO) << BOLDRED << "Interfaces destroyed" << RESET;
 }
 
 void SystemController::addFileHandler(const std::string& pFilename, char pOption)
@@ -183,6 +199,23 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     }
 
     if(fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
+
+    DetectorMonitorConfig theDetectorMonitorConfig;
+    std::string           monitoringType = fParser.parseMonitor(pFilename, theDetectorMonitorConfig, os, pIsFile);
+
+    if(monitoringType != "None")
+    {
+        if(monitoringType == "2S") fDetectorMonitor = new CBCMonitor(theDetectorMonitorConfig);
+        // else if(monitoringType == "IT") fDetectorMonitor = new ITMonitor();
+        else
+        {
+            LOG(ERROR) << "Unrecognized monitor type, Aborting";
+            abort();
+        }
+
+        fDetectorMonitor->Inherit(this);
+        fMonitorFuture = std::async(std::launch::async, std::ref(*fDetectorMonitor));
+    }
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os, bool pIsFile) { this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile); }
@@ -199,10 +232,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
 
     for(const auto cBoard: *fDetectorContainer)
     {
-        uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
-
         if(cBoard->getBoardType() != BoardType::RD53)
         {
+            uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
+
             // setting up back-end board
             fBeBoardInterface->ConfigureBoard(cBoard);
             LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
@@ -303,9 +336,12 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ###################
             size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
             size_t injType     = SystemController::findValueInSettings("INJtype");
+            size_t injLatency  = SystemController::findValueInSettings("InjLatency");
             size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
             size_t colStart    = SystemController::findValueInSettings("COLstart");
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, nClkDelays, colStart < RD53::LIN.colStart);
+            bool   resetMask   = SystemController::findValueInSettings("ResetMask");
+            bool   resetTDAC   = SystemController::findValueInSettings("ResetTDAC");
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
             LOG(INFO) << GREEN << "Configured FSM fast command block" << RESET;
 
             // ########################
@@ -337,12 +373,15 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     LOG(INFO) << GREEN << "Initializing communication to Hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
-                    for(const auto cRD53: *cHybrid)
+                    for(const auto cChip: *cHybrid)
                     {
-                        LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cRD53->getId() << RESET;
-                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cRD53));
-                        LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cRD53)->getNbMaskedPixels() << RESET;
-                        // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cRD53), 0);
+                        LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
+                        if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
+                        if(resetTDAC == true) static_cast<RD53*>(cChip)->resetTDAC();
+                        static_cast<RD53*>(cChip)->copyMaskToDefault();
+                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cChip));
+                        LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+                        // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
                     }
                 }
             }
@@ -530,18 +569,23 @@ void SystemController::SetFuture(const BeBoard* pBoard, const std::vector<uint32
 
 void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
 {
+    // ####################
+    // # Decoding IT data #
+    // ####################
     if(pType == BoardType::RD53)
     {
         fEventList.clear();
         if(RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEventsMultiThreads(pData, RD53FWInterface::decodedEvents);
         RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
-        for(auto i = 0u; i < RD53FWInterface::decodedEvents.size(); i++) fEventList.push_back(&RD53FWInterface::decodedEvents[i]);
+        for(auto& evt: RD53FWInterface::decodedEvents) fEventList.push_back(&evt);
     }
+    // ####################
+    // # Decoding OT data #
+    // ####################
     else if(pType == BoardType::D19C)
     {
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();
-        fCurrentEvent = 0;
 
         if(pNevents == 0) { LOG(INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET; }
         else
@@ -550,27 +594,19 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             uint32_t  fNFe       = pBoard->getNFe();
             uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
             LOG(DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
-            fEventSize      = static_cast<uint32_t>((pData.size()) / pNevents);
-            //uint32_t nmpa = 0;
+            fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
+            // uint32_t nmpa = 0;
             uint32_t maxind = 0;
 
-
-                //if(fEventType == EventType::SSAAS) 
-                 //   {
-                 //   uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-                 //   nSSA = pData.size() / 120;
-                 //   }
-
+            // if(fEventType == EventType::SSAAS)
+            //   {
+            //   uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+            //   nSSA = pData.size() / 120;
+            //   }
 
             for(auto opticalGroup: *pBoard)
             {
-                    for(auto hybrid: *opticalGroup)
-                    {
-
-                            maxind = std::max(maxind, uint32_t(hybrid->size()));
-          
-                        
-                    }
+                for(auto hybrid: *opticalGroup) { maxind = std::max(maxind, uint32_t(hybrid->size())); }
             }
 
             if(fEventType == EventType::SSAAS) { fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
@@ -586,7 +622,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 {
                     uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
                     auto     cEnd       = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
-              
+
                     // retrieve chunck of data vector belonging to this event
                     if(cEnd - cEventIterator == cEventSize)
                     {
