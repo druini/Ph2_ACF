@@ -249,13 +249,13 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
-                    cIslpGBTI2C = !cBoard->ifUseOpticalLink();
+                    cIslpGBTI2C                         = !cBoard->ifUseOpticalLink();
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                 }
             }
-            //Check lpGBT Link Lock 
-            if(cIslpGBTI2C) 
+            // Check lpGBT Link Lock
+            if(cIslpGBTI2C)
             {
                 LOG(INFO) << BOLDBLUE << "Configuring optical link.." << RESET;
                 bool clpGBTlock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
@@ -265,7 +265,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     exit(0);
                 }
             }
-    
+
             for(auto cOpticalGroup: *cBoard)
             {
                 uint8_t cLinkId = cOpticalGroup->getId();
