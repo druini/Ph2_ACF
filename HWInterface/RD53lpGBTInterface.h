@@ -98,7 +98,7 @@ class RD53lpGBTInterface : public lpGBTInterface
     void PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pRate);
 
     // ################################
-    // # LpGBT Block Status functions #
+    // # LpGBT block status functions #
     // ################################
     // Print out LpGBT chip mode (data rate, FEC, transmission mode)
     void PrintChipMode(Ph2_HwDescription::Chip* pChip);

@@ -25,6 +25,9 @@
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
 
+#include  <chrono>
+#include  <thread>
+
 #ifdef __USE_ROOT__
 #include "TApplication.h"
 #endif
@@ -42,7 +45,7 @@
 #define SETBATCH 0 // Set batch mode when running supervisor
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
-#define ARBITRARYDELAY 2e6 // [us]
+#define ARBITRARYDELAY 2 // [seconds]
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -266,9 +269,9 @@ int main(int argc, char** argv)
                 {
                     LOG(INFO) << BOLDBLUE << "Supervisor sending stop" << RESET;
 
-                    usleep(ARBITRARYDELAY);
+                    std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
                     theMiddlewareInterface.stop();
-                    usleep(ARBITRARYDELAY);
+                    std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
                     theDQMInterface.stopProcessingData();
 
                     stateMachineStatus = STOPPED;
@@ -297,7 +300,7 @@ int main(int argc, char** argv)
     {
         SystemController mySysCntr;
 
-        if((reset == true) || (binaryFile != ""))
+        if((reset == true) || (binaryFile != "") || (whichCalib == "prbstime") || (whichCalib == "prbsframes"))
         {
             // ######################################
             // # Reset hardware or read binary file #
@@ -540,7 +543,7 @@ int main(int argc, char** argv)
             {
                 ph.localConfigure(fileName, -1);
                 ph.Start(runNumber);
-                usleep(ARBITRARYDELAY);
+                std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
                 ph.Stop();
             }
             else
@@ -598,8 +601,8 @@ int main(int argc, char** argv)
                 exit(EXIT_FAILURE);
             }
 
-            unsigned long long frames_or_time = strtoull(cmd.argument(0).c_str(), NULL, 0);
-            bool               given_time     = false;
+            double frames_or_time = atof(cmd.argument(0).c_str());
+            bool   given_time     = false;
             if(whichCalib == "prbstime") given_time = true;
 
             for(const auto cBoard: *mySysCntr.fDetectorContainer)
@@ -607,14 +610,16 @@ int main(int argc, char** argv)
                     for(const auto cHybrid: *cOpticalGroup)
                         for(const auto cChip: *cHybrid)
                         {
-                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 2, true);
+                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 2, false);
+
                             LOG(INFO) << GREEN << "PRBS test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                       << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
                                       << ((static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getId()])->RunPRBStest(given_time, frames_or_time, cHybrid->getId(), cChip->getId()) == true)
                                               ? "PASSED"
                                               : "NOT PASSED")
                                       << RESET;
-                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 1, true);
+
+                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 1, false);
                         }
         }
         else if((program == false) && (whichCalib != ""))

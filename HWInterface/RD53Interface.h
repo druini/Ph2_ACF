@@ -39,15 +39,18 @@ class RD53Interface : public ReadoutChipInterface
     bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true) override;
     bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override;
 
-    void InitRD53DownAndUpLinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1);
+    void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard);
+    void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1);
 
     void PackChipCommands(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = false);
-    void SendChipCommandsPack(const std::vector<uint16_t>& chipCommandList, int hybridId);
+    void SendChipCommandsPack(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId);
 
-    void PackHybridCommands(const std::vector<uint16_t>& chipCommandList, int hybridId, std::vector<uint32_t>& hybridCommandList);
-    void SendHybridCommandsPack(const std::vector<uint32_t>& hybridCommandList);
+    void PackHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId, std::vector<uint32_t>& hybridCommandList);
+    void SendHybridCommandsPack(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList);
 
   private:
+    void InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip);
+
     std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName);
     void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
 

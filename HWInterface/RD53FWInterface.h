@@ -293,7 +293,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // ##############################
     // # Pseudo Random Bit Sequence #
     // ##############################
-    bool RunPRBStest(bool given_time, unsigned long long frames_or_time, uint16_t hybrid_id, uint16_t chip_id);
+    bool RunPRBStest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id);
 
   private:
     void                  PrintFWstatus();

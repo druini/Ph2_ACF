@@ -321,10 +321,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
 
             do
             {
-                // ############################################
-                // # Configure down and up link to/from chips #
-                // ############################################
-                LOG(INFO) << CYAN << "=== Configuring chip communication ===" << RESET;
+                // ######################################################
+                // # Configure down and up links to/from frontend chips #
+                // ######################################################
+                LOG(INFO) << CYAN << "=== Configuring frontend chip communication ===" << RESET;
+                static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Downlink(cBoard);
                 for(auto cOpticalGroup: *cBoard)
                     for(auto cHybrid: *cOpticalGroup)
                     {
@@ -332,10 +333,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         for(const auto cChip: *cHybrid)
                         {
                             LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
-                            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53DownAndUpLinks(static_cast<RD53*>(cChip));
+                            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(static_cast<RD53*>(cChip));
                         }
                     }
-                LOG(INFO) << CYAN << "================ Done ================" << RESET;
+                LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
 
                 // ####################################
                 // # Check AURORA lock on data stream #
@@ -345,7 +346,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ############################
             // # Configure frontend chips #
             // ############################
-            LOG(INFO) << CYAN << "=== Configuring chip registers ===" << RESET;
+            LOG(INFO) << CYAN << "=== Configuring frontend chip registers ===" << RESET;
             for(auto cOpticalGroup: *cBoard)
                 for(auto cHybrid: *cOpticalGroup)
                 {
@@ -361,7 +362,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
                     }
                 }
-            LOG(INFO) << CYAN << "============== Done ==============" << RESET;
+            LOG(INFO) << CYAN << "================== Done ===================" << RESET;
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
         }

@@ -25,14 +25,6 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // #####################
     for(auto& ele: fPUSMStatusMap) revertedPUSMStatusMap[ele.second] = ele.first;
 
-    // ###############################
-    // # In case of not efused LpGBT #
-    // ###############################
-    // @TMP@
-    ChipRegMap& lpGBTRegMap = pChip->getRegMap();
-    for(const auto& cRegItem: lpGBTRegMap)
-        if((cRegItem.second.fAddress < 0x13C) && (cRegItem.second.fPrmptCfg == true)) RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
-
     // #########################
     // # Configure PLL and DLL #
     // #########################
@@ -42,6 +34,13 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     RD53lpGBTInterface::WriteChipReg(pChip, "PSDllConfig", 5 << 4 | 1 << 2 | 1, false);
     RD53lpGBTInterface::WriteChipReg(pChip, "POWERUP2", 1 << 2 | 1 << 1, false);
 
+    // ####################################################
+    // # Programming registers as from configuration file #
+    // ####################################################
+    ChipRegMap& lpGBTRegMap = pChip->getRegMap();
+    for(const auto& cRegItem: lpGBTRegMap)
+        if((cRegItem.second.fAddress < 0x13C) && (cRegItem.second.fPrmptCfg == true)) RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+
     // #####################
     // # Check PUSM status #
     // #####################
@@ -50,7 +49,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     while((PUSMStatus != revertedPUSMStatusMap["READY"]) && (nAttempts < RD53lpGBTconstants::MAXATTEMPTS))
     {
         PUSMStatus = RD53lpGBTInterface::GetPUSMStatus(pChip);
-        usleep(RD53Shared::DEEPSLEEP);
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         nAttempts++;
     }
 
