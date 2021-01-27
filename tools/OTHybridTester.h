@@ -43,9 +43,10 @@ class OTHybridTester : public Tool
     void      FindUSBHandler(bool b2SSEH = false);
     TC_PSROH* GetTCUSBHandler()
     {
-#ifndef __TC_USB__
+#ifdef __TCUSB__
         return fTC_PSROH;
 #endif
+    }
 
     // ###################################
     // # LpGBT related functions #
