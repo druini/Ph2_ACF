@@ -880,7 +880,6 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Uncomment this for Skeleton test
     ConfigureGPIO(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1, 1, 0, 0, 0);
-    ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
 }
 
 // Preliminary

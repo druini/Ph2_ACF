@@ -25,6 +25,10 @@
 #include "TTree.h"
 #endif
 
+#ifdef __TCUSB__
+#include "USB_a.h"
+#endif
+
 #include <map>
 #include <string>
 
@@ -42,7 +46,6 @@ class OTHybridTester : public Tool
 #ifndef __TC_USB__
         return fTC_PSROH;
 #endif
-    }
 
     // ###################################
     // # LpGBT related functions #
@@ -80,7 +83,7 @@ class OTHybridTester : public Tool
 #endif
 
   protected:
-#ifndef __TC_USB__
+#ifdef __TCUSB__
     TC_PSROH* fTC_PSROH;
     TC_2SSEH* fTC_2SSEH;
 #endif

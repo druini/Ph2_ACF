@@ -37,7 +37,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     LOG(INFO) << BOLDRED << "=============" << RESET;
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
     std::string       cHWFile = "settings/D19C_MPA_PreCalibSYNC.xml";
     std::stringstream outp;
@@ -208,9 +208,9 @@ int main(int argc, char* argv[])
 
                         std::cout<<"counts"<<cpix<<" "<<(cRP2*256) + cRP1<<std::endl;
                         }*/
-                    const std::vector<Event*>& events = cTool.GetEvents(pBoard);
+                    const std::vector<Event*>& events = cTool.GetEvents();
 
-                    // const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
+                    // const std::vector<Event*> &eventVector = cTool.GetEvents();
                     int nev    = 0;
                     int nevtot = 0;
                     int nstub  = 0;

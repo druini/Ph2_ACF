@@ -22,7 +22,7 @@
 #include <time.h>
 #include <uhal/uhal.hpp>
 
-#pragma GCC diagnostic ignored "-Wpedantic"
+// #pragma GCC diagnostic ignored "-Wpedantic"
 // #pragma GCC diagnostic pop
 
 using namespace Ph2_HwDescription;
