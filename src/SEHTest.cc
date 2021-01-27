@@ -257,7 +257,7 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("eff"))
     {
-        //cSEHTester.exampleFit();
+        // cSEHTester.exampleFit();
         LOG(INFO) << BOLDBLUE << "Efficency Test" << RESET;
         cSEHTester.TestEfficency(0, 100, 5);
     }

@@ -301,7 +301,7 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     fResultFile->cd();
     cIouttoIinTree->Write();
     cEfficencyTree->Write();
-    auto cIouttoIinCanvas = new TCanvas("tIouttoIin", "Iout to Iin conversion in DC/DC", 500, 500);
+    auto cIouttoIinCanvas = new TCanvas("tIouttoIin", "Iout to Iin conversion in DC/DC", 750, 500);
 
     cIouttoIinMultiGraph->Draw("ALP");
     cIouttoIinMultiGraph->GetXaxis()->SetTitle("Iout [A]");
@@ -309,7 +309,7 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 
     cIouttoIinCanvas->BuildLegend();
     cIouttoIinCanvas->Write();
-    auto cEfficencyCanvas = new TCanvas("tEfficency", "DC/DC conversion efficency", 500, 500);
+    auto cEfficencyCanvas = new TCanvas("tEfficency", "DC/DC conversion efficency", 750, 500);
     cEfficencyMultiGraph->Draw("ALP");
     cEfficencyMultiGraph->GetXaxis()->SetTitle("Iout [A]");
     cEfficencyMultiGraph->GetYaxis()->SetTitle("Efficency");

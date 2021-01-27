@@ -239,6 +239,107 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 #endif
 }
 
+// Fixed in this context means: The ADC pin is not an AMUX pin
+// Need statistics on spread of RSSI and temperature sensors
+bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
+{
+    bool                               cReturn;
+    std::map<std::string, std::string> cADCsMap;
+    std::map<std::string, float>*      cDefaultParameters;
+#ifdef __USE_ROOT__
+    auto cFixedADCsTree = new TTree("FixedADCs", "lpGBT ADCs not tied to AMUX");
+    gStyle->SetOptStat(0);
+
+    if(p2SSEH)
+    {
+        cADCsMap           = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
+                    {"VMIN", "VMIN_Nominal"},
+                    {"TEMPP", "TEMPP_Nominal"},
+                    {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
+                    {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
+                    {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
+        cDefaultParameters = &f2SSEHDefaultParameters;
+    }
+    else
+    {
+        cADCsMap           = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
+                    {"TEMP", "TEMP_Nominal"},
+                    {"VTRX+.RSSI_ADC", "VTRX+.RSSI_ADC_Nominal"},
+
+                    {"1V25_MONITOR", "1V25_MONITOR_Nominal"},
+                    {"2V55_MONITOR", "2V55_MONITOR_Nominal"}};
+        cDefaultParameters = &fPSROHDefaultParameters;
+    }
+    auto cADCHistogram = new TH2I("cADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
+    cADCHistogram->GetZaxis()->SetTitle("Number of entries");
+
+    auto             cADCsMapIterator = cADCsMap.begin();
+    int              cADCValue;
+    int              cBinCount         = 1;
+    float            cConversionFactor = 1. / 1024.;
+    std::vector<int> cADCValueVect;
+    fillSummaryTree("ADC conversion factor", cConversionFactor);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT == nullptr)
+        {
+            LOG(INFO) << BOLDRED << "No lpGBT to test ADCs!" << RESET;
+            cReturn = false;
+            continue;
+        }
+        for(auto cOpticalGroup: *cBoard)
+        {
+            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+            // Configure Temperature sensor
+            clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0xff);
+            do
+            {
+                cADCValueVect.clear();
+                cADCHistogram->GetXaxis()->SetBinLabel(cBinCount, cADCsMapIterator->first.c_str());
+
+                for(int cIteration = 0; cIteration < 10; ++cIteration)
+                {
+                    cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADCsMapIterator->first);
+                    cADCValueVect.push_back(cADCValue);
+                    cADCHistogram->Fill(cADCsMapIterator->first.c_str(), cADCValue, 1);
+                }
+                // fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
+
+                fillSummaryTree(cADCsMapIterator->first, cADCValue * cConversionFactor);
+                float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
+                float mean          = sum / cADCValueVect.size();
+                float cDifference_V = std::fabs((*cDefaultParameters)[cADCsMapIterator->second] - mean * cConversionFactor);
+
+                // Still hard coded threshold for imidiate boolean result, actual values are stored
+                if(cDifference_V > 0.1)
+                {
+                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
+                              << (*cDefaultParameters)[cADCsMapIterator->second] << " V" << RESET;
+                    cReturn = false;
+                }
+                else
+                {
+                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
+                              << (*cDefaultParameters)[cADCsMapIterator->second] << " V" << RESET;
+                }
+
+                cADCsMapIterator++;
+                cBinCount++;
+
+            } while(cADCsMapIterator != cADCsMap.end());
+        }
+    }
+    auto cADCCanvas = new TCanvas("tFixedADCs", "lpGBT ADCs not tied to AMUX", 1600, 900);
+    cADCCanvas->SetRightMargin(0.2);
+    cADCHistogram->GetXaxis()->SetTitle("ADC channel");
+    cADCHistogram->GetYaxis()->SetTitle("ADC count");
+
+    cADCHistogram->Draw("colz");
+    cADCCanvas->Write();
+#endif
+    return cReturn;
+}
+
 void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t pLevel)
 {
     for(auto cBoard: *fDetectorContainer)
