@@ -1103,7 +1103,7 @@ RD53FWInterface::Event::Event(const uint32_t* data, size_t n)
     index = 4;
     for(auto size: event_sizes)
     {
-      chip_frames_events.emplace_back(std::pair<ChipFrame, RD53::Event>(ChipFrame(data[index], data[index + 1]), RD53::Event(&data[index + 2], size - 2)));
+        chip_frames_events.emplace_back(std::pair<ChipFrame, RD53::Event>(ChipFrame(data[index], data[index + 1]), RD53::Event(&data[index + 2], size - 2)));
 
         if(chip_frames_events.back().first.error_code != 0)
         {

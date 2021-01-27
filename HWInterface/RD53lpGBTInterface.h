@@ -137,7 +137,7 @@ class RD53lpGBTInterface : public lpGBTInterface
     uint8_t GetBERTStatus(Ph2_HwDescription::Chip* pChip);
     // Get BERT errors
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
-    // RunBER test LpGBT <--> frontend 
+    // RunBER test LpGBT <--> frontend
     bool RunPRBStest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pMeasTime, uint8_t pSkipDisable = false);
 
   private:

@@ -262,11 +262,11 @@ void RD53lpGBTInterface::ConfigureRxSource(Chip* pChip, const std::vector<uint8_
     for(const auto& cGroup: pGroups)
     {
         if(pSource == 0)
-	  LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "NORMAL " << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "NORMAL " << RESET;
         else if(pSource == 1)
-	  LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "PRBS7 " << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "PRBS7 " << RESET;
         else if(pSource == 4 || pSource == 5)
-	  LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "Constant Pattern" << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "Constant Pattern" << RESET;
 
         std::string cRxSourceReg;
         if(cGroup == 0 || cGroup == 1)
@@ -362,7 +362,7 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
         LOG(INFO) << GREEN << "Phase Aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
         do
         {
-	  std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         } while(!IsRxLocked(pChip, cGroup, pChannels));
         LOG(INFO) << GREEN << "Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " LOCKED" << RESET;
 

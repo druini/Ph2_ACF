@@ -25,8 +25,8 @@
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
 
-#include  <chrono>
-#include  <thread>
+#include <chrono>
+#include <thread>
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
