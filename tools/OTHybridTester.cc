@@ -374,3 +374,35 @@ bool OTHybridTester::LpGBTTestResetLines(uint8_t pLevel)
 #endif
     return cValid;
 }
+
+bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
+{
+    std::map<std::string, uint8_t> fGPILines;
+    if(p2SSEH) { fGPILines = f2SSEHGPILines; }
+    else
+    {
+        fGPILines = fPSROHGPILines;
+    }
+    bool cValid = true;
+    bool cReadGPI;
+    auto cMapIterator = fGPILines.begin();
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            do
+            {
+                D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+                cReadGPI                            = clpGBTInterface->ReadGPIO(cOpticalGroup->flpGBT, cMapIterator->second);
+                cValid = cValid && cReadGPI;
+                if(!cReadGPI) { LOG(INFO) << BOLDRED << "GPIO connected to " << cMapIterator->first << " is low!" << RESET; }
+                else
+                {
+                    LOG(INFO) << BOLDGREEN << "GPIO connected to " << cMapIterator->first << " is high!" << RESET;
+                }
+                cMapIterator++;
+            } while(cMapIterator != fGPILines.end());
+        }
+    }
+    return cValid;
+}

@@ -71,9 +71,19 @@ class OTHybridTester : public Tool
     void LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
     bool LpGBTTestResetLines(uint8_t pLevel);
     bool LpGBTTestFixedADCs(bool p2SSEH = false);
+    bool LpGBTTestGPILines(bool p2SSEH = false);
 
   private:
 #ifdef __TCUSB__
+
+    std::map<std::string, uint8_t> f2SSEHGPILines = {
+        {"PG2V5", 13},
+        {"PG1V25", 14},
+    };
+    std::map<std::string, uint8_t> fPSROHGPILines = {
+        {"PWRGOOD", 14},
+    };
+
     std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
                                                                           {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
                                                                           {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},

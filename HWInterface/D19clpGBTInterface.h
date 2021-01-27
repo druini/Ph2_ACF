@@ -151,7 +151,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // # LpGBT GPIO functions #
     // ########################
     void ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pInOut, uint8_t pHighLow, uint8_t pDriveStr, uint8_t pPullEn, uint8_t pPullUpDown);
-
+    bool ReadGPIO(Ph2_HwDescription::Chip* pChip, const uint8_t& pGPIO);
     // #####################
     // # LpGBT BERT Tester #
     // #####################

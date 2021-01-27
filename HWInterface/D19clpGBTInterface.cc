@@ -727,7 +727,13 @@ void D19clpGBTInterface::ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std
     WriteChipReg(pChip, "PIOUpDownH", cUpDownH);
     WriteChipReg(pChip, "PIOUpDownL", cUpDownL);
 }
-
+bool D19clpGBTInterface::ReadGPIO(Ph2_HwDescription::Chip* pChip, const uint8_t& pGPIO)
+{
+    LOG(INFO) << BOLDBLUE << "Reading GPIO value from " << pGPIO << RESET;
+    uint8_t cPIOInH = ReadChipReg(pChip, "PIOInH");
+    uint8_t cPIOInL = ReadChipReg(pChip, "PIOInL");
+    return ((cPIOInH << 8 | cPIOInL) >> pGPIO) & 1;
+}
 /*-------------------------------------------------------------------------*/
 /* Bit Error Rate Tester functions                                         */
 /*-------------------------------------------------------------------------*/
