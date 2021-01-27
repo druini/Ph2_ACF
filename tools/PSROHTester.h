@@ -12,7 +12,7 @@
 #define PSROHTester_h__
 #include "OTHybridTester.h"
 
-    using namespace Ph2_HwDescription;
+using namespace Ph2_HwDescription;
 
 class PSROHTester : public OTHybridTester
 {
