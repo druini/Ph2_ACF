@@ -612,12 +612,20 @@ int main(int argc, char** argv)
                         {
                             mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 2, false);
 
+			    // @TMP@
+			    // static_cast<RD53lpGBTInterface*>(mySysCntr.flpGBTInterface)->ConfigureRxPRBS(cOpticalGroup->flpGBT, {6}, {0}, true);
+			    // static_cast<RD53lpGBTInterface*>(mySysCntr.flpGBTInterface)->ConfigureRxSource(cOpticalGroup->flpGBT, {6}, 1);
+
                             LOG(INFO) << GREEN << "PRBS test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                       << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
                                       << ((static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getId()])->RunPRBStest(given_time, frames_or_time, cHybrid->getId(), cChip->getId()) == true)
                                               ? "PASSED"
                                               : "NOT PASSED")
                                       << RESET;
+
+			    // static_cast<RD53lpGBTInterface*>(mySysCntr.flpGBTInterface)->ConfigureRxPRBS(cOpticalGroup->flpGBT, {6}, {0}, false);
+
+			    // static_cast<RD53lpGBTInterface*>(mySysCntr.flpGBTInterface)->RunPRBStest(cOpticalGroup->flpGBT, 6, 0, frames_or_time);
 
                             mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 1, false);
                         }

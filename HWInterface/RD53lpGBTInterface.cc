@@ -262,11 +262,11 @@ void RD53lpGBTInterface::ConfigureRxSource(Chip* pChip, const std::vector<uint8_
     for(const auto& cGroup: pGroups)
     {
         if(pSource == 0)
-            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to NORMAL " << RESET;
+	  LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "NORMAL " << RESET;
         else if(pSource == 1)
-            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to PRBS7 " << RESET;
+	  LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "PRBS7 " << RESET;
         else if(pSource == 4 || pSource == 5)
-            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to Constant Pattern" << RESET;
+	  LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "Constant Pattern" << RESET;
 
         std::string cRxSourceReg;
         if(cGroup == 0 || cGroup == 1)
@@ -362,7 +362,7 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
         LOG(INFO) << GREEN << "Phase Aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
         do
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	  std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         } while(!IsRxLocked(pChip, cGroup, pChannels));
         LOG(INFO) << GREEN << "Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " LOCKED" << RESET;
 
@@ -551,7 +551,7 @@ uint16_t RD53lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInput)
     // Enable Internal VREF
     RD53lpGBTInterface::WriteChipReg(pChip, "VREFCNTR", 1 << 7);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // Start ADC conversion
     RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", 1 << 7 | 1 << 2);
@@ -644,45 +644,54 @@ uint64_t RD53lpGBTInterface::GetBERTErrors(Chip* pChip)
     return ((cResult4 << 32) | (cResult3 << 24) | (cResult2 << 16) | (cResult1 << 8) | cResult0);
 }
 
-float RD53lpGBTInterface::PerformBERTest(Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern)
+bool RD53lpGBTInterface::RunPRBStest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pMeasTime, uint8_t pSkipDisable)
+// #####################################
+// # PRBS test LpGBT <--> frontend     #
+// # group   6 == BERTSource group   7 #
+// # channel 0 == BERTSource channel 6 #
+// #####################################
 {
-    if(pPattern == 0)
-        LOG(INFO) << GREEN << "Performing BER test with PRBS" << RESET;
-    else
-    {
-        LOG(INFO) << GREEN << "Performing BER test with Constant Pattern" << RESET;
+    const uint32_t nBitInClkPeriod = 32; // 32 if 1.28 Gbit/s; 16 if 640 Mbit/s
 
-        RD53lpGBTInterface::ConfigureDPPattern(pChip, pPattern);
-        RD53lpGBTInterface::ConfigureBERTPattern(pChip, pPattern);
-    }
-    RD53lpGBTInterface::ConfigureBERT(pChip, pCoarseSource, pFineSource, pMeasTime, pSkipDisable, true);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    // ###############
+    // # Configuring #
+    // ###############
+    RD53lpGBTInterface::ConfigureRxSource(pChip, {pGroup}, 0);
+
+    // #########
+    // # Start #
+    // #########
+    RD53lpGBTInterface::ConfigureBERT(pChip, pGroup + 1 /* BERTSource group */, pChannel + 6 /* BERTSource channel */, pMeasTime, pSkipDisable, true /* start */);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     uint8_t cBERTStatus = RD53lpGBTInterface::GetBERTStatus(pChip);
     bool    cAllZeros   = ((cBERTStatus & (0x1 << 2)) >> 2) == 1;
 
-    if(cAllZeros == true) throw std::runtime_error(std::string("BERT: All zeros at input"));
+    if(cAllZeros == true) throw std::runtime_error(std::string("BERT: all zeros at input"));
 
     while((cBERTStatus & 0x1) != 1)
     {
         LOG(INFO) << GREEN << "BERT still running ... status is: " << BOLDYELLOW << std::bitset<3>(cBERTStatus) << RESET;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         cBERTStatus = RD53lpGBTInterface::GetBERTStatus(pChip);
     }
 
     LOG(INFO) << GREEN << "Reading BERT counter" << RESET;
 
     uint64_t cErrors      = RD53lpGBTInterface::GetBERTErrors(pChip);
-    uint32_t cBitsChecked = std::pow(2, 5 + pMeasTime * 2) * 16; // # @TMP@ : currently hard coded for 640 MHz
+    uint32_t cBitsChecked = std::pow(2, 5 + pMeasTime * 2) * nBitInClkPeriod;
 
     LOG(INFO) << GREEN << "Bits checked : " << BOLDYELLOW << +cBitsChecked << RESET << GREEN << " bits" << RESET;
     LOG(INFO) << GREEN << "Bits in error: " << BOLDYELLOW << +cErrors << RESET << GREEN << " bits" << RESET;
 
-    RD53lpGBTInterface::ConfigureBERT(pChip, pCoarseSource, pFineSource, pMeasTime, pSkipDisable, false);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    // ########
+    // # Stop #
+    // ########
+    RD53lpGBTInterface::ConfigureBERT(pChip, pGroup + 1, pChannel + 6, pMeasTime, pSkipDisable, false /* stop */);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
-    LOG(INFO) << "BER test done" << RESET;
+    LOG(INFO) << GREEN << "BER test done" << RESET;
 
-    return float(cErrors) / cBitsChecked;
+    return (cErrors == cBitsChecked);
 }
 } // namespace Ph2_HwInterface

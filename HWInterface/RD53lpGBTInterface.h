@@ -137,8 +137,8 @@ class RD53lpGBTInterface : public lpGBTInterface
     uint8_t GetBERTStatus(Ph2_HwDescription::Chip* pChip);
     // Get BERT errors
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
-    // Perform BER test
-    float PerformBERTest(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern);
+    // RunBER test LpGBT <--> frontend 
+    bool RunPRBStest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pMeasTime, uint8_t pSkipDisable = false);
 
   private:
     std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},
