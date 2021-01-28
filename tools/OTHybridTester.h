@@ -84,10 +84,10 @@ class OTHybridTester : public Tool
         {"PWRGOOD", 14},
     };
 
-    std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
-                                                                          {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
-                                                                          {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
-                                                                          {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
+    // std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
+    //                                                                       {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
+    //                                                                       {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
+    //                                                                       {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
 
     std::map<std::string, TC_PSROH::measurement> fResetLines             = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
@@ -128,7 +128,7 @@ class OTHybridTester : public Tool
   protected:
 #ifdef __TCUSB__
     TC_PSROH* fTC_PSROH;
-    TC_2SSEH* fTC_2SSEH;
+    //TC_2SSEH* fTC_2SSEH;
 #endif
 };
 

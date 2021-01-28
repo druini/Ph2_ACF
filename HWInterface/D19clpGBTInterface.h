@@ -249,10 +249,10 @@ class D19clpGBTInterface : public lpGBTInterface
                                                                 {"R_MPA", TC_PSROH::measurement::R_MPA_RST},
                                                                 {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
                                                                 {"R_SSA", TC_PSROH::measurement::R_SSA_RST}};
-    std::map<std::string, TC_2SSEH::resetMeasurement> fSehResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
-                                                                        {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
-                                                                        {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
-                                                                        {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
+    // std::map<std::string, TC_2SSEH::resetMeasurement> fSehResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
+    //                                                                     {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
+    //                                                                     {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
+    //                                                                     {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
 #endif
 };
 } // namespace Ph2_HwInterface
