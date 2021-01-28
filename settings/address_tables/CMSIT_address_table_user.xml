@@ -115,41 +115,76 @@
       <!-- <node id="Chips_en"             mask="0x000001FE"       permission="rw"      description="" /> -->
     </node>
 
-    <node id="Slow_cmd_fifo_din"     address="0x0000000D"     permission="rw"      mode="non-incremental"       description=""> </node>
+    <node id="Slow_cmd_fifo_din"    address="0x0000000D"      permission="rw"      mode="non-incremental"       description=""> </node>
 
-    <node id="Slow_cmd"              address="0x0000000E"     permission="rw"      description="">
-      <node id="fifo_prog_empty_thr"       mask="0x00000FFF"  permission="rw"      description="" />
-      <node id="fifo_reset"                mask="0x00001000"  permission="rw"      description="" />
-      <node id="dispatch_packet"           mask="0x00002000"  permission="rw"      description="" />
+    <node id="Slow_cmd"             address="0x0000000E"      permission="rw"      description="">
+      <node id="fifo_prog_empty_thr"  mask="0x00000FFF"       permission="rw"      description="" />
+      <node id="fifo_reset"           mask="0x00001000"       permission="rw"      description="" />
+      <node id="dispatch_packet"      mask="0x00002000"       permission="rw"      description="" />
     </node>
 
-    <node id="Register_RdBack"       address="0x0000000F"     permission="rw"      description="">
+    <node id="Register_RdBack"      address="0x0000000F"      permission="rw"      description="">
       <node id="fifo_reset"           mask="0x00000001"       permission="rw"      description="" />
       <node id="AutoRead_addr_a"      mask="0x0000003E"       permission="rw"      description="" />
       <node id="AutoRead_addr_b"      mask="0x000007C0"       permission="rw"      description="" />
     </node>
 
-    <node id="Aurora_block"       address="0x00000010"        permission="rw"      description="">
-      <node id="error_cntr_module_addr"   mask="0x0000000F"   permission="rw"      description="" />
-      <node id="error_cntr_chip_addr"     mask="0x00000070"   permission="rw"      description="" />
+    <node id="Aurora_block"          address="0x00000010"     permission="rw"      description="">
+      <node id="error_cntr_module_addr" mask="0x0000000F"     permission="rw"      description="" />
+      <node id="error_cntr_chip_addr"   mask="0x00000070"     permission="rw"      description="" />
     </node>
 
-    <node id="PRBS_checker"       address="0x00000011"    permission="rw"      description="">
-      <node id="reset_cntr"           mask="0x00000400"       permission="rw"      description="" />
-      <node id="error_cntr_sel"       mask="0x00000800"       permission="rw"      description="" />
-      <node id="chip_address"         mask="0x0000F000"       permission="rw"      description="" />
-      <node id="emulator_en"          mask="0x00010000"       permission="rw"      description="" />
-      <node id="start_checker"        mask="0x00040000"       permission="rw"      description="" />
-      <node id="stop_checker"         mask="0x00080000"       permission="rw"      description="" />
-      <node id="load_config"          mask="0x00100000"       permission="rw"      description="" />
-      <node id="module_addr"          mask="0xF0000000"       permission="rw"      description="" />
+    <node id="i2c_block"             address="0x00000011"     permission="rw"      description="">
+      <node id="dp_addr"                mask="0x0000000F"     permission="rw"      description="" />
     </node>
 
-    <node id="prbs_frames_to_run_low"  address="0x00000012"   permission="rw"      description=""> </node>
-    <node id="prbs_frames_to_run_high" address="0x00000013"   permission="rw"      description=""> </node>
+    <node id="PRBS_checker"          address="0x00000012"     permission="rw"      description="">
+      <node id="reset_cntr"             mask="0x00000001"     permission="rw"      description="Reset the PRBS counter" />
+      <node id="start_checker"          mask="0x00000002"     permission="rw"      description="Start the PRBS counter to monitor BER" />
+      <node id="stop_checker"           mask="0x00000004"     permission="rw"      description="Stop the PRBS counter" />
+      <node id="load_config"            mask="0x00000008"     permission="rw"      description="Load the configuration for PRBS tests (nb of frames to run etc)" />
+      <node id="error_cntr_sel"         mask="0x00000010"     permission="rw"      description="Select between Error Counter per Frame ('0') or per bit ('1')" />
+      <node id="upgroup_addr"           mask="0x000001E0"     permission="rw"      description="Address of the uplink group" />
+      <node id="emulator_en"            mask="0x00000200"     permission="rw"      description="Enable PRBS emulation (for fw debugging only)" />
+      <node id="chip_address"           mask="0x00001C00"     permission="rw"      description="Address of the chip for which PRBS output regs will be read. (IPBus status registers are MUXed)" />
+      <node id="module_addr"            mask="0x0001E000"     permission="rw"      description="Address of the module for which PRBS output regs will be read. (IPBus status registers are MUXed)" />
+    </node>
 
-    <node id="i2c_block"          address="0x00000014"        permission="rw"      description="">
-      <node id="dp_addr"              mask="0x0000000F"       permission="rw"      description="" />
+    <node id="prbs_frames_to_run_low"  address="0x00000013"   permission="rw"      description=""> </node>
+    <node id="prbs_frames_to_run_high" address="0x00000014"   permission="rw"      description=""> </node>
+
+    <!-- Optical Implementation -->
+    <node id="lpgbt_1"               address="0x00000015"     permission="rw"      description="Signals for Slow Control of lpgbt">
+      <node id="mgt_reset"              mask="0x00000001"     permission="rw"      description="Reset FPGA mgt bank" />
+      <node id="ic_tx_fifo_wr_en"       mask="0x00000002"     permission="rw"      description="Write Enable for SC Tx FIFO" />
+      <node id="ic_rx_fifo_rd_en"       mask="0x00000004"     permission="rw"      description="Read Enable for SC Rx FIFO" />
+      <node id="ic_send_wr_cmd"         mask="0x00000008"     permission="rw"      description="Send Write command to lpgbt" />
+      <node id="ic_send_rd_cmd"         mask="0x00000010"     permission="rw"      description="Send Read command to lpgbt" />
+      <node id="ic_tx_reset"            mask="0x00000020"     permission="rw"      description="Reset tx block of slow control module in fpga" />
+      <node id="ic_rx_reset"            mask="0x00000040"     permission="rw"      description="Reset rx block of slow control module in fpga" />
+      <node id="ic_tx_fifo_din"         mask="0x00007F80"     permission="rw"      description="Slow-Control Data to be transmited" />
+      <node id="ic_chip_addr_tx"        mask="0x007F8000"     permission="rw"      description="lpgbt address (always 0x70 for now)" />
+      <node id="active_link"            mask="0x07800000"     permission="rw"      description="select link for slow control (only one lpgbt at a time for now)" />
+    </node>
+
+    <node id="lpgbt_2"               address="0x00000016"     permission="rw"      description="Signals for Slow Control of lpgbt">
+      <node id="ic_reg_addr_tx"         mask="0x0000FFFF"     permission="rw"      description="lpgbt register address to read" />
+      <node id="ic_nb_of_words_to_read" mask="0xFFFF0000"     permission="rw"      description="nb of words to read through lpgbt sc" />
+    </node>
+
+    <node id="sfp_disable"           address="0x00000017"     permission="rw"      description="Configuration for SFP connectors">
+      <node id="l8"                     mask="0x00007FFF"     permission="rw"      description="disable for FMC L8 pins" />
+      <node id="l12"                    mask="0xFFFF8000"     permission="rw"      description="diasble for FMC L12 pins" />
+    </node>
+
+    <node id="sfp_tx_polarity"       address="0x00000018"     permission="rw"      description="Configuration for SFP connectors">
+      <node id="l8"                     mask="0x00007FFF"     permission="rw"      description="Polarity for FMC L8 TX pins" />
+      <node id="l12"                    mask="0xFFFF8000"     permission="rw"      description="Polarity for FMC L12 TX pins" />
+    </node>
+
+    <node id="sfp_rx_polarity"       address="0x00000019"     permission="rw"      description="Configuration for SFP connectors">
+      <node id="l8"                     mask="0x00007FFF"     permission="rw"      description="Polarity for FMC L8 RX pins" />
+      <node id="l12"                    mask="0xFFFF8000"     permission="rw"      description="Polarity for FMC L12 RX pins" />
     </node>
 
   </node>
@@ -266,9 +301,28 @@
     </node>
 
     <!-- Optical Link -->
-    <node id="prbs_ber_cntr"       address="0x00000018"        permission="r"> </node>
-    <node id="prbs_frame_cntr_low" address="0x00000019"        permission="r"> </node>
-    <node id="prbs_frame_cntr_high" address="0x0000001A"       permission="r"> </node>
+    <node id="lpgbt_fpga"           address="0x00000019"    permission="r"      description="Status Signals from the lpgbt-fpga core">
+      <node id="tx_ready"             mask="0x000000FF"     permission="r"      description="lpgbt-fpga tx ready, one bit per link" />
+      <node id="rx_ready"             mask="0x0000FF00"     permission="r"      description="lpgbt-fpga rx ready, one bit per link" />
+      <node id="mgt_ready"            mask="0x00FF0000"     permission="r"      description="fpga mgt ready, one bit per link" />
+    </node>
+
+    <node id="prbs_ber_cntr"        address="0x0000001A"    permission="r"> </node>
+    <node id="prbs_frame_cntr_low"  address="0x0000001B"    permission="r"> </node>
+    <node id="prbs_frame_cntr_high" address="0x0000001C"    permission="r"> </node>
+
+    <node id="lpgbt_sc_1"           address="0x0000001D"    permission="r"      description="Status Signals for the lpgbt Slow Control">
+      <node id="tx_ready"             mask="0x00000001"     permission="r"      description="lpgbt Slow Control tx ready" />
+      <node id="rx_empty"             mask="0x00000002"     permission="r"      description="lpgbt Slow Control rx ready" />
+      <node id="rx_fifo_dout"         mask="0x000003FC"     permission="r"      description="Read-back data from Slow Control Read Command" />
+      <node id="rx_chip_addr"         mask="0x0003FC00"     permission="r"      description="Chip Address from Slow Control Read Command" />
+      <node id="link_id"              mask="0x003C0000"     permission="r"      description="Current active link for Slow Control operation" />
+    </node>
+
+    <node id="lpgbt_sc_2"           address="0x0000001E"    permission="r"      description="Status Signals for the lpgbt Slow Control">
+      <node id="reg_addr_rx"          mask="0x0000FFFF"     permission="r"      description="Returned Register addres from Slow Control Read Command" />
+      <node id="nb_of_words_rx"       mask="0xFFFF0000"     permission="r"      description="Nb of received words from Slow Control Read Command" />
+    </node>
 
   </node>
 

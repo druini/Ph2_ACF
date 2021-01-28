@@ -20,6 +20,7 @@
 #include "../Utils/easylogging++.h"
 #include "BeBoardFWInterface.h"
 #include "D19cFpgaConfig.h"
+#include "RD53lpGBTInterface.h"
 #include <uhal/uhal.hpp>
 
 #include <omp.h>
@@ -27,14 +28,20 @@
 // #############
 // # CONSTANTS #
 // #############
-#define DEEPSLEEP 100000     // [microseconds]
 #define READOUTSLEEP 50      // [microseconds]
-#define MAXATTEMPTS 20       // Maximum number of attempts
 #define NWORDS_DDR3 4        // Number of IPbus words in a DDR3 word
 #define NLANE_HYBRID 4       // Number of lanes per hybrid
 #define HEADEAR_WRTCMD 0xFF  // Header of chip write command sequence
 #define NBIT_FWVER 16        // Number of bits for the firmware version
 #define IPBUS_FASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
+
+// #######################
+// # FW useful constants #
+// #######################
+namespace RD53FWconstants
+{
+const uint8_t MAXATTEMPTS = 20; // Maximum number of attempts
+}
 
 namespace RD53FWEvtEncoder
 {
@@ -86,11 +93,14 @@ class RD53FWInterface : public BeBoardFWInterface
     RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable);
     ~RD53FWInterface() { delete fFileHandler; }
 
+    // #############################
+    // # Override member functions #
+    // #############################
     void      setFileHandler(FileHandler* pHandler) override;
     uint32_t  getBoardInfo() override;
     BoardType getBoardType() const override { return BoardType::RD53; }
 
-    void ResetSequence();
+    void ResetSequence(const std::string& refClockRate);
     void ConfigureBoard(const Ph2_HwDescription::BeBoard* pBoard) override;
 
     void Start() override;
@@ -98,10 +108,18 @@ class RD53FWInterface : public BeBoardFWInterface
     void Pause() override;
     void Resume() override;
 
+    bool     RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override;
     void     ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true) override;
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
     void     ChipReset() override;
     void     ChipReSync() override;
+    // #############################
+
+    // ####################################
+    // # Check AURORA lock on data stream #
+    // ####################################
+    bool     CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
+    uint32_t ReadoutSpeed();
 
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
@@ -138,8 +156,7 @@ class RD53FWInterface : public BeBoardFWInterface
         uint32_t l1a_counter;
         uint32_t bx_counter;
 
-        std::vector<ChipFrame>                      chip_frames;
-        std::vector<Ph2_HwDescription::RD53::Event> chip_events;
+        std::vector<std::pair<ChipFrame, Ph2_HwDescription::RD53::Event>> chip_frames_events;
 
         uint16_t evtStatus;
 
@@ -235,13 +252,15 @@ class RD53FWInterface : public BeBoardFWInterface
 
     FastCommandsConfig* getLocalCfgFastCmd() { return &localCfgFastCmd; }
 
-    // ############################
-    // # Read/Write Optical Group #
-    // ############################
-    void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty) override;
-    void     ResetOptoLink(Ph2_HwDescription::Chip* pChip) override;
-    bool     WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress) override;
+    // ###################################
+    // # Read/Write Status Optical Group #
+    // ###################################
+    void     ResetOptoLinkSlowControl();
+    void     StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady);
+    void     ResetOptoLink() override;
+    void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
+    bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
+    uint32_t ReadOptoLinkRegister(uint32_t pAddress) override;
 
     // ###########################################
     // # Member functions to handle the firmware #
@@ -263,7 +282,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // ################################################
     // # I2C block for programming peripheral devices #
     // ################################################
-    bool I2cCmdAckWait(unsigned int trials);
+    bool I2cCmdAckWait(int nAttempts);
     void WriteI2C(std::vector<uint32_t>& data);
     void ReadI2C(std::vector<uint32_t>& data);
     void ConfigureClockSi5324();
@@ -276,11 +295,6 @@ class RD53FWInterface : public BeBoardFWInterface
     float calcTemperature(uint32_t sensor1, uint32_t sensor2, int beta = 3435);
     float calcVoltage(uint32_t senseVDD, uint32_t senseGND);
 
-    // ##############################
-    // # Pseudo Random Bit Sequence #
-    // ##############################
-    bool RunPRBStest(bool given_time, unsigned long long frames_or_time, uint16_t hybrid_id, uint16_t chip_id);
-
   private:
     void                  PrintFWstatus();
     void                  TurnOffFMC();
@@ -292,7 +306,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void                  ConfigureFastCommands(const FastCommandsConfig* config = nullptr);
     void                  ConfigureDIO5(const DIO5Config* config);
     void                  SendBoardCommand(const std::string& cmd_reg);
-    bool                  CheckChipCommunication();
     void                  InitHybridByHybrid(const Ph2_HwDescription::BeBoard* pBoard);
     std::vector<uint16_t> GetInitSequence(const unsigned int type);
     uint32_t              GetHybridEnabledChips(const Ph2_HwDescription::Hybrid* pHybrid);
@@ -300,14 +313,13 @@ class RD53FWInterface : public BeBoardFWInterface
     // ###################
     // # Clock generator #
     // ###################
-    void InitializeClockGenerator(bool doStoreInEEPROM = false);
+    void InitializeClockGenerator(const std::string& refClockRate = "160", bool doStoreInEEPROM = false);
     void ReadClockGenerator();
 
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
     bool               singleChip;
-    unsigned int       auroraSpeed;
     uint16_t           enabledHybrids;
 };
 
