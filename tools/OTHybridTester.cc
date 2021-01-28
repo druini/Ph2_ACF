@@ -32,7 +32,7 @@ void OTHybridTester::FindUSBHandler(bool b2SSEH)
     }
     if(!cThereIsLpGBT)
     {
-        if(b2SSEH) { //fTC_2SSEH = new TC_2SSEH(); }
+        if(b2SSEH) {} //fTC_2SSEH = new TC_2SSEH(); }
         else
         {
             fTC_PSROH = new TC_PSROH();

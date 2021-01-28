@@ -13,7 +13,7 @@
 #include "lpGBTInterface.h"
 #ifdef __TCUSB__
 #include "USB_a.h"
-#include "USB_libusb.h"
+//#include "USB_libusb.h"
 #endif
 
 namespace Ph2_HwInterface
