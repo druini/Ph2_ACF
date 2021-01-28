@@ -402,72 +402,72 @@ bool SEHTester::TestFixedADCs()
     return cReturn;
 }
 
-// bool SEHTester::ToyTestFixedADCs()
-// {
-//     bool cReturn;
-// #ifdef __USE_ROOT__
-//     auto                               cFixedADCsTree   = new TTree("ToyFixedADCs", "ToylpGBT ADCs not tied to AMUX");
-//      gStyle->SetOptStat(0);
-//     auto cADCHistogram= new TH2I("cToyADCHistogram","Toy Fixed ADC Histogram",6,0,6,1024,0,1024);
+/* bool SEHTester::ToyTestFixedADCs()
+{
+    bool cReturn;
+#ifdef __USE_ROOT__
+    auto                               cFixedADCsTree   = new TTree("ToyFixedADCs", "ToylpGBT ADCs not tied to AMUX");
+     gStyle->SetOptStat(0);
+    auto cADCHistogram= new TH2I("cToyADCHistogram","Toy Fixed ADC Histogram",6,0,6,1024,0,1024);
 
-//     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
-//     std::map<std::string, std::string> cADCsMap         = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
-//                                                    {"VMIN", "VMIN_Nominal"},
-//                                                    {"TEMPP","TEMPP_Nominal"},
-//                                                    {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
-//                                                    {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
-//                                                    {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
-//     auto                               cADCsMapIterator = cADCsMap.begin();
-//     float                                cADCValue;
-//     int cBinCount=1;
-//     float                              cConversionFactor = 1. / 1024.;
-//     std::vector<float> cADCValueVect;
-//     fillSummaryTree("ADC conversion factor", cConversionFactor);
-//     auto gRandom = new TRandom3();
-//         do
-//             {
-//                 cADCValueVect.clear();
-//                 cADCHistogram->GetXaxis()->SetBinLabel(cBinCount,cADCsMapIterator->first.c_str());
+    cADCHistogram->GetZaxis()->SetTitle("Number of entries");
+    std::map<std::string, std::string> cADCsMap         = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
+                                                   {"VMIN", "VMIN_Nominal"},
+                                                   {"TEMPP","TEMPP_Nominal"},
+                                                   {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
+                                                   {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
+                                                   {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
+    auto                               cADCsMapIterator = cADCsMap.begin();
+    float                                cADCValue;
+    int cBinCount=1;
+    float                              cConversionFactor = 1. / 1024.;
+    std::vector<float> cADCValueVect;
+    fillSummaryTree("ADC conversion factor", cConversionFactor);
+    auto gRandom = new TRandom3();
+        do
+            {
+                cADCValueVect.clear();
+                cADCHistogram->GetXaxis()->SetBinLabel(cBinCount,cADCsMapIterator->first.c_str());
 
-//                 for (int cIteration=0;cIteration<1000;++cIteration)
-//                 {
-//                     cADCValue = gRandom->Gaus(550.0, 50.0);
-//                     cADCValueVect.push_back(cADCValue);
-//                     cADCHistogram->Fill(cADCsMapIterator->first.c_str(),cADCValue,1);
-//                 }
-//                     // fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
+                for (int cIteration=0;cIteration<1000;++cIteration)
+                {
+                    cADCValue = gRandom->Gaus(550.0, 50.0);
+                    cADCValueVect.push_back(cADCValue);
+                    cADCHistogram->Fill(cADCsMapIterator->first.c_str(),cADCValue,1);
+                }
+                    // fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
 
-//                     fillSummaryTree(cADCsMapIterator->first, cADCValue * cConversionFactor);
-//                     float cDifference_V = std::fabs((fDefaultParameters[cADCsMapIterator->second]) - cADCValue * cConversionFactor);
+                    fillSummaryTree(cADCsMapIterator->first, cADCValue * cConversionFactor);
+                    float cDifference_V = std::fabs((fDefaultParameters[cADCsMapIterator->second]) - cADCValue * cConversionFactor);
 
-//                 // Still hard coded threshold for imidiate boolean result, actual values are stored
-//                 if(cDifference_V > 0.1)
-//                 {
-//                     LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
-//                               << fDefaultParameters[cADCsMapIterator->second] << " V" << RESET;
-//                     cReturn = false;
-//                 }
-//                 else
-//                 {
-//                     LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
-//                               << fDefaultParameters[cADCsMapIterator->second] << " V" << RESET;
-//                 }
+                // Still hard coded threshold for imidiate boolean result, actual values are stored
+                if(cDifference_V > 0.1)
+                {
+                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
+                              << fDefaultParameters[cADCsMapIterator->second] << " V" << RESET;
+                    cReturn = false;
+                }
+                else
+                {
+                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
+                              << fDefaultParameters[cADCsMapIterator->second] << " V" << RESET;
+                }
 
-//                 cADCsMapIterator++;cBinCount++;
+                cADCsMapIterator++;cBinCount++;
 
-//             } while(cADCsMapIterator != cADCsMap.end());
+            } while(cADCsMapIterator != cADCsMap.end());
 
-//     auto cToyADCCanvas = new TCanvas("tToyFixedADCs", "ToylpGBT ADCs not tied to AMUX", 1600, 900);
-//     cToyADCCanvas->SetRightMargin(0.2);
-//     cADCHistogram->GetXaxis()->SetTitle("ADC channel");
-//     cADCHistogram->GetYaxis()->SetTitle("ADC count");
+    auto cToyADCCanvas = new TCanvas("tToyFixedADCs", "ToylpGBT ADCs not tied to AMUX", 1600, 900);
+    cToyADCCanvas->SetRightMargin(0.2);
+    cADCHistogram->GetXaxis()->SetTitle("ADC channel");
+    cADCHistogram->GetYaxis()->SetTitle("ADC count");
 
-//     cADCHistogram->Draw("colz");
-//     cToyADCCanvas->Write();
-// #endif
+    cADCHistogram->Draw("colz");
+    cToyADCCanvas->Write();
+#endif
 
-//     return cReturn;
-// }
+    return cReturn;
+} */
 
 void SEHTester::TestCardVoltages()
 {

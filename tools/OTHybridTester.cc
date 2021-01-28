@@ -381,7 +381,7 @@ bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
     if(p2SSEH) { fGPILines = f2SSEHGPILines; }
     else
     {
-        fGPILines = fPSROHGPILines;
+        fGPILines = fPSROHGPILines; // On the TC the PWRGOOD is connected to a switch!
     }
     bool cValid = true;
     bool cReadGPI;
