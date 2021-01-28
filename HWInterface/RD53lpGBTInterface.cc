@@ -615,9 +615,9 @@ uint16_t RD53lpGBTInterface::ReadADCDiff(Chip* pChip, const std::string& pADCInp
     return (cADCvalue1 << 8 | cADCvalue2);
 }
 
-// #####################
-// # LpGBT BERT Tester #
-// #####################
+// #######################
+// # Bit Error Rate test #
+// #######################
 uint64_t RD53lpGBTInterface::GetBERTErrors(Chip* pChip)
 {
     uint64_t cResult0 = RD53lpGBTInterface::ReadChipReg(pChip, "BERTResult0");
@@ -629,11 +629,6 @@ uint64_t RD53lpGBTInterface::GetBERTErrors(Chip* pChip)
 }
 
 bool RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
-// #####################################
-// # BER test LpGBT <--> frontend      #
-// # group   6 == BERTSource group   7 #
-// # channel 0 == BERTSource channel 6 #
-// #####################################
 {
     const uint32_t nBitInClkPeriod = 32. / std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
