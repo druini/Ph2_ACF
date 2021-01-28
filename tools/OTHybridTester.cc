@@ -91,6 +91,7 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             if(pIsExternal)
@@ -100,7 +101,6 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
                 clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
-
             fBeBoardInterface->setBoard(cBoard->getId());
             D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
             cFWInterface->selectLink(cOpticalGroup->getId());
@@ -341,9 +341,10 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
 }
 
 void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t pLevel)
-{
+{   
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);

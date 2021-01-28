@@ -423,7 +423,7 @@ void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std:
     }
     PhaseTrainRx(pChip, pGroups, false);
     // Set back Rx groups to Fixed Phase tracking mode
-    // ConfigureRxGroups(pChip, pGroups, pChannels, 2, 0);
+    ConfigureRxGroups(pChip, pGroups, pChannels, 2, 0);
     // Turn off PRBS for channels 0,2
     ConfigureRxPRBS(pChip, pGroups, pChannels, false);
     // Set back Rx source to Normal data
@@ -637,7 +637,6 @@ void D19clpGBTInterface::ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, con
     // Setting Nth bit in this register attaches current DAC to ADCN pin. Current source can be attached to any number of channels
     uint8_t cCURDACCHN = 0;
     uint8_t cADCInput;
-
     for(auto cCurrentDACChannel: pCurrentDACChannels)
     {
         cADCInput = fADCInputMap[cCurrentDACChannel];
