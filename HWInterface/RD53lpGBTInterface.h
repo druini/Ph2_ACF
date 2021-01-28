@@ -29,14 +29,19 @@ class RD53lpGBTInterface : public lpGBTInterface
   public:
     RD53lpGBTInterface(const BeBoardFWMap& pBoardMap) : lpGBTInterface(pBoardMap) {}
 
-    // ###################################
-    // # LpGBT register access functions #
-    // ###################################
+    // #############################
+    // # Override member functions #
+    // #############################
     bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
+    bool     RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pMeasTime, uint8_t pSkipDisable = false) override;
+    void     StartPRBSpattern(Ph2_HwDescription::Chip* pChip) override;
+    void     StopPRBSpattern(Ph2_HwDescription::Chip* pChip) override;
+    // #############################
 
+  private:
     bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop = true);
     uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
 
@@ -137,10 +142,7 @@ class RD53lpGBTInterface : public lpGBTInterface
     uint8_t GetBERTStatus(Ph2_HwDescription::Chip* pChip);
     // Get BERT errors
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
-    // RunBER test LpGBT <--> frontend
-    bool RunPRBStest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pMeasTime, uint8_t pSkipDisable = false);
 
-  private:
     std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},
                                                    {"ADC1", 1},
                                                    {"ADC2", 2},

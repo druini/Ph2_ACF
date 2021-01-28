@@ -727,6 +727,11 @@ class D19cFWInterface : public BeBoardFWInterface
      */
     uint32_t ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
 
+    // ##############################
+    // # Pseudo Random Bit Sequence #
+    // ##############################
+    bool RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id) override { return true; };
+
     // ############################
     // # Read/Write Optical Group #
     // ############################

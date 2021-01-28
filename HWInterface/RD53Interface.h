@@ -28,6 +28,9 @@ class RD53Interface : public ReadoutChipInterface
   public:
     RD53Interface(const BeBoardFWMap& pBoardMap);
 
+    // #############################
+    // # Override member functions #
+    // #############################
     int      CheckChipID(Ph2_HwDescription::Chip* pChip, int chipIDfromDB);
     bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, bool pVerifLoop = true) override;
@@ -38,6 +41,10 @@ class RD53Interface : public ReadoutChipInterface
     bool     ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true) override;
     bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override;
+
+    void     StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+    void     StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+    // #############################
 
     void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard);
     void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1);

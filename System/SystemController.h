@@ -132,14 +132,14 @@ class SystemController
     /*!
      * \brief Initialize the Hardware via a config file
      * \param pFilename : HW Description file
-     *\param os : ostream to dump output
+     *\param os         : ostream to dump output
      */
     void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true, bool streamData = false);
 
     /*!
      * \brief Initialize the settings
-     * \param pFilename :   settings file
-     *\param os : ostream to dump output
+     * \param pFilename : settings file
+     *\param os         : ostream to dump output
      */
     void InitializeSettings(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true);
 
@@ -147,6 +147,15 @@ class SystemController
      * \brief Configure the Hardware with XML file indicated values
      */
     void ConfigureHw(bool bIgnoreI2c = false);
+
+    /*!
+     * \brief Run Bit Error Rate test
+     * \param chain2test     : which part of the chain to be tested
+     * \param given_time     : states if PRBS has to be run for a certain amount of time or for a certain amount of frames
+     * \param frames_or_time : time [s] or number of frames
+     * \return: none
+     */
+    void RunBERtest(std::string chain2test, bool given_time, double frames_or_time);
 
     /*!
      * \brief Read Monitor Data from pBoard

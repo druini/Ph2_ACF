@@ -365,10 +365,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
         return false;
     }
     else if(chips_en == 0)
-    {
-        LOG(ERROR) << BOLDRED << "\t--> No data lane is enabled: aborting" << RESET;
-        exit(EXIT_FAILURE);
-    }
+        throw Exception("[RD53FWInterface::CheckChipCommunication] No data lane is enabled: aborting");
     else
         LOG(INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
 
@@ -1006,8 +1003,8 @@ void RD53FWInterface::Event::fillDataContainer(BoardDataContainer* boardContaine
                     for(const auto& hit: chip_frames_events[chipIndx].second.hit_data)
                     {
                         cChip->getChannel<OccupancyAndPh>(hit.row + RD53::nRows * (hit.col)).fOccupancy++;
-                        cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPh += float(hit.tot);
-                        cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPhError += float(hit.tot * hit.tot);
+                        cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPh += static_cast<float>(hit.tot);
+                        cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPhError += static_cast<float>(hit.tot * hit.tot);
                         if(cTestChannelGroup->isChannelEnabled(hit.row, hit.col) == false) cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).readoutError = true;
                     }
                 }
@@ -1457,7 +1454,7 @@ void RD53FWInterface::DeleteFpgaConfig(const std::string& strId)
 
 void RD53FWInterface::CheckIfUploading()
 {
-    if(fpgaConfig && fpgaConfig->getUploadingFpga() > 0) throw Exception("This board is uploading an FPGA configuration");
+    if(fpgaConfig && fpgaConfig->getUploadingFpga() > 0) throw Exception("[RD53FWInterface::CheckIfUploading] This board is uploading an FPGA configuration");
 
     if(!fpgaConfig) fpgaConfig = new D19cFpgaConfig(this);
 }
@@ -1512,10 +1509,7 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
     else if(refClockRate == "320")
         SPIregSettings[1] = 0xEB820321;
     else
-    {
-        LOG(ERROR) << BOLDRED << "[RD53FWInterface::InitializeClockGenerator] CDCE reference clock rate not recognized: " << BOLDYELLOW << refClockRate << RESET;
-        exit(EXIT_FAILURE);
-    }
+        throw Exception("[RD53FWInterface::InitializeClockGenerator] CDCE reference clock rate not recognized");
 
     for(const auto value: SPIregSettings)
     {
@@ -1843,12 +1837,12 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
     return voltage;
 }
 
-// ##############################
-// # Pseudo Random Bit Sequence #
-// ##############################
-bool RD53FWInterface::RunPRBStest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id)
+// #######################
+// # Bit Error Rate test #
+// #######################
+bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id)
 {
-    const double fps        = 3.5E7;
+    const double fps        = 3.5e7;
     const int    n_prints   = 10; // Only an indication, the real number of printouts will be driven by the length of the time steps
     double       frames2run = 0;
     double       time2run   = 0;
@@ -1901,7 +1895,7 @@ bool RD53FWInterface::RunPRBStest(bool given_time, double frames_or_time, uint16
         auto     current_frame = bits::pack<32, 32>(cntr_hi, cntr_lo);
 
         // Print progress and intermediate BER information
-        float percent_done = current_frame / frames2run * 100.;
+        double percent_done = current_frame / frames2run * 100.;
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * (idx + 1) << RESET << GREEN << "s (" << BOLDYELLOW << percent_done << RESET << GREEN << "% done)" << RESET;
         LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << RegManager::ReadReg("user.stat_regs.prbs_ber_cntr") << RESET;
         if(given_time == true)

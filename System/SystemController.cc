@@ -175,6 +175,40 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os, bool pIsFile) { this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile); }
 
+void SystemController::RunBERtest(std::string chain2test, bool given_time, double frames_or_time)
+// ##############################
+// # chain2test = "BE-LPGBT-FE" #
+// # chain2test = "BE-LPGBR"    #
+// # chain2test = "LPGBRT-FE"   #
+// ##############################
+{
+    if((chain2test != "BE-LPGBT-FE") && (chain2test != "BE-LPGBT") && (chain2test != "LPGBRT-FE")) throw Exception("[SystemController::RunBERtest] Option non recognized");
+
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    if((chain2test == "BE-LPGBT-FE") || (chain2test == "LPGBRT-FE"))
+                        fReadoutChipInterface->StartPRBSpattern(cChip);
+                    else if(chain2test == "BE-LPGBT")
+                        flpGBTInterface->StartPRBSpattern(cOpticalGroup->flpGBT);
+
+                    LOG(INFO) << GREEN << "PRBS test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                              << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
+                              << ((((chain2test != "LPGBRT-FE") && (fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), cChip->getId()) == true)) ||
+                                   ((chain2test == "LPGBRT-FE") && (flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, 6, 0, frames_or_time) == true))) // @TMP@
+                                      ? "PASSED"
+                                      : "NOT PASSED")
+                              << RESET;
+
+                    if((chain2test == "BE-LPGBT-FE") || (chain2test == "LPGBRT-FE"))
+                        fReadoutChipInterface->StopPRBSpattern(cChip);
+                    else if(chain2test == "BE-LPGBT")
+                        flpGBTInterface->StopPRBSpattern(cOpticalGroup->flpGBT);
+                }
+}
+
 void SystemController::ConfigureHw(bool bIgnoreI2c)
 {
     if(fDetectorContainer == nullptr)
@@ -215,7 +249,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         cPUSMStatus = clpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
                         cIter++;
                     }
-                    if(cPUSMStatus != 18) exit(0);
+                    if(cPUSMStatus != 18) exit(EXIT_FAILURE);
                     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
                 }
                 uint8_t cLinkId = cOpticalGroup->getId();
@@ -243,7 +277,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         if(!cSuccess)
                         {
                             LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
-                            exit(0);
+                            exit(EXIT_FAILURE);
                         }
                         LOG(INFO) << BOLDMAGENTA << "CIC configured for " << ((cModeSelect == 0) ? "2S" : "PS") << " readout." << RESET;
                         // CIC start-up sequence

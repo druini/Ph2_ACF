@@ -21,6 +21,10 @@ class lpGBTInterface : public ChipInterface
   public:
     lpGBTInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap) {}
     virtual ~lpGBTInterface() {}
+
+    virtual bool RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pMeasTime, uint8_t pSkipDisable = false) = 0;
+    virtual void StartPRBSpattern(Ph2_HwDescription::Chip* pChip)                                                                              = 0;
+    virtual void StopPRBSpattern(Ph2_HwDescription::Chip* pChip)                                                                               = 0;
 };
 } // namespace Ph2_HwInterface
 

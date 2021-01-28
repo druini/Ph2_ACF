@@ -93,6 +93,9 @@ class RD53FWInterface : public BeBoardFWInterface
     RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable);
     ~RD53FWInterface() { delete fFileHandler; }
 
+    // #############################
+    // # Override member functions #
+    // #############################
     void      setFileHandler(FileHandler* pHandler) override;
     uint32_t  getBoardInfo() override;
     BoardType getBoardType() const override { return BoardType::RD53; }
@@ -105,10 +108,12 @@ class RD53FWInterface : public BeBoardFWInterface
     void Pause() override;
     void Resume() override;
 
+    bool     RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id) override;
     void     ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true) override;
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
     void     ChipReset() override;
     void     ChipReSync() override;
+    // #############################
 
     // ####################################
     // # Check AURORA lock on data stream #
@@ -289,11 +294,6 @@ class RD53FWInterface : public BeBoardFWInterface
     float ReadHybridVoltage(int hybridId);
     float calcTemperature(uint32_t sensor1, uint32_t sensor2, int beta = 3435);
     float calcVoltage(uint32_t senseVDD, uint32_t senseGND);
-
-    // ##############################
-    // # Pseudo Random Bit Sequence #
-    // ##############################
-    bool RunPRBStest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id);
 
   private:
     void                  PrintFWstatus();

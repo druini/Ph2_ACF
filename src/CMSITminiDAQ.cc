@@ -585,19 +585,18 @@ int main(int argc, char** argv)
         }
         else if((whichCalib == "prbstime") || (whichCalib == "prbsframes"))
         {
-            // #################
-            // # Run PRBS test #
-            // #################
-            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Pseudo Random Bit Sequence test @@@" << RESET;
+            // ################
+            // # Run BER test #
+            // ################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Bit Error Rate test @@@" << RESET;
 
             if(cmd.argument(0) == "")
             {
-                if(whichCalib == "prbstime") { LOG(ERROR) << BOLDRED << "Failed to specify duration of PRBS test; use \"-c prbstime <TIME IN SECONDS>\"" << RESET; }
+                if(whichCalib == "prbstime") { LOG(ERROR) << BOLDRED << "Failed to specify duration of PRBS test; use \"-c prbstime <TIME IN SECONDS (e.g. 10)>\"" << RESET; }
                 else if(whichCalib == "prbsframes")
                 {
-                    LOG(ERROR) << BOLDRED << "Failed to specify number of frames for PRBS test; use \"-c prbsframes <NUMBER OF FRAMES>\"" << RESET;
+                    LOG(ERROR) << BOLDRED << "Failed to specify number of frames for PRBS test; use \"-c prbsframes <NUMBER OF FRAMES (e.g. 1e9)>\"" << RESET;
                 }
-
                 exit(EXIT_FAILURE);
             }
 
@@ -605,30 +604,7 @@ int main(int argc, char** argv)
             bool   given_time     = false;
             if(whichCalib == "prbstime") given_time = true;
 
-            for(const auto cBoard: *mySysCntr.fDetectorContainer)
-                for(const auto cOpticalGroup: *cBoard)
-                    for(const auto cHybrid: *cOpticalGroup)
-                        for(const auto cChip: *cHybrid)
-                        {
-                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 2, false);
-
-                            // @TMP@
-                            // static_cast<RD53lpGBTInterface*>(mySysCntr.flpGBTInterface)->ConfigureRxPRBS(cOpticalGroup->flpGBT, {6}, {0}, true);
-                            // static_cast<RD53lpGBTInterface*>(mySysCntr.flpGBTInterface)->ConfigureRxSource(cOpticalGroup->flpGBT, {6}, 1);
-
-                            LOG(INFO) << GREEN << "PRBS test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                      << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
-                                      << ((static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getId()])->RunPRBStest(given_time, frames_or_time, cHybrid->getId(), cChip->getId()) == true)
-                                              ? "PASSED"
-                                              : "NOT PASSED")
-                                      << RESET;
-
-                            // static_cast<RD53lpGBTInterface*>(mySysCntr.flpGBTInterface)->ConfigureRxPRBS(cOpticalGroup->flpGBT, {6}, {0}, false);
-
-                            // static_cast<RD53lpGBTInterface*>(mySysCntr.flpGBTInterface)->RunPRBStest(cOpticalGroup->flpGBT, 6, 0, frames_or_time);
-
-                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 1, false);
-                        }
+            mySysCntr.RunBERtest("BE-LPGBT-FE", given_time, frames_or_time);
         }
         else if((program == false) && (whichCalib != ""))
         {

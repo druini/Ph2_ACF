@@ -96,7 +96,7 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
         nAttempts++;
     } while((pVerifLoop == true) && (status == false) && (nAttempts < RD53lpGBTconstants::MAXATTEMPTS));
 
-    if((pVerifLoop == true) && (status == false)) throw std::runtime_error(std::string("LpGBT register writing issue"));
+    if((pVerifLoop == true) && (status == false)) throw Exception("[RD53lpGBTInterface::WriteReg] LpGBT register writing issue");
 
     return true;
 }
@@ -644,7 +644,7 @@ uint64_t RD53lpGBTInterface::GetBERTErrors(Chip* pChip)
     return ((cResult4 << 32) | (cResult3 << 24) | (cResult2 << 16) | (cResult1 << 8) | cResult0);
 }
 
-bool RD53lpGBTInterface::RunPRBStest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pMeasTime, uint8_t pSkipDisable)
+bool RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pMeasTime, uint8_t pSkipDisable)
 // #####################################
 // # PRBS test LpGBT <--> frontend     #
 // # group   6 == BERTSource group   7 #
@@ -667,7 +667,7 @@ bool RD53lpGBTInterface::RunPRBStest(Chip* pChip, uint8_t pGroup, uint8_t pChann
     uint8_t cBERTStatus = RD53lpGBTInterface::GetBERTStatus(pChip);
     bool    cAllZeros   = ((cBERTStatus & (0x1 << 2)) >> 2) == 1;
 
-    if(cAllZeros == true) throw std::runtime_error(std::string("BERT: all zeros at input"));
+    if(cAllZeros == true) throw Exception("[RD53lpGBTInterface::RunBERtest] All zeros at input");
 
     while((cBERTStatus & 0x1) != 1)
     {
@@ -694,4 +694,12 @@ bool RD53lpGBTInterface::RunPRBStest(Chip* pChip, uint8_t pGroup, uint8_t pChann
 
     return (cErrors == cBitsChecked);
 }
+
+void RD53lpGBTInterface::StartPRBSpattern(Ph2_HwDescription::Chip* pChip)
+{
+    RD53lpGBTInterface::ConfigureRxPRBS(pChip, {6}, {0}, true); // @TMP@
+    RD53lpGBTInterface::ConfigureRxSource(pChip, {6}, 1);       // @TMP@
+}
+
+  void RD53lpGBTInterface::StopPRBSpattern(Ph2_HwDescription::Chip* pChip) { RD53lpGBTInterface::ConfigureRxPRBS(pChip, {6}, {0}, false); } // @TMP@
 } // namespace Ph2_HwInterface
