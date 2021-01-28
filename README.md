@@ -15,7 +15,8 @@
 4. `sudo chmod 744 /dev/sd_card_name` - to be able to play with it
 5. `./imgtool /dev/sd_card_name format Firmware` - to format the SD card
 6. Go to the folder were you saved the sdgoldenimage.img file
-7. `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512` - to write the image to the SD card
+7. `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512` - to write the image to the SD card. Alternatively, to only copy the needed bytes: `imageName=sdgoldenimage.img; dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device coun
+t=$(ls -s --block-size=1 $imageName | awk '{print $1}')`. If the SD card is partitioned (formatted), pay attention to write on the block devive (e.g. `/dev/mmcblk0`) and not inside the partition (e.g. `/dev/mmcblk0p1`)
 8. Once the previous command is done, you can list the SD card: `./imgtool /dev/sd_card_name list` - there should be a GoldenImage.bin, with 20MB block size
 9. Insert the SD card into the FC7
 
@@ -38,7 +39,7 @@ More informations can be found at https://indico.cern.ch/event/842824/attachment
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
 2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
 3. Restart the network: `sudo /etc/init.d/network restart`
-4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://centos.pkgs.org/6/epel-x86_64/rarpd-ss981107-42.el6.x86_64.rpm.html
+4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://archives.fedoraproject.org/pub/archive/epel/6/x86_64/Packages/r/rarpd-ss981107-42.el6.x86_64.rpm
 5. Start the rarpd daemon: `sudo systemctl start rarpd` or `rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
 
 More details on the hardware needed to setup the system can be bound here: https://espace.cern.ch/Tracker-Upgrade/DAQ/SitePages/Home.aspx

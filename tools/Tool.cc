@@ -149,14 +149,17 @@ void Tool::Destroy()
     LOG(INFO) << BOLDRED << "Destroying memory objects" << RESET;
     SystemController::Destroy();
 #ifdef __HTTP__
+    LOG(INFO) << BOLDRED << "Destroying HttpServer" << RESET;
     if(fHttpServer)
     {
         delete fHttpServer;
         fHttpServer = nullptr;
     }
+    LOG(INFO) << BOLDRED << "HttpServer Destroyed" << RESET;
 #endif
 
     SoftDestroy();
+    LOG(INFO) << BOLDRED << "Memory objects destroyed" << RESET;
 }
 
 void Tool::SoftDestroy()

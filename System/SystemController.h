@@ -48,6 +48,7 @@
 #include <unordered_map>
 #include <vector>
 
+class DetectorMonitor;
 /*!
  * \namespace Ph2_System
  * \brief Namespace regrouping the framework wrapper
@@ -76,7 +77,9 @@ class SystemController
     std::string        fRawFileName;
     bool               fWriteHandlerEnabled;
     bool               fStreamerEnabled;
+    std::future<void>  fMonitorFuture;
     TCPPublishServer*  fNetworkStreamer;
+    DetectorMonitor*   fDetectorMonitor;
 
     /*!
      * \brief Constructor of the SystemController class
