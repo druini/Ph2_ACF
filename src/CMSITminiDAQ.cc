@@ -592,11 +592,16 @@ int main(int argc, char** argv)
 
             if(cmd.argument(0) == "")
             {
-                if(whichCalib == "prbstime") { LOG(ERROR) << BOLDRED << "Failed to specify duration of PRBS test; use \"-c prbstime <TIME IN SECONDS (e.g. 10)>\"" << RESET; }
+                if(whichCalib == "prbstime") { LOG(ERROR) << BOLDRED << "Failed to specify duration of BER test; use \"-c prbstime <TIME IN SECONDS (e.g. 10)>\"" << RESET; }
                 else if(whichCalib == "prbsframes")
                 {
-                    LOG(ERROR) << BOLDRED << "Failed to specify number of frames for PRBS test; use \"-c prbsframes <NUMBER OF FRAMES (e.g. 1e9)>\"" << RESET;
+                    LOG(ERROR) << BOLDRED << "Failed to specify number of frames for BER test; use \"-c prbsframes <NUMBER OF FRAMES (e.g. 1e9)>\"" << RESET;
                 }
+                exit(EXIT_FAILURE);
+            }
+            if(cmd.argument(1) == "")
+            {
+                LOG(ERROR) << BOLDRED << "Failed to specify which connection to test [BE-LPGBT-FE, BE-LPGBT, BE-FE]" << RESET;
                 exit(EXIT_FAILURE);
             }
 
@@ -604,7 +609,7 @@ int main(int argc, char** argv)
             bool   given_time     = false;
             if(whichCalib == "prbstime") given_time = true;
 
-            mySysCntr.RunBERtest("BE-LPGBT-FE", given_time, frames_or_time);
+            mySysCntr.RunBERtest(cmd.argument(1), given_time, frames_or_time);
         }
         else if((program == false) && (whichCalib != ""))
         {

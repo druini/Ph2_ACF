@@ -42,8 +42,8 @@ const uint8_t  NSYNC_WORS        = 128;  // Number of Sync words for synchroniza
 const uint8_t  CDRCONFIG_ADDR    = 0x40; // Address of CDR_CONFIG register
 const uint16_t CDRCONFIG_1Gbit   = 1048; // Value for 1.28 Gbit/s
 const uint16_t CDRCONFIG_640Mbit = 1049; // Value for 640 Mbit/s
-const uint16_t PATTERN_PRBS      = 0x2;  // Start PRBS pattern
-const uint16_t PATTERN_AURORA    = 0x1;  // Start AURORA pattern
+const uint8_t  PATTERN_PRBS      = 0x2;  // Start PRBS pattern
+const uint8_t  PATTERN_AURORA    = 0x1;  // Start AURORA pattern
 } // namespace RD53Constants
 
 // ############
