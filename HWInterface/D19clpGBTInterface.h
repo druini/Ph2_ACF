@@ -252,7 +252,7 @@ class D19clpGBTInterface : public lpGBTInterface
     std::map<std::string, TC_2SSEH::resetMeasurement> fSehResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
                                                                         {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
                                                                         {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
-                                                                       {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
+                                                                        {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
 #endif
 };
 } // namespace Ph2_HwInterface

@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testADC"))
     {
         cPSROHTester.LpGBTTestFixedADCs();
-        
+
         std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
         cPSROHTester.LpGBTTestADC(cADCs, 0, 1000, 20);
     }
