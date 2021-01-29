@@ -72,13 +72,13 @@ int SEHTester::exampleFit()
     Zint[1] = Yint;
 
     fitter::Linear_Regression<float> Reg_Class;
-    Reg_Class.fit(Z);
+    Reg_Class.fit(X,Y);
     std::cout << "\n";
     std::cout << "Estimated Coefficients:\nb_0 = { " << Reg_Class.b_0 << " }  \
           \nb_1 = { "
               << Reg_Class.b_1 << " }" << std::endl;
     fitter::Linear_Regression<int> Reg_Classint;
-    Reg_Classint.fit(Zint);
+    Reg_Classint.fit(Xint,Yint);
     std::cout << "\n";
     std::cout << "Estimated Coefficients:\nb_0 = { " << Reg_Classint.b_0 << " }  \
           \nb_1 = { "
