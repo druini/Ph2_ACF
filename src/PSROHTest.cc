@@ -214,9 +214,9 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testADC"))
     {
         cPSROHTester.LpGBTTestFixedADCs();
-        //cPSROHTester.lpGBTexampleFit();
-        //std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
-        //cPSROHTester.LpGBTTestADC(cADCs, 0, 1000, 20);
+        
+        std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
+        cPSROHTester.LpGBTTestADC(cADCs, 0, 1000, 20);
     }
 
     // Test Fast Commands

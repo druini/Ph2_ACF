@@ -45,6 +45,6 @@ class Linear_Regression
     float b_0;
     float b_1;
 
-    void fit(std::vector<std::vector<T>> dataset) { estimate_coef<T>(dataset[0], dataset[1], b_1, b_0); }
+    void fit(std::vector<T> datasetX,std::vector<T> datasetY) { estimate_coef<T>(datasetX, datasetY, b_1, b_0); }
 };
 } // namespace fitter

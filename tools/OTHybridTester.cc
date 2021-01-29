@@ -15,52 +15,7 @@ OTHybridTester::~OTHybridTester()
 }
 
 
-int OTHybridTester::lpGBTexampleFit()
-{
-    std::vector<float>              X{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    std::vector<float>              Y{1, 3, 2, 5, 7, 8, 8, 9, 10, 12};
-    std::vector<int>                Xint{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    std::vector<int>                Yint{1, 3, 2, 5, 7, 8, 8, 9, 10, 12};
-    std::vector<std::vector<float>> Z(10);
-    Z[0] = X;
-    Z[1] = Y;
-    std::vector<std::vector<int>> Zint(10);
-    Zint[0] = Xint;
-    Zint[1] = Yint;
 
-    fitter::Linear_Regression<float> Reg_Class;
-    Reg_Class.fit(Z);
-    std::cout << "\n";
-    std::cout << "Estimated Coefficients:\nb_0 = { " << Reg_Class.b_0 << " }  \
-          \nb_1 = { "
-              << Reg_Class.b_1 << " }" << std::endl;
-    fitter::Linear_Regression<int> Reg_Classint;
-    Reg_Classint.fit(Zint);
-    std::cout << "\n";
-    std::cout << "Estimated Coefficients:\nb_0 = { " << Reg_Classint.b_0 << " }  \
-          \nb_1 = { "
-              << Reg_Classint.b_1 << " }" << std::endl;
-    LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Class.b_0 << "  Parameter 2   " << Reg_Class.b_1 << RESET;
-    LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Classint.b_0 << "  Parameter 2   " << Reg_Classint.b_1 << RESET;
-#ifdef __USE_ROOT__
-    auto cGraph = new TGraph(X.size(), X.data(), Y.data());
-    cGraph->Fit("pol1");
-    cGraph->SetName("test");
-    cGraph->SetTitle("test");
-    cGraph->SetLineColor(2);
-    cGraph->SetFillColor(0);
-    cGraph->SetLineWidth(3);
-    auto cCanvas = new TCanvas("test", "test", 1600, 900);
-    cGraph->Draw("AL*");
-
-    TF1* cFit = (TF1*)cGraph->GetListOfFunctions()->FindObject("pol1");
-    LOG(INFO) << BOLDBLUE << "Using ROOT: Parameter 1  " << cFit->GetParameter(0) << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
-
-    // cEfficencyCanvas->BuildLegend();
-    cCanvas->Write();
-#endif
-    return 0;
-}
 
 
 
@@ -234,7 +189,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             LOG(INFO) << BOLDMAGENTA << "Testing ADC channels" << RESET;
 
             fitter::Linear_Regression<int> cReg_Class;
-            std::vector<std::vector<int>>  cfitDataVect(51);
+            std::vector<std::vector<int>>  cfitDataVect(2);
 
             for(const auto& cADC: pADCs)
             {
@@ -267,7 +222,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 cDACtoADCMultiGraph->Add(cDACtoADCGraph);
                 cfitDataVect[0] = cDACValVect;
                 cfitDataVect[1] = cADCValVect;
-                cReg_Class.fit(cfitDataVect);
+                cReg_Class.fit(cDACValVect,cADCValVect);
                 cDACtoADCGraph->Fit("pol1");
 
                 TF1* cFit = (TF1*)cDACtoADCGraph->GetListOfFunctions()->FindObject("pol1");
