@@ -72,6 +72,7 @@ class OTHybridTester : public Tool
     bool LpGBTTestResetLines(uint8_t pLevel);
     bool LpGBTTestFixedADCs(bool p2SSEH = false);
     bool LpGBTTestGPILines(bool p2SSEH = false);
+    
 
   private:
 #ifdef __TCUSB__
@@ -86,8 +87,8 @@ class OTHybridTester : public Tool
 
     std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
                                                                           {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
-                                                                          {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
-                                                                          {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
+                                                                         {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
+    {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
 
     std::map<std::string, TC_PSROH::measurement> fResetLines             = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
@@ -106,7 +107,7 @@ class OTHybridTester : public Tool
                                                             {"PTAT_BPOL12V_Nominal", 0.6}};
     std::map<std::string, std::string>           f2SSEHADCInputMap =
         {{"AMUX_L", "ADC0"}, {"VMON_P1V25_L", "ADC1"}, {"VMIN", "ADC2"}, {"AMUX_R", "ADC3"}, {"TEMPP", "ADC4"}, {"VTRX+_RSSI_ADC", "ADC5"}, {"PTAT_BPOL2V5", "ADC6"}, {"PTAT_BPOL12V", "ADC7"}};
-    std::map<std::string, std::string> fPSPOHADCInputMap       = {{"L_AMUX_OUT", "ADC0"},
+    std::map<std::string, std::string> fPSROHADCInputMap       = {{"L_AMUX_OUT", "ADC0"},
                                                             {"1V_MONITOR", "ADC1"},
                                                             {"12V_MONITOR_VD", "ADC2"},
                                                             {"R_AMUX_OUT", "ADC3"},

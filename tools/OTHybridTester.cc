@@ -14,6 +14,13 @@ OTHybridTester::~OTHybridTester()
 #endif
 }
 
+
+
+
+
+
+
+
 void OTHybridTester::FindUSBHandler(bool b2SSEH)
 {
 #ifdef __TCUSB__
@@ -91,6 +98,7 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             if(pIsExternal)
@@ -100,7 +108,6 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
                 clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
-
             fBeBoardInterface->setBoard(cBoard->getId());
             D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
             cFWInterface->selectLink(cOpticalGroup->getId());
@@ -182,7 +189,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             LOG(INFO) << BOLDMAGENTA << "Testing ADC channels" << RESET;
 
             fitter::Linear_Regression<int> cReg_Class;
-            std::vector<std::vector<int>>  cfitDataVect;
+            std::vector<std::vector<int>>  cfitDataVect(2);
 
             for(const auto& cADC: pADCs)
             {
@@ -215,7 +222,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 cDACtoADCMultiGraph->Add(cDACtoADCGraph);
                 cfitDataVect[0] = cDACValVect;
                 cfitDataVect[1] = cADCValVect;
-                cReg_Class.fit(cfitDataVect);
+                cReg_Class.fit(cDACValVect,cADCValVect);
                 cDACtoADCGraph->Fit("pol1");
 
                 TF1* cFit = (TF1*)cDACtoADCGraph->GetListOfFunctions()->FindObject("pol1");
@@ -246,6 +253,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
     bool                               cReturn;
     std::map<std::string, std::string> cADCsMap;
     std::map<std::string, float>*      cDefaultParameters;
+    std::map<std::string, std::string> *cADCNametoPinMapping;
 #ifdef __USE_ROOT__
     auto cFixedADCsTree = new TTree("FixedADCs", "lpGBT ADCs not tied to AMUX");
     gStyle->SetOptStat(0);
@@ -259,6 +267,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                     {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
                     {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
         cDefaultParameters = &f2SSEHDefaultParameters;
+        cADCNametoPinMapping=&f2SSEHADCInputMap;
     }
     else
     {
@@ -269,6 +278,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                     {"1V25_MONITOR", "1V25_MONITOR_Nominal"},
                     {"2V55_MONITOR", "2V55_MONITOR_Nominal"}};
         cDefaultParameters = &fPSROHDefaultParameters;
+        cADCNametoPinMapping=&fPSROHADCInputMap;
     }
     auto cADCHistogram = new TH2I("cADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
@@ -299,7 +309,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
 
                 for(int cIteration = 0; cIteration < 10; ++cIteration)
                 {
-                    cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADCsMapIterator->first);
+                    cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, (*cADCNametoPinMapping)[cADCsMapIterator->first]);
                     cADCValueVect.push_back(cADCValue);
                     cADCHistogram->Fill(cADCsMapIterator->first.c_str(), cADCValue, 1);
                 }
@@ -313,13 +323,13 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                 // Still hard coded threshold for imidiate boolean result, actual values are stored
                 if(cDifference_V > 0.1)
                 {
-                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
+                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << mean * cConversionFactor << " V, nominal value is "
                               << (*cDefaultParameters)[cADCsMapIterator->second] << " V" << RESET;
                     cReturn = false;
                 }
                 else
                 {
-                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
+                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << mean * cConversionFactor << " V, nominal value is "
                               << (*cDefaultParameters)[cADCsMapIterator->second] << " V" << RESET;
                 }
 
@@ -341,9 +351,10 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
 }
 
 void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t pLevel)
-{
+{   
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
