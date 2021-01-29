@@ -28,7 +28,7 @@ SystemController::SystemController()
     , fRawFileName("")
     , fWriteHandlerEnabled(false)
     , fStreamerEnabled(false)
-    , fNetworkStreamer(nullptr) // This is the server listening port
+    , fNetworkStreamer(nullptr)
     , fDetectorMonitor(nullptr)
 {
 }
