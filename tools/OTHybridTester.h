@@ -72,6 +72,7 @@ class OTHybridTester : public Tool
     bool LpGBTTestResetLines(uint8_t pLevel);
     bool LpGBTTestFixedADCs(bool p2SSEH = false);
     bool LpGBTTestGPILines(bool p2SSEH = false);
+    int  lpGBTexampleFit();
 
   private:
 #ifdef __TCUSB__
@@ -106,7 +107,7 @@ class OTHybridTester : public Tool
                                                             {"PTAT_BPOL12V_Nominal", 0.6}};
     std::map<std::string, std::string>           f2SSEHADCInputMap =
         {{"AMUX_L", "ADC0"}, {"VMON_P1V25_L", "ADC1"}, {"VMIN", "ADC2"}, {"AMUX_R", "ADC3"}, {"TEMPP", "ADC4"}, {"VTRX+_RSSI_ADC", "ADC5"}, {"PTAT_BPOL2V5", "ADC6"}, {"PTAT_BPOL12V", "ADC7"}};
-    std::map<std::string, std::string> fPSPOHADCInputMap       = {{"L_AMUX_OUT", "ADC0"},
+    std::map<std::string, std::string> fPSROHADCInputMap       = {{"L_AMUX_OUT", "ADC0"},
                                                             {"1V_MONITOR", "ADC1"},
                                                             {"12V_MONITOR_VD", "ADC2"},
                                                             {"R_AMUX_OUT", "ADC3"},

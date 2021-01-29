@@ -461,7 +461,7 @@ void Tool::SaveResults()
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
     // Save summary TTree
-    fSummaryTree->Write();
+    //fSummaryTree->Write();
 
 #endif
 
