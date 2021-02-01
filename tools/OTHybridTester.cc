@@ -306,7 +306,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                     cADCValueVect.push_back(cADCValue);
                     cADCHistogram->Fill(cADCsMapIterator->first.c_str(), cADCValue, 1);
                 }
-                // fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
+                
 
                 fillSummaryTree(cADCsMapIterator->first, cADCValue * cConversionFactor);
                 float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
