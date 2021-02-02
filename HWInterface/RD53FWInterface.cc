@@ -789,7 +789,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 
      if(retry == true)
      {
-         LOG(ERROR) << BOLDRED << "Reached maximum number of attempts (" << BOLDYELLOW << RD53FWconstants::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
+         LOG(ERROR) << BOLDRED << "Reached maximum number of attempts (" << BOLDYELLOW << +RD53FWconstants::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
          pData.clear();
      }
 
