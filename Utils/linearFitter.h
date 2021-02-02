@@ -20,6 +20,9 @@ void estimate_coef(std::vector<T> indep_var, std::vector<T> dep_var, float& B_1,
     float Y_mean = sumY / (dep_var.size());
     float SS_xy  = 0;
     float SS_xx  = 0;
+    double Delta = 0;
+    double delta_B1=0;
+    double delta_B0=0;
     int   n      = indep_var.size();
     {
         SS_xy = std::inner_product(indep_var.begin(), indep_var.end(), dep_var.begin(), 0);
@@ -35,6 +38,20 @@ void estimate_coef(std::vector<T> indep_var, std::vector<T> dep_var, float& B_1,
     // std::cout << "Y_mean : " << Y_mean << std::endl;
     B_1 = SS_xy / SS_xx;
     B_0 = Y_mean - B_1 * X_mean;
+    double SS_ab=0;
+    for (int index = 0; index < indep_var.size(); ++index)
+    {
+    SS_ab+=pow(B_1*indep_var[index]+B_0-dep_var[index],2);
+    }
+    Delta=std::sqrt(1./(n-2)/SS_ab);
+    std::cout << "Delta : " << Delta << std::endl;
+    std::cout << "SS_ab : " << SS_ab << std::endl;
+    //delta_B1=Delta*std::sqrt(1./(SS_xx-pow(X_mean,2)*n));
+    delta_B1=Delta*std::sqrt(1./(double)n/(1./(double)n*std::inner_product(indep_var.begin(), indep_var.end(), indep_var.begin(), 0)-X_mean*X_mean));
+    std::cout << "B1_error : " << delta_B1 << std::endl;
+    delta_B0=Delta*std::sqrt(std::inner_product(indep_var.begin(), indep_var.end(), indep_var.begin(), 0)/(double)n/SS_xx);
+    //delta_B0=Delta*std::sqrt(X_mean/(SS_xx-pow(X_mean,2)*n));
+    std::cout << "B0_error : " << delta_B0 << std::endl;
 }
 
 template <typename T>

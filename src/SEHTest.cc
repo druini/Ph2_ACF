@@ -163,6 +163,7 @@ int main(int argc, char* argv[])
 
     // Initialize BackEnd & Control LpGBT Tester
     SEHTester cSEHTester;
+    cSEHTester.exampleFit();
     cSEHTester.Inherit(&cTool);
     cSEHTester.FindUSBHandler(true);
     if(cmd.foundOption("test-parameter"))
