@@ -369,9 +369,9 @@ void SCurve::computeStats(const std::vector<float>& measurements, int offset, fl
     for(auto i = 0u; i < dacList.size()-1; i++)
     {
         auto dacCenter = (dacList[i] + dacList[i+1]) / 2.;
+
         mean += measurements[i] * (dacCenter - offset);
         weight += measurements[i];
-
         mean2 += measurements[i] * (dacCenter - offset) * (dacCenter - offset);
     }
 

@@ -189,7 +189,7 @@ void ThrAdjustment::fillHisto()
 #endif
 }
 
-void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, uint16_t target, uint16_t startValue, uint16_t stopValue)
+void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, float target, uint16_t startValue, uint16_t stopValue)
 {
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
@@ -239,22 +239,19 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, uint32_t nEven
                     int hybridId = cHybrid->getId();
 
                     for(const auto cChip: *cHybrid)
-                    {                    
-                        // Set VCAL_HIGH to get target threshold
-                        uint16_t vcal_med_setting  = static_cast<RD53*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()))->getReg("VCAL_MED");
+                    {
+                        // #########################################
+                        // # Set VCAL_HIGH to get target threshold #
+                        // #########################################
+                        uint16_t vcal_med_setting =
+                            static_cast<RD53*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()))->getReg("VCAL_MED");
                         uint16_t vcal_high_setting = round(RD53chargeConverter::Charge2VCal(target)) + vcal_med_setting;
 
-                        static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackChipCommands(cChip,
-                                                "VCAL_HIGH",
-                                                vcal_high_setting,
-                                                chipCommandList,
-                                                true);
+                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackChipCommands(cChip, "VCAL_HIGH", vcal_high_setting, chipCommandList, true);
 
-                        LOG(INFO) << GREEN << "The target threshold is "<< BOLDYELLOW  << target << " electrons. " << RESET;
-                        LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " 
-                                  << BOLDYELLOW << "VCAL_HIGH" << RESET << GREEN << " = " << BOLDYELLOW << vcal_high_setting << RESET << GREEN << " for "
-                                  << BOLDYELLOW << "VCAL_MED"  << RESET << GREEN << " = " << BOLDYELLOW << vcal_med_setting << RESET;
+                        LOG(INFO) << GREEN << "The target threshold is " << std::setprecision(1) << BOLDYELLOW << target << RESET << GREEN << " electrons" << RESET;
+                        LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << RESET << GREEN << " = " << BOLDYELLOW << vcal_high_setting << RESET << GREEN
+                                  << " for " << BOLDYELLOW << "VCAL_MED" << RESET << GREEN << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
 
                         midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                             (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +

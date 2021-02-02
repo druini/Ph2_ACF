@@ -210,6 +210,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     RD53Interface::sendCommand(static_cast<RD53*>(pChip), RD53Cmd::WrReg(pChip->getId(), pChip->getRegItem(regName).fAddress, data));
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
 
+    bool status = true;
     if(pVerifLoop == true)
     {
         if(regName == "PIX_PORTAL")
@@ -219,15 +220,17 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
             {
                 auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), regName);
                 auto row         = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
-                if(regReadback.size() == 0 /* @TMP@ */ || regReadback[0].first != row || regReadback[0].second != data)
-                {
-                    LOG(ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << regName << RESET;
-                    return false;
-                }
+                if(regReadback.size() == 0 /* @TMP@ */ || regReadback[0].first != row || regReadback[0].second != data) status = false;
             }
         }
         else if(data != RD53Interface::ReadChipReg(pChip, regName))
-            return false;
+            status = false;
+    }
+
+    if(status == false)
+    {
+        LOG(ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << regName << RESET;
+        return false;
     }
 
     pChip->setReg(regName, data);
@@ -252,7 +255,7 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
         auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), regName);
         if(regReadback.size() == 0)
         {
-            LOG(WARNING) << BLUE << "Empty register readback, attempt n. " << YELLOW << attempt << RESET;
+            LOG(WARNING) << BLUE << "Empty register readback, attempt n. " << YELLOW << attempt << BLUE << "/" << YELLOW << nAttempts << RESET;
             std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP));
         }
         else
