@@ -185,6 +185,7 @@ int main(int argc, char* argv[])
         // cBackEndAligner.Reset();
     }
     // Test PS ROH Reset Lines
+    cPSROHTester.LpGBTTestGPILines();
     if(cmd.foundOption("testReset"))
     {
         std::vector<std::pair<string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
