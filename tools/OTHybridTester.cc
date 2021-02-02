@@ -394,7 +394,7 @@ bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            do
+            while(cMapIterator != fGPILines.end())
             {
                 D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                 cReadGPI                            = clpGBTInterface->ReadGPIO(cOpticalGroup->flpGBT, cMapIterator->second);
@@ -405,7 +405,7 @@ bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
                     LOG(INFO) << BOLDGREEN << "GPIO connected to " << cMapIterator->first << " is high!" << RESET;
                 }
                 cMapIterator++;
-            } while(cMapIterator != fGPILines.end());
+            } 
         }
     }
     return cValid;
