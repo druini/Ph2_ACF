@@ -27,7 +27,7 @@ More informations can be found at https://indico.cern.ch/event/842824/attachment
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 14/12/2020
++ Last change made to this section: 02/02/2021
 ```
 
 **Suggested software and firmware versions:**
