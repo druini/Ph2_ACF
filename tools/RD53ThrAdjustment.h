@@ -40,11 +40,8 @@ class ThrAdjustment : public PixelAlive
     size_t getNumberIterations()
     {
         uint16_t nIterationsThr     = floor(log2(ThrStop - ThrStart + 1) + 1);
-        uint16_t moreIterationsThr  = 1;
-        uint16_t nIterationsVCal    = floor(log2(VCalStop - VCalStart + 1) + 1);
-        uint16_t moreIterationsVCal = 1;
-        uint16_t moreIterations     = 1;
-        return PixelAlive::getNumberIterations() * ((nIterationsThr + moreIterationsThr) * (nIterationsVCal + moreIterationsVCal) + moreIterations);
+        uint16_t moreIterations     = 1 + 1;
+        return PixelAlive::getNumberIterations() * (nIterationsThr + moreIterations);
     }
     void saveChipRegisters(int currentRun);
 
@@ -69,8 +66,7 @@ class ThrAdjustment : public PixelAlive
     DetectorDataContainer theThrContainer;
 
     void                                   fillHisto();
-    void                                   bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
-    std::shared_ptr<DetectorDataContainer> bitWiseScanGlobal_MeasureThr(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+    void                                   bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, uint16_t target, uint16_t startValue, uint16_t stopValue);
     void                                   chipErrorReport();
 
   protected:
