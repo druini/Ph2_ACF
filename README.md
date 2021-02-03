@@ -40,7 +40,7 @@ More informations can be found at https://indico.cern.ch/event/842824/attachment
 2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
 3. Restart the network: `sudo /etc/init.d/network restart`
 4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://archives.fedoraproject.org/pub/archive/epel/6/x86_64/Packages/r/rarpd-ss981107-42.el6.x86_64.rpm
-5. Start the rarpd daemon: `sudo systemctl start rarpd` or `rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
+5. Start the rarpd daemon: `sudo rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
 
 More details on the hardware needed to setup the system can be bound here: https://espace.cern.ch/Tracker-Upgrade/DAQ/SitePages/Home.aspx
 
