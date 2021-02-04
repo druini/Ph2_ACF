@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
         if(progress == 100)
         {
             cDone = 1;
-            LOG(INFO) << BOLDBLUE << "\n 100% Done" << RESET;
+            LOG(INFO) << BOLDBLUE << ">>> 100% Done <<<" << RESET;
         }
         else
         {
