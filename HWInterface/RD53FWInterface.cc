@@ -1281,7 +1281,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
          {
              RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
              RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger;
-             RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger  = 0;
+             RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger  = INJdelay::Loop;
          }
      }
      else
