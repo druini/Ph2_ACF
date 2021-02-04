@@ -62,6 +62,7 @@ int SEHTester::exampleFit()
 {
     std::vector<float>              X{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     std::vector<float>              Y{1, 3, 2, 5, 7, 8, 8, 9, 10, 12};
+    std::vector<float>              Yerrors{0, 2, 5, 2, 1, 1, 2, 0, 2, 3};
     std::vector<int>                Xint{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     std::vector<int>                Yint{1, 3, 2, 5, 7, 8, 8, 9, 10, 12};
     std::vector<std::vector<float>> Z(10);
@@ -72,7 +73,7 @@ int SEHTester::exampleFit()
     Zint[1] = Yint;
 
     fitter::Linear_Regression<float> Reg_Class;
-    Reg_Class.fit(X, Y);
+    Reg_Class.fit(X, Y, Yerrors);
     std::cout << "\n";
     std::cout << "Estimated Coefficients:\nb_0 = { " << Reg_Class.b_0 << " }  \
           \nb_1 = { "
@@ -83,10 +84,11 @@ int SEHTester::exampleFit()
     std::cout << "Estimated Coefficients:\nb_0 = { " << Reg_Classint.b_0 << " }  \
           \nb_1 = { "
               << Reg_Classint.b_1 << " }" << std::endl;
-    LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Class.b_0 << "  Parameter 2   " << Reg_Class.b_1 << RESET;
-    LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Classint.b_0 << "  Parameter 2   " << Reg_Classint.b_1 << RESET;
+    LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Class.b_0 << " +/- " << Reg_Class.b_0_error << "  Parameter 2   " << Reg_Class.b_1 << " +/- " << Reg_Class.b_1_error << RESET;
+    LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Classint.b_0 << " +/- " << Reg_Classint.b_0_error << "  Parameter 2   " << Reg_Classint.b_1 << " +/- " << Reg_Classint.b_1_error
+              << RESET;
 #ifdef __USE_ROOT__
-    auto cGraph = new TGraph(X.size(), X.data(), Y.data());
+    auto cGraph = new TGraphErrors(X.size(), X.data(), Y.data(), 0, Yerrors.data());
     cGraph->Fit("pol1");
     cGraph->SetName("test");
     cGraph->SetTitle("test");
@@ -97,7 +99,8 @@ int SEHTester::exampleFit()
     cGraph->Draw("AL*");
 
     TF1* cFit = (TF1*)cGraph->GetListOfFunctions()->FindObject("pol1");
-    LOG(INFO) << BOLDBLUE << "Using ROOT: Parameter 1  " << cFit->GetParameter(0) << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
+    LOG(INFO) << BOLDBLUE << "Using ROOT: Parameter 1  " << cFit->GetParameter(0) << " +/- " << cFit->GetParError(0) << "  Parameter 2   " << cFit->GetParameter(1) << " +/- " << cFit->GetParError(1)
+              << RESET;
 
     // cEfficencyCanvas->BuildLegend();
     cCanvas->Write();

@@ -306,7 +306,6 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                     cADCValueVect.push_back(cADCValue);
                     cADCHistogram->Fill(cADCsMapIterator->first.c_str(), cADCValue, 1);
                 }
-                
 
                 fillSummaryTree(cADCsMapIterator->first, cADCValue * cConversionFactor);
                 float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
@@ -405,7 +404,7 @@ bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
                     LOG(INFO) << BOLDGREEN << "GPIO connected to " << cMapIterator->first << " is high!" << RESET;
                 }
                 cMapIterator++;
-            } 
+            }
         }
     }
     return cValid;
