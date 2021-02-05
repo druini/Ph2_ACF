@@ -154,7 +154,11 @@ class D19clpGBTInterface : public lpGBTInterface
     // get BERT errors
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
     // perform BER test
-    float PerformBERTest(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern);
+    float PerformPRBSTest(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern);
+    bool  RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0) override { return true; }
+
+    void StartPRBSpattern(Ph2_HwDescription::Chip* pChip) override {};
+    void StopPRBSpattern(Ph2_HwDescription::Chip* pChip) override {};
 
     // ###################################
     // # Outer Tracker specific funtions #

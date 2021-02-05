@@ -25,6 +25,9 @@
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
 
+#include <chrono>
+#include <thread>
+
 #ifdef __USE_ROOT__
 #include "TApplication.h"
 #endif
@@ -36,7 +39,7 @@
 // ##################
 // # Default values #
 // ##################
-#define ARBITRARYDELAY 2e6 // [us]
+#define ARBITRARYDELAY 2 // [seconds]
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -92,7 +95,10 @@ int main(int argc, char** argv)
     // ##################
     if(doReset == true)
     {
-        static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence();
+        if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
+            static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("160");
+        else
+            static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
         return EXIT_SUCCESS;
     }
 
@@ -131,7 +137,7 @@ int main(int argc, char** argv)
     {
         ph.localConfigure(fileName, -1);
         ph.Start(runNumber);
-        usleep(ARBITRARYDELAY);
+        std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
         ph.Stop();
     }
     else

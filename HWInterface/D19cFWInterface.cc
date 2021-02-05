@@ -4216,7 +4216,7 @@ void D19cFWInterface::Align_out()
     }
 }
 
-void D19cFWInterface::ResetOptoLink(Ph2_HwDescription::Chip* pChip)
+void D19cFWInterface::ResetOptoLink()
 {
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.push_back({"fc7_daq_ctrl.optical_block.ic", 0x00});
@@ -4225,10 +4225,10 @@ void D19cFWInterface::ResetOptoLink(Ph2_HwDescription::Chip* pChip)
     this->WriteStackReg(cVecReg);
 }
 
-bool D19cFWInterface::WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop)
+bool D19cFWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop)
 {
     // Reset
-    ResetOptoLink(pChip);
+    ResetOptoLink();
     // Config transaction register
     this->WriteReg("fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress);
     this->WriteReg("fc7_daq_cnfg.optical_block.gbtx.data", pData);
@@ -4242,10 +4242,10 @@ bool D19cFWInterface::WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint
     return true;
 }
 
-uint32_t D19cFWInterface::ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress)
+uint32_t D19cFWInterface::ReadOptoLinkRegister(uint32_t pAddress)
 {
     // Reset
-    ResetOptoLink(pChip);
+    ResetOptoLink();
     // Config transaction register
     this->WriteReg("fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress);
     this->WriteReg("fc7_daq_cnfg.optical_block.ic.register", pAddress);

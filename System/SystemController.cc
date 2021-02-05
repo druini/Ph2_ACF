@@ -28,7 +28,7 @@ SystemController::SystemController()
     , fRawFileName("")
     , fWriteHandlerEnabled(false)
     , fStreamerEnabled(false)
-    , fNetworkStreamer(nullptr) // This is the server listening port
+    , fNetworkStreamer(nullptr)
     , fDetectorMonitor(nullptr)
 {
 }
@@ -144,7 +144,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
                 if(cFirstOpticalGroup->flpGBT != nullptr)
                 {
-                    LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for LpGBT" << RESET;
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap);
                 }
 
@@ -208,6 +208,57 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os, bool pIsFile) { this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile); }
 
+void SystemController::RunBERtest(std::string chain2test, bool given_time, double frames_or_time)
+// ##############################
+// # chain2test = "BE-LPGBT-FE" #
+// # chain2test = "BE-LPGBT"    #
+// # chain2test = "LPGBT-FE"    #
+// ##############################
+{
+    if((chain2test != "BE-LPGBT-FE") && (chain2test != "BE-LPGBT") && (chain2test != "LPGBT-FE")) throw Exception("[SystemController::RunBERtest] Option non recognized");
+
+    if(chain2test == "BE-LPGBT")
+        for(const auto cBoard: *fDetectorContainer)
+          {
+              uint32_t frontendSpeed = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+
+              for(const auto cOpticalGroup: *cBoard)
+                  for(const auto cHybrid: *cOpticalGroup)
+                  {
+                      flpGBTInterface->StartPRBSpattern(cOpticalGroup->flpGBT);
+
+                      LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << RESET << GREEN
+                                << "]: " << BOLDYELLOW
+                                << ((fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), 0, frontendSpeed) == true) ? "PASSED" : "NOT PASSED") << RESET; // @TMP@
+
+                      flpGBTInterface->StopPRBSpattern(cOpticalGroup->flpGBT);
+                  }
+          }
+    else
+        for(const auto cBoard: *fDetectorContainer)
+          {
+              uint32_t frontendSpeed = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+
+              for(const auto cOpticalGroup: *cBoard)
+                  for(const auto cHybrid: *cOpticalGroup)
+                      for(const auto cChip: *cHybrid)
+                      {
+                          fReadoutChipInterface->StartPRBSpattern(cChip);
+
+                          LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                    << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
+                                    << ((((chain2test != "LPGBT-FE") &&
+                                          (fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), cChip->getId(), frontendSpeed) == true)) ||
+                                         ((chain2test == "LPGBT-FE") && (flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, 6, 0, given_time, frames_or_time, frontendSpeed) == true))) // @TMP@
+                                            ? "PASSED"
+                                            : "NOT PASSED")
+                                    << RESET;
+
+                          fReadoutChipInterface->StopPRBSpattern(cChip);
+                      }
+          }
+}
+
 void SystemController::ConfigureHw(bool bIgnoreI2c)
 {
     if(fDetectorContainer == nullptr)
@@ -248,7 +299,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         cPUSMStatus = clpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
                         cIter++;
                     }
-                    if(cPUSMStatus != 18) exit(0);
+                    if(cPUSMStatus != 18) exit(EXIT_FAILURE);
                     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
                 }
                 uint8_t cLinkId = cOpticalGroup->getId();
@@ -276,7 +327,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         if(!cSuccess)
                         {
                             LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
-                            exit(0);
+                            exit(EXIT_FAILURE);
                         }
                         LOG(INFO) << BOLDMAGENTA << "CIC configured for " << ((cModeSelect == 0) ? "2S" : "PS") << " readout." << RESET;
                         // CIC start-up sequence
@@ -309,7 +360,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // # Configuring Inner Tracker hardware #
             // ######################################
             LOG(INFO) << BOLDBLUE << "\t--> Found an Inner Tracker board" << RESET;
-            LOG(INFO) << GREEN << "Configuring Board: " << RESET << BOLDYELLOW << +cBoard->getId() << RESET;
+            LOG(INFO) << GREEN << "Configuring Board: " << BOLDYELLOW << +cBoard->getId() << RESET;
             fBeBoardInterface->ConfigureBoard(cBoard);
 
             // ###################
@@ -322,39 +373,68 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             size_t colStart    = SystemController::findValueInSettings("COLstart");
             bool   resetMask   = SystemController::findValueInSettings("ResetMask");
             bool   resetTDAC   = SystemController::findValueInSettings("ResetTDAC");
+            LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
-            LOG(INFO) << GREEN << "Configured FSM fast command block" << RESET;
+            LOG(INFO) << CYAN << "================== Done ==================" << RESET;
 
             // ########################
             // # Configuring from XML #
             // ########################
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ConfigureFromXML(cBoard);
 
-            // ###################
-            // # Configure chips #
-            // ###################
+            // ########################
+            // # Configure LpGBT chip #
+            // ########################
             for(auto cOpticalGroup: *cBoard)
-            {
-                // ########################
-                // # Configure lpGBT chip #
-                // ########################
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
-                    // @TMP@
-                    // RD53lpGBTInterface *clpGBTInterface = static_cast<RD53lpGBTInterface*>(flpGBTInterface);
-                    // clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
-                    // if(clpGBTInterface->IslpGBTReady(cOpticalGroup->flpGBT))
-                    //    LOG(ERROR) << BOLDRED << "lpGBT chip NOT configured" << RESET;
-                    // else
-                    //    LOG(INFO) << GREEN << "lpGBT chip configured" << RESET;
+                    LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
+
+                    if(static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ConfigureChip(cOpticalGroup->flpGBT) == true)
+                        LOG(INFO) << BOLDBLUE << "\t--> LpGBT chip configured" << RESET;
+                    else
+                        LOG(ERROR) << BOLDRED << "\t--> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ")" << RESET;
                 }
 
-                // ############################
-                // # Configure frontend chips #
-                // ############################
+            // #######################
+            // # Status optical link #
+            // #######################
+            uint32_t txStatus, rxStatus, mgtStatus;
+            LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(txStatus, rxStatus, mgtStatus);
+
+            do
+            {
+                // ######################################################
+                // # Configure down and up links to/from frontend chips #
+                // ######################################################
+                LOG(INFO) << CYAN << "=== Configuring frontend chip communication ===" << RESET;
+                static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Downlink(cBoard);
+                for(auto cOpticalGroup: *cBoard)
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        LOG(INFO) << GREEN << "Initializing chip communication of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
+                        for(const auto cChip: *cHybrid)
+                        {
+                            LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
+                            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(static_cast<RD53*>(cChip));
+                        }
+                    }
+                LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
+
+                // ####################################
+                // # Check AURORA lock on data stream #
+                // ####################################
+            } while(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard) == false);
+
+            // ############################
+            // # Configure frontend chips #
+            // ############################
+            LOG(INFO) << CYAN << "=== Configuring frontend chip registers ===" << RESET;
+            for(auto cOpticalGroup: *cBoard)
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    LOG(INFO) << GREEN << "Initializing communication to Hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
+                    LOG(INFO) << GREEN << "Configuring chip of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
                     for(const auto cChip: *cHybrid)
                     {
                         LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
@@ -366,7 +446,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
                     }
                 }
-            }
+            LOG(INFO) << CYAN << "================== Done ===================" << RESET;
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
         }

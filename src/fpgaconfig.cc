@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
         if(!cmd.foundOption("file"))
         {
             verifyImageName(strImage, lstNames);
-            LOG(INFO) << ">>> Done <<<";
+            LOG(INFO) << BOLDBLUE << ">>> Done <<<" << RESET;
         }
     }
     else if(!lstNames.empty())
@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
         if(progress == 100)
         {
             cDone = 1;
-            LOG(INFO) << "\n 100% Done";
+            LOG(INFO) << BOLDBLUE << ">>> 100% Done <<<" << RESET;
         }
         else
         {

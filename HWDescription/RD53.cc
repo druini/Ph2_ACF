@@ -232,10 +232,7 @@ void RD53::loadfRegMap(const std::string& fileName)
         file.close();
     }
     else
-    {
-        LOG(ERROR) << BOLDRED << "The RD53 file settings " << BOLDYELLOW << fileName << BOLDRED << " does not exist" << RESET;
-        exit(EXIT_FAILURE);
-    }
+        throw Exception("[RD53::loadfRegMapd] The RD53 file settings does not exist");
 }
 
 void RD53::saveRegMap(const std::string& fName2Add)
