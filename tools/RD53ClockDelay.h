@@ -67,7 +67,9 @@ class ClockDelay : public PixelAlive
     std::string fileRes;
     int         theCurrentRun;
     size_t      shiftData;
+    size_t      shiftPhase;
     size_t      saveData;
+    size_t      savePhase;
     size_t      maxDelay;
     bool        doUpdateChip;
     bool        doDisplay;
