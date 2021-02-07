@@ -827,9 +827,52 @@ float D19clpGBTInterface::PerformBERTest(Ph2_HwDescription::Chip* pChip, uint8_t
     return float(cErrors) / cBitsChecked;
 }
 
-/*-------------------------------------------------------------------------*/
-/* OT specific functions                                                   */
-/*-------------------------------------------------------------------------*/
+/*-------------------------------*/
+/* Eye Opening Monitor functions */ 
+/*-------------------------------*/
+void D19clpGBTInterface::ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator, bool pEnableEOM)
+{
+    //configure EOM parameters and enable the block
+    WriteChipReg(pChip, "EOMConfigH", pEndOfCountSelect << 4 | pByPassPhaseInterpolator << 2 | pEnableEOM << 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5)); //wait for few ms for voltages to stabilize
+}
+
+void D19clpGBTInterface::StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM)
+{
+    //Start/Stop EOM
+    uint8_t cRegisterValue = ReadChipReg(pChip, "EOMConfigH");
+    WriteChipReg(pChip, "EOMConfigH", (cRegisterValue & ~(0x1 << 1)) | (pStartEOM << 1));
+}
+
+void D19clpGBTInterface::SelectEOMPhase(Ph2_HwDescription::Chip* pChip, uint8_t pPhase)
+{
+    //Select EOM Sampling Phase
+    WriteChipReg(pChip, "EOMConfigL", pPhase);
+}
+
+void D19clpGBTInterface::SelectEOMVof(Ph2_HwDescription::Chip* pChip, uint8_t pVof)
+{
+    //Select EOM comparator voltage
+    WriteChipReg(pChip, "EOMvofSel", pVof);
+} 
+
+uint8_t D19clpGBTInterface::GetEOMStatus(Ph2_HwDescription::Chip* pChip)
+{
+    //Get EOM status
+    uint8_t cEOMStatus = ReadChipReg(pChip, "EOMStatus");
+    LOG(DEBUG) << BOLDBLUE << "Eye Opening Monitor status : " << fEOMStatusMap[(cEOMStatus & (0x3 << 2)) >> 2] << RESET;
+    return cEOMStatus;
+}
+
+uint16_t D19clpGBTInterface::GetEOMCounter(Ph2_HwDescription::Chip* pChip)
+{
+    //Get EOM tick counters
+    return (ReadChipReg(pChip, "EOMCounterValueH") << 8 | ReadChipReg(pChip, "EOMCounterValueL") << 0);
+}
+
+/*-----------------------*/
+/* OT specific functions */
+/*-----------------------*/
 
 void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC)
 {

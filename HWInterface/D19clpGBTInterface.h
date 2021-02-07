@@ -172,6 +172,23 @@ class D19clpGBTInterface : public lpGBTInterface
     // perform BER test
     float PerformBERTest(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern);
 
+
+    // #####################################
+    // # LpGBT Eye Opening Monitor Tester  #
+    // ####################################
+    // Configure Eye Opening Monitor
+    void ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator=false, bool EnableEOM=true);
+    // Start Eye Opening Monitor
+    void StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM=true);
+    // Select Eye Opening Monitor sampling phase
+    void SelectEOMPhase(Ph2_HwDescription::Chip* pChip, uint8_t pPhase);
+    // Select Eye Opening Monitor comparator voltage
+    void SelectEOMVof(Ph2_HwDescription::Chip* pChip, uint8_t pVof);
+    // Get Eye Opening Monitor status
+    uint8_t GetEOMStatus(Ph2_HwDescription::Chip* pChip);
+    // Get Eye Opening Monitor counter value
+    uint16_t GetEOMCounter(Ph2_HwDescription::Chip* pChip);
+
     // ###################################
     // # Outer Tracker specific funtions #
     // ###################################
@@ -239,6 +256,8 @@ class D19clpGBTInterface : public lpGBTInterface
                                                      {17, "WAIT_CHNS_LOCKED"},
                                                      {18, "READY"}};
     std::map<uint8_t, std::string> fI2CStatusMap  = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
+
+    std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
 
     // ###################################
     // # Outer Tracker specific objects  #

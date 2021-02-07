@@ -22,6 +22,7 @@
 #include "TObject.h"
 #include "TString.h"
 #include "TTree.h"
+#include "TH2I.h"
 #endif
 
 #ifdef __TCUSB__
@@ -61,6 +62,8 @@ class OTHybridTester : public Tool
     void LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep);
     // Set GPIO level
     void LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
+    // Run Eye Openin Monitor
+    void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
 
   private:
   protected:
