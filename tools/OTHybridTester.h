@@ -64,6 +64,8 @@ class OTHybridTester : public Tool
     void LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
+    // Run Bit Error Test
+    std::map<uint8_t, std::vector<float>> RunBERT(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern = 0);
 
   private:
   protected:

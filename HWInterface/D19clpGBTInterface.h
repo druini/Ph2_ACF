@@ -162,22 +162,21 @@ class D19clpGBTInterface : public lpGBTInterface
     // # LpGBT Bit Error Rate Tester #
     // ###############################
     // configure BER tester
-    void ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, bool pStart);
+    void ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable);
+    // start BER tester
+    void StartBERT(Ph2_HwDescription::Chip* pChip, bool pStartBERT = true);
     // configure BER pattern
     void ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
     // get BER status
     uint8_t GetBERTStatus(Ph2_HwDescription::Chip* pChip);
     // get BERT errors
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
-    // perform BER test
-    float PerformBERTest(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern);
-
 
     // #####################################
     // # LpGBT Eye Opening Monitor Tester  #
     // ####################################
     // Configure Eye Opening Monitor
-    void ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator=false, bool EnableEOM=true);
+    void ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator=false, bool pEnableEOM=true);
     // Start Eye Opening Monitor
     void StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM=true);
     // Select Eye Opening Monitor sampling phase

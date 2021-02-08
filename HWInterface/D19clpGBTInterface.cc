@@ -294,11 +294,11 @@ void D19clpGBTInterface::ConfigureRxSource(Ph2_HwDescription::Chip* pChip, const
     for(const auto& cGroup: pGroups)
     {
         if(pSource == 0)
-            LOG(INFO) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to NORMAL " << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to NORMAL " << RESET;
         else if(pSource == 1)
-            LOG(INFO) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to PRBS7 " << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to PRBS7 " << RESET;
         else if(pSource == 4 || pSource == 5)
-            LOG(INFO) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to Constant Pattern" << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to Constant Pattern" << RESET;
         std::string cRxSourceReg;
         if(cGroup == 0 || cGroup == 1)
             cRxSourceReg = "ULDataSource1";
@@ -669,7 +669,7 @@ uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::
         cSuccess = IsReadADCDone(pChip);
         cIter++;
     } while(cIter < cMaxIter && !cSuccess);
-    if(cIter == cMaxIter) throw std::runtime_error(std::string("BERT : All zeros at input"));
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("ADC conversion timed out"));
     // Read ADC value
     uint8_t cADCvalue1 = ReadChipReg(pChip, "ADCStatusH") & 0x3;
     uint8_t cADCvalue2 = ReadChipReg(pChip, "ADCStatusL");
@@ -757,16 +757,16 @@ void D19clpGBTInterface::ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const
 /*---------------------------------*/
 /* Bit Error Rate Tester functions */
 /*---------------------------------*/
-void D19clpGBTInterface::ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, bool pStart)
+void D19clpGBTInterface::ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable)
 {
-    if(pStart)
-    {
-        LOG(INFO) << BOLDMAGENTA << "Configuring and starting BERT" << RESET;
-        WriteChipReg(pChip, "BERTSource", (pCoarseSource << 4) | pFineSource);
-    }
-    else
-        LOG(INFO) << BOLDMAGENTA << "Stopping BERT" << RESET;
-    WriteChipReg(pChip, "BERTConfig", (pMeasTime << 4) | (pSkipDisable << 1) | pStart);
+    WriteChipReg(pChip, "BERTSource", (pCoarseSource << 4) | pFineSource);
+    WriteChipReg(pChip, "BERTConfig", (pMeasTime << 4) | (pSkipDisable << 1));
+}
+
+void D19clpGBTInterface::StartBERT(Ph2_HwDescription::Chip* pChip, bool pStartBERT)
+{
+    uint8_t cRegisterValue = ReadChipReg(pChip, "BERTConfig");
+    WriteChipReg(pChip, "BERTConfig", (cRegisterValue & ~(0x1 << 0)) | (pStartBERT << 0));
 }
 
 void D19clpGBTInterface::ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern)
@@ -791,41 +791,7 @@ uint64_t D19clpGBTInterface::GetBERTErrors(Ph2_HwDescription::Chip* pChip)
     return ((cResult4 << 32) | (cResult3 << 24) | (cResult2 << 16) | (cResult1 << 8) | cResult0);
 }
 
-float D19clpGBTInterface::PerformBERTest(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern)
-{
-    if(pPattern == 0)
-        LOG(INFO) << BOLDMAGENTA << "Performing BER test with PRBS" << RESET;
-    else
-    {
-        LOG(INFO) << BOLDMAGENTA << "Performing BER test with Constant Pattern" << RESET;
-        ConfigureDPPattern(pChip, pPattern);
-        ConfigureBERTPattern(pChip, pPattern);
-    }
-    ConfigureBERT(pChip, pCoarseSource, pFineSource, pMeasTime, pSkipDisable, true);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    uint8_t cBERTStatus = GetBERTStatus(pChip);
-    bool    cAllZeros   = ((cBERTStatus & (0x1 << 2)) >> 2) == 1;
-    if(cAllZeros)
-    {
-        LOG(INFO) << BOLDRED << "BERT : All zeros at input ... exiting" << RESET;
-        throw std::runtime_error(std::string("BERT : All zeros at input"));
-    }
-    while((cBERTStatus & 0x1) != 1)
-    {
-        LOG(INFO) << BOLDBLUE << "BERT still running ... status is : " << std::bitset<3>(cBERTStatus) << RESET;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        cBERTStatus = GetBERTStatus(pChip);
-    }
-    LOG(INFO) << BOLDBLUE << "Reading BERT counter" << RESET;
-    uint64_t cErrors      = GetBERTErrors(pChip);
-    uint32_t cBitsChecked = std::pow(2, 5 + pMeasTime * 2) * 16; // #FIXME currently hard coded for 640MHz
-    LOG(INFO) << BOLDBLUE << "Bits checked  : " << +cBitsChecked << " bits" << RESET;
-    LOG(INFO) << BOLDBLUE << "Bits in error : " << +cErrors << " bits" << RESET;
-    ConfigureBERT(pChip, pCoarseSource, pFineSource, pMeasTime, pSkipDisable, false);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    LOG(INFO) << "BER test done !" << RESET;
-    return float(cErrors) / cBitsChecked;
-}
+
 
 /*-------------------------------*/
 /* Eye Opening Monitor functions */ 

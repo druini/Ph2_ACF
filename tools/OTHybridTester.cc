@@ -275,3 +275,53 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect)
     }
 #endif 
 }
+
+std::map<uint8_t, std::vector<float>> OTHybridTester::RunBERT(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern)
+{
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    std::map<uint8_t, std::vector<float>> fBERResultMap;
+    uint64_t cErrors = 0;
+    uint32_t cBitsChecked = 0;
+    for(auto cBoard : *fDetectorContainer)
+    {
+        std::vector<float> cOpticalGroupsBER;
+        for(auto cOpticalGroup : *cBoard)
+        {
+            if(pPattern == 0)
+                LOG(INFO) << BOLDMAGENTA << "Performing BER test with PRBS" << RESET;
+            else
+            {
+                LOG(INFO) << BOLDMAGENTA << "Performing BER test with Constant Pattern" << RESET;
+                clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern);
+                clpGBTInterface->ConfigureBERTPattern(cOpticalGroup->flpGBT, pPattern);
+            }
+            clpGBTInterface->ConfigureBERT(cOpticalGroup->flpGBT, pCoarseSource, pFineSource, pMeasTime, pSkipDisable);
+            clpGBTInterface->StartBERT(cOpticalGroup->flpGBT, true);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            uint8_t cBERTStatus = clpGBTInterface->GetBERTStatus(cOpticalGroup->flpGBT);
+            while((cBERTStatus & 0x1) != 1)
+            {
+                LOG(INFO) << BOLDBLUE << "BERT still running ... status is : " << std::bitset<3>(cBERTStatus) << RESET;
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                cBERTStatus = clpGBTInterface->GetBERTStatus(cOpticalGroup->flpGBT);
+            }
+            bool    cAllZeros   = ((cBERTStatus & (0x1 << 2)) >> 2) == 1;
+            if(cAllZeros)
+            {
+                LOG(INFO) << BOLDRED << "BERT : All zeros at input ... exiting" << RESET;
+                throw std::runtime_error(std::string("BERT : All zeros at input"));
+            }
+            LOG(INFO) << BOLDBLUE << "Reading BERT counter" << RESET;
+            cErrors      = clpGBTInterface->GetBERTErrors(cOpticalGroup->flpGBT);
+            cBitsChecked = std::pow(2, 5 + pMeasTime * 2) * 16; // #FIXME currently hard coded for 640MHz
+            LOG(INFO) << BOLDBLUE << "Bits checked  : " << +cBitsChecked << " bits" << RESET;
+            LOG(INFO) << BOLDBLUE << "Bits in error : " << +cErrors << " bits" << RESET;
+            cOpticalGroupsBER.push_back(float(cErrors)/cBitsChecked);
+            clpGBTInterface->StartBERT(cOpticalGroup->flpGBT, false);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            LOG(INFO) << "BER test done !" << RESET;
+        }
+        fBERResultMap.insert({cBoard->getId(), cOpticalGroupsBER});
+    }
+    return fBERResultMap;
+}
