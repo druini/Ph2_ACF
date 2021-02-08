@@ -51,9 +51,9 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     return true;
 }
 
-/*-------------------------------------------------------------------------*/
-/* Read/Write LpGBT chip registers                                         */
-/*-------------------------------------------------------------------------*/
+/*---------------------------------*/
+/* Read/Write LpGBT chip registers */
+/*---------------------------------*/
 
 bool D19clpGBTInterface::WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
@@ -151,9 +151,9 @@ bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const 
     return writeGood;
 }
 
-/*-------------------------------------------------------------------------*/
-/* lpGBT configuration functions                                           */
-/*-------------------------------------------------------------------------*/
+/*-------------------------------*/
+/* lpGBT configuration functions */
+/*-------------------------------*/
 
 void D19clpGBTInterface::ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode)
 {
@@ -361,9 +361,9 @@ void D19clpGBTInterface::ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, cons
     }
 }
 
-/*-------------------------------------------------------------------------*/
-/* lpGBT specific routine functions                                        */
-/*-------------------------------------------------------------------------*/
+/*----------------------------------*/
+/* lpGBT specific routine functions */
+/*----------------------------------*/
 
 void D19clpGBTInterface::PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain)
 {
@@ -430,9 +430,9 @@ void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std:
     ConfigureRxSource(pChip, pGroups, 0);
 }
 
-/*-------------------------------------------------------------------------*/
-/* lpGBT status functions                                                  */
-/*-------------------------------------------------------------------------*/
+/*------------------------*/
+/* lpGBT status functions */
+/*------------------------*/
 
 void D19clpGBTInterface::PrintChipMode(Ph2_HwDescription::Chip* pChip)
 {
@@ -507,9 +507,9 @@ uint8_t D19clpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t
     return ReadChipReg(pChip, cI2CStatReg);
 }
 
-/*-------------------------------------------------------------------------*/
-/* lpGBT I2C Master functions                                              */
-/*-------------------------------------------------------------------------*/
+/*----------------------------*/
+/* lpGBT I2C Master functions */
+/*----------------------------*/
 
 void D19clpGBTInterface::ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters)
 {
@@ -624,9 +624,15 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     }
 }
 
-/*-------------------------------------------------------------------------*/
-/* lpGBT ADC-DAC functions                                                 */
-/*-------------------------------------------------------------------------*/
+/*-------------------------*/
+/* lpGBT ADC-DAC functions */
+/*-------------------------*/
+
+void D19clpGBTInterface::ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, bool pADCEnable, bool pStartConversion)
+{
+    WriteChipReg(pChip, "ADCConfig", pStartConversion << 7 | pADCEnable << 2 | pGainSelect);
+}
+
 void D19clpGBTInterface::ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput)
 {
     // Enables current DAC without changing the voltage DAC
@@ -643,11 +649,6 @@ void D19clpGBTInterface::ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, con
         cCURDACCHN += 1 << cADCInput;
         WriteChipReg(pChip, "CURDACCHN", cCURDACCHN);
     }
-}
-
-void D19clpGBTInterface::ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, bool pADCEnable, bool pStartConversion)
-{
-    WriteChipReg(pChip, "ADCConfig", pStartConversion << 7 | pADCEnable << 2 | pGainSelect);
 }
 
 uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
@@ -685,42 +686,72 @@ uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::
 
 bool D19clpGBTInterface::IsReadADCDone(Ph2_HwDescription::Chip* pChip) { return (((ReadChipReg(pChip, "ADCStatusH") & 0x40) >> 6) == 1); }
 
-/*-------------------------------------------------------------------------*/
-/* General Purpose Input Output                                            */
-/*-------------------------------------------------------------------------*/
-void D19clpGBTInterface::ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir, uint8_t pOut, uint8_t pDriveStr, uint8_t pPullEn, uint8_t pUpDown)
+/*------------------------------*/
+/* General Purpose Input Output */
+/*------------------------------*/
+
+void D19clpGBTInterface::ConfigureGPIODirection(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir)
 {
-    LOG(INFO) << BOLDMAGENTA << "Configuring GPIOs" << RESET;
-    uint8_t cDirH = 0, cDirL = 0;
-    uint8_t cOutH = 0, cOutL = 0;
-    uint8_t cDriveStrH = 0, cDriveStrL = 0;
-    uint8_t cPullEnH = 0, cPullEnL = 0;
-    uint8_t cUpDownH = 0, cUpDownL = 0;
+    uint8_t cDirH = ReadChipReg(pChip, "PIODirH");
+    uint8_t cDirL = ReadChipReg(pChip, "PIODirL");
+    for(auto cGPIO: pGPIOs)
+    {
+        if(cGPIO < 8)
+            cDirL |= (pDir << cGPIO);
+        else
+            cDirH |= (pDir << (cGPIO - 8));
+    }
+    WriteChipReg(pChip, "PIODirH", cDirH);
+    WriteChipReg(pChip, "PIODirL", cDirL);
+}
+
+void D19clpGBTInterface::ConfigureGPIOLevel(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pOut)
+{
+    uint8_t cOutH = ReadChipReg(pChip, "PIOOutH");
+    uint8_t cOutL = ReadChipReg(pChip, "PIOOutL");
+    for(auto cGPIO: pGPIOs)
+    {
+        if(cGPIO < 8)
+            cOutL |= (pOut << cGPIO);
+        else
+            cOutH |= (pOut << (cGPIO - 8));
+    }
+    WriteChipReg(pChip, "PIOOutH", cOutH);
+    WriteChipReg(pChip, "PIOOutL", cOutL);
+}
+
+void D19clpGBTInterface::ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDriveStr)
+{
+    uint8_t cDriveStrH = ReadChipReg(pChip, "PIODriveStrengthH");
+    uint8_t cDriveStrL = ReadChipReg(pChip, "PIODriveStrengthL");
+    for(auto cGPIO: pGPIOs)
+    {
+        if(cGPIO < 8)
+            cDriveStrL |= (pDriveStr << cGPIO);
+        else
+            cDriveStrH |= (pDriveStr << (cGPIO - 8));
+    }
+    WriteChipReg(pChip, "PIODriveStrengthH", cDriveStrH);
+    WriteChipReg(pChip, "PIODriveStrengthL", cDriveStrL);
+}
+
+void D19clpGBTInterface::ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pEnable, uint8_t pUpDown)
+{
+    uint8_t cPullEnH = ReadChipReg(pChip, "PIOPullEnaH"), cPullEnL = ReadChipReg(pChip, "PIOPullEnaL");
+    uint8_t cUpDownH = ReadChipReg(pChip, "PIOUpDownH"), cUpDownL = ReadChipReg(pChip, "PIOUpDownL");
     for(auto cGPIO: pGPIOs)
     {
         if(cGPIO < 8)
         {
-            cDirL |= (pDir << cGPIO);
-            cOutL |= (pOut << cGPIO);
-            cDriveStrL |= (pDriveStr << cGPIO);
-            cPullEnL |= (pPullEn << cGPIO);
+            cPullEnL |= (pEnable << cGPIO);
             cUpDownL |= (pUpDown << cGPIO);
         }
         else
         {
-            cDirH |= (pDir << (cGPIO - 8));
-            cOutH |= (pOut << (cGPIO - 8));
-            cDriveStrH |= (pDriveStr << (cGPIO - 8));
-            cPullEnH |= (pPullEn << (cGPIO - 8));
+            cPullEnH |= (pEnable << (cGPIO - 8));
             cUpDownH |= (pUpDown << (cGPIO - 8));
         }
     }
-    WriteChipReg(pChip, "PIODirH", cDirH);
-    WriteChipReg(pChip, "PIODirL", cDirL);
-    WriteChipReg(pChip, "PIOOutH", cOutH);
-    WriteChipReg(pChip, "PIOOutL", cOutL);
-    WriteChipReg(pChip, "PIODriveStrengthH", cDriveStrH);
-    WriteChipReg(pChip, "PIODriveStrengthL", cDriveStrL);
     WriteChipReg(pChip, "PIOPullEnaH", cPullEnH);
     WriteChipReg(pChip, "PIOPullEnaL", cPullEnL);
     WriteChipReg(pChip, "PIOUpDownH", cUpDownH);
@@ -806,9 +837,52 @@ float D19clpGBTInterface::PerformBERTest(Ph2_HwDescription::Chip* pChip, uint8_t
     return float(cErrors) / cBitsChecked;
 }
 
-/*-------------------------------------------------------------------------*/
-/* OT specific functions                                                   */
-/*-------------------------------------------------------------------------*/
+/*-------------------------------*/
+/* Eye Opening Monitor functions */
+/*-------------------------------*/
+void D19clpGBTInterface::ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator, bool pEnableEOM)
+{
+    // configure EOM parameters and enable the block
+    WriteChipReg(pChip, "EOMConfigH", pEndOfCountSelect << 4 | pByPassPhaseInterpolator << 2 | pEnableEOM << 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5)); // wait for few ms for voltages to stabilize
+}
+
+void D19clpGBTInterface::StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM)
+{
+    // Start/Stop EOM
+    uint8_t cRegisterValue = ReadChipReg(pChip, "EOMConfigH");
+    WriteChipReg(pChip, "EOMConfigH", (cRegisterValue & ~(0x1 << 1)) | (pStartEOM << 1));
+}
+
+void D19clpGBTInterface::SelectEOMPhase(Ph2_HwDescription::Chip* pChip, uint8_t pPhase)
+{
+    // Select EOM Sampling Phase
+    WriteChipReg(pChip, "EOMConfigL", pPhase);
+}
+
+void D19clpGBTInterface::SelectEOMVof(Ph2_HwDescription::Chip* pChip, uint8_t pVof)
+{
+    // Select EOM comparator voltage
+    WriteChipReg(pChip, "EOMvofSel", pVof);
+}
+
+uint8_t D19clpGBTInterface::GetEOMStatus(Ph2_HwDescription::Chip* pChip)
+{
+    // Get EOM status
+    uint8_t cEOMStatus = ReadChipReg(pChip, "EOMStatus");
+    LOG(DEBUG) << BOLDBLUE << "Eye Opening Monitor status : " << fEOMStatusMap[(cEOMStatus & (0x3 << 2)) >> 2] << RESET;
+    return cEOMStatus;
+}
+
+uint16_t D19clpGBTInterface::GetEOMCounter(Ph2_HwDescription::Chip* pChip)
+{
+    // Get EOM tick counters
+    return (ReadChipReg(pChip, "EOMCounterValueH") << 8 | ReadChipReg(pChip, "EOMCounterValueL") << 0);
+}
+
+/*-----------------------*/
+/* OT specific functions */
+/*-----------------------*/
 
 void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC)
 {
@@ -884,7 +958,8 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Uncomment this for Skeleton test
-    ConfigureGPIO(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1, 1, 0, 0, 0);
+    ConfigureGPIODirection(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1);
+    ConfigureGPIOLevel(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1);
 }
 
 // Preliminary

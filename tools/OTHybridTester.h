@@ -20,6 +20,7 @@
 #include "TF1.h"
 #include "TGraph.h"
 #include "TH2.h"
+#include "TH2I.h"
 #include "TLegend.h"
 #include "TMultiGraph.h"
 #include "TObject.h"
@@ -72,6 +73,8 @@ class OTHybridTester : public Tool
     bool LpGBTTestResetLines(uint8_t pLevel);
     bool LpGBTTestFixedADCs(bool p2SSEH = false);
     bool LpGBTTestGPILines(bool p2SSEH = false);
+    // Run Eye Openin Monitor
+    void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
 
   private:
 #ifdef __TCUSB__
