@@ -27,6 +27,7 @@
 #include "TString.h"
 #include "TStyle.h"
 #include "TTree.h"
+#include "TH2I.h"
 #endif
 
 #ifdef __TCUSB__
@@ -72,6 +73,8 @@ class OTHybridTester : public Tool
     bool LpGBTTestResetLines(uint8_t pLevel);
     bool LpGBTTestFixedADCs(bool p2SSEH = false);
     bool LpGBTTestGPILines(bool p2SSEH = false);
+    // Run Eye Openin Monitor
+    void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
 
   private:
 #ifdef __TCUSB__
