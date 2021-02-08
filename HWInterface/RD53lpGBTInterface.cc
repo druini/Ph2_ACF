@@ -700,13 +700,13 @@ bool RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChanne
 
 void RD53lpGBTInterface::StartPRBSpattern(Ph2_HwDescription::Chip* pChip)
 {
-    RD53lpGBTInterface::ConfigureRxPRBS(pChip, {RD53lpGBTconstants::fictitiousGroup}, {RD53lpGBTconstants::fictitiousChannel}, true);
-    RD53lpGBTInterface::ConfigureRxSource(pChip, {RD53lpGBTconstants::fictitiousGroup}, RD53lpGBTconstants::PATTERN_PRBS);
+    RD53lpGBTInterface::ConfigureRxPRBS(pChip, { RD53lpGBTconstants::fictitiousGroup }, { RD53lpGBTconstants::fictitiousChannel }, true);
+    RD53lpGBTInterface::ConfigureRxSource(pChip, { RD53lpGBTconstants::fictitiousGroup }, RD53lpGBTconstants::PATTERN_PRBS);
 }
 
 void RD53lpGBTInterface::StopPRBSpattern(Ph2_HwDescription::Chip* pChip)
 {
-    RD53lpGBTInterface::ConfigureRxPRBS(pChip, {RD53lpGBTconstants::fictitiousGroup}, {RD53lpGBTconstants::fictitiousChannel}, false);
+    RD53lpGBTInterface::ConfigureRxPRBS(pChip, { RD53lpGBTconstants::fictitiousGroup }, { RD53lpGBTconstants::fictitiousChannel }, false);
     RD53lpGBTInterface::ConfigureRxSource(pChip, {RD53lpGBTconstants::fictitiousGroup}, RD53lpGBTconstants::PATTERN_NORMAL);
 }
 } // namespace Ph2_HwInterface
