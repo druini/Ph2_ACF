@@ -7,9 +7,10 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "SystemController.h"
 #include "../Utils/DetectorMonitorConfig.h"
 #include "../tools/CBCMonitor.h"
+#include "../tools/RD53Monitor.h"
+#include "SystemController.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -56,7 +57,7 @@ void SystemController::Destroy()
     {
         LOG(INFO) << BOLDRED << "Destroying monitoring" << RESET;
         fDetectorMonitor->stopMonitoring();
-        while(fMonitorFuture.wait_for(std::chrono::milliseconds(250)) != std::future_status::ready) { LOG(INFO) << "Waiting for monitoring to be completed..."; }
+        while(fMonitorFuture.wait_for(std::chrono::milliseconds(250)) != std::future_status::ready) { LOG(INFO) << GREEN << "Waiting for monitoring to be completed..." << RESET; }
         delete fDetectorMonitor;
         fDetectorMonitor = nullptr;
         LOG(INFO) << BOLDRED << "Monitoring destroyed" << RESET;
@@ -193,11 +194,13 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     if(monitoringType != "None")
     {
-        if(monitoringType == "2S") fDetectorMonitor = new CBCMonitor(theDetectorMonitorConfig);
-        // else if(monitoringType == "IT") fDetectorMonitor = new ITMonitor();
+        if(monitoringType == "2S")
+            fDetectorMonitor = new CBCMonitor(theDetectorMonitorConfig);
+        else if(monitoringType == "RD53")
+            fDetectorMonitor = new RD53Monitor(theDetectorMonitorConfig);
         else
         {
-            LOG(ERROR) << "Unrecognized monitor type, Aborting";
+            LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
             abort();
         }
 
