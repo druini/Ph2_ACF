@@ -145,6 +145,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                 else
                     LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED" << RESET;
                 cTestSuccess &= cSuccess;
+                fillSummaryTree(Form("i2cmaster%i",cMaster), cSuccess);
             }
         }
     }
@@ -247,8 +248,12 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
     std::map<std::string, std::string>  cADCsMap;
     std::map<std::string, float>*       cDefaultParameters;
     std::map<std::string, std::string>* cADCNametoPinMapping;
+    std::string cADCNameString;
+    std::vector<int> cADCValueVect;
 #ifdef __USE_ROOT__
     auto cFixedADCsTree = new TTree("FixedADCs", "lpGBT ADCs not tied to AMUX");
+    cFixedADCsTree->Branch("Id",&cADCNameString);
+    cFixedADCsTree->Branch("AdcValue",&cADCValueVect);
     gStyle->SetOptStat(0);
 
     if(p2SSEH)
@@ -283,7 +288,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
     int              cADCValue;
     int              cBinCount         = 1;
     float            cConversionFactor = 1. / 1024.;
-    std::vector<int> cADCValueVect;
+    
     fillSummaryTree("ADC conversion factor", cConversionFactor);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -301,6 +306,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
             do
             {
                 cADCValueVect.clear();
+                cADCNameString=cADCsMapIterator->first;
                 cADCHistogram->GetXaxis()->SetBinLabel(cBinCount, cADCsMapIterator->first.c_str());
 
                 for(int cIteration = 0; cIteration < 10; ++cIteration)
@@ -310,11 +316,11 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                     cADCHistogram->Fill(cADCsMapIterator->first.c_str(), cADCValue, 1);
                 }
 
-                fillSummaryTree(cADCsMapIterator->first, cADCValue * cConversionFactor);
+                
                 float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
                 float mean          = sum / cADCValueVect.size();
                 float cDifference_V = std::fabs((*cDefaultParameters)[cADCsMapIterator->second] - mean * cConversionFactor);
-
+                fillSummaryTree(cADCsMapIterator->first, mean * cConversionFactor);
                 // Still hard coded threshold for imidiate boolean result, actual values are stored
                 if(cDifference_V > 0.1)
                 {
@@ -327,9 +333,10 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                     LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << mean * cConversionFactor << " V, nominal value is "
                               << (*cDefaultParameters)[cADCsMapIterator->second] << " V" << RESET;
                 }
-
+                cFixedADCsTree->Fill();
                 cADCsMapIterator++;
                 cBinCount++;
+
 
             } while(cADCsMapIterator != cADCsMap.end());
         }
@@ -341,7 +348,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
 
     cADCHistogram->Draw("colz");
     cADCCanvas->Write();
-
+    cFixedADCsTree->Write();
     if(p2SSEH)
     {
 #ifdef __TCUSB__
@@ -415,6 +422,8 @@ bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
                     LOG(INFO) << BOLDGREEN << "GPIO connected to " << cMapIterator->first << " is high!" << RESET;
                 }
                 cMapIterator++;
+                fillSummaryTree(cMapIterator->first, cReadGPI);
+
             }
         }
     }

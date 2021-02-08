@@ -130,6 +130,12 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     std::vector<float> cVHVJ7ValVect;
     std::vector<float> cVHVJ8ValVect;
     std::vector<float> cUMonValVect;
+    auto cBiasVoltageTree = new TTree("tBiasVoltageTree", "Bias Voltage Sensor Side");
+    cBiasVoltageTree->Branch("DAC",&cDACValVect);
+    cBiasVoltageTree->Branch("VHVJ7",&cVHVJ7ValVect);
+    cBiasVoltageTree->Branch("VHVJ8",&cVHVJ8ValVect);
+    cBiasVoltageTree->Branch("MON",&cUMonValVect);
+
     for(int cDACValue = 0; cDACValue <= 3500; cDACValue += 0x155)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -191,6 +197,11 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 
     cDACtoHVCanvas->BuildLegend();
     cDACtoHVCanvas->Write();
+    cBiasVoltageTree->Fill();
+    cBiasVoltageTree->Write();
+    #ifdef __TCUSB__
+    fTC_2SSEH->set_HV(false, false, false, 0);
+    #endif
 #endif
 }
 
@@ -410,7 +421,7 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 }
 // Fixed in this context means: The ADC pin is not an AMUX pin
 // Need statistics on spread of RSSI and temperature sensors
-bool SEHTester::TestFixedADCs()
+/* bool SEHTester::TestFixedADCs()
 {
     bool cReturn;
 #ifdef __USE_ROOT__
@@ -489,7 +500,7 @@ bool SEHTester::TestFixedADCs()
     cADCCanvas->Write();
 #endif
     return cReturn;
-}
+} */
 
 /* bool SEHTester::ToyTestFixedADCs()
 {
@@ -581,7 +592,7 @@ void SEHTester::TestCardVoltages()
         d2SSEHMapIterator++;
 
     } while(d2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_On);
+    fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_Off);
 #endif
 }
 
@@ -1007,6 +1018,7 @@ void SEHTester::CheckClocks(BeBoard* pBoard)
             LOG(INFO) << "320 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
         else
             LOG(ERROR) << "320 l clock test ->" << BOLDRED << " FAILED" << RESET;
+        fillSummaryTree("320lClkTest", Clk320lStat);
     }
 
     while(!c320rClkTestDone)
@@ -1018,10 +1030,11 @@ void SEHTester::CheckClocks(BeBoard* pBoard)
     {
         bool Clk320rStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_stat");
 
-        if(Clk320rStat)
-            LOG(INFO) << "320 r clk test ->" << BOLDGREEN << " PASSED" << RESET;
-        else
-            LOG(ERROR) << "320 r clock test ->" << BOLDRED << " FAILED" << RESET;
+        if(Clk320rStat){
+            LOG(INFO) << "320 r clk test ->" << BOLDGREEN << " PASSED" << RESET;}
+        else{
+            LOG(ERROR) << "320 r clock test ->" << BOLDRED << " FAILED" << RESET;}
+        fillSummaryTree("320rClkTest", Clk320rStat);
     }
 
     while(!c640lClkTestDone)

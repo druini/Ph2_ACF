@@ -168,6 +168,8 @@ int main(int argc, char* argv[])
     // cSEHTester.exampleFit();
     cSEHTester.Inherit(&cTool);
     cSEHTester.FindUSBHandler(true);
+
+    //cSEHTester.TestCardVoltages();
     if(cmd.foundOption("test-parameter"))
     {
         cSEHTester.readTestParameters(cTestParameterFileName);
@@ -234,7 +236,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testADC"))
     {
         // cSEHTester.ToyTestFixedADCs();
-        cSEHTester.TestFixedADCs();
+        cSEHTester.LpGBTTestFixedADCs();
         std::vector<std::string> cADCs = {"ADC0", "ADC3"};
         cSEHTester.LpGBTTestADC(cADCs, 0, 1000, 20); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
     }

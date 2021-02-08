@@ -69,7 +69,7 @@ class SEHTester : public OTHybridTester
     void TestBiasVoltage(uint16_t pBiasVoltage);
     int  exampleFit();
     void readTestParameters(std::string file);
-    bool TestFixedADCs();
+    // bool TestFixedADCs();
     // bool ToyTestFixedADCs();
 
   private:
