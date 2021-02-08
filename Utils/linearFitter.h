@@ -26,7 +26,6 @@ void estimate_coef(std::vector<T> indep_var, std::vector<T> dep_var, double& B_1
 {
     double N = indep_var.size();
 
-
     double mean_x = std::accumulate(indep_var.begin(), indep_var.end(), 0.0) / N;
     double mean_y = std::accumulate(dep_var.begin(), dep_var.end(), 0.0) / N;
 
@@ -85,7 +84,6 @@ void estimate_coef(std::vector<T> indep_var, std::vector<T> dep_var, std::vector
     // std::cout << "mean_y : " << mean_y << std::endl;
     // std::cout << "mean_x_square : " << mean_x_square << std::endl;
     // std::cout << "mean_x_times_y : " << mean_x_times_y << std::endl;
-
 }
 
 template <typename T>

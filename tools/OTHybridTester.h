@@ -72,7 +72,6 @@ class OTHybridTester : public Tool
     bool LpGBTTestResetLines(uint8_t pLevel);
     bool LpGBTTestFixedADCs(bool p2SSEH = false);
     bool LpGBTTestGPILines(bool p2SSEH = false);
-    
 
   private:
 #ifdef __TCUSB__

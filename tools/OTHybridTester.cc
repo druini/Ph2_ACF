@@ -14,13 +14,6 @@ OTHybridTester::~OTHybridTester()
 #endif
 }
 
-
-
-
-
-
-
-
 void OTHybridTester::FindUSBHandler(bool b2SSEH)
 {
 #ifdef __TCUSB__
@@ -222,7 +215,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 cDACtoADCMultiGraph->Add(cDACtoADCGraph);
                 cfitDataVect[0] = cDACValVect;
                 cfitDataVect[1] = cADCValVect;
-                cReg_Class.fit(cDACValVect,cADCValVect);
+                cReg_Class.fit(cDACValVect, cADCValVect);
                 cDACtoADCGraph->Fit("pol1");
 
                 TF1* cFit = (TF1*)cDACtoADCGraph->GetListOfFunctions()->FindObject("pol1");
@@ -253,35 +246,35 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 // Need statistics on spread of RSSI and temperature sensors
 bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
 {
-    bool                               cReturn;
-    std::map<std::string, std::string> cADCsMap;
-    std::map<std::string, float>*      cDefaultParameters;
-    std::map<std::string, std::string> *cADCNametoPinMapping;
+    bool                                cReturn;
+    std::map<std::string, std::string>  cADCsMap;
+    std::map<std::string, float>*       cDefaultParameters;
+    std::map<std::string, std::string>* cADCNametoPinMapping;
 #ifdef __USE_ROOT__
     auto cFixedADCsTree = new TTree("FixedADCs", "lpGBT ADCs not tied to AMUX");
     gStyle->SetOptStat(0);
 
     if(p2SSEH)
     {
-        cADCsMap           = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
+        cADCsMap             = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
                     {"VMIN", "VMIN_Nominal"},
                     {"TEMPP", "TEMPP_Nominal"},
                     {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
                     {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
                     {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
-        cDefaultParameters = &f2SSEHDefaultParameters;
-        cADCNametoPinMapping=&f2SSEHADCInputMap;
+        cDefaultParameters   = &f2SSEHDefaultParameters;
+        cADCNametoPinMapping = &f2SSEHADCInputMap;
     }
     else
     {
-        cADCsMap           = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
+        cADCsMap             = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
                     {"TEMP", "TEMP_Nominal"},
                     {"VTRX+.RSSI_ADC", "VTRX+.RSSI_ADC_Nominal"},
 
                     {"1V25_MONITOR", "1V25_MONITOR_Nominal"},
                     {"2V55_MONITOR", "2V55_MONITOR_Nominal"}};
-        cDefaultParameters = &fPSROHDefaultParameters;
-        cADCNametoPinMapping=&fPSROHADCInputMap;
+        cDefaultParameters   = &fPSROHDefaultParameters;
+        cADCNametoPinMapping = &fPSROHADCInputMap;
     }
     auto cADCHistogram = new TH2I("cADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
@@ -316,7 +309,6 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                     cADCValueVect.push_back(cADCValue);
                     cADCHistogram->Fill(cADCsMapIterator->first.c_str(), cADCValue, 1);
                 }
-                // fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
 
                 fillSummaryTree(cADCsMapIterator->first, cADCValue * cConversionFactor);
                 float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
@@ -354,7 +346,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
 }
 
 void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t pLevel)
-{   
+{
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
@@ -395,7 +387,7 @@ bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
     if(p2SSEH) { fGPILines = f2SSEHGPILines; }
     else
     {
-        fGPILines = fPSROHGPILines;
+        fGPILines = fPSROHGPILines; // On the TC the PWRGOOD is connected to a switch!
     }
     bool cValid = true;
     bool cReadGPI;
@@ -408,14 +400,14 @@ bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
             {
                 D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                 cReadGPI                            = clpGBTInterface->ReadGPIO(cOpticalGroup->flpGBT, cMapIterator->second);
-                cValid = cValid && cReadGPI;
+                cValid                              = cValid && cReadGPI;
                 if(!cReadGPI) { LOG(INFO) << BOLDRED << "GPIO connected to " << cMapIterator->first << " is low!" << RESET; }
                 else
                 {
                     LOG(INFO) << BOLDGREEN << "GPIO connected to " << cMapIterator->first << " is high!" << RESET;
                 }
                 cMapIterator++;
-            } 
+            }
         }
     }
     return cValid;
