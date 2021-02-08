@@ -35,18 +35,51 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     // ################################################
     // # Programming global registers from white list #
     // ################################################
-    static const char* registerWhileList[] = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"};
+    static const char* registerWhiteList[] = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"};
 
-    for(auto i = 0u; i < arraySize(registerWhileList); i++)
+    for(auto i = 0u; i < arraySize(registerWhiteList); i++)
     {
-        auto it = pRD53RegMap.find(registerWhileList[i]);
+        auto it = pRD53RegMap.find(registerWhiteList[i]);
         if(it != pRD53RegMap.end()) RD53Interface::WriteChipReg(pChip, it->first, it->second.fValue, true);
     }
+
+    // #######################################
+    // # Programming CLK_DATA_DELAY register #
+    // #######################################
+    static const char* registerClkDataDelayList[] = {"CLK_DATA_DELAY_CMD_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"};
+    auto clk_data_delay_value = pRD53RegMap["CLK_DATA_DELAY"].fValue;
+
+    for(auto i = 0u; i < arraySize(registerClkDataDelayList); i++)
+    {
+        auto it = pRD53RegMap.find(registerClkDataDelayList[i]);
+        if(it != pRD53RegMap.end()) 
+        {
+            if(it->first == "CLK_DATA_DELAY_CMD_DELAY")
+            {
+                clk_data_delay_value =
+                    it->second.fValue | (clk_data_delay_value & (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - RD53Shared::setBits(it->second.fBitSize)));
+            }
+            else if(it->first == "CLK_DATA_DELAY_CLK_DELAY")
+            {
+                clk_data_delay_value = (it->second.fValue << pRD53RegMap["CLK_DATA_DELAY_CMD_DELAY"].fBitSize) |
+                        (clk_data_delay_value &
+                            (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - (RD53Shared::setBits(it->second.fBitSize) << pRD53RegMap["CLK_DATA_DELAY_CMD_DELAY"].fBitSize)));
+            }
+            else if(it->first == "CLK_DATA_DELAY_2INV_DELAY")
+            {
+                clk_data_delay_value = (it->second.fValue << (pRD53RegMap["CLK_DATA_DELAY_CMD_DELAY"].fBitSize + pRD53RegMap["CLK_DATA_DELAY_CLK_DELAY"].fBitSize)) |
+                        (clk_data_delay_value &
+                            (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) -
+                            (RD53Shared::setBits(it->second.fBitSize) << (pRD53RegMap["CLK_DATA_DELAY_CMD_DELAY"].fBitSize + pRD53RegMap["CLK_DATA_DELAY_CLK_DELAY"].fBitSize))));
+            }
+        }
+    }
+    RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", clk_data_delay_value, true);
 
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const char* registerBlackList[] = {"HighGain_LIN", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR"};
+    static const char* registerBlackList[] = {"HighGain_LIN", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "CLK_DATA_DELAY_CMD_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"};
 
     for(const auto& cRegItem: pRD53RegMap)
         if(cRegItem.second.fPrmptCfg == true)
@@ -92,27 +125,6 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
                     value = cRegItem.second.fValue |
                             (pRD53RegMap["INJECTION_SELECT"].fValue & (RD53Shared::setBits(pRD53RegMap["INJECTION_SELECT"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
                     regName = "INJECTION_SELECT";
-                }
-                else if(cRegItem.first == "CLK_DATA_DELAY_DATA_DELAY")
-                {
-                    value =
-                        cRegItem.second.fValue | (pRD53RegMap["CLK_DATA_DELAY"].fValue & (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
-                    regName = "CLK_DATA_DELAY";
-                }
-                else if(cRegItem.first == "CLK_DATA_DELAY_CLK_DELAY")
-                {
-                    value = (cRegItem.second.fValue << pRD53RegMap["CLK_DATA_DELAY_DATA_DELAY"].fBitSize) |
-                            (pRD53RegMap["CLK_DATA_DELAY"].fValue &
-                             (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["CLK_DATA_DELAY_DATA_DELAY"].fBitSize)));
-                    regName = "CLK_DATA_DELAY";
-                }
-                else if(cRegItem.first == "CLK_DATA_DELAY_CLK_PHASE")
-                {
-                    value = (cRegItem.second.fValue << (pRD53RegMap["CLK_DATA_DELAY_DATA_DELAY"].fBitSize + pRD53RegMap["CLK_DATA_DELAY_CLK_DELAY"].fBitSize)) |
-                            (pRD53RegMap["CLK_DATA_DELAY"].fValue &
-                             (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) -
-                              (RD53Shared::setBits(cRegItem.second.fBitSize) << (pRD53RegMap["CLK_DATA_DELAY_DATA_DELAY"].fBitSize + pRD53RegMap["CLK_DATA_DELAY_CLK_DELAY"].fBitSize))));
-                    regName = "CLK_DATA_DELAY";
                 }
 
                 RD53Interface::WriteChipReg(pChip, regName, value, true);
