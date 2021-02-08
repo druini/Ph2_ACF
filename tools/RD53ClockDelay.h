@@ -66,11 +66,8 @@ class ClockDelay : public PixelAlive
   protected:
     std::string fileRes;
     int         theCurrentRun;
-    size_t      shiftData;
-    size_t      shiftPhase;
-    size_t      saveData;
-    size_t      savePhase;
-    size_t      maxDelay;
+    uint16_t    maxClkDelay;
+    uint16_t    maxCmdDelay;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;
