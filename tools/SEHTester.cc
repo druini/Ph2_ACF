@@ -130,11 +130,11 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     std::vector<float> cVHVJ7ValVect;
     std::vector<float> cVHVJ8ValVect;
     std::vector<float> cUMonValVect;
-    auto cBiasVoltageTree = new TTree("tBiasVoltageTree", "Bias Voltage Sensor Side");
-    cBiasVoltageTree->Branch("DAC",&cDACValVect);
-    cBiasVoltageTree->Branch("VHVJ7",&cVHVJ7ValVect);
-    cBiasVoltageTree->Branch("VHVJ8",&cVHVJ8ValVect);
-    cBiasVoltageTree->Branch("MON",&cUMonValVect);
+    auto               cBiasVoltageTree = new TTree("tBiasVoltageTree", "Bias Voltage Sensor Side");
+    cBiasVoltageTree->Branch("DAC", &cDACValVect);
+    cBiasVoltageTree->Branch("VHVJ7", &cVHVJ7ValVect);
+    cBiasVoltageTree->Branch("VHVJ8", &cVHVJ8ValVect);
+    cBiasVoltageTree->Branch("MON", &cUMonValVect);
 
     for(int cDACValue = 0; cDACValue <= 3500; cDACValue += 0x155)
     {
@@ -199,9 +199,9 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cDACtoHVCanvas->Write();
     cBiasVoltageTree->Fill();
     cBiasVoltageTree->Write();
-    #ifdef __TCUSB__
+#ifdef __TCUSB__
     fTC_2SSEH->set_HV(false, false, false, 0);
-    #endif
+#endif
 #endif
 }
 
@@ -1030,10 +1030,11 @@ void SEHTester::CheckClocks(BeBoard* pBoard)
     {
         bool Clk320rStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_stat");
 
-        if(Clk320rStat){
-            LOG(INFO) << "320 r clk test ->" << BOLDGREEN << " PASSED" << RESET;}
-        else{
-            LOG(ERROR) << "320 r clock test ->" << BOLDRED << " FAILED" << RESET;}
+        if(Clk320rStat) { LOG(INFO) << "320 r clk test ->" << BOLDGREEN << " PASSED" << RESET; }
+        else
+        {
+            LOG(ERROR) << "320 r clock test ->" << BOLDRED << " FAILED" << RESET;
+        }
         fillSummaryTree("320rClkTest", Clk320rStat);
     }
 

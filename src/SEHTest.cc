@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
     cSEHTester.Inherit(&cTool);
     cSEHTester.FindUSBHandler(true);
 
-    //cSEHTester.TestCardVoltages();
+    // cSEHTester.TestCardVoltages();
     if(cmd.foundOption("test-parameter"))
     {
         cSEHTester.readTestParameters(cTestParameterFileName);
