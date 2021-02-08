@@ -10,7 +10,7 @@ OTHybridTester::~OTHybridTester()
 {
 #ifdef __TCUSB__
     if(fTC_PSROH != nullptr) delete fTC_PSROH;
-    //if(fTC_2SSEH != nullptr) delete fTC_2SSEH;
+        // if(fTC_2SSEH != nullptr) delete fTC_2SSEH;
 #endif
 }
 
@@ -32,7 +32,7 @@ void OTHybridTester::FindUSBHandler(bool b2SSEH)
     }
     if(!cThereIsLpGBT)
     {
-        if(b2SSEH) {} //fTC_2SSEH = new TC_2SSEH(); }
+        if(b2SSEH) {} // fTC_2SSEH = new TC_2SSEH(); }
         else
         {
             fTC_PSROH = new TC_PSROH();
@@ -145,7 +145,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                 else
                     LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED" << RESET;
                 cTestSuccess &= cSuccess;
-                fillSummaryTree(Form("i2cmaster%i",cMaster), cSuccess);
+                fillSummaryTree(Form("i2cmaster%i", cMaster), cSuccess);
             }
         }
     }
@@ -220,12 +220,12 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 cDACtoADCGraph->Fit("pol1");
 
                 TF1* cFit = (TF1*)cDACtoADCGraph->GetListOfFunctions()->FindObject("pol1");
-                //LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
-                //LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0 << "  Parameter 2   " << cReg_Class.b_1 << RESET;
-                LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0 << " +/- " << cReg_Class.b_0_error << "  Parameter 2   " << cReg_Class.b_1 << " +/- " << cReg_Class.b_1_error
-              << RESET;
-                LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << " +/- " << cFit->GetParError(0) << "  Parameter 2   " << cFit->GetParameter(1) << " +/- " << cFit->GetParError(1)
-              << RESET;
+                // LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
+                // LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0 << "  Parameter 2   " << cReg_Class.b_1 << RESET;
+                LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0 << " +/- " << cReg_Class.b_0_error << "  Parameter 2   " << cReg_Class.b_1
+                          << " +/- " << cReg_Class.b_1_error << RESET;
+                LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << " +/- " << cFit->GetParError(0) << "  Parameter 2   " << cFit->GetParameter(1)
+                          << " +/- " << cFit->GetParError(1) << RESET;
                 LOG(INFO) << BOLDBLUE << "DAC value = "
                           << ""
                           << " --- ADC value = "
@@ -251,12 +251,12 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
     std::map<std::string, std::string>  cADCsMap;
     std::map<std::string, float>*       cDefaultParameters;
     std::map<std::string, std::string>* cADCNametoPinMapping;
-    std::string cADCNameString;
-    std::vector<int> cADCValueVect;
+    std::string                         cADCNameString;
+    std::vector<int>                    cADCValueVect;
 #ifdef __USE_ROOT__
     auto cFixedADCsTree = new TTree("FixedADCs", "lpGBT ADCs not tied to AMUX");
-    cFixedADCsTree->Branch("Id",&cADCNameString);
-    cFixedADCsTree->Branch("AdcValue",&cADCValueVect);
+    cFixedADCsTree->Branch("Id", &cADCNameString);
+    cFixedADCsTree->Branch("AdcValue", &cADCValueVect);
     gStyle->SetOptStat(0);
 
     if(p2SSEH)
@@ -287,11 +287,11 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
     auto cADCHistogram = new TH2I("cADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
 
-    auto             cADCsMapIterator = cADCsMap.begin();
-    int              cADCValue;
-    int              cBinCount         = 1;
-    float            cConversionFactor = 1. / 1024.;
-    
+    auto  cADCsMapIterator = cADCsMap.begin();
+    int   cADCValue;
+    int   cBinCount         = 1;
+    float cConversionFactor = 1. / 1024.;
+
     fillSummaryTree("ADC conversion factor", cConversionFactor);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -309,7 +309,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
             do
             {
                 cADCValueVect.clear();
-                cADCNameString=cADCsMapIterator->first;
+                cADCNameString = cADCsMapIterator->first;
                 cADCHistogram->GetXaxis()->SetBinLabel(cBinCount, cADCsMapIterator->first.c_str());
 
                 for(int cIteration = 0; cIteration < 10; ++cIteration)
@@ -319,7 +319,6 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                     cADCHistogram->Fill(cADCsMapIterator->first.c_str(), cADCValue, 1);
                 }
 
-                
                 float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
                 float mean          = sum / cADCValueVect.size();
                 float cDifference_V = std::fabs((*cDefaultParameters)[cADCsMapIterator->second] - mean * cConversionFactor);
@@ -339,7 +338,6 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                 cFixedADCsTree->Fill();
                 cADCsMapIterator++;
                 cBinCount++;
-
 
             } while(cADCsMapIterator != cADCsMap.end());
         }
@@ -426,7 +424,6 @@ bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
                 }
                 cMapIterator++;
                 fillSummaryTree(cMapIterator->first, cReadGPI);
-
             }
         }
     }

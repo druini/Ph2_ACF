@@ -96,10 +96,8 @@ class Linear_Regression
     double b_0_error;
     double b_1_error;
 
-
     void fit(std::vector<T> datasetX, std::vector<T> datasetY) { estimate_coef<T>(datasetX, datasetY, b_1, b_0, b_1_error, b_0_error); }
     void fit(std::vector<T> datasetX, std::vector<T> datasetY, std::vector<T> datasetYerrors) { estimate_coef<T>(datasetX, datasetY, datasetYerrors, b_1, b_0, b_1_error, b_0_error); }
-
 };
 
 } // namespace fitter

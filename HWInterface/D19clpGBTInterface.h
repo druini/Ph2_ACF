@@ -268,8 +268,8 @@ class D19clpGBTInterface : public lpGBTInterface
     bool fUseOpticalLink = true;
     bool fUseCPB         = true;
 #ifdef __TCUSB__
-    TC_PSROH*                                         fTC_PSROH;
-    std::map<std::string, TC_PSROH::measurement>      fResetLines    = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
+    TC_PSROH*                                    fTC_PSROH;
+    std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
                                                                 {"L_SSA", TC_PSROH::measurement::L_SSA_RST},
                                                                 {"R_MPA", TC_PSROH::measurement::R_MPA_RST},

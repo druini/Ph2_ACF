@@ -131,7 +131,7 @@ class OTHybridTester : public Tool
   protected:
 #ifdef __TCUSB__
     TC_PSROH* fTC_PSROH;
-    //TC_2SSEH* fTC_2SSEH;
+    // TC_2SSEH* fTC_2SSEH;
 #endif
 };
 
