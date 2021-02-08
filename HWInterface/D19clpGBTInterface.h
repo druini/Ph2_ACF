@@ -151,7 +151,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // # LpGBT GPIO functions #
     // ########################
     bool ReadGPIO(Ph2_HwDescription::Chip* pChip, const uint8_t& pGPIO);
-   // Configure GPIO direction (In/Out)
+    // Configure GPIO direction (In/Out)
     void ConfigureGPIODirection(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir);
     // Configure GPIO Level (High/Low)
     void ConfigureGPIOLevel(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pOut);
@@ -174,14 +174,13 @@ class D19clpGBTInterface : public lpGBTInterface
     // perform BER test
     float PerformBERTest(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern);
 
-
     // #####################################
     // # LpGBT Eye Opening Monitor Tester  #
     // ####################################
     // Configure Eye Opening Monitor
-    void ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator=false, bool EnableEOM=true);
+    void ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator = false, bool EnableEOM = true);
     // Start Eye Opening Monitor
-    void StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM=true);
+    void StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM = true);
     // Select Eye Opening Monitor sampling phase
     void SelectEOMPhase(Ph2_HwDescription::Chip* pChip, uint8_t pPhase);
     // Select Eye Opening Monitor comparator voltage

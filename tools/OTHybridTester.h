@@ -20,6 +20,7 @@
 #include "TF1.h"
 #include "TGraph.h"
 #include "TH2.h"
+#include "TH2I.h"
 #include "TLegend.h"
 #include "TMultiGraph.h"
 #include "TObject.h"
@@ -27,7 +28,6 @@
 #include "TString.h"
 #include "TStyle.h"
 #include "TTree.h"
-#include "TH2I.h"
 #endif
 
 #ifdef __TCUSB__

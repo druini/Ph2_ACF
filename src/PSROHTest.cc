@@ -220,10 +220,7 @@ int main(int argc, char* argv[])
         cPSROHTester.LpGBTTestADC(cADCs, 0, 1000, 20);
     }
 
-    if(cmd.foundOption("eye-monitor"))
-    {
-        cPSROHTester.LpGBTRunEyeOpeningMonitor(7);
-    }
+    if(cmd.foundOption("eye-monitor")) { cPSROHTester.LpGBTRunEyeOpeningMonitor(7); }
 
     // Test Fast Commands
     if(cDebug)

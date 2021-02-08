@@ -120,7 +120,7 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            uint8_t             cSource         = 3;
+            uint8_t cSource = 3;
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, cSource); // 0 --> link data, 3 --> constant pattern
         }
@@ -129,7 +129,7 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
 
 bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
 {
-    bool cTestSuccess = true;
+    bool                cTestSuccess    = true;
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -261,9 +261,9 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                     {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
         cDefaultParameters   = &f2SSEHDefaultParameters;
         cADCNametoPinMapping = &f2SSEHADCInputMap;
-        #ifdef __TCUSB__
-            fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-        #endif
+#ifdef __TCUSB__
+        fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+#endif
     }
     else
     {
@@ -342,10 +342,11 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
     cADCHistogram->Draw("colz");
     cADCCanvas->Write();
 
-    if (p2SSEH){
-    #ifdef __TCUSB__
-            fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
-    #endif
+    if(p2SSEH)
+    {
+#ifdef __TCUSB__
+        fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
+#endif
     }
 #endif
     return cReturn;
@@ -423,10 +424,10 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect)
 {
 #ifdef __USE_ROOT__
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-    for(auto cBoard : *fDetectorContainer)
+    for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
-        for(auto cOpticalGroup : *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
             // ROOT Tree for Eye Diagram from lpGBT Eye Opening Monitor
             auto cEyeDiagramTree = new TTree(Form("tEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Diagram form lpGBT Eye Opening Monitor");
@@ -440,7 +441,7 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect)
             cEyeDiagramTree->Branch("Counter", &cCounterVector);
             // Create TCanvas & TH2I
             auto cEyeDiagramCanvas = new TCanvas(Form("cEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Opening Image", 500, 500);
-            auto cObj = gROOT->FindObject(Form("hEyeDiagram%i", cOpticalGroup->getOpticalGroupId()));
+            auto cObj              = gROOT->FindObject(Form("hEyeDiagram%i", cOpticalGroup->getOpticalGroupId()));
             if(cObj) delete cObj;
             auto cEyeDiagramHist = new TH2I(Form("hEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Opening Image", 64, 0, 63, 32, 0, 31);
             clpGBTInterface->ConfigureEOM(cOpticalGroup->flpGBT, pEndOfCountSelect, false, true);
@@ -453,18 +454,15 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect)
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     clpGBTInterface->StartEOM(cOpticalGroup->flpGBT, true);
                     uint8_t cEOMStatus = clpGBTInterface->GetEOMStatus(cOpticalGroup->flpGBT);
-                    while((cEOMStatus & (0x1 << 1) >> 1) && !(cEOMStatus & (0x1 << 0)))
-                    {
-                        cEOMStatus = clpGBTInterface->GetEOMStatus(cOpticalGroup->flpGBT);
-                    }
-                    uint16_t cCounterValue = clpGBTInterface->GetEOMCounter(cOpticalGroup->flpGBT);
+                    while((cEOMStatus & (0x1 << 1) >> 1) && !(cEOMStatus & (0x1 << 0))) { cEOMStatus = clpGBTInterface->GetEOMStatus(cOpticalGroup->flpGBT); }
+                    uint16_t cCounterValue    = clpGBTInterface->GetEOMCounter(cOpticalGroup->flpGBT);
                     uint16_t c40MCounterValue = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EOMCounter40MH") << 8 | clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EOMCounter40ML");
                     LOG(INFO) << YELLOW << "voltage step " << +cVoltageStep << ", time step " << +cTimeStep << ", counter value " << +cCounterValue << ", 40M counter " << +c40MCounterValue << RESET;
                     clpGBTInterface->StartEOM(cOpticalGroup->flpGBT, false);
                     cVoltageVector.push_back(cVoltageStep);
                     cTimeVector.push_back(cTimeStep);
                     cCounterVector.push_back(cCounterValue);
-                    //ROOT related filling
+                    // ROOT related filling
                     cEyeDiagramHist->Fill(cTimeStep, cVoltageStep, cCounterValue);
                     cEyeDiagramTree->Fill();
                 }
@@ -477,5 +475,5 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect)
             cEyeDiagramHist->Draw("COLZ");
         }
     }
-#endif 
+#endif
 }

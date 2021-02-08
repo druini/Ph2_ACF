@@ -126,14 +126,12 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ8, cVHVJ8);
     //----------------------------------------------------
     fTC_2SSEH->set_HV(false, true, true, 0);
-    std::vector<float>   cDACValVect;
+    std::vector<float> cDACValVect;
     std::vector<float> cVHVJ7ValVect;
     std::vector<float> cVHVJ8ValVect;
     std::vector<float> cUMonValVect;
     for(int cDACValue = 0; cDACValue <= 3500; cDACValue += 0x155)
     {
-
-
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         fTC_2SSEH->set_HV(true, true, true, cDACValue); // 0x155 = 100V
 
@@ -145,11 +143,11 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 
 #endif
 
-        LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- Mon = " << +cUMon <<" --- VHVJ7 = " << +cVHVJ7 << " --- VHVJ8 = " << +cVHVJ8 << RESET;
+        LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- Mon = " << +cUMon << " --- VHVJ7 = " << +cVHVJ7 << " --- VHVJ8 = " << +cVHVJ8 << RESET;
         cDACValVect.push_back(cDACValue);
         cVHVJ7ValVect.push_back(cVHVJ7);
         cVHVJ8ValVect.push_back(cVHVJ8);
-         cUMonValVect.push_back(cUMon);
+        cUMonValVect.push_back(cUMon);
     }
 
     auto cDACtoHVCanvas = new TCanvas("cDACtoHV", "Bias voltage sensor side", 1600, 900);
@@ -160,7 +158,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cDACtoHVMultiGraph->SetTitle("Bias voltage sensor side");
 
     auto cDACtoVHVJ7Graph = new TGraph(cDACValVect.size(), cDACValVect.data(), cVHVJ7ValVect.data());
-    cDACtoVHVJ7Graph->SetName( "VHVJ7");
+    cDACtoVHVJ7Graph->SetName("VHVJ7");
     cDACtoVHVJ7Graph->SetTitle("VHVJ7");
     cDACtoVHVJ7Graph->SetLineColor(1);
     cDACtoVHVJ7Graph->SetFillColor(0);
