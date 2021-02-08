@@ -108,6 +108,94 @@ int SEHTester::exampleFit()
     return 0;
 }
 
+void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
+{
+#ifdef __USE_ROOT__
+    float cUMon;
+    float cVHVJ7;
+    float cVHVJ8;
+#ifdef __TCUSB__
+    fTC_2SSEH->set_HV(false, true, true, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    fTC_2SSEH->set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(15000));
+
+    fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, cUMon);
+    fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ7, cVHVJ7);
+    fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ8, cVHVJ8);
+    //----------------------------------------------------
+    fTC_2SSEH->set_HV(false, true, true, 0);
+    std::vector<float>   cDACValVect;
+    std::vector<float> cVHVJ7ValVect;
+    std::vector<float> cVHVJ8ValVect;
+    std::vector<float> cUMonValVect;
+    for(int cDACValue = 0; cDACValue <= 3500; cDACValue += 0x155)
+    {
+
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        fTC_2SSEH->set_HV(true, true, true, cDACValue); // 0x155 = 100V
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(15000));
+
+        fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, cUMon);
+        fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ7, cVHVJ7);
+        fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ8, cVHVJ8);
+
+#endif
+
+        LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- Mon = " << +cUMon <<" --- VHVJ7 = " << +cVHVJ7 << " --- VHVJ8 = " << +cVHVJ8 << RESET;
+        cDACValVect.push_back(cDACValue);
+        cVHVJ7ValVect.push_back(cVHVJ7);
+        cVHVJ8ValVect.push_back(cVHVJ8);
+         cUMonValVect.push_back(cUMon);
+    }
+
+    auto cDACtoHVCanvas = new TCanvas("cDACtoHV", "Bias voltage sensor side", 1600, 900);
+    auto cObj           = gROOT->FindObject("mgDACtoHV");
+    if(cObj) delete cObj;
+    auto cDACtoHVMultiGraph = new TMultiGraph();
+    cDACtoHVMultiGraph->SetName("mgDACtoHV");
+    cDACtoHVMultiGraph->SetTitle("Bias voltage sensor side");
+
+    auto cDACtoVHVJ7Graph = new TGraph(cDACValVect.size(), cDACValVect.data(), cVHVJ7ValVect.data());
+    cDACtoVHVJ7Graph->SetName( "VHVJ7");
+    cDACtoVHVJ7Graph->SetTitle("VHVJ7");
+    cDACtoVHVJ7Graph->SetLineColor(1);
+    cDACtoVHVJ7Graph->SetFillColor(0);
+    cDACtoVHVJ7Graph->SetLineWidth(3);
+    cDACtoVHVJ7Graph->SetMarkerStyle(20);
+    cDACtoHVMultiGraph->Add(cDACtoVHVJ7Graph);
+
+    auto cDACtoVHVJ8Graph = new TGraph(cDACValVect.size(), cDACValVect.data(), cVHVJ8ValVect.data());
+    cDACtoVHVJ8Graph->SetName("VHVJ8");
+    cDACtoVHVJ8Graph->SetTitle("VHVJ8");
+    cDACtoVHVJ8Graph->SetLineColor(2);
+    cDACtoVHVJ8Graph->SetFillColor(0);
+    cDACtoVHVJ8Graph->SetLineWidth(3);
+    cDACtoVHVJ8Graph->SetMarkerStyle(21);
+    cDACtoHVMultiGraph->Add(cDACtoVHVJ8Graph);
+
+    auto cDACtoMonGraph = new TGraph(cDACValVect.size(), cDACValVect.data(), cUMonValVect.data());
+    cDACtoMonGraph->SetName("UMon");
+    cDACtoMonGraph->SetTitle("UMon");
+    cDACtoMonGraph->SetLineColor(3);
+    cDACtoMonGraph->SetFillColor(0);
+    cDACtoMonGraph->SetLineWidth(3);
+    cDACtoMonGraph->SetMarkerStyle(22);
+    cDACtoHVMultiGraph->Add(cDACtoMonGraph);
+
+    fTC_2SSEH->set_HV(false, true, true, 0);
+    cDACtoHVMultiGraph->Draw("ALP");
+    cDACtoHVMultiGraph->GetXaxis()->SetTitle("HV DAC");
+    cDACtoHVMultiGraph->GetYaxis()->SetTitle("Voltage [V]");
+
+    cDACtoHVCanvas->BuildLegend();
+    cDACtoHVCanvas->Write();
+#endif
+}
+
 void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 {
     // time_t startTime;

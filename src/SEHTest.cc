@@ -101,6 +101,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("eff", "Measure the DC/DC efficency");
     // Bias voltage leakage current
     cmd.defineOption("leak", "Measure the Bias voltage leakage current ");
+    // Bias voltage on sensor side
+    cmd.defineOption("bias", "Measure the Bias voltage on sensor side ", ArgvParser::OptionRequiresValue);
     // Load values defining a test from file
     cmd.defineOption("test-parameter", "Use user file with test parameters, otherwise (or if file is missing it) default parameters will be used", ArgvParser::OptionRequiresValue);
     // general
@@ -134,7 +136,7 @@ int main(int argc, char* argv[])
     uint32_t          cInternalPattern32     = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
     uint8_t           cFCMDPattern           = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
     std::string       cTestParameterFileName = (cmd.foundOption("test-parameter")) ? cmd.optionValue("test-parameter") : "testParameters.txt";
-
+    uint16_t          cBiasVoltage           = (cmd.foundOption("bias")) ? convertAnyInt(cmd.optionValue("bias").c_str()) : 0;
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
     TApplication cApp("Root Application", &argc, argv);
@@ -163,7 +165,7 @@ int main(int argc, char* argv[])
 
     // Initialize BackEnd & Control LpGBT Tester
     SEHTester cSEHTester;
-    cSEHTester.exampleFit();
+    // cSEHTester.exampleFit();
     cSEHTester.Inherit(&cTool);
     cSEHTester.FindUSBHandler(true);
     if(cmd.foundOption("test-parameter"))
@@ -267,6 +269,12 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDBLUE << "Measuring leakage current" << RESET;
         cSEHTester.TestLeakageCurrent(0x155, 30);
+    }
+
+    if(cmd.foundOption("bias"))
+    {
+        LOG(INFO) << BOLDBLUE << "Measuring bias voltage on sensor side" << RESET;
+        cSEHTester.TestBiasVoltage(cBiasVoltage);
     }
 
     if(cFCMDTest && !cFCMDTestStartPattern.empty() && !cFCMDTestUserFileName.empty())

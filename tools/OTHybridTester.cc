@@ -261,6 +261,9 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                     {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
         cDefaultParameters   = &f2SSEHDefaultParameters;
         cADCNametoPinMapping = &f2SSEHADCInputMap;
+        #ifdef __TCUSB__
+            fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+        #endif
     }
     else
     {
@@ -338,6 +341,12 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
 
     cADCHistogram->Draw("colz");
     cADCCanvas->Write();
+
+    if (p2SSEH){
+    #ifdef __TCUSB__
+            fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
+    #endif
+    }
 #endif
     return cReturn;
 }

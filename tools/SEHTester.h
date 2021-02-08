@@ -66,6 +66,7 @@ class SEHTester : public OTHybridTester
     void TestCardVoltages();
     void TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep);
     void TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime);
+    void TestBiasVoltage(uint16_t pBiasVoltage);
     int  exampleFit();
     void readTestParameters(std::string file);
     bool TestFixedADCs();
