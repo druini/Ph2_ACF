@@ -12,7 +12,6 @@ class DetectorMonitor
   public:
     DetectorMonitor(Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig);
     virtual ~DetectorMonitor();
-    virtual void runMonitor() = 0;
     void         forkMonitor();
     void         operator()();
     void         startMonitoring() { startMonitor = true; }
@@ -20,6 +19,7 @@ class DetectorMonitor
     void         stopRunning() { fKeepRunning = false; }
 
   protected:
+    virtual void                  runMonitor() = 0;
     Ph2_System::SystemController& theSystCntr;
     DetectorMonitorConfig         fDetectorMonitorConfig;
 
