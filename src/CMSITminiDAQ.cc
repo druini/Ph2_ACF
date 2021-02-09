@@ -633,6 +633,12 @@ int main(int argc, char** argv)
         if(fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(runNumber) << std::endl;
         fileRunNumberOut.close();
 
+        // #############################
+        // # Destroy System Controller #
+        // #############################
+        mySysCntr.Destroy();
+        // fDetectorMonitor->startMonitoring();
+
         LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
     }
 

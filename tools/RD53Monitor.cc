@@ -9,10 +9,13 @@
 
 #include "RD53Monitor.h"
 
-RD53Monitor::RD53Monitor(DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theDetectorMonitorConfig) { allVariables = fDetectorMonitorConfig.isElementToMonitor("AllVariables"); }
+RD53Monitor::RD53Monitor(Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystCntr, theDetectorMonitorConfig)
+{
+    allVariables = fDetectorMonitorConfig.isElementToMonitor("AllVariables");
+}
 
 void RD53Monitor::runMonitor()
 {
     if(allVariables == true)
-        for(const auto cBoard: *fDetectorContainer) SystemController::ReadSystemMonitor(cBoard, "VOUT_ana_ShuLDO", "VOUT_dig_ShuLDO", "ADCbandgap", "Iref", "TEMPSENS_1", "TEMPSENS_4");
+        for(const auto cBoard: *theSystCntr.fDetectorContainer) theSystCntr.ReadSystemMonitor(cBoard, "VOUT_ana_ShuLDO", "VOUT_dig_ShuLDO", "ADCbandgap", "Iref", "TEMPSENS_1", "TEMPSENS_4");
 }
