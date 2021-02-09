@@ -46,7 +46,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
-    static const char* registerClkDataDelayList[] = {"if(cRegItem.second.fPrmptCfg == true)", "CLK_DATA_DELAY_CMD_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"};
+    static const char* registerClkDataDelayList[] = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_CMD_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"};
     auto               clk_data_delay_value       = pRD53RegMap["CLK_DATA_DELAY"].fValue;
     bool               doWriteClkDataDelay        = false;
 
