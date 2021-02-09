@@ -34,6 +34,24 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     RD53lpGBTInterface::WriteChipReg(pChip, "EPRXDllConfig", 1 << 6 | 1 << 4 | 1 << 2, false);
     RD53lpGBTInterface::WriteChipReg(pChip, "PSDllConfig", 5 << 4 | 1 << 2 | 1, false);
 
+
+
+//     RD53lpGBTInterface::WriteChipReg(pChip, "EPRX0Control" + group, 1 << 4 | 3 << 2 | 0);
+
+//  RXConfig = 0
+//    RXConfig |= enableTerm << 1 # enable 100 ohm termination
+//    RXConfig |= enableBias << 2 # enable AC bias
+//    RXConfig |= (phase << 4) | (invert << 3) | (equal >> 1)
+//    self.write(0x0cc + 4 * group, RXConfig)
+//         # register contains EQ[0] setting of two groups -> make sure we don't change the other one
+//         currCfg = self.read(0x0e9 + group // 2)
+//         eqReg = (currCfg & ~(1 << (4 * (group % 2)))) | ((equal & 1) << (4 * (group % 2)))
+//         self.write(0x0e9 + group // 2, eqReg)
+// '
+
+
+
+
     RD53lpGBTInterface::WriteChipReg(pChip, "POWERUP2", 1 << 2 | 1 << 1, false);
 
     // ####################################################
