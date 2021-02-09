@@ -159,8 +159,11 @@ void ClockDelay::run()
                     std::tie(phase, clock_delay, cmd_delay) = bits::unpack<1, 4, 4>(this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY"));
                     cmd_delay                               = cmd_delay - clock_delay;
                     uint16_t clk_data_delay                 = (uint16_t)bits::pack<1, 4, 4>(phase, 0, cmd_delay);
-                    while(this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY", clk_data_delay, true) == false)
-                    { std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP)); };
+                    
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY", clk_data_delay, false);
+                    std::vector<uint16_t> commandList(64, RD53CmdEncoder::SYNC);
+                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, commandList, cChip->getHybridId());
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY", clk_data_delay, true);
                 }
     la.run();
     la.analyze();
@@ -267,8 +270,11 @@ void ClockDelay::analyze()
                     cmd_delay                               = (regVal + cmd_delay - clock_delay) & maxCmdDelay;
                     clock_delay                             = regVal & maxClkDelay;
                     uint16_t clk_data_delay                 = (uint16_t)bits::pack<1, 4, 4>(phase, clock_delay, cmd_delay);
-                    while(this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY", clk_data_delay, true) == false)
-                    { std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP)); };
+                    
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY", clk_data_delay, false);
+                    std::vector<uint16_t> commandList(64, RD53CmdEncoder::SYNC);
+                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, commandList, cChip->getHybridId());
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY", clk_data_delay, true);
 
                     auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG");
                     if(regVal / (maxClkDelay + 1) == 0) latency--;
@@ -306,8 +312,11 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
                         cmd_delay                               = (dacList[i] + cmd_delay - clock_delay) & maxCmdDelay;
                         clock_delay                             = dacList[i] & maxClkDelay;
                         uint16_t clk_data_delay                 = (uint16_t)bits::pack<1, 4, 4>(phase, clock_delay, cmd_delay);
-                        while(this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, clk_data_delay, true) == false)
-                        { std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP)); };
+                    
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY", clk_data_delay, false);
+                    std::vector<uint16_t> commandList(64, RD53CmdEncoder::SYNC);
+                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, commandList, cChip->getHybridId());
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY", clk_data_delay, true);
                     }
 
         // ################
