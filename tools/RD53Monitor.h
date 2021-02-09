@@ -16,6 +16,8 @@ class RD53Monitor : public DetectorMonitor
 {
   public:
     RD53Monitor(Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig);
+
+  protected:
     void runMonitor() override;
 
   private:
