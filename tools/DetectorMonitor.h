@@ -10,18 +10,18 @@
 class DetectorMonitor
 {
   public:
-    DetectorMonitor(Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig);
+    DetectorMonitor(const Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig);
     virtual ~DetectorMonitor();
-    void         forkMonitor();
-    void         operator()();
-    void         startMonitoring() { startMonitor = true; }
-    void         stopMonitoring() { startMonitor = false; }
-    void         stopRunning() { fKeepRunning = false; }
+    void forkMonitor();
+    void operator()();
+    void startMonitoring() { startMonitor = true; }
+    void stopMonitoring() { startMonitor = false; }
+    void stopRunning() { fKeepRunning = false; }
 
   protected:
-    virtual void                  runMonitor() = 0;
-    Ph2_System::SystemController& theSystCntr;
-    DetectorMonitorConfig         fDetectorMonitorConfig;
+    virtual void                        runMonitor() = 0;
+    const Ph2_System::SystemController& theSystCntr;
+    DetectorMonitorConfig               fDetectorMonitorConfig;
 
   private:
     std::atomic<bool> fKeepRunning;

@@ -46,7 +46,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
-    static const char* registerClkDataDelayList[] = {"if(cRegItem.second.fPrmptCfg == true)", "CLK_DATA_DELAY_CMD_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"};
+    static const char* registerClkDataDelayList[] = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_CMD_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"};
     auto               clk_data_delay_value       = pRD53RegMap["CLK_DATA_DELAY"].fValue;
     bool               doWriteClkDataDelay        = false;
 
@@ -515,7 +515,7 @@ void RD53Interface::SendHybridCommandsPack(const BeBoard* pBoard, const std::vec
 // # Dedicated to minitoring #
 // ###########################
 
-float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const char* observableName)
+float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& observableName)
 {
     this->setBoard(pChip->getBeBoardId());
 
@@ -557,7 +557,7 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const char* observableN
     }
 
     observable = bits::pack<1, 6, 7>(true, currentObservable, voltageObservable);
-    if(std::string(observableName).find("TEMPSENS") != std::string::npos)
+    if(observableName.find("TEMPSENS") != std::string::npos)
     {
         value = RD53Interface::measureTemperature(pChip, observable);
         LOG(INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " C" << std::setprecision(-1)

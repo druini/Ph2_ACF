@@ -1,7 +1,7 @@
 #include "CBCMonitor.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 
-CBCMonitor::CBCMonitor(Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystCntr, theDetectorMonitorConfig)
+CBCMonitor::CBCMonitor(const Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystCntr, theDetectorMonitorConfig)
 {
     doMonitorTemperature = fDetectorMonitorConfig.isElementToMonitor("ModuleTemperature");
 }

@@ -77,14 +77,11 @@ class RD53Interface : public ReadoutChipInterface
     // # Dedicated to minitoring #
     // ###########################
   public:
-    template <typename T, typename... Ts>
-    void ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const T& observableName, const Ts&... observableNames)
+    void ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args)
     {
-        ReadChipMonitor(pChip, observableName);
-        ReadChipMonitor(pChip, observableNames...);
+        for(const auto& arg: args) ReadChipMonitor(pChip, arg);
     }
-
-    float ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const char* observableName);
+    float ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
     float ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip);
     float ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip);
 

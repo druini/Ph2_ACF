@@ -166,20 +166,7 @@ class SystemController
      * \param args
      * \return: none
      */
-    template <typename... Ts>
-    void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, const Ts&... args)
-    {
-        if(sizeof...(Ts) > 0)
-            for(const auto cOpticalGroup: *pBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid)
-                    {
-                        LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                        fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args...);
-                        LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
-                    }
-    }
+    void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, const std::vector<std::string>& args) const;
 
     /*!
      * \brief Read Data from pBoard
