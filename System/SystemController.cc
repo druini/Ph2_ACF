@@ -235,7 +235,7 @@ void SystemController::RunBERtest(std::string chain2test, bool given_time, doubl
                     flpGBTInterface->StartPRBSpattern(cOpticalGroup->flpGBT);
 
                     LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << RESET << GREEN
-                              << "]: " << BOLDYELLOW << ((fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), 0, frontendSpeed) == true) ? "PASSED" : "NOT PASSED")
+                              << "]: " << BOLDYELLOW << ((fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), 0, frontendSpeed) == true) ? "PASSED" : "NOT PASSED")
                               << RESET; // @TMP@
 
                     flpGBTInterface->StopPRBSpattern(cOpticalGroup->flpGBT);
@@ -255,7 +255,7 @@ void SystemController::RunBERtest(std::string chain2test, bool given_time, doubl
                         LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
                                   << ((((chain2test != "LPGBT-FE") &&
-                                        (fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), cChip->getId(), frontendSpeed) == true)) ||
+                                        (fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), 6, cChip->getId(), frontendSpeed) == true)) ||
                                        ((chain2test == "LPGBT-FE") && (flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, 6, 0, given_time, frames_or_time, frontendSpeed) == true))) // @TMP@
                                           ? "PASSED"
                                           : "NOT PASSED")
@@ -397,7 +397,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 {
                     LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
 
-                    if(static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ConfigureChip(cOpticalGroup->flpGBT) == true)
+                    if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
                         LOG(INFO) << BOLDBLUE << "\t--> LpGBT chip configured" << RESET;
                     else
                         LOG(ERROR) << BOLDRED << "\t--> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ")" << RESET;

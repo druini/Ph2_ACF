@@ -1840,7 +1840,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 // #######################
 // # Bit Error Rate test #
 // #######################
-bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed)
+bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed)
 {
     const uint32_t nBitInClkPeriod = 32. / std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
@@ -1868,7 +1868,8 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
     // Configure number of printouts and calculate the frequency of printouts
     double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
-    WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
+    WriteStackReg({{"user.ctrl_regs.PRBS_checker.upgroup_addr", optGroup_id},
+	           {"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
                    {"user.ctrl_regs.PRBS_checker.chip_address", chip_id},
                    {"user.ctrl_regs.PRBS_checker.reset_cntr", 1},
                    {"user.ctrl_regs.PRBS_checker.reset_cntr", 0}});
