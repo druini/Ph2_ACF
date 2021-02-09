@@ -515,7 +515,7 @@ void RD53Interface::SendHybridCommandsPack(const BeBoard* pBoard, const std::vec
 // # Dedicated to minitoring #
 // ###########################
 
-float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const char* observableName)
+float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& observableName)
 {
     this->setBoard(pChip->getBeBoardId());
 
@@ -557,7 +557,7 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const char* observableN
     }
 
     observable = bits::pack<1, 6, 7>(true, currentObservable, voltageObservable);
-    if(std::string(observableName).find("TEMPSENS") != std::string::npos)
+    if(observableName.find("TEMPSENS") != std::string::npos)
     {
         value = RD53Interface::measureTemperature(pChip, observable);
         LOG(INFO) << BOLDBLUE << "\t--> " << observableName << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " C" << std::setprecision(-1)

@@ -1,6 +1,7 @@
 #include "DetectorMonitor.h"
 
-DetectorMonitor::DetectorMonitor(Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig) : theSystCntr(theSystCntr), fDetectorMonitorConfig(theDetectorMonitorConfig)
+DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig)
+    : theSystCntr(theSystCntr), fDetectorMonitorConfig(theDetectorMonitorConfig)
 {
     fKeepRunning = true;
     startMonitor = false;

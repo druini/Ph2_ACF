@@ -6,7 +6,7 @@
 class CBCMonitor : public DetectorMonitor
 {
   public:
-    CBCMonitor(Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig);
+    CBCMonitor(const Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig);
 
   protected:
     void runMonitor() override;

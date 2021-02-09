@@ -201,6 +201,20 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os, bool pIsFile) { this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile); }
 
+void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std::string>& args) const
+{
+    if(args.size() != 0)
+        for(const auto cOpticalGroup: *pBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                              << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args);
+                    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+                }
+}
+
 void SystemController::RunBERtest(std::string chain2test, bool given_time, double frames_or_time)
 // ##############################
 // # chain2test = "BE-LPGBT-FE" #
