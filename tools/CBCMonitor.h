@@ -1,17 +1,17 @@
 #ifndef CBC_MONITOR_H
 #define CBC_MONITOR_H
 
-#include "../tools/DetectorMonitor.h"
+#include "DetectorMonitor.h"
 
 class CBCMonitor : public DetectorMonitor
 {
   public:
-    CBCMonitor(DetectorMonitorConfig theDetectorMonitorConfig);
+    CBCMonitor(Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig);
+    void runMonitor() override;
 
   private:
-    virtual void runMonitor() override;
-    void         runTemperatureMonitor();
-    bool         doMonitorTemperature{false};
+    void runTemperatureMonitor();
+    bool doMonitorTemperature{false};
 };
 
 #endif

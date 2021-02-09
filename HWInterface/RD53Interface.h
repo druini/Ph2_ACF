@@ -42,8 +42,8 @@ class RD53Interface : public ReadoutChipInterface
     bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true) override;
     bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override;
 
-    void     StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
-    void     StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+    void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+    void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
     // #############################
 
     void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard);

@@ -4,17 +4,29 @@
 #include "../System/SystemController.h"
 #include "../Utils/DetectorMonitorConfig.h"
 
-class DetectorMonitor : public Ph2_System::SystemController
+#include "chrono"
+#include "thread"
+
+class DetectorMonitor
 {
   public:
-    DetectorMonitor(DetectorMonitorConfig theDetectorMonitorConfig);
-    void operator()();
-    void stopMonitoring() { fKeepRunning = false; }
+    DetectorMonitor(Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig);
+    virtual ~DetectorMonitor();
+    virtual void runMonitor() = 0;
+    void         forkMonitor();
+    void         operator()();
+    void         startMonitoring() { startMonitor = true; }
+    void         stopMonitoring() { startMonitor = false; }
+    void         stopRunning() { fKeepRunning = false; }
 
   protected:
-    virtual void          runMonitor() = 0;
-    std::atomic<bool>     fKeepRunning{true};
-    DetectorMonitorConfig fDetectorMonitorConfig;
+    Ph2_System::SystemController& theSystCntr;
+    DetectorMonitorConfig         fDetectorMonitorConfig;
+
+  private:
+    std::atomic<bool> fKeepRunning;
+    std::atomic<bool> startMonitor;
+    std::future<void> fMonitorFuture;
 };
 
 #endif

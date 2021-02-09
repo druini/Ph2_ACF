@@ -15,11 +15,10 @@
 class RD53Monitor : public DetectorMonitor
 {
   public:
-    RD53Monitor(DetectorMonitorConfig theDetectorMonitorConfig);
-
-  private:
+    RD53Monitor(Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig);
     void runMonitor() override;
 
+  private:
     bool allVariables;
 };
 
