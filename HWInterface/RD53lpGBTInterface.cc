@@ -697,16 +697,16 @@ bool RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChanne
     // ########
     // # Stop #
     // ########
-    auto totalErrors = RD53lpGBTInterface::GetBERTErrors(pChip);
+    auto nErrors = RD53lpGBTInterface::GetBERTErrors(pChip);
     RD53lpGBTInterface::WriteChipReg(pChip, "BERTConfig", (BERTMeasTime << 4) | (0 << 1) | 0); // Stop
 
     // Read PRBS frame counter
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frames2run << RESET;
-    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << totalErrors << RESET;
+    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
-    return (totalErrors == 0);
+    return (nErrors == 0);
 }
 
 void RD53lpGBTInterface::StartPRBSpattern(Ph2_HwDescription::Chip* pChip)

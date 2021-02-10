@@ -1842,6 +1842,11 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 // # Bit Error Rate test #
 // #######################
 bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed)
+// ####################
+// # 1.28 Gbit/s  = 0 #
+// # 640 Mbit/s   = 1 #
+// # 320 Mbit/s   = 2 #
+// ####################
 {
     const uint32_t nBitInClkPeriod = 32. / std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
