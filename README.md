@@ -27,12 +27,12 @@ More informations can be found at https://indico.cern.ch/event/842824/attachment
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 14/12/2020
++ Last change made to this section: 03/02/2021
 ```
 
 **Suggested software and firmware versions:**
 - Software git branch / tag : `master` / `IT-v3.9.9`
-- Firmware tag: `3.4`
+- Firmware tag: `3.5`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 **FC7 setup:**
@@ -40,7 +40,7 @@ More informations can be found at https://indico.cern.ch/event/842824/attachment
 2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
 3. Restart the network: `sudo /etc/init.d/network restart`
 4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://archives.fedoraproject.org/pub/archive/epel/6/x86_64/Packages/r/rarpd-ss981107-42.el6.x86_64.rpm
-5. Start the rarpd daemon: `sudo systemctl start rarpd` or `rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
+5. Start the rarpd daemon: `sudo systemctl start rarpd` or `sudo rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
 
 More details on the hardware needed to setup the system can be bound here: https://espace.cern.ch/Tracker-Upgrade/DAQ/SitePages/Home.aspx
 
@@ -221,6 +221,7 @@ For more information on the firmware, please check the doc directory of https://
 ### clang-format (required to submit merge requests!!!)
 1. install 7.0 llvm toolset:
 
+        $> yum install centos-release-scl
         $> yum install llvm-toolset-7.0
 
 2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):
