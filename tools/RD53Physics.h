@@ -45,7 +45,7 @@ class Physics : public Tool
     void analyze(bool doReadBinary = false);
     void saveChipRegisters(int currentRun);
     void fillDataContainer(Ph2_HwDescription::BeBoard* cBoard);
-    void monitor();
+    /* void monitor(); */
 
     void setGenericEvtConverter(evtConvType arg)
     {
@@ -86,7 +86,6 @@ class Physics : public Tool
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;
-    std::thread thrMonitor;
     std::mutex  theMtx;
     evtConvType genericEvtConverter;
 };

@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clockdelay physics eudaq prbstime prbsframes]",
+                     "injdelay clkdelay physics eudaq prbstime prbsframes]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -514,7 +514,7 @@ int main(int argc, char** argv)
             id.analyze();
             id.draw();
         }
-        else if(whichCalib == "clockdelay")
+        else if(whichCalib == "clkdelay")
         {
             // ###################
             // # Run Clock Delay #
@@ -632,6 +632,12 @@ int main(int argc, char** argv)
         fileRunNumberOut.open(FILERUNNUMBER, std::ios::out);
         if(fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(runNumber) << std::endl;
         fileRunNumberOut.close();
+
+        // #############################
+        // # Destroy System Controller #
+        // #############################
+        mySysCntr.Destroy();
+        // fDetectorMonitor->startMonitoring();
 
         LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
     }

@@ -28,20 +28,11 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // #########################
     // # Configure PLL and DLL #
     // #########################
-    // @TMP@
     RD53lpGBTInterface::WriteChipReg(pChip, "LDConfigH", 1 << 5, false);
     RD53lpGBTInterface::WriteChipReg(pChip, "EPRXLOCKFILTER", 0x55, false);
     RD53lpGBTInterface::WriteChipReg(pChip, "EPRXDllConfig", 1 << 6 | 1 << 4 | 1 << 2, false);
     RD53lpGBTInterface::WriteChipReg(pChip, "PSDllConfig", 5 << 4 | 1 << 2 | 1, false);
-
     RD53lpGBTInterface::WriteChipReg(pChip, "POWERUP2", 1 << 2 | 1 << 1, false);
-
-    // ####################################################
-    // # Programming registers as from configuration file #
-    // ####################################################
-    ChipRegMap& lpGBTRegMap = pChip->getRegMap();
-    for(const auto& cRegItem: lpGBTRegMap)
-        if((cRegItem.second.fAddress < 0x13C) && (cRegItem.second.fPrmptCfg == true)) RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
 
     // #####################
     // # Check PUSM status #
@@ -62,7 +53,22 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     }
     LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[PUSMStatus] << RESET;
 
+    // ####################################################
+    // # Programming registers as from configuration file #
+    // ####################################################
+    ChipRegMap& lpGBTRegMap = pChip->getRegMap();
+    for(const auto& cRegItem: lpGBTRegMap)
+        if((cRegItem.second.fAddress < 0x13C) && (cRegItem.second.fPrmptCfg == true)) RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+
     RD53lpGBTInterface::PrintChipMode(pChip);
+
+    // ###############################
+    // # Configure Up and Down links # // @TMP@
+    // ###############################
+    RD53lpGBTInterface::ConfigureRxGroups(pChip, {6}, {0}, 3, 0);
+    RD53lpGBTInterface::ConfigureRxChannels(pChip, {6}, {0}, 0, 1, 1, 0, 0);
+    RD53lpGBTInterface::ConfigureTxGroups(pChip, {3}, {0}, 2);
+    RD53lpGBTInterface::ConfigureTxChannels(pChip, {3}, {0}, 0, 3, 0, 0, 1);
 
     return true;
 }
@@ -663,7 +669,7 @@ bool RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChanne
     // #########
     // # Start #
     // #########
-    RD53lpGBTInterface::WriteChipReg(pChip, "BERTSource", (fGroup2BERTsourceCourse[pGroup] << 4) | fChannelSpeed2BERTsourceFine[pChannel + 4*frontendSpeed]);
+    RD53lpGBTInterface::WriteChipReg(pChip, "BERTSource", (fGroup2BERTsourceCourse[pGroup] << 4) | fChannelSpeed2BERTsourceFine[pChannel + 4 * frontendSpeed]);
     RD53lpGBTInterface::WriteChipReg(pChip, "BERTConfig", (BERTMeasTime << 4) | (0 << 1) | 1);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
