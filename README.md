@@ -32,7 +32,7 @@ More informations can be found at https://indico.cern.ch/event/842824/attachment
 
 **Suggested software and firmware versions:**
 - Software git branch / tag : `master` / `IT-v3.9.9`
-- Firmware tag: `3.4`
+- Firmware tag: `3.5`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 **FC7 setup:**
