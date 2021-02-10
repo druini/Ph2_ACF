@@ -27,7 +27,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     cmake_minimum_required(VERSION 2.8)
     project(Ph2_ACF)
 
-    #set the output directory
+   # Set the output directory
     if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
        MESSAGE( STATUS "${BoldRed}" )
        MESSAGE( FATAL_ERROR "${Reset}In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
@@ -53,8 +53,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
        )
     # ---------- Setup output Directories -------------------------
 
-
-    # Set the cmakeL module path
+    # Set the cmake module path
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
     set(CompileForShep "$ENV{CompileForShep}")
@@ -101,7 +100,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif()
 
 
-    #check for external dependences
+    # Check for external dependences
     message("--")
     message("--     ${BoldCyan}#### Checking for external Dependencies ####${Reset}")
     if(CompileForShep OR NoDataShipping)
@@ -120,16 +119,19 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         endif(ROOT_FOUND)
     endif()
 
+    # AMC13
     find_package(CACTUS)      #========================================================
     if(${CACTUS_AMC13_FOUND})
         message(STATUS "    Enabling AMC13 component")
     endif(${CACTUS_AMC13_FOUND})
 
+    # Antenna
     find_package(PH2_ANTENNA) #========================================================
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
+    # Power supplt
     find_package(PH2_POWERSUPPLY) #========================================================
     if(PH2_POWERSUPPLY_FOUND)
         message(STATUS "    Building the PowerSupply components")
@@ -151,7 +153,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})
 
-    # ZeroMQ optional
+    # ZeroMQ
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)
@@ -177,12 +179,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         MESSAGE(STATUS "    No boost headers found with uHAL (you are most likely using CC7) - make sure to install boost 1.53 (default version on CC7)")
     endif(uhal_boost)
 
-
     find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
-    #all the subdirs
+    # All the subdirs
     if(${CACTUS_AMC13_FOUND})
         add_subdirectory(AMC13)
     endif()
@@ -243,16 +244,18 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         set(NoDataShipping false)
     endif()
 
+    # AMC13
     if(${CACTUS_AMC13_FOUND})
         message(STATUS "    Enabling AMC13 component")
     endif(${CACTUS_AMC13_FOUND})
 
+    # Antenna
     find_package(PH2_ANTENNA) #========================================================
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
-    # ZeroMQ optional
+    # ZeroMQ
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)
@@ -272,13 +275,12 @@ else() # ------------------------------- Compilation in the otsdaq environment -
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
-    #all the subdirs
+    # All the subdirs
     if(${CACTUS_AMC13_FOUND})
         add_subdirectory(AMC13)
-   endif()
+    endif()
 
     add_subdirectory(tools)
-##    add_subdirectory(RootWeb)
     add_subdirectory(DQMUtils)
     add_subdirectory(Utils)
     add_subdirectory(RootUtils)
