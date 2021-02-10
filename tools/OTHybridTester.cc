@@ -319,7 +319,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                 float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
                 float mean          = sum / cADCValueVect.size();
                 float cDifference_V = std::fabs((*cDefaultParameters)[cADCsMapIterator->second] - mean * cConversionFactor);
-                fillSummaryTree(cADCsMapIterator->first, mean * cConversionFactor);
+                fillSummaryTree(cADCsMapIterator->first.c_str(), mean * cConversionFactor);
                 // Still hard coded threshold for imidiate boolean result, actual values are stored
                 if(cDifference_V > 0.1)
                 {
@@ -420,7 +420,7 @@ bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
                     LOG(INFO) << BOLDGREEN << "GPIO connected to " << cMapIterator->first << " is high!" << RESET;
                 }
                 cMapIterator++;
-                fillSummaryTree(cMapIterator->first, cReadGPI);
+                fillSummaryTree(cMapIterator->first.c_str(), cReadGPI);
             }
         }
     }
