@@ -227,7 +227,7 @@
 -->
 <MonitoringSettings>
   <Monitoring type="RD53" enable="0">
-    <MonitoringSleepTime>     1000 </MonitoringSleepTime>
-    <Enable name="AllVariables"> 1 </Enable>
+    <MonitoringSleepTime>        1000 </MonitoringSleepTime>
+    <Enable name="AllVariables">    1 </Enable>
   </Monitoring>
 </MonitoringSettings>
