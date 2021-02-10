@@ -1890,7 +1890,7 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
 
     LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << RESET;
     bool run_done = false;
-    int  idx      = 0;
+    int  idx      = 1;
     while(run_done == false)
     {
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
@@ -1901,10 +1901,10 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
         auto frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
 
         double percent_done = frameCounter / frames2run * 100.;
-        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * (idx + 1) << RESET << GREEN << "s (" << BOLDYELLOW << percent_done << RESET << GREEN << "% done)" << RESET;
+        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << percent_done << RESET << GREEN << "% done)" << RESET;
         LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << RegManager::ReadReg("user.stat_regs.prbs_ber_cntr") << RESET;
         if(given_time == true)
-            run_done = (time_per_step * (idx + 1) >= time2run);
+            run_done = (time_per_step * idx >= time2run);
         else
             run_done = (frameCounter >= frames2run);
         idx++;

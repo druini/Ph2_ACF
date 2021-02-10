@@ -68,7 +68,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     RD53lpGBTInterface::ConfigureRxGroups(pChip, {6}, {0}, 3, 0);
     RD53lpGBTInterface::ConfigureRxChannels(pChip, {6}, {0}, 0, 1, 1, 0, 0);
     RD53lpGBTInterface::ConfigureTxGroups(pChip, {3}, {0}, 2);
-    RD53lpGBTInterface::ConfigureTxChannels(pChip, {3}, {0}, 0, 3, 0, 0, 1);
+    RD53lpGBTInterface::ConfigureTxChannels(pChip, {3}, {0}, 3, 3, 0, 0, 1);
 
     return true;
 }
@@ -635,6 +635,11 @@ uint64_t RD53lpGBTInterface::GetBERTErrors(Chip* pChip)
 }
 
 bool RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
+// ####################
+// # 1.28 Gbit/s  = 0 #
+// # 640 Mbit/s   = 1 #
+// # 320 Mbit/s   = 2 #
+// ####################
 {
     const uint32_t nBitInClkPeriod = 32. / std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
@@ -665,43 +670,43 @@ bool RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChanne
     // # Configuring #
     // ###############
     RD53lpGBTInterface::ConfigureRxSource(pChip, {pGroup}, RD53lpGBTconstants::PATTERN_NORMAL);
+    RD53lpGBTInterface::WriteChipReg(pChip, "BERTSource", (fGroup2BERTsourceCourse[pGroup] << 4) | fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)]);
 
     // #########
     // # Start #
     // #########
-    RD53lpGBTInterface::WriteChipReg(pChip, "BERTSource", (fGroup2BERTsourceCourse[pGroup] << 4) | fChannelSpeed2BERTsourceFine[pChannel + 4 * frontendSpeed]);
-    RD53lpGBTInterface::WriteChipReg(pChip, "BERTConfig", (BERTMeasTime << 4) | (0 << 1) | 1);
+    RD53lpGBTInterface::WriteChipReg(pChip, "BERTConfig", (BERTMeasTime << 4) | (0 << 1) | 0); // Stop
+    RD53lpGBTInterface::WriteChipReg(pChip, "BERTConfig", (BERTMeasTime << 4) | (0 << 1) | 1); // Start
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
-    if(((RD53lpGBTInterface::ReadChipReg(pChip, "BERTStatus") & (0x1 << 2)) >> 2) == true) throw Exception("[RD53lpGBTInterface::RunBERtest] All zeros at input");
-
     LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << RESET;
-    int idx = 0;
-    while(time_per_step * (idx + 1) < time2run)
+    int idx = 1;
+    while((RD53lpGBTInterface::ReadChipReg(pChip, "BERTStatus") & 1) == false)
     {
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
 
-        double percent_done = time_per_step * (idx + 1) / time2run * 100.;
-        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * (idx + 1) << RESET << GREEN << "s (" << BOLDYELLOW << percent_done << RESET << GREEN << "% done)" << RESET;
+        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s" << RESET;
         LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << RD53lpGBTInterface::GetBERTErrors(pChip) << RESET;
         idx++;
     }
+    frames2run = time_per_step * idx * fps;
     LOG(INFO) << BOLDGREEN << "========= Finished =========" << RESET;
+
+    if(((RD53lpGBTInterface::ReadChipReg(pChip, "BERTStatus") & (1 << 2)) >> 2) == true) throw Exception("[RD53lpGBTInterface::RunBERtest] All zeros at input");
 
     // ########
     // # Stop #
     // ########
-    RD53lpGBTInterface::WriteChipReg(pChip, "BERTConfig", (BERTMeasTime << 4) | (0 << 1) | 0);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    auto totalErrors = RD53lpGBTInterface::GetBERTErrors(pChip);
+    RD53lpGBTInterface::WriteChipReg(pChip, "BERTConfig", (BERTMeasTime << 4) | (0 << 1) | 0); // Stop
 
     // Read PRBS frame counter
-    auto nErrors = RD53lpGBTInterface::GetBERTErrors(pChip);
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frames2run << RESET;
-    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET;
+    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << totalErrors << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
-    return (nErrors == 0);
+    return (totalErrors == 0);
 }
 
 void RD53lpGBTInterface::StartPRBSpattern(Ph2_HwDescription::Chip* pChip)
