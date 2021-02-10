@@ -75,6 +75,8 @@ class OTHybridTester : public Tool
     bool LpGBTTestGPILines(bool p2SSEH = false);
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
+    // Run Bit Error Test
+    std::map<uint8_t, std::vector<float>> RunBERT(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern = 0);
 
   private:
 #ifdef __TCUSB__
