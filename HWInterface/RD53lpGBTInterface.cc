@@ -336,7 +336,7 @@ void RD53lpGBTInterface::ConfigurePhShifter(Chip* pChip, const std::vector<uint8
 // ####################################
 // # LpGBT specific routine functions #
 // ####################################
-  void RD53lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain)
+void RD53lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain)
 {
     for(const auto& cGroup: pGroups)
     {
@@ -350,16 +350,16 @@ void RD53lpGBTInterface::ConfigurePhShifter(Chip* pChip, const std::vector<uint8
         else if(cGroup == 6)
             cTrainRxReg = "EPRXTrain32";
 
-	if(pTrain == true)
-	  RD53lpGBTInterface::WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
-	else
-	  RD53lpGBTInterface::WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
+        if(pTrain == true)
+            RD53lpGBTInterface::WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
+        else
+            RD53lpGBTInterface::WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
     }
 }
 
 void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
-    const uint8_t cChipRate = GetChipRate(pChip);
+    const uint8_t cChipRate = RD53lpGBTInterface::GetChipRate(pChip);
 
     // Set data source for channels 0,2 to PRBS
     RD53lpGBTInterface::ConfigureRxSource(pChip, pGroups, RD53lpGBTconstants::PATTERN_PRBS);
@@ -368,29 +368,28 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
 
     // Configure Rx Phase Shifter
     uint16_t cDelay = 0x00;
-    uint8_t  cFreq  = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
+    uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
     RD53lpGBTInterface::ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
 
     RD53lpGBTInterface::PhaseTrainRx(pChip, pGroups, true);
     for(const auto& cGroup: pGroups)
-      {
+    {
         // Wait until channels lock
         LOG(INFO) << GREEN << "Phase Aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
         do
-	  {
-	    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-	  }
-	while(RD53lpGBTInterface::IsRxLocked(pChip, cGroup, pChannels) == false);
+        {
+            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+        } while(RD53lpGBTInterface::IsRxLocked(pChip, cGroup, pChannels) == false);
         LOG(INFO) << GREEN << "Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " LOCKED" << RESET;
 
         // Set new phase to channels 0,2
         for(const auto& cChannel: pChannels)
-	  {
-            uint8_t cCurrPhase = GetRxPhase(pChip, cGroup, cChannel);
+        {
+            uint8_t cCurrPhase = RD53lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
             LOG(INFO) << GREEN << "Channel " << BOLDYELLOW << +cChannel << RESET << GREEN << " phase is " << BOLDYELLOW << +cCurrPhase << RESET;
-	    RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
-	  }
-      }
+            RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
+        }
+    }
     RD53lpGBTInterface::PhaseTrainRx(pChip, pGroups, false);
 
     // Set back Rx groups to Fixed Phase tracking mode
@@ -477,10 +476,10 @@ void RD53lpGBTInterface::PrintChipMode(Chip* pChip)
 
 uint8_t RD53lpGBTInterface::GetChipRate(Chip* pChip)
 {
-  if(((RD53lpGBTInterface::ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4) >= 8)
-      return 10;
+    if(((RD53lpGBTInterface::ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4) >= 8)
+        return 10;
     else
-      return 5;
+        return 5;
 }
 
 uint8_t RD53lpGBTInterface::GetPUSMStatus(Chip* pChip) { return RD53lpGBTInterface::ReadChipReg(pChip, "PUSMStatus"); }

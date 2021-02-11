@@ -125,9 +125,9 @@ class RD53FWInterface : public BeBoardFWInterface
         RegManager::WriteReg("user.ctrl_regs.PRBS_checker.upgroup_addr", optGroup_id);
 
         RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 0x44, RD53Constants::PATTERN_CLOCK);
-	usleep(1000);
+        usleep(1000);
         uint32_t readPattern = RegManager::ReadReg("user.stat_regs.rate_measurement_bx_counter");
-	std::cout << "AAAAA " << std::hex << readPattern << std::dec << std::endl;
+        std::cout << "AAAAA " << std::hex << readPattern << std::dec << std::endl;
         if(readPattern == 0x5555) return true;
         return false;
     }
