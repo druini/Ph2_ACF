@@ -253,7 +253,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
 
     if(status == false)
     {
-        LOG(ERROR) << BOLDRED << "Error while reading back what was written into RD53 reg. " << BOLDYELLOW << regName << RESET;
+        LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << RESET;
         return false;
     }
 
