@@ -214,7 +214,7 @@ void RD53Interface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     // ##############################
     // # Set standard AURORA output #
     // ##############################
-    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", 1, false);
+    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false);
 
     // ###############################################################
     // # Enable monitoring (needed for AutoRead register monitoring) #
