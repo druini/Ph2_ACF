@@ -122,10 +122,10 @@ class RD53FWInterface : public BeBoardFWInterface
     uint32_t ReadoutSpeed();
     bool     DidIwriteChipReg() // @TMP@
     {
-      RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 0x44, RD53Constants::PATTERN_CLOCK);
-      uint32_t readPattern = RegManager::ReadReg("user.stat_regs.rate_measurement_bx_counter");
-      if(readPattern == 0x5555) return true;
-      return false;
+        RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 0x44, RD53Constants::PATTERN_CLOCK);
+        uint32_t readPattern = RegManager::ReadReg("user.stat_regs.rate_measurement_bx_counter");
+        if(readPattern == 0x5555) return true;
+        return false;
     }
 
     // #############################################

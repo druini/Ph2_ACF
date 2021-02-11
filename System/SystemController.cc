@@ -439,28 +439,30 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ############################
             LOG(INFO) << CYAN << "=== Configuring frontend chip registers ===" << RESET;
             for(auto cOpticalGroup: *cBoard)
-	      {
-		if(cOpticalGroup->flpGBT != nullptr) // @TMP@
-		  {
-		    if(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->DidIwriteChipReg() == true) LOG(INFO) << GREEN << "Write frontent chip reg GOOD" << RESET;
-		    else LOG(INFO) << BOLDRED << "Write frontend chip reg BAD" << RESET;
-		  }
-		    
-		for(auto cHybrid: *cOpticalGroup)
-		  {
-		    LOG(INFO) << GREEN << "Configuring chip of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
-		    for(const auto cChip: *cHybrid)
-		      {
-			LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
-			if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
-			if(resetTDAC == true) static_cast<RD53*>(cChip)->resetTDAC();
-			static_cast<RD53*>(cChip)->copyMaskToDefault();
-			static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cChip));
-			LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
-			// @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
-		      }
-		  }
-	      }
+            {
+                if(cOpticalGroup->flpGBT != nullptr) // @TMP@
+                {
+                    if(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->DidIwriteChipReg() == true)
+                        LOG(INFO) << GREEN << "Write frontent chip reg GOOD" << RESET;
+                    else
+                        LOG(INFO) << BOLDRED << "Write frontend chip reg BAD" << RESET;
+                }
+
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    LOG(INFO) << GREEN << "Configuring chip of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
+                    for(const auto cChip: *cHybrid)
+                    {
+                        LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
+                        if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
+                        if(resetTDAC == true) static_cast<RD53*>(cChip)->resetTDAC();
+                        static_cast<RD53*>(cChip)->copyMaskToDefault();
+                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cChip));
+                        LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+                        // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
+                    }
+                }
+            }
             LOG(INFO) << CYAN << "================== Done ===================" << RESET;
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
