@@ -65,8 +65,12 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // ###############################
     // # Configure Up and Down links # // @TMP@
     // ###############################
+    RD53lpGBTInterface::ConfigureClocks(pChip, {28}, 6, 7, 0, 0, 0, 0);
+
     RD53lpGBTInterface::ConfigureRxGroups(pChip, {6}, {0}, 3, 0);
     RD53lpGBTInterface::ConfigureRxChannels(pChip, {6}, {0}, 0, 1, 1, 0, 0);
+    RD53lpGBTInterface::PhaseAlignRx(pChip, {6}, {0});
+
     RD53lpGBTInterface::ConfigureTxGroups(pChip, {3}, {0}, 2);
     RD53lpGBTInterface::ConfigureTxChannels(pChip, {3}, {0}, 3, 3, 0, 0, 1);
 
@@ -196,14 +200,14 @@ void RD53lpGBTInterface::ConfigureTxChannels(Chip*                       pChip,
             RD53lpGBTInterface::WriteChipReg(pChip, cTXChnCntrl, (pPreEmphStr << 5) | (pPreEmphMode << 3) | (pDriveStr << 0));
 
             // Configure Tx Channel PreEmphasisWidth, Inversion
-            std::string cTXChn_Cntr;
+            std::string cTXChnCntr;
             if(cChannel == 0 || cChannel == 1)
-                cTXChn_Cntr = "EPTX" + std::to_string(cGroup) + "1_" + std::to_string(cGroup) + "0ChnCntr";
+                cTXChnCntr = "EPTX" + std::to_string(cGroup) + "1_" + std::to_string(cGroup) + "0ChnCntr";
             else if(cChannel == 2 || cChannel == 3)
-                cTXChn_Cntr = "EPTX" + std::to_string(cGroup) + "3_" + std::to_string(cGroup) + "2ChnCntr";
+                cTXChnCntr = "EPTX" + std::to_string(cGroup) + "3_" + std::to_string(cGroup) + "2ChnCntr";
 
-            uint8_t cValue_ChnCntr = RD53lpGBTInterface::ReadChipReg(pChip, cTXChn_Cntr);
-            RD53lpGBTInterface::WriteChipReg(pChip, cTXChn_Cntr, (cValue_ChnCntr & ~(0x0F << 4 * (cChannel % 2))) | ((pInvert << 3 | pPreEmphWidth << 0) << 4 * (cChannel % 2)));
+            uint8_t cValueChnCntr = RD53lpGBTInterface::ReadChipReg(pChip, cTXChnCntr);
+            RD53lpGBTInterface::WriteChipReg(pChip, cTXChnCntr, (cValueChnCntr & ~(0x0F << 4 * (cChannel % 2))) | ((pInvert << 3 | pPreEmphWidth << 0) << 4 * (cChannel % 2)));
         }
     }
 }
@@ -332,7 +336,7 @@ void RD53lpGBTInterface::ConfigurePhShifter(Chip* pChip, const std::vector<uint8
 // ####################################
 // # LpGBT specific routine functions #
 // ####################################
-void RD53lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGroups)
+  void RD53lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain)
 {
     for(const auto& cGroup: pGroups)
     {
@@ -346,47 +350,55 @@ void RD53lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& p
         else if(cGroup == 6)
             cTrainRxReg = "EPRXTrain32";
 
-        RD53lpGBTInterface::WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
-        RD53lpGBTInterface::WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
+	if(pTrain == true)
+	  RD53lpGBTInterface::WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
+	else
+	  RD53lpGBTInterface::WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
     }
 }
 
-void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pRate)
+void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
+    const uint8_t cChipRate = GetChipRate(pChip);
+
     // Set data source for channels 0,2 to PRBS
-    RD53lpGBTInterface::ConfigureRxSource(pChip, pGroups, 1);
+    RD53lpGBTInterface::ConfigureRxSource(pChip, pGroups, RD53lpGBTconstants::PATTERN_PRBS);
     // Turn ON PRBS for channels 0,2
     RD53lpGBTInterface::ConfigureRxPRBS(pChip, pGroups, pChannels, true);
 
     // Configure Rx Phase Shifter
     uint16_t cDelay = 0x00;
-    uint8_t  cFreq = (pRate = 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
+    uint8_t  cFreq  = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
     RD53lpGBTInterface::ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
-    // Phase Train channels 0,2
-    RD53lpGBTInterface::PhaseTrainRx(pChip, pGroups);
+
+    RD53lpGBTInterface::PhaseTrainRx(pChip, pGroups, true);
     for(const auto& cGroup: pGroups)
-    {
+      {
         // Wait until channels lock
         LOG(INFO) << GREEN << "Phase Aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
         do
-        {
-            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-        } while(!IsRxLocked(pChip, cGroup, pChannels));
+	  {
+	    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+	  }
+	while(RD53lpGBTInterface::IsRxLocked(pChip, cGroup, pChannels) == false);
         LOG(INFO) << GREEN << "Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " LOCKED" << RESET;
 
         // Set new phase to channels 0,2
-        for(const auto cChannel: pChannels)
-        {
-            uint8_t cCurrPhase = RD53lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
+        for(const auto& cChannel: pChannels)
+	  {
+            uint8_t cCurrPhase = GetRxPhase(pChip, cGroup, cChannel);
             LOG(INFO) << GREEN << "Channel " << BOLDYELLOW << +cChannel << RESET << GREEN << " phase is " << BOLDYELLOW << +cCurrPhase << RESET;
-            RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
-        }
-    }
+	    RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
+	  }
+      }
+    RD53lpGBTInterface::PhaseTrainRx(pChip, pGroups, false);
 
-    // Set back Rx source to Normal data
-    RD53lpGBTInterface::ConfigureRxSource(pChip, pGroups, 0);
+    // Set back Rx groups to Fixed Phase tracking mode
+    RD53lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 3, 0);
     // Turn off PRBS for channels 0,2
     RD53lpGBTInterface::ConfigureRxPRBS(pChip, pGroups, pChannels, false);
+    // Set back Rx source to Normal data
+    RD53lpGBTInterface::ConfigureRxSource(pChip, pGroups, RD53lpGBTconstants::PATTERN_NORMAL);
 }
 
 // ################################
@@ -461,6 +473,14 @@ void RD53lpGBTInterface::PrintChipMode(Chip* pChip)
                   << "; LpGBT Mode = " << BOLDYELLOW << "Transceiver" << RESET;
         break;
     }
+}
+
+uint8_t RD53lpGBTInterface::GetChipRate(Chip* pChip)
+{
+  if(((RD53lpGBTInterface::ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4) >= 8)
+      return 10;
+    else
+      return 5;
 }
 
 uint8_t RD53lpGBTInterface::GetPUSMStatus(Chip* pChip) { return RD53lpGBTInterface::ReadChipReg(pChip, "PUSMStatus"); }
