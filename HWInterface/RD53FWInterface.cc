@@ -1131,9 +1131,6 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
 {
     if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
-    if(cfg->autozero_source == AutozeroSource::FastCMDFSM)
-        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 44, 1 << 14).getFrames(), -1); // @TMP@ : GLOBAL_PULSE_RT = "Acquire zero level in SYNC FE"
-
     // ##################################
     // # Configuring fast command block #
     // ##################################
