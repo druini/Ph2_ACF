@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
         // cBackEndAligner.Reset();
     }
     // Test PS ROH Reset Lines
-    //cPSROHTester.LpGBTTestGPILines();
+    // cPSROHTester.LpGBTTestGPILines();
     if(cmd.foundOption("testReset"))
     {
         cPSROHTester.LpGBTTestGPILines();
@@ -206,16 +206,15 @@ int main(int argc, char* argv[])
     }
 
     // Test VTRx+ slow control
-    
+
     if(cmd.foundOption("testVTRx+"))
     {
-        bool cStatus=cPSROHTester.LpGBTTestVTRx();
-        
-            if(cStatus)
-                LOG(INFO) << BOLDBLUE << "VTRx+ slow control test passed." << RESET;
-            else
-                LOG(INFO) << BOLDRED << "VTRx+ slow control test failed." << RESET;
-        
+        bool cStatus = cPSROHTester.LpGBTTestVTRx();
+
+        if(cStatus)
+            LOG(INFO) << BOLDBLUE << "VTRx+ slow control test passed." << RESET;
+        else
+            LOG(INFO) << BOLDRED << "VTRx+ slow control test failed." << RESET;
     }
 
     // Test LpGBT I2C Masters

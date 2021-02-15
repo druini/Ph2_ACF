@@ -543,9 +543,7 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
 {
     // Write Data to Slave Address using I2C Master
     uint8_t cFreq = 3; // 1 MHz
-    if(pMaster==1){
-        cFreq=2;
-    }
+    if(pMaster == 1) { cFreq = 2; }
     ConfigureI2C(pChip, pMaster, cFreq, (pNBytes > 1) ? pNBytes : 0, 0);
 
     // Prepare Address Register
@@ -598,9 +596,7 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
 {
     // Read Data from Slave Address using I2C Master
     uint8_t cFreq = 3; // 1 MHz
-    if(pMaster==1){
-        cFreq=2;
-    }
+    if(pMaster == 1) { cFreq = 2; }
     ConfigureI2C(pChip, pMaster, cFreq, pNBytes, 0);
     // Prepare Address Register
     std::string cI2CAddressReg = "I2CM" + std::to_string(pMaster) + "Address";
@@ -669,8 +665,8 @@ uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::
     ConfigureADC(pChip, pGain, true, false);
     // Enable Internal VREF
     WriteChipReg(pChip, "VREFCNTR", 1 << 7);
-    //WriteChipReg(pChip, "VREFCNTR", 0xa0);
-    
+    // WriteChipReg(pChip, "VREFCNTR", 0xa0);
+
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     // Start ADC conversion
     ConfigureADC(pChip, pGain, true, true);

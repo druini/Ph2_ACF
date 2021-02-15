@@ -85,7 +85,8 @@ class OTHybridTester : public Tool
         {"PG1V25", 14},
     };
     std::map<std::string, uint8_t> fPSROHGPILines = {
-        {"PWRGOOD", 13},{"VTRx.RSTN", 11},
+        {"PWRGOOD", 13},
+        {"VTRx.RSTN", 11},
     };
 
     // std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
