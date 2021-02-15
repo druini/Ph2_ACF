@@ -184,8 +184,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 
             fitter::Linear_Regression<int> cReg_Class;
             std::vector<std::vector<int>>  cfitDataVect(2);
-
-            for(const auto& cADC: pADCs)
+             for(const auto& cADC: pADCs)
             {
                 cDACValVect.clear(), cADCValVect.clear();
                 cfitDataVect.clear();
@@ -230,6 +229,8 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                           << ""
                           << " --- ADC value = "
                           << "" << RESET;
+            int cTrim = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "VREFCNTR");
+            LOG(INFO) << BOLDBLUE << "Trim value "<<cTrim<< RESET;
             }
             fResultFile->cd();
             cDACtoADCTree->Write();
@@ -270,7 +271,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
         cDefaultParameters   = &f2SSEHDefaultParameters;
         cADCNametoPinMapping = &f2SSEHADCInputMap;
 #ifdef __TCUSB__
-        fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+        //fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
 #endif
     }
     else
@@ -315,6 +316,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                 for(int cIteration = 0; cIteration < 10; ++cIteration)
                 {
                     cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, (*cADCNametoPinMapping)[cADCsMapIterator->first]);
+                   //cADCValue-=34;
                     cADCValueVect.push_back(cADCValue);
                     cADCHistogram->Fill(cADCsMapIterator->first.c_str(), cADCValue, 1);
                 }
@@ -322,7 +324,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                 float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
                 float mean          = sum / cADCValueVect.size();
                 float cDifference_V = std::fabs((*cDefaultParameters)[cADCsMapIterator->second] - mean * cConversionFactor);
-                fillSummaryTree(cADCsMapIterator->first, mean * cConversionFactor);
+                fillSummaryTree(cADCsMapIterator->first.c_str(), mean * cConversionFactor);
                 // Still hard coded threshold for imidiate boolean result, actual values are stored
                 if(cDifference_V > 0.1)
                 {
@@ -353,7 +355,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
     if(p2SSEH)
     {
 #ifdef __TCUSB__
-        fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
+        //fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
 #endif
     }
 #endif
@@ -408,13 +410,15 @@ bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
     bool cValid = true;
     bool cReadGPI;
     auto cMapIterator = fGPILines.begin();
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             while(cMapIterator != fGPILines.end())
             {
-                D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+                
                 cReadGPI                            = clpGBTInterface->ReadGPIO(cOpticalGroup->flpGBT, cMapIterator->second);
                 cValid                              = cValid && cReadGPI;
                 if(!cReadGPI) { LOG(INFO) << BOLDRED << "GPIO connected to " << cMapIterator->first << " is low!" << RESET; }
@@ -423,12 +427,57 @@ bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
                     LOG(INFO) << BOLDGREEN << "GPIO connected to " << cMapIterator->first << " is high!" << RESET;
                 }
                 cMapIterator++;
-                fillSummaryTree(cMapIterator->first, cReadGPI);
+                //fillSummaryTree(cMapIterator->first.c_str(), cReadGPI);
             }
         }
     }
     return cValid;
 }
+
+
+bool OTHybridTester::LpGBTTestVTRx()
+{
+    
+    bool cSuccess=true;
+    bool cRecent;
+    uint32_t cResult=0;
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        for(auto cOpticalGroup: *cBoard)
+        {
+clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "I2CM1Config",8);
+                for(int cIterator=0;cIterator<31;cIterator++){
+                    
+                    int cMasterConf = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "I2CM1Config");
+                    LOG(INFO) << BOLDBLUE << "I2C Master 1 Config: "<<cMasterConf <<RESET;
+                cRecent      =  clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cIterator,1);
+                cResult      = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1);
+                cSuccess= cSuccess &&cRecent;
+                if(cRecent){
+                    
+                LOG(INFO) << BOLDGREEN << "I2C Master 1 Read from register " <<cIterator<<" value "<<cResult<<" ."<< RESET;}
+                else{
+                    LOG(INFO) << BOLDRED << "I2C Master 1 FAILED on register "<<cIterator<<" ." << RESET;}
+                
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }
+                
+                
+                 
+                /* 
+                 */
+                
+        }
+    }
+    return cSuccess;
+}
+
+
+
+
+
 void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect)
 {
 #ifdef __USE_ROOT__
