@@ -184,7 +184,6 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 
             fitter::Linear_Regression<int> cReg_Class;
             std::vector<std::vector<int>>  cfitDataVect(2);
-
             for(const auto& cADC: pADCs)
             {
                 cDACValVect.clear(), cADCValVect.clear();
@@ -220,13 +219,18 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 cDACtoADCGraph->Fit("pol1");
 
                 TF1* cFit = (TF1*)cDACtoADCGraph->GetListOfFunctions()->FindObject("pol1");
-                LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
-                LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0 << "  Parameter 2   " << cReg_Class.b_1 << RESET;
-
+                // LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
+                // LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0 << "  Parameter 2   " << cReg_Class.b_1 << RESET;
+                LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0 << " +/- " << cReg_Class.b_0_error << "  Parameter 2   " << cReg_Class.b_1
+                          << " +/- " << cReg_Class.b_1_error << RESET;
+                LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << " +/- " << cFit->GetParError(0) << "  Parameter 2   " << cFit->GetParameter(1)
+                          << " +/- " << cFit->GetParError(1) << RESET;
                 LOG(INFO) << BOLDBLUE << "DAC value = "
                           << ""
                           << " --- ADC value = "
                           << "" << RESET;
+                int cTrim = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "VREFCNTR");
+                LOG(INFO) << BOLDBLUE << "Trim value " << cTrim << RESET;
             }
             fResultFile->cd();
             cDACtoADCTree->Write();
@@ -312,6 +316,7 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
                 for(int cIteration = 0; cIteration < 10; ++cIteration)
                 {
                     cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, (*cADCNametoPinMapping)[cADCsMapIterator->first]);
+                    // cADCValue-=34;
                     cADCValueVect.push_back(cADCValue);
                     cADCHistogram->Fill(cADCsMapIterator->first.c_str(), cADCValue, 1);
                 }
@@ -402,18 +407,19 @@ bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
     {
         fGPILines = fPSROHGPILines; // On the TC the PWRGOOD is connected to a switch!
     }
-    bool cValid = true;
-    bool cReadGPI;
-    auto cMapIterator = fGPILines.begin();
+    bool                cValid = true;
+    bool                cReadGPI;
+    auto                cMapIterator    = fGPILines.begin();
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             while(cMapIterator != fGPILines.end())
             {
-                D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                cReadGPI                            = clpGBTInterface->ReadGPIO(cOpticalGroup->flpGBT, cMapIterator->second);
-                cValid                              = cValid && cReadGPI;
+                cReadGPI = clpGBTInterface->ReadGPIO(cOpticalGroup->flpGBT, cMapIterator->second);
+                cValid   = cValid && cReadGPI;
                 if(!cReadGPI) { LOG(INFO) << BOLDRED << "GPIO connected to " << cMapIterator->first << " is low!" << RESET; }
                 else
                 {
@@ -426,6 +432,42 @@ bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
     }
     return cValid;
 }
+
+bool OTHybridTester::LpGBTTestVTRx()
+{
+    bool                cSuccess = true;
+    bool                cRecent;
+    uint32_t            cResult         = 0;
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "I2CM1Config", 8);
+            for(int cIterator = 0; cIterator < 31; cIterator++)
+            {
+                int cMasterConf = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "I2CM1Config");
+                LOG(INFO) << BOLDBLUE << "I2C Master 1 Config: " << cMasterConf << RESET;
+                cRecent  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cIterator, 1);
+                cResult  = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1);
+                cSuccess = cSuccess && cRecent;
+                if(cRecent) { LOG(INFO) << BOLDGREEN << "I2C Master 1 Read from register " << cIterator << " value " << cResult << " ." << RESET; }
+                else
+                {
+                    LOG(INFO) << BOLDRED << "I2C Master 1 FAILED on register " << cIterator << " ." << RESET;
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+
+            /*
+             */
+        }
+    }
+    return cSuccess;
+}
+
 void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect)
 {
 #ifdef __USE_ROOT__

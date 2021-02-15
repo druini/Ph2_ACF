@@ -73,6 +73,7 @@ class OTHybridTester : public Tool
     bool LpGBTTestResetLines(uint8_t pLevel);
     bool LpGBTTestFixedADCs(bool p2SSEH = false);
     bool LpGBTTestGPILines(bool p2SSEH = false);
+    bool LpGBTTestVTRx();
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
     // Run Bit Error Test
@@ -87,6 +88,7 @@ class OTHybridTester : public Tool
     };
     std::map<std::string, uint8_t> fPSROHGPILines = {
         {"PWRGOOD", 13},
+        {"VTRx.RSTN", 11},
     };
 
     std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},

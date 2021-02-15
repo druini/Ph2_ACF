@@ -97,6 +97,9 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("debug", "d");
     // scope
     cmd.defineOption("scope-fcmd", "Scope fast commands [de-serialized]");
+    // Test Reset lines
+    cmd.defineOption("testVTRx+", "Test testVTRx+ slow control");
+    cmd.defineOptionAlternative("testVTRx+", "v");
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -185,9 +188,10 @@ int main(int argc, char* argv[])
         // cBackEndAligner.Reset();
     }
     // Test PS ROH Reset Lines
-    cPSROHTester.LpGBTTestGPILines();
+    // cPSROHTester.LpGBTTestGPILines();
     if(cmd.foundOption("testReset"))
     {
+        cPSROHTester.LpGBTTestGPILines();
         std::vector<std::pair<string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
         std::vector<uint8_t>                    cGPIOs  = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
         for(auto cLevel: cLevels)
@@ -199,6 +203,18 @@ int main(int argc, char* argv[])
             else
                 LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
         }
+    }
+
+    // Test VTRx+ slow control
+
+    if(cmd.foundOption("testVTRx+"))
+    {
+        bool cStatus = cPSROHTester.LpGBTTestVTRx();
+
+        if(cStatus)
+            LOG(INFO) << BOLDBLUE << "VTRx+ slow control test passed." << RESET;
+        else
+            LOG(INFO) << BOLDRED << "VTRx+ slow control test failed." << RESET;
     }
 
     // Test LpGBT I2C Masters
