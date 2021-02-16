@@ -150,13 +150,13 @@ void Physics::run()
     std::unique_lock<std::mutex> theGuard(theMtx, std::defer_lock);
     while(this->fKeepRunning == true)
     {
-        RD53FWInterface::decodedEvents.clear();
+        RD53FWInterface::Event::decodedEvents.clear();
         Physics::analyze();
         theGuard.lock();
-        genericEvtConverter(RD53FWInterface::decodedEvents);
+        genericEvtConverter(RD53FWInterface::Event::decodedEvents);
         theGuard.unlock();
         std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
-        numberOfEventsPerRun += RD53FWInterface::decodedEvents.size();
+        numberOfEventsPerRun += RD53FWInterface::Event::decodedEvents.size();
     }
 }
 

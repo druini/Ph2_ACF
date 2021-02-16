@@ -24,6 +24,7 @@
 #include <uhal/uhal.hpp>
 
 #include <omp.h>
+#include <condition_variable>
 
 // #############
 // # CONSTANTS #
@@ -140,6 +141,9 @@ class RD53FWInterface : public BeBoardFWInterface
     void                                       SendChipCommandsPack(const std::vector<uint32_t>& commandList);
     std::vector<std::pair<uint16_t, uint16_t>> ReadChipRegisters(Ph2_HwDescription::ReadoutChip* pChip);
 
+    // ########################
+    // # Event Implementation #
+    // ########################
     struct ChipFrame
     {
         ChipFrame(const uint32_t data0, const uint32_t data1);
@@ -157,8 +161,16 @@ class RD53FWInterface : public BeBoardFWInterface
     {
         Event(const uint32_t* data, size_t n);
 
-        void        fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
-        static void addBoardInfo2Events(const Ph2_HwDescription::BeBoard* pBoard, std::vector<RD53FWInterface::Event>& decodedEvents);
+        void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
+
+        static void     addBoardInfo2Events(const Ph2_HwDescription::BeBoard* pBoard, std::vector<RD53FWInterface::Event>& decodedEvents);
+        static void     ForkDecodingThreads();
+        static void     JoinDecodingThreads();
+        static uint16_t DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
+        static void     DecodeEventsWrapper(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStart, std::atomic<uint16_t>& evtStatus);
+        static uint16_t DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStart);
+        static bool     EvtErrorHandler(uint16_t status);
+        static void     PrintEvents(const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
 
         uint16_t block_size;
         uint16_t tlu_trigger_id;
@@ -171,16 +183,19 @@ class RD53FWInterface : public BeBoardFWInterface
 
         uint16_t evtStatus;
 
+        // ########################################
+        // # Vector containing the decoded events #
+        // ########################################
+        static std::vector<RD53FWInterface::Event> decodedEvents;
+
       protected:
         bool       isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const;
         static int lane2chipId(const Ph2_HwDescription::BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane);
+        static void                                 DecoderThread() {}
+        static std::vector<std::thread>             decodingThreads;
+        static std::vector<std::condition_variable> thereIsWork2Do;
+        static std::atomic<bool>                    keepDecodersRunning;
     };
-
-    static uint16_t DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events);
-    static void     DecodeEventsWrapper(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStart, std::atomic<uint16_t>& evtStatus);
-    static uint16_t DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStart);
-    static bool     EvtErrorHandler(uint16_t status);
-    static void     PrintEvents(const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData = {});
 
     enum class TriggerSource : uint32_t
     {
@@ -284,11 +299,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void                     CheckIfUploading();
     void                     RebootBoard();
     const FpgaConfig*        GetConfiguringFpga();
-
-    // ########################################
-    // # Vector containing the decoded events #
-    // ########################################
-    static std::vector<RD53FWInterface::Event> decodedEvents;
 
     // ################################################
     // # I2C block for programming peripheral devices #

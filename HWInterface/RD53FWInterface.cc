@@ -589,132 +589,6 @@ void RD53FWInterface::ChipReset()
 
 void RD53FWInterface::ChipReSync() { RegManager::WriteStackReg({{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr", 1}, {"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr", 0}}); }
 
-void RD53FWInterface::PrintEvents(const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData)
-{
-    // ##################
-    // # Print raw data #
-    // ##################
-    if(pData.size() != 0)
-        for(auto j = 0u; j < pData.size(); j++)
-        {
-            if(j % NWORDS_DDR3 == 0) std::cout << std::dec << j << ":\t";
-            std::cout << std::hex << std::setfill('0') << std::setw(8) << pData[j] << "\t";
-            if(j % NWORDS_DDR3 == NWORDS_DDR3 - 1) std::cout << std::endl;
-        }
-
-    // ######################
-    // # Print decoded data #
-    // ######################
-    for(auto i = 0u; i < events.size(); i++)
-    {
-        auto& evt = events[i];
-        LOG(INFO) << BOLDGREEN << "===========================" << RESET;
-        LOG(INFO) << BOLDGREEN << "EVENT           = " << i << RESET;
-        LOG(INFO) << BOLDGREEN << "block_size      = " << evt.block_size << RESET;
-        LOG(INFO) << BOLDGREEN << "tlu_trigger_id  = " << evt.tlu_trigger_id << RESET;
-        LOG(INFO) << BOLDGREEN << "data_format_ver = " << evt.data_format_ver << RESET;
-        LOG(INFO) << BOLDGREEN << "tdc             = " << evt.tdc << RESET;
-        LOG(INFO) << BOLDGREEN << "l1a_counter     = " << evt.l1a_counter << RESET;
-        LOG(INFO) << BOLDGREEN << "bx_counter      = " << evt.bx_counter << RESET;
-
-        for(auto& frame_event: evt.chip_frames_events)
-        {
-            LOG(INFO) << CYAN << "------- Chip Header -------" << RESET;
-            LOG(INFO) << CYAN << "error_code      = " << frame_event.first.error_code << RESET;
-            LOG(INFO) << CYAN << "hybrid_id       = " << frame_event.first.hybrid_id << RESET;
-            LOG(INFO) << CYAN << "chip_lane       = " << frame_event.first.chip_lane << RESET;
-            LOG(INFO) << CYAN << "l1a_data_size   = " << frame_event.first.l1a_data_size << RESET;
-            LOG(INFO) << CYAN << "chip_type       = " << frame_event.first.chip_type << RESET;
-            LOG(INFO) << CYAN << "frame_delay     = " << frame_event.first.frame_delay << RESET;
-
-            LOG(INFO) << CYAN << "trigger_id      = " << frame_event.second.trigger_id << RESET;
-            LOG(INFO) << CYAN << "trigger_tag     = " << frame_event.second.trigger_tag << RESET;
-            LOG(INFO) << CYAN << "bc_id           = " << frame_event.second.bc_id << RESET;
-
-            LOG(INFO) << BOLDYELLOW << "--- Hit Data (" << frame_event.second.hit_data.size() << " hits) ---" << RESET;
-
-            for(const auto& hit: frame_event.second.hit_data)
-            {
-                LOG(INFO) << BOLDYELLOW << "Column: " << std::setw(3) << hit.col << std::setw(-1) << ", Row: " << std::setw(3) << hit.row << std::setw(-1) << ", ToT: " << std::setw(3) << +hit.tot
-                          << std::setw(-1) << RESET;
-            }
-        }
-    }
-}
-
-bool RD53FWInterface::EvtErrorHandler(uint16_t status)
-{
-    bool isGood = true;
-
-    if(status & RD53FWEvtEncoder::EVSIZE)
-    {
-        LOG(ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
-        isGood = false;
-    }
-
-    if(status & RD53FWEvtEncoder::EMPTY)
-    {
-        LOG(ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
-        isGood = false;
-    }
-
-    if(status & RD53FWEvtEncoder::NOHEADER)
-    {
-        LOG(ERROR) << BOLDRED << "No event headear found in data " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
-        isGood = false;
-    }
-
-    if(status & RD53FWEvtEncoder::INCOMPLETE)
-    {
-        LOG(ERROR) << BOLDRED << "Incomplete event header " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
-        isGood = false;
-    }
-
-    if(status & RD53FWEvtEncoder::L1A)
-    {
-        LOG(ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
-        isGood = false;
-    }
-
-    if(status & RD53FWEvtEncoder::FWERR)
-    {
-        LOG(ERROR) << BOLDRED << "Firmware error " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
-        isGood = false;
-    }
-
-    if(status & RD53FWEvtEncoder::FRSIZE)
-    {
-        LOG(ERROR) << BOLDRED << "Invalid frame size " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
-        isGood = false;
-    }
-
-    if(status & RD53FWEvtEncoder::MISSCHIP)
-    {
-        LOG(ERROR) << BOLDRED << "Chip data are missing " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
-        isGood = false;
-    }
-
-    if(status & RD53EvtEncoder::CHIPHEAD)
-    {
-        LOG(ERROR) << BOLDRED << "Invalid chip header " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
-        isGood = false;
-    }
-
-    if(status & RD53EvtEncoder::CHIPPIX)
-    {
-        LOG(ERROR) << BOLDRED << "Invalid pixel row or column " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
-        isGood = false;
-    }
-
-    if(status & RD53EvtEncoder::CHIPNOHIT)
-    {
-        LOG(ERROR) << BOLDRED << " Hit data are missing " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
-        isGood = false;
-    }
-
-    return isGood;
-}
-
 uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
 {
     uint32_t nWordsInMemoryOld, nWordsInMemory = 0;
@@ -767,20 +641,20 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // ##################
         // # Error checking #
         // ##################
-        decodedEvents.clear();
-        uint16_t status = RD53FWInterface::DecodeEventsMultiThreads(pData, decodedEvents); // Decode events with multiple threads
-        // uint16_t status = RD53FWInterface::DecodeEvents(pData, decodedEvents, {});         // Decode events with a single thread
-        // RD53FWInterface::PrintEvents(decodedEvents, pData); // @TMP@
-        if(RD53FWInterface::EvtErrorHandler(status) == false)
+        RD53FWInterface::Event::decodedEvents.clear();
+        uint16_t status = RD53FWInterface::Event::DecodeEventsMultiThreads(pData, RD53FWInterface::Event::decodedEvents); // Decode events with multiple threads
+        // uint16_t status = RD53FWInterface::Event::DecodeEvents(pData, RD53FWInterface::Event::decodedEvents, {});         // Decode events with a single thread
+        // RD53FWInterface::Event::PrintEvents(RD53FWInterface::Event::decodedEvents, pData);                                // @TMP@
+        if(RD53FWInterface::Event::EvtErrorHandler(status) == false)
         {
             retry = true;
             continue;
         }
 
-        if(decodedEvents.size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
+        if(RD53FWInterface::Event::decodedEvents.size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
         {
             LOG(ERROR) << BOLDRED << "Sent " << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << " triggers, but collected "
-                       << decodedEvents.size() << " events" << BOLDYELLOW << " --> retry" << RESET;
+                       << RD53FWInterface::Event::decodedEvents.size() << " events" << BOLDYELLOW << " --> retry" << RESET;
             retry = true;
             continue;
         }
@@ -797,329 +671,6 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     // # Show progress #
     // #################
     RD53RunProgress::update(pData.size(), true);
-}
-/*
-// ##########################################
-// # Use of OpenMP (compiler flag -fopenmp) #
-// ##########################################
-
-uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
-{
-    // ######################
-    // # Consistency checks #
-    // ######################
-    if(data.size() == 0) return RD53FWEvtEncoder::EMPTY;
-
-    uint16_t evtStatus = RD53FWEvtEncoder::GOOD;
-
-    std::vector<size_t> eventStart;
-    size_t              i = 0u;
-    while(i < data.size())
-        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
-        {
-            eventStart.push_back(i);
-            i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
-        }
-        else
-            i++;
-    if(eventStart.size() == 0) return RD53FWEvtEncoder::NOHEADER;
-    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / omp_get_max_threads());
-    eventStart.push_back(data.size());
-
-    // ######################
-    // # Unpack data vector #
-    // ######################
-#pragma omp parallel
-    {
-        std::vector<RD53FWInterface::Event> vecEvents;
-        std::vector<size_t>                 vecEventStart;
-
-        if(eventStart.begin() + nEvents * omp_get_thread_num() < eventStart.end())
-        {
-            auto firstEvent = eventStart.begin() + nEvents * omp_get_thread_num();
-            auto lastEvent  = firstEvent + nEvents + 1 < eventStart.end() ? firstEvent + nEvents + 1 : eventStart.end();
-            std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart));
-
-            uint16_t status = RD53FWInterface::DecodeEvents(data, vecEvents, vecEventStart);
-
-#pragma omp atomic
-            evtStatus |= status;
-
-            // #####################
-            // # Pack event vector #
-            // #####################
-#pragma omp critical
-            std::move(vecEvents.begin(), vecEvents.end(), std::back_inserter(events));
-        }
-    }
-
-    return evtStatus;
-}
-*/
-uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
-{
-    // ######################
-    // # Consistency checks #
-    // ######################
-    if(data.size() == 0) return RD53FWEvtEncoder::EMPTY;
-
-    std::atomic<uint16_t> evtStatus;
-    evtStatus.store(RD53FWEvtEncoder::GOOD);
-
-    std::vector<std::vector<RD53FWInterface::Event>> vecEvents(RD53Shared::NTHREADS);
-    std::vector<std::thread>                         vecThrDecoders(RD53Shared::NTHREADS);
-    std::vector<std::vector<size_t>>                 vecEventStart(RD53Shared::NTHREADS);
-
-    std::vector<size_t> eventStart;
-    size_t              i = 0u;
-    while(i < data.size())
-        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
-        {
-            eventStart.push_back(i);
-            i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
-        }
-        else
-            i++;
-    if(eventStart.size() == 0) return RD53FWEvtEncoder::NOHEADER;
-    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / RD53Shared::NTHREADS);
-    eventStart.push_back(data.size());
-
-    // ######################
-    // # Unpack data vector #
-    // ######################
-    for(i = 0u; i < RD53Shared::NTHREADS - 1; i++)
-    {
-        auto firstEvent = eventStart.begin() + nEvents * i;
-        if(firstEvent + nEvents + 1 > eventStart.end() - 1) break;
-        auto lastEvent = firstEvent + nEvents + 1;
-        std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart[i]));
-
-        vecThrDecoders[i] = std::thread(&RD53FWInterface::DecodeEventsWrapper, std::ref(data), std::ref(vecEvents[i]), std::ref(vecEventStart[i]), std::ref(evtStatus));
-    }
-
-    auto firstEvent = eventStart.begin() + nEvents * i;
-    auto lastEvent  = eventStart.end();
-    std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart[i]));
-
-    evtStatus |= RD53FWInterface::DecodeEvents(data, vecEvents[i], vecEventStart[i]);
-
-    // ################
-    // # Join threads #
-    // ################
-    for(auto& thr: vecThrDecoders)
-        if(thr.joinable() == true) thr.join();
-
-    // #####################
-    // # Pack event vector #
-    // #####################
-    for(auto i = 0u; i < RD53Shared::NTHREADS; i++) std::move(vecEvents[i].begin(), vecEvents[i].end(), std::back_inserter(events));
-
-    return evtStatus;
-}
-
-void RD53FWInterface::DecodeEventsWrapper(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStart, std::atomic<uint16_t>& evtStatus)
-{
-    evtStatus |= RD53FWInterface::DecodeEvents(data, events, eventStart);
-}
-
-uint16_t RD53FWInterface::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStartExt)
-{
-    std::vector<size_t>  eventStartLocal;
-    std::vector<size_t>& refEventStart = const_cast<std::vector<size_t>&>(eventStartExt);
-    uint16_t             evtStatus     = RD53FWEvtEncoder::GOOD;
-    const size_t         maxL1Counter  = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
-
-    // ######################
-    // # Consistency checks #
-    // ######################
-    if(data.size() == 0) return RD53FWEvtEncoder::EMPTY;
-
-    if(eventStartExt.size() == 0)
-    {
-        size_t i = 0u;
-        while(i < data.size())
-            if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
-            {
-                eventStartLocal.push_back(i);
-                i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
-            }
-            else
-                i++;
-        if(eventStartLocal.size() == 0) return RD53FWEvtEncoder::NOHEADER;
-        eventStartLocal.push_back(data.size());
-        refEventStart = eventStartLocal;
-    }
-
-    events.reserve(events.size() + refEventStart.size() - 1);
-
-    for(auto i = 0u; i < refEventStart.size() - 1; i++)
-    {
-        const auto start = refEventStart[i];
-        const auto end   = refEventStart[i + 1];
-
-        events.emplace_back(&data[start], end - start);
-        if(events.back().evtStatus != RD53FWEvtEncoder::GOOD)
-            evtStatus |= events.back().evtStatus;
-        else
-        {
-            for(auto j = 0u; j < events.back().chip_frames_events.size(); j++)
-                if(events.back().l1a_counter % maxL1Counter != events.back().chip_frames_events[j].second.trigger_id) evtStatus |= RD53FWEvtEncoder::L1A;
-        }
-    }
-
-    return evtStatus;
-}
-
-// ########################
-// # Event Implementation #
-// ########################
-
-void RD53FWInterface::Event::addBoardInfo2Events(const BeBoard* pBoard, std::vector<RD53FWInterface::Event>& decodedEvents)
-{
-    for(auto& evt: decodedEvents)
-        for(auto& frame_event: evt.chip_frames_events)
-        {
-            int chip_id = RD53FWInterface::Event::lane2chipId(pBoard, 0, frame_event.first.hybrid_id, frame_event.first.chip_lane);
-            if(chip_id != -1) frame_event.first.chip_id = chip_id;
-        }
-}
-
-void RD53FWInterface::Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
-{
-    bool   vectorRequired = boardContainer->at(0)->at(0)->at(0)->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
-    size_t chipIndx;
-
-    for(const auto& cOpticalGroup: *boardContainer)
-        for(const auto& cHybrid: *cOpticalGroup)
-            for(const auto& cChip: *cHybrid)
-                if((evtStatus == RD53FWEvtEncoder::GOOD) && (RD53FWInterface::Event::isHittedChip(cHybrid->getId(), cChip->getId(), chipIndx) == true))
-                {
-                    if(vectorRequired == true)
-                    {
-                        cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.push_back(chip_frames_events[chipIndx].second.bc_id);
-                        cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.push_back(chip_frames_events[chipIndx].second.trigger_id);
-                    }
-
-                    for(const auto& hit: chip_frames_events[chipIndx].second.hit_data)
-                    {
-                        cChip->getChannel<OccupancyAndPh>(hit.row + RD53::nRows * (hit.col)).fOccupancy++;
-                        cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPh += static_cast<float>(hit.tot);
-                        cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPhError += static_cast<float>(hit.tot * hit.tot);
-                        if(cTestChannelGroup->isChannelEnabled(hit.row, hit.col) == false) cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).readoutError = true;
-                    }
-                }
-}
-
-bool RD53FWInterface::Event::isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const
-{
-    auto it = std::find_if(chip_frames_events.begin(), chip_frames_events.end(), [&](const std::pair<ChipFrame, RD53::Event>& frame_event) {
-        return ((frame_event.first.hybrid_id == hybrid_id) && (frame_event.first.chip_id == chip_id) && (frame_event.second.hit_data.size() != 0));
-    });
-
-    if(it == chip_frames_events.end()) return false;
-    chipIndx = it - chip_frames_events.begin();
-    return true;
-}
-
-int RD53FWInterface::Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane)
-{
-    // #############################
-    // # Translate lane to chip ID #
-    // #############################
-    if(pBoard != nullptr)
-    {
-        auto opticalGroup = std::find_if(pBoard->begin(), pBoard->end(), [&](OpticalGroupContainer* cOpticalGroup) { return cOpticalGroup->getId() == optGroup_id; });
-        if(opticalGroup != pBoard->end())
-        {
-            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [&](HybridContainer* cHybrid) { return cHybrid->getId() == hybrid_id; });
-            if(hybrid != (*opticalGroup)->end())
-            {
-                auto it = std::find_if((*hybrid)->begin(), (*hybrid)->end(), [&](ChipContainer* pChip) { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
-                if(it != (*hybrid)->end()) return (*it)->getId();
-            }
-        }
-    }
-    return -1; // Chip not found
-}
-
-RD53FWInterface::Event::Event(const uint32_t* data, size_t n)
-{
-    evtStatus = RD53FWEvtEncoder::GOOD;
-
-    // ######################
-    // # Consistency checks #
-    // ######################
-    if(n < RD53FWEvtEncoder::EVT_HEADER_SIZE)
-    {
-        evtStatus = RD53FWEvtEncoder::INCOMPLETE;
-        return;
-    }
-
-    std::tie(block_size) = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);
-    if(block_size * NWORDS_DDR3 != n)
-    {
-        evtStatus = RD53FWEvtEncoder::EVSIZE;
-        return;
-    }
-
-    // #######################
-    // # Decode event header #
-    // #######################
-    bool dummy_size;
-    std::tie(tlu_trigger_id, data_format_ver, dummy_size) = bits::unpack<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_FMTVER, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
-    std::tie(tdc, l1a_counter)                            = bits::unpack<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
-    bx_counter                                            = data[3];
-
-    // ############################
-    // # Search for frame lengths #
-    // ############################
-    std::vector<size_t> event_sizes;
-    size_t              index = 4;
-    while(index < n - dummy_size * NWORDS_DDR3)
-    {
-        if(data[index] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_CHIPID + RD53FWEvtEncoder::NBIT_L1ASIZE) != RD53FWEvtEncoder::FRAME_HEADER)
-        {
-            evtStatus |= RD53FWEvtEncoder::FRSIZE;
-            return;
-        }
-        size_t size = (data[index] & ((1 << RD53FWEvtEncoder::NBIT_L1ASIZE) - 1)) * NWORDS_DDR3;
-        event_sizes.push_back(size);
-        index += size;
-    }
-
-    if(index != n - dummy_size * NWORDS_DDR3)
-    {
-        evtStatus |= RD53FWEvtEncoder::MISSCHIP;
-        return;
-    }
-
-    // ##############################
-    // # Decode frame and chip data #
-    // ##############################
-    chip_frames_events.reserve(event_sizes.size());
-    index = 4;
-    for(auto size: event_sizes)
-    {
-        chip_frames_events.emplace_back(std::pair<ChipFrame, RD53::Event>(ChipFrame(data[index], data[index + 1]), RD53::Event(&data[index + 2], size - 2)));
-
-        if(chip_frames_events.back().first.error_code != 0)
-        {
-            evtStatus |= RD53FWEvtEncoder::FWERR;
-            chip_frames_events.clear();
-            return;
-        }
-
-        if(chip_frames_events.back().second.evtStatus != RD53EvtEncoder::CHIPGOOD) evtStatus |= chip_frames_events.back().second.evtStatus;
-
-        index += size;
-    }
-}
-
-RD53FWInterface::ChipFrame::ChipFrame(const uint32_t data0, const uint32_t data1)
-{
-    std::tie(error_code, hybrid_id, chip_lane, l1a_data_size) =
-        bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_CHIPID, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
-    std::tie(chip_type, frame_delay) = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
 }
 
 void RD53FWInterface::SendBoardCommand(const std::string& cmd_reg)
@@ -1571,11 +1122,6 @@ void RD53FWInterface::ReadClockGenerator()
     }
 }
 
-// ########################################
-// # Vector containing the decoded events #
-// ########################################
-std::vector<RD53FWInterface::Event> RD53FWInterface::decodedEvents;
-
 // ################################################
 // # I2C block for programming peripheral devices #
 // ################################################
@@ -1943,6 +1489,483 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
     return (nErrors == 0);
+}
+
+// ########################
+// # Event Implementation #
+// ########################
+
+RD53FWInterface::ChipFrame::ChipFrame(const uint32_t data0, const uint32_t data1)
+{
+    std::tie(error_code, hybrid_id, chip_lane, l1a_data_size) =
+        bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_CHIPID, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
+    std::tie(chip_type, frame_delay) = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
+}
+
+RD53FWInterface::Event::Event(const uint32_t* data, size_t n)
+{
+    evtStatus = RD53FWEvtEncoder::GOOD;
+
+    // ######################
+    // # Consistency checks #
+    // ######################
+    if(n < RD53FWEvtEncoder::EVT_HEADER_SIZE)
+    {
+        evtStatus = RD53FWEvtEncoder::INCOMPLETE;
+        return;
+    }
+
+    std::tie(block_size) = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);
+    if(block_size * NWORDS_DDR3 != n)
+    {
+        evtStatus = RD53FWEvtEncoder::EVSIZE;
+        return;
+    }
+
+    // #######################
+    // # Decode event header #
+    // #######################
+    bool dummy_size;
+    std::tie(tlu_trigger_id, data_format_ver, dummy_size) = bits::unpack<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_FMTVER, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
+    std::tie(tdc, l1a_counter)                            = bits::unpack<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
+    bx_counter                                            = data[3];
+
+    // ############################
+    // # Search for frame lengths #
+    // ############################
+    std::vector<size_t> event_sizes;
+    size_t              index = 4;
+    while(index < n - dummy_size * NWORDS_DDR3)
+    {
+        if(data[index] >> (RD53FWEvtEncoder::NBIT_ERR + RD53FWEvtEncoder::NBIT_HYBRID + RD53FWEvtEncoder::NBIT_CHIPID + RD53FWEvtEncoder::NBIT_L1ASIZE) != RD53FWEvtEncoder::FRAME_HEADER)
+        {
+            evtStatus |= RD53FWEvtEncoder::FRSIZE;
+            return;
+        }
+        size_t size = (data[index] & ((1 << RD53FWEvtEncoder::NBIT_L1ASIZE) - 1)) * NWORDS_DDR3;
+        event_sizes.push_back(size);
+        index += size;
+    }
+
+    if(index != n - dummy_size * NWORDS_DDR3)
+    {
+        evtStatus |= RD53FWEvtEncoder::MISSCHIP;
+        return;
+    }
+
+    // ##############################
+    // # Decode frame and chip data #
+    // ##############################
+    chip_frames_events.reserve(event_sizes.size());
+    index = 4;
+    for(auto size: event_sizes)
+    {
+        chip_frames_events.emplace_back(std::pair<ChipFrame, RD53::Event>(ChipFrame(data[index], data[index + 1]), RD53::Event(&data[index + 2], size - 2)));
+
+        if(chip_frames_events.back().first.error_code != 0)
+        {
+            evtStatus |= RD53FWEvtEncoder::FWERR;
+            chip_frames_events.clear();
+            return;
+        }
+
+        if(chip_frames_events.back().second.evtStatus != RD53EvtEncoder::CHIPGOOD) evtStatus |= chip_frames_events.back().second.evtStatus;
+
+        index += size;
+    }
+}
+
+void RD53FWInterface::Event::addBoardInfo2Events(const BeBoard* pBoard, std::vector<RD53FWInterface::Event>& decodedEvents)
+{
+    for(auto& evt: decodedEvents)
+        for(auto& frame_event: evt.chip_frames_events)
+        {
+            int chip_id = RD53FWInterface::Event::lane2chipId(pBoard, 0, frame_event.first.hybrid_id, frame_event.first.chip_lane);
+            if(chip_id != -1) frame_event.first.chip_id = chip_id;
+        }
+}
+
+void RD53FWInterface::Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+{
+    bool   vectorRequired = boardContainer->at(0)->at(0)->at(0)->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
+    size_t chipIndx;
+
+    for(const auto& cOpticalGroup: *boardContainer)
+        for(const auto& cHybrid: *cOpticalGroup)
+            for(const auto& cChip: *cHybrid)
+                if((evtStatus == RD53FWEvtEncoder::GOOD) && (RD53FWInterface::Event::isHittedChip(cHybrid->getId(), cChip->getId(), chipIndx) == true))
+                {
+                    if(vectorRequired == true)
+                    {
+                        cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.push_back(chip_frames_events[chipIndx].second.bc_id);
+                        cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.push_back(chip_frames_events[chipIndx].second.trigger_id);
+                    }
+
+                    for(const auto& hit: chip_frames_events[chipIndx].second.hit_data)
+                    {
+                        cChip->getChannel<OccupancyAndPh>(hit.row + RD53::nRows * (hit.col)).fOccupancy++;
+                        cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPh += static_cast<float>(hit.tot);
+                        cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPhError += static_cast<float>(hit.tot * hit.tot);
+                        if(cTestChannelGroup->isChannelEnabled(hit.row, hit.col) == false) cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).readoutError = true;
+                    }
+                }
+}
+
+bool RD53FWInterface::Event::isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const
+{
+    auto it = std::find_if(chip_frames_events.begin(), chip_frames_events.end(), [&](const std::pair<ChipFrame, RD53::Event>& frame_event) {
+        return ((frame_event.first.hybrid_id == hybrid_id) && (frame_event.first.chip_id == chip_id) && (frame_event.second.hit_data.size() != 0));
+    });
+
+    if(it == chip_frames_events.end()) return false;
+    chipIndx = it - chip_frames_events.begin();
+    return true;
+}
+
+int RD53FWInterface::Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane)
+{
+    // #############################
+    // # Translate lane to chip ID #
+    // #############################
+    if(pBoard != nullptr)
+    {
+        auto opticalGroup = std::find_if(pBoard->begin(), pBoard->end(), [&](OpticalGroupContainer* cOpticalGroup) { return cOpticalGroup->getId() == optGroup_id; });
+        if(opticalGroup != pBoard->end())
+        {
+            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [&](HybridContainer* cHybrid) { return cHybrid->getId() == hybrid_id; });
+            if(hybrid != (*opticalGroup)->end())
+            {
+                auto it = std::find_if((*hybrid)->begin(), (*hybrid)->end(), [&](ChipContainer* pChip) { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
+                if(it != (*hybrid)->end()) return (*it)->getId();
+            }
+        }
+    }
+    return -1; // Chip not found
+}
+
+// ##########################################
+// # Event static data member instantiation #
+// ##########################################
+std::vector<RD53FWInterface::Event>  RD53FWInterface::Event::decodedEvents;
+std::vector<std::thread>             RD53FWInterface::Event::decodingThreads(RD53Shared::NTHREADS);
+std::vector<std::condition_variable> RD53FWInterface::Event::thereIsWork2Do(RD53Shared::NTHREADS);
+std::atomic<bool>                    RD53FWInterface::Event::keepDecodersRunning(false);
+
+void RD53FWInterface::Event::PrintEvents(const std::vector<RD53FWInterface::Event>& events, const std::vector<uint32_t>& pData)
+{
+    // ##################
+    // # Print raw data #
+    // ##################
+    if(pData.size() != 0)
+        for(auto j = 0u; j < pData.size(); j++)
+        {
+            if(j % NWORDS_DDR3 == 0) std::cout << std::dec << j << ":\t";
+            std::cout << std::hex << std::setfill('0') << std::setw(8) << pData[j] << "\t";
+            if(j % NWORDS_DDR3 == NWORDS_DDR3 - 1) std::cout << std::endl;
+        }
+
+    // ######################
+    // # Print decoded data #
+    // ######################
+    for(auto i = 0u; i < events.size(); i++)
+    {
+        auto& evt = events[i];
+        LOG(INFO) << BOLDGREEN << "===========================" << RESET;
+        LOG(INFO) << BOLDGREEN << "EVENT           = " << i << RESET;
+        LOG(INFO) << BOLDGREEN << "block_size      = " << evt.block_size << RESET;
+        LOG(INFO) << BOLDGREEN << "tlu_trigger_id  = " << evt.tlu_trigger_id << RESET;
+        LOG(INFO) << BOLDGREEN << "data_format_ver = " << evt.data_format_ver << RESET;
+        LOG(INFO) << BOLDGREEN << "tdc             = " << evt.tdc << RESET;
+        LOG(INFO) << BOLDGREEN << "l1a_counter     = " << evt.l1a_counter << RESET;
+        LOG(INFO) << BOLDGREEN << "bx_counter      = " << evt.bx_counter << RESET;
+
+        for(auto& frame_event: evt.chip_frames_events)
+        {
+            LOG(INFO) << CYAN << "------- Chip Header -------" << RESET;
+            LOG(INFO) << CYAN << "error_code      = " << frame_event.first.error_code << RESET;
+            LOG(INFO) << CYAN << "hybrid_id       = " << frame_event.first.hybrid_id << RESET;
+            LOG(INFO) << CYAN << "chip_lane       = " << frame_event.first.chip_lane << RESET;
+            LOG(INFO) << CYAN << "l1a_data_size   = " << frame_event.first.l1a_data_size << RESET;
+            LOG(INFO) << CYAN << "chip_type       = " << frame_event.first.chip_type << RESET;
+            LOG(INFO) << CYAN << "frame_delay     = " << frame_event.first.frame_delay << RESET;
+
+            LOG(INFO) << CYAN << "trigger_id      = " << frame_event.second.trigger_id << RESET;
+            LOG(INFO) << CYAN << "trigger_tag     = " << frame_event.second.trigger_tag << RESET;
+            LOG(INFO) << CYAN << "bc_id           = " << frame_event.second.bc_id << RESET;
+
+            LOG(INFO) << BOLDYELLOW << "--- Hit Data (" << frame_event.second.hit_data.size() << " hits) ---" << RESET;
+
+            for(const auto& hit: frame_event.second.hit_data)
+            {
+                LOG(INFO) << BOLDYELLOW << "Column: " << std::setw(3) << hit.col << std::setw(-1) << ", Row: " << std::setw(3) << hit.row << std::setw(-1) << ", ToT: " << std::setw(3) << +hit.tot
+                          << std::setw(-1) << RESET;
+            }
+        }
+    }
+}
+
+bool RD53FWInterface::Event::EvtErrorHandler(uint16_t status)
+{
+    bool isGood = true;
+
+    if(status & RD53FWEvtEncoder::EVSIZE)
+    {
+        LOG(ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53FWEvtEncoder::EMPTY)
+    {
+        LOG(ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53FWEvtEncoder::NOHEADER)
+    {
+        LOG(ERROR) << BOLDRED << "No event headear found in data " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53FWEvtEncoder::INCOMPLETE)
+    {
+        LOG(ERROR) << BOLDRED << "Incomplete event header " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53FWEvtEncoder::L1A)
+    {
+        LOG(ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53FWEvtEncoder::FWERR)
+    {
+        LOG(ERROR) << BOLDRED << "Firmware error " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53FWEvtEncoder::FRSIZE)
+    {
+        LOG(ERROR) << BOLDRED << "Invalid frame size " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53FWEvtEncoder::MISSCHIP)
+    {
+        LOG(ERROR) << BOLDRED << "Chip data are missing " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53EvtEncoder::CHIPHEAD)
+    {
+        LOG(ERROR) << BOLDRED << "Invalid chip header " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53EvtEncoder::CHIPPIX)
+    {
+        LOG(ERROR) << BOLDRED << "Invalid pixel row or column " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53EvtEncoder::CHIPNOHIT)
+    {
+        LOG(ERROR) << BOLDRED << " Hit data are missing " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    return isGood;
+}
+
+/*
+// ##########################################
+// # Use of OpenMP (compiler flag -fopenmp) #
+// ##########################################
+
+uint16_t RD53FWInterface::Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
+{
+    // ######################
+    // # Consistency checks #
+    // ######################
+    if(data.size() == 0) return RD53FWEvtEncoder::EMPTY;
+
+    uint16_t evtStatus = RD53FWEvtEncoder::GOOD;
+
+    std::vector<size_t> eventStart;
+    size_t              i = 0u;
+    while(i < data.size())
+        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
+        {
+            eventStart.push_back(i);
+            i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
+        }
+        else
+            i++;
+    if(eventStart.size() == 0) return RD53FWEvtEncoder::NOHEADER;
+    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / omp_get_max_threads());
+    eventStart.push_back(data.size());
+
+    // ######################
+    // # Unpack data vector #
+    // ######################
+#pragma omp parallel
+    {
+        std::vector<RD53FWInterface::Event> vecEvents;
+        std::vector<size_t>                 vecEventStart;
+
+        if(eventStart.begin() + nEvents * omp_get_thread_num() < eventStart.end())
+        {
+            auto firstEvent = eventStart.begin() + nEvents * omp_get_thread_num();
+            auto lastEvent  = firstEvent + nEvents + 1 < eventStart.end() ? firstEvent + nEvents + 1 : eventStart.end();
+            std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart));
+
+            uint16_t status = RD53FWInterface::Event::DecodeEvents(data, vecEvents, vecEventStart);
+
+#pragma omp atomic
+            evtStatus |= status;
+
+            // #####################
+            // # Pack event vector #
+            // #####################
+#pragma omp critical
+            std::move(vecEvents.begin(), vecEvents.end(), std::back_inserter(events));
+        }
+    }
+
+    return evtStatus;
+}
+*/
+uint16_t RD53FWInterface::Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
+{
+    // ######################
+    // # Consistency checks #
+    // ######################
+    if(data.size() == 0) return RD53FWEvtEncoder::EMPTY;
+
+    std::atomic<uint16_t> evtStatus;
+    evtStatus.store(RD53FWEvtEncoder::GOOD);
+
+    std::vector<std::vector<RD53FWInterface::Event>> vecEvents(RD53Shared::NTHREADS);
+    std::vector<std::thread>                         vecThrDecoders(RD53Shared::NTHREADS);
+    std::vector<std::vector<size_t>>                 vecEventStart(RD53Shared::NTHREADS);
+
+    std::vector<size_t> eventStart;
+    size_t              i = 0u;
+    while(i < data.size())
+        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
+        {
+            eventStart.push_back(i);
+            i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
+        }
+        else
+            i++;
+    if(eventStart.size() == 0) return RD53FWEvtEncoder::NOHEADER;
+    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / RD53Shared::NTHREADS);
+    eventStart.push_back(data.size());
+
+    // ######################
+    // # Unpack data vector #
+    // ######################
+    for(i = 0u; i < RD53Shared::NTHREADS - 1; i++)
+    {
+        auto firstEvent = eventStart.begin() + nEvents * i;
+        if(firstEvent + nEvents + 1 > eventStart.end() - 1) break;
+        auto lastEvent = firstEvent + nEvents + 1;
+        std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart[i]));
+
+        vecThrDecoders[i] = std::thread(&RD53FWInterface::Event::DecodeEventsWrapper, std::ref(data), std::ref(vecEvents[i]), std::ref(vecEventStart[i]), std::ref(evtStatus));
+    }
+
+    auto firstEvent = eventStart.begin() + nEvents * i;
+    auto lastEvent  = eventStart.end();
+    std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart[i]));
+
+    evtStatus |= RD53FWInterface::Event::DecodeEvents(data, vecEvents[i], vecEventStart[i]);
+
+    // ################
+    // # Join threads #
+    // ################
+    for(auto& thr: vecThrDecoders)
+        if(thr.joinable() == true) thr.join();
+
+    // #####################
+    // # Pack event vector #
+    // #####################
+    for(auto i = 0u; i < RD53Shared::NTHREADS; i++) std::move(vecEvents[i].begin(), vecEvents[i].end(), std::back_inserter(events));
+
+    return evtStatus;
+}
+
+void RD53FWInterface::Event::DecodeEventsWrapper(const std::vector<uint32_t>&         data,
+                                                 std::vector<RD53FWInterface::Event>& events,
+                                                 const std::vector<size_t>&           eventStart,
+                                                 std::atomic<uint16_t>&               evtStatus)
+{
+    evtStatus |= RD53FWInterface::Event::DecodeEvents(data, events, eventStart);
+}
+
+uint16_t RD53FWInterface::Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStartExt)
+{
+    std::vector<size_t>  eventStartLocal;
+    std::vector<size_t>& refEventStart = const_cast<std::vector<size_t>&>(eventStartExt);
+    uint16_t             evtStatus     = RD53FWEvtEncoder::GOOD;
+    const size_t         maxL1Counter  = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+
+    // ######################
+    // # Consistency checks #
+    // ######################
+    if(data.size() == 0) return RD53FWEvtEncoder::EMPTY;
+
+    if(eventStartExt.size() == 0)
+    {
+        size_t i = 0u;
+        while(i < data.size())
+            if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
+            {
+                eventStartLocal.push_back(i);
+                i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
+            }
+            else
+                i++;
+        if(eventStartLocal.size() == 0) return RD53FWEvtEncoder::NOHEADER;
+        eventStartLocal.push_back(data.size());
+        refEventStart = eventStartLocal;
+    }
+
+    events.reserve(events.size() + refEventStart.size() - 1);
+
+    for(auto i = 0u; i < refEventStart.size() - 1; i++)
+    {
+        const auto start = refEventStart[i];
+        const auto end   = refEventStart[i + 1];
+
+        events.emplace_back(&data[start], end - start);
+        if(events.back().evtStatus != RD53FWEvtEncoder::GOOD)
+            evtStatus |= events.back().evtStatus;
+        else
+        {
+            for(auto j = 0u; j < events.back().chip_frames_events.size(); j++)
+                if(events.back().l1a_counter % maxL1Counter != events.back().chip_frames_events[j].second.trigger_id) evtStatus |= RD53FWEvtEncoder::L1A;
+        }
+    }
+
+    return evtStatus;
+}
+
+void RD53FWInterface::Event::ForkDecodingThreads()
+{
+    RD53FWInterface::Event::keepDecodersRunning = true;
+    for(auto& thr: RD53FWInterface::Event::decodingThreads) thr = std::thread(&RD53FWInterface::Event::DecoderThread);
+    // , std::ref(data), std::ref(vecEvents[i]), std::ref(vecEventStart[i]), std::ref(evtStatus));
+}
+
+void RD53FWInterface::Event::JoinDecodingThreads()
+{
+    RD53FWInterface::Event::keepDecodersRunning = false;
+    for(auto& thr: RD53FWInterface::Event::decodingThreads)
+        if(thr.joinable() == true) thr.join();
+    RD53FWInterface::Event::decodingThreads.clear();
+    RD53FWInterface::Event::decodingThreads.reserve(RD53Shared::NTHREADS);
 }
 
 } // namespace Ph2_HwInterface

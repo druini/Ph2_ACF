@@ -660,9 +660,9 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     if(pType == BoardType::RD53)
     {
         fEventList.clear();
-        if(RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEventsMultiThreads(pData, RD53FWInterface::decodedEvents);
-        RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
-        for(auto& evt: RD53FWInterface::decodedEvents) fEventList.push_back(&evt);
+        if(RD53FWInterface::Event::decodedEvents.size() == 0) RD53FWInterface::Event::DecodeEventsMultiThreads(pData, RD53FWInterface::Event::decodedEvents);
+        RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::Event::decodedEvents);
+        for(auto& evt: RD53FWInterface::Event::decodedEvents) fEventList.push_back(&evt);
     }
     // ####################
     // # Decoding OT data #
