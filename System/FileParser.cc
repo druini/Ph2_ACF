@@ -61,7 +61,7 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
     for(i = 0; i < 80; i++) os << "*";
     os << "\n";
 
-    for(j = 0; j < 40; j++) os << " ";
+    for(j = 0; j < 35; j++) os << " ";
     os << BOLDRED << "HW SUMMARY" << RESET << std::endl;
 
     for(i = 0; i < 80; i++) os << "*";
@@ -79,7 +79,7 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
 
     os << "\n";
 
-    for(j = 0; j < 40; j++) os << " ";
+    for(j = 0; j < 32; j++) os << " ";
 
     os << BOLDRED << "END OF HW SUMMARY" << RESET << std::endl;
 
