@@ -67,7 +67,7 @@ void interruptHandler(int handler)
     exit(EXIT_FAILURE);
 }
 
-void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
+void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
     const unsigned int    wordDataSize = 32;
     unsigned int          errors       = 0;
@@ -78,15 +78,15 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     LOG(INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
     mySysCntr.readFile(data, 0);
 
-    RD53FWInterface::Event::DecodeEventsMultiThreads(data, decodedEvents);
+    RD53Event::DecodeEventsMultiThreads(data, decodedEvents);
     LOG(INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
 
     for(auto i = 0u; i < decodedEvents.size(); i++)
-        if(RD53FWInterface::Event::EvtErrorHandler(decodedEvents[i].evtStatus) == false)
+        if(RD53Event::EvtErrorHandler(decodedEvents[i].evtStatus) == false)
         {
             LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
             errors++;
-            RD53FWInterface::Event::PrintEvents({decodedEvents[i]});
+            RD53Event::PrintEvents({decodedEvents[i]});
         }
 
     LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
@@ -317,7 +317,7 @@ int main(int argc, char** argv)
                     static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
                 exit(EXIT_SUCCESS);
             }
-            if(binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53FWInterface::Event::decodedEvents);
+            if(binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53Event::decodedEvents);
         }
         else if(binaryFile == "")
         {
