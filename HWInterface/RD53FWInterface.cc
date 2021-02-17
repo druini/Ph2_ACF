@@ -776,7 +776,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         // #######################################
         RD53::CalCmd calcmd_first(1, 2, 10, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
-        RD53::CalCmd calcmd_second(0, 0, 2, 0, 0); // @TMP@ : to be removed in FW > 3.4
+        RD53::CalCmd calcmd_second(0, 0, 2, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
@@ -786,7 +786,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en  = true;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en = false;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
     }
