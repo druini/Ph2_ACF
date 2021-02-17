@@ -216,13 +216,13 @@ void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std:
 }
 
 void SystemController::RunBERtest(std::string chain2test, bool given_time, double frames_or_time)
-// ##############################
-// # chain2test = "BE-LPGBT-FE" #
-// # chain2test = "BE-LPGBT"    #
-// # chain2test = "LPGBT-FE"    #
-// ##############################
+// ###########################
+// # chain2test = "BE-FE"    #
+// # chain2test = "BE-LPGBT" #
+// # chain2test = "LPGBT-FE" #
+// ###########################
 {
-    if((chain2test != "BE-LPGBT-FE") && (chain2test != "BE-LPGBT") && (chain2test != "LPGBT-FE")) throw Exception("[SystemController::RunBERtest] Option non recognized");
+    if((chain2test != "BE-FE") && (chain2test != "BE-LPGBT") && (chain2test != "LPGBT-FE")) throw Exception("[SystemController::RunBERtest] Option non recognized");
 
     if(chain2test == "BE-LPGBT")
         for(const auto cBoard: *fDetectorContainer)
@@ -439,6 +439,15 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ############################
             LOG(INFO) << CYAN << "=== Configuring frontend chip registers ===" << RESET;
             for(auto cOpticalGroup: *cBoard)
+            {
+                if(cOpticalGroup->flpGBT != nullptr) // @TMP@
+                {
+                    if(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->DidIwriteChipReg(6) == true)
+                        LOG(INFO) << GREEN << "Check writing frontent chip reg: " << BOLDYELLOW << "GOOD" << RESET;
+                    else
+                        LOG(INFO) << GREEN << "Check writing frontent chip reg: " << BOLDRED << "BAD" << RESET;
+                }
+
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     LOG(INFO) << GREEN << "Configuring chip of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
@@ -453,6 +462,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
                     }
                 }
+            }
             LOG(INFO) << CYAN << "================== Done ===================" << RESET;
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
@@ -650,9 +660,9 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     if(pType == BoardType::RD53)
     {
         fEventList.clear();
-        if(RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEventsMultiThreads(pData, RD53FWInterface::decodedEvents);
-        RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
-        for(auto& evt: RD53FWInterface::decodedEvents) fEventList.push_back(&evt);
+        if(RD53Event::decodedEvents.size() == 0) RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents);
+        RD53Event::addBoardInfo2Events(pBoard, RD53Event::decodedEvents);
+        for(auto& evt: RD53Event::decodedEvents) fEventList.push_back(&evt);
     }
     // ####################
     // # Decoding OT data #

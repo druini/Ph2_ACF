@@ -89,13 +89,14 @@ class RD53lpGBTInterface : public lpGBTInterface
     // ####################################
     // # LpGBT specific routine functions #
     // ####################################
-    void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
-    void PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pRate);
+    void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain);
+    void PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
 
     // ################################
     // # LpGBT block status functions #
     // ################################
     void    PrintChipMode(Ph2_HwDescription::Chip* pChip);
+    uint8_t GetChipRate(Ph2_HwDescription::Chip* pChip);
     uint8_t GetPUSMStatus(Ph2_HwDescription::Chip* pChip);
     uint8_t GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
     bool    IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels);
@@ -119,7 +120,7 @@ class RD53lpGBTInterface : public lpGBTInterface
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
 
     std::map<uint8_t, uint8_t> fGroup2BERTsourceCourse      = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}};
-    std::map<uint8_t, uint8_t> fChannelSpeed2BERTsourceFine = {{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {6, 5}, {8, 6}}; // channel + 4 * frontendSpeed
+    std::map<uint8_t, uint8_t> fChannelSpeed2BERTsourceFine = {{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {6, 5}, {8, 6}}; // channel + 4 * (2 - frontendSpeed)
 
     std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},
                                                    {"ADC1", 1},

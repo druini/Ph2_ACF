@@ -214,7 +214,7 @@ void RD53Interface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     // ##############################
     // # Set standard AURORA output #
     // ##############################
-    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", 1, false);
+    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false);
 
     // ###############################################################
     // # Enable monitoring (needed for AutoRead register monitoring) #
@@ -253,7 +253,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
 
     if(status == false)
     {
-        LOG(ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << regName << RESET;
+        LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << RESET;
         return false;
     }
 
@@ -466,6 +466,9 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
     return true;
 }
 
+// ##################
+// # PRBS generator #
+// ##################
 void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_PRBS, false); }
 void RD53Interface::StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false); }
 
