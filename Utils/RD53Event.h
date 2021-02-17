@@ -116,8 +116,9 @@ class RD53Event : public Ph2_HwInterface::Event
     // ########################################
     static std::vector<RD53Event> decodedEvents;
 
+    bool isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const;
+
   protected:
-    bool                                        isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const;
     static int                                  lane2chipId(const Ph2_HwDescription::BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane);
     static void                                 decoderThread() {}
     static std::vector<std::thread>             decodingThreads;

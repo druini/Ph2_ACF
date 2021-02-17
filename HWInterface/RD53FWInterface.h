@@ -71,7 +71,7 @@ class RD53FWInterface : public BeBoardFWInterface
     uint32_t ReadoutSpeed();
     bool     DidIwriteChipReg(uint16_t optGroup_id) // @TMP@
     {
-        RegManager::WriteReg("user.ctrl_regs.PRBS_checker.upgroup_addr", optGroup_id);
+      /* RegManager::WriteReg("user.ctrl_regs.PRBS_checker.upgroup_addr", optGroup_id); */ // @TMP@
 
         RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 0x44, RD53Constants::PATTERN_CLOCK);
         usleep(1000);

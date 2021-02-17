@@ -216,13 +216,13 @@ void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std:
 }
 
 void SystemController::RunBERtest(std::string chain2test, bool given_time, double frames_or_time)
-// ##############################
-// # chain2test = "BE-LPGBT-FE" #
-// # chain2test = "BE-LPGBT"    #
-// # chain2test = "LPGBT-FE"    #
-// ##############################
+// ###########################
+// # chain2test = "BE-FE"    #
+// # chain2test = "BE-LPGBT" #
+// # chain2test = "LPGBT-FE" #
+// ###########################
 {
-    if((chain2test != "BE-LPGBT-FE") && (chain2test != "BE-LPGBT") && (chain2test != "LPGBT-FE")) throw Exception("[SystemController::RunBERtest] Option non recognized");
+    if((chain2test != "BE-FE") && (chain2test != "BE-LPGBT") && (chain2test != "LPGBT-FE")) throw Exception("[SystemController::RunBERtest] Option non recognized");
 
     if(chain2test == "BE-LPGBT")
         for(const auto cBoard: *fDetectorContainer)
