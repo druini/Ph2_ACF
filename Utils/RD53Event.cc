@@ -164,10 +164,13 @@ int RD53Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup_id, uint16_t
 // ##########################################
 // # Event static data member instantiation #
 // ##########################################
-std::vector<RD53Event>               RD53Event::decodedEvents;
-std::vector<std::thread>             RD53Event::decodingThreads(RD53Shared::NTHREADS);
-std::vector<std::condition_variable> RD53Event::thereIsWork2Do(RD53Shared::NTHREADS);
-std::atomic<bool>                    RD53Event::keepDecodersRunning(false);
+std::vector<RD53Event>              RD53Event::decodedEvents;
+std::vector<std::thread>            RD53Event::decodingThreads;
+std::vector<std::vector<RD53Event>> RD53Event::vecEvents;
+std::vector<std::vector<size_t>>    RD53Event::vecEventStart;
+std::vector<uint16_t>               RD53Event::vecEventStatus;
+std::vector<std::atomic<bool>>      RD53Event::vecWorkDone;
+std::atomic<bool>                   RD53Event::keepDecodersRunning(false);
 
 void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vector<uint32_t>& pData)
 {
@@ -300,7 +303,7 @@ bool RD53Event::EvtErrorHandler(uint16_t status)
 // # Use of OpenMP (compiler flag -fopenmp) #
 // ##########################################
 
-uint16_t RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events)
+void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& evtStatus)
 {
     // ######################
     // # Consistency checks #
@@ -352,8 +355,8 @@ uint16_t RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, 
 
     return evtStatus;
 }
-*/
-uint16_t RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events)
+
+void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& evtStatus)
 {
     // ######################
     // # Consistency checks #
@@ -413,23 +416,27 @@ uint16_t RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, 
 
     return evtStatus;
 }
+*/
+// void RD53Event::DecodeEventsWrapper(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, std::atomic<uint16_t>& evtStatus)
+// {
+//     evtStatus |= RD53Event::DecodeEvents(data, events, eventStart);
+// }
 
-void RD53Event::DecodeEventsWrapper(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, std::atomic<uint16_t>& evtStatus)
+void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStartExt, uint16_t& evtStatus)
 {
-    evtStatus |= RD53Event::DecodeEvents(data, events, eventStart);
-}
-
-uint16_t RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStartExt)
-{
-    std::vector<size_t>  eventStartLocal;
-    std::vector<size_t>& refEventStart = const_cast<std::vector<size_t>&>(eventStartExt);
-    uint16_t             evtStatus     = RD53FWEvtEncoder::GOOD;
-    const size_t         maxL1Counter  = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    std::vector<size_t>        eventStartLocal;
+    const std::vector<size_t>& refEventStart = eventStartExt;
+    const size_t               maxL1Counter  = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    evtStatus                                = RD53FWEvtEncoder::GOOD;
 
     // ######################
     // # Consistency checks #
     // ######################
-    if(data.size() == 0) return RD53FWEvtEncoder::EMPTY;
+    if(data.size() == 0)
+    {
+        evtStatus = RD53FWEvtEncoder::EMPTY;
+        return;
+    }
 
     if(eventStartExt.size() == 0)
     {
@@ -442,9 +449,13 @@ uint16_t RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<
             }
             else
                 i++;
-        if(eventStartLocal.size() == 0) return RD53FWEvtEncoder::NOHEADER;
+        if(eventStartLocal.size() == 0)
+        {
+            evtStatus = RD53FWEvtEncoder::NOHEADER;
+            return;
+        }
         eventStartLocal.push_back(data.size());
-        refEventStart = eventStartLocal;
+        refEventStart = const_cast<std::vector<size_t>&>(eventStartLocal);
     }
 
     events.reserve(events.size() + refEventStart.size() - 1);
@@ -463,24 +474,127 @@ uint16_t RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<
                 if(events.back().l1a_counter % maxL1Counter != events.back().chip_frames_events[j].second.trigger_id) evtStatus |= RD53FWEvtEncoder::L1A;
         }
     }
-
-    return evtStatus;
 }
 
 void RD53Event::ForkDecodingThreads()
 {
     RD53Event::keepDecodersRunning = true;
-    for(auto& thr: RD53Event::decodingThreads) thr = std::thread(&RD53Event::decoderThread);
-    // , std::ref(data), std::ref(vecEvents[i]), std::ref(vecEventStart[i]), std::ref(evtStatus));
+
+    RD53Event::decodingThreads.clear();
+    RD53Event::decodingThreads.reserve(RD53Shared::NTHREADS);
+
+    RD53Event::vecEvents.clear();
+    RD53Event::vecEvents.reserve(RD53Shared::NTHREADS);
+
+    RD53Event::vecEventStart.clear();
+    RD53Event::vecEventStart.reserve(RD53Shared::NTHREADS);
+
+    RD53Event::vecEventStatus.clear();
+    RD53Event::vecEventStatus.reserve(RD53Shared::NTHREADS);
+
+    RD53Event::vecWorkDone.clear();
+    RD53Event::vecWorkDone.reserve(RD53Shared::NTHREADS);
+
+    for(auto i = 0u; i < RD53Event::decodingThreads.size(); i++)
+        RD53Event::decodingThreads[i] =
+            std::thread(&RD53Event::decoderThread, theData, std::ref(RD53Event::vecEvents[i]), std::ref(RD53Event::vecEventStart[i]), std::ref(RD53Event::vecEventStatus[i]), std::ref(vecWorkDone[i]));
 }
 
 void RD53Event::JoinDecodingThreads()
 {
     RD53Event::keepDecodersRunning = false;
+    thereIsWork2Do.notify_all();
+
     for(auto& thr: RD53Event::decodingThreads)
         if(thr.joinable() == true) thr.join();
+
     RD53Event::decodingThreads.clear();
-    RD53Event::decodingThreads.reserve(RD53Shared::NTHREADS);
+    RD53Event::vecEvents.clear();
+    RD53Event::vecEventStart.clear();
+    RD53Event::vecEventStatus.clear();
+    RD53Event::vecWorkDone.clear();
+}
+
+void RD53Event::decoderThread(const std::vector<uint32_t>** data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint16_t& evtStatus, std::atomic<bool>& workDone)
+{
+    while(keepDecodersRunning == true)
+    {
+        std::unique_lock<std::mutex> theGuard(theMtx);
+        thereIsWork2Do.wait(theGuard);
+        theGuard.unlock();
+        if(eventStart.size() != 0) RD53Event::DecodeEvents(**data, events, eventStart, evtStatus);
+        workDone = true;
+    }
+}
+
+void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& evtStatus)
+{
+    if(data.size() == 0)
+    {
+        evtStatus = RD53FWEvtEncoder::EMPTY;
+        return;
+    }
+
+    // #####################
+    // # Find events start #
+    // #####################
+    std::vector<size_t> eventStart;
+    size_t              i = 0u;
+    while(i < data.size())
+        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
+        {
+            eventStart.push_back(i);
+            i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
+        }
+        else
+            i++;
+    if(eventStart.size() == 0)
+    {
+        evtStatus = RD53FWEvtEncoder::NOHEADER;
+        return;
+    }
+    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / RD53Shared::NTHREADS);
+    eventStart.push_back(data.size());
+
+    // ######################
+    // # Unpack data vector #
+    // ######################
+    for(i = 0u; i < RD53Shared::NTHREADS - 1; i++)
+    {
+        auto firstEvent = eventStart.begin() + nEvents * i;
+        if(firstEvent + nEvents + 1 > eventStart.end() - 1) break;
+        auto lastEvent = firstEvent + nEvents + 1;
+        std::move(firstEvent, lastEvent, std::back_inserter(RD53Event::vecEventStart[i]));
+    }
+    auto firstEvent = eventStart.begin() + nEvents * i;
+    auto lastEvent  = eventStart.end();
+    std::move(firstEvent, lastEvent, std::back_inserter(RD53Event::vecEventStart[i]));
+
+    // #######################
+    // # Start data decoding #
+    // #######################
+    *theData = &data;
+    for(auto& workDone: RD53Event::vecWorkDone) workDone = false;
+    thereIsWork2Do.notify_all();
+    while(false)
+    {
+        bool allWorkDone = true;
+        for(auto& workDone: RD53Event::vecWorkDone) allWorkDone &= workDone;
+        if(allWorkDone == true) break;
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    }
+
+    // #####################
+    // # Pack event vector #
+    // #####################
+    evtStatus = 0;
+    for(auto i = 0u; i < RD53Shared::NTHREADS; i++)
+    {
+        std::move(RD53Event::vecEvents[i].begin(), RD53Event::vecEvents[i].end(), std::back_inserter(events));
+        evtStatus |= RD53Event::vecEventStatus[i];
+        RD53Event::vecEventStatus[i] = 0;
+        RD53Event::vecEventStart[i].clear();
+    }
 }
 
 } // namespace Ph2_HwInterface
