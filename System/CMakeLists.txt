@@ -1,9 +1,9 @@
 if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
-    MESSAGE(STATUS " ") 
-    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
+    MESSAGE(STATUS " ")
+    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
 
     #includes
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
@@ -15,7 +15,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
     include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-    
+
     #library directories
     link_directories(${UHAL_UHAL_LIB_PREFIX})
     link_directories(${UHAL_LOG_LIB_PREFIX})
@@ -24,19 +24,26 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #find source files
     file(GLOB HEADERS *.h)
     file(GLOB SOURCES *.cc)
-    
+
     #add the library
     add_library(Ph2_System STATIC ${SOURCES} ${HEADERS})
     set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_NetworkUtils)
     TARGET_LINK_LIBRARIES(Ph2_System ${LIBS})
 
-    #check for TestCard USBDriver
-    if(${PH2_TCUSB_FOUND})
-      include_directories(${PH2_TCUSB_INCLUDE_DIRS})
-      link_directories(${PH2_TCUSB_LIBRARY_DIRS})
-      set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
-      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
-      #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{SsehTCUSBFlag}")
+    #check for PowerSupply
+    if(${PH2_POWERSUPPLY_FOUND})
+      include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
+      link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
+      #set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
+    endif()
+      #check for TestCard USBDriver
+      if(${PH2_TCUSB_FOUND})
+        include_directories(${PH2_TCUSB_INCLUDE_DIRS})
+        link_directories(${PH2_TCUSB_LIBRARY_DIRS})
+        set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
+
     endif()
 
     ####################################
@@ -52,18 +59,18 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endforeach(sourcefile ${BINARIES})
     message("--     ${BoldCyan}#### End ####${Reset}")
 
-    MESSAGE(STATUS " ") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}") 
-    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
+    MESSAGE(STATUS " ")
 
 else()
 
-    MESSAGE(STATUS " ") 
-    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}") 
-    MESSAGE(STATUS " ") 
-    
+    MESSAGE(STATUS " ")
+    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS " ")
+
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
@@ -71,7 +78,7 @@ else()
     cet_set_compiler_flags(
                            EXTRA_FLAGS -Wno-reorder -Wl,--undefined
                           )
-     
+
     cet_make(
              LIBRARY_NAME Ph2_System_${Ph2_ACF_Master}
              LIBRARIES
@@ -79,13 +86,13 @@ else()
              Ph2_Interface_${Ph2_ACF_Master}
              Ph2_Utils_${Ph2_ACF_Master}
             )
-    
+
     install_headers()
     install_source()
 
-    MESSAGE(STATUS " ") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}") 
-    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS " ") 
+    MESSAGE(STATUS " ")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
+    MESSAGE(STATUS " ")
 
 endif()

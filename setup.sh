@@ -6,7 +6,7 @@
 # export CACTUSBIN=/opt/cactus/bin
 # export CACTUSLIB=/opt/cactus/lib
 # export CACTUSINCLUDE=/opt/cactus/include
-export CACTUSROOT=/opt/cactus_from_source2/uhal/
+export CACTUSROOT=/opt/cactus_from_source/uhal/
 
 export CACTUSINCLUDE=$CACTUSROOT/uhal/include/
 export CACTUSLIB=$CACTUSROOT/uhal/lib

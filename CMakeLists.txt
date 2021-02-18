@@ -167,11 +167,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # Boost
     file(GLOB_RECURSE uhal_boost /opt/cactus/*version.hpp)
     if(uhal_boost)
-        MESSAGE(STATUS "    Found boost installation that comes with uHAL, using this version") 
+        MESSAGE(STATUS "    Found boost installation that comes with uHAL, using this version")
             set(Boost_NO_SYSTEM_PATHS TRUE)
             if(Boost_NO_SYSTEM_PATHS)
                 if(${CACTUS_FOUND})
-                    set(BOOST_ROOT ${CACTUS_ROOT})
+                    set(BOOST_ROOT /opt/cactus)
                 else(${CACTUS_FOUND})
                     set(BOOST_ROOT /opt/cactus)
                 endif(${CACTUS_FOUND})
@@ -256,6 +256,11 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
+
+    find_package(PH2_POWERSUPPLY) #========================================================
+    if(PH2_POWERSUPPLY_FOUND)
+        message(STATUS "    Building the PowerSupply components")
+    endif(PH2_POWERSUPPLY_FOUND)
 
     # ZeroMQ optional
     find_package(ZMQ)         #========================================================

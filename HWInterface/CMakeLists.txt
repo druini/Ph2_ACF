@@ -1,8 +1,8 @@
 if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/HWInterface/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")  
+    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/HWInterface/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
     #includes
@@ -13,6 +13,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
     include_directories(${PROJECT_SOURCE_DIR})
+
 
     #replace this with find_package
     link_directories(${UHAL_UHAL_LIB_PREFIX})
@@ -25,9 +26,20 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     #add the library
     add_library(Ph2_Interface STATIC ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} Ph2_Description cactus_uhal_uhal cactus_uhal_log boost_regex)
-    TARGET_LINK_LIBRARIES(Ph2_Interface ${LIBS})
 
+    set(LIBS ${LIBS} Ph2_Description cactus_uhal_uhal cactus_uhal_log boost_regex)
+    #check for PowerSupply
+    if(${PH2_POWERSUPPLY_FOUND})
+      include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
+      link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
+      #message(${PH2_POWERSUPPLY_LIBRARY_DIRS})
+      #message(${PH2_POWERSUPPLY_LIBRARIES})
+      #set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
+      TARGET_LINK_LIBRARIES(Ph2_Interface ${PH2_POWERSUPPLY_LIBRARIES})
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
+    endif()
+
+    TARGET_LINK_LIBRARIES(Ph2_Interface ${LIBS})
     #check for TestCard USBDriver
     if(${PH2_TCUSB_FOUND})
       include_directories(${PH2_TCUSB_INCLUDE_DIRS})
@@ -52,15 +64,15 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     message("--     ${BoldCyan}#### End ####${Reset}")
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/HWInterface/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}") 
-    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/HWInterface/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 
 else()
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/HWInterface/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}") 
+    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/HWInterface/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
@@ -86,8 +98,8 @@ else()
     install_source()
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/HWInterface/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}") 
-    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}") 
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/HWInterface/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 
 endif()
