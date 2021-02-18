@@ -178,7 +178,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // # LpGBT Eye Opening Monitor Tester  #
     // ####################################
     // Configure Eye Opening Monitor
-    void ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator=false, bool pEnableEOM=true);
+    void ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator = false, bool pEnableEOM = true);
     // Start Eye Opening Monitor
     void StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM = true);
     // Select Eye Opening Monitor sampling phase

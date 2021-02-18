@@ -158,4 +158,23 @@
 </Settings>
 </HwDescription>
 
-
+<Devices>
+  <PowerSupply 
+  BaudRate="9600" 
+  Connection="Serial" 
+  FlowControl="False" 
+  ID="MyRohdeSchwarz" 
+  InUse="Yes" 
+  Model="RohdeSchwarz" 
+  Parity="False" 
+  Port="/dev/HMP4040" 
+  RemoveEcho="False" 
+  Suffix="LF" 
+  Terminator="LF" 
+  Timeout="1">
+   <Channel Channel="1" ID="LV_Module1" InUse="No"/> 
+    <Channel Channel="2" ID="LV_Module2" InUse="Yes"/>
+   <Channel Channel="3" ID="LV_Module3" InUse="No"/>
+    <Channel Channel="4" ID="LV_Module4" InUse="No"/> 
+  </PowerSupply>
+</Devices>

@@ -806,8 +806,6 @@ uint64_t D19clpGBTInterface::GetBERTErrors(Ph2_HwDescription::Chip* pChip)
     return ((cResult4 << 32) | (cResult3 << 24) | (cResult2 << 16) | (cResult1 << 8) | cResult0);
 }
 
-
-
 /*-------------------------------*/
 /* Eye Opening Monitor functions */
 /*-------------------------------*/

@@ -2,9 +2,17 @@
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
 #include "../tools/Tool.h"
+//#include "../Utils/gui_logger.h"
 #include "tools/BackEndAlignment.h"
 
 #include "../tools/SEHTester.h"
+
+// #ifdef __POWERSUPPLY__
+// // Libraries
+// #include "DeviceHandler.h"
+// #include "PowerSupply.h"
+// #include "PowerSupplyChannel.h"
+// #endif
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
@@ -99,12 +107,18 @@ int main(int argc, char* argv[])
     cmd.defineOption("scope-fcmd", "Scope fast commands [de-serialized]");
     // efficency
     cmd.defineOption("eff", "Measure the DC/DC efficency");
+    // Test VTRx+ registers
+    cmd.defineOption("powersupply", "Use remote control of the 10V power supply in order to ramp up the voltage", ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("powersupply", "ps");
     // Bias voltage leakage current
     cmd.defineOption("leak", "Measure the Bias voltage leakage current ");
     // Bias voltage on sensor side
     cmd.defineOption("bias", "Measure the Bias voltage on sensor side ", ArgvParser::OptionRequiresValue);
     // Load values defining a test from file
     cmd.defineOption("test-parameter", "Use user file with test parameters, otherwise (or if file is missing it) default parameters will be used", ArgvParser::OptionRequiresValue);
+    // Test VTRx+ registers
+    cmd.defineOption("testVTRxplus", "Test testVTRx+ slow control");
+    cmd.defineOptionAlternative("testVTRxplus", "v");
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -117,6 +131,7 @@ int main(int argc, char* argv[])
     }
 
     std::string       cHWFile                = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19CDescription_ROH_OFC7.xml";
+    std::string       cPowerSupply           = (cmd.foundOption("powersupply")) ? cmd.optionValue("powersupply") : "";
     bool              batchMode              = (cmd.foundOption("batch")) ? true : false;
     const std::string cSSAPair               = (cmd.foundOption("ssapair")) ? cmd.optionValue("ssapair") : "";
     std::string       cDirectory             = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
@@ -154,7 +169,9 @@ int main(int argc, char* argv[])
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
     cTool.InitializeHw(cHWFile, outp);
+    LOG(INFO) << BOLDYELLOW << "Initializing Settings" << RESET;
     cTool.InitializeSettings(cHWFile, outp);
+    LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
     LOG(INFO) << outp.str();
     outp.str("");
     cTool.CreateResultDirectory(cDirectory);
@@ -168,6 +185,38 @@ int main(int argc, char* argv[])
     // cSEHTester.exampleFit();
     cSEHTester.Inherit(&cTool);
     cSEHTester.FindUSBHandler(true);
+
+    if(cmd.foundOption("powersupply"))
+    {
+        LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control" << RESET;
+        cSEHTester.TurnOn();
+        #ifdef __POWERSUPPLY__
+        // el::Helpers::installLogDispatchCallback<gui::LogDispatcher>("GUILogDispatcher");
+        // gui::init("/tmp/guiDummyPipe");
+        // std::string docPath = cHWFile;
+        // LOG(INFO) << "Init PS with " << docPath;
+
+        // pugi::xml_document docSettings;
+
+        // DeviceHandler theHandler;
+        // theHandler.readSettings(docPath, docSettings);
+
+        // try
+        // {
+        //     theHandler.getPowerSupply(cPowerSupply);
+        // }
+        // catch(const std::out_of_range& oor)
+        // {
+        //     std::cerr << "Out of Range error: " << oor.what() << '\n';
+        //     exit(0);
+        // }
+        #endif
+    }
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "Switching on SEH without remote power supply control" << RESET;
+        cSEHTester.TurnOn();
+    }
 
     // cSEHTester.TestCardVoltages();
     if(cmd.foundOption("test-parameter"))
@@ -221,7 +270,17 @@ int main(int argc, char* argv[])
                 LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
         }
     }
+    // Test VTRx+ slow control
 
+    if(cmd.foundOption("testVTRxplus"))
+    {
+        bool cStatus = cSEHTester.LpGBTTestVTRx();
+
+        if(cStatus)
+            LOG(INFO) << BOLDBLUE << "VTRx+ slow control test passed." << RESET;
+        else
+            LOG(INFO) << BOLDRED << "VTRx+ slow control test failed." << RESET;
+    }
     // Test LpGBT I2C Masters
     if(cmd.foundOption("testI2C"))
     {

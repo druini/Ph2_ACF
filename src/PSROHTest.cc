@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("debug", "d");
     // scope
     cmd.defineOption("scope-fcmd", "Scope fast commands [de-serialized]");
-    // Test Reset lines
+    // Test VTRx+ registers
     cmd.defineOption("testVTRx+", "Test testVTRx+ slow control");
     cmd.defineOptionAlternative("testVTRx+", "v");
     // general

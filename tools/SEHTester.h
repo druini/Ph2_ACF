@@ -50,7 +50,7 @@ class SEHTester : public OTHybridTester
     void Resume();
 
     void SEHInputsDebug();
-
+    void TurnOn();
     void CheckFastCommands(const std::string& sFastCommandPattern, const std::string& userFilename);
     void CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);

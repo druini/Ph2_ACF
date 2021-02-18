@@ -204,7 +204,12 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 #endif
 #endif
 }
-
+void SEHTester::TurnOn()
+{
+#ifdef __TCUSB__
+    fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_On);
+#endif
+}
 void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 {
     // time_t startTime;
