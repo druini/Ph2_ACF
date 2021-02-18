@@ -67,7 +67,7 @@ void interruptHandler(int handler)
     exit(EXIT_FAILURE);
 }
 
-void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
+void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
     const unsigned int    wordDataSize = 32;
     unsigned int          errors       = 0;
@@ -78,15 +78,15 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     LOG(INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
     mySysCntr.readFile(data, 0);
 
-    RD53FWInterface::DecodeEventsMultiThreads(data, decodedEvents);
+    RD53Event::DecodeEventsMultiThreads(data, decodedEvents);
     LOG(INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
 
     for(auto i = 0u; i < decodedEvents.size(); i++)
-        if(RD53FWInterface::EvtErrorHandler(decodedEvents[i].evtStatus) == false)
+        if(RD53Event::EvtErrorHandler(decodedEvents[i].evtStatus) == false)
         {
             LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
             errors++;
-            RD53FWInterface::PrintEvents({decodedEvents[i]});
+            RD53Event::PrintEvents({decodedEvents[i]});
         }
 
     LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clockdelay physics eudaq prbstime prbsframes]",
+                     "injdelay clkdelay physics eudaq prbstime prbsframes]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -317,7 +317,7 @@ int main(int argc, char** argv)
                     static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
                 exit(EXIT_SUCCESS);
             }
-            if(binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53FWInterface::decodedEvents);
+            if(binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53Event::decodedEvents);
         }
         else if(binaryFile == "")
         {
@@ -514,7 +514,7 @@ int main(int argc, char** argv)
             id.analyze();
             id.draw();
         }
-        else if(whichCalib == "clockdelay")
+        else if(whichCalib == "clkdelay")
         {
             // ###################
             // # Run Clock Delay #
@@ -632,6 +632,12 @@ int main(int argc, char** argv)
         fileRunNumberOut.open(FILERUNNUMBER, std::ios::out);
         if(fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(runNumber) << std::endl;
         fileRunNumberOut.close();
+
+        // #############################
+        // # Destroy System Controller #
+        // #############################
+        mySysCntr.Destroy();
+        // fDetectorMonitor->startMonitoring();
 
         LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
     }

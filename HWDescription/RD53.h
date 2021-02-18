@@ -44,6 +44,7 @@ const uint16_t CDRCONFIG_1Gbit   = 1048; // Value for 1.28 Gbit/s
 const uint16_t CDRCONFIG_640Mbit = 1049; // Value for 640 Mbit/s
 const uint8_t  PATTERN_PRBS      = 0x2;  // Start PRBS pattern
 const uint8_t  PATTERN_AURORA    = 0x1;  // Start AURORA pattern
+const uint8_t  PATTERN_CLOCK     = 0x0;  // Start clock pattern
 } // namespace RD53Constants
 
 // ############

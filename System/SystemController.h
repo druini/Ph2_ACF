@@ -35,6 +35,7 @@
 #include "../Utils/D19cMPAEventAS.h"
 #include "../Utils/D19cSSAEvent.h"
 #include "../Utils/D19cSSAEventAS.h"
+#include "../Utils/DetectorMonitorConfig.h"
 #include "../Utils/Event.h"
 #include "../Utils/FileHandler.h"
 #include "../Utils/Utilities.h"
@@ -77,7 +78,6 @@ class SystemController
     std::string        fRawFileName;
     bool               fWriteHandlerEnabled;
     bool               fStreamerEnabled;
-    std::future<void>  fMonitorFuture;
     TCPPublishServer*  fNetworkStreamer;
     DetectorMonitor*   fDetectorMonitor;
 
@@ -166,20 +166,7 @@ class SystemController
      * \param args
      * \return: none
      */
-    template <typename... Ts>
-    void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, const Ts&... args)
-    {
-        if(sizeof...(Ts) > 0)
-            for(const auto cOpticalGroup: *pBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid)
-                    {
-                        LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                        fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args...);
-                        LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
-                    }
-    }
+    void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, const std::vector<std::string>& args) const;
 
     /*!
      * \brief Read Data from pBoard
@@ -254,11 +241,10 @@ class SystemController
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
     std::vector<Ph2_HwInterface::Event*> fEventList;
-
-    std::future<void> fFuture;
-    uint32_t          fEventSize;
-    uint32_t          fNCbc;
-    FileParser        fParser;
+    std::future<void>                    fFuture;
+    uint32_t                             fEventSize;
+    uint32_t                             fNCbc;
+    FileParser                           fParser;
 };
 } // namespace Ph2_System
 

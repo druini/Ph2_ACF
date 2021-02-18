@@ -41,9 +41,11 @@ class RD53Interface : public ReadoutChipInterface
     bool     ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true) override;
     bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override;
-
-    void     StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
-    void     StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+    // ##################
+    // # PRBS generator #
+    // ##################
+    void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+    void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
     // #############################
 
     void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard);
@@ -77,14 +79,11 @@ class RD53Interface : public ReadoutChipInterface
     // # Dedicated to minitoring #
     // ###########################
   public:
-    template <typename T, typename... Ts>
-    void ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const T& observableName, const Ts&... observableNames)
+    void ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args)
     {
-        ReadChipMonitor(pChip, observableName);
-        ReadChipMonitor(pChip, observableNames...);
+        for(const auto& arg: args) ReadChipMonitor(pChip, arg);
     }
-
-    float ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const char* observableName);
+    float ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
     float ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip);
     float ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip);
 
