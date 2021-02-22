@@ -303,144 +303,6 @@ bool RD53Event::EvtErrorHandler(uint16_t status)
     return isGood;
 }
 
-// ##########################################
-// # Use of OpenMP (compiler flag -fopenmp) #
-// ##########################################
-/*
-void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& eventStatus)
-{
-    // #####################
-    // # Consistency check #
-    // #####################
-    if(data.size() == 0)
-    {
-        eventStatus = RD53FWEvtEncoder::EMPTY;
-        return;
-    }
-
-    // #####################
-    // # Find events start #
-    // #####################
-    std::vector<size_t> eventStart;
-    size_t              i = 0u;
-    while(i < data.size())
-        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
-        {
-            eventStart.push_back(i);
-            i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
-        }
-        else
-            i++;
-    if(eventStart.size() == 0)
-    {
-        eventStatus = RD53FWEvtEncoder::NOHEADER;
-        return;
-    }
-    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / omp_get_max_threads());
-    eventStart.push_back(data.size());
-
-    eventStatus = 0;
-
-    // ######################
-    // # Unpack data vector #
-    // ######################
-#pragma omp parallel
-    {
-        std::vector<RD53Event> vecEvents;
-        std::vector<size_t>    vecEventStart;
-
-        if(eventStart.begin() + nEvents * omp_get_thread_num() < eventStart.end())
-        {
-            uint16_t status;
-            auto     firstEvent = eventStart.begin() + nEvents * omp_get_thread_num();
-            auto     lastEvent  = firstEvent + nEvents + 1 < eventStart.end() ? firstEvent + nEvents + 1 : eventStart.end();
-            std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart));
-
-            RD53Event::DecodeEvents(data, vecEvents, vecEventStart, status);
-
-            // #####################
-            // # Pack event vector #
-            // #####################
-#pragma omp critical
-            std::move(vecEvents.begin(), vecEvents.end(), std::back_inserter(events));
-            eventStatus |= status;
-        }
-    }
-}
-
-void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& eventStatus)
-{
-    // #####################
-    // # Consistency check #
-    // #####################
-    if(data.size() == 0)
-    {
-        eventStatus = RD53FWEvtEncoder::EMPTY;
-        return;
-    }
-
-    std::vector<uint16_t>               vecEventStatus(RD53Shared::NTHREADS);
-    std::vector<std::vector<RD53Event>> vecEvents(RD53Shared::NTHREADS);
-    std::vector<std::thread>            vecThrDecoders(RD53Shared::NTHREADS);
-    std::vector<std::vector<size_t>>    vecEventStart(RD53Shared::NTHREADS);
-
-    // #####################
-    // # Find events start #
-    // #####################
-    std::vector<size_t> eventStart;
-    size_t              i = 0u;
-    while(i < data.size())
-        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
-        {
-            eventStart.push_back(i);
-            i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
-        }
-        else
-            i++;
-    if(eventStart.size() == 0)
-    {
-        eventStatus = RD53FWEvtEncoder::NOHEADER;
-        return;
-    }
-    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / RD53Shared::NTHREADS);
-    eventStart.push_back(data.size());
-
-    // ######################
-    // # Unpack data vector #
-    // ######################
-    for(i = 0u; i < RD53Shared::NTHREADS > 1 && RD53Shared::NTHREADS - 1; i++)
-    {
-        auto firstEvent = eventStart.begin() + nEvents * i;
-        if(firstEvent + nEvents + 1 > eventStart.end() - 1) break;
-        auto lastEvent = firstEvent + nEvents + 1;
-        std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart[i]));
-
-        vecThrDecoders[i] = std::thread(&RD53Event::DecodeEvents, std::ref(data), std::ref(vecEvents[i]), std::ref(vecEventStart[i]), std::ref(vecEventStatus[i]));
-    }
-
-    auto firstEvent = eventStart.begin() + nEvents * i;
-    auto lastEvent  = eventStart.end();
-    std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart[i]));
-
-    RD53Event::DecodeEvents(data, vecEvents[i], vecEventStart[i], vecEventStatus[i]);
-
-    // ################
-    // # Join threads #
-    // ################
-    for(auto& thr: vecThrDecoders)
-        if(thr.joinable() == true) thr.join();
-
-    // #####################
-    // # Pack event vector #
-    // #####################
-    eventStatus = 0;
-    for(auto i = 0u; i < RD53Shared::NTHREADS; i++)
-    {
-        std::move(vecEvents[i].begin(), vecEvents[i].end(), std::back_inserter(events));
-        eventStatus |= vecEventStatus[i];
-    }
-}
-*/
 void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStartExt, uint16_t& eventStatus)
 {
     std::vector<size_t> eventStartLocal;
@@ -510,7 +372,6 @@ void RD53Event::ForkDecodingThreads()
         RD53Event::decodingThreads.emplace_back(std::thread(&RD53Event::decoderThread,
                                                             std::ref(RD53Event::theData),
                                                             std::ref(RD53Event::vecEvents[i]),
-                                                            // std::ref(std::forward<std::vector<RD53Event>&&>(RD53Event::vecEvents[i])), // @TMP@
                                                             std::ref(RD53Event::vecEventStart[i]),
                                                             std::ref(RD53Event::vecEventStatus[i]),
                                                             std::ref(RD53Event::vecWorkDone[i])));
@@ -583,7 +444,6 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
     auto firstEvent = eventStart.begin() + nEvents * i;
     auto lastEvent  = eventStart.end();
     std::move(firstEvent, lastEvent, std::back_inserter(RD53Event::vecEventStart[i]));
-    // std::cout << "AAA1 " << eventStart.size() << std::endl;
 
     // #######################
     // # Start data decoding #
@@ -604,14 +464,76 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
     eventStatus = 0;
     for(auto i = 0u; i < RD53Shared::NTHREADS; i++)
     {
-        std::move(RD53Event::vecEvents[i].begin(), RD53Event::vecEvents[i].end(), std::back_inserter(events));
+        RD53Shared::myMove(std::move(RD53Event::vecEvents[i]), events);
         eventStatus |= RD53Event::vecEventStatus[i];
         RD53Event::vecEventStatus[i] = 0;
         RD53Event::vecEventStart[i].clear();
-
-        RD53Event::vecEvents[i].clear(); // @TMP@
     }
-    // std::cout << "AAA2 " << RD53Event::vecEvents[0].size() << std::endl;
 }
 
+// ##########################################
+// # Use of OpenMP (compiler flag -fopenmp) #
+// ##########################################
+/*
+void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& eventStatus)
+{
+    // #####################
+    // # Consistency check #
+    // #####################
+    if(data.size() == 0)
+    {
+        eventStatus = RD53FWEvtEncoder::EMPTY;
+        return;
+    }
+
+    // #####################
+    // # Find events start #
+    // #####################
+    std::vector<size_t> eventStart;
+    size_t              i = 0u;
+    while(i < data.size())
+        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
+        {
+            eventStart.push_back(i);
+            i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
+        }
+        else
+            i++;
+    if(eventStart.size() == 0)
+    {
+        eventStatus = RD53FWEvtEncoder::NOHEADER;
+        return;
+    }
+    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / omp_get_max_threads());
+    eventStart.push_back(data.size());
+
+    eventStatus = 0;
+
+    // ######################
+    // # Unpack data vector #
+    // ######################
+#pragma omp parallel
+    {
+        std::vector<RD53Event> vecEvents;
+        std::vector<size_t>    vecEventStart;
+
+        if(eventStart.begin() + nEvents * omp_get_thread_num() < eventStart.end())
+        {
+            uint16_t status;
+            auto     firstEvent = eventStart.begin() + nEvents * omp_get_thread_num();
+            auto     lastEvent  = firstEvent + nEvents + 1 < eventStart.end() ? firstEvent + nEvents + 1 : eventStart.end();
+            std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart));
+
+            RD53Event::DecodeEvents(data, vecEvents, vecEventStart, status);
+
+            // #####################
+            // # Pack event vector #
+            // #####################
+#pragma omp critical
+            RD53Shared::myMove(std::move(vecEvents), events);
+            eventStatus |= status;
+        }
+    }
+}
+*/
 } // namespace Ph2_HwInterface

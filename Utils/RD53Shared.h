@@ -15,6 +15,7 @@
 #include <iostream>
 #include <sstream>
 #include <thread>
+#include <vector>
 
 namespace RD53Shared
 {
@@ -32,6 +33,13 @@ size_t      countBitsOne(size_t num);
 void        resetDefaultFloat();
 
 constexpr size_t setBits(size_t nBit2Set) { return (1 << nBit2Set) - 1; }
+
+template <typename T>
+inline void myMove(std::vector<T> source, std::vector<T>& destination)
+{
+    destination.insert(destination.end(), std::make_move_iterator(source.begin()), std::make_move_iterator(source.end()));
+}
+
 } // namespace RD53Shared
 
 #endif
