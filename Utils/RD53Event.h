@@ -94,9 +94,8 @@ class RD53Event : public Ph2_HwInterface::Event
     static void addBoardInfo2Events(const Ph2_HwDescription::BeBoard* pBoard, std::vector<RD53Event>& decodedEvents);
     static void ForkDecodingThreads();
     static void JoinDecodingThreads();
-    /* static void     DecodeEventsWrapper(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, std::atomic<uint16_t>& evtStatus); */
-    static void DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& evtStatus);
-    static void DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint16_t& evtStatus);
+    static void DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& eventStatus);
+    static void DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint16_t& eventStatus);
     static bool EvtErrorHandler(uint16_t status);
     static void PrintEvents(const std::vector<RD53Event>& events, const std::vector<uint32_t>& pData = {});
 
@@ -109,7 +108,7 @@ class RD53Event : public Ph2_HwInterface::Event
 
     std::vector<std::pair<ChipFrame, Ph2_HwDescription::RD53::Event>> chip_frames_events;
 
-    uint16_t evtStatus;
+    uint16_t eventStatus;
 
     // ########################################
     // # Vector containing the decoded events #
@@ -119,14 +118,14 @@ class RD53Event : public Ph2_HwInterface::Event
   private:
     bool        isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const;
     static int  lane2chipId(const Ph2_HwDescription::BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane);
-    static void decoderThread(const std::vector<uint32_t>** data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint16_t& evtStatus, std::atomic<bool>& workDone);
+    static void decoderThread(std::vector<uint32_t>*& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint16_t& eventStatus, std::atomic<bool>& workDone);
 
     static std::vector<std::thread>            decodingThreads;
     static std::vector<std::vector<RD53Event>> vecEvents;
     static std::vector<std::vector<size_t>>    vecEventStart;
     static std::vector<uint16_t>               vecEventStatus;
     static std::vector<std::atomic<bool>>      vecWorkDone;
-    static std::vector<uint32_t>**             theData;
+    static std::vector<uint32_t>*              theData;
 
     static std::condition_variable thereIsWork2Do;
     static std::atomic<bool>       keepDecodersRunning;

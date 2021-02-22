@@ -57,6 +57,8 @@ void SystemController::Destroy()
 
     LOG(INFO) << BOLDRED << ">>> Destroying interfaces <<<" << RESET;
 
+    RD53Event::JoinDecodingThreads();
+
     delete fDetectorMonitor;
     fDetectorMonitor = nullptr;
     delete fBeBoardInterface;
@@ -78,6 +80,7 @@ void SystemController::Destroy()
 
     delete fNetworkStreamer;
     fNetworkStreamer = nullptr;
+
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
 
@@ -466,6 +469,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             LOG(INFO) << CYAN << "================== Done ===================" << RESET;
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
+            RD53Event::ForkDecodingThreads();
         }
     }
 
@@ -659,8 +663,9 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     // ####################
     if(pType == BoardType::RD53)
     {
+        uint16_t status;
         fEventList.clear();
-        if(RD53Event::decodedEvents.size() == 0) RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents);
+        if(RD53Event::decodedEvents.size() == 0) RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status);
         RD53Event::addBoardInfo2Events(pBoard, RD53Event::decodedEvents);
         for(auto& evt: RD53Event::decodedEvents) fEventList.push_back(&evt);
     }
