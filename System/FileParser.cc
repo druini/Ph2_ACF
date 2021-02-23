@@ -951,10 +951,9 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
         if(pIsFile == false) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]" << std::endl;
 
         throw Exception("Unable to parse XML source!");
-        return;
     }
 
-    for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings; nSettings = nSettings.next_sibling())
+    for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings == doc.child("HwDescription").child("Settings"); nSettings = nSettings.next_sibling())
     {
         os << "\n" << std::endl;
 
@@ -1061,14 +1060,14 @@ std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMo
         return "None";
     }
 
-    if(!bool(doc.child("MonitoringSettings")))
+    if(!bool(doc.child("HwDescription").child("MonitoringSettings")))
     {
         os << BOLDYELLOW << "Monitoring not defined in " << pFilename << RESET << std::endl;
         os << BOLDYELLOW << "No monitoring will be run" << RESET << std::endl;
         return "None";
     }
 
-    pugi::xml_node theMonitorNode = doc.child("MonitoringSettings").child("Monitoring");
+    pugi::xml_node theMonitorNode = doc.child("HwDescription").child("MonitoringSettings").child("Monitoring");
     if(std::string(theMonitorNode.attribute("enable").value()) == "0") return "None";
 
     theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child("MonitoringSleepTime").first_child().value());

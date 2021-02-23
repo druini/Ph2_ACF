@@ -181,7 +181,7 @@ class RD53 : public ReadoutChip
         uint16_t             bc_id;
         std::vector<HitData> hit_data;
 
-        uint16_t evtStatus;
+        uint16_t eventStatus;
 
       private:
         void DecodeQuad(uint32_t data);

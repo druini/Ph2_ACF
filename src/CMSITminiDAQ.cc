@@ -78,11 +78,12 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     LOG(INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
     mySysCntr.readFile(data, 0);
 
-    RD53Event::DecodeEventsMultiThreads(data, decodedEvents);
+    uint16_t status;
+    RD53Event::DecodeEventsMultiThreads(data, decodedEvents, status);
     LOG(INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
 
     for(auto i = 0u; i < decodedEvents.size(); i++)
-        if(RD53Event::EvtErrorHandler(decodedEvents[i].evtStatus) == false)
+        if(RD53Event::EvtErrorHandler(decodedEvents[i].eventStatus) == false)
         {
             LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
             errors++;
