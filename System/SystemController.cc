@@ -258,7 +258,7 @@ void SystemController::RunBERtest(std::string chain2test, bool given_time, doubl
                         LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
                                   << ((((chain2test != "LPGBT-FE") &&
-                                        (fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), 6, cChip->getId(), frontendSpeed) == true)) ||
+                                        (fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), cChip->getId(), frontendSpeed) == true)) ||
                                        ((chain2test == "LPGBT-FE") && (flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, 6, 0, given_time, frames_or_time, frontendSpeed) == true))) // @TMP@
                                           ? "PASSED"
                                           : "NOT PASSED")
