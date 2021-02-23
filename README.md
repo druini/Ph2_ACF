@@ -27,12 +27,12 @@ More informations can be found at https://indico.cern.ch/event/842824/attachment
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 03/02/2021
++ Last change made to this section: 23/02/2021
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `master` / `IT-v3.9.9`
-- Firmware tag: `3.5`
+- Software git branch / tag : `master` / `IT-v3.9.10`
+- Firmware tag: `3.6`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 **FC7 setup:**
@@ -92,6 +92,7 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 10. Injection delay scan
 11. Clock delay scan
 12. Physics
+13. Bit Error Rate test
 ```
 Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 
