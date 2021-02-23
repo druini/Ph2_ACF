@@ -224,14 +224,14 @@
     <Setting name="nClkDelays">       280 </Setting>
   </Settings>
 
-</HwDescription>
+  <!-- === Monitoring parameters ===
+       MonitoringSleepTime: sleep for monitoring thread in milliseconds
+  -->
+  <MonitoringSettings>
+    <Monitoring type="RD53" enable="0">
+      <MonitoringSleepTime>        1000 </MonitoringSleepTime>
+      <Enable name="AllVariables">    1 </Enable>
+    </Monitoring>
+  </MonitoringSettings>
 
-<!-- === Monitoring parameters ===
-     MonitoringSleepTime: sleep for monitoring thread in milliseconds
--->
-<MonitoringSettings>
-  <Monitoring type="RD53" enable="0">
-    <MonitoringSleepTime>        1000 </MonitoringSleepTime>
-    <Enable name="AllVariables">    1 </Enable>
-  </Monitoring>
-</MonitoringSettings>
+</HwDescription>

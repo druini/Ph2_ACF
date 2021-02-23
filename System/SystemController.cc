@@ -537,7 +537,6 @@ void SystemController::Configure(std::string cHWFile, bool enableStream)
     InitializeHw(cHWFile, outp, true, enableStream);
     InitializeSettings(cHWFile, outp);
     std::cout << outp.str() << std::endl;
-    outp.str("");
     ConfigureHw();
 }
 
