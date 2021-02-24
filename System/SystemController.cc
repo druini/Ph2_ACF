@@ -225,7 +225,8 @@ void SystemController::RunBERtest(std::string chain2test, bool given_time, doubl
 // # chain2test = "LPGBT-FE" #
 // ###########################
 {
-    if((chain2test != "BE-FE") && (chain2test != "BE-LPGBT") && (chain2test != "LPGBT-FE")) throw Exception("[SystemController::RunBERtest] Option non recognized");
+    if((chain2test != "BE-FE") && (chain2test != "BE-LPGBT") && (chain2test != "LPGBT-FE"))
+        throw Exception("[SystemController::RunBERtest] Option non recognized: " + chain2test + " (use BE-FE, BE-LPGBT, or LPGBT-FE)");
 
     if(chain2test == "BE-LPGBT")
         for(const auto cBoard: *fDetectorContainer)
