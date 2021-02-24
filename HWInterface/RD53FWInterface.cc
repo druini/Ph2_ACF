@@ -243,7 +243,7 @@ void RD53FWInterface::SendChipCommandsPack(const std::vector<uint32_t>& commandL
         std::this_thread::sleep_for(std::chrono::microseconds(RD53FWconstants::READOUTSLEEP));
     }
     if(retry == true)
-        LOG(ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << RD53FWconstants::MAXATTEMPTS << BOLDRED << ")" << RESET;
+        LOG(ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << +RD53FWconstants::MAXATTEMPTS << BOLDRED << ")" << RESET;
 }
 
 std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(ReadoutChip* pChip)
@@ -642,9 +642,10 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // # Error checking #
         // ##################
         RD53Event::decodedEvents.clear();
-        uint16_t status = RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents); // Decode events with multiple threads
-        // uint16_t status = RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {});         // Decode events with a single thread
-        // RD53Event::PrintEvents(RD53Event::decodedEvents, pData);                                // @TMP@
+        uint16_t status;
+        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
+        // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status);         // Decode events with a single thread
+        // RD53Event::PrintEvents(RD53Event::decodedEvents, pData);                      // @TMP@
         if(RD53Event::EvtErrorHandler(status) == false)
         {
             retry = true;
@@ -810,15 +811,6 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
-
-        // @TMP@
-        if(enableAutozero == true)
-        {
-            RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
-            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
-            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
-            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
-        }
     }
     else if(injType == INJtype::None)
     {
@@ -835,18 +827,18 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en = false;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
-
-        // @TMP@
-        if(enableAutozero == true)
-        {
-            RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
-            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
-            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
-            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
-        }
     }
     else
         LOG(ERROR) << BOLDRED << "Option not recognized " << injType << RESET;
+
+    // @TMP@
+    if(enableAutozero == true)
+    {
+        RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
+    }
 
     LOG(INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
               << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject +
@@ -1398,6 +1390,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 // #######################
 // # Bit Error Rate test #
 // #######################
+
 bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed)
 // ####################
 // # 1.28 Gbit/s  = 0 #
@@ -1431,7 +1424,7 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
     // Configure number of printouts and calculate the frequency of printouts
     double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
-    WriteStackReg({/*{"user.ctrl_regs.PRBS_checker.upgroup_addr", optGroup_id},*/ // @TMP@
+    WriteStackReg({{"user.ctrl_regs.PRBS_checker.upgroup_addr", optGroup_id},
                    {"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
                    {"user.ctrl_regs.PRBS_checker.chip_address", chip_id},
                    {"user.ctrl_regs.PRBS_checker.reset_cntr", 1},

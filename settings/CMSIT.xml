@@ -113,6 +113,10 @@
             HITOR_3_MASK_DIFF_0     = "65535"
             HITOR_3_MASK_DIFF_1     =     "1"
 
+            CML_TAP0_BIAS           =   "500"
+            CML_TAP1_BIAS           =     "0"
+            CML_TAP2_BIAS           =     "0"
+
             LOCKLOSS_CNT            =     "0"
             BITFLIP_WNG_CNT         =     "0"
             BITFLIP_ERR_CNT         =     "0"
@@ -220,14 +224,14 @@
     <Setting name="nClkDelays">       280 </Setting>
   </Settings>
 
-</HwDescription>
+  <!-- === Monitoring parameters ===
+       MonitoringSleepTime: sleep for monitoring thread in milliseconds
+  -->
+  <MonitoringSettings>
+    <Monitoring type="RD53" enable="0">
+      <MonitoringSleepTime>        1000 </MonitoringSleepTime>
+      <Enable name="AllVariables">    1 </Enable>
+    </Monitoring>
+  </MonitoringSettings>
 
-<!-- === Monitoring parameters ===
-     MonitoringSleepTime: sleep for monitoring thread in milliseconds
--->
-<MonitoringSettings>
-  <Monitoring type="RD53" enable="0">
-    <MonitoringSleepTime>        1000 </MonitoringSleepTime>
-    <Enable name="AllVariables">    1 </Enable>
-  </Monitoring>
-</MonitoringSettings>
+</HwDescription>
