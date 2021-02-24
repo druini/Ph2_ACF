@@ -602,7 +602,7 @@ int main(int argc, char** argv)
             }
             if(cmd.argument(1) == "")
             {
-                LOG(ERROR) << BOLDRED << "Failed to specify which connection to test [BE-LPGBT-FE, BE-LPGBT, LPGBT-FE]" << RESET;
+                LOG(ERROR) << BOLDRED << "Failed to specify which connection to test [BE-FE, BE-LPGBT, LPGBT-FE]" << RESET;
                 exit(EXIT_FAILURE);
             }
 
