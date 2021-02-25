@@ -8,9 +8,9 @@
 struct DetectorMonitorConfig
 {
     std::vector<std::string> fMonitorElementList;
-    int                      fSleepTimeMs;
+    int fSleepTimeMs;
 
-    bool isElementToMonitor(std::string theElement) { return (find(fMonitorElementList.begin(), fMonitorElementList.end(), theElement) != fMonitorElementList.end()); }
+    bool isElementToMonitor(std::string const& theElement) { return std::find(fMonitorElementList.begin(), fMonitorElementList.end(), theElement) != fMonitorElementList.end(); }
 };
 
 #endif

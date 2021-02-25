@@ -229,8 +229,17 @@
   -->
   <MonitoringSettings>
     <Monitoring type="RD53" enable="0">
-      <MonitoringSleepTime>        1000 </MonitoringSleepTime>
-      <Enable name="AllVariables">    1 </Enable>
+      <MonitoringSleepTime> 1000 </MonitoringSleepTime>
+      <MonitoringElements
+        VIN_ana_ShuLDO  = "1"
+        VOUT_ana_ShuLDO = "1"
+        VIN_dig_ShuLDO  = "1"
+        VOUT_dig_ShuLDO = "1"
+        ADCbandgap      = "1"
+        Iref            = "1"
+        TEMPSENS_1      = "1"
+        TEMPSENS_4      = "1"
+      />
     </Monitoring>
   </MonitoringSettings>
 

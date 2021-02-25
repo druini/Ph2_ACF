@@ -1074,13 +1074,23 @@ std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMo
 
     os << "\n" << std::endl;
 
-    for(pugi::xml_node monitorElement = theMonitorNode.child("Enable"); monitorElement; monitorElement = monitorElement.next_sibling())
+    auto const theMonitoringElements = theMonitorNode.child("MonitoringElements");
+    if(theMonitoringElements != nullptr)
     {
-        std::string monitorElementName = monitorElement.attribute("name").value();
-        if(atoi(monitorElement.first_child().value()) > 0)
+        for(auto const& attr: theMonitoringElements.attributes())
         {
-            os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << monitorElementName << RESET;
-            theDetectorMonitorConfig.fMonitorElementList.emplace_back(std::move(monitorElementName));
+            uint16_t regvalue = convertAnyInt(attr.value());
+            if (regvalue == 1)
+            {
+                auto const& regname = attr.name();
+                os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << regname << RESET << std::endl;
+                theDetectorMonitorConfig.fMonitorElementList.emplace_back(regname);
+            }
+            else if(regvalue != 0)
+            {
+                auto const& regname = attr.name();
+                os << BOLDYELLOW << "Invalid value for monitoring element \"" << regname << "\" (will be ignored): " << regvalue << " (must be 0 or 1)" << RESET << std::endl;
+            }
         }
     }
 
