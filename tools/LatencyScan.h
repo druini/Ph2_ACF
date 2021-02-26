@@ -17,13 +17,7 @@
 #include "../Utils/Visitor.h"
 #include "Tool.h"
 #ifdef __USE_ROOT__
-#include "../DQMUtils/DQMHistogramPedeNoise.h"
-#include "TCanvas.h"
-#include "TF1.h"
-#include "TGaxis.h"
-#include "TH1F.h"
-#include "TH2F.h"
-#include "TString.h"
+#include "../DQMUtils/DQMLatencyScan.h"
 #endif
 
 

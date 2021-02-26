@@ -11,6 +11,8 @@ LatencyScan::~LatencyScan() {}
 void LatencyScan::Initialise(uint32_t pStartLatency, uint32_t pLatencyRange)
 {
 #ifdef __USE_ROOT__
+    fDQMHistogramLatencyScan.setStartLatency(pStartLatency);
+    fDQMHistogramLatencyScan.setLatencyRange(pLatencyRange);
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 

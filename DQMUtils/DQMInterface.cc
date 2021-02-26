@@ -8,6 +8,7 @@
 #include "DQMHistogramCalibrationExample.h"
 #include "DQMHistogramPedeNoise.h"
 #include "DQMHistogramPedestalEqualization.h"
+#include "DQMHistogramLatencyScan.h"
 #include "DQMInterface.h"
 #include "RD53ClockDelayHistograms.h"
 #include "RD53GainHistograms.h"
@@ -94,6 +95,8 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
         fDQMHistogrammerVector.push_back(new DQMHistogramPedestalEqualization());
         fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
     }
+    else if(calibrationName == "OTLatency")
+        fDQMHistogrammerVector.push_back(new DQMHistogramLatencyScan());
     else if(calibrationName == "calibrationexample")
         fDQMHistogrammerVector.push_back(new DQMHistogramCalibrationExample());
     else if(calibrationName == "cbcPulseShape")
