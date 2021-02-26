@@ -12,28 +12,22 @@
 #ifndef LATENCYSCAN_H__
 #define LATENCYSCAN_H__
 
+#include "../Utils/CommonVisitors.h"
+#include "../Utils/ContainerRecycleBin.h"
+#include "../Utils/Visitor.h"
 #include "Tool.h"
 #ifdef __USE_ROOT__
-
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/Visitor.h"
-
-#ifdef __USE_ROOT__
-#include "../DQMUtils/DQMHistogramLatencyScan.h"
-#endif
-
+#include "../DQMUtils/DQMHistogramPedeNoise.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TGaxis.h"
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TString.h"
+#endif
+
 
 using namespace Ph2_System;
-
-typedef std::map<Ph2_HwDescription::Chip*, std::map<std::string, TObject*>>   CbcHistogramMap;
-typedef std::map<Ph2_HwDescription::Hybrid*, std::map<std::string, TObject*>> HybridHistogramMap;
 
 /*!
  * \class LatencyScan
@@ -45,7 +39,7 @@ class LatencyScan : public Tool
   public:
     LatencyScan();
     ~LatencyScan();
-    void                                Initialize(uint32_t pStartLatency, uint32_t pLatencyRange);
+    void                                Initialise(uint32_t pStartLatency, uint32_t pLatencyRange);
     std::map<HybridContainer*, uint8_t> ScanLatency(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
     std::map<HybridContainer*, uint8_t> ScanStubLatency(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
     void                                MeasureTriggerTDC();
@@ -106,4 +100,4 @@ class LatencyScan : public Tool
 };
 
 #endif
-#endif
+

@@ -1,6 +1,5 @@
 #include "LatencyScan.h"
 
-#ifdef __USE_ROOT__
 #include "../HWDescription/Cbc.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
@@ -9,7 +8,7 @@ LatencyScan::LatencyScan() : Tool() {}
 
 LatencyScan::~LatencyScan() {}
 
-void LatencyScan::Initialize(uint32_t pStartLatency, uint32_t pLatencyRange)
+void LatencyScan::Initialise(uint32_t pStartLatency, uint32_t pLatencyRange)
 {
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -699,4 +698,3 @@ void LatencyScan::Pause() {}
 
 void LatencyScan::Resume() {}
 
-#endif
