@@ -14,6 +14,7 @@
 #include "../Utils/argvparser.h"
 
 #include "../tools/RD53ClockDelay.h"
+#include "../tools/RD53DataReadbackOptimization.h"
 #include "../tools/RD53Gain.h"
 #include "../tools/RD53GainOptimization.h"
 #include "../tools/RD53InjectionDelay.h"
@@ -113,7 +114,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay physics eudaq prbstime prbsframes]",
+                     "injdelay clkdelay datarbopt physics eudaq prbstime prbsframes]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -350,6 +351,21 @@ int main(int argc, char** argv)
             la.run();
             la.analyze();
             la.draw();
+        }
+        if(whichCalib == "datarbopt")
+        {
+            // ##################################
+            // # Run Data Readback Optimization #
+            // ##################################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Data Readback Optimization @@@" << RESET;
+
+            std::string              fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_DataReadbackOptimization");
+            DataReadbackOptimization dro;
+            dro.Inherit(&mySysCntr);
+            dro.localConfigure(fileName, runNumber);
+            dro.run();
+            dro.analyze();
+            dro.draw();
         }
         else if(whichCalib == "pixelalive")
         {
