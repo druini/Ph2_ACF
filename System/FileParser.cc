@@ -84,6 +84,8 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
     os << BOLDRED << "END OF HW SUMMARY" << RESET << std::endl;
 
     for(i = 0; i < 80; i++) os << "*";
+
+    os << std::endl;
 }
 
 void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
@@ -955,7 +957,7 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
 
     for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings == doc.child("HwDescription").child("Settings"); nSettings = nSettings.next_sibling())
     {
-        os << "\n" << std::endl;
+        os << std::endl;
 
         for(pugi::xml_node nSetting = nSettings.child("Setting"); nSetting; nSetting = nSetting.next_sibling())
         {
@@ -1072,7 +1074,7 @@ std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMo
 
     theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child("MonitoringSleepTime").first_child().value());
 
-    os << "\n" << std::endl;
+    os << std::endl;
 
     auto const theMonitoringElements = theMonitorNode.child("MonitoringElements");
     if(theMonitoringElements != nullptr)
@@ -1083,13 +1085,17 @@ std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMo
             if (regvalue == 1)
             {
                 auto const& regname = attr.name();
-                os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << regname << RESET << std::endl;
+                os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << regname << RESET << ":" << BOLDYELLOW << "Yes" << RESET << std::endl;
                 theDetectorMonitorConfig.fMonitorElementList.emplace_back(regname);
             }
-            else if(regvalue != 0)
+            else
             {
                 auto const& regname = attr.name();
-                os << BOLDYELLOW << "Invalid value for monitoring element \"" << regname << "\" (will be ignored): " << regvalue << " (must be 0 or 1)" << RESET << std::endl;
+                os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << regname << RESET << ":" << BOLDYELLOW << "No";
+                if (regvalue != 0)
+                  os << " (invalid configuration value: " << regvalue << " -> must be 0 or 1)";
+
+                os << RESET << std::endl;
             }
         }
     }

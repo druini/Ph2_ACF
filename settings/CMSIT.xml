@@ -231,9 +231,9 @@
     <Monitoring type="RD53" enable="0">
       <MonitoringSleepTime> 1000 </MonitoringSleepTime>
       <MonitoringElements
-        VIN_ana_ShuLDO  = "1"
+        VIN_ana_ShuLDO  = "0"
         VOUT_ana_ShuLDO = "1"
-        VIN_dig_ShuLDO  = "1"
+        VIN_dig_ShuLDO  = "0"
         VOUT_dig_ShuLDO = "1"
         ADCbandgap      = "1"
         Iref            = "1"
