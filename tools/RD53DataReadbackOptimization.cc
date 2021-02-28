@@ -35,16 +35,18 @@ void DataReadbackOptimization::ConfigureCalibration()
     // ##############################
     // # Initialize dac scan values #
     // ##############################
-    size_t nSteps = stopValueTAP0 - startValueTAP0 + 1;
-    size_t step   = 1;
+    const size_t minNsteps = 10;
+
+    size_t nSteps = (stopValueTAP0 - startValueTAP0 + 1 >= minNsteps ? minNsteps : stopValueTAP0 - startValueTAP0 + 1);
+    size_t step   = (nSteps == minNsteps ? floor((stopValueTAP0 - startValueTAP0 + 1.) / minNsteps) : 1);
     for(auto i = 0u; i < nSteps; i++) dacListTAP0.push_back(startValueTAP0 + step * i);
 
-    nSteps = stopValueTAP1 - startValueTAP1 + 1;
-    step   = 1;
+    nSteps = (stopValueTAP1 - startValueTAP1 + 1 >= minNsteps ? minNsteps : stopValueTAP1 - startValueTAP1 + 1);
+    step   = (nSteps == minNsteps ? floor((stopValueTAP1 - startValueTAP1 + 1.) / minNsteps) : 1);
     for(auto i = 0u; i < nSteps; i++) dacListTAP1.push_back(startValueTAP1 + step * i);
 
-    nSteps = stopValueTAP2 - startValueTAP2 + 1;
-    step   = 1;
+    nSteps = (stopValueTAP2 - startValueTAP2 + 1 >= minNsteps ? minNsteps : stopValueTAP2 - startValueTAP2 + 1);
+    step   = (nSteps == minNsteps ? floor((stopValueTAP2 - startValueTAP2 + 1.) / minNsteps) : 1);
     for(auto i = 0u; i < nSteps; i++) dacListTAP2.push_back(startValueTAP2 + step * i);
 
     // #######################
