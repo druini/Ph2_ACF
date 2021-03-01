@@ -404,6 +404,12 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
     // #####################
     // # Consistency check #
     // #####################
+    if(RD53Event::decodingThreads.size() == 0)
+    {
+        LOG(ERROR) << BOLDRED << "Threads for data decoding haven't been forked: use " << BOLDYELLOW << "RD53Event::ForkDecodingThreads()" << BOLDRED << " first" << RESET;
+        eventStatus = RD53FWEvtEncoder::EMPTY;
+        return;
+    }
     if(data.size() == 0)
     {
         eventStatus = RD53FWEvtEncoder::EMPTY;
