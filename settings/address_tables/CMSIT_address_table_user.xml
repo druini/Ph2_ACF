@@ -130,11 +130,11 @@
       <node id="error_cntr_chip_addr"   mask="0x00000070"     permission="rw"      description="" />
     </node>
 
-    <node id="i2c_block"            address="0x00000014"      permission="rw"      description="">
+    <node id="i2c_block"            address="0x00000011"      permission="rw"      description="">
       <node id="dp_addr"               mask="0x0000000F"      permission="rw"      description="" />
     </node>
 
-    <node id="PRBS_checker"         address="0x00000011"      permission="rw"      description="">
+    <node id="PRBS_checker"         address="0x00000012"      permission="rw"      description="">
       <node id="reset_cntr"            mask="0x00000400"      permission="rw"      description="" />
       <node id="error_cntr_sel"        mask="0x00000800"      permission="rw"      description="" />
       <node id="chip_address"          mask="0x0000F000"      permission="rw"      description="" />
@@ -145,8 +145,8 @@
       <node id="module_addr"           mask="0xF0000000"      permission="rw"      description="" />
     </node>
 
-    <node id="prbs_frames_to_run_low"  address="0x00000012"   permission="rw"      description=""> </node>
-    <node id="prbs_frames_to_run_high" address="0x00000013"   permission="rw"      description=""> </node>
+    <node id="prbs_frames_to_run_low"  address="0x00000013"   permission="rw"      description=""> </node>
+    <node id="prbs_frames_to_run_high" address="0x00000014"   permission="rw"      description=""> </node>
 
     <!-- Optical Implementation -->
     <node id="lpgbt_1"              address="0x00000015"      permission="rw"      description="Signals for Slow Control of lpgbt">
@@ -294,9 +294,9 @@
       <node id="gnd_sense"             mask="0x00FFF000"      permission="r"       description="" />
     </node>
 
-    <node id="prbs_ber_cntr"        address="0x00000018"      permission="r"> </node>
-    <node id="prbs_frame_cntr_low"  address="0x00000019"      permission="r"> </node>
-    <node id="prbs_frame_cntr_high" address="0x0000001A"      permission="r"> </node>
+    <node id="prbs_ber_cntr"        address="0x0000001A"      permission="r"> </node>
+    <node id="prbs_frame_cntr_low"  address="0x0000001B"      permission="r"> </node>
+    <node id="prbs_frame_cntr_high" address="0x0000001C"      permission="r"> </node>
 
     <!-- Optical Link -->
     <node id="lpgbt_fpga"           address="0x00000019"      permission="r"       description="Status Signals from the lpgbt-fpga core">
