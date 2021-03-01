@@ -192,14 +192,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void                     RebootBoard();
     const FpgaConfig*        GetConfiguringFpga();
 
-    // ################################################
-    // # I2C block for programming peripheral devices #
-    // ################################################
-    bool I2cCmdAckWait(int nAttempts);
-    void WriteI2C(std::vector<uint32_t>& data);
-    void ReadI2C(std::vector<uint32_t>& data);
-    void ConfigureClockSi5324();
-
     // ####################################################
     // # Hybrid ADC measurements: temperature and voltage #
     // ####################################################

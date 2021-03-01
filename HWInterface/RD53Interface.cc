@@ -35,7 +35,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     // ################################################
     // # Programming global registers from white list #
     // ################################################
-    static const char* registerWhileList[] = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"};
+    static const char* registerWhileList[] = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"}; // @CONST@
 
     for(auto i = 0u; i < arraySize(registerWhileList); i++)
     {
@@ -46,7 +46,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
-    static const char* registerClkDataDelayList[] = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_CMD_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"};
+    static const char* registerClkDataDelayList[] = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_CMD_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"}; // @CONST@
     auto               clk_data_delay_value       = pRD53RegMap["CLK_DATA_DELAY"].fValue;
     bool               doWriteClkDataDelay        = false;
 
@@ -273,7 +273,7 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
 {
     this->setBoard(pChip->getBeBoardId());
 
-    const int nAttempts = 2;
+    const int nAttempts = 2; // @CONST@
     for(auto attempt = 0; attempt < nAttempts; attempt++)
     {
         auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), regName);
@@ -605,7 +605,7 @@ uint32_t RD53Interface::measureADC(ReadoutChip* pChip, uint32_t data)
 
 float RD53Interface::measureVoltageCurrent(ReadoutChip* pChip, uint32_t data, bool isCurrentNotVoltage)
 {
-    const float safetyMargin = 0.9;
+    const float safetyMargin = 0.9; // @CONST@
 
     auto ADC = RD53Interface::measureADC(pChip, data);
     if(ADC > (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1.) * safetyMargin)
@@ -633,8 +633,7 @@ float RD53Interface::measureTemperature(ReadoutChip* pChip, uint32_t data)
     const uint8_t sensorDEM      = 0x0E; // Sensor Dynamic Element Matching bits needed to trim the thermistors
     const float   idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR").fValue / 1e3;
 
-    uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each
-                               // sensor config register)
+    uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
 
     // Get high bias voltage
     sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 0, true, sensorDEM, 0);
