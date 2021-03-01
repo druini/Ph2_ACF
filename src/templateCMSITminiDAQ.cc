@@ -154,5 +154,10 @@ int main(int argc, char** argv)
         ph.draw();
     }
 
+    // #############################
+    // # Destroy System Controller #
+    // #############################
+    mySysCntr.Destroy();
+
     return EXIT_SUCCESS;
 }

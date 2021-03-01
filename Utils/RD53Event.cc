@@ -222,10 +222,8 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
             LOG(INFO) << BOLDYELLOW << "--- Hit Data (" << frame_event.second.hit_data.size() << " hits) ---" << RESET;
 
             for(const auto& hit: frame_event.second.hit_data)
-            {
                 LOG(INFO) << BOLDYELLOW << "Column: " << std::setw(3) << hit.col << std::setw(-1) << ", Row: " << std::setw(3) << hit.row << std::setw(-1) << ", ToT: " << std::setw(3) << +hit.tot
                           << std::setw(-1) << RESET;
-            }
         }
     }
 }

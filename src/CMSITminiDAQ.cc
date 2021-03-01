@@ -660,7 +660,6 @@ int main(int argc, char** argv)
         // # Destroy System Controller #
         // #############################
         mySysCntr.Destroy();
-        // fDetectorMonitor->startMonitoring();
 
         LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
     }
