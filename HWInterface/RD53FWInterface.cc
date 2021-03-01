@@ -686,8 +686,8 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     // @TMP@
     if(cfg->autozero_source == AutozeroSource::FastCMDFSM)
     {
-        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 44, 1 << 15).getFrames(), -1); // Prepare GLOBAL_PULSE_RT to reset autozero level in SYNC FE
-        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 44, 1 << 14).getFrames(), -1); // Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
+        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 15).getFrames(), -1); // Prepare GLOBAL_PULSE_RT to reset autozero level in SYNC FE
+        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1); // Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
     }
 
     // ##################################
@@ -1265,7 +1265,7 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
     // Configure number of printouts and calculate the frequency of printouts
     double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
-    WriteStackReg({/*{"user.ctrl_regs.PRBS_checker.upgroup_addr", optGroup_id},*/
+    WriteStackReg({{"user.ctrl_regs.PRBS_checker.upgroup_addr", optGroup_id},
                    {"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
                    {"user.ctrl_regs.PRBS_checker.chip_address", chip_id},
                    {"user.ctrl_regs.PRBS_checker.reset_cntr", 1},
@@ -1287,14 +1287,20 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
     LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << RESET;
     bool run_done = false;
     int  idx      = 1;
+    uint64_t frameCounter = 0;
     while(run_done == false)
     {
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
 
         // Read frame counters to check progress
-        cntr_lo           = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
-        cntr_hi           = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
-        auto frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
+        cntr_lo = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
+        cntr_hi = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
+        if(bits::pack<32, 32>(cntr_hi, cntr_lo) == frameCounter)
+        {
+            LOG(ERROR) << BOLDRED << "BER test stopping because no clock was detected for this chip" << RESET;
+            return false;
+        }
+        frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
 
         double percent_done = frameCounter / frames2run * 100.;
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << percent_done << RESET << GREEN << "% done)" << RESET;
@@ -1313,10 +1319,10 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
     WriteStackReg({{"user.ctrl_regs.PRBS_checker.stop_checker", 1}, {"user.ctrl_regs.PRBS_checker.stop_checker", 0}});
 
     // Read PRBS frame counter
-    cntr_lo           = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
-    cntr_hi           = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
-    auto frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
-    auto nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
+    cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
+    cntr_hi      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
+    frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
+    auto nErrors = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
     LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET;

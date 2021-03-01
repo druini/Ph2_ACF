@@ -473,6 +473,19 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
 void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_PRBS, false); }
 void RD53Interface::StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false); }
 
+void RD53Interface::Reset(Ph2_HwDescription::ReadoutChip* pChip)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 0).getFrames(), pChip->getHybridId()); // Reset Channel Synchronizer
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 1).getFrames(), pChip->getHybridId()); // Reset Command Decoder
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 2).getFrames(), pChip->getHybridId()); // Reset Global Configuration
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 3).getFrames(), pChip->getHybridId()); // Reset Monitor Data
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 4).getFrames(), pChip->getHybridId()); // Reset Aurora
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 5).getFrames(), pChip->getHybridId()); // Reset Serializer
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 6).getFrames(), pChip->getHybridId()); // Reset ADC
+}
+
 bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue, bool pVerifLoop)
 {
     RD53* pRD53 = static_cast<RD53*>(pChip);
