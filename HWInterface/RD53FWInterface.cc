@@ -383,7 +383,7 @@ uint32_t RD53FWInterface::ReadoutSpeed()
 
 void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
 {
-    const unsigned int MAXSEQUENCES = 5;
+    const unsigned int MAXSEQUENCES = 5; // @CONST@
 
     for(const auto cOpticalGroup: *pBoard)
         for(const auto cHybrid: *cOpticalGroup)
@@ -683,8 +683,12 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
 {
     if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
-    if((cfg->fast_cmd_fsm.first_cal_en == true) && (cfg->autozero_source == AutozeroSource::FastCMDFSM))
-        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 44, 1 << 14).getFrames(), -1); // @TMP@ : prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
+    // @TMP@
+    if(cfg->autozero_source == AutozeroSource::FastCMDFSM)
+    {
+        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 15).getFrames(), -1); // Prepare GLOBAL_PULSE_RT to reset autozero level in SYNC FE
+        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1); // Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
+    }
 
     // ##################################
     // # Configuring fast command block #
@@ -748,7 +752,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
 // #  |---------------------------------------------------------------------------| #
 // ##################################################################################
 {
-    const double FSMperiod = 1. / 10e6; // Referred to 10 MHz clock
+    const double FSMperiod = 1. / 10e6; // Referred to 10 MHz clock @CONST@
     enum INJtype
     {
         None,
@@ -855,7 +859,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
 
 void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
 {
-    const uint8_t fiftyOhmEnable = 0x12;
+    const uint8_t fiftyOhmEnable = 0x12; // @CONST@
 
     if(RegManager::ReadReg("user.stat_regs.stat_dio5.dio5_not_ready") == true) LOG(ERROR) << BOLDRED << "DIO5 not ready" << RESET;
 
@@ -1032,8 +1036,8 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
 // # refClockRate = 320 [MHz] #
 // ############################
 {
-    const uint32_t writeSPI(0x8FA38014);    // Write to SPI
-    const uint32_t writeEEPROM(0x8FA38014); // Write to EEPROM
+    const uint32_t writeSPI(0x8FA38014);    // Write to SPI @CONST@
+    const uint32_t writeEEPROM(0x8FA38014); // Write to EEPROM @CONST@
     uint32_t       SPIregSettings[] = {
         0xEB020320, // OUT0 --> This clock is not used, but it can be used as another GBT clock (160 MHz, LVDS, phase shift 0 deg)
         0xEB020321, // OUT1 --> GBT clock reference: 160 MHz, LVDS, phase shift 0 deg (0xEB820321: 320 MHz, LVDS, phase shift 0 deg)
@@ -1095,8 +1099,8 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
 
 void RD53FWInterface::ReadClockGenerator()
 {
-    const uint32_t writeSPI(0x8FA38014); // Write to SPI
-    const uint32_t SPIreadCommands[] = {0x0E, 0x1E, 0x2E, 0x3E, 0x4E, 0x5E, 0x6E, 0x7E, 0x8E};
+    const uint32_t writeSPI(0x8FA38014);                                                       // Write to SPI @CONST@
+    const uint32_t SPIreadCommands[] = {0x0E, 0x1E, 0x2E, 0x3E, 0x4E, 0x5E, 0x6E, 0x7E, 0x8E}; // @CONST@
 
     LOG(INFO) << GREEN << "Reading clock generator (CDCE62005) configuration" << RESET;
     for(const auto value: SPIreadCommands)
@@ -1112,169 +1116,6 @@ void RD53FWInterface::ReadClockGenerator()
         myString << std::right << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << readback << std::dec;
         LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << RESET;
     }
-}
-
-// ################################################
-// # I2C block for programming peripheral devices #
-// ################################################
-
-bool RD53FWInterface::I2cCmdAckWait(int nAttempts)
-{
-    const uint16_t I2CcmdAckGOOD = 0x1;
-    uint32_t       status        = 0x2; // 0x2 = I2CcmdAckBAD
-    uint16_t       cLoop         = 0;
-
-    while(++cLoop < nAttempts)
-    {
-        status = RegManager::ReadReg("user.stat_regs.global_reg.i2c_acq_err");
-        if(status == I2CcmdAckGOOD) return true;
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    }
-
-    return false;
-}
-
-void RD53FWInterface::WriteI2C(std::vector<uint32_t>& data)
-{
-    const uint16_t I2CwriteREQ = 0x1;
-
-    RegManager::WriteReg("ctrl.board.i2c_req", 0); // Disable
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    RegManager::WriteReg("ctrl.board.i2c_reset", 1);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    RegManager::WriteReg("ctrl.board.i2c_reset", 0);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    RegManager::WriteReg("ctrl.board.i2c_fifo_rx_dsel", 1);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    RegManager::WriteReg("ctrl.board.i2c_req", I2CwriteREQ);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-
-    /* bool outcome = */ RegManager::WriteBlockReg("ctrl.board.i2c_fifo_tx", data);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-
-    if(I2cCmdAckWait(20) == false) throw Exception("[RD53FWInterface::WriteI2C] I2C transaction error");
-
-    RegManager::WriteReg("ctrl.board.i2c_req", 0); // Disable
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-}
-
-void RD53FWInterface::ReadI2C(std::vector<uint32_t>& data)
-{
-    const uint16_t I2CreadREQ = 0x03;
-
-    RegManager::WriteReg("ctrl.board.i2c_req", 0); // Disable
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    RegManager::WriteReg("ctrl.board.i2c_reset", 1);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    RegManager::WriteReg("ctrl.board.i2c_reset", 0);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    RegManager::WriteReg("ctrl.board.i2c_fifo_rx_dsel", 1);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    RegManager::WriteReg("ctrl.board.i2c_req", I2CreadREQ);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-
-    uint32_t sizeI2Cfifo = RegManager::ReadReg("stat.board.i2c_fifo_rx_dcnt");
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-
-    int size2read = 0;
-    if(sizeI2Cfifo > data.size())
-    {
-        size2read = data.size();
-        LOG(WARNING) << BOLDRED << "[RD53FWInterface::ReadI2C] I2C FIFO contains more data than the vector size" << RESET;
-    }
-    else
-        size2read = sizeI2Cfifo;
-
-    data = RegManager::ReadBlockReg("ctrl.board.i2c_fifo_rx", size2read);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-
-    if(RD53FWInterface::I2cCmdAckWait(20) == false) throw Exception("[RD53FWInterface::ReadI2C] I2C transaction error");
-
-    RegManager::WriteReg("ctrl.board.i2c_req", 0); // Disable
-}
-
-void RD53FWInterface::ConfigureClockSi5324()
-{
-    // ###################################################
-    // # The Si5324 chip generates the clock for the GTX #
-    // ###################################################
-
-    uint8_t start_wr = 0x90;
-    uint8_t stop_wr  = 0x50;
-    // uint8_t stop_rd_nack   = 0x68;
-    // uint8_t rd_incr        = 0x20;
-    uint8_t wr_incr = 0x10;
-
-    uint8_t enable_i2cmux  = 1;
-    uint8_t disable_i2cmux = 0;
-
-    uint8_t i2cmux_addr_wr = 0xe8;
-    // uint8_t i2cmux_addr_rd = 0xe9;
-
-    uint8_t si5324_pos     = 7;
-    uint8_t si5324_addr_wr = 0xd0;
-    // uint8_t si5324_addr_rd = 0xd1;
-
-    uint32_t              word;
-    std::vector<uint32_t> data;
-
-    // #############
-    // # Frequency #
-    // #############
-    const int N1_HS  = 0;
-    const int NC1_LS = 19;
-    const int N2_HS  = 1;
-    const int N2_LS  = 511;
-    const int N32    = 31;
-
-    // ############################################
-    // # Program Si5324 for 160 MHz precise clock #
-    // ############################################
-    std::vector<std::pair<uint8_t, uint8_t>> si5324Program;
-    si5324Program.push_back({0x00, 0x54}); // Free running mode = 1, CKOUT_ALWAYS_ON = 0
-    si5324Program.push_back({0x0B, 0x41}); // Disable CLKIN1
-    si5324Program.push_back({0x06, 0x0F}); // Disable CKOUT2 (SFOUT2_REG=001), set CKOUT1 to LVDS (SFOUT1_REG=111)
-    si5324Program.push_back({0x15, 0xFE}); // CKSEL_PIN = 0
-    si5324Program.push_back({0x03, 0x55}); // CKIN2 selected, SQ_ICAL = 1
-
-    si5324Program.push_back({0x02, 0x22});
-
-    si5324Program.push_back({0x19, N1_HS << 5});
-    si5324Program.push_back({0x1F, NC1_LS >> 16});
-    si5324Program.push_back({0x20, NC1_LS >> 8});
-    si5324Program.push_back({0x21, NC1_LS});
-    si5324Program.push_back({0x28, (N2_HS << 5) | (N2_LS >> 16)});
-    si5324Program.push_back({0x29, N2_LS >> 8});
-    si5324Program.push_back({0x2A, N2_LS});
-    si5324Program.push_back({0x2E, N32 >> 16});
-    si5324Program.push_back({0x2F, N32 >> 8});
-    si5324Program.push_back({0x30, N32});
-
-    si5324Program.push_back({0x89, 0x01}); // FASTLOCK = 1
-    si5324Program.push_back({0x88, 0x40}); // ICAL = 1
-    // ###########################################
-
-    word = (i2cmux_addr_wr << 8) | start_wr;
-    data.push_back(word);
-    word = (enable_i2cmux << si5324_pos) << 8 | stop_wr;
-    data.push_back(word);
-
-    for(auto i = 0u; i < si5324Program.size(); i++)
-    {
-        word = (si5324_addr_wr << 8) | start_wr;
-        data.push_back(word);
-        word = (si5324Program[i].first << 8) | wr_incr;
-        data.push_back(word);
-        word = (si5324Program[i].second << 8) | stop_wr;
-        data.push_back(word);
-    }
-
-    word = (i2cmux_addr_wr << 8) | start_wr;
-    data.push_back(word);
-    word = (disable_i2cmux << si5324_pos) << 8 | stop_wr;
-    data.push_back(word);
-
-    RD53FWInterface::WriteI2C(data);
 }
 
 // #################################################
@@ -1400,7 +1241,7 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
 {
     const uint32_t nBitInClkPeriod = 32. / std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
-    const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps
+    const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
     double         frames2run;
     double         time2run;
     uint32_t       cntr_lo;
@@ -1446,14 +1287,20 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
     LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << RESET;
     bool run_done = false;
     int  idx      = 1;
+    uint64_t frameCounter = 0;
     while(run_done == false)
     {
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
 
         // Read frame counters to check progress
-        cntr_lo           = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
-        cntr_hi           = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
-        auto frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
+        cntr_lo = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
+        cntr_hi = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
+        if(bits::pack<32, 32>(cntr_hi, cntr_lo) == frameCounter)
+        {
+            LOG(ERROR) << BOLDRED << "BER test stopping because no clock was detected for this chip" << RESET;
+            return false;
+        }
+        frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
 
         double percent_done = frameCounter / frames2run * 100.;
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << percent_done << RESET << GREEN << "% done)" << RESET;
@@ -1472,10 +1319,10 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
     WriteStackReg({{"user.ctrl_regs.PRBS_checker.stop_checker", 1}, {"user.ctrl_regs.PRBS_checker.stop_checker", 0}});
 
     // Read PRBS frame counter
-    cntr_lo           = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
-    cntr_hi           = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
-    auto frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
-    auto nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
+    cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
+    cntr_hi      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
+    frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
+    auto nErrors = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
     LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET;

@@ -14,6 +14,7 @@
 #include "../Utils/argvparser.h"
 
 #include "../tools/RD53ClockDelay.h"
+#include "../tools/RD53DataReadbackOptimization.h"
 #include "../tools/RD53Gain.h"
 #include "../tools/RD53GainOptimization.h"
 #include "../tools/RD53InjectionDelay.h"
@@ -73,6 +74,8 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     unsigned int          errors       = 0;
     std::vector<uint32_t> data;
 
+    RD53Event::ForkDecodingThreads();
+
     LOG(INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
     mySysCntr.addFileHandler(binaryFile, 'r');
     LOG(INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
@@ -90,10 +93,14 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
             RD53Event::PrintEvents({decodedEvents[i]});
         }
 
-    LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
-    int avgEventSize = data.size() / decodedEvents.size();
-    LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN << " events"
-              << RESET;
+    if(decodedEvents.size() != 0)
+    {
+        LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
+        int avgEventSize = data.size() / decodedEvents.size();
+        LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN
+                  << " events" << RESET;
+    }
+
     mySysCntr.closeFileHandler();
 }
 
@@ -113,7 +120,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay physics eudaq prbstime prbsframes]",
+                     "injdelay clkdelay datarbopt physics eudaq prbstime prbsframes]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -350,6 +357,21 @@ int main(int argc, char** argv)
             la.run();
             la.analyze();
             la.draw();
+        }
+        if(whichCalib == "datarbopt")
+        {
+            // ##################################
+            // # Run Data Readback Optimization #
+            // ##################################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Data Readback Optimization @@@" << RESET;
+
+            std::string              fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_DataReadbackOptimization");
+            DataReadbackOptimization dro;
+            dro.Inherit(&mySysCntr);
+            dro.localConfigure(fileName, runNumber);
+            dro.run();
+            dro.analyze();
+            dro.draw();
         }
         else if(whichCalib == "pixelalive")
         {
@@ -638,7 +660,6 @@ int main(int argc, char** argv)
         // # Destroy System Controller #
         // #############################
         mySysCntr.Destroy();
-        // fDetectorMonitor->startMonitoring();
 
         LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
     }
