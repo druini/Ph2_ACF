@@ -516,7 +516,7 @@ void RD53Interface::SendHybridCommandsPack(const BeBoard* pBoard, const std::vec
 }
 
 // ###########################
-// # Dedicated to minitoring #
+// # Dedicated to monitoring #
 // ###########################
 
 float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& observableName)
