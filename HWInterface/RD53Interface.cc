@@ -610,7 +610,7 @@ float RD53Interface::measureVoltageCurrent(ReadoutChip* pChip, uint32_t data, bo
     auto ADC = RD53Interface::measureADC(pChip, data);
     if(ADC > (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1.) * safetyMargin)
         LOG(WARNING) << BOLDRED << "\t\t--> ADC measurement in saturation (ADC = " << BOLDYELLOW << ADC << BOLDRED
-                     << "): likely the R-IMUX resistor, that converts the current into a voltage, is not connected" << RESET;
+                     << "): likely the IMUX resistor, that converts the current into a voltage, is not connected" << RESET;
 
     return RD53Interface::convertADC2VorI(pChip, ADC, isCurrentNotVoltage);
 }

@@ -1092,7 +1092,7 @@ std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMo
             {
                 auto const& regname = attr.name();
                 os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << regname << RESET << ":" << BOLDYELLOW << "No";
-                if(regvalue != 0) os << " (invalid configuration value: " << regvalue << " -> must be 0 or 1)";
+                if(regvalue != 0) os << BOLDRED << " (invalid configuration value: " << BOLDYELLOW << regvalue << BOLDRED << " -> must be 0 or 1)";
 
                 os << RESET << std::endl;
             }
