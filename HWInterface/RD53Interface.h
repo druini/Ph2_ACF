@@ -49,6 +49,7 @@ class RD53Interface : public ReadoutChipInterface
     // #############################
 
     void Reset(Ph2_HwDescription::ReadoutChip* pChip);
+    void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip);
 
     void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard);
     void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1);
