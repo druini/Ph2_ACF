@@ -122,6 +122,10 @@
             BITFLIP_ERR_CNT         =     "0"
             CMDERR_CNT              =     "0"
             SKIPPED_TRIGGER_CNT     =     "0"
+            HITOR_0_CNT             =     "0"
+            HITOR_1_CNT             =     "0"
+            HITOR_2_CNT             =     "0"
+            HITOR_3_CNT             =     "0"
             />
       </Hybrid>
     </OpticalGroup>
