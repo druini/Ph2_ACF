@@ -414,7 +414,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(txStatus, rxStatus, mgtStatus);
 
-            // do
+            do
             {
                 // ######################################################
                 // # Configure down and up links to/from frontend chips #
@@ -436,8 +436,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 // ####################################
                 // # Check AURORA lock on data stream #
                 // ####################################
-            }
-            // while(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard) == false);
+            } while(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard) == false);
 
             // ############################
             // # Configure frontend chips #
@@ -452,8 +451,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     else
                         LOG(INFO) << GREEN << "Check writing frontent chip reg: " << BOLDRED << "BAD" << RESET;
                 }
-
-                // @TMP@ : change TAP to new values
 
                 for(auto cHybrid: *cOpticalGroup)
                 {
