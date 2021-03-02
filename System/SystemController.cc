@@ -447,9 +447,9 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 if(cOpticalGroup->flpGBT != nullptr) // @TMP@
                 {
                     if(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->DidIwriteChipReg(6) == true)
-                        LOG(INFO) << GREEN << "Check writing frontent chip reg: " << BOLDYELLOW << "GOOD" << RESET;
+                        LOG(INFO) << GREEN << "Check writing frontent chip reg --> " << BOLDYELLOW << "GOOD" << RESET;
                     else
-                        LOG(INFO) << GREEN << "Check writing frontent chip reg: " << BOLDRED << "BAD" << RESET;
+                        LOG(INFO) << GREEN << "Check writing frontent chip reg --> " << BOLDRED << "BAD" << RESET;
                 }
 
                 for(auto cHybrid: *cOpticalGroup)
