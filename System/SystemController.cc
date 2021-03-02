@@ -251,6 +251,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 {
                     cIslpGBTI2C                         = !cBoard->ifUseOpticalLink();
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+                    if(cIslpGBTI2C){ clpGBTInterface->InitialiseTCUSBHandler(); }
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                 }
             }
