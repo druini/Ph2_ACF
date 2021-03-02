@@ -444,9 +444,9 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             LOG(INFO) << CYAN << "===== Configuring frontend chip registers =====" << RESET;
             for(auto cOpticalGroup: *cBoard)
             {
-                if(cOpticalGroup->flpGBT != nullptr) // @TMP@
+                if(cOpticalGroup->flpGBT != nullptr)
                 {
-                    if(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->DidIwriteChipReg(6) == true)
+                    if(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->DidIwriteChipReg(6) == true) // @TMP@
                         LOG(INFO) << GREEN << "Check writing frontend chip reg --> " << BOLDYELLOW << "GOOD" << RESET;
                     else
                         LOG(INFO) << GREEN << "Check writing frontend chip reg --> " << BOLDRED << "BAD" << RESET;

@@ -375,7 +375,7 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
     for(const auto& cGroup: pGroups)
     {
         // Wait until channels lock
-        LOG(INFO) << GREEN << "Phase aligning Rx group " << BOLDYELLOW << +cGroup << RESET;
+        LOG(INFO) << GREEN << "Phase aligning Rx group: " << BOLDYELLOW << +cGroup << RESET;
         do
         {
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
@@ -408,67 +408,67 @@ void RD53lpGBTInterface::PrintChipMode(Chip* pChip)
     switch((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4)
     {
     case 0:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Off" << RESET;
         break;
     case 1:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex TX" << RESET;
         break;
     case 2:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO; Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info; Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex RX" << RESET;
         break;
     case 3:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Transceiver" << RESET;
         break;
     case 4:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Off" << RESET;
         break;
     case 5:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex TX" << RESET;
         break;
     case 6:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex RX" << RESET;
         break;
     case 7:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Transceiver" << RESET;
         break;
     case 8:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Off" << RESET;
         break;
     case 9:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex TX" << RESET;
         break;
     case 10:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex RX" << RESET;
         break;
     case 11:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Transceiver" << RESET;
         break;
     case 12:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Off" << RESET;
         break;
     case 13:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex TX" << RESET;
         break;
     case 14:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex RX" << RESET;
         break;
     case 15:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Transceiver" << RESET;
         break;
     }
