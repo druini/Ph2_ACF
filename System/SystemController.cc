@@ -402,9 +402,9 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
 
                     if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
-                        LOG(INFO) << BOLDBLUE << "\t--> LpGBT chip configured" << RESET;
+                        LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
                     else
-                        LOG(ERROR) << BOLDRED << "\t--> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ")" << RESET;
+                        LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
                 }
 
             // #######################
