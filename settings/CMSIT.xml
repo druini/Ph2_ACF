@@ -11,7 +11,7 @@
     <OpticalGroup Id="0" FMCId="0">
       <!--
       <lpGBT_Files path="./" />
-      <lpGBT configfile="CMSIT_lpGBT.txt">
+      <lpGBT configfile="CMSIT_LpGBT.txt">
         <Settings
             EPRXDllConfig = "81"
             />

@@ -274,11 +274,11 @@ void RD53lpGBTInterface::ConfigureRxSource(Chip* pChip, const std::vector<uint8_
     for(const auto& cGroup: pGroups)
     {
         if(pSource == 0)
-            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "NORMAL " << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "NORMAL " << RESET;
         else if(pSource == 1)
-            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "PRBS7 " << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "PRBS7 " << RESET;
         else if(pSource == 4 || pSource == 5)
-            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "Constant Pattern" << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "Constant Pattern" << RESET;
 
         std::string cRxSourceReg;
         if(cGroup == 0 || cGroup == 1)
@@ -375,18 +375,18 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
     for(const auto& cGroup: pGroups)
     {
         // Wait until channels lock
-        LOG(INFO) << GREEN << "Phase Aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
+        LOG(INFO) << GREEN << "Phase aligning Rx group " << BOLDYELLOW << +cGroup << RESET;
         do
         {
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         } while(RD53lpGBTInterface::IsRxLocked(pChip, cGroup, pChannels) == false);
-        LOG(INFO) << GREEN << "Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " LOCKED" << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " LOCKED" << RESET;
 
         // Set new phase to channels 0,2
         for(const auto& cChannel: pChannels)
         {
             uint8_t cCurrPhase = RD53lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-            LOG(INFO) << GREEN << "For channel " << BOLDYELLOW << +cChannel << RESET << GREEN << " phase is " << BOLDYELLOW << +cCurrPhase << RESET;
+            LOG(INFO) << BOLDBLUE << "\t-->channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +cCurrPhase << RESET;
             RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
         }
     }
@@ -662,7 +662,7 @@ bool RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChanne
 {
     const uint32_t nBitInClkPeriod = 32. / std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
-    const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps
+    const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
     double         frames2run;
     double         time2run;
 

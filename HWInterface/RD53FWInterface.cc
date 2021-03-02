@@ -86,7 +86,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> Link type : " << BOLDYELLOW << (cLinkType == 0 ? "electrical" : "optical") << BOLDBLUE << " -- Optical speed : " << BOLDYELLOW
               << (cOptSpeed == 0 ? "10 Gbit/s" : "5 Gbit/s") << BOLDBLUE << " -- Frontend type : " << BOLDYELLOW << (cFEtype == 1 ? "RD53A" : "RD53B") << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> L12 FMC type : " << BOLDYELLOW << cL12FMCtype << BOLDBLUE << " -- L08 FMC type : " << BOLDYELLOW << cL08FMCtype << BOLDBLUE
-              << " (1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=unspecified)" << RESET;
+              << " (1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=Unspecified)" << RESET;
 
     RD53FWInterface::ChipReset();
     RD53FWInterface::ChipReSync();
@@ -320,13 +320,13 @@ void RD53FWInterface::PrintFWstatus()
               << RESET;
 
     fastCMDReg = RegManager::ReadReg("user.stat_regs.fast_cmd.trigger_state");
-    LOG(INFO) << GREEN << "Fast command block trigger state: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (0=idle, 2=running)" << RESET;
+    LOG(INFO) << GREEN << "Fast command block trigger state: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (0=Idle, 2=Running)" << RESET;
 
     fastCMDReg = RegManager::ReadReg("user.stat_regs.fast_cmd.if_configured");
     LOG(INFO) << GREEN << "Fast command block check if configuraiton registers have been set: " << BOLDYELLOW << (fastCMDReg == true ? "configured" : "not configured") << RESET;
 
     fastCMDReg = RegManager::ReadReg("user.stat_regs.fast_cmd.error_code");
-    LOG(INFO) << GREEN << "Fast command block error code (0=no error): " << BOLDYELLOW << fastCMDReg << RESET;
+    LOG(INFO) << GREEN << "Fast command block error code (0=No error): " << BOLDYELLOW << fastCMDReg << RESET;
 
     // ###########################
     // # Check trigger registers #
@@ -338,7 +338,7 @@ void RD53FWInterface::PrintFWstatus()
     // # Check hybrid registers #
     // ##########################
     uint32_t hybrid = RegManager::ReadReg("user.stat_regs.aurora_rx.Module_type");
-    LOG(INFO) << GREEN << "Hybrid type: " << BOLDYELLOW << hybrid << RESET << GREEN " (1=single chip, 2=double chip, 4=quad chip)" << RESET;
+    LOG(INFO) << GREEN << "Hybrid type: " << BOLDYELLOW << hybrid << RESET << GREEN " (1=Single chip, 2=Double chip, 4=Quad chip)" << RESET;
 
     hybrid = RegManager::ReadReg("user.stat_regs.aurora_rx.Nb_of_modules");
     LOG(INFO) << GREEN << "Number of hybrids which can be potentially readout: " << BOLDYELLOW << hybrid << RESET;
@@ -1295,8 +1295,8 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
     WriteStackReg({{"user.ctrl_regs.PRBS_checker.start_checker", 1}, {"user.ctrl_regs.PRBS_checker.start_checker", 0}});
 
     LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << RESET;
-    bool run_done = false;
-    int  idx      = 1;
+    bool     run_done     = false;
+    int      idx          = 1;
     uint64_t frameCounter = 0;
     while(run_done == false)
     {
