@@ -286,7 +286,7 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
             return regReadback[0].second;
     }
 
-    LOG(ERROR) << BOLDRED << "Empty register readback FIFO in " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
+    LOG(ERROR) << BOLDRED << "Empty register readback FIFO after " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
 
     return 0;
 }

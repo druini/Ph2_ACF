@@ -367,7 +367,7 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
     RD53lpGBTInterface::ConfigureRxPRBS(pChip, pGroups, pChannels, true);
 
     // Configure Rx Phase Shifter
-    uint16_t cDelay = 0x00;
+    uint16_t cDelay = 0x0;
     uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
     RD53lpGBTInterface::ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
 
@@ -386,7 +386,7 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
         for(const auto& cChannel: pChannels)
         {
             uint8_t cCurrPhase = RD53lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-            LOG(INFO) << BOLDBLUE << "\t-->channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +cCurrPhase << RESET;
+            LOG(INFO) << BOLDBLUE << "\t\t--> Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +cCurrPhase << RESET;
             RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
         }
     }
@@ -499,7 +499,7 @@ uint8_t RD53lpGBTInterface::GetRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pCha
 bool RD53lpGBTInterface::IsRxLocked(Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels)
 {
     std::string cRXLockedReg = "EPRX" + std::to_string(pGroup) + "Locked";
-    uint8_t     cChannelMask = 0x00;
+    uint8_t     cChannelMask = 0x0;
     for(auto cChannel: pChannels) cChannelMask += (1 << cChannel);
     return (((RD53lpGBTInterface::ReadChipReg(pChip, cRXLockedReg) & (cChannelMask << 4)) >> 4) == cChannelMask);
 }
@@ -513,6 +513,7 @@ uint8_t RD53lpGBTInterface::GetRxDllStatus(Chip* pChip, uint8_t pGroup)
 // ########################
 // # LpGBT GPIO functions #
 // ########################
+
 void RD53lpGBTInterface::ConfigureGPIO(Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir, uint8_t pOut, uint8_t pDriveStr, uint8_t pPullEn, uint8_t pUpDown)
 {
     uint8_t cDirH      = RD53lpGBTInterface::ReadChipReg(pChip, "PIODirH");
@@ -561,6 +562,7 @@ void RD53lpGBTInterface::ConfigureGPIO(Chip* pChip, const std::vector<uint8_t>& 
 // ###########################
 // # LpGBT ADC-DAC functions #
 // ###########################
+
 void RD53lpGBTInterface::ConfigureADC(Chip* pChip, uint8_t pGainSelect, uint8_t pADCEnable) { RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", pADCEnable << 2 | pGainSelect); }
 
 uint16_t RD53lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInput)
@@ -643,6 +645,7 @@ uint16_t RD53lpGBTInterface::ReadADCDiff(Chip* pChip, const std::string& pADCInp
 // #######################
 // # Bit Error Rate test #
 // #######################
+
 uint64_t RD53lpGBTInterface::GetBERTErrors(Chip* pChip)
 {
     uint64_t cResult0 = RD53lpGBTInterface::ReadChipReg(pChip, "BERTResult0");
