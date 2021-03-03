@@ -7,13 +7,6 @@
 
 #include "../tools/SEHTester.h"
 
-#ifdef __POWERSUPPLY__
-// Libraries
-#include "DeviceHandler.h"
-#include "PowerSupply.h"
-#include "PowerSupplyChannel.h"
-#endif
-
 #ifdef __USE_ROOT__
 #include "TApplication.h"
 #include "TROOT.h"
@@ -111,7 +104,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("powersupply", "Use remote control of the 10V power supply in order to ramp up the voltage", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("powersupply", "ps");
     // Bias voltage leakage current
-    cmd.defineOption("leak", "Measure the Bias voltage leakage current ");
+    cmd.defineOption("leak", "Measure the Bias voltage leakage current ",ArgvParser::OptionRequiresValue);
     // Bias voltage on sensor side
     cmd.defineOption("bias", "Measure the Bias voltage on sensor side ", ArgvParser::OptionRequiresValue);
     // Load values defining a test from file
@@ -152,6 +145,7 @@ int main(int argc, char* argv[])
     uint8_t           cFCMDPattern           = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
     std::string       cTestParameterFileName = (cmd.foundOption("test-parameter")) ? cmd.optionValue("test-parameter") : "testParameters.txt";
     uint16_t          cBiasVoltage           = (cmd.foundOption("bias")) ? convertAnyInt(cmd.optionValue("bias").c_str()) : 0;
+    uint16_t          cLeakVoltage           = (cmd.foundOption("leak")) ? convertAnyInt(cmd.optionValue("leak").c_str()) : 0;
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
     TApplication cApp("Root Application", &argc, argv);
@@ -190,71 +184,7 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control" << RESET;
         cSEHTester.TurnOn();
-        #ifdef __POWERSUPPLY__
-        // el::Helpers::installLogDispatchCallback<gui::LogDispatcher>("GUILogDispatcher");
-        // gui::init("/tmp/guiDummyPipe");
-        std::string docPath = cHWFile;
-        LOG(INFO) << "Init PS with " << docPath;
-
-        pugi::xml_document docSettings;
-
-        DeviceHandler theHandler;
-        theHandler.readSettings(docPath, docSettings);
-
-        try
-        {
-            theHandler.getPowerSupply(cPowerSupply);
-        }
-        catch(const std::out_of_range& oor)
-        {
-            std::cerr << "Out of Range error: " << oor.what() << '\n';
-            exit(0);
-        }
-
-        std::vector<std::pair<std::string, bool>> channelNames;
-    pugi::xml_document                        doc;
-    if(!doc.load_file(cHWFile.c_str())) return -1;
-    pugi::xml_node devices = doc.child("Devices");
-    for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
-    {
-        std::string s(ps.attribute("ID").value());
-        if(s == cPowerSupply)
-        {
-            for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
-            {
-                std::string name(channel.attribute("ID").value());
-                std::string use(channel.attribute("InUse").value());
-
-                channelNames.push_back(std::make_pair(name, use == "Yes"));
-            }
-        }
-    }
-
-        for(auto channelName: channelNames)
-        {
-            if(channelName.second)
-            {
-                LOG(INFO) << BOLDWHITE << cPowerSupply << " status of channel " << channelName.first << ":" RESET;
-                bool        isOn       = theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->isOn();
-                std::string isOnResult = isOn ? "1" : "0";
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                std::string voltageCompliance = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltageCompliance());
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                std::string voltage = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltage());
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                std::string currentCompliance = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrentCompliance());
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                std::string current = "-";
-                if(isOn) { current = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrent()); }
-                LOG(INFO) << "\tIsOn:\t\t" << BOLDWHITE << isOnResult << RESET;
-                LOG(INFO) << "\tV_max(set):\t\t" << BOLDWHITE << voltageCompliance << RESET;
-                LOG(INFO) << "\tV(meas):\t" << BOLDWHITE << voltage << RESET;
-                LOG(INFO) << "\tI_max(set):\t" << BOLDWHITE << currentCompliance << RESET;
-                LOG(INFO) << "\tI(meas):\t" << BOLDWHITE << current << RESET;
-            }
-        }
-
-        #endif
+        cSEHTester.RampPowerSupply(cHWFile, cPowerSupply);
     }
     else
     {
@@ -373,7 +303,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("leak"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring leakage current" << RESET;
-        cSEHTester.TestLeakageCurrent(0x155, 30);
+        cSEHTester.TestLeakageCurrent(cLeakVoltage, 600);
     }
 
     if(cmd.foundOption("bias"))

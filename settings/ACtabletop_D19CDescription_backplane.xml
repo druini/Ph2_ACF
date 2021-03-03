@@ -173,8 +173,8 @@
   Terminator="LF" 
   Timeout="1">
    <Channel Channel="1" ID="LV_Module1" InUse="No"/> 
-    <Channel Channel="2" ID="LV_Module2" InUse="Yes"/>
-   <Channel Channel="3" ID="LV_Module3" InUse="No"/>
+    <Channel Channel="2" ID="LV_Module2" InUse="No"/>
+   <Channel Channel="3" ID="LV_Module3" InUse="Yes"/>
     <Channel Channel="4" ID="LV_Module4" InUse="No"/> 
   </PowerSupply>
 </Devices>

@@ -58,6 +58,139 @@ void SEHTester::readTestParameters(std::string file)
     }
 }
 
+void SEHTester::RampPowerSupply(std::string fHWFile, std::string fPowerSupply)
+{
+#ifdef __POWERSUPPLY__
+    // el::Helpers::installLogDispatchCallback<gui::LogDispatcher>("GUILogDispatcher");
+    // gui::init("/tmp/guiDummyPipe");
+    std::string docPath = fHWFile;
+    LOG(INFO) << "Init PS with " << docPath;
+
+    pugi::xml_document docSettings;
+
+    DeviceHandler theHandler;
+    theHandler.readSettings(docPath, docSettings);
+
+    try
+    {
+        theHandler.getPowerSupply(fPowerSupply);
+    }
+    catch(const std::out_of_range& oor)
+    {
+        std::cerr << "Out of Range error: " << oor.what() << '\n';
+        exit(0);
+    }
+
+    std::vector<std::pair<std::string, bool>> channelNames;
+    std::string                               fChannel;
+    bool                                      fFoundChannel = false;
+    pugi::xml_document                        doc;
+    if(!doc.load_file(fHWFile.c_str())) throw std::runtime_error(std::string("Error Loading HW file"));
+    ;
+    pugi::xml_node devices = doc.child("Devices");
+    for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
+    {
+        std::string s(ps.attribute("ID").value());
+        if(s == fPowerSupply)
+        {
+            for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
+            {
+                std::string name(channel.attribute("ID").value());
+                std::string use(channel.attribute("InUse").value());
+
+                channelNames.push_back(std::make_pair(name, use == "Yes"));
+                if(use == "Yes")
+                {
+                    LOG(INFO) << BOLDBLUE << "Channel " << name << " will be used" RESET;
+                    if(fFoundChannel)
+                    {
+                        LOG(INFO) << "Too many channels activated";
+                        exit(1);
+                    }
+                    fFoundChannel = true;
+                    fChannel      = name;
+                }
+            }
+        }
+    }
+
+    for(auto channelName: channelNames)
+    {
+        if(channelName.second)
+        {
+            LOG(INFO) << BOLDWHITE << fPowerSupply << " status of channel " << channelName.first << ":" RESET;
+            bool        isOn       = theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->isOn();
+            std::string isOnResult = isOn ? "1" : "0";
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::string voltageCompliance = std::to_string(theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->getVoltageCompliance());
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::string voltage = std::to_string(theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->getVoltage());
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::string currentCompliance = std::to_string(theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->getCurrentCompliance());
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::string current = "-";
+            if(isOn) { current = std::to_string(theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->getCurrent()); }
+            LOG(INFO) << "\tIsOn:\t\t" << BOLDWHITE << isOnResult << RESET;
+            LOG(INFO) << "\tV_max(set):\t\t" << BOLDWHITE << voltageCompliance << RESET;
+            LOG(INFO) << "\tV(meas):\t" << BOLDWHITE << voltage << RESET;
+            LOG(INFO) << "\tI_max(set):\t" << BOLDWHITE << currentCompliance << RESET;
+            LOG(INFO) << "\tI(meas):\t" << BOLDWHITE << current << RESET;
+        }
+    }
+
+#ifdef __USE_ROOT__
+    // Create TTree for Iout to Iin conversion in DC/DC
+    auto cUinIinTree = new TTree("tUinIinTree", "Uin to Iin during power-up");
+
+    // Create variables for TTree branches
+    std::vector<float> cUinValVect;
+    std::vector<float> cIinValVect;
+    // Create TTree Branches
+    cUinIinTree->Branch("Uin", &cUinValVect);
+    cUinIinTree->Branch("Iin", &cIinValVect);
+
+    auto cObj1 = gROOT->FindObject("mgUinIin");
+    if(cObj1) delete cObj1;
+
+    float cVolts = 0;
+    float I_SEH;
+    float U_SEH;
+    while(cVolts < 10.01)
+    {
+        theHandler.getPowerSupply(fPowerSupply)->getChannel(fChannel)->setVoltage(cVolts);
+        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
+#ifdef __TCUSB__
+
+        fTC_2SSEH->read_supply(fTC_2SSEH->I_SEH, I_SEH);
+        fTC_2SSEH->read_supply(fTC_2SSEH->U_SEH, U_SEH);
+#endif
+
+        cIinValVect.push_back(I_SEH);
+        cUinValVect.push_back(U_SEH);
+        cVolts += 0.1;
+    }
+    cUinIinTree->Fill();
+
+    auto cUinIinGraph = new TGraph(cUinValVect.size(), cUinValVect.data(), cIinValVect.data());
+    cUinIinGraph->SetName("gUinIin");
+    cUinIinGraph->SetTitle("Uin to Iin during power-up");
+    cUinIinGraph->SetLineWidth(3);
+    cUinIinGraph->SetMarkerStyle(70);
+    cUinIinTree->Write();
+
+    auto cUinIinCanvas = new TCanvas("tUinIin", "Uin to Iin during power-up", 750, 500);
+
+    cUinIinGraph->Draw("AP");
+    cUinIinGraph->GetXaxis()->SetTitle("Uin [V]");
+    cUinIinGraph->GetYaxis()->SetTitle("Iin [A]");
+
+    cUinIinCanvas->Write();
+
+#endif
+#endif
+}
+
 int SEHTester::exampleFit()
 {
     std::vector<float>              X{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -247,6 +380,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 
 #ifdef __TCUSB__
         fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, UMon);
+         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         fTC_2SSEH->read_hvmon(fTC_2SSEH->HV_meas, ILeak);
 #endif
         cILeakValVect.push_back(double(ILeak));
@@ -257,7 +391,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
         time_taken = (time_taken + (timer.tv_nsec - startTime.tv_nsec)) * 1e-9;
         cTimeValVect.push_back(time_taken);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2500));
     } while(time_taken < measurementTime);
     cLeakTree->Fill();
     fResultFile->cd();

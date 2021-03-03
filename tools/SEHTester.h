@@ -16,6 +16,12 @@
 #include "USB_a.h"
 #include "USB_libusb.h"
 #endif
+#ifdef __POWERSUPPLY__
+// Libraries
+#include "DeviceHandler.h"
+#include "PowerSupply.h"
+#include "PowerSupplyChannel.h"
+#endif
 #ifdef __USE_ROOT__
 #include "TAxis.h"
 #include "TF1.h"
@@ -30,6 +36,7 @@
 #include "TStyle.h"
 #include "TTree.h"
 #endif
+
 using namespace Ph2_HwDescription;
 
 class SEHTester : public OTHybridTester
@@ -51,6 +58,7 @@ class SEHTester : public OTHybridTester
 
     void SEHInputsDebug();
     void TurnOn();
+    void RampPowerSupply(std::string fHWFile, std::string fPowerSupply);
     void CheckFastCommands(const std::string& sFastCommandPattern, const std::string& userFilename);
     void CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
