@@ -10,7 +10,7 @@
 ###  A short guide to write the GoldenImage to the SD card
 
 1. Connect the SD card
-2. Download the golden firmware from [our downloads section](../Downloads/sdgoldenimage.img)
+2. Download the golden firmware from the [cms-tracker-daq webpage](https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/Downloads/sdgoldenimage.img)
 3. `sudo fdisk -l` - find the name of the SD card (for example, /dev/mmcblk0)
 4. `sudo chmod 744 /dev/sd_card_name` - to be able to play with it
 5. Go to the folder were you saved the sdgoldenimage.img file
