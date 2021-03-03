@@ -46,6 +46,7 @@ const uint8_t  PATTERN_PRBS      = 0x2;  // Start PRBS pattern
 const uint8_t  PATTERN_AURORA    = 0x1;  // Start AURORA pattern
 const uint8_t  PATTERN_CLOCK     = 0x0;  // Start clock pattern
 const uint16_t GLOBAL_PULSE_ADDR = 0x2C; // Global Pulse Route regiser address
+const uint16_t SET_SEL_OUT_ADDR  = 0x44; // SET_SEL_OUT regiser address
 } // namespace RD53Constants
 
 // ############
