@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("powersupply", "Use remote control of the 10V power supply in order to ramp up the voltage", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("powersupply", "ps");
     // Bias voltage leakage current
-    cmd.defineOption("leak", "Measure the Bias voltage leakage current ",ArgvParser::OptionRequiresValue);
+    cmd.defineOption("leak", "Measure the Bias voltage leakage current ", ArgvParser::OptionRequiresValue);
     // Bias voltage on sensor side
     cmd.defineOption("bias", "Measure the Bias voltage on sensor side ", ArgvParser::OptionRequiresValue);
     // Load values defining a test from file

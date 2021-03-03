@@ -380,7 +380,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 
 #ifdef __TCUSB__
         fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, UMon);
-         std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         fTC_2SSEH->read_hvmon(fTC_2SSEH->HV_meas, ILeak);
 #endif
         cILeakValVect.push_back(double(ILeak));
