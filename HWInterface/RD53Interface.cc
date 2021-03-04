@@ -138,6 +138,21 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
                             (pRD53RegMap["INJECTION_SELECT"].fValue & (RD53Shared::setBits(pRD53RegMap["INJECTION_SELECT"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
                     regName = "INJECTION_SELECT";
                 }
+                else if(cRegItem.first == "CML_CONFIG_SER_EN_TAP")
+                {
+                    value = (cRegItem.second.fValue << pRD53RegMap["CML_CONFIG_EN_LANE"].fBitSize) |
+                            (pRD53RegMap["CML_CONFIG"].fValue &
+                             (RD53Shared::setBits(pRD53RegMap["CML_CONFIG"].fBitSize) - (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["CML_CONFIG_EN_LANE"].fBitSize)));
+                    regName = "CML_CONFIG";
+                }
+                else if(cRegItem.first == "CML_CONFIG_SER_INV_TAP")
+                {
+                    value = (cRegItem.second.fValue << (pRD53RegMap["CML_CONFIG_EN_LANE"].fBitSize + pRD53RegMap["CML_CONFIG_SER_EN_TAP"].fBitSize)) |
+                            (pRD53RegMap["CML_CONFIG"].fValue &
+                             (RD53Shared::setBits(pRD53RegMap["CML_CONFIG"].fBitSize) -
+                              (RD53Shared::setBits(cRegItem.second.fBitSize) << (pRD53RegMap["CML_CONFIG_EN_LANE"].fBitSize + pRD53RegMap["CML_CONFIG_SER_EN_TAP"].fBitSize))));
+                    regName = "CML_CONFIG";
+                }
 
                 RD53Interface::WriteChipReg(pChip, regName, value, true);
             }

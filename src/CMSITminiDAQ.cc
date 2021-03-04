@@ -308,7 +308,7 @@ int main(int argc, char** argv)
     {
         SystemController mySysCntr;
 
-        if((reset == true) || (binaryFile != "") || (whichCalib == "prbstime") || (whichCalib == "prbsframes"))
+        if((reset == true) || (binaryFile != ""))
         {
             // ######################################
             // # Reset hardware or read binary file #
