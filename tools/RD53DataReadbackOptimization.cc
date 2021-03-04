@@ -22,12 +22,12 @@ void DataReadbackOptimization::ConfigureCalibration()
     colStart       = this->findValueInSettings("COLstart");
     colStop        = this->findValueInSettings("COLstop");
     nEvents        = this->findValueInSettings("nEvents");
-    startValueTAP0 = this->findValueInSettings("StartValueTAP0");
-    stopValueTAP0  = this->findValueInSettings("StopValueTAP0");
-    startValueTAP1 = this->findValueInSettings("StartValueTAP1");
-    stopValueTAP1  = this->findValueInSettings("StopValueTAP1");
-    startValueTAP2 = this->findValueInSettings("StartValueTAP2");
-    stopValueTAP2  = this->findValueInSettings("StopValueTAP2");
+    startValueTAP0 = this->findValueInSettings("TAP0Start");
+    stopValueTAP0  = this->findValueInSettings("TAP0Stop");
+    startValueTAP1 = this->findValueInSettings("TAP1Start");
+    stopValueTAP1  = this->findValueInSettings("TAP1Stop");
+    startValueTAP2 = this->findValueInSettings("TAP2Start");
+    stopValueTAP2  = this->findValueInSettings("TAP2Stop");
     doDisplay      = this->findValueInSettings("DisplayHisto");
     doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings("SaveBinaryData");
@@ -35,7 +35,7 @@ void DataReadbackOptimization::ConfigureCalibration()
     // ##############################
     // # Initialize dac scan values #
     // ##############################
-    const size_t minNsteps = 10;
+    const size_t minNsteps = 10; // @CONST@
 
     size_t nSteps = (stopValueTAP0 - startValueTAP0 + 1 >= minNsteps ? minNsteps : stopValueTAP0 - startValueTAP0 + 1);
     size_t step   = (nSteps == minNsteps ? floor((stopValueTAP0 - startValueTAP0 + 1.) / minNsteps) : 1);
@@ -198,14 +198,17 @@ void DataReadbackOptimization::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    auto best   = 0.;
-                    int  regVal = 0;
+                    auto best = *std::max_element(
+                        theTAP0scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data,
+                        theTAP0scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data +
+                            dacListTAP0.size());
+                    int regVal = 0;
 
-                    for(auto i = 0u; i < dacListTAP0.size(); i++)
+                    for(auto i = 1u; i < dacListTAP0.size(); i++)
                     {
                         auto current =
                             theTAP0scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i];
-                        if(current > best)
+                        if(current < best)
                         {
                             regVal = dacListTAP0[i];
                             best   = current;
@@ -221,14 +224,17 @@ void DataReadbackOptimization::analyze()
                     theTAP0Containet.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CML_TAP0_BIAS", regVal, true);
 
-                    best   = 0.;
+                    best = *std::max_element(
+                        theTAP1scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data,
+                        theTAP1scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data +
+                            dacListTAP1.size());
                     regVal = 0;
 
                     for(auto i = 0u; i < dacListTAP1.size(); i++)
                     {
                         auto current =
                             theTAP1scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i];
-                        if(current > best)
+                        if(current < best)
                         {
                             regVal = dacListTAP1[i];
                             best   = current;
@@ -244,14 +250,17 @@ void DataReadbackOptimization::analyze()
                     theTAP1Containet.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CML_TAP1_BIAS", regVal, true);
 
-                    best   = 0.;
+                    best = *std::max_element(
+                        theTAP2scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data,
+                        theTAP2scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data +
+                            dacListTAP2.size());
                     regVal = 0;
 
                     for(auto i = 0u; i < dacListTAP2.size(); i++)
                     {
                         auto current =
                             theTAP2scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i];
-                        if(current > best)
+                        if(current < best)
                         {
                             regVal = dacListTAP2[i];
                             best   = current;
@@ -285,7 +294,8 @@ void DataReadbackOptimization::fillHisto()
 
 void DataReadbackOptimization::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-    const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    const size_t TAPsize  = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    const double time2run = 10; // @CONST@
 
     for(auto i = 0u; i < dacList.size(); i++)
     {
@@ -298,20 +308,20 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
         // ################
         // # Run analysis #
         // ################
-        // Run BERtest @TMP@
+        for(const auto cBoard: *fDetectorContainer)
+        {
+            uint32_t frontendSpeed = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
 
-        // ###############
-        // # Save output #
-        // ###############
-        for(const auto cBoard: *fDetectorContainer) // @TMP@
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
-                        // float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+                        fReadoutChipInterface->StartPRBSpattern(cChip);
                         theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i] =
-                            0; // @TMP@
+                            fBeBoardFWMap[cBoard->getId()]->RunBERtest(false, time2run, 6, cHybrid->getId(), cChip->getId(), frontendSpeed); // @TMP@
+                        fReadoutChipInterface->StopPRBSpattern(cChip);
                     }
+        }
 
         // ##############################################
         // # Send periodic data to minitor the progress #

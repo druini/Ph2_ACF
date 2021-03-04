@@ -1242,7 +1242,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 // # Bit Error Rate test #
 // #######################
 
-bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed)
+double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed)
 // ####################
 // # 1.28 Gbit/s  = 0 #
 // # 640 Mbit/s   = 1 #
@@ -1308,7 +1308,7 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
         if(bits::pack<32, 32>(cntr_hi, cntr_lo) == frameCounter)
         {
             LOG(ERROR) << BOLDRED << "BER test stopping because no clock was detected for this chip" << RESET;
-            return false;
+            return -1;
         }
         frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
 
@@ -1338,7 +1338,7 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
     LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
-    return (nErrors == 0);
+    return nErrors;
 }
 
 } // namespace Ph2_HwInterface

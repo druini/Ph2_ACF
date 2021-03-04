@@ -25,17 +25,16 @@ void GainOptimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart      = this->findValueInSettings("ROWstart");
-    rowStop       = this->findValueInSettings("ROWstop");
-    colStart      = this->findValueInSettings("COLstart");
-    colStop       = this->findValueInSettings("COLstop");
-    nEvents       = this->findValueInSettings("nEvents");
-    startValue    = this->findValueInSettings("VCalHstart");
-    stopValue     = this->findValueInSettings("VCalHstop");
-    targetCharge  = RD53chargeConverter::Charge2VCal(this->findValueInSettings("TargetCharge"));
-    KrumCurrStart = this->findValueInSettings("KrumCurrStart");
-    KrumCurrStop  = this->findValueInSettings("KrumCurrStop");
-    ;
+    rowStart       = this->findValueInSettings("ROWstart");
+    rowStop        = this->findValueInSettings("ROWstop");
+    colStart       = this->findValueInSettings("COLstart");
+    colStop        = this->findValueInSettings("COLstop");
+    nEvents        = this->findValueInSettings("nEvents");
+    startValue     = this->findValueInSettings("VCalHstart");
+    stopValue      = this->findValueInSettings("VCalHstop");
+    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings("TargetCharge"));
+    KrumCurrStart  = this->findValueInSettings("KrumCurrStart");
+    KrumCurrStop   = this->findValueInSettings("KrumCurrStop");
     doFast         = this->findValueInSettings("DoFast");
     doDisplay      = this->findValueInSettings("DisplayHisto");
     doUpdateChip   = this->findValueInSettings("UpdateChipCfg");

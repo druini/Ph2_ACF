@@ -656,7 +656,7 @@ uint64_t RD53lpGBTInterface::GetBERTErrors(Chip* pChip)
     return ((cResult4 << 32) | (cResult3 << 24) | (cResult2 << 16) | (cResult1 << 8) | cResult0);
 }
 
-bool RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
+double RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
 // ####################
 // # 1.28 Gbit/s  = 0 #
 // # 640 Mbit/s   = 1 #
@@ -728,7 +728,7 @@ bool RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChanne
     LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
-    return (nErrors == 0);
+    return nErrors;
 }
 
 void RD53lpGBTInterface::StartPRBSpattern(Ph2_HwDescription::Chip* pChip)

@@ -239,8 +239,8 @@ void SystemController::RunBERtest(std::string chain2test, bool given_time, doubl
                     flpGBTInterface->StartPRBSpattern(cOpticalGroup->flpGBT);
 
                     LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << RESET << GREEN
-                              << "]: " << BOLDYELLOW
-                              << ((fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), 0, frontendSpeed) == true) ? "PASSED" : "NOT PASSED") << RESET; // @TMP@
+                              << "]: " << BOLDYELLOW << ((fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), 0, frontendSpeed) == 0) ? "PASSED" : "NOT PASSED")
+                              << RESET; // @TMP@
 
                     flpGBTInterface->StopPRBSpattern(cOpticalGroup->flpGBT);
                 }
@@ -259,8 +259,8 @@ void SystemController::RunBERtest(std::string chain2test, bool given_time, doubl
                         LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
                                   << ((((chain2test != "LPGBT-FE") &&
-                                        (fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), cChip->getId(), frontendSpeed) == true)) ||
-                                       ((chain2test == "LPGBT-FE") && (flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, 6, 0, given_time, frames_or_time, frontendSpeed) == true))) // @TMP@
+                                        (fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), cChip->getId(), frontendSpeed) == 0)) ||
+                                       ((chain2test == "LPGBT-FE") && (flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, 6, 0, given_time, frames_or_time, frontendSpeed) == 0))) // @TMP@
                                           ? "PASSED"
                                           : "NOT PASSED")
                                   << RESET;
