@@ -696,8 +696,11 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     // @TMP@
     if(cfg->autozero_source == AutozeroSource::FastCMDFSM)
     {
-        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 15).getFrames(), -1); // Prepare GLOBAL_PULSE_RT to reset autozero level in SYNC FE
-        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1); // Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
+        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 15).getFrames(),
+                                          -1); // Prepare GLOBAL_PULSE_RT to reset autozero level in SYNC FE
+        RD53FWInterface::WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, 0x0004).getFrames(), -1);
+        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(),
+                                          -1); // Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
     }
 
     // ##################################
@@ -736,7 +739,7 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
                                // # @TMP@ Autozero configuration #
                                // ################################
                                {"user.ctrl_regs.fast_cmd_reg_2.autozero_source", (uint32_t)cfg->autozero_source},
-                               {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, 8, 0)}});
+                               {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, 0x0008, 0)}});
 
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
 }
