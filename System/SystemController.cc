@@ -428,7 +428,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         for(const auto cChip: *cHybrid)
                         {
                             LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
-                            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(static_cast<RD53*>(cChip));
+                            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
                         }
                     }
                 LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
@@ -461,7 +461,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
                         if(resetTDAC == true) static_cast<RD53*>(cChip)->resetTDAC();
                         static_cast<RD53*>(cChip)->copyMaskToDefault();
-                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cChip));
+                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
                         LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
                         // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
                     }

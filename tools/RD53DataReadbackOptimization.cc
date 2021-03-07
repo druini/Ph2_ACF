@@ -318,7 +318,7 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
                     {
                         fReadoutChipInterface->StartPRBSpattern(cChip);
                         theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i] =
-                            fBeBoardFWMap[cBoard->getId()]->RunBERtest(false, time2run, 6, cHybrid->getId(), cChip->getId(), frontendSpeed); // @TMP@
+                            fBeBoardFWMap[cBoard->getId()]->RunBERtest(true, time2run, 6, cHybrid->getId(), cChip->getId(), frontendSpeed); // @TMP@
                         fReadoutChipInterface->StopPRBSpattern(cChip);
                     }
         }

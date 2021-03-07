@@ -31,7 +31,7 @@ class RD53Interface : public ReadoutChipInterface
     // #############################
     // # Override member functions #
     // #############################
-    int      CheckChipID(Ph2_HwDescription::Chip* pChip, int chipIDfromDB);
+    int      CheckChipID(Ph2_HwDescription::Chip* pChip, const int chipIDfromDB) override;
     bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, bool pVerifLoop = true) override;
     void     WriteBoardBroadcastChipReg(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data) override;

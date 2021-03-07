@@ -15,7 +15,7 @@ namespace Ph2_HwInterface
 {
 RD53Interface::RD53Interface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap) {}
 
-int RD53Interface::CheckChipID(Chip* pChip, int chipIDfromDB)
+int RD53Interface::CheckChipID(Chip* pChip, const int chipIDfromDB)
 {
     // @TMP@ : to be implemented for RD53B
     auto chipID = RD53Interface::ReadChipReg(pChip, "CHIP_ID");
@@ -280,7 +280,7 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
 {
     this->setBoard(pBoard->getId());
 
-    const uint16_t address = static_cast<RD53*>(pBoard->at(0)->at(0)->at(0))->getRegItem(regName).fAddress;
+    const uint16_t address = pBoard->at(0)->at(0)->at(0)->getRegItem(regName).fAddress;
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, address, data).getFrames(), -1);
 }
 
