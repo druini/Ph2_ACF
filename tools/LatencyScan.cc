@@ -8,75 +8,14 @@ LatencyScan::LatencyScan() : Tool() {}
 
 LatencyScan::~LatencyScan() {}
 
-void LatencyScan::Initialise(uint32_t pStartLatency, uint32_t pLatencyRange)
+void LatencyScan::Initialize(uint32_t pStartLatency, uint32_t pLatencyRange)
 {
+    parseSettings();
+
 #ifdef __USE_ROOT__
-    fDQMHistogramLatencyScan.setStartLatency(pStartLatency);
-    fDQMHistogramLatencyScan.setLatencyRange(pLatencyRange);
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
-    for(auto cBoard: *fDetectorContainer)
-    {
-        uint32_t cBoardId = cBoard->getId();
-
-        TH1F* cTriggerTDC = new TH1F(Form("h_BeBoard_triggerTDC_Be%d", cBoardId), Form("Trigger TDC BE%d; Trigger TDC; # of Hits", cBoardId), fTDCBins, -0.5, fTDCBins - 0.5);
-
-        cTriggerTDC->SetFillColor(4);
-        cTriggerTDC->SetFillStyle(3001);
-        bookHistogram(cBoard, "triggerTDC", cTriggerTDC);
-
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cFe: *cOpticalGroup)
-            {
-                uint32_t cFeId = cFe->getId();
-
-                TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%d", cFeId), Form("FE%d  Online Canvas", cFeId));
-                // ctmpCanvas->Divide( 2, 2 );
-                fCanvasMap[cFe] = ctmpCanvas;
-
-                fNCbc = cFe->size();
-
-                // 1D Hist forlatency scan
-                TString  cName = Form("h_hybrid_latency_Fe%d", cFeId);
-                TObject* cObj  = gROOT->FindObject(cName);
-
-                if(cObj) delete cObj;
-
-                TH1F* cLatHist = nullptr;
-
-                cLatHist = new TH1F(cName, Form("Latency FE%d; Latency; # of Hits", cFeId), (pLatencyRange), pStartLatency - 0.5, pStartLatency + (pLatencyRange)-0.5);
-
-                cLatHist->GetXaxis()->SetTitle("Trigger Latency");
-                cLatHist->SetFillColor(4);
-                cLatHist->SetFillStyle(3001);
-                bookHistogram(cFe, "hybrid_latency", cLatHist);
-
-                cName = Form("h_hybrid_stub_latency_Fe%d", cFeId);
-                cObj  = gROOT->FindObject(cName);
-
-                if(cObj) delete cObj;
-
-                TH1F* cStubHist = new TH1F(cName, Form("Stub Lateny FE%d; Stub Lateny; # of Stubs", cFeId), pLatencyRange, pStartLatency, pStartLatency + pLatencyRange);
-                cStubHist->SetMarkerStyle(2);
-                bookHistogram(cFe, "hybrid_stub_latency", cStubHist);
-
-                cName                = Form("h_hybrid_latency_2D_Fe%d", cFeId);
-                TH2D* cLatencyScan2D = new TH2D(cName,
-                                                Form("Latency FE%d; Stub Latency; L1 Latency; # of Events w/ no Hits and no Stubs", cFeId),
-                                                pLatencyRange,
-                                                pStartLatency - 0.5,
-                                                pStartLatency + (pLatencyRange)-0.5,
-                                                pLatencyRange,
-                                                pStartLatency - 0.5,
-                                                pStartLatency + (pLatencyRange)-0.5);
-                bookHistogram(cFe, "hybrid_latency_2D", cLatencyScan2D);
-            }
-        }
-    }
-
-    parseSettings();
     LOG(INFO) << "Histograms and Settings initialised.";
 }
 
@@ -136,8 +75,8 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLaten
     uint32_t cIterationCount = 0;
 
     // //Fabio - clean BEGIN
-    // setFWTestPulse();
-    // setSystemTestPulse ( 200, 0, true, false );
+     setFWTestPulse();
+     setSystemTestPulse ( 200, 0, true, false );
     // //Fabio - clean END
 
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
@@ -156,19 +95,14 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLaten
             const std::vector<Event*>& events = GetEvents(theBoard);
             countHitsLat(theBoard, events, "hybrid_latency", cLat, pStartLatency);
             // done counting hits for all FE's, now update the Histograms
-            updateHists("hybrid_latency", false);
+            countHitsLat("hybrid_latency", false);
         }
 
-        // done counting hits for all FE's, now update the Histograms
-        updateHists("hybrid_latency", false);
         cIterationCount++;
     }
 
     // analyze the Histograms
     std::map<HybridContainer*, uint8_t> cLatencyMap;
-
-    updateHists("hybrid_latency", true);
-
     return cLatencyMap;
 }
 
@@ -385,7 +319,6 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
             LOG(INFO) << "Stub Latency " << +cLat << " Stubs " << cNStubs << " Events " << cEvents.size();
         }
         // done counting hits for all FE's, now update the Histograms
-        updateHists("hybrid_stub_latency", false);
     }
 
     // // analyze the Histograms
@@ -478,7 +411,6 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
                             TH2D* cTmpHist2D = dynamic_cast<TH2D*>(getHist(cFe, "hybrid_latency_2D"));
                             cTmpHist2D->Fill(cStubLatency, cLatency, cNEvents_wBoth);
                             cTmpHist2D->GetZaxis()->SetRangeUser(1, cNevents);
-                            updateHists("hybrid_latency_2D", false);
                         }
                     }
 
@@ -609,38 +541,6 @@ int LatencyScan::countStubs(Hybrid* pFe, const Event* pEvent, std::string pHistN
     return cStubCounter;
 }
 
-void LatencyScan::updateHists(std::string pHistName, bool pFinal)
-{
-    for(auto& cCanvas: fCanvasMap)
-    {
-        // maybe need to declare temporary pointers outside the if condition?
-        if(pHistName == "hybrid_latency")
-        {
-            cCanvas.second->cd();
-            TH1F* cTmpHist = dynamic_cast<TH1F*>(getHist(static_cast<Ph2_HwDescription::Hybrid*>(cCanvas.first), pHistName));
-            cTmpHist->DrawCopy();
-            cCanvas.second->Update();
-        }
-        else if(pHistName == "hybrid_stub_latency")
-        {
-            cCanvas.second->cd();
-            TH1F* cTmpHist = dynamic_cast<TH1F*>(getHist(static_cast<Ph2_HwDescription::Hybrid*>(cCanvas.first), pHistName));
-            cTmpHist->DrawCopy();
-            cCanvas.second->Update();
-        }
-        else if(pHistName == "hybrid_latency_2D")
-        {
-            cCanvas.second->cd();
-            TH2D* cTmpHist = dynamic_cast<TH2D*>(getHist(static_cast<Ph2_HwDescription::Hybrid*>(cCanvas.first), pHistName));
-            cTmpHist->DrawCopy("colz");
-            cTmpHist->SetStats(0);
-            cCanvas.second->Update();
-        }
-    }
-
-    this->HttpServerProcess();
-}
-
 void LatencyScan::parseSettings()
 {
     // now read the settings from the map
@@ -699,4 +599,3 @@ void LatencyScan::Stop() {}
 void LatencyScan::Pause() {}
 
 void LatencyScan::Resume() {}
-

@@ -51,66 +51,8 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, const DetectorContainer
     
     HistContainer<TH1F> hTriggerTDC("TriggerTDC", "Trigger TDC", fTDCBins, -0.5, fTDCBins - 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fTriggerTDC, hTriggerTDC);
-    
-    for(auto cBoard: *fDetectorContainer)
-    {
-        uint32_t cBoardId = cBoard->getId();
 
-        TH1F* cTriggerTDC = new TH1F(Form("h_BeBoard_triggerTDC_Be%d", cBoardId), Form("Trigger TDC BE%d; Trigger TDC; # of Hits", cBoardId), fTDCBins, -0.5, fTDCBins - 0.5);
 
-        cTriggerTDC->SetFillColor(4);
-        cTriggerTDC->SetFillStyle(3001);
-        bookHistogram(cBoard, "triggerTDC", cTriggerTDC);
-
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cFe: *cOpticalGroup)
-            {
-                uint32_t cFeId = cFe->getId();
-
-                TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%d", cFeId), Form("FE%d  Online Canvas", cFeId));
-                // ctmpCanvas->Divide( 2, 2 );
-                fCanvasMap[cFe] = ctmpCanvas;
-
-                fNCbc = cFe->size();
-
-                // 1D Hist forlatency scan
-                TString  cName = Form("h_hybrid_latency_Fe%d", cFeId);
-                TObject* cObj  = gROOT->FindObject(cName);
-
-                if(cObj) delete cObj;
-
-                TH1F* cLatHist = nullptr;
-
-                cLatHist = new TH1F(cName, Form("Latency FE%d; Latency; # of Hits", cFeId), (fLatencyRange), fStartLatency - 0.5, fStartLatency + (fLatencyRange)-0.5);
-
-                cLatHist->GetXaxis()->SetTitle("Trigger Latency");
-                cLatHist->SetFillColor(4);
-                cLatHist->SetFillStyle(3001);
-                bookHistogram(cFe, "hybrid_latency", cLatHist);
-
-                cName = Form("h_hybrid_stub_latency_Fe%d", cFeId);
-                cObj  = gROOT->FindObject(cName);
-
-                if(cObj) delete cObj;
-
-                TH1F* cStubHist = new TH1F(cName, Form("Stub Lateny FE%d; Stub Lateny; # of Stubs", cFeId), fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
-                cStubHist->SetMarkerStyle(2);
-                bookHistogram(cFe, "hybrid_stub_latency", cStubHist);
-
-                cName                = Form("h_hybrid_latency_2D_Fe%d", cFeId);
-                TH2D* cLatencyScan2D = new TH2D(cName,
-                                                Form("Latency FE%d; Stub Latency; L1 Latency; # of Events w/ no Hits and no Stubs", cFeId),
-                                                fLatencyRange,
-                                                fStartLatency - 0.5,
-                                                fStartLatency + (fLatencyRange)-0.5,
-                                                fLatencyRange,
-                                                fStartLatency - 0.5,
-                                                fStartLatency + (fLatencyRange)-0.5);
-                bookHistogram(cFe, "hybrid_latency_2D", cLatencyScan2D);
-            }
-        }
-    }
 
 
 }
@@ -124,3 +66,20 @@ void DQMHistogramLatencyScan::process() {}
 //========================================================================================================================
 
 void DQMHistogramLatencyScan::reset(void) {}
+
+void DQMHistogramLatencyScan::fillLatency(DetectorDataContainer& theLatency)
+{ 
+    return false; 
+}
+void DQMHistogramLatencyScan::fillStubLatency(DetectorDataContainer& theStubLatency)
+{
+    return false;
+}
+void DQMHistogramLatencyScan::fill2DLatency(DetectorDataContainer& the2DLatency)
+{
+    return false;
+}
+void DQMHistogramLatencyScan::fillTriggerTDC(DetectorDataContainer& theTriggerTDC)
+{
+    return false;
+}
