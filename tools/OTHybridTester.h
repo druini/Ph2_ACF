@@ -33,6 +33,7 @@
 #include <string>
 
 using namespace Ph2_HwDescription;
+typedef std::map<uint8_t, std::vector<float>> BERTResultMap;
 
 class OTHybridTester : public Tool
 {
@@ -65,7 +66,7 @@ class OTHybridTester : public Tool
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
     // Run Bit Error Test
-    std::map<uint8_t, std::vector<float>> RunBERT(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern = 0);
+    BERTResultMap RunBERT(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern = 0);
 
   private:
   protected:

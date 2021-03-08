@@ -780,9 +780,13 @@ void D19clpGBTInterface::ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, ui
 
 uint8_t D19clpGBTInterface::GetBERTStatus(Ph2_HwDescription::Chip* pChip) { return ReadChipReg(pChip, "BERTStatus"); }
 
+bool D19clpGBTInterface::IsBERTDone(Ph2_HwDescription::Chip* pChip){ return (GetBERTStatus(pChip) & 0x1) == 1;}
+
+bool D19clpGBTInterface::IsBERTEmptyData(Ph2_HwDescription::Chip* pChip){ return ((GetBERTStatus(pChip) & (0x1 << 2)) >> 2) == 1; }
+
 uint64_t D19clpGBTInterface::GetBERTErrors(Ph2_HwDescription::Chip* pChip)
 {
-    LOG(INFO) << BOLDMAGENTA << "Retrieving BERT result" << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "Retrieving BERT result" << RESET;
     uint64_t cResult0 = ReadChipReg(pChip, "BERTResult0");
     uint64_t cResult1 = ReadChipReg(pChip, "BERTResult1");
     uint64_t cResult2 = ReadChipReg(pChip, "BERTResult2");

@@ -168,6 +168,10 @@ class D19clpGBTInterface : public lpGBTInterface
     void ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
     // get BER status
     uint8_t GetBERTStatus(Ph2_HwDescription::Chip* pChip);
+    // get if BER done
+    bool IsBERTDone(Ph2_HwDescription::Chip* pChip);
+    // get if BER tester received empty data
+    bool IsBERTEmptyData(Ph2_HwDescription::Chip* pChip);
     // get BERT errors
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
 
