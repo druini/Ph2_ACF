@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
             if(cAntenna) cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential);
 #endif
 
-            cLatencyScan.StubLatencyScan(cStartLatency, cLatencyRange);
+            cLatencyScan.ScanLatency(cStartLatency, cLatencyRange);
         }
 
         if(cStubLatency) cLatencyScan.StubLatencyScan(cStartLatency, cLatencyRange);

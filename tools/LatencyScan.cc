@@ -129,14 +129,14 @@ void LatencyScan::MeasureTriggerTDC()
     return;
 }
 
-std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLatency, uint8_t pLatencyRange)
+std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
 {
     LOG(INFO) << "Scanning Latency ... ";
     uint32_t cIterationCount = 0;
 
     // //Fabio - clean BEGIN
-    // setFWTestPulse();
-    // setSystemTestPulse ( 200, 0, true, false );
+     setFWTestPulse();
+     setSystemTestPulse ( 200, 0, true, false );
     // //Fabio - clean END
 
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
