@@ -488,32 +488,61 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
 void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_PRBS, false); }
 void RD53Interface::StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false); }
 
-void RD53Interface::Reset(Ph2_HwDescription::ReadoutChip* pChip)
+void RD53Interface::Reset(Ph2_HwDescription::ReadoutChip* pChip, const int resetType)
+// ################################################
+// # resetType = 0 --> Reset Channel Synchronizer #
+// # resetType = 1 --> Reset Command Decoder      #
+// # resetType = 2 --> Reset Global Configuration #
+// # resetType = 3 --> Reset Monitor Data         #
+// # resetType = 4 --> Reset Aurora               #
+// # resetType = 5 --> Reset Serializer           #
+// # resetType = 6 --> Reset ADC                  #
+// # default       --> Reset Aurora pattern       #
+// ################################################
 {
     this->setBoard(pChip->getBeBoardId());
 
     const int duration = 0x0004; // @CONST@
 
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 0)); // Reset Channel Synchronizer
-    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+    switch(resetType)
+    {
+    case 0:
+        RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 0)); // Reset Channel Synchronizer
+        RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+        break;
 
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 1)); // Reset Command Decoder
-    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+    case 1:
+        RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 1)); // Reset Command Decoder
+        RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+        break;
 
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 2)); // Reset Global Configuration
-    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+    case 2:
+        RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 2)); // Reset Global Configuration
+        RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+        break;
 
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 3)); // Reset Monitor Data
-    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+    case 3:
+        RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 3)); // Reset Monitor Data
+        RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+        break;
 
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 4)); // Reset Aurora
-    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+    case 4:
+        RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 4)); // Reset Aurora
+        RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+        break;
 
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 5)); // Reset Serializer
-    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+    case 5:
+        RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 5)); // Reset Serializer
+        RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+        break;
 
-    RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 6)); // Reset ADC
-    RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+    case 6:
+        RD53Interface::sendCommand(pChip, RD53Cmd::WrReg(pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, 1 << 6)); // Reset ADC
+        RD53Interface::sendCommand(pChip, RD53Cmd::GlobalPulse(pChip->getId(), duration));
+        break;
+
+    default: RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false); break;
+      }
 }
 
 void RD53Interface::ChipErrorReport(ReadoutChip* pChip)

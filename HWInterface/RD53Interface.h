@@ -48,7 +48,7 @@ class RD53Interface : public ReadoutChipInterface
     void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
     // #############################
 
-    void Reset(Ph2_HwDescription::ReadoutChip* pChip);
+    void Reset(Ph2_HwDescription::ReadoutChip* pChip, const int resetType);
     void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip);
 
     void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard);

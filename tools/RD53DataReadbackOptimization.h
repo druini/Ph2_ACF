@@ -56,6 +56,7 @@ class DataReadbackOptimization : public Tool
     size_t stopValueTAP1;
     size_t startValueTAP2;
     size_t stopValueTAP2;
+    size_t timeXstep;
     size_t nEvents;
 
     std::vector<uint16_t> dacListTAP0;

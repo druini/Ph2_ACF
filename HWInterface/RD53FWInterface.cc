@@ -464,6 +464,7 @@ std::vector<uint16_t> RD53FWInterface::GetInitSequence(const unsigned int type)
         for(unsigned int i = 0; i < 500; i++) initSequence.push_back(0x0000);  // 0000 0000
         for(unsigned int i = 0; i < 2000; i++) initSequence.push_back(0xCCCC); // 1100 1100
         break;
+
     case 1:                                                                    // Seen to be good for some TBPX hybrids
         for(unsigned int i = 0; i < 1000; i++) initSequence.push_back(0xFFFF); // 1111 1111
         for(unsigned int i = 0; i < 500; i++) initSequence.push_back(0x3333);  // 0011 0011
