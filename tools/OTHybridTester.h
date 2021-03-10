@@ -33,7 +33,6 @@
 #include <string>
 
 using namespace Ph2_HwDescription;
-typedef std::map<uint8_t, std::vector<float>> BERTResultMap;
 
 class OTHybridTester : public Tool
 {
@@ -52,7 +51,7 @@ class OTHybridTester : public Tool
     // Test lpGBT Up Link with internal pattern
     void LpGBTInjectULInternalPattern(uint32_t pPattern);
     // Test lpGBT Up Link with external pattern
-    void LpGBTInjectULExternalPattern(uint8_t pPattern);
+    void LpGBTInjectULExternalPattern(bool pStart, uint8_t pPattern);
     // Check Up Link data in backend fc7
     void LpGBTCheckULPattern(bool pIsExternal = false);
     // Test lpGBT Down Link with internal pattern (Hybrid Fast Command)
@@ -65,8 +64,8 @@ class OTHybridTester : public Tool
     void LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
-    // Run Bit Error Test
-    BERTResultMap RunBERT(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern = 0);
+    // Run Bit Error Rate Test
+    void LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint32_t pPattern=0x00000000);
 
   private:
   protected:

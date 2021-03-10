@@ -177,8 +177,9 @@ int main(int argc, char* argv[])
         else if(cmd.foundOption("external-pattern"))
         {
             uint8_t           cExternalPattern      = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
-            cPSROHTester.LpGBTInjectULExternalPattern(cExternalPattern);
+            cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
             cPSROHTester.LpGBTCheckULPattern(true);
+            cPSROHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
         }
     }
     /****************************/
@@ -235,7 +236,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("bit-error-rate"))
     {
         uint32_t cBERTPattern32 = cmd.foundOption("ber-pattern") ? convertAnyInt(cmd.optionValue("ber-pattern").c_str()) : 0x00000000;
-        cPSROHTester.RunBERT(1, 5, 8, 0, cBERTPattern32);
+        //cPSROHTester.RunBERT(1, 5, 8, 0, cBERTPattern32);
     }
 
     /***************/
