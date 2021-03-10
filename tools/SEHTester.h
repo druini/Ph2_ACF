@@ -71,6 +71,7 @@ class SEHTester : public OTHybridTester
     void CheckFastCommandsBRAM(const std::string& sFastCommandLine);
     void WritePatternToBRAM(const std::string& sFileName);
     void FastCommandScope();
+    bool FastCommandChecker(uint8_t pPattern);
     void TestCardVoltages();
     void TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep);
     void TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime);
@@ -82,6 +83,7 @@ class SEHTester : public OTHybridTester
 
   private:
     void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
+    bool FastCommandChecker(Ph2_HwDescription::BeBoard* pBoard, uint8_t pPattern);
     void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandPattern, const std::string& userFilename);
     void CheckClocks(Ph2_HwDescription::BeBoard* pBoard);
     void CheckFastCommandsBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandLine);

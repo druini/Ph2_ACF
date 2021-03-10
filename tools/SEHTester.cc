@@ -717,7 +717,9 @@ void SEHTester::TestCardVoltages()
     do
     {
         fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
+#ifdef __USE_ROOT__
         fillSummaryTree(c2SSEHMapIterator->first, k);
+#endif
         c2SSEHMapIterator++;
 
     } while(c2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
@@ -727,7 +729,9 @@ void SEHTester::TestCardVoltages()
     do
     {
         fTC_2SSEH->read_supply(d2SSEHMapIterator->second, k);
+#ifdef __USE_ROOT__
         fillSummaryTree(d2SSEHMapIterator->first, k);
+#endif
         d2SSEHMapIterator++;
 
     } while(d2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
@@ -1157,7 +1161,9 @@ void SEHTester::CheckClocks(BeBoard* pBoard)
             LOG(INFO) << "320 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
         else
             LOG(ERROR) << "320 l clock test ->" << BOLDRED << " FAILED" << RESET;
+#ifdef __USE_ROOT__
         fillSummaryTree("320lClkTest", Clk320lStat);
+#endif
     }
 
     while(!c320rClkTestDone)
@@ -1174,7 +1180,9 @@ void SEHTester::CheckClocks(BeBoard* pBoard)
         {
             LOG(ERROR) << "320 r clock test ->" << BOLDRED << " FAILED" << RESET;
         }
+#ifdef __USE_ROOT__
         fillSummaryTree("320rClkTest", Clk320rStat);
+#endif
     }
 
     while(!c640lClkTestDone)
@@ -1219,15 +1227,72 @@ void SEHTester::CheckClocks()
 void SEHTester::FastCommandScope(BeBoard* pBoard)
 {
     fBeBoardInterface->setBoard(pBoard->getId());
-    uint32_t cSSA_L = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_l");
-    uint32_t cSSA_R = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_r");
+    // uint32_t cSSA_L = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_l");
+    uint32_t cCIC_R = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_r");
     uint32_t cCIC_L = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_l");
-    uint32_t cCIC_R = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_r");
+    // uint32_t cCIC_R = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_r");
 
-    LOG(INFO) << BOLDBLUE << "Scoped output on SSA_L : " << std::bitset<32>(cSSA_L) << RESET;
-    LOG(INFO) << BOLDBLUE << "Scoped output on SSA_R : " << std::bitset<32>(cSSA_R) << RESET;
+    // LOG(INFO) << BOLDBLUE << "Scoped output on SSA_L : " << std::bitset<32>(cSSA_L) << RESET;
+    // LOG(INFO) << BOLDBLUE << "Scoped output on SSA_R : " << std::bitset<32>(cSSA_R) << RESET;
     LOG(INFO) << BOLDBLUE << "Scoped output on CIC_L : " << std::bitset<32>(cCIC_L) << RESET;
     LOG(INFO) << BOLDBLUE << "Scoped output on CIC_R : " << std::bitset<32>(cCIC_R) << RESET;
+}
+bool SEHTester::FastCommandChecker(BeBoard* pBoard, uint8_t pPattern)
+{
+    fBeBoardInterface->setBoard(pBoard->getId());
+    // uint32_t cSSA_L = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_l");
+    uint32_t cCIC_R = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_r");
+    uint32_t cCIC_L = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_l");
+    // uint32_t cCIC_R = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_r");
+
+    // LOG(INFO) << BOLDBLUE << "Scoped output on SSA_L : " << std::bitset<32>(cSSA_L) << RESET;
+    // LOG(INFO) << BOLDBLUE << "Scoped output on SSA_R : " << std::bitset<32>(cSSA_R) << RESET;
+    LOG(INFO) << BOLDBLUE << "Scoped output on CIC_L : " << std::bitset<32>(cCIC_L) << RESET;
+    LOG(INFO) << BOLDBLUE << "Scoped output on CIC_R : " << std::bitset<32>(cCIC_R) << RESET;
+    LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(pPattern) << RESET;
+    uint8_t  cWrappedByte;
+    uint32_t cWrappedData;
+    uint8_t  cMatchR = 32;
+    uint8_t  cShiftR = 0;
+    uint8_t  cMatchL = 32;
+    uint8_t  cShiftL = 0;
+    for(uint8_t shift = 0; shift < 8; shift++)
+    {
+        cWrappedByte  = (pPattern >> shift) | (pPattern << (8 - shift));
+        cWrappedData  = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
+        LOG(INFO) << BOLDBLUE <<  std::bitset<8>(cWrappedByte)<< RESET;
+        LOG(INFO) << BOLDBLUE <<  std::bitset<32>(cWrappedData)<< RESET;
+        int popcountR = __builtin_popcountll(cWrappedData ^ cCIC_R);
+        int popcountL = __builtin_popcountll(cWrappedData ^ cCIC_L);
+        if(popcountR < cMatchR)
+        {
+            cMatchR = popcountR;
+            cShiftR = shift;
+        }
+        if(popcountL < cMatchL)
+        {
+            cMatchL = popcountL;
+            cShiftL = shift;
+        }
+        LOG(INFO) << BOLDBLUE << "Loop " << +shift <<" MatchL "<<+popcountL<<" MatchR "<<+popcountR<< RESET;
+    }
+    LOG(INFO) << BOLDBLUE << "Found for CIC_L a minimal bit difference of " << +cMatchL << " for a bit shift of " << +cShiftL << RESET;
+    LOG(INFO) << BOLDBLUE << "Found for CIC_R a minimal bit difference of " << +cMatchR << " for a bit shift of " << +cShiftR << RESET;
+
+#ifdef __USE_ROOT__
+    fillSummaryTree("FCMD_CIC_R_match", cMatchR);
+    fillSummaryTree("FCMD_CIC_L_match", cMatchL);
+    fillSummaryTree("FCMD_CIC_R_shift", cShiftR);
+    fillSummaryTree("FCMD_CIC_L_shift", cShiftL);
+#endif
+    if((cMatchR == 0) & (cMatchL == 0)) {
+    LOG(INFO) << BOLDGREEN << "FCMD Test passed" << RESET;
+     return true; }
+    else
+    {
+        LOG(INFO) << BOLDRED << "FCMD Test failed" << RESET;
+        return false;
+    }
 }
 void SEHTester::FastCommandScope()
 {
@@ -1236,6 +1301,16 @@ void SEHTester::FastCommandScope()
         if(cBoard->at(0)->flpGBT != nullptr) continue;
         this->FastCommandScope(cBoard);
     }
+}
+bool SEHTester::FastCommandChecker(uint8_t pPattern)
+{
+    bool re = false;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        re = this->FastCommandChecker(cBoard, pPattern);
+    }
+    return re;
 }
 void SEHTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {

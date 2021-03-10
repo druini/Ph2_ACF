@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     // Load pattern
     cmd.defineOption("internal-pattern", "Internally Generated LpGBT Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("internal-pattern", "ip");
-    cmd.defineOption("external-pattern", "Externlly Generated LpGBT Pattern using the Data Player for Control FC7", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+    cmd.defineOption("external-pattern", "Externally Generated LpGBT Pattern using the Data Player for Control FC7", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("external-pattern", "ep");
 
     cmd.defineOption("cic-pattern", "Externally Generated LpGBT Pattern using CIC output", ArgvParser::NoOptionAttribute /*| ArgvParser::OptionRequires*/);
@@ -115,6 +115,9 @@ int main(int argc, char* argv[])
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
+    // Naming
+    cmd.defineOption("output", "Result File directory", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("hybridId", "Hybrid ID", ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
     if(result != ArgvParser::NoParserError)
@@ -289,8 +292,16 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("scope-fcmd"))
     {
-        if(cmd.foundOption("fcmd-pattern")) cSEHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
-        cSEHTester.FastCommandScope();
+        if(cmd.foundOption("fcmd-pattern"))
+        {
+            LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
+            cSEHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
+            cSEHTester.FastCommandChecker(cFCMDPattern);
+        }
+        else
+        {
+            cSEHTester.FastCommandScope();
+        }
     }
 
     if(cmd.foundOption("eff"))
