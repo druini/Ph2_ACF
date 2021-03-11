@@ -42,7 +42,11 @@ class OTHybridTester : public Tool
 
     void FindUSBHandler();
 #ifdef __TCUSB__
-    TC_PSROH* GetTCUSBHandler() { return fTC_PSROH; }
+    #ifdef __ROH_USB__
+        TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
+    #elif __SEH_USB__
+        TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
+    #endif
 #endif
 
     // ###################################
@@ -70,7 +74,11 @@ class OTHybridTester : public Tool
   private:
   protected:
 #ifdef __TCUSB__
-    TC_PSROH* fTC_PSROH;
+    #ifdef __ROH_USB__
+        TC_PSROH* fTC_USB;
+    #elif __SEH_USB__
+        TC_2SSEH* fTC_USB;
+    #endif
 #endif
 };
 

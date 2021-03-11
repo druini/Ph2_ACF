@@ -94,7 +94,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     {
         // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-        fTC_PSROH->write_i2c(pAddress, static_cast<char>(pValue));
+        fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
     }
     return true;
@@ -109,7 +109,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
                 // Now pick one configuration mode
                 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-                cReadBack = fTC_PSROH->write_i2c(pAddress, static_cast<char>(pValue));
+                cReadBack = fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
                 cIter++;
             }
@@ -132,7 +132,7 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
     {
 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-        return fTC_PSROH->read_i2c(pAddress);
+        return fTC_USB->read_i2c(pAddress);
 #endif
     }
     return 0;
@@ -895,8 +895,10 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUse
     if(pUseOpticalLink)
     {
 #ifdef __TCUSB__
-        LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
-        if(pToggleTC) fTC_PSROH->toggle_SCI2C();
+        #ifdef __ROH_USB__
+            LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
+            if(pToggleTC) fTC_USB->toggle_SCI2C();
+        #endif
 #endif
         LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
         fUseOpticalLink = true;
@@ -913,6 +915,19 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUse
         fUseCPB         = false;
     }
 }
+
+#ifdef __TCUSB__
+void D19clpGBTInterface::InitialiseTCUSBHandler()
+{ 
+    #ifdef __ROH_USB__
+        fTC_USB = new TC_PSROH(); 
+        LOG(INFO) << BOLDGREEN << "Initialised PS-ROH TestCard USB Handler" << RESET;
+    #elif __SEH_USB__
+        fTC_USB = new TC_2SSEH(); 
+        LOG(INFO) << BOLDGREEN << "Initialised 2S-SEH TestCard USB Handler" << RESET;
+    #endif
+}
+#endif
 
 void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 {
