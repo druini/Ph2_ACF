@@ -5,6 +5,7 @@
 #include <map>
 #include <math.h>
 #include <sstream>
+#include <stdlib.h>
 #include <string>
 #include <sys/time.h>
 
@@ -349,6 +350,11 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     // time(&startTime);
 #ifdef __USE_ROOT__
     struct timespec startTime, timer;
+    srand(time(NULL));
+
+    /* generate secret number between 1 and 10: */
+    int iSecond;
+    int iMilli;
 
     // start timer.
     // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
@@ -372,6 +378,9 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     double time_taken;
     do
     {
+        iSecond = rand() % 2;
+        iMilli  = rand() % 1000;
+        LOG(INFO) << BOLDBLUE << "Seconds " << +iSecond << " Milli " << +iMilli << RESET;
         float ILeak;
         float UMon;
         // time_t timer;
@@ -380,7 +389,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 
 #ifdef __TCUSB__
         fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, UMon);
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000 + iMilli));
         fTC_2SSEH->read_hvmon(fTC_2SSEH->HV_meas, ILeak);
 #endif
         cILeakValVect.push_back(double(ILeak));
@@ -391,7 +400,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
         time_taken = (time_taken + (timer.tv_nsec - startTime.tv_nsec)) * 1e-9;
         cTimeValVect.push_back(time_taken);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2500 + 1000 * iSecond + iMilli));
     } while(time_taken < measurementTime);
     cLeakTree->Fill();
     fResultFile->cd();
@@ -1140,80 +1149,110 @@ void SEHTester::CheckClocks(BeBoard* pBoard)
     fBeBoardInterface->setBoard(pBoard->getId());
     // clk test
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x01);
-    bool c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_test_done") == 1);
-    bool c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_test_done") == 1);
-    bool c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_test_done") == 1);
-    bool c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_test_done") == 1);
+    auto cMapIterator = f2SSEHClockMap.begin();
+    bool cClkTestDone;
+    bool cClkStat;
+
     LOG(INFO) << GREEN << "============================" << RESET;
     LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
 
-    LOG(INFO) << "Waiting for clock test";
-    while(!c320lClkTestDone)
+    do
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_test_done") == 1);
-    }
-    if(c320lClkTestDone)
-    {
-        bool Clk320lStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_stat");
-
-        if(Clk320lStat)
-            LOG(INFO) << "320 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
-        else
-            LOG(ERROR) << "320 l clock test ->" << BOLDRED << " FAILED" << RESET;
-#ifdef __USE_ROOT__
-        fillSummaryTree("320lClkTest", Clk320lStat);
-#endif
-    }
-
-    while(!c320rClkTestDone)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_test_done") == 1);
-    }
-    if(c320rClkTestDone)
-    {
-        bool Clk320rStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_stat");
-
-        if(Clk320rStat) { LOG(INFO) << "320 r clk test ->" << BOLDGREEN << " PASSED" << RESET; }
-        else
+        cClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_test_done") == 1);
+        LOG(INFO) << "Waiting for clock test";
+        while(!cClkTestDone)
         {
-            LOG(ERROR) << "320 r clock test ->" << BOLDRED << " FAILED" << RESET;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            cClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_test_done") == 1);
         }
+        if(cClkTestDone)
+        {
+            cClkStat = fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_stat");
+
+            if(cClkStat)
+                LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED" << RESET;
+            else
+                LOG(ERROR) << cMapIterator->first << " test ->" << BOLDRED << " FAILED" << RESET;
 #ifdef __USE_ROOT__
-        fillSummaryTree("320rClkTest", Clk320rStat);
+            fillSummaryTree(cMapIterator->first, cClkStat);
 #endif
-    }
+        }
+        cMapIterator++;
+    } while(cMapIterator != f2SSEHClockMap.end());
+//     bool c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_test_done") == 1);
+//     bool c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_test_done") == 1);
+//     bool c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_test_done") == 1);
+//     bool c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_test_done") == 1);
+//     LOG(INFO) << GREEN << "============================" << RESET;
+//     LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
 
-    while(!c640lClkTestDone)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_test_done") == 1);
-    }
-    if(c640lClkTestDone)
-    {
-        bool Clk640lStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_stat");
+//     LOG(INFO) << "Waiting for clock test";
+//     while(!c320lClkTestDone)
+//     {
+//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
+//         c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_test_done") == 1);
+//     }
+//     if(c320lClkTestDone)
+//     {
+//         bool Clk320lStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_stat");
 
-        if(Clk640lStat)
-            LOG(INFO) << "640 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
-        else
-            LOG(ERROR) << "640 l clock test ->" << BOLDRED << " FAILED" << RESET;
-    }
+//         if(Clk320lStat)
+//             LOG(INFO) << "320 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
+//         else
+//             LOG(ERROR) << "320 l clock test ->" << BOLDRED << " FAILED" << RESET;
+// #ifdef __USE_ROOT__
+//         fillSummaryTree("320_l_Clk_Test", Clk320lStat);
+// #endif
+//     }
 
-    while(!c640rClkTestDone)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_test_done") == 1);
-    }
-    if(c640rClkTestDone)
-    {
-        bool Clk640rStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_stat");
-        if(Clk640rStat)
-            LOG(INFO) << "640 r clk test ->" << BOLDGREEN << " PASSED" << RESET;
-        else
-            LOG(ERROR) << "640 r clock test ->" << BOLDRED << " FAILED" << RESET;
-    }
-    LOG(INFO) << GREEN << "============================" << RESET;
+//     while(!c320rClkTestDone)
+//     {
+//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
+//         c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_test_done") == 1);
+//     }
+//     if(c320rClkTestDone)
+//     {
+//         bool Clk320rStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_stat");
+
+//         if(Clk320rStat) { LOG(INFO) << "320 r clk test ->" << BOLDGREEN << " PASSED" << RESET; }
+//         else
+//         {
+//             LOG(ERROR) << "320 r clock test ->" << BOLDRED << " FAILED" << RESET;
+//         }
+// #ifdef __USE_ROOT__
+//         fillSummaryTree("320rClkTest", Clk320rStat);
+// #endif
+//     }
+
+//     while(!c640lClkTestDone)
+//     {
+//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
+//         c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_test_done") == 1);
+//     }
+//     if(c640lClkTestDone)
+//     {
+//         bool Clk640lStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_stat");
+
+//         if(Clk640lStat)
+//             LOG(INFO) << "640 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
+//         else
+//             LOG(ERROR) << "640 l clock test ->" << BOLDRED << " FAILED" << RESET;
+//     }
+
+//     while(!c640rClkTestDone)
+//     {
+//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
+//         c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_test_done") == 1);
+//     }
+//     if(c640rClkTestDone)
+//     {
+//         bool Clk640rStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_stat");
+//         if(Clk640rStat)
+//             LOG(INFO) << "640 r clk test ->" << BOLDGREEN << " PASSED" << RESET;
+//         else
+//             LOG(ERROR) << "640 r clock test ->" << BOLDRED << " FAILED" << RESET;
+//     }
+//     LOG(INFO) << GREEN << "============================" << RESET;
 }
 
 void SEHTester::CheckClocks()
@@ -1258,10 +1297,10 @@ bool SEHTester::FastCommandChecker(BeBoard* pBoard, uint8_t pPattern)
     uint8_t  cShiftL = 0;
     for(uint8_t shift = 0; shift < 8; shift++)
     {
-        cWrappedByte  = (pPattern >> shift) | (pPattern << (8 - shift));
-        cWrappedData  = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
-        LOG(INFO) << BOLDBLUE <<  std::bitset<8>(cWrappedByte)<< RESET;
-        LOG(INFO) << BOLDBLUE <<  std::bitset<32>(cWrappedData)<< RESET;
+        cWrappedByte = (pPattern >> shift) | (pPattern << (8 - shift));
+        cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
+        LOG(INFO) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
+        LOG(INFO) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
         int popcountR = __builtin_popcountll(cWrappedData ^ cCIC_R);
         int popcountL = __builtin_popcountll(cWrappedData ^ cCIC_L);
         if(popcountR < cMatchR)
@@ -1274,7 +1313,7 @@ bool SEHTester::FastCommandChecker(BeBoard* pBoard, uint8_t pPattern)
             cMatchL = popcountL;
             cShiftL = shift;
         }
-        LOG(INFO) << BOLDBLUE << "Loop " << +shift <<" MatchL "<<+popcountL<<" MatchR "<<+popcountR<< RESET;
+        LOG(INFO) << BOLDBLUE << "Loop " << +shift << " MatchL " << +popcountL << " MatchR " << +popcountR << RESET;
     }
     LOG(INFO) << BOLDBLUE << "Found for CIC_L a minimal bit difference of " << +cMatchL << " for a bit shift of " << +cShiftL << RESET;
     LOG(INFO) << BOLDBLUE << "Found for CIC_R a minimal bit difference of " << +cMatchR << " for a bit shift of " << +cShiftR << RESET;
@@ -1285,9 +1324,11 @@ bool SEHTester::FastCommandChecker(BeBoard* pBoard, uint8_t pPattern)
     fillSummaryTree("FCMD_CIC_R_shift", cShiftR);
     fillSummaryTree("FCMD_CIC_L_shift", cShiftL);
 #endif
-    if((cMatchR == 0) & (cMatchL == 0)) {
-    LOG(INFO) << BOLDGREEN << "FCMD Test passed" << RESET;
-     return true; }
+    if((cMatchR == 0) & (cMatchL == 0))
+    {
+        LOG(INFO) << BOLDGREEN << "FCMD Test passed" << RESET;
+        return true;
+    }
     else
     {
         LOG(INFO) << BOLDRED << "FCMD Test failed" << RESET;

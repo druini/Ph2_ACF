@@ -466,6 +466,67 @@ bool OTHybridTester::LpGBTTestVTRx()
     return cSuccess;
 }
 
+bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern, bool p2SSEH)
+{
+    uint8_t  cMatch;
+    uint8_t  cShift;
+    uint8_t  cWrappedByte;
+    uint32_t cWrappedData;
+    bool     res = false;
+
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        fBeBoardInterface->setBoard(cBoard->getId());
+
+        std::map<std::string, std::string> fFCMDLines;
+        if(p2SSEH) { fFCMDLines = f2SSEHFCMDLines; }
+        else
+        {
+            fFCMDLines = fPSROHFCMDLines; // On the TC the PWRGOOD is connected to a switch!
+        }
+        auto cMapIterator = fFCMDLines.begin();
+        LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(pPattern) << RESET;
+        res = true;
+        do
+        {
+            uint32_t cFCMDOutput = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second);
+            LOG(INFO) << BOLDBLUE << "Scoped output on " << cMapIterator->first << ": " << std::bitset<32>(cFCMDOutput) << RESET;
+
+            cMatch = 32;
+            cShift = 0;
+            for(uint8_t shift = 0; shift < 8; shift++)
+            {
+                cWrappedByte = (pPattern >> shift) | (pPattern << (8 - shift));
+                cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
+                LOG(DEBUG) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
+                LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
+                int popcount = __builtin_popcountll(cWrappedData ^ cFCMDOutput);
+                if(popcount < cMatch)
+                {
+                    cMatch = popcount;
+                    cShift = shift;
+                }
+                LOG(DEBUG) << BOLDBLUE << "Line " << cMapIterator->first << " Shift " << +shift << " Match " << +popcount << RESET;
+            }
+            LOG(INFO) << BOLDBLUE << "Found for " << cMapIterator->first << " a minimal bit difference of " << +cMatch << " for a bit shift of " << +cShift << RESET;
+
+#ifdef __USE_ROOT__
+            fillSummaryTree(cMapIterator->first + "_match", cMatch);
+            fillSummaryTree(cMapIterator->first + "_shift", cShift);
+#endif
+            if((cMatch == 0)) { LOG(INFO) << BOLDGREEN << "FCMD Test passed for " << cMapIterator->first << RESET; }
+            else
+            {
+                LOG(INFO) << BOLDRED << "FCMD Test failed for " << cMapIterator->first << RESET;
+                res = false;
+            }
+            cMapIterator++;
+        } while(cMapIterator != fFCMDLines.end());
+    }
+    return res;
+}
+
 void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect)
 {
 #ifdef __USE_ROOT__

@@ -74,6 +74,7 @@ class OTHybridTester : public Tool
     bool LpGBTTestFixedADCs(bool p2SSEH = false);
     bool LpGBTTestGPILines(bool p2SSEH = false);
     bool LpGBTTestVTRx();
+    bool LpGBTFastCommandChecker(uint8_t pPattern, bool p2SSEH);
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
     // Run Bit Error Test
@@ -89,6 +90,18 @@ class OTHybridTester : public Tool
     std::map<std::string, uint8_t> fPSROHGPILines = {
         {"PWRGOOD", 13},
         {"VTRx.RSTN", 11},
+    };
+
+    std::map<std::string, std::string> f2SSEHFCMDLines = {
+        {"FCMD_CIC_R", "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_r"},
+        {"FCMD_CIC_L", "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_l"},
+    };
+
+    std::map<std::string, std::string> fPSROHFCMDLines = {
+        {"FCMD_CIC_R", "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_r"},
+        {"FCMD_CIC_L", "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_l"},
+        {"FCMD_SSA_R", "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_r"},
+        {"FCMD_SSA_L", "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_l"},
     };
 
     std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},

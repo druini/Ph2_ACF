@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.bookSummaryTree();
     LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
-    // cTool.ConfigureHw();
+    //cTool.ConfigureHw();
 
     // Initialize BackEnd & Control LpGBT Tester
     SEHTester cSEHTester;
@@ -220,18 +220,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    if(cmd.foundOption("cic-pattern"))
-    {
-        LOG(INFO) << BOLDBLUE << "Checking back-end alignment with CIC.." << RESET;
-        // align back-end
-        BackEndAlignment cBackEndAligner;
-        cBackEndAligner.Inherit(&cTool);
-        cBackEndAligner.Align();
-        // cBackEndAligner.Start(0);
-        // reset all chip and board registers
-        // to what they were before this tool was called
-        // cBackEndAligner.Reset();
-    }
+    
     // Test 2S SEH Reset Lines
     if(cmd.foundOption("testReset"))
     {
@@ -296,7 +285,7 @@ int main(int argc, char* argv[])
         {
             LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
             cSEHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
-            cSEHTester.FastCommandChecker(cFCMDPattern);
+            cSEHTester.LpGBTFastCommandChecker(cFCMDPattern, true);
         }
         else
         {
@@ -371,6 +360,18 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
         cSEHTester.ClearBRAM(std::string("test"));
+    }
+    if(cmd.foundOption("cic-pattern"))
+    {
+        LOG(INFO) << BOLDBLUE << "Checking back-end alignment with CIC.." << RESET;
+        // align back-end
+        BackEndAlignment cBackEndAligner;
+        cBackEndAligner.Inherit(&cTool);
+        cBackEndAligner.Align();
+        // cBackEndAligner.Start(0);
+        // reset all chip and board registers
+        // to what they were before this tool was called
+        // cBackEndAligner.Reset();
     }
     /*
         D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
