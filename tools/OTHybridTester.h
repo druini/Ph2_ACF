@@ -59,7 +59,7 @@ class OTHybridTester : public Tool
     // Test lpGBT Up Link with internal pattern
     void LpGBTInjectULInternalPattern(uint32_t pPattern);
     // Test lpGBT Up Link with external pattern
-    void LpGBTInjectULExternalPattern(uint8_t pPattern);
+    void LpGBTInjectULExternalPattern(bool pStart, uint8_t pPattern);
     // Check Up Link data in backend fc7
     void LpGBTCheckULPattern(bool pIsExternal = false);
     // Test lpGBT Down Link with internal pattern (Hybrid Fast Command)
@@ -77,8 +77,8 @@ class OTHybridTester : public Tool
     bool LpGBTFastCommandChecker(uint8_t pPattern, bool p2SSEH);
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
-    // Run Bit Error Test
-    std::map<uint8_t, std::vector<float>> RunBERT(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern = 0);
+    // Run Bit Error Rate Test
+    void LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint32_t pPattern=0x00000000);
 
   private:
 #ifdef __TCUSB__
