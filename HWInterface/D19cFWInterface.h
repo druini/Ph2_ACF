@@ -404,7 +404,9 @@ class D19cFWInterface : public BeBoardFWInterface
     void ConfigureAntennaFSM(uint16_t pNtriggers = 1, uint16_t pTriggerRate = 1, uint16_t pL1Delay = 100);
 
     void L1ADebug(uint8_t pWait_ms = 1);
+    void L1ACompare(uint8_t pWait_ms = 1);
     void StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
+    void StubCompare(bool pWithTestPulse = true, uint8_t pNlines = 5);
     bool L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
     bool L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
     bool L1Tuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);

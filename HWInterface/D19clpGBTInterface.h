@@ -24,7 +24,7 @@ class D19clpGBTInterface : public lpGBTInterface
     D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB)
     {
 #ifdef __TCUSB__
-fTC_PSROH = new TC_PSROH();
+        fTC_PSROH = new TC_PSROH();
 #endif
     }
 
@@ -194,7 +194,7 @@ fTC_PSROH = new TC_PSROH();
     // # Outer Tracker specific funtions #
     // ###################################
 #ifdef __TCUSB__
-    
+
     void      SetTCUSBHandler(TC_PSROH* pTC_PSROH) { fTC_PSROH = pTC_PSROH; }
     TC_PSROH* GetTCUSBHandler() { return fTC_PSROH; }
 #endif
