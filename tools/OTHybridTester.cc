@@ -319,9 +319,21 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
             }
             //Configure BERT block
             clpGBTInterface->ConfigureBERT(cOpticalGroup->flpGBT, pCoarseSource, pFineSource, pMeasTime);
-            //Run BERT and get result (fraction of errors)
-            float cBERTResult = 100*clpGBTInterface->GetBERTResult(cOpticalGroup->flpGBT);
-            LOG(INFO) << "Bit Error Rate = " << +cBERTResult << RESET;
+            uint8_t cRxTerm = 1, cRxAcBias = 0, cRxInvert = 1;
+            for(uint8_t cRxEqual = 0; cRxEqual < 4; cRxEqual++)
+            {
+                for(uint16_t cRxPhase = 0; cRxPhase < 16; cRxPhase++)
+                {
+                    clpGBTInterface->ConfigureRxChannels(cOpticalGroup->flpGBT, {0}, {0}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+                    //Run BERT and get result (fraction of errors)
+                    float cBERTResult = 100*clpGBTInterface->GetBERTResult(cOpticalGroup->flpGBT);
+                    LOG(INFO) << BOLDWHITE << "\tBit Error Rate [RxEqual=" << +cRxEqual << ":RxPhase="<< +cRxPhase << "] = " << +cBERTResult << "%" << RESET;
+                }
+            }
+            if(pPattern == 0x00000000)
+            {
+                clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
+            }
         }
     }
 }

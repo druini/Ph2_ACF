@@ -829,13 +829,12 @@ float D19clpGBTInterface::GetBERTResult(Ph2_HwDescription::Chip* pChip)
     LOG(DEBUG) << BOLDBLUE << "\t\tReading BERT counter" << RESET;
     uint64_t cErrors      = GetBERTErrors(pChip);
     //Compute number of bits checked
-    uint8_t cMeasTime = (ReadChipReg(pChip, "BERTConfig") & (0xFF << 4)) >> 4;
-    uint8_t cNClkCycles = std::pow(2, 5 + cMeasTime*2);
+    uint8_t cMeasTime = (ReadChipReg(pChip, "BERTConfig") & (0xF << 4)) >> 4;
+    uint64_t cNClkCycles = std::pow(2, 5 + cMeasTime*2);
     uint8_t cNBitsPerClkCycle = (GetChipRate(pChip) == 5) ? 8 : 16; //5G(320MHz) == 8 bits/clk, 10G(640MHz) == 16 bits/clk
-    uint32_t cBitsChecked = cNClkCycles*cNBitsPerClkCycle;
+    uint64_t cBitsChecked = cNClkCycles*cNBitsPerClkCycle;
     //Stop BERT
     StartBERT(pChip, false);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     LOG(INFO) << BOLDWHITE << "\tBits checked  : " << +cBitsChecked << RESET;
     LOG(INFO) << BOLDWHITE << "\tBits in error : " << +cErrors << RESET;
     //return fraction of errors
