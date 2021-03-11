@@ -399,7 +399,7 @@ void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std:
     // Find Phase
     // Configure Rx Phase Shifter
     uint16_t cDelay = 0x00;
-    uint8_t  cFreq = (cChipRate == 5) ? 4 : 5; // 4 --> 320 MHz || 5 --> 640 MHz
+    uint8_t  cFreq  = (cChipRate == 5) ? 4 : 5; // 4 --> 320 MHz || 5 --> 640 MHz
     ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDelay);
     // Phase Train channels 0,2
     PhaseTrainRx(pChip, pGroups, true);
@@ -793,20 +793,11 @@ void D19clpGBTInterface::ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, ui
     WriteChipReg(pChip, "BERTDataPattern3", (pPattern & (0xFF << 24)) >> 24);
 }
 
-uint8_t D19clpGBTInterface::GetBERTStatus(Ph2_HwDescription::Chip* pChip) 
-{ 
-    return ReadChipReg(pChip, "BERTStatus"); 
-}
+uint8_t D19clpGBTInterface::GetBERTStatus(Ph2_HwDescription::Chip* pChip) { return ReadChipReg(pChip, "BERTStatus"); }
 
-bool D19clpGBTInterface::IsBERTDone(Ph2_HwDescription::Chip* pChip)
-{ 
-    return (GetBERTStatus(pChip) & 0x1) == 1;
-}
+bool D19clpGBTInterface::IsBERTDone(Ph2_HwDescription::Chip* pChip) { return (GetBERTStatus(pChip) & 0x1) == 1; }
 
-bool D19clpGBTInterface::IsBERTEmptyData(Ph2_HwDescription::Chip* pChip)
-{ 
-    return ((GetBERTStatus(pChip) & (0x1 << 2)) >> 2) == 1; 
-}
+bool D19clpGBTInterface::IsBERTEmptyData(Ph2_HwDescription::Chip* pChip) { return ((GetBERTStatus(pChip) & (0x1 << 2)) >> 2) == 1; }
 
 uint64_t D19clpGBTInterface::GetBERTErrors(Ph2_HwDescription::Chip* pChip)
 {
@@ -821,42 +812,41 @@ uint64_t D19clpGBTInterface::GetBERTErrors(Ph2_HwDescription::Chip* pChip)
 
 float D19clpGBTInterface::GetBERTResult(Ph2_HwDescription::Chip* pChip)
 {
-    //make sure BERT is stopped
+    // make sure BERT is stopped
     StartBERT(pChip, false);
-    //start BERT
+    // start BERT
     StartBERT(pChip, true);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    //Wait for BERT to end
+    // Wait for BERT to end
     while(!IsBERTDone(pChip))
     {
         LOG(INFO) << BOLDBLUE << "\tBERT still running ... " << RESET;
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    //Throw error if empty data
+    // Throw error if empty data
     if(IsBERTEmptyData(pChip))
     {
-        //stop BERT
+        // stop BERT
         StartBERT(pChip, false);
         LOG(INFO) << BOLDRED << "BERT : All zeros at input ... exiting" << RESET;
         throw std::runtime_error(std::string("BERT : All zeros at input"));
     }
-    //Get BERT Error counters
+    // Get BERT Error counters
     LOG(DEBUG) << BOLDBLUE << "\t\tReading BERT counter" << RESET;
-    uint64_t cErrors      = GetBERTErrors(pChip);
-    //Compute number of bits checked
-    uint8_t cMeasTime = (ReadChipReg(pChip, "BERTConfig") & (0xFF << 4)) >> 4;
-    uint8_t cNClkCycles = std::pow(2, 5 + cMeasTime*2);
-    uint8_t cNBitsPerClkCycle = (GetChipRate(pChip) == 5) ? 8 : 16; //5G(320MHz) == 8 bits/clk, 10G(640MHz) == 16 bits/clk
-    uint32_t cBitsChecked = cNClkCycles*cNBitsPerClkCycle;
-    //Stop BERT
+    uint64_t cErrors = GetBERTErrors(pChip);
+    // Compute number of bits checked
+    uint8_t  cMeasTime         = (ReadChipReg(pChip, "BERTConfig") & (0xFF << 4)) >> 4;
+    uint8_t  cNClkCycles       = std::pow(2, 5 + cMeasTime * 2);
+    uint8_t  cNBitsPerClkCycle = (GetChipRate(pChip) == 5) ? 8 : 16; // 5G(320MHz) == 8 bits/clk, 10G(640MHz) == 16 bits/clk
+    uint32_t cBitsChecked      = cNClkCycles * cNBitsPerClkCycle;
+    // Stop BERT
     StartBERT(pChip, false);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     LOG(INFO) << BOLDWHITE << "\tBits checked  : " << +cBitsChecked << RESET;
     LOG(INFO) << BOLDWHITE << "\tBits in error : " << +cErrors << RESET;
-    //return fraction of errors
-    return (float)cErrors/cBitsChecked;
+    // return fraction of errors
+    return (float)cErrors / cBitsChecked;
 }
-
 
 /*-------------------------------*/
 /* Eye Opening Monitor functions */

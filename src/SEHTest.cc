@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.bookSummaryTree();
     LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
-    //cTool.ConfigureHw();
+    // cTool.ConfigureHw();
 
     // Initialize BackEnd & Control LpGBT Tester
     SEHTester cSEHTester;
@@ -206,21 +206,29 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDYELLOW << "You are using the default parameter set stored in fDefaultParameters" << RESET;
     }
 
+    /***************/
+    /* TEST UPLINK */
+    /***************/
     if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
     {
+        /* INTERNALLY GENERATED PATTERN */
         if(cmd.foundOption("internal-pattern"))
         {
+            uint8_t  cInternalPattern8  = (cmd.foundOption("internal-pattern")) ? convertAnyInt(cmd.optionValue("internal-pattern").c_str()) : 0;
+            uint32_t cInternalPattern32 = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
             cSEHTester.LpGBTInjectULInternalPattern(cInternalPattern32);
             cSEHTester.LpGBTCheckULPattern(false);
         }
+        /* EXTERNALLY GENERATED PATTERN */
         else if(cmd.foundOption("external-pattern"))
         {
-            cSEHTester.LpGBTInjectULExternalPattern(cExternalPattern);
+            uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
+            cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
             cSEHTester.LpGBTCheckULPattern(true);
+            cSEHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
         }
     }
 
-    
     // Test 2S SEH Reset Lines
     if(cmd.foundOption("testReset"))
     {

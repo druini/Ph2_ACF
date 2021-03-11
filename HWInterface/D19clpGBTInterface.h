@@ -95,7 +95,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // Configure lpGBT Rx channels phase
     void ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
     // Configure lpGBT Phase Shifter
-    void ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint16_t pDelay, uint8_t pDriveStr=0, uint8_t pEnFTune=0);
+    void ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint16_t pDelay, uint8_t pDriveStr = 0, uint8_t pEnFTune = 0);
 
     // ####################################
     // # LpGBT specific routine functions #
@@ -164,7 +164,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // # LpGBT Bit Error Rate Tester #
     // ###############################
     // configure BER tester
-    void ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable=false);
+    void ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable = false);
     // start BER tester
     void StartBERT(Ph2_HwDescription::Chip* pChip, bool pStartBERT = true);
     // configure BER pattern
