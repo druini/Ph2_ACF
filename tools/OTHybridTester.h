@@ -117,6 +117,7 @@ class OTHybridTester : public Tool
                                                                 {"R_MPA", TC_PSROH::measurement::R_MPA_RST},
                                                                 {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
                                                                 {"R_SSA", TC_PSROH::measurement::R_SSA_RST}};
+                                                                #endif
     std::map<std::string, float>                 f2SSEHDefaultParameters = {{"Spannung", 2},
                                                             {"Strom", 0.5},
                                                             {"HV", 1},
@@ -146,7 +147,7 @@ class OTHybridTester : public Tool
                                                             {"2V55_MONITOR_Nominal", 0.808}};
     std::map<uint8_t, uint8_t>         fVTRxplusDefaultRegisters = {{0x00, 0x0f}, {0x01, 0x01}, {0x04, 0x0f}, {0x05, 0x2f}, {0x06, 0x26}, {0x07, 0x00}};
 
-#endif
+
 
   protected:
 #ifdef __TCUSB__

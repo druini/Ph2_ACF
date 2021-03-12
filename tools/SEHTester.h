@@ -122,7 +122,7 @@ class SEHTester : public OTHybridTester
         {{"cic_in_6", 0}, {"cic_in_5", 1}, {"cic_in_4", 2}, {"cic_in_3", 3}, {"cic_in_2", 4}, {"cic_in_1", 5}, {"cic_in_0", 6}, {"r_i2c_sda_i", 7}, {"l_i2c_sda_i", 8}, {"na", 9}};
 
     static const int NBRAMADDR = 1024;
-
+#ifdef __TCUSB__
     std::map<std::string, TC_2SSEH::supplyMeasurement> f2SSEHSupplyMeasurements = {{"U_P5V", TC_2SSEH::supplyMeasurement::U_P5V},
                                                                                    {"I_P5V", TC_2SSEH::supplyMeasurement::I_P5V},
                                                                                    {"U_P3V3", TC_2SSEH::supplyMeasurement::U_P3V3},
@@ -148,6 +148,7 @@ class SEHTester : public OTHybridTester
                                                                           {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
                                                                           {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
                                                                           {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
+  #endif
     std::map<std::string, float>                      fDefaultParameters = {{"Spannung", 2},
                                                        {"Strom", 0.5},
                                                        {"HV", 1},
@@ -157,6 +158,7 @@ class SEHTester : public OTHybridTester
                                                        {"VTRX+_RSSI_ADC_Nominal", 0.6},
                                                        {"PTAT_BPOL2V5_Nominal", 0.6},
                                                        {"PTAT_BPOL12V_Nominal", 0.6}};
-};
 
+};
 #endif
+

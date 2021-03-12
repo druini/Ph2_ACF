@@ -87,7 +87,6 @@ void SEHTester::RampPowerSupply(std::string fHWFile, std::string fPowerSupply)
     bool                                      fFoundChannel = false;
     pugi::xml_document                        doc;
     if(!doc.load_file(fHWFile.c_str())) throw std::runtime_error(std::string("Error Loading HW file"));
-    ;
     pugi::xml_node devices = doc.child("Devices");
     for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
     {
@@ -246,11 +245,12 @@ int SEHTester::exampleFit()
 void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 {
 #ifdef __USE_ROOT__
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
     float cUMon  = 0;
     float cVHVJ7 = 0;
     float cVHVJ8 = 0;
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
+
     fTC_USB->set_HV(false, true, true, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     fTC_USB->set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
@@ -262,7 +262,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8);
     //----------------------------------------------------
     fTC_USB->set_HV(false, true, true, 0);
-#endif
+
     std::vector<float> cDACValVect;
     std::vector<float> cVHVJ7ValVect;
     std::vector<float> cVHVJ8ValVect;
@@ -276,7 +276,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     for(int cDACValue = 0; cDACValue <= 3500; cDACValue += 0x155)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-#ifdef __SEH_USB__
+
         fTC_USB->set_HV(true, true, true, cDACValue); // 0x155 = 100V
 
         std::this_thread::sleep_for(std::chrono::milliseconds(15000));
@@ -284,8 +284,8 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
         fTC_USB->read_hvmon(fTC_USB->Mon, cUMon);
         fTC_USB->read_hvmon(fTC_USB->VHVJ7, cVHVJ7);
         fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8);
-#endif
-#endif
+
+
 
         LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- Mon = " << +cUMon << " --- VHVJ7 = " << +cVHVJ7 << " --- VHVJ8 = " << +cVHVJ8 << RESET;
         cDACValVect.push_back(cDACValue);
@@ -327,11 +327,8 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cDACtoMonGraph->SetLineWidth(3);
     cDACtoMonGraph->SetMarkerStyle(22);
     cDACtoHVMultiGraph->Add(cDACtoMonGraph);
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
+
     fTC_USB->set_HV(false, true, true, 0);
-#endif
-#endif
 
     cDACtoHVMultiGraph->Draw("ALP");
     cDACtoHVMultiGraph->GetXaxis()->SetTitle("HV DAC");
@@ -341,8 +338,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cDACtoHVCanvas->Write();
     cBiasVoltageTree->Fill();
     cBiasVoltageTree->Write();
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
+
     fTC_USB->set_HV(false, false, false, 0);
 #endif
 #endif
@@ -1547,3 +1543,4 @@ void SEHTester::Stop()
 void SEHTester::Pause() {}
 
 void SEHTester::Resume() {}
+

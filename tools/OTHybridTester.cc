@@ -257,19 +257,20 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 // Need statistics on spread of RSSI and temperature sensors
 bool OTHybridTester::LpGBTTestFixedADCs()
 {
-    bool                                cReturn;
+    bool                                cReturn=true;
     std::map<std::string, std::string>  cADCsMap;
     std::map<std::string, float>*       cDefaultParameters;
     std::map<std::string, std::string>* cADCNametoPinMapping;
     std::string                         cADCNameString;
     std::vector<int>                    cADCValueVect;
 #ifdef __USE_ROOT__
+#ifdef __TCUSB__
     auto cFixedADCsTree = new TTree("FixedADCs", "lpGBT ADCs not tied to AMUX");
     cFixedADCsTree->Branch("Id", &cADCNameString);
     cFixedADCsTree->Branch("AdcValue", &cADCValueVect);
     gStyle->SetOptStat(0);
 #ifdef __SEH_USB__
-#ifdef __TCUSB__
+
 
     cADCsMap             = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
                 {"VMIN", "VMIN_Nominal"},
@@ -293,7 +294,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cDefaultParameters   = &fPSROHDefaultParameters;
     cADCNametoPinMapping = &fPSROHADCInputMap;
 #endif
-#endif
+
     auto cADCHistogram = new TH2I("cADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
 
@@ -362,12 +363,12 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cADCCanvas->Write();
     cFixedADCsTree->Write();
 
-#ifdef __TCUSB__
+
 #ifdef __SEH_USB__
     fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
-#endif
-#endif
 
+#endif
+#endif
 #endif
     return cReturn;
 }
