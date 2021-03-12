@@ -1,5 +1,6 @@
 #include "OTHybridTester.h"
 #include "linearFitter.h"
+
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -421,36 +422,47 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
     }
 }
 
-bool OTHybridTester::LpGBTTestResetLines(uint8_t pLevel)
+bool OTHybridTester::LpGBTTestResetLines()
 {
-    bool cValid = true;
+    bool                                    cValid = true;
+    bool                                    cStatus=true;
+    std::vector<std::pair<std::string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
 #ifdef __TCUSB__
     float cMeasurement;
 #ifdef __ROH_USB__
-    std::map<std::string, TC_PSROH::measurement> cResetLines = ffResetLines;
-
+    std::map<std::string, TC_PSROH::measurement> cResetLines = fResetLines;
+    std::vector<uint8_t>                         cGPIOs      = {0, 1, 3, 6, 9, 12};
 #elif __SEH_USB__
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
+    std::vector<uint8_t> cGPIOs = {0, 3, 6, 8};
+#endif
 
-#endif
-    auto cMapIterator = cResetLines.begin();
-    // auto  c2SSEHMapIterator = f2SSEHResetLines.begin();
-    do
+    for(auto cLevel: cLevels)
     {
+        LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
+
+        auto cMapIterator = cResetLines.begin();
+
+        do
+        {
 #ifdef __ROH_USB__
-        fTC_USB->adc_get(cMapIterator->second, cMeasurement);
+            fTC_USB->adc_get(cMapIterator->second, cMeasurement);
 #elif __SEH_USB__
-        fTC_USB->read_reset(cMapIterator->second, cMeasurement);
+            fTC_USB->read_reset(cMapIterator->second, cMeasurement);
 #endif
-        // clpGBTInterface->fTC_2SSEH.read_reset(c2SSEHMapIterator->second, cMeasurement);
-        float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
-        cValid               = cValid && (cDifference_mV <= 100);
-        if(cDifference_mV > 100)
-            LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
+            float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
+            cValid               = cValid && (cDifference_mV <= 100);
+            if(cDifference_mV > 100)
+                LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
+            else
+                LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
+            cMapIterator++;
+        } while(cMapIterator != cResetLines.end());
+        if(cStatus)
+            LOG(INFO) << BOLDBLUE << "Set levels to " << cLevel.first << " : test " << BOLDGREEN << " passed." << RESET;
         else
-            LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
-        cMapIterator++;
-    } while(cMapIterator != cResetLines.end());
+            LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
+    }
 #endif
     return cValid;
 }

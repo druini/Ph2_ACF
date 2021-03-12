@@ -188,18 +188,9 @@ int main(int argc, char* argv[])
     /****************************/
     if(cmd.foundOption("testReset"))
     {
-        cPSROHTester.LpGBTTestGPILines();
-        std::vector<std::pair<string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
-        std::vector<uint8_t>                    cGPIOs  = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-        for(auto cLevel: cLevels)
-        {
-            cPSROHTester.LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
-            bool cStatus = cPSROHTester.LpGBTTestResetLines(cLevel.second);
-            if(cStatus)
-                LOG(INFO) << BOLDBLUE << "Set levels to " << cLevel.first << " : test " << BOLDGREEN << " passed." << RESET;
-            else
-                LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
-        }
+        
+            bool cStatus = cPSROHTester.LpGBTTestResetLines();
+            
     }
 
     // Test VTRx+ slow control

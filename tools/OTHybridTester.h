@@ -36,6 +36,7 @@
 
 #include <map>
 #include <string>
+#include <cstring>
 
 using namespace Ph2_HwDescription;
 
@@ -72,7 +73,7 @@ class OTHybridTester : public Tool
     void LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep);
     // Set GPIO level
     void LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
-    bool LpGBTTestResetLines(uint8_t pLevel);
+    bool LpGBTTestResetLines();
     bool LpGBTTestFixedADCs();
     bool LpGBTTestGPILines();
     bool LpGBTTestVTRx();

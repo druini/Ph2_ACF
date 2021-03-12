@@ -230,20 +230,7 @@ int main(int argc, char* argv[])
     }
 
     // Test 2S SEH Reset Lines
-    if(cmd.foundOption("testReset"))
-    {
-        std::vector<std::pair<string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
-        std::vector<uint8_t>                    cGPIOs  = {0, 3, 6, 8};
-        for(auto cLevel: cLevels)
-        {
-            cSEHTester.LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
-            bool cStatus = cSEHTester.LpGBTTestResetLines(cLevel.second);
-            if(cStatus)
-                LOG(INFO) << BOLDBLUE << "Set levels to " << cLevel.first << " : test " << BOLDGREEN << " passed." << RESET;
-            else
-                LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
-        }
-    }
+    if(cmd.foundOption("testReset")) { bool cStatus = cSEHTester.LpGBTTestResetLines(); }
     // Test VTRx+ slow control
 
     if(cmd.foundOption("testVTRxplus"))
