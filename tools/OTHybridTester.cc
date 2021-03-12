@@ -13,7 +13,7 @@ OTHybridTester::~OTHybridTester()
 #endif
 }
 
-void OTHybridTester::FindUSBHandler(bool b2SSEH)
+void OTHybridTester::FindUSBHandler()
 {
 #ifdef __TCUSB__
     bool cThereIsLpGBT = false;
@@ -255,7 +255,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 
 // Fixed in this context means: The ADC pin is not an AMUX pin
 // Need statistics on spread of RSSI and temperature sensors
-bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
+bool OTHybridTester::LpGBTTestFixedADCs()
 {
     bool                                cReturn;
     std::map<std::string, std::string>  cADCsMap;
@@ -268,34 +268,32 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
     cFixedADCsTree->Branch("Id", &cADCNameString);
     cFixedADCsTree->Branch("AdcValue", &cADCValueVect);
     gStyle->SetOptStat(0);
-
-    if(p2SSEH)
-    {
-        cADCsMap             = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
-                    {"VMIN", "VMIN_Nominal"},
-                    {"TEMPP", "TEMPP_Nominal"},
-                    {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
-                    {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
-                    {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
-        cDefaultParameters   = &f2SSEHDefaultParameters;
-        cADCNametoPinMapping = &f2SSEHADCInputMap;
-#ifdef __TCUSB__
 #ifdef __SEH_USB__
-        fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-#endif
-#endif
-    }
-    else
-    {
-        cADCsMap             = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
-                    {"TEMP", "TEMP_Nominal"},
-                    {"VTRX+.RSSI_ADC", "VTRX+.RSSI_ADC_Nominal"},
+#ifdef __TCUSB__
 
-                    {"1V25_MONITOR", "1V25_MONITOR_Nominal"},
-                    {"2V55_MONITOR", "2V55_MONITOR_Nominal"}};
-        cDefaultParameters   = &fPSROHDefaultParameters;
-        cADCNametoPinMapping = &fPSROHADCInputMap;
-    }
+    cADCsMap             = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
+                {"VMIN", "VMIN_Nominal"},
+                {"TEMPP", "TEMPP_Nominal"},
+                {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
+                {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
+                {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
+    cDefaultParameters   = &f2SSEHDefaultParameters;
+    cADCNametoPinMapping = &f2SSEHADCInputMap;
+
+    fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+
+#elif __ROH_USB__
+
+    cADCsMap             = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
+                {"TEMP", "TEMP_Nominal"},
+                {"VTRX+.RSSI_ADC", "VTRX+.RSSI_ADC_Nominal"},
+
+                {"1V25_MONITOR", "1V25_MONITOR_Nominal"},
+                {"2V55_MONITOR", "2V55_MONITOR_Nominal"}};
+    cDefaultParameters   = &fPSROHDefaultParameters;
+    cADCNametoPinMapping = &fPSROHADCInputMap;
+#endif
+#endif
     auto cADCHistogram = new TH2I("cADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
 
@@ -363,14 +361,13 @@ bool OTHybridTester::LpGBTTestFixedADCs(bool p2SSEH)
     cADCHistogram->Draw("colz");
     cADCCanvas->Write();
     cFixedADCsTree->Write();
-    if(p2SSEH)
-    {
+
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
-        fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
+    fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
 #endif
 #endif
-    }
+
 #endif
     return cReturn;
 }
@@ -417,14 +414,14 @@ bool OTHybridTester::LpGBTTestResetLines(uint8_t pLevel)
     return cValid;
 }
 
-bool OTHybridTester::LpGBTTestGPILines(bool p2SSEH)
+bool OTHybridTester::LpGBTTestGPILines()
 {
     std::map<std::string, uint8_t> fGPILines;
-    if(p2SSEH) { fGPILines = f2SSEHGPILines; }
-    else
-    {
-        fGPILines = fPSROHGPILines; // On the TC the PWRGOOD is connected to a switch!
-    }
+#ifdef __SEH_USB__
+    fGPILines = f2SSEHGPILines;
+#elif __ROH_USB__
+    fGPILines = fPSROHGPILines; // On the TC the PWRGOOD is connected to a switch!
+#endif
     bool                cValid = true;
     bool                cReadGPI;
     auto                cMapIterator    = fGPILines.begin();
@@ -484,7 +481,7 @@ bool OTHybridTester::LpGBTTestVTRx()
     return cSuccess;
 }
 
-bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern, bool p2SSEH)
+bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
 {
     uint8_t  cMatch;
     uint8_t  cShift;
@@ -498,11 +495,12 @@ bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern, bool p2SSEH)
         fBeBoardInterface->setBoard(cBoard->getId());
 
         std::map<std::string, std::string> fFCMDLines;
-        if(p2SSEH) { fFCMDLines = f2SSEHFCMDLines; }
-        else
-        {
-            fFCMDLines = fPSROHFCMDLines; // On the TC the PWRGOOD is connected to a switch!
-        }
+#ifdef __SEH_USB__
+        fFCMDLines = f2SSEHFCMDLines;
+#elif __ROH_USB__
+        fFCMDLines = fPSROHFCMDLines;
+#endif
+
         auto cMapIterator = fFCMDLines.begin();
         LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(pPattern) << RESET;
         res = true;

@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
     SEHTester cSEHTester;
     // cSEHTester.exampleFit();
     cSEHTester.Inherit(&cTool);
-    cSEHTester.FindUSBHandler(true);
+    cSEHTester.FindUSBHandler();
 
     if(cmd.foundOption("powersupply"))
     {
@@ -293,7 +293,7 @@ int main(int argc, char* argv[])
         {
             LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
             cSEHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
-            cSEHTester.LpGBTFastCommandChecker(cFCMDPattern, true);
+            cSEHTester.LpGBTFastCommandChecker(cFCMDPattern);
         }
         else
         {

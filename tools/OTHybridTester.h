@@ -45,7 +45,7 @@ class OTHybridTester : public Tool
     OTHybridTester();
     ~OTHybridTester();
 
-    void FindUSBHandler(bool b2SSEH = false);
+    void FindUSBHandler();
 
 #ifdef __TCUSB__
 #ifdef __ROH_USB__
@@ -73,10 +73,10 @@ class OTHybridTester : public Tool
     // Set GPIO level
     void LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
     bool LpGBTTestResetLines(uint8_t pLevel);
-    bool LpGBTTestFixedADCs(bool p2SSEH = false);
-    bool LpGBTTestGPILines(bool p2SSEH = false);
+    bool LpGBTTestFixedADCs();
+    bool LpGBTTestGPILines();
     bool LpGBTTestVTRx();
-    bool LpGBTFastCommandChecker(uint8_t pPattern, bool p2SSEH);
+    bool LpGBTFastCommandChecker(uint8_t pPattern);
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
     // Run Bit Error Rate Test
