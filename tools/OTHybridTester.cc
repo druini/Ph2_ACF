@@ -9,8 +9,7 @@ OTHybridTester::OTHybridTester() : Tool() {}
 OTHybridTester::~OTHybridTester()
 {
 #ifdef __TCUSB__
-    if(fTC_PSROH != nullptr) delete fTC_PSROH;
-    if(fTC_2SSEH != nullptr) delete fTC_2SSEH;
+    if(fTC_USB != nullptr) delete fTC_USB;
 #endif
 }
 
@@ -31,15 +30,13 @@ void OTHybridTester::FindUSBHandler(bool b2SSEH)
         }
     }
     if(!cThereIsLpGBT)
-    {
-        if(b2SSEH) { fTC_2SSEH = new TC_2SSEH(); }
-        else
-        {
-            fTC_PSROH = new TC_PSROH();
-        }
-    }
+        #ifdef __ROH_USB__
+            fTC_USB = new TC_PSROH();
+        #elif __SEH_USB__
+            fTC_USB = new TC_2SSEH();
+        #endif
     else
-        fTC_PSROH = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetTCUSBHandler();
+        fTC_USB = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetTCUSBHandler();
 #endif
 }
 
@@ -207,7 +204,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                     // Need to confirm conversion factor for 2S-SEH
                     // fTC_2SSEH->set_AMUX(cDACValue, cDACValue);
                     // example to program current Dac for temperature sensor clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, pADCs,0);
-                    fTC_PSROH->dac_output(cDACValue);
+                    fTC_USB->dac_output(cDACValue);
 #endif
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
 
