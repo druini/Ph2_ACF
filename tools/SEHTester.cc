@@ -285,8 +285,6 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
         fTC_USB->read_hvmon(fTC_USB->VHVJ7, cVHVJ7);
         fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8);
 
-
-
         LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- Mon = " << +cUMon << " --- VHVJ7 = " << +cVHVJ7 << " --- VHVJ8 = " << +cVHVJ8 << RESET;
         cDACValVect.push_back(cDACValue);
         cVHVJ7ValVect.push_back(cVHVJ7);
@@ -1543,4 +1541,3 @@ void SEHTester::Stop()
 void SEHTester::Pause() {}
 
 void SEHTester::Resume() {}
-

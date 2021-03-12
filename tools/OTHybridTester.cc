@@ -113,6 +113,40 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
             cFWInterface->selectLink(cOpticalGroup->getId());
             LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
             cFWInterface->StubDebug(true, 6);
+            // enable stub debug - allows you to 'scope' the stub output
+            cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
+            cFWInterface->ChipTestPulse();
+            auto                     cWords = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
+            std::vector<std::string> cLines(0);
+            size_t                   cLine = 0;
+            // int cStrLength=0;
+            do
+            {
+                std::vector<std::string> cOutputWords(0);
+                for(size_t cIndex = 0; cIndex < 5; cIndex++)
+                {
+                    auto cWord   = cWords[cLine * 10 + cIndex];
+                    auto cString = std::bitset<32>(cWord).to_string();
+                    for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
+                }
+
+                std::string cOutput_wSpace = "";
+                std::string cOutput        = "";
+                for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
+                {
+                    cOutput_wSpace += *cIt + " ";
+                    cOutput += *cIt;
+                }
+                LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+                cLines.push_back(cOutput);
+                // cStrLength = cOutput.length();
+                cLine++;
+            } while(cLine < 6);
+
+            // disable stub debug
+            cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
+            cFWInterface->ResetReadout();
+
             LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
             cFWInterface->L1ADebug();
         }
@@ -206,6 +240,8 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 // example to program current Dac for temperature sensor clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, pADCs,0);
 #ifdef __ROH_USB__
                     fTC_USB->dac_output(cDACValue);
+#elif __SEH_USB__
+                    fTC_USB->set_AMUX(cDACValue, cDACValue);
 #endif
 #endif
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
@@ -257,7 +293,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 // Need statistics on spread of RSSI and temperature sensors
 bool OTHybridTester::LpGBTTestFixedADCs()
 {
-    bool                                cReturn=true;
+    bool                                cReturn = true;
     std::map<std::string, std::string>  cADCsMap;
     std::map<std::string, float>*       cDefaultParameters;
     std::map<std::string, std::string>* cADCNametoPinMapping;
@@ -270,7 +306,6 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cFixedADCsTree->Branch("AdcValue", &cADCValueVect);
     gStyle->SetOptStat(0);
 #ifdef __SEH_USB__
-
 
     cADCsMap             = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
                 {"VMIN", "VMIN_Nominal"},
@@ -285,13 +320,13 @@ bool OTHybridTester::LpGBTTestFixedADCs()
 
 #elif __ROH_USB__
 
-    cADCsMap             = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
+    cADCsMap = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
                 {"TEMP", "TEMP_Nominal"},
                 {"VTRX+.RSSI_ADC", "VTRX+.RSSI_ADC_Nominal"},
 
                 {"1V25_MONITOR", "1V25_MONITOR_Nominal"},
                 {"2V55_MONITOR", "2V55_MONITOR_Nominal"}};
-    cDefaultParameters   = &fPSROHDefaultParameters;
+    cDefaultParameters = &fPSROHDefaultParameters;
     cADCNametoPinMapping = &fPSROHADCInputMap;
 #endif
 
@@ -363,7 +398,6 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cADCCanvas->Write();
     cFixedADCsTree->Write();
 
-
 #ifdef __SEH_USB__
     fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
 
@@ -392,15 +426,21 @@ bool OTHybridTester::LpGBTTestResetLines(uint8_t pLevel)
     bool cValid = true;
 #ifdef __TCUSB__
     float cMeasurement;
-    auto  cMapIterator = fResetLines.begin();
+#ifdef __ROH_USB__
+    std::map<std::string, TC_PSROH::measurement> cResetLines = ffResetLines;
+
+#elif __SEH_USB__
+    std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
+
+#endif
+    auto cMapIterator = cResetLines.begin();
     // auto  c2SSEHMapIterator = f2SSEHResetLines.begin();
     do
     {
 #ifdef __ROH_USB__
         fTC_USB->adc_get(cMapIterator->second, cMeasurement);
 #elif __SEH_USB__
-        // fTC_USB->read_reset(cMapIterator->second, cMeasurement);
-        cMeasurement = 0;
+        fTC_USB->read_reset(cMapIterator->second, cMeasurement);
 #endif
         // clpGBTInterface->fTC_2SSEH.read_reset(c2SSEHMapIterator->second, cMeasurement);
         float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
@@ -410,7 +450,7 @@ bool OTHybridTester::LpGBTTestResetLines(uint8_t pLevel)
         else
             LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
         cMapIterator++;
-    } while(cMapIterator != fResetLines.end());
+    } while(cMapIterator != cResetLines.end());
 #endif
     return cValid;
 }

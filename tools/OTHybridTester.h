@@ -111,14 +111,14 @@ class OTHybridTester : public Tool
                                                                           {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
                                                                           {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
 
-    std::map<std::string, TC_PSROH::measurement> fResetLines             = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
+    std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
                                                                 {"L_SSA", TC_PSROH::measurement::L_SSA_RST},
                                                                 {"R_MPA", TC_PSROH::measurement::R_MPA_RST},
                                                                 {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
                                                                 {"R_SSA", TC_PSROH::measurement::R_SSA_RST}};
-                                                                #endif
-    std::map<std::string, float>                 f2SSEHDefaultParameters = {{"Spannung", 2},
+#endif
+    std::map<std::string, float>       f2SSEHDefaultParameters = {{"Spannung", 2},
                                                             {"Strom", 0.5},
                                                             {"HV", 1},
                                                             {"VMON_P1V25_L_Nominal", 0.806},
@@ -127,7 +127,7 @@ class OTHybridTester : public Tool
                                                             {"VTRX+_RSSI_ADC_Nominal", 0.6},
                                                             {"PTAT_BPOL2V5_Nominal", 0.6},
                                                             {"PTAT_BPOL12V_Nominal", 0.6}};
-    std::map<std::string, std::string>           f2SSEHADCInputMap =
+    std::map<std::string, std::string> f2SSEHADCInputMap =
         {{"AMUX_L", "ADC0"}, {"VMON_P1V25_L", "ADC1"}, {"VMIN", "ADC2"}, {"AMUX_R", "ADC3"}, {"TEMPP", "ADC4"}, {"VTRX+_RSSI_ADC", "ADC5"}, {"PTAT_BPOL2V5", "ADC6"}, {"PTAT_BPOL12V", "ADC7"}};
     std::map<std::string, std::string> fPSROHADCInputMap         = {{"L_AMUX_OUT", "ADC0"},
                                                             {"1V_MONITOR", "ADC1"},
@@ -146,8 +146,6 @@ class OTHybridTester : public Tool
                                                             {"1V25_MONITOR_Nominal", 0.806},
                                                             {"2V55_MONITOR_Nominal", 0.808}};
     std::map<uint8_t, uint8_t>         fVTRxplusDefaultRegisters = {{0x00, 0x0f}, {0x01, 0x01}, {0x04, 0x0f}, {0x05, 0x2f}, {0x06, 0x26}, {0x07, 0x00}};
-
-
 
   protected:
 #ifdef __TCUSB__

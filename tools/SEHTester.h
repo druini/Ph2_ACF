@@ -144,12 +144,12 @@ class SEHTester : public OTHybridTester
                                                                                              {"Temp3", TC_2SSEH::temperatureMeasurement::Temp3},
                                                                                              {"Temp_SEH", TC_2SSEH::temperatureMeasurement::Temp_SEH}};
 
-    std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines   = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
+    std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
                                                                           {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
                                                                           {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
                                                                           {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
-  #endif
-    std::map<std::string, float>                      fDefaultParameters = {{"Spannung", 2},
+#endif
+    std::map<std::string, float> fDefaultParameters = {{"Spannung", 2},
                                                        {"Strom", 0.5},
                                                        {"HV", 1},
                                                        {"VMON_P1V25_L_Nominal", 0.806},
@@ -158,7 +158,5 @@ class SEHTester : public OTHybridTester
                                                        {"VTRX+_RSSI_ADC_Nominal", 0.6},
                                                        {"PTAT_BPOL2V5_Nominal", 0.6},
                                                        {"PTAT_BPOL12V_Nominal", 0.6}};
-
 };
 #endif
-
