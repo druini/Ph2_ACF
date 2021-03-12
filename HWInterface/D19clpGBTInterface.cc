@@ -900,10 +900,10 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUse
     if(pUseOpticalLink)
     {
 #ifdef __TCUSB__
-        #ifdef __ROH_USB__
-            LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
-            if(pToggleTC) fTC_USB->toggle_SCI2C();
-        #endif
+#ifdef __ROH_USB__
+        LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
+        if(pToggleTC) fTC_USB->toggle_SCI2C();
+#endif
 #endif
         LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
         fUseOpticalLink = true;
@@ -923,14 +923,14 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUse
 
 #ifdef __TCUSB__
 void D19clpGBTInterface::InitialiseTCUSBHandler()
-{ 
-    #ifdef __ROH_USB__
-        fTC_USB = new TC_PSROH(); 
-        LOG(INFO) << BOLDGREEN << "Initialised PS-ROH TestCard USB Handler" << RESET;
-    #elif __SEH_USB__
-        fTC_USB = new TC_2SSEH(); 
-        LOG(INFO) << BOLDGREEN << "Initialised 2S-SEH TestCard USB Handler" << RESET;
-    #endif
+{
+#ifdef __ROH_USB__
+    fTC_USB = new TC_PSROH();
+    LOG(INFO) << BOLDGREEN << "Initialised PS-ROH TestCard USB Handler" << RESET;
+#elif __SEH_USB__
+    fTC_USB = new TC_2SSEH();
+    LOG(INFO) << BOLDGREEN << "Initialised 2S-SEH TestCard USB Handler" << RESET;
+#endif
 }
 #endif
 

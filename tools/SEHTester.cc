@@ -162,9 +162,10 @@ void SEHTester::RampPowerSupply(std::string fHWFile, std::string fPowerSupply)
         std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
 #ifdef __TCUSB__
-
-        fTC_2SSEH->read_supply(fTC_2SSEH->I_SEH, I_SEH);
-        fTC_2SSEH->read_supply(fTC_2SSEH->U_SEH, U_SEH);
+#ifdef __SEH_USB__
+        fTC_USB->read_supply(fTC_USB->I_SEH, I_SEH);
+        fTC_USB->read_supply(fTC_USB->U_SEH, U_SEH);
+#endif
 #endif
 
         cIinValVect.push_back(I_SEH);
@@ -245,21 +246,23 @@ int SEHTester::exampleFit()
 void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 {
 #ifdef __USE_ROOT__
-    float cUMon;
-    float cVHVJ7;
-    float cVHVJ8;
+    float cUMon  = 0;
+    float cVHVJ7 = 0;
+    float cVHVJ8 = 0;
 #ifdef __TCUSB__
-    fTC_2SSEH->set_HV(false, true, true, 0);
+#ifdef __SEH_USB__
+    fTC_USB->set_HV(false, true, true, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    fTC_2SSEH->set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
+    fTC_USB->set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
 
     std::this_thread::sleep_for(std::chrono::milliseconds(15000));
 
-    fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, cUMon);
-    fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ7, cVHVJ7);
-    fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ8, cVHVJ8);
+    fTC_USB->read_hvmon(fTC_USB->Mon, cUMon);
+    fTC_USB->read_hvmon(fTC_USB->VHVJ7, cVHVJ7);
+    fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8);
     //----------------------------------------------------
-    fTC_2SSEH->set_HV(false, true, true, 0);
+    fTC_USB->set_HV(false, true, true, 0);
+#endif
     std::vector<float> cDACValVect;
     std::vector<float> cVHVJ7ValVect;
     std::vector<float> cVHVJ8ValVect;
@@ -273,14 +276,15 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     for(int cDACValue = 0; cDACValue <= 3500; cDACValue += 0x155)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        fTC_2SSEH->set_HV(true, true, true, cDACValue); // 0x155 = 100V
+#ifdef __SEH_USB__
+        fTC_USB->set_HV(true, true, true, cDACValue); // 0x155 = 100V
 
         std::this_thread::sleep_for(std::chrono::milliseconds(15000));
 
-        fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, cUMon);
-        fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ7, cVHVJ7);
-        fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ8, cVHVJ8);
-
+        fTC_USB->read_hvmon(fTC_USB->Mon, cUMon);
+        fTC_USB->read_hvmon(fTC_USB->VHVJ7, cVHVJ7);
+        fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8);
+#endif
 #endif
 
         LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- Mon = " << +cUMon << " --- VHVJ7 = " << +cVHVJ7 << " --- VHVJ8 = " << +cVHVJ8 << RESET;
@@ -323,8 +327,12 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cDACtoMonGraph->SetLineWidth(3);
     cDACtoMonGraph->SetMarkerStyle(22);
     cDACtoHVMultiGraph->Add(cDACtoMonGraph);
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
+    fTC_USB->set_HV(false, true, true, 0);
+#endif
+#endif
 
-    fTC_2SSEH->set_HV(false, true, true, 0);
     cDACtoHVMultiGraph->Draw("ALP");
     cDACtoHVMultiGraph->GetXaxis()->SetTitle("HV DAC");
     cDACtoHVMultiGraph->GetYaxis()->SetTitle("Voltage [V]");
@@ -334,14 +342,18 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cBiasVoltageTree->Fill();
     cBiasVoltageTree->Write();
 #ifdef __TCUSB__
-    fTC_2SSEH->set_HV(false, false, false, 0);
+#ifdef __SEH_USB__
+    fTC_USB->set_HV(false, false, false, 0);
+#endif
 #endif
 #endif
 }
 void SEHTester::TurnOn()
 {
 #ifdef __TCUSB__
-    fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_On);
+#ifdef __SEH_USB__
+    fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
+#endif
 #endif
 }
 void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
@@ -361,7 +373,9 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     // clock_gettime(CLOCK_REALTIME, &start);
     clock_gettime(CLOCK_MONOTONIC, &startTime);
 #ifdef __TCUSB__
-    fTC_2SSEH->set_HV(true, false, false, pHvDacValue);
+#ifdef __SEH_USB__
+    fTC_USB->set_HV(true, false, false, pHvDacValue);
+#endif
 #endif
     // Create TTree for leakage current
     auto cLeakTree = new TTree("tLeakTree", "Leakage Current");
@@ -381,16 +395,18 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
         iSecond = rand() % 2;
         iMilli  = rand() % 1000;
         LOG(INFO) << BOLDBLUE << "Seconds " << +iSecond << " Milli " << +iMilli << RESET;
-        float ILeak;
-        float UMon;
+        float ILeak = 0;
+        float UMon  = 0;
         // time_t timer;
         // time(&timer);
         clock_gettime(CLOCK_MONOTONIC, &timer);
 
 #ifdef __TCUSB__
-        fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, UMon);
+#ifdef __SEH_USB__
+        fTC_USB->read_hvmon(fTC_USB->Mon, UMon);
         std::this_thread::sleep_for(std::chrono::milliseconds(1000 + iMilli));
-        fTC_2SSEH->read_hvmon(fTC_2SSEH->HV_meas, ILeak);
+        fTC_USB->read_hvmon(fTC_USB->HV_meas, ILeak);
+#endif
 #endif
         cILeakValVect.push_back(double(ILeak));
         cUMonValVect.push_back(UMon);
@@ -434,7 +450,9 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     // cEfficencyCanvas->BuildLegend();
     cMonCanvas->Write();
 #ifdef __TCUSB__
-    fTC_2SSEH->set_HV(false, false, false, 0);
+#ifdef __SEH_USB__
+    fTC_USB->set_HV(false, false, false, 0);
+#endif
 #endif
 #endif
 }
@@ -442,6 +460,8 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep)
 {
 #ifdef __USE_ROOT__
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
     // Create TTree for Iout to Iin conversion in DC/DC
     auto cIouttoIinTree = new TTree("tIouttoIinTree", "Iout to Iin conversion in DC/DC");
     auto cEfficencyTree = new TTree("tEfficency", "DC/DC Efficency");
@@ -476,10 +496,9 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     // We run three times; Only right side, only left side and load on both sides
     for(const auto& cSide: pSides)
     {
-#ifdef __TCUSB__
-        fTC_2SSEH->set_load1(false, false, 0);
-        fTC_2SSEH->set_load2(false, false, 0);
-#endif
+        fTC_USB->set_load1(false, false, 0);
+        fTC_USB->set_load2(false, false, 0);
+
         cIoutValVect.clear(), cIinValVect.clear();
         cEfficencyValVect.clear();
         cSideValVect.clear();
@@ -493,23 +512,22 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
             float U_P1V2_R;
             float U_P1V2_L;
 
-#ifdef __TCUSB__
             if(cSide == "both")
             {
-                fTC_2SSEH->set_load1(true, false, cLoadValue);
-                fTC_2SSEH->set_load2(true, false, cLoadValue);
+                fTC_USB->set_load1(true, false, cLoadValue);
+                fTC_USB->set_load2(true, false, cLoadValue);
             }
-            if(cSide == "left") { fTC_2SSEH->set_load1(true, false, cLoadValue); }
-            if(cSide == "right") { fTC_2SSEH->set_load2(true, false, cLoadValue); }
+            if(cSide == "left") { fTC_USB->set_load1(true, false, cLoadValue); }
+            if(cSide == "right") { fTC_USB->set_load2(true, false, cLoadValue); }
             // Delay needs to be optimized during functional testing
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_R, I_P1V2_R);
-            fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_L, I_P1V2_L);
-            fTC_2SSEH->read_supply(fTC_2SSEH->I_SEH, I_SEH);
-            fTC_2SSEH->read_load(fTC_2SSEH->U_P1V2_R, U_P1V2_R);
-            fTC_2SSEH->read_load(fTC_2SSEH->U_P1V2_L, U_P1V2_L);
-            fTC_2SSEH->read_supply(fTC_2SSEH->U_SEH, U_SEH);
-#endif
+            fTC_USB->read_load(fTC_USB->I_P1V2_R, I_P1V2_R);
+            fTC_USB->read_load(fTC_USB->I_P1V2_L, I_P1V2_L);
+            fTC_USB->read_supply(fTC_USB->I_SEH, I_SEH);
+            fTC_USB->read_load(fTC_USB->U_P1V2_R, U_P1V2_R);
+            fTC_USB->read_load(fTC_USB->U_P1V2_L, U_P1V2_L);
+            fTC_USB->read_supply(fTC_USB->U_SEH, U_SEH);
+
             // The input binning is performed in DAC values, the result is binned in the measured current
             cIoutValVect.push_back(I_P1V2_R + I_P1V2_L);
             cIinValVect.push_back(I_SEH);
@@ -542,10 +560,10 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
         cEfficencyMultiGraph->Add(cEfficencyGraph);
         iterator++;
     }
-#ifdef __TCUSB__
-    fTC_2SSEH->set_load1(false, false, 0);
-    fTC_2SSEH->set_load2(false, false, 0);
-#endif
+
+    fTC_USB->set_load1(false, false, 0);
+    fTC_USB->set_load2(false, false, 0);
+
     fResultFile->cd();
     cIouttoIinTree->Write();
     cEfficencyTree->Write();
@@ -564,7 +582,8 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 
     cEfficencyCanvas->BuildLegend();
     cEfficencyCanvas->Write();
-
+#endif
+#endif
 #endif
 }
 // Fixed in this context means: The ADC pin is not an AMUX pin
@@ -720,31 +739,32 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 void SEHTester::TestCardVoltages()
 {
 #ifdef __TCUSB__
-
+#ifdef __SEH_USB__
     float k;
     auto  c2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
     {
-        fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
+        fTC_USB->read_supply(c2SSEHMapIterator->second, k);
 #ifdef __USE_ROOT__
         fillSummaryTree(c2SSEHMapIterator->first, k);
 #endif
         c2SSEHMapIterator++;
 
     } while(c2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_On);
+    fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     auto d2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
     {
-        fTC_2SSEH->read_supply(d2SSEHMapIterator->second, k);
+        fTC_USB->read_supply(d2SSEHMapIterator->second, k);
 #ifdef __USE_ROOT__
         fillSummaryTree(d2SSEHMapIterator->first, k);
 #endif
         d2SSEHMapIterator++;
 
     } while(d2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_Off);
+    fTC_USB->set_SehSupply(fTC_USB->sehSupply_Off);
+#endif
 #endif
 }
 

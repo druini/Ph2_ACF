@@ -45,17 +45,15 @@ class OTHybridTester : public Tool
     OTHybridTester();
     ~OTHybridTester();
 
-    void      FindUSBHandler(bool b2SSEH = false);
-    TC_PSROH* GetTCUSBHandler()
-    {
+    void FindUSBHandler(bool b2SSEH = false);
+
 #ifdef __TCUSB__
-    #ifdef __ROH_USB__
-        TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
-    #elif __SEH_USB__
-        TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
-    #endif
+#ifdef __ROH_USB__
+    TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
+#elif __SEH_USB__
+    TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
 #endif
-    }
+#endif
 
     // ###################################
     // # LpGBT related functions #
@@ -152,11 +150,11 @@ class OTHybridTester : public Tool
 
   protected:
 #ifdef __TCUSB__
-    #ifdef __ROH_USB__
-        TC_PSROH* fTC_USB;
-    #elif __SEH_USB__
-        TC_2SSEH* fTC_USB;
-    #endif
+#ifdef __ROH_USB__
+    TC_PSROH* fTC_USB;
+#elif __SEH_USB__
+    TC_2SSEH* fTC_USB;
+#endif
 #endif
 };
 

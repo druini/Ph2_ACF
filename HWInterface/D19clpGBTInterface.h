@@ -21,7 +21,7 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB){}
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB) {}
     ~D19clpGBTInterface()
     {
 #ifdef __TCUSB__
@@ -194,14 +194,14 @@ class D19clpGBTInterface : public lpGBTInterface
     // # Outer Tracker specific funtions #
     // ###################################
 #ifdef __TCUSB__
-    void      InitialiseTCUSBHandler();
-    #ifdef __ROH_USB__
-        void      SetTCUSBHandler(TC_PSROH* pTC_PSROH) { fTC_USB = pTC_PSROH; }
-        TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
-    #elif __SEH_USB__
-        void      SetTCUSBHandler(TC_2SSEH* pTC_2SSEH) { fTC_USB = pTC_2SSEH; }
-        TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
-    #endif
+    void InitialiseTCUSBHandler();
+#ifdef __ROH_USB__
+    void      SetTCUSBHandler(TC_PSROH* pTC_PSROH) { fTC_USB = pTC_PSROH; }
+    TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
+#elif __SEH_USB__
+    void                                              SetTCUSBHandler(TC_2SSEH* pTC_2SSEH) { fTC_USB = pTC_2SSEH; }
+    TC_2SSEH*                                         GetTCUSBHandler() { return fTC_USB; }
+#endif
 
 #endif
     // Sets the flag used to select which lpGBT configuration interface to use
@@ -275,22 +275,23 @@ class D19clpGBTInterface : public lpGBTInterface
     bool fUseOpticalLink = true;
     bool fUseCPB         = true;
 #ifdef __TCUSB__
-    #ifdef __ROH_USB__
-        TC_PSROH*                                    fTC_USB;
-        std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
+#ifdef __ROH_USB__
+    TC_PSROH*                                    fTC_USB;
+    std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
                                                                 {"L_SSA", TC_PSROH::measurement::L_SSA_RST},
                                                                 {"R_MPA", TC_PSROH::measurement::R_MPA_RST},
                                                                 {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
-                                                                {"R_SSA", TC_PSROH::measurement::R_SSA_RST}};
-    
-    #elif __SEH_USB__
-        TC_2SSEH*                                    fTC_USB;
-        std::map<std::string, TC_2SSEH::resetMeasurement> fSehResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
+                                                                { "R_SSA",
+                                                                  TC_PSROH::measurement::R_SSA_RST }};
+
+#elif __SEH_USB__
+    TC_2SSEH*                                         fTC_USB;
+    std::map<std::string, TC_2SSEH::resetMeasurement> fSehResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
                                                                         {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
                                                                         {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
                                                                         {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
-    #endif
+#endif
 #endif
 };
 } // namespace Ph2_HwInterface
