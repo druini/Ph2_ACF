@@ -8,7 +8,7 @@ LatencyScan::LatencyScan() : Tool() {}
 
 LatencyScan::~LatencyScan() {}
 
-void LatencyScan::Initialize(uint32_t pStartLatency, uint32_t pLatencyRange)
+void LatencyScan::Initialise(uint32_t pStartLatency, uint32_t pLatencyRange)
 {
     parseSettings();
 
@@ -19,6 +19,8 @@ void LatencyScan::Initialize(uint32_t pStartLatency, uint32_t pLatencyRange)
     LOG(INFO) << "Histograms and Settings initialised.";
 }
 
+
+/* LESYA: this needs to be re-formatted to standard container structure*/
 void LatencyScan::MeasureTriggerTDC()
 {
     LOG(INFO) << "Measuring Trigger TDC ... ";
@@ -34,7 +36,6 @@ void LatencyScan::MeasureTriggerTDC()
         ReadNEvents(theBoard, fNevents);
 
         const std::vector<Event*>& events = GetEvents(theBoard);
-
         for(auto& cEvent: events)
         {
             uint8_t cTDCVal = cEvent->GetTDC();
@@ -60,16 +61,31 @@ void LatencyScan::MeasureTriggerTDC()
         }
     }
 
+#ifdef __USE_ROOT__
+    fDQMHistogramLatencyScan.fillTriggerTDC(/*container name*/);
+#else
+    auto theTriggerTDCStream = prepareHybridContainerStreamer<EmptyContainer, uint16_t, EmptyContainer>();
+    //for(auto board: /*container name*/)
+    //{
+    //    if(fStreamerEnabled) theTriggerTDCStream.streamAndSendBoard(board, fNetworkStreamer);
+    //}
+#endif
+
+
+
+/* to be deleted -- histogram filling
+
     for(auto pBoard: *fDetectorContainer)
     {
         TH1F* cTmpHist = dynamic_cast<TH1F*>(getHist(pBoard, "triggerTDC"));
         for(size_t tdcValue = 0; tdcValue < fTDCBins; ++tdcValue) { cTmpHist->SetBinContent(tdcValue + 1, BeBoardTriggerTDCMap[pBoard->getId()][tdcValue]); }
     }
+    */
 
     return;
 }
 
-std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLatency, uint8_t pLatencyRange)
+void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
 {
     LOG(INFO) << "Scanning Latency ... ";
     uint32_t cIterationCount = 0;
@@ -81,29 +97,59 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLaten
 
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
 
-    for(auto pBoard: *fDetectorContainer)
+
+    DetectorDataContainer theLatencyContainer;
+    ContainerFactory::copyAndInitHybrid<std::pair<uint16_t, int>>(*fDetectorContainer, theLatencyContainer);
+
+
+    for(auto board: theLatencyContainer)
     {
-        BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
+        BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(board->getIndex()));
         for(uint16_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++)
         {
             //  Set a Latency Value on all FEs
             cVisitor.setLatency(cLat);
             this->accept(cVisitor);
-
             ReadNEvents(theBoard, fNevents);
 
-            const std::vector<Event*>& events = GetEvents(theBoard);
-            countHitsLat(theBoard, events, "hybrid_latency", cLat, pStartLatency);
-            // done counting hits for all FE's, now update the Histograms
-            countHitsLat("hybrid_latency", false);
-        }
+            for(auto opticalGroup : *board){
+                const std::vector<Event*>& events = GetEvents(theBoard);
+                for(auto hybrid: *opticalGroup)
+                {
+                    uint32_t cHitSum = 0;
+                    for(auto& cEvent: events)
+                    { 
+                        // first, reset the hit counter - I need separate counters for each event
+                        int cHitCounter = 0;
+                        for(auto chip: *hybrid){
+                            cHitCounter += cEvent->GetNHits(hybrid->getId(), chip->getId());
+                        }
+                        cHitSum += cHitCounter;
+                        
+                    } // end event loop
+
+                    LOG(INFO) << "FE: " << +hybrid->getId() << "; Latency " << +cLat << " clock cycles; Hits " << cHitSum << "; Events " << fNevents;           
+                    hybrid->getSummary<std::pair<uint16_t, int>>() = std::make_pair(cLat, cHitSum); 
+                } // end hyrbid 
+                    
+                    
+            } // end optical group 
+
+        } // end latency loop
 
         cIterationCount++;
-    }
+    } // end board loop
 
-    // analyze the Histograms
-    std::map<HybridContainer*, uint8_t> cLatencyMap;
-    return cLatencyMap;
+#ifdef __USE_ROOT__
+    fDQMHistogramPedestalEqualization.fillLatencyPlots(theLatencyContainer);
+#else
+    auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, uint16_t, EmptyContainer>();
+    for(auto board: theLatencyContainer)
+    {
+        if(fStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fNetworkStreamer);
+    }
+#endif
+
 }
 
 void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
@@ -260,7 +306,7 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
     }     // latency
 }
 std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartLatency, uint8_t pLatencyRange)
-{
+{   /*
     // Now the actual scan
     LOG(INFO) << BOLDBLUE << "Scanning Stub Latency ... ";
     for(auto cBoard: *fDetectorContainer)
@@ -342,12 +388,15 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
 
         LOG(INFO) << "Stub Latency FE " << +cFe.first->getId() << ": " << +cStubLatency << " clock cycles!";
     }
-
+    */
+    std::map<HybridContainer*, uint8_t> cStubLatencyMap;
     return cStubLatencyMap;
+    
 }
 
 void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
 {
+    /*
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
     int            cNSteps = 0;
     for(uint16_t cLatency = pStartLatency; cLatency < pStartLatency + pLatencyRange; cLatency++)
@@ -464,6 +513,7 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
             }
         }
     }
+    */
 }
 
 //////////////////////////////////////          PRIVATE METHODS             //////////////////////////////////////
@@ -474,8 +524,11 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
 
 // }
 
+
+/* LESYA I think this should be deleted too
 int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency)
 {
+
     uint32_t cTotalHits = 0;
     for(auto cOpticalGroup: *pBoard)
     {
@@ -514,7 +567,10 @@ int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventV
 
     return cTotalHits;
 }
+*/
 
+
+/* LESYA this should go too
 int LatencyScan::countStubs(Hybrid* pFe, const Event* pEvent, std::string pHistName, uint8_t pParameter)
 {
     // loop over Hybrids & Cbcs and count hits separately
@@ -540,6 +596,7 @@ int LatencyScan::countStubs(Hybrid* pFe, const Event* pEvent, std::string pHistN
 
     return cStubCounter;
 }
+*/
 
 void LatencyScan::parseSettings()
 {
@@ -572,6 +629,7 @@ void LatencyScan::parseSettings()
 }
 void LatencyScan::writeObjects()
 {
+    /*
     this->SaveResults();
     // just use auto iterators to write everything to disk
     // this is the old method before Tool class was cool
@@ -582,15 +640,12 @@ void LatencyScan::writeObjects()
     // fPedestalCanvas->Write ( fPedestalCanvas->GetName(), TObject::kOverwrite );
     // fFeSummaryCanvas->Write ( fFeSummaryCanvas->GetName(), TObject::kOverwrite );
     fResultFile->Flush();
+    */
 }
 
 // State machine control functions
 
-void LatencyScan::ConfigureCalibration()
-{
-    CreateResultDirectory("Results/Run_LatencyScan");
-    InitResultFile("LatencyScanResults");
-}
+void LatencyScan::ConfigureCalibration() { CreateResultDirectory("Results/Run_Latency"); }
 
 void LatencyScan::Running() {}
 

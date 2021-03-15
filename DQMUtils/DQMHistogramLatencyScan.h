@@ -54,7 +54,7 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
     // virtual void summarizeHistos();
 
     void setStartLatency(uint32_t pStartLatency) { fStartLatency = pStartLatency; }
-    void setLatencyRange(uint32_t pLatencyRange) { fStartLatency = pStartLatency; }
+    void setLatencyRange(uint32_t pLatencyRange) { fLatencyRange = pLatencyRange; }
 
     //Histogram Fillers
     void fillLatency(DetectorDataContainer& theLatency);
@@ -64,9 +64,9 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
 
   private:
     DetectorDataContainer fDetectorData;
-    DetectorDataContainer fDetectorLatencyHistograms;
-    DetectorDataContainer fDetectorStubHistograms;
-    DetectorDataContainer fDetectorLatencyScan2DHistograms;
+    DetectorDataContainer fLatencyHistograms;
+    DetectorDataContainer fStubHistograms;
+    DetectorDataContainer fLatencyScan2DHistograms;
     DetectorDataContainer fTriggerTDC;
 
     uint32_t fStartLatency;
