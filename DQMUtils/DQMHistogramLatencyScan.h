@@ -60,14 +60,14 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
     void fillLatencyPlots(DetectorDataContainer& theLatency);
     void fillStubLatency(DetectorDataContainer& theStubLatency);
     void fill2DLatency(DetectorDataContainer& the2DLatency);
-    void fillTriggerTDC(DetectorDataContainer& theTriggerTDC);
+    void fillTriggerTDC(DetectorDataContainer& theTriggerTDC, uint32_t TDCBins);
 
   private:
     DetectorDataContainer fDetectorData;
     DetectorDataContainer fLatencyHistograms;
     DetectorDataContainer fStubHistograms;
     DetectorDataContainer fLatencyScan2DHistograms;
-    DetectorDataContainer fTriggerTDC;
+    DetectorDataContainer fTriggerTDCHistograms;
 
     uint32_t fStartLatency;
     uint32_t fLatencyRange;

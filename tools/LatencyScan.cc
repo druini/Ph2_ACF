@@ -20,22 +20,24 @@ void LatencyScan::Initialise(uint32_t pStartLatency, uint32_t pLatencyRange)
 }
 
 
-/* LESYA: this needs to be re-formatted to standard container structure*/
+/* LESYA: this needs to be re-formatted to standard container structure -- note this returned an empty canvas before*/
 void LatencyScan::MeasureTriggerTDC()
 {
     LOG(INFO) << "Measuring Trigger TDC ... ";
 
-    std::map<uint16_t, std::vector<uint16_t>> BeBoardTriggerTDCMap;
+    DetectorDataContainer theTriggerTDCContainer;
+    ContainerFactory::copyAndInitBoard<std::vector<uint16_t>>(*fDetectorContainer, theTriggerTDCContainer);
+
     // Take Data for all Hybrids
-    for(auto pBoard: *fDetectorContainer)
+    for(auto board: theTriggerTDCContainer)
     {
-        BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
-        // I need this to normalize the TDC values I get from the Strasbourg FW
-        BeBoardTriggerTDCMap[pBoard->getId()] = std::vector<uint16_t>(fTDCBins, 0);
+        BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(board->getIndex()));
 
         ReadNEvents(theBoard, fNevents);
-
         const std::vector<Event*>& events = GetEvents(theBoard);
+
+        board->getSummary<std::vector<uint16_t>>().resize(fTDCBins);
+
         for(auto& cEvent: events)
         {
             uint8_t cTDCVal = cEvent->GetTDC();
@@ -56,33 +58,21 @@ void LatencyScan::MeasureTriggerTDC()
                           << std::endl;
             else
             {
-                ++BeBoardTriggerTDCMap[pBoard->getId()][cTDCVal];
+                board->getSummary<std::vector<uint16_t>>()[cTDCVal]++;
             }
         }
     }
 
 #ifdef __USE_ROOT__
-    fDQMHistogramLatencyScan.fillTriggerTDC(/*container name*/);
+    fDQMHistogramLatencyScan.fillTriggerTDC(theTriggerTDCContainer, fTDCBins);
 #else
     auto theTriggerTDCStream = prepareHybridContainerStreamer<EmptyContainer, uint16_t, EmptyContainer>();
-    //for(auto board: /*container name*/)
-    //{
-    //    if(fStreamerEnabled) theTriggerTDCStream.streamAndSendBoard(board, fNetworkStreamer);
-    //}
+    for(auto board: theTriggerTDCContainer)
+    {
+        if(fStreamerEnabled) theTriggerTDCStream.streamAndSendBoard(board, fNetworkStreamer);
+    }
 #endif
 
-
-
-/* to be deleted -- histogram filling
-
-    for(auto pBoard: *fDetectorContainer)
-    {
-        TH1F* cTmpHist = dynamic_cast<TH1F*>(getHist(pBoard, "triggerTDC"));
-        for(size_t tdcValue = 0; tdcValue < fTDCBins; ++tdcValue) { cTmpHist->SetBinContent(tdcValue + 1, BeBoardTriggerTDCMap[pBoard->getId()][tdcValue]); }
-    }
-    */
-
-    return;
 }
 
 void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
@@ -97,10 +87,8 @@ void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
 
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
 
-
     DetectorDataContainer theLatencyContainer;
     ContainerFactory::copyAndInitHybrid<std::pair<uint16_t, int>>(*fDetectorContainer, theLatencyContainer);
-
 
     for(auto board: theLatencyContainer)
     {
@@ -124,7 +112,7 @@ void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
                         for(auto chip: *hybrid){
                             cHitCounter += cEvent->GetNHits(hybrid->getId(), chip->getId());
                         }
-                        cHitSum += cHitCounter;
+                        cHitSum += cHitCounter; //TODO: It would be nice to fill per event so you could have the errors correct
                         
                     } // end event loop
 
@@ -524,50 +512,6 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
 
 // }
 
-
-/* LESYA I think this should be deleted too
-int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency)
-{
-
-    uint32_t cTotalHits = 0;
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cFe: *cOpticalGroup)
-        {
-            uint32_t cHitSum = 0;
-            //  get histogram to fill
-            TH1F* cTmpHist = dynamic_cast<TH1F*>(getHist(cFe, pHistName));
-            for(auto& cEvent: pEventVec)
-            {
-                // first, reset the hit counter - I need separate counters for each event
-                int cHitCounter = 0;
-
-                for(auto cCbc: *cFe)
-                {
-                    // now loop the channels for this particular event and increment a counter
-                    cHitCounter += cEvent->GetNHits(cFe->getId(), cCbc->getId());
-                }
-
-                // now I have the number of hits in this particular event for all CBCs and the TDC value
-
-                cTmpHist->Fill(pParameter, cHitCounter);
-
-                // if (cHitCounter != 0 ) std::cout << "Found " << cHitCounter << " Hits in this event!" << std::endl;
-
-                // GA: old, potentially buggy code
-                // cTmpHist->Fill (cBin, cHitCounter);
-
-                cHitSum += cHitCounter;
-            }
-
-            LOG(INFO) << "FE: " << +cFe->getId() << "; Latency " << +pParameter << " clock cycles; Hits " << cHitSum << "; Events " << fNevents;
-            cTotalHits += cHitSum;
-        }
-    }
-
-    return cTotalHits;
-}
-*/
 
 
 /* LESYA this should go too

@@ -48,8 +48,6 @@ class LatencyScan : public Tool
     void Resume() override;
 
   private:
-    int countHitsLat(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency);
-    // int countHits ( Hybrid* pFe,  const Event* pEvent, std::string pHistName, uint8_t pParameter );
     int  countStubs(Ph2_HwDescription::Hybrid* pFe, const Ph2_HwInterface::Event* pEvent, std::string pHistName, uint8_t pParameter);
     void updateHists(std::string pHistName, bool pFinal);
     void parseSettings();

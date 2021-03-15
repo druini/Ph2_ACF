@@ -50,7 +50,7 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, const DetectorContainer
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fLatencyScan2DHistograms, hLatencyScan2D);
     
     HistContainer<TH1F> hTriggerTDC("TriggerTDC", "Trigger TDC", fTDCBins, -0.5, fTDCBins - 0.5);
-    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fTriggerTDC, hTriggerTDC);
+    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fTriggerTDCHistograms, hTriggerTDC);
 
 
 
@@ -117,7 +117,16 @@ void DQMHistogramLatencyScan::fill2DLatency(DetectorDataContainer& the2DLatency)
 {
 
 }
-void DQMHistogramLatencyScan::fillTriggerTDC(DetectorDataContainer& theTriggerTDC)
+void DQMHistogramLatencyScan::fillTriggerTDC(DetectorDataContainer& theTriggerTDC, uint32_t TDCBins)
 {
+    for(auto board: theTriggerTDC)
+    {
+        for(size_t tdcValue = 0; tdcValue < TDCBins; ++tdcValue)
+        {
+            TH1F* boardTriggerTDCHistogram =
+                    fTriggerTDCHistograms.at(board->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+            boardTriggerTDCHistogram->SetBinContent(tdcValue + 1, board->getSummary<std::vector<uint16_t>>()[tdcValue]); 
+        }
+    }
 
 }
