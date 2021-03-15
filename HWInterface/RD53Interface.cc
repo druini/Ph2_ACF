@@ -40,7 +40,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     for(auto i = 0u; i < arraySize(registerWhileList); i++)
     {
         auto it = pRD53RegMap.find(registerWhileList[i]);
-        if(it != pRD53RegMap.end()) RD53Interface::WriteChipReg(pChip, it->first, it->second.fValue, true);
+        if(it != pRD53RegMap.end()) RD53Interface::WriteChipReg(pChip, it->first, it->second.fValue);
     }
 
     // #######################################
@@ -84,7 +84,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     {
         RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", clk_data_delay_value, false);
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53CmdEncoder::SYNC), -1);
-        RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", clk_data_delay_value, true);
+        RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", clk_data_delay_value);
     }
 
     // ###############################
@@ -153,8 +153,14 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
                               (RD53Shared::setBits(cRegItem.second.fBitSize) << (pRD53RegMap["CML_CONFIG_EN_LANE"].fBitSize + pRD53RegMap["CML_CONFIG_SER_EN_TAP"].fBitSize))));
                     regName = "CML_CONFIG";
                 }
+                else if(cRegItem.first == "CDR_CONFIG")
+                {
+                    RD53Interface::sendCommand(static_cast<RD53*>(pChip), RD53Cmd::ECR());
+                    RD53Interface::sendCommand(static_cast<RD53*>(pChip), RD53Cmd::ECR());
+                    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+                }
 
-                RD53Interface::WriteChipReg(pChip, regName, value, true);
+                RD53Interface::WriteChipReg(pChip, regName, value);
             }
         }
 
@@ -185,10 +191,7 @@ void RD53Interface::InitRD53UplinkSpeed(ReadoutChip* pChip)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     uint32_t auroraSpeed = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
-    if(auroraSpeed == 0)
-        RD53Interface::WriteChipReg(pChip, "CDR_CONFIG", RD53Constants::CDRCONFIG_1Gbit, false);
-    else
-        RD53Interface::WriteChipReg(pChip, "CDR_CONFIG", RD53Constants::CDRCONFIG_640Mbit, false);
+    RD53Interface::WriteChipReg(pChip, "CDR_CONFIG", (auroraSpeed == 0 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit), false);
     LOG(INFO) << GREEN << "Up-link speed: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
@@ -272,7 +275,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
         return false;
     }
 
-    pChip->setReg(regName, data);
+    if((pVerifLoop == true) && (status == true)) pChip->setReg(regName, data);
     return true;
 }
 

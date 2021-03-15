@@ -227,7 +227,7 @@ void DataReadbackOptimization::analyze()
                     // # Fill latency container and download new DAC values #
                     // ######################################################
                     theTAP0Containet.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CML_TAP0_BIAS", regVal, true);
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CML_TAP0_BIAS", regVal);
 
                     best = *std::max_element(
                         theTAP1scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data,
@@ -253,7 +253,7 @@ void DataReadbackOptimization::analyze()
                     // # Fill latency container and download new DAC values #
                     // ######################################################
                     theTAP1Containet.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CML_TAP1_BIAS", regVal, true);
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CML_TAP1_BIAS", regVal);
 
                     best = *std::max_element(
                         theTAP2scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data,
@@ -279,7 +279,7 @@ void DataReadbackOptimization::analyze()
                     // # Fill latency container and download new DAC values #
                     // ######################################################
                     theTAP2Containet.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CML_TAP2_BIAS", regVal, true);
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CML_TAP2_BIAS", regVal);
                 }
 }
 

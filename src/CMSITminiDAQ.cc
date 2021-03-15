@@ -358,7 +358,7 @@ int main(int argc, char** argv)
             la.analyze();
             la.draw();
         }
-        if(whichCalib == "datarbopt")
+        else if(whichCalib == "datarbopt")
         {
             // ##################################
             // # Run Data Readback Optimization #
