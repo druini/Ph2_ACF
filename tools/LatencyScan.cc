@@ -141,7 +141,7 @@ void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
     } // end board loop
 
 #ifdef __USE_ROOT__
-    fDQMHistogramPedestalEqualization.fillLatencyPlots(theLatencyContainer);
+    fDQMHistogramLatencyScan.fillLatencyPlots(theLatencyContainer);
 #else
     auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, uint16_t, EmptyContainer>();
     for(auto board: theLatencyContainer)

@@ -91,8 +91,22 @@ void DQMHistogramLatencyScan::process() {
 
 void DQMHistogramLatencyScan::reset(void) {}
 
-void DQMHistogramLatencyScan::fillLatency(DetectorDataContainer& theLatency)
+void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency)
 { 
+    for(auto board: theLatency)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                if(!hybrid->hasSummary()) continue;
+                TH1F* hybridLatencyHistogram =
+                    fLatencyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                hybridLatencyHistogram->SetBinContent(hybrid->getSummary<std::pair<uint16_t, int>>().first, hybrid->getSummary<std::pair<uint16_t, int>>().second );
+            }
+        }
+    }
+
 
 }
 void DQMHistogramLatencyScan::fillStubLatency(DetectorDataContainer& theStubLatency)
