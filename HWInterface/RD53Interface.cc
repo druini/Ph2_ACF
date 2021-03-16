@@ -40,7 +40,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     for(auto i = 0u; i < arraySize(registerWhileList); i++)
     {
         auto it = pRD53RegMap.find(registerWhileList[i]);
-        if(it != pRD53RegMap.end()) RD53Interface::WriteChipReg(pChip, it->first, it->second.fValue);
+        if(it != pRD53RegMap.end()) RD53Interface::WriteChipReg(pChip, it->first, it->second.fValue, pVerifLoop);
     }
 
     // #######################################
@@ -84,7 +84,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     {
         RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", clk_data_delay_value, false);
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53CmdEncoder::SYNC), -1);
-        RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", clk_data_delay_value);
+        RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", clk_data_delay_value, pVerifLoop);
     }
 
     // ###############################
@@ -154,14 +154,14 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
                     regName = "CML_CONFIG";
                 }
 
-                RD53Interface::WriteChipReg(pChip, regName, value);
+                RD53Interface::WriteChipReg(pChip, regName, value, pVerifLoop);
             }
         }
 
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    RD53Interface::WriteRD53Mask(static_cast<RD53*>(const_cast<Chip*>(pChip)), false, true, true);
+    RD53Interface::WriteRD53Mask(static_cast<RD53*>(const_cast<Chip*>(pChip)), false, true, pVerifLoop);
 
     return true;
 }
@@ -190,6 +190,8 @@ void RD53Interface::InitRD53UplinkSpeed(ReadoutChip* pChip)
 
 void RD53Interface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
 {
+    RD53Interface::ConfigureChip(pChip, false);
+
     this->setBoard(pChip->getBeBoardId());
 
     // ##############################

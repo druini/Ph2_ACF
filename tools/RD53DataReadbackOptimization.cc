@@ -36,7 +36,7 @@ void DataReadbackOptimization::ConfigureCalibration()
     // ##############################
     // # Initialize dac scan values #
     // ##############################
-    const size_t minNsteps = 10; // @CONST@
+    const size_t minNsteps = 2; // @CONST@ @TMP@
 
     size_t nSteps = (stopValueTAP0 - startValueTAP0 + 1 >= minNsteps ? minNsteps : stopValueTAP0 - startValueTAP0 + 1);
     size_t step   = (nSteps == minNsteps ? floor((stopValueTAP0 - startValueTAP0 + 1.) / minNsteps) : 1);
@@ -54,6 +54,11 @@ void DataReadbackOptimization::ConfigureCalibration()
     // # Initialize progress #
     // #######################
     RD53RunProgress::total() += DataReadbackOptimization::getNumberIterations();
+
+    // ############################################################
+    // # Create directory for: raw data, config files, histograms #
+    // ############################################################
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
 }
 
 void DataReadbackOptimization::Running()
@@ -220,7 +225,7 @@ void DataReadbackOptimization::analyze()
                         }
                     }
 
-                    LOG(INFO) << BOLDMAGENTA << ">>> Best TAP0 for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
+                    LOG(INFO) << BOLDMAGENTA << ">>> Best " << BOLDYELLOW << "TAP0" << BOLDMAGENTA << " for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
                               << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " <<<" << RESET;
 
                     // ######################################################
@@ -246,7 +251,7 @@ void DataReadbackOptimization::analyze()
                         }
                     }
 
-                    LOG(INFO) << BOLDMAGENTA << ">>> Best TAP1 for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
+                    LOG(INFO) << BOLDMAGENTA << ">>> Best " << BOLDYELLOW << "TAP1" << BOLDMAGENTA << " for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
                               << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " <<<" << RESET;
 
                     // ######################################################
@@ -272,7 +277,7 @@ void DataReadbackOptimization::analyze()
                         }
                     }
 
-                    LOG(INFO) << BOLDMAGENTA << ">>> Best TAP2 for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
+                    LOG(INFO) << BOLDMAGENTA << ">>> Best " << BOLDYELLOW << "TAP2" << BOLDMAGENTA << " for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
                               << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " <<<" << RESET;
 
                     // ######################################################
