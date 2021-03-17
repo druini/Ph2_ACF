@@ -370,7 +370,6 @@ int main(int argc, char** argv)
             dro.Inherit(&mySysCntr);
             dro.localConfigure(fileName, runNumber);
             dro.run();
-            dro.analyze();
             dro.draw();
         }
         else if(whichCalib == "pixelalive")

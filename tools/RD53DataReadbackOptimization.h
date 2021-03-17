@@ -38,6 +38,7 @@ class DataReadbackOptimization : public Tool
     void   run();
     void   draw(bool saveData = true);
     void   analyze();
+    void   analyze(const std::string& regName, const std::vector<uint16_t>& dacListTAP, const DetectorDataContainer& theTAPscanContainer, DetectorDataContainer& theTAPContainer);
     size_t getNumberIterations() { return 1; }
     void   saveChipRegisters(int currentRun);
 
@@ -64,11 +65,11 @@ class DataReadbackOptimization : public Tool
     std::vector<uint16_t> dacListTAP2;
 
     DetectorDataContainer theTAP0scanContainer;
-    DetectorDataContainer theTAP0Containet;
+    DetectorDataContainer theTAP0Container;
     DetectorDataContainer theTAP1scanContainer;
-    DetectorDataContainer theTAP1Containet;
+    DetectorDataContainer theTAP1Container;
     DetectorDataContainer theTAP2scanContainer;
-    DetectorDataContainer theTAP2Containet;
+    DetectorDataContainer theTAP2Container;
 
     void fillHisto();
     void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
