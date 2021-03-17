@@ -154,11 +154,7 @@ void DataReadbackOptimization::run()
     ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize>>(*fDetectorContainer, theTAP1scanContainer);
     ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize>>(*fDetectorContainer, theTAP2scanContainer);
 
-    for(const auto cBoard: *fDetectorContainer)
-      {
-          static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x0);
-          // static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard); // @TMP@
-      }
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x0);
     DataReadbackOptimization::scanDac("CML_TAP0_BIAS", dacListTAP0, nEvents, &theTAP0scanContainer);
     DataReadbackOptimization::analyze("CML_TAP0_BIAS", dacListTAP0, theTAP0scanContainer, theTAP0Container);
 
@@ -279,6 +275,7 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
                         fReadoutChipInterface->StartPRBSpattern(cChip);
                         theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i] =
                             fBeBoardFWMap[cBoard->getId()]->RunBERtest(true, timeXstep, 6, cHybrid->getId(), cChip->getId(), frontendSpeed); // @TMP@
+                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
                         fReadoutChipInterface->StopPRBSpattern(cChip);
                     }
         }
