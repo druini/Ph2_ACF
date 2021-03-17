@@ -221,7 +221,7 @@ For more information on the firmware, please check the doc directory of https://
     ii. in the section `Available specific runners` click button `Enable for this project` for the Ph2_ACF runner with the `FNAL`
 
 
-### Setup on CentOs 8
+### Setup on CentOs8
 
 The following procedure will install (in order):
 1. `git-extras`
@@ -234,10 +234,14 @@ The following procedure will install (in order):
 ```bash
 sudo yum install -y git-extras
 sudo yum install -y boost-devel pugixml-devel
-sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo -o /etc/yum.repos.d/ipbus-sw.repo
+sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo \
+  -o /etc/yum.repos.d/ipbus-sw.repo
 sudo yum clean all
-sudo yum install -y cactuscore-controlhub cactuscore-uhal-grammars cactuscore-uhal-log cactuscore-uhal-python36 cactuscore-uhal-python36 cactuscore-uhal-python38 cactuscore-uhal-python38 cactuscore-uhal-tests cactuscore-uhal-tools cactuscore-uhal-uhal 
-sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+sudo yum install -y cactuscore-controlhub cactuscore-uhal-grammars cactuscore-uhal-log \
+  cactuscore-uhal-python36 cactuscore-uhal-python36 cactuscore-uhal-python38 \
+  cactuscore-uhal-python38 cactuscore-uhal-tests cactuscore-uhal-tools cactuscore-uhal-uhal 
+sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
+  root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
 sudo yum install -y cmake
 sudo yum install -y clang-tools-extra
 ```
