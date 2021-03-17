@@ -101,7 +101,7 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                         {
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED)
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy > 0)
                             {
                                 Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + Occupancy1DHist->GetBinWidth(0) / 2);
                                 Occupancy2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);

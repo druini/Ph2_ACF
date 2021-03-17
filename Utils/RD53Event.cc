@@ -121,7 +121,7 @@ void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const Chan
 
                     for(const auto& hit: chip_frames_events[chipIndx].second.hit_data)
                     {
-                        cChip->getChannel<OccupancyAndPh>(hit.row + RD53::nRows * (hit.col)).fOccupancy++;
+                        cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fOccupancy++;
                         cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPh += static_cast<float>(hit.tot);
                         cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPhError += static_cast<float>(hit.tot * hit.tot);
                         if(cTestChannelGroup->isChannelEnabled(hit.row, hit.col) == false) cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).readoutError = true;
