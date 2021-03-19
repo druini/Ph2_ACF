@@ -36,18 +36,16 @@ void DataReadbackOptimization::ConfigureCalibration()
     // ##############################
     // # Initialize dac scan values #
     // ##############################
-    const size_t minNsteps = 10; // @CONST@
-
-    size_t nSteps = (stopValueTAP0 - startValueTAP0 + 1 >= minNsteps ? minNsteps : stopValueTAP0 - startValueTAP0 + 1);
-    size_t step   = (nSteps == minNsteps ? floor((stopValueTAP0 - startValueTAP0 + 1.) / minNsteps) : 1);
+    size_t nSteps = (stopValueTAP0 - startValueTAP0 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP0 - startValueTAP0 + 1);
+    size_t step   = floor((stopValueTAP0 - startValueTAP0 + 1) / nSteps);
     for(auto i = 0u; i < nSteps; i++) dacListTAP0.push_back(startValueTAP0 + step * i);
 
-    nSteps = (stopValueTAP1 - startValueTAP1 + 1 >= minNsteps ? minNsteps : stopValueTAP1 - startValueTAP1 + 1);
-    step   = (nSteps == minNsteps ? floor((stopValueTAP1 - startValueTAP1 + 1.) / minNsteps) : 1);
+    nSteps = (stopValueTAP1 - startValueTAP1 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP1 - startValueTAP1 + 1);
+    step   = floor((stopValueTAP1 - startValueTAP1 + 1) / nSteps);
     for(auto i = 0u; i < nSteps; i++) dacListTAP1.push_back(startValueTAP1 + step * i);
 
-    nSteps = (stopValueTAP2 - startValueTAP2 + 1 >= minNsteps ? minNsteps : stopValueTAP2 - startValueTAP2 + 1);
-    step   = (nSteps == minNsteps ? floor((stopValueTAP2 - startValueTAP2 + 1.) / minNsteps) : 1);
+    nSteps = (stopValueTAP2 - startValueTAP2 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP2 - startValueTAP2 + 1);
+    step   = floor((stopValueTAP2 - startValueTAP2 + 1) / nSteps);
     for(auto i = 0u; i < nSteps; i++) dacListTAP2.push_back(startValueTAP2 + step * i);
 
     // #######################
@@ -277,6 +275,7 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
                             fBeBoardFWMap[cBoard->getId()]->RunBERtest(true, timeXstep, 6, cHybrid->getId(), cChip->getId(), frontendSpeed); // @TMP@
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
                         fReadoutChipInterface->StopPRBSpattern(cChip);
+                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_TAP0_BIAS", RD53Shared::setBits(cChip->getRegItem(regName).fBitSize));
                     }
         }
 

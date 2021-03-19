@@ -18,24 +18,27 @@ void DataReadbackOptimizationHistograms::book(TFile* theOutputFile, const Detect
     // #######################
     // # Retrieve parameters #
     // #######################
-    startValueTAP0 = this->findValueInSettings(settingsMap, "StartValueTAP0");
-    stopValueTAP0  = this->findValueInSettings(settingsMap, "StopValueTAP0");
-    startValueTAP1 = this->findValueInSettings(settingsMap, "StartValueTAP1");
-    stopValueTAP1  = this->findValueInSettings(settingsMap, "StopValueTAP1");
-    startValueTAP2 = this->findValueInSettings(settingsMap, "StartValueTAP2");
-    stopValueTAP2  = this->findValueInSettings(settingsMap, "StopValueTAP2");
+    startValueTAP0 = this->findValueInSettings(settingsMap, "TAP0Start");
+    stopValueTAP0  = this->findValueInSettings(settingsMap, "TAP0Stop");
+    startValueTAP1 = this->findValueInSettings(settingsMap, "TAP1Start");
+    stopValueTAP1  = this->findValueInSettings(settingsMap, "TAP1Stop");
+    startValueTAP2 = this->findValueInSettings(settingsMap, "TAP2Start");
+    stopValueTAP2  = this->findValueInSettings(settingsMap, "TAP2Stop");
 
-    auto hTAP0scan = CanvasContainer<TH1F>("TAP0scan", "TAP0 scan", stopValueTAP0 - startValueTAP0 + 1, startValueTAP0, stopValueTAP0 + 1);
+    size_t nSteps = (stopValueTAP0 - startValueTAP0 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP0 - startValueTAP0 + 1);
+    auto hTAP0scan = CanvasContainer<TH1F>("TAP0scan", "TAP0 scan", nSteps, startValueTAP0, stopValueTAP0 + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TAP0scan, hTAP0scan, "TAP0 - driver", "Bit Error Rate");
     auto hTAP0 = CanvasContainer<TH1F>("TAP0", "TAP0 - driver", stopValueTAP0 - startValueTAP0 + 1, startValueTAP0, stopValueTAP0 + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TAP0, hTAP0, "TAP0 - driver", "Bit Error Rate");
 
-    auto hTAP1scan = CanvasContainer<TH1F>("TAP1scan", "TAP1 scan", stopValueTAP1 - startValueTAP1 + 1, startValueTAP1, stopValueTAP1 + 1);
+    nSteps = (stopValueTAP1 - startValueTAP1 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP1 - startValueTAP1 + 1);
+    auto hTAP1scan = CanvasContainer<TH1F>("TAP1scan", "TAP1 scan", nSteps, startValueTAP1, stopValueTAP1 + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TAP1scan, hTAP1scan, "TAP1 - pre-emphasis-1", "Bit Error Rate");
     auto hTAP1 = CanvasContainer<TH1F>("TAP1", "TAP1 - pre-emphasis-1", stopValueTAP1 - startValueTAP1 + 1, startValueTAP1, stopValueTAP1 + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TAP1, hTAP1, "TAP1 - pre-emphasis-1", "Bit Error Rate");
 
-    auto hTAP2scan = CanvasContainer<TH1F>("TAP2scan", "TAP2 scan", stopValueTAP2 - startValueTAP2 + 1, startValueTAP2, stopValueTAP2 + 1);
+    nSteps = (stopValueTAP2 - startValueTAP2 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP2 - startValueTAP2 + 1);
+    auto hTAP2scan = CanvasContainer<TH1F>("TAP2scan", "TAP2 scan", nSteps, startValueTAP2, stopValueTAP2 + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TAP2scan, hTAP2scan, "TAP2 - pre-emphasis-2", "Bit Error Rate");
     auto hTAP2 = CanvasContainer<TH1F>("TAP2", "TAP2 - pre-emphasis-2", stopValueTAP2 - startValueTAP2 + 1, startValueTAP2, stopValueTAP2 + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TAP2, hTAP2, "TAP2 - pre-emphasis-2", "Bit Error Rate");
@@ -112,8 +115,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP0(const DetectorDataContaine
                     auto* TAP0scanHist =
                         TAP0scan.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(size_t i = startValueTAP0; i <= stopValueTAP0; i++)
-                        TAP0scanHist->SetBinContent(TAP0scanHist->FindBin(i), cChip->getSummary<GenericDataArray<TAPsize>>().data[i - startValueTAP0]);
+                    for(auto i = 0; i < TAP0scanHist->GetNbinsX(); i++) TAP0scanHist->SetBinContent(i, cChip->getSummary<GenericDataArray<TAPsize>>().data[i - startValueTAP0]);
                 }
 }
 
@@ -146,8 +148,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP1(const DetectorDataContaine
                     auto* TAP1scanHist =
                         TAP1scan.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(size_t i = startValueTAP1; i <= stopValueTAP1; i++)
-                        TAP1scanHist->SetBinContent(TAP1scanHist->FindBin(i), cChip->getSummary<GenericDataArray<TAPsize>>().data[i - startValueTAP1]);
+                    for(auto i = 0; i < TAP1scanHist->GetNbinsX(); i++) TAP1scanHist->SetBinContent(i, cChip->getSummary<GenericDataArray<TAPsize>>().data[i - startValueTAP1]);
                 }
 }
 
@@ -180,8 +181,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP2(const DetectorDataContaine
                     auto* TAP2scanHist =
                         TAP2scan.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(size_t i = startValueTAP2; i <= stopValueTAP2; i++)
-                        TAP2scanHist->SetBinContent(TAP2scanHist->FindBin(i), cChip->getSummary<GenericDataArray<TAPsize>>().data[i - startValueTAP2]);
+                    for(auto i = 0; i < TAP2scanHist->GetNbinsX(); i++) TAP2scanHist->SetBinContent(i, cChip->getSummary<GenericDataArray<TAPsize>>().data[i - startValueTAP2]);
                 }
 }
 
