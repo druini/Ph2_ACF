@@ -218,7 +218,7 @@ void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& da
     // #####################
     if(RegManager::ReadReg("user.stat_regs.slow_cmd.error_flag") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
     if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false) LOG(ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
-    if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == false) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
+    if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
 
     // ##########
     // # Header #
