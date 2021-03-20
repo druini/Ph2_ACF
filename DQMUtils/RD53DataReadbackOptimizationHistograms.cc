@@ -115,7 +115,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP0(const DetectorDataContaine
                     auto* TAP0scanHist =
                         TAP0scan.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0; i < TAP0scanHist->GetNbinsX(); i++) TAP0scanHist->SetBinContent(i, cChip->getSummary<GenericDataArray<TAPsize>>().data[i - startValueTAP0]);
+                    for(auto i = 0; i < TAP0scanHist->GetNbinsX(); i++) TAP0scanHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<TAPsize>>().data[i]);
                 }
 }
 
@@ -148,7 +148,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP1(const DetectorDataContaine
                     auto* TAP1scanHist =
                         TAP1scan.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0; i < TAP1scanHist->GetNbinsX(); i++) TAP1scanHist->SetBinContent(i, cChip->getSummary<GenericDataArray<TAPsize>>().data[i - startValueTAP1]);
+                    for(auto i = 0; i < TAP1scanHist->GetNbinsX(); i++) TAP1scanHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<TAPsize>>().data[i]);
                 }
 }
 
@@ -181,7 +181,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP2(const DetectorDataContaine
                     auto* TAP2scanHist =
                         TAP2scan.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0; i < TAP2scanHist->GetNbinsX(); i++) TAP2scanHist->SetBinContent(i, cChip->getSummary<GenericDataArray<TAPsize>>().data[i - startValueTAP2]);
+                    for(auto i = 0; i < TAP2scanHist->GetNbinsX(); i++) TAP2scanHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<TAPsize>>().data[i]);
                 }
 }
 

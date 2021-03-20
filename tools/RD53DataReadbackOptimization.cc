@@ -280,7 +280,7 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
                         fReadoutChipInterface->StopPRBSpattern(cChip);
 
                         // @TMP@
-                        // static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_TAP0_BIAS", RD53Shared::setBits(cChip->getRegItem(regName).fBitSize) / 2);
+                        // static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_TAP0_BIAS", RD53Shared::setBits(cChip->getRegItem(regName).fBitSize));
                         // static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_TAP1_BIAS", 0);
                     }
         }
