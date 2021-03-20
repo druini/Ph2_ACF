@@ -271,11 +271,17 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
                     for(const auto cChip: *cHybrid)
                     {
                         fReadoutChipInterface->StartPRBSpattern(cChip);
+
                         theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i] =
                             fBeBoardFWMap[cBoard->getId()]->RunBERtest(true, timeXstep, 6, cHybrid->getId(), cChip->getId(), frontendSpeed); // @TMP@
+
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
+
                         fReadoutChipInterface->StopPRBSpattern(cChip);
-                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_TAP0_BIAS", RD53Shared::setBits(cChip->getRegItem(regName).fBitSize));
+
+                        // @TMP@
+                        // static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_TAP0_BIAS", RD53Shared::setBits(cChip->getRegItem(regName).fBitSize) / 2);
+                        // static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_TAP1_BIAS", 0);
                     }
         }
 
