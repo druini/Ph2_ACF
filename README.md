@@ -224,12 +224,10 @@ For more information on the firmware, please check the doc directory of https://
 ### Setup on CentOs8
 
 The following procedure will install (in order):
-1. `git-extras`
-2. the `boost` and `pugixml` libraries
-3. the `cactus` libraries for ipBus
-4. `root` with all its needed libraries
-5. `cmake`
-6. tools for clang, including `clang-format`
+1. the `boost` and `pugixml` libraries
+2. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
+3. `root` with all its needed libraries
+4. `cmake`, tools for clang, including `clang-format` and `git-extras`
 
 ```bash
 # Libraries needed by Ph2_ACF
