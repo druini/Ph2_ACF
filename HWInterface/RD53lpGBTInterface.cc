@@ -135,7 +135,7 @@ void RD53lpGBTInterface::ConfigureRxGroups(Chip* pChip, const std::vector<uint8_
     {
         // Enable Rx Groups Channels and set Data Rate and Phase Tracking mode
         uint8_t cValueEnableRx = 0;
-        for(const auto cChannel: pChannels) cValueEnableRx += (1 << cChannel);
+        for(const auto cChannel: pChannels) cValueEnableRx |= (1 << cChannel);
         std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
         RD53lpGBTInterface::WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
     }
@@ -177,7 +177,7 @@ void RD53lpGBTInterface::ConfigureTxGroups(Chip* pChip, const std::vector<uint8_
             cEnableTxReg = "EPTX32Enable";
 
         uint8_t cValueEnableTx = RD53lpGBTInterface::ReadChipReg(pChip, cEnableTxReg);
-        for(const auto cChannel: pChannels) cValueEnableTx += (1 << (cChannel + 4 * (cGroup % 2)));
+        for(const auto cChannel: pChannels) cValueEnableTx |= (1 << (cChannel + 4 * (cGroup % 2)));
         RD53lpGBTInterface::WriteChipReg(pChip, cEnableTxReg, cValueEnableTx);
     }
 }
@@ -499,8 +499,8 @@ uint8_t RD53lpGBTInterface::GetRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pCha
 bool RD53lpGBTInterface::IsRxLocked(Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels)
 {
     std::string cRXLockedReg = "EPRX" + std::to_string(pGroup) + "Locked";
-    uint8_t     cChannelMask = 0x0;
-    for(auto cChannel: pChannels) cChannelMask += (1 << cChannel);
+    uint8_t     cChannelMask = 0;
+    for(auto cChannel: pChannels) cChannelMask |= (1 << cChannel);
     return (((RD53lpGBTInterface::ReadChipReg(pChip, cRXLockedReg) & (cChannelMask << 4)) >> 4) == cChannelMask);
 }
 
