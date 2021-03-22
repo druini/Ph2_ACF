@@ -941,8 +941,11 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
     LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << mgtStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
 }
 
-bool RD53FWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop)
+bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
 {
+    // OptoChip ID
+    RD53FWInterface::SetActiveLink(linkNumber);
+
     // Config
     RegManager::WriteStackReg(
         {{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_din", pData}, {"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", RD53lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
@@ -955,7 +958,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, b
 
     if(pVerifLoop == true)
     {
-        uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(pAddress);
+        uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(linkNumber, pAddress);
         if(cReadBack != pData)
         {
             LOG(ERROR) << BOLDRED << "[RD53FWInterface::WriteOpticalLinkRegiser] Register readback failure for register 0x" << BOLDYELLOW << std::hex << std::uppercase << pAddress << std::dec
@@ -967,8 +970,11 @@ bool RD53FWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, b
     return true;
 }
 
-uint32_t RD53FWInterface::ReadOptoLinkRegister(uint32_t pAddress)
+uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress)
 {
+    // OptoChip ID
+    RD53FWInterface::SetActiveLink(linkNumber);
+
     // Config
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", RD53lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
 
@@ -979,18 +985,20 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(uint32_t pAddress)
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x0}});
     uint32_t cRead = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_fifo_dout");
 
-    /* @TMP@
-    uint32_t chipAddrRx  = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_chip_addr"); // Should be the same as RD53lpGBTconstants::LPGBTADDRESS
-    uint32_t regAddrRx   = RegManager::ReadReg("user.stat_regs.lpgbt_sc_2.reg_addr_rx");
-    uint32_t nWords2Read = RegManager::ReadReg("user.stat_regs.lpgbt_sc_2.nb_of_words_rx");
-    bool     isRxFIFOempty = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
+    // @TMP@
+    // uint32_t chipAddrRx    = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_chip_addr"); // Should be the same as RD53lpGBTconstants::LPGBTADDRESS
+    // uint32_t regAddrRx     = RegManager::ReadReg("user.stat_regs.lpgbt_sc_2.reg_addr_rx");
+    // uint32_t nWords2Read   = RegManager::ReadReg("user.stat_regs.lpgbt_sc_2.nb_of_words_rx");
+    // bool     isRxFIFOempty = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
 
-    LOG(INFO) << GREEN << std::hex << "Chip address 0x" << BOLDYELLOW << std::uppercase << chipAddrRx << RESET << GREEN << ". Reg address 0x" << BOLDYELLOW << std::uppercase << regAddrRx << RESET
-              << GREEN << ". Nb of words received 0x" << BOLDYELLOW << std::uppercase << nWords2Read << RESET << GREEN << ". FIFO readback data 0x" << BOLDYELLOW << std::uppercase << cRead << RESET
-              << GREEN << ". FIFO empty flag " << BOLDYELLOW << (isRxFIFOempty == true ? "true" : "false") << std::dec << RESET;
-    */
+    // LOG(INFO) << GREEN << std::hex << "Chip address 0x" << BOLDYELLOW << std::uppercase << chipAddrRx << RESET << GREEN << ". Reg address 0x" << BOLDYELLOW << std::uppercase << regAddrRx << RESET
+    //           << GREEN << ". Nb of words received 0x" << BOLDYELLOW << std::uppercase << nWords2Read << RESET << GREEN << ". FIFO readback data 0x" << BOLDYELLOW << std::uppercase << cRead << RESET
+    //           << GREEN << ". FIFO empty flag " << BOLDYELLOW << (isRxFIFOempty == true ? "true" : "false") << std::dec << RESET;
+
     return cRead;
 }
+
+void RD53FWInterface::SetActiveLink(const uint32_t linkNumber) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", linkNumber); }
 
 // ###########################################
 // # Member functions to handle the firmware #

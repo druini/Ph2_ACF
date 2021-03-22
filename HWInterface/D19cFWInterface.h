@@ -738,8 +738,8 @@ class D19cFWInterface : public BeBoardFWInterface
     uint8_t  flpGBTAddress = 0x70;
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
     void     ResetOptoLink() override;
-    bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(uint32_t pAddress) override;
+    bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
+    uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress) override;
 };
 } // namespace Ph2_HwInterface
 

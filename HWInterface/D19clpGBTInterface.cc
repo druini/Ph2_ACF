@@ -65,7 +65,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     }
     // Now pick one configuration mode
     if(fUseOpticalLink)
-        fBoardFW->WriteOptoLinkRegister(pAddress, pValue, pVerifLoop);
+        fBoardFW->WriteOptoLinkRegister(pChip->getId(), pAddress, pValue, pVerifLoop);
     else
     {
         // use PS-ROH test card USB interface
@@ -81,7 +81,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     {
         // Now pick one configuration mode
         if(fUseOpticalLink)
-            fBoardFW->WriteOptoLinkRegister(pAddress, pValue, pVerifLoop);
+            fBoardFW->WriteOptoLinkRegister(pChip->getId(), pAddress, pValue, pVerifLoop);
         else
         {
             // use PS-ROH test card USB interface
@@ -104,7 +104,7 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
 {
     setBoard(pChip->getBeBoardId());
     uint16_t cReadBack = 0;
-    if(fUseOpticalLink) { cReadBack = fBoardFW->ReadOptoLinkRegister(pAddress); }
+    if(fUseOpticalLink) { cReadBack = fBoardFW->ReadOptoLinkRegister(pChip->getId(), pAddress); }
     else
     {
 // use PS-ROH test card USB interface
