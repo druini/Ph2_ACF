@@ -232,18 +232,24 @@ The following procedure will install (in order):
 6. tools for clang, including `clang-format`
 
 ```bash
-sudo yum install -y git-extras
+# Libraries needed by Ph2_ACF
 sudo yum install -y boost-devel pugixml-devel
+
+# uHAL libraries (cactus)
 sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo \
   -o /etc/yum.repos.d/ipbus-sw.repo
+sudo yum-config-manager --enable powertools
 sudo yum clean all
-sudo yum install -y cactuscore-controlhub cactuscore-uhal-grammars cactuscore-uhal-log \
-  cactuscore-uhal-python36 cactuscore-uhal-python36 cactuscore-uhal-python38 \
-  cactuscore-uhal-python38 cactuscore-uhal-tests cactuscore-uhal-tools cactuscore-uhal-uhal 
+sudo yum groupinstall uhal
+
+# ROOT
 sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
   root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+
+# Build tools and some nice git extras
 sudo yum install -y cmake
 sudo yum install -y clang-tools-extra
+sudo yum install -y git-extras
 ```
 
 ### clang-format (required to submit merge requests!!!)
