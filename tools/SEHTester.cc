@@ -355,6 +355,8 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     // time_t startTime;
     // time(&startTime);
 #ifdef __USE_ROOT__
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
     struct timespec startTime, timer;
     srand(time(NULL));
 
@@ -366,11 +368,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     // clock_gettime(CLOCK_REALTIME, &start);
     clock_gettime(CLOCK_MONOTONIC, &startTime);
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
     fTC_USB->set_HV(true, false, false, pHvDacValue);
-#endif
-#endif
     // Create TTree for leakage current
     auto cLeakTree = new TTree("tLeakTree", "Leakage Current");
     // Create variables for TTree branches
@@ -394,14 +392,9 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
         // time_t timer;
         // time(&timer);
         clock_gettime(CLOCK_MONOTONIC, &timer);
-
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
         fTC_USB->read_hvmon(fTC_USB->Mon, UMon);
         std::this_thread::sleep_for(std::chrono::milliseconds(1000 + iMilli));
         fTC_USB->read_hvmon(fTC_USB->HV_meas, ILeak);
-#endif
-#endif
         cILeakValVect.push_back(double(ILeak));
         cUMonValVect.push_back(UMon);
         // cTimeValVect.push_back(timer-startTime);
@@ -443,8 +436,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 
     // cEfficencyCanvas->BuildLegend();
     cMonCanvas->Write();
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
+
     fTC_USB->set_HV(false, false, false, 0);
 #endif
 #endif
