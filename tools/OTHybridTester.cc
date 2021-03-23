@@ -416,7 +416,8 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            clpGBTInterface->ConfigureGPIODirection(cOpticalGroup->flpGBT, pGPIOs, pLevel);
+            LOG(INFO) << BOLDBLUE << "Set levels to "<< +pLevel << RESET;
+            clpGBTInterface->ConfigureGPIODirection(cOpticalGroup->flpGBT, pGPIOs, 1);
             clpGBTInterface->ConfigureGPIOLevel(cOpticalGroup->flpGBT, pGPIOs, pLevel);
         }
     }
@@ -425,8 +426,8 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
 bool OTHybridTester::LpGBTTestResetLines()
 {
     bool                                    cValid = true;
-    bool                                    cStatus=true;
-    std::vector<std::pair<std::string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
+    
+    std::vector<std::pair<std::string, uint8_t>> cLevels = { {"High", 1},{"Low", 0}};
 #ifdef __TCUSB__
     float cMeasurement;
 #ifdef __ROH_USB__
@@ -439,23 +440,29 @@ bool OTHybridTester::LpGBTTestResetLines()
 
     for(auto cLevel: cLevels)
     {
+        
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
-
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         auto cMapIterator = cResetLines.begin();
-
+        bool                                    cStatus=true;
         do
         {
+            
 #ifdef __ROH_USB__
             fTC_USB->adc_get(cMapIterator->second, cMeasurement);
 #elif __SEH_USB__
             fTC_USB->read_reset(cMapIterator->second, cMeasurement);
 #endif
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
-            cValid               = cValid && (cDifference_mV <= 100);
-            if(cDifference_mV > 100)
+            cStatus = cStatus && (cDifference_mV <= 100);
+            cValid               = cValid && cStatus;
+             
+            if(cDifference_mV > 100){
                 LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
-            else
+                fillSummaryTree(cMapIterator->first.c_str()+cLevel.first, 0);}
+            else{
                 LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
+                fillSummaryTree(cMapIterator->first.c_str()+cLevel.first, 1);}
             cMapIterator++;
         } while(cMapIterator != cResetLines.end());
         if(cStatus)
@@ -464,6 +471,11 @@ bool OTHybridTester::LpGBTTestResetLines()
             LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
     }
 #endif
+    if (cValid) {
+        LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET;
+    } else {
+        LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
+    }
     return cValid;
 }
 

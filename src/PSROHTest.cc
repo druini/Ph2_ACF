@@ -261,8 +261,10 @@ int main(int argc, char* argv[])
         {
             uint8_t cFCMDPattern = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
             cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
+            cPSROHTester.LpGBTFastCommandChecker(cFCMDPattern);
         }
-        cPSROHTester.FastCommandScope();
+        else{
+        cPSROHTester.FastCommandScope();}
     }
 
     if(cDebug)
