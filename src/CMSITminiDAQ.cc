@@ -308,7 +308,7 @@ int main(int argc, char** argv)
     {
         SystemController mySysCntr;
 
-        if((reset == true) || (binaryFile != "") || (whichCalib == "prbstime") || (whichCalib == "prbsframes"))
+        if((reset == true) || (binaryFile != ""))
         {
             // ######################################
             // # Reset hardware or read binary file #
@@ -358,7 +358,7 @@ int main(int argc, char** argv)
             la.analyze();
             la.draw();
         }
-        if(whichCalib == "datarbopt")
+        else if(whichCalib == "datarbopt")
         {
             // ##################################
             // # Run Data Readback Optimization #
@@ -370,7 +370,6 @@ int main(int argc, char** argv)
             dro.Inherit(&mySysCntr);
             dro.localConfigure(fileName, runNumber);
             dro.run();
-            dro.analyze();
             dro.draw();
         }
         else if(whichCalib == "pixelalive")

@@ -75,8 +75,18 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t cFWminute  = RegManager::ReadReg("user.stat_regs.fw_date.minute");
     uint32_t cFWseconds = RegManager::ReadReg("user.stat_regs.fw_date.seconds");
 
-    LOG(INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor << BOLDBLUE << " -- date (yy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/"
-              << cFWday << BOLDBLUE << " -- time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
+    uint32_t cLinkType   = RegManager::ReadReg("user.stat_regs.global_reg.link_type");
+    uint32_t cOptSpeed   = RegManager::ReadReg("user.stat_regs.global_reg.optical_speed");
+    uint32_t cFEtype     = RegManager::ReadReg("user.stat_regs.global_reg.front_end_type");
+    uint32_t cL12FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l12_type");
+    uint32_t cL08FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l8_type");
+
+    LOG(INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor << BOLDBLUE << " -- Date (yy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/"
+              << cFWday << BOLDBLUE << " -- Time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Link type : " << BOLDYELLOW << (cLinkType == 0 ? "electrical" : "optical") << BOLDBLUE << " -- Optical speed : " << BOLDYELLOW
+              << (cOptSpeed == 0 ? "10 Gbit/s" : "5 Gbit/s") << BOLDBLUE << " -- Frontend type : " << BOLDYELLOW << (cFEtype == 1 ? "RD53A" : "RD53B") << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> L12 FMC type : " << BOLDYELLOW << cL12FMCtype << BOLDBLUE << " -- L08 FMC type : " << BOLDYELLOW << cL08FMCtype << BOLDBLUE
+              << " (1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=Unspecified)" << RESET;
 
     RD53FWInterface::ChipReset();
     RD53FWInterface::ChipReSync();
@@ -208,6 +218,7 @@ void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& da
     // #####################
     if(RegManager::ReadReg("user.stat_regs.slow_cmd.error_flag") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
     if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false) LOG(ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
+    if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
 
     // ##########
     // # Header #
@@ -310,13 +321,13 @@ void RD53FWInterface::PrintFWstatus()
               << RESET;
 
     fastCMDReg = RegManager::ReadReg("user.stat_regs.fast_cmd.trigger_state");
-    LOG(INFO) << GREEN << "Fast command block trigger state: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (0=idle, 2=running)" << RESET;
+    LOG(INFO) << GREEN << "Fast command block trigger state: " << BOLDYELLOW << fastCMDReg << RESET << GREEN << " (0=Idle, 2=Running)" << RESET;
 
     fastCMDReg = RegManager::ReadReg("user.stat_regs.fast_cmd.if_configured");
     LOG(INFO) << GREEN << "Fast command block check if configuraiton registers have been set: " << BOLDYELLOW << (fastCMDReg == true ? "configured" : "not configured") << RESET;
 
     fastCMDReg = RegManager::ReadReg("user.stat_regs.fast_cmd.error_code");
-    LOG(INFO) << GREEN << "Fast command block error code (0=no error): " << BOLDYELLOW << fastCMDReg << RESET;
+    LOG(INFO) << GREEN << "Fast command block error code (0=No error): " << BOLDYELLOW << fastCMDReg << RESET;
 
     // ###########################
     // # Check trigger registers #
@@ -328,7 +339,7 @@ void RD53FWInterface::PrintFWstatus()
     // # Check hybrid registers #
     // ##########################
     uint32_t hybrid = RegManager::ReadReg("user.stat_regs.aurora_rx.Module_type");
-    LOG(INFO) << GREEN << "Hybrid type: " << BOLDYELLOW << hybrid << RESET << GREEN " (1=single chip, 2=double chip, 4=quad chip)" << RESET;
+    LOG(INFO) << GREEN << "Hybrid type: " << BOLDYELLOW << hybrid << RESET << GREEN " (1=Single chip, 2=Double chip, 4=Quad chip)" << RESET;
 
     hybrid = RegManager::ReadReg("user.stat_regs.aurora_rx.Nb_of_modules");
     LOG(INFO) << GREEN << "Number of hybrids which can be potentially readout: " << BOLDYELLOW << hybrid << RESET;
@@ -454,6 +465,7 @@ std::vector<uint16_t> RD53FWInterface::GetInitSequence(const unsigned int type)
         for(unsigned int i = 0; i < 500; i++) initSequence.push_back(0x0000);  // 0000 0000
         for(unsigned int i = 0; i < 2000; i++) initSequence.push_back(0xCCCC); // 1100 1100
         break;
+
     case 1:                                                                    // Seen to be good for some TBPX hybrids
         for(unsigned int i = 0; i < 1000; i++) initSequence.push_back(0xFFFF); // 1111 1111
         for(unsigned int i = 0; i < 500; i++) initSequence.push_back(0x3333);  // 0011 0011
@@ -686,8 +698,11 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     // @TMP@
     if(cfg->autozero_source == AutozeroSource::FastCMDFSM)
     {
-        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 15).getFrames(), -1); // Prepare GLOBAL_PULSE_RT to reset autozero level in SYNC FE
-        WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1); // Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
+        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 15).getFrames(),
+                                          -1); // Prepare GLOBAL_PULSE_RT to reset autozero level in SYNC FE
+        RD53FWInterface::WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, 0x0004).getFrames(), -1);
+        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(),
+                                          -1); // Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
     }
 
     // ##################################
@@ -726,7 +741,7 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
                                // # @TMP@ Autozero configuration #
                                // ################################
                                {"user.ctrl_regs.fast_cmd_reg_2.autozero_source", (uint32_t)cfg->autozero_source},
-                               {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, 8, 0)}});
+                               {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, 0x0008, 0)}});
 
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
 }
@@ -926,8 +941,11 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
     LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << mgtStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
 }
 
-bool RD53FWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop)
+bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
 {
+    // OptoChip ID
+    RD53FWInterface::SetActiveLink(linkNumber);
+
     // Config
     RegManager::WriteStackReg(
         {{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_din", pData}, {"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", RD53lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
@@ -940,7 +958,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, b
 
     if(pVerifLoop == true)
     {
-        uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(pAddress);
+        uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(linkNumber, pAddress);
         if(cReadBack != pData)
         {
             LOG(ERROR) << BOLDRED << "[RD53FWInterface::WriteOpticalLinkRegiser] Register readback failure for register 0x" << BOLDYELLOW << std::hex << std::uppercase << pAddress << std::dec
@@ -952,8 +970,11 @@ bool RD53FWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, b
     return true;
 }
 
-uint32_t RD53FWInterface::ReadOptoLinkRegister(uint32_t pAddress)
+uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress)
 {
+    // OptoChip ID
+    RD53FWInterface::SetActiveLink(linkNumber);
+
     // Config
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", RD53lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
 
@@ -964,18 +985,20 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(uint32_t pAddress)
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x0}});
     uint32_t cRead = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_fifo_dout");
 
-    /* @TMP@
-    uint32_t chipAddrRx  = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_chip_addr"); // Should be the same as RD53lpGBTconstants::LPGBTADDRESS
-    uint32_t regAddrRx   = RegManager::ReadReg("user.stat_regs.lpgbt_sc_2.reg_addr_rx");
-    uint32_t nWords2Read = RegManager::ReadReg("user.stat_regs.lpgbt_sc_2.nb_of_words_rx");
-    bool     isRxFIFOempty = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
+    // @TMP@
+    // uint32_t chipAddrRx    = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_chip_addr"); // Should be the same as RD53lpGBTconstants::LPGBTADDRESS
+    // uint32_t regAddrRx     = RegManager::ReadReg("user.stat_regs.lpgbt_sc_2.reg_addr_rx");
+    // uint32_t nWords2Read   = RegManager::ReadReg("user.stat_regs.lpgbt_sc_2.nb_of_words_rx");
+    // bool     isRxFIFOempty = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
 
-    LOG(INFO) << GREEN << std::hex << "Chip address 0x" << BOLDYELLOW << std::uppercase << chipAddrRx << RESET << GREEN << ". Reg address 0x" << BOLDYELLOW << std::uppercase << regAddrRx << RESET
-              << GREEN << ". Nb of words received 0x" << BOLDYELLOW << std::uppercase << nWords2Read << RESET << GREEN << ". FIFO readback data 0x" << BOLDYELLOW << std::uppercase << cRead << RESET
-              << GREEN << ". FIFO empty flag " << BOLDYELLOW << (isRxFIFOempty == true ? "true" : "false") << std::dec << RESET;
-    */
+    // LOG(INFO) << GREEN << std::hex << "Chip address 0x" << BOLDYELLOW << std::uppercase << chipAddrRx << RESET << GREEN << ". Reg address 0x" << BOLDYELLOW << std::uppercase << regAddrRx << RESET
+    //           << GREEN << ". Nb of words received 0x" << BOLDYELLOW << std::uppercase << nWords2Read << RESET << GREEN << ". FIFO readback data 0x" << BOLDYELLOW << std::uppercase << cRead << RESET
+    //           << GREEN << ". FIFO empty flag " << BOLDYELLOW << (isRxFIFOempty == true ? "true" : "false") << std::dec << RESET;
+
     return cRead;
 }
+
+void RD53FWInterface::SetActiveLink(const uint32_t linkNumber) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", linkNumber); }
 
 // ###########################################
 // # Member functions to handle the firmware #
@@ -1232,7 +1255,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 // # Bit Error Rate test #
 // #######################
 
-bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed)
+double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed)
 // ####################
 // # 1.28 Gbit/s  = 0 #
 // # 640 Mbit/s   = 1 #
@@ -1265,8 +1288,7 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
     // Configure number of printouts and calculate the frequency of printouts
     double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
-    WriteStackReg({{"user.ctrl_regs.PRBS_checker.upgroup_addr", optGroup_id},
-                   {"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
+    WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
                    {"user.ctrl_regs.PRBS_checker.chip_address", chip_id},
                    {"user.ctrl_regs.PRBS_checker.reset_cntr", 1},
                    {"user.ctrl_regs.PRBS_checker.reset_cntr", 0}});
@@ -1285,8 +1307,8 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
     WriteStackReg({{"user.ctrl_regs.PRBS_checker.start_checker", 1}, {"user.ctrl_regs.PRBS_checker.start_checker", 0}});
 
     LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << RESET;
-    bool run_done = false;
-    int  idx      = 1;
+    bool     run_done     = false;
+    int      idx          = 1;
     uint64_t frameCounter = 0;
     while(run_done == false)
     {
@@ -1298,7 +1320,7 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
         if(bits::pack<32, 32>(cntr_hi, cntr_lo) == frameCounter)
         {
             LOG(ERROR) << BOLDRED << "BER test stopping because no clock was detected for this chip" << RESET;
-            return false;
+            return -1;
         }
         frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
 
@@ -1328,7 +1350,7 @@ bool RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_
     LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
-    return (nErrors == 0);
+    return nErrors;
 }
 
 } // namespace Ph2_HwInterface

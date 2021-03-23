@@ -22,12 +22,13 @@ void DataReadbackOptimization::ConfigureCalibration()
     colStart       = this->findValueInSettings("COLstart");
     colStop        = this->findValueInSettings("COLstop");
     nEvents        = this->findValueInSettings("nEvents");
-    startValueTAP0 = this->findValueInSettings("StartValueTAP0");
-    stopValueTAP0  = this->findValueInSettings("StopValueTAP0");
-    startValueTAP1 = this->findValueInSettings("StartValueTAP1");
-    stopValueTAP1  = this->findValueInSettings("StopValueTAP1");
-    startValueTAP2 = this->findValueInSettings("StartValueTAP2");
-    stopValueTAP2  = this->findValueInSettings("StopValueTAP2");
+    startValueTAP0 = this->findValueInSettings("TAP0Start");
+    stopValueTAP0  = this->findValueInSettings("TAP0Stop");
+    startValueTAP1 = this->findValueInSettings("TAP1Start");
+    stopValueTAP1  = this->findValueInSettings("TAP1Stop");
+    startValueTAP2 = this->findValueInSettings("TAP2Start");
+    stopValueTAP2  = this->findValueInSettings("TAP2Stop");
+    timeXstep      = this->findValueInSettings("TimePerStep");
     doDisplay      = this->findValueInSettings("DisplayHisto");
     doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings("SaveBinaryData");
@@ -35,24 +36,27 @@ void DataReadbackOptimization::ConfigureCalibration()
     // ##############################
     // # Initialize dac scan values #
     // ##############################
-    const size_t minNsteps = 10;
-
-    size_t nSteps = (stopValueTAP0 - startValueTAP0 + 1 >= minNsteps ? minNsteps : stopValueTAP0 - startValueTAP0 + 1);
-    size_t step   = (nSteps == minNsteps ? floor((stopValueTAP0 - startValueTAP0 + 1.) / minNsteps) : 1);
+    size_t nSteps = (stopValueTAP0 - startValueTAP0 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP0 - startValueTAP0 + 1);
+    size_t step   = floor((stopValueTAP0 - startValueTAP0 + 1) / nSteps);
     for(auto i = 0u; i < nSteps; i++) dacListTAP0.push_back(startValueTAP0 + step * i);
 
-    nSteps = (stopValueTAP1 - startValueTAP1 + 1 >= minNsteps ? minNsteps : stopValueTAP1 - startValueTAP1 + 1);
-    step   = (nSteps == minNsteps ? floor((stopValueTAP1 - startValueTAP1 + 1.) / minNsteps) : 1);
+    nSteps = (stopValueTAP1 - startValueTAP1 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP1 - startValueTAP1 + 1);
+    step   = floor((stopValueTAP1 - startValueTAP1 + 1) / nSteps);
     for(auto i = 0u; i < nSteps; i++) dacListTAP1.push_back(startValueTAP1 + step * i);
 
-    nSteps = (stopValueTAP2 - startValueTAP2 + 1 >= minNsteps ? minNsteps : stopValueTAP2 - startValueTAP2 + 1);
-    step   = (nSteps == minNsteps ? floor((stopValueTAP2 - startValueTAP2 + 1.) / minNsteps) : 1);
+    nSteps = (stopValueTAP2 - startValueTAP2 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP2 - startValueTAP2 + 1);
+    step   = floor((stopValueTAP2 - startValueTAP2 + 1) / nSteps);
     for(auto i = 0u; i < nSteps; i++) dacListTAP2.push_back(startValueTAP2 + step * i);
 
     // #######################
     // # Initialize progress #
     // #######################
     RD53RunProgress::total() += DataReadbackOptimization::getNumberIterations();
+
+    // ############################################################
+    // # Create directory for: raw data, config files, histograms #
+    // ############################################################
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
 }
 
 void DataReadbackOptimization::Running()
@@ -67,7 +71,6 @@ void DataReadbackOptimization::Running()
     }
 
     DataReadbackOptimization::run();
-    DataReadbackOptimization::analyze();
     DataReadbackOptimization::saveChipRegisters(theCurrentRun);
     DataReadbackOptimization::sendData();
 }
@@ -88,13 +91,13 @@ void DataReadbackOptimization::sendData()
     if(fStreamerEnabled == true)
     {
         for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTAP0Containet) theStreamTAP0.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theTAP0Container) theStreamTAP0.streamAndSendBoard(cBoard, fNetworkStreamer);
 
         for(const auto cBoard: theTAP1scanContainer) theStreamTAP1scan.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTAP1Containet) theStreamTAP1.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theTAP1Container) theStreamTAP1.streamAndSendBoard(cBoard, fNetworkStreamer);
 
         for(const auto cBoard: theTAP2scanContainer) theStreamTAP2scan.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTAP2Containet) theStreamTAP2.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theTAP2Container) theStreamTAP2.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
 
@@ -149,12 +152,18 @@ void DataReadbackOptimization::run()
     ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize>>(*fDetectorContainer, theTAP1scanContainer);
     ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize>>(*fDetectorContainer, theTAP2scanContainer);
 
-    // Set TAP1 and TAP2 @TMP@
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x0);
     DataReadbackOptimization::scanDac("CML_TAP0_BIAS", dacListTAP0, nEvents, &theTAP0scanContainer);
-    // Set TAP0 and TAP2 @TMP@
+    DataReadbackOptimization::analyze("CML_TAP0_BIAS", dacListTAP0, theTAP0scanContainer, theTAP0Container);
+
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x1);
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_INV_TAP", 0x1);
     DataReadbackOptimization::scanDac("CML_TAP1_BIAS", dacListTAP1, nEvents, &theTAP1scanContainer);
-    // Set TAP0 and TAP1 @TMP@
+    DataReadbackOptimization::analyze("CML_TAP1_BIAS", dacListTAP1, theTAP1scanContainer, theTAP1Container);
+
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x2);
     DataReadbackOptimization::scanDac("CML_TAP2_BIAS", dacListTAP2, nEvents, &theTAP2scanContainer);
+    DataReadbackOptimization::analyze("CML_TAP2_BIAS", dacListTAP2, theTAP2scanContainer, theTAP2Container);
 
     // ################
     // # Error report #
@@ -185,87 +194,42 @@ void DataReadbackOptimization::draw(bool saveData)
 #endif
 }
 
-void DataReadbackOptimization::analyze()
+void DataReadbackOptimization::analyze(const std::string& regName, const std::vector<uint16_t>& dacListTAP, const DetectorDataContainer& theTAPscanContainer, DetectorDataContainer& theTAPContainer)
 {
     const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theTAP0Containet);
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theTAP1Containet);
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theTAP2Containet);
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theTAPContainer);
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    auto best   = 0.;
-                    int  regVal = 0;
+                    auto best = *std::max_element(
+                        theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data,
+                        theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data +
+                            dacListTAP.size());
+                    int regVal = 0;
 
-                    for(auto i = 0u; i < dacListTAP0.size(); i++)
+                    for(auto i = 1u; i < dacListTAP.size(); i++)
                     {
                         auto current =
-                            theTAP0scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i];
-                        if(current > best)
+                            theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i];
+                        if(current < best)
                         {
-                            regVal = dacListTAP0[i];
+                            regVal = dacListTAP[i];
                             best   = current;
                         }
                     }
 
-                    LOG(INFO) << BOLDMAGENTA << ">>> Best TAP0 for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
+                    LOG(INFO) << BOLDMAGENTA << ">>> Best " << BOLDYELLOW << regName << BOLDMAGENTA << " for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
                               << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " <<<" << RESET;
 
                     // ######################################################
                     // # Fill latency container and download new DAC values #
                     // ######################################################
-                    theTAP0Containet.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CML_TAP0_BIAS", regVal, true);
-
-                    best   = 0.;
-                    regVal = 0;
-
-                    for(auto i = 0u; i < dacListTAP1.size(); i++)
-                    {
-                        auto current =
-                            theTAP1scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i];
-                        if(current > best)
-                        {
-                            regVal = dacListTAP1[i];
-                            best   = current;
-                        }
-                    }
-
-                    LOG(INFO) << BOLDMAGENTA << ">>> Best TAP1 for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
-                              << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " <<<" << RESET;
-
-                    // ######################################################
-                    // # Fill latency container and download new DAC values #
-                    // ######################################################
-                    theTAP1Containet.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CML_TAP1_BIAS", regVal, true);
-
-                    best   = 0.;
-                    regVal = 0;
-
-                    for(auto i = 0u; i < dacListTAP2.size(); i++)
-                    {
-                        auto current =
-                            theTAP2scanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i];
-                        if(current > best)
-                        {
-                            regVal = dacListTAP2[i];
-                            best   = current;
-                        }
-                    }
-
-                    LOG(INFO) << BOLDMAGENTA << ">>> Best TAP2 for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
-                              << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " <<<" << RESET;
-
-                    // ######################################################
-                    // # Fill latency container and download new DAC values #
-                    // ######################################################
-                    theTAP2Containet.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CML_TAP2_BIAS", regVal, true);
+                    theTAPContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, regVal);
                 }
 }
 
@@ -273,19 +237,19 @@ void DataReadbackOptimization::fillHisto()
 {
 #ifdef __USE_ROOT__
     histos->fillScanTAP0(theTAP0scanContainer);
-    histos->fillTAP0(theTAP0Containet);
+    histos->fillTAP0(theTAP0Container);
 
     histos->fillScanTAP1(theTAP1scanContainer);
-    histos->fillTAP1(theTAP1Containet);
+    histos->fillTAP1(theTAP1Container);
 
     histos->fillScanTAP2(theTAP2scanContainer);
-    histos->fillTAP2(theTAP2Containet);
+    histos->fillTAP2(theTAP2Container);
 #endif
 }
 
 void DataReadbackOptimization::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-    const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    const size_t TAPsize  = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
     for(auto i = 0u; i < dacList.size(); i++)
     {
@@ -298,20 +262,28 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
         // ################
         // # Run analysis #
         // ################
-        // Run BERtest @TMP@
+        for(const auto cBoard: *fDetectorContainer)
+        {
+            uint32_t frontendSpeed = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
 
-        // ###############
-        // # Save output #
-        // ###############
-        for(const auto cBoard: *fDetectorContainer) // @TMP@
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
-                        // float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+                        fReadoutChipInterface->StartPRBSpattern(cChip);
+
                         theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i] =
-                            0; // @TMP@
+                            fBeBoardFWMap[cBoard->getId()]->RunBERtest(true, timeXstep, 6, cHybrid->getId(), cChip->getId(), frontendSpeed); // @TMP@
+
+                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
+
+                        fReadoutChipInterface->StopPRBSpattern(cChip);
+
+                        // @TMP@
+                        // static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_TAP0_BIAS", RD53Shared::setBits(cChip->getRegItem(regName).fBitSize));
+                        // static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_TAP1_BIAS", 0);
                     }
+        }
 
         // ##############################################
         // # Send periodic data to minitor the progress #
@@ -320,10 +292,8 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
     }
 }
 
-void DataReadbackOptimization::chipErrorReport()
+void DataReadbackOptimization::chipErrorReport() const
 {
-    auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
-
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -331,20 +301,7 @@ void DataReadbackOptimization::chipErrorReport()
                 {
                     LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                               << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8)
-                              << "" << RESET;
-                    LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8)
-                              << "" << RESET;
-                    LOG(INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8)
-                              << "" << RESET;
-                    LOG(INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "CMDERR_CNT") << std::setfill(' ') << std::setw(8)
-                              << "" << RESET;
-                    LOG(INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "SKIPPED_TRIGGER_CNT") << std::setfill(' ')
-                              << std::setw(8) << "" << RESET;
-                    LOG(INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BCID_CNT") << std::setfill(' ') << std::setw(8) << ""
-                              << RESET;
-                    LOG(INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "TRIG_CNT") << std::setfill(' ') << std::setw(8) << ""
-                              << RESET;
+                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->ChipErrorReport(cChip);
                 }
 }
 

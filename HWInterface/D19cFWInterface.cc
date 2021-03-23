@@ -4225,7 +4225,7 @@ void D19cFWInterface::ResetOptoLink()
     this->WriteStackReg(cVecReg);
 }
 
-bool D19cFWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop)
+bool D19cFWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
 {
     // Reset
     ResetOptoLink();
@@ -4242,7 +4242,7 @@ bool D19cFWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, b
     return true;
 }
 
-uint32_t D19cFWInterface::ReadOptoLinkRegister(uint32_t pAddress)
+uint32_t D19cFWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress)
 {
     // Reset
     ResetOptoLink();

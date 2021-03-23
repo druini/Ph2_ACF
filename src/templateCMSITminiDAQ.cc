@@ -115,7 +115,7 @@ int main(int argc, char** argv)
         // # Read binary file and decode events #
         // ######################################
         readBinaryData(binaryFile, mySysCntr, RD53Event::decodedEvents);
-        RD53Event::PrintEvents(RD53Event::decodedEvents);
+        // RD53Event::PrintEvents(RD53Event::decodedEvents);
     }
     else
     {
