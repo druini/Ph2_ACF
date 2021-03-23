@@ -359,8 +359,8 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     srand(time(NULL));
 
     /* generate secret number between 1 and 10: */
-    int iSecond;
-    int iMilli;
+    // int iSecond;
+    // int iMilli;
 
     // start timer.
     // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
@@ -386,9 +386,9 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     double time_taken;
     do
     {
-        iSecond = rand() % 2;
-        iMilli  = rand() % 1000;
-        LOG(INFO) << BOLDBLUE << "Seconds " << +iSecond << " Milli " << +iMilli << RESET;
+        // iSecond = rand() % 2;
+        // iMilli  = rand() % 1000;
+        // LOG(INFO) << BOLDBLUE << "Seconds " << +iSecond << " Milli " << +iMilli << RESET;
         float ILeak = 0;
         float UMon  = 0;
         // time_t timer;
@@ -398,7 +398,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
         fTC_USB->read_hvmon(fTC_USB->Mon, UMon);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000 + iMilli));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         fTC_USB->read_hvmon(fTC_USB->HV_meas, ILeak);
 #endif
 #endif
@@ -410,7 +410,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
         time_taken = (time_taken + (timer.tv_nsec - startTime.tv_nsec)) * 1e-9;
         cTimeValVect.push_back(time_taken);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(2500 + 1000 * iSecond + iMilli));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2500));
     } while(time_taken < measurementTime);
     cLeakTree->Fill();
     fResultFile->cd();
