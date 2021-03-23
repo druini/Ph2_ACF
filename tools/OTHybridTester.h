@@ -34,9 +34,9 @@
 #include "USB_a.h"
 #endif
 
+#include <cstring>
 #include <map>
 #include <string>
-#include <cstring>
 
 using namespace Ph2_HwDescription;
 

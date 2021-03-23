@@ -186,12 +186,7 @@ int main(int argc, char* argv[])
     /****************************/
     /* TEST RESET LINES (GPIOs) */
     /****************************/
-    if(cmd.foundOption("testReset"))
-    {
-        
-            bool cStatus = cPSROHTester.LpGBTTestResetLines();
-            
-    }
+    if(cmd.foundOption("testReset")) { bool cStatus = cPSROHTester.LpGBTTestResetLines(); }
 
     // Test VTRx+ slow control
 
@@ -263,8 +258,10 @@ int main(int argc, char* argv[])
             cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
             cPSROHTester.LpGBTFastCommandChecker(cFCMDPattern);
         }
-        else{
-        cPSROHTester.FastCommandScope();}
+        else
+        {
+            cPSROHTester.FastCommandScope();
+        }
     }
 
     if(cDebug)
