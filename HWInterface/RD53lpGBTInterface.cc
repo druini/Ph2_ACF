@@ -68,8 +68,8 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     RD53lpGBTInterface::ConfigureClocks(pChip, {28}, 6, 7, 0, 0, 0, 0);
 
     RD53lpGBTInterface::ConfigureRxGroups(pChip, {6}, {0}, 3, 0);
-    RD53lpGBTInterface::ConfigureRxChannels(pChip, {6}, {0}, 0, 1, 1, 0, 0);
-    RD53lpGBTInterface::PhaseAlignRx(pChip, {6}, {0});
+    RD53lpGBTInterface::ConfigureRxChannels(pChip, {6}, {0}, 1, 1, 1, 0, 7);
+    // RD53lpGBTInterface::PhaseAlignRx(pChip, {6}, {0}); // @TMP@
 
     RD53lpGBTInterface::ConfigureTxGroups(pChip, {3}, {0}, 2);
     RD53lpGBTInterface::ConfigureTxChannels(pChip, {3}, {0}, 3, 3, 0, 0, 1);
