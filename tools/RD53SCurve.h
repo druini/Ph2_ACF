@@ -73,7 +73,7 @@ class SCurve : public Tool
 
     void fillHisto();
     void computeStats(const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
-    void chipErrorReport();
+    void chipErrorReport() const;
 
   protected:
     std::string fileRes;

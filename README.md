@@ -10,18 +10,20 @@
 ###  A short guide to write the GoldenImage to the SD card
 
 1. Connect the SD card
-2. Download the golden firmware from https://indico.cern.ch/event/842824/attachments/1920624/3178547/sdgoldenimage.img
+2. Download the golden firmware from [our downloads section](../Downloads/sdgoldenimage.img)
 3. `sudo fdisk -l` - find the name of the SD card (for example, /dev/mmcblk0)
 4. `sudo chmod 744 /dev/sd_card_name` - to be able to play with it
-5. `./imgtool /dev/sd_card_name format Firmware` - to format the SD card
-6. Go to the folder were you saved the sdgoldenimage.img file
-7. `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512` - to write the image to the SD card. Alternatively, to only copy the needed bytes: `imageName=sdgoldenimage.img; dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device coun
-t=$(ls -s --block-size=1 $imageName | awk '{print $1}')`. If the SD card is partitioned (formatted), pay attention to write on the block devive (e.g. `/dev/mmcblk0`) and not inside the partition (e.g. `/dev/mmcblk0p1`)
-8. Once the previous command is done, you can list the SD card: `./imgtool /dev/sd_card_name list` - there should be a GoldenImage.bin, with 20MB block size
-9. Insert the SD card into the FC7
+5. Go to the folder were you saved the sdgoldenimage.img file
+6. `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512` - to write the image to the SD card.
+If the SD card is partitioned (formatted), pay attention to write on the block device (e.g. `/dev/mmcblk0`) and not inside the partition (e.g. `/dev/mmcblk0p1`)
+7. Once the previous command is done, you can list the SD card: `./imgtool /dev/sd_card_name list` - there should be a GoldenImage.bin, with 20MB block size
+8. Insert the SD card into the FC7
 
-Use the guide (https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/IPAddress_Tutorial.md) to find the MAC address of the FC7 (Wireshark option) and to set the proper IP <br/>
-More informations can be found at https://indico.cern.ch/event/842824/attachments/1920624/3177632/PreparingFC7.pdf
+Alternatively, instead of the `dd` command above, to only copy the needed bytes you can do:
+```bash
+imageName=sdgoldenimage.img
+dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --block-size=1 $imageName | awk '{print $1}')
+```
 <hr>
 
 
