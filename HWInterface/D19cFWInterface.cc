@@ -4074,6 +4074,7 @@ void D19cFWInterface::DisconnectMultiplexingSetup(uint8_t pWait_ms)
             c = true;
             std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
             CardsDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.cards_disconnected") == 1);
+            LOG(DEBUG) << BOLDBLUE << "Set-up scanned : " << +ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") << RESET;
         }
 
         while(!BackplanesDisconnected)
@@ -4082,6 +4083,7 @@ void D19cFWInterface::DisconnectMultiplexingSetup(uint8_t pWait_ms)
             b = true;
             std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
             BackplanesDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplanes_disconnected") == 1);
+            LOG(DEBUG) << BOLDBLUE << "Set-up scanned : " << +ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") << RESET;
         }
 
         if(CardsDisconnected && BackplanesDisconnected)
@@ -4093,19 +4095,22 @@ void D19cFWInterface::DisconnectMultiplexingSetup(uint8_t pWait_ms)
 }
 
 // scan setup with multiplexing backplane
+// scan setup with multiplexing backplane
 uint32_t D19cFWInterface::ScanMultiplexingSetup(uint8_t pWait_ms)
 {
     int AvailableBackplanesCards = 0;
     this->DisconnectMultiplexingSetup();
-    WriteReg("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.backplane_num", 0xF);
-    WriteReg("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.card_num", 0xF);
-    std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
+
+    LOG(INFO) << BOLDBLUE << "Sending a global reset to the FC7 ..... " << RESET;
+    this->WriteReg("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
     bool ConfigurationRequired = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.configuration_required") == 1);
     bool SystemNotConfigured   = false;
     if(ConfigurationRequired)
     {
         SystemNotConfigured = true;
-        WriteReg("fc7_daq_ctrl.physical_interface_block.multiplexing_bp.setup_configure", 0x1);
+        WriteReg("fc7_daq_ctrl.physical_interface_block.multiplexing_bp.setup_scan", 0x1);
     }
 
     if(SystemNotConfigured == true)
@@ -4133,9 +4138,8 @@ uint32_t D19cFWInterface::ScanMultiplexingSetup(uint8_t pWait_ms)
 }
 
 // configure setup with multiplexing backplane
-uint32_t D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms)
+void D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms)
 {
-    uint32_t cAvailableCards = 0;
     this->DisconnectMultiplexingSetup();
     WriteReg("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.backplane_num", 0xF & ~(1 << (3 - BackplaneNum)));
     WriteReg("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.card_num", 0xF & ~(1 << (3 - CardNum)));
@@ -4146,29 +4150,16 @@ uint32_t D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardN
     {
         SystemNotConfigured = true;
         WriteReg("fc7_daq_ctrl.physical_interface_block.multiplexing_bp.setup_configure", 0x1);
-        cAvailableCards = ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.available_backplanes_cards");
+        std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
     }
 
     if(SystemNotConfigured == true)
     {
-        bool SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
-        bool s            = false;
-        LOG(INFO) << GREEN << "============================" << RESET;
-        LOG(INFO) << BOLDGREEN << "Scan setup" << RESET;
-        while(!SetupScanned)
-        {
-            if(s == false) LOG(INFO) << "Scanning setup";
-            s = true;
-            std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
-            SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
-        }
-
+        bool SetupScanned   = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
         bool BackplaneValid = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplane_valid") == 1);
         bool CardValid      = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.card_valid") == 1);
         if(SetupScanned)
         {
-            LOG(INFO) << GREEN << "============================" << RESET;
-            LOG(INFO) << BOLDGREEN << "Setup is scanned" << RESET;
             if(BackplaneValid) { LOG(INFO) << BLUE << "Backplane configuration VALID" << RESET; }
             else
             {
@@ -4181,9 +4172,9 @@ uint32_t D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardN
                 LOG(ERROR) << RED << "Card configuration is NOT VALID" << RESET;
                 exit(0);
             }
-            // LOG (INFO) << BLUE << AvailableBackplanesCards << RESET;
-            // printAvailableBackplanesCards(parseAvailableBackplanesCards(AvailableBackplanesCards,false));
         }
+        else
+            LOG(ERROR) << RED << "First you must scan the setup! Map of present backplanes and cards is not available!" << RESET;
 
         bool SetupConfigured = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_configured") == 1);
         bool c               = false;
@@ -4206,7 +4197,6 @@ uint32_t D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardN
             {
                 LOG(INFO) << GREEN << "============================" << RESET;
                 LOG(INFO) << BOLDGREEN << "Setup with backplane " << BackplaneNum << " and card " << CardNum << " is configured" << RESET;
-                cAvailableCards = ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.available_backplanes_cards");
             }
             else
             {
@@ -4215,7 +4205,6 @@ uint32_t D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardN
             }
         }
     }
-    return cAvailableCards;
 }
 // MPA specific
 void D19cFWInterface::Pix_write_MPA(Chip* cMPA, ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data)
