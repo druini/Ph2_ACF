@@ -655,6 +655,7 @@ class D19cFWInterface : public BeBoardFWInterface
     void PSInterfaceBoard_PowerOn(uint8_t mpaid = 0, uint8_t ssaid = 0);
     void PSInterfaceBoard_PowerOff();
 
+    void PSInterfaceBoard_PowerOn_MPASSA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, float VBF = 0.3, uint8_t mpaid = 0, uint8_t ssaid = 0);
     // MPA power on
     void PSInterfaceBoard_PowerOn_MPA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, uint8_t mpaid = 0, uint8_t ssaid = 0);
     void PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid = 0, uint8_t ssaid = 0);
@@ -726,14 +727,19 @@ class D19cFWInterface : public BeBoardFWInterface
      */
     uint32_t ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
 
+    // ##############################
+    // # Pseudo Random Bit Sequence #
+    // ##############################
+    bool RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override { return true; };
+
     // ############################
     // # Read/Write Optical Group #
     // ############################
     uint8_t  flpGBTAddress = 0x70;
-    void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty) override {}
-    void     ResetOptoLink(Ph2_HwDescription::Chip* pChip) override;
-    bool     WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress) override;
+    void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
+    void     ResetOptoLink() override;
+    bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
+    uint32_t ReadOptoLinkRegister(uint32_t pAddress) override;
 };
 } // namespace Ph2_HwInterface
 

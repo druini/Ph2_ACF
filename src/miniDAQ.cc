@@ -37,7 +37,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     uint32_t pEventsperVcth;
@@ -149,6 +149,7 @@ int main(int argc, char* argv[])
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
         cCicAligner.Start(0);
+        cCicAligner.waitForRunToBeCompleted();
         // reset all chip and board registers
         // to what they were before this tool was called
         cCicAligner.Reset();
@@ -169,7 +170,7 @@ int main(int argc, char* argv[])
 
         if(cN + cPacketSize >= pEventsperVcth) cTool.fBeBoardInterface->Stop(pBoard);
 
-        const std::vector<Event*>& events = cTool.GetEvents(pBoard);
+        const std::vector<Event*>& events = cTool.GetEvents();
         std::vector<DQMEvent*>     cDQMEvents;
 
         for(auto& ev: events)

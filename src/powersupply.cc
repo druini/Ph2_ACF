@@ -4,7 +4,9 @@
 #include "../Utils/argvparser.h"
 
 #ifdef __POWERSUPPLY__
+#include "DeviceHandler.h"
 #include "PowerSupply.h"
+#include "PowerSupplyChannel.h"
 #endif
 
 using namespace Ph2_HwDescription;
@@ -17,21 +19,24 @@ int main(int argc, char** argv)
 {
 #ifdef __POWERSUPPLY__
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
 
     // init
-    cmd.setIntroductoryDescription("CMS Ph2_ACF  system test application");
+    cmd.setIntroductoryDescription("CMS Ph2_ACF power supply example application");
     // error codes
     cmd.addErrorCode(0, "Success");
     cmd.addErrorCode(1, "Error");
     // options
-    cmd.setHelpOption("h", "help", "Print this help page");
+    cmd.setHelpOption("h", "help", "Example: powersupply -f CMSIT.xml --name TestKeithley --channel Front -v 1.8");
 
     cmd.defineOption("name", "Name of the power supply as described in the HW file", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("name", "n");
+
+    cmd.defineOption("channel", "Channel of the power supply as described in the HW file (e.g.: \"Front\")", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
+    cmd.defineOptionAlternative("channel", "ch");
 
     cmd.defineOption("voltage", "Voltage to be set", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("voltage", "v");
@@ -60,56 +65,53 @@ int main(int argc, char** argv)
     }
 
     // now query the parsing results
-    std::string cHWFile      = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19CDescription_Cic2.xml";
-    std::string cPowerSupply = (cmd.foundOption("name")) ? cmd.optionValue("name") : "";
-    double      cVoltsLimit  = (cmd.foundOption("v_max")) ? std::stod(cmd.optionValue("v_max").c_str()) : 10.5;
-    double      cAmpsLimit   = (cmd.foundOption("i_max")) ? std::stod(cmd.optionValue("i_max").c_str()) : 1.3;
-    double      cVolts       = (cmd.foundOption("v")) ? std::stod(cmd.optionValue("v").c_str()) : 0;
-    bool        cTurnOff     = cmd.foundOption("o");
+    std::string cHWFile             = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19CDescription_Cic2.xml";
+    std::string cPowerSupply        = (cmd.foundOption("name")) ? cmd.optionValue("name") : "";
+    std::string cPowerSupplyChannel = (cmd.foundOption("channel")) ? cmd.optionValue("channel") : "";
+    double      cVoltsLimit         = (cmd.foundOption("v_max")) ? std::stod(cmd.optionValue("v_max").c_str()) : 10.5;
+    double      cAmpsLimit          = (cmd.foundOption("i_max")) ? std::stod(cmd.optionValue("i_max").c_str()) : 1.3;
+    double      cVolts              = (cmd.foundOption("v")) ? std::stod(cmd.optionValue("v").c_str()) : 0;
+    bool        cTurnOff            = cmd.foundOption("o");
 
     std::string docPath = cHWFile;
     LOG(INFO) << "Init PS with " << docPath;
     pugi::xml_document docSettings;
 
-    PowerSupply::PS_settings ps_settings = PowerSupply::readSettings(docPath, docSettings);
-    PowerSupply::PS_map      ps_map      = PowerSupply::Initialize(ps_settings);
+    DeviceHandler ps_deviceHandler;
+    ps_deviceHandler.readSettings(docPath, docSettings); // Includes connection configuration/initialization
 
-    if(ps_map.size() == 0) { std::cout << "No configurable power supply has been found" << std::endl; }
-    else
-    {
-        std::cout << "Number of power supplies: " << ps_map.size() << std::endl;
-        std::cout << "ps_map content:" << std::endl;
-        for(auto it = ps_map.begin(); it != ps_map.end(); ++it) { std::cout << it->first << std::endl; }
-    }
+    PowerSupply* dPowerSupply = ps_deviceHandler.getPowerSupply(cPowerSupply);  // Will throw std::out_of_range error if not found
+    PowerSupplyChannel* dPowerSupplyChannel = dPowerSupply->getChannel(cPowerSupplyChannel);
 
-    if(ps_map[cPowerSupply]->isOpen())
-    {
+    // if(dPowerSupply->isOpen()) // power supply doesn't have isOpen method
+    // {
         if(cTurnOff)
         {
             LOG(INFO) << "Turn off " << cPowerSupply;
-            ps_map[cPowerSupply]->turnOff();
+            dPowerSupplyChannel->turnOff();
         }
         else
         {
-            if(cmd.foundOption("v_max")) { ps_map[cPowerSupply]->setVoltsLimit(cVoltsLimit); }
-            if(cmd.foundOption("i_max")) { ps_map[cPowerSupply]->setAmpsLimit(cAmpsLimit); }
+            if(cmd.foundOption("v_max")) { dPowerSupplyChannel->setVoltageCompliance(cVoltsLimit); }
+            if(cmd.foundOption("i_max")) { dPowerSupplyChannel->setCurrentCompliance(cAmpsLimit); }
             if(cmd.foundOption("v"))
             {
-                ps_map[cPowerSupply]->setVolts(cVolts);
-                ps_map[cPowerSupply]->turnOn();
+                dPowerSupplyChannel->setVoltage(cVolts);
+                dPowerSupplyChannel->turnOn();
             }
         }
         sleep(1);
-        LOG(INFO) << BOLDWHITE << cPowerSupply << " status:" RESET;
-        LOG(INFO) << "\tV(set):\t\t" << BOLDWHITE << ps_map[cPowerSupply]->getVolts() << RESET;
-        LOG(INFO) << "\tV(meas):\t" << BOLDWHITE << ps_map[cPowerSupply]->measureVolts() << RESET;
-        LOG(INFO) << "\tI_max(set):\t" << BOLDWHITE << ps_map[cPowerSupply]->getAmps() << RESET;
-        LOG(INFO) << "\tI(meas):\t" << BOLDWHITE << ps_map[cPowerSupply]->measureAmps() << RESET;
-    }
-    else
-    {
-        LOG(INFO) << cPowerSupply << " not found!";
-    }
+        LOG(INFO) << BOLDWHITE << cPowerSupply << " channel " << cPowerSupplyChannel << " status:" RESET;
+        LOG(INFO) << "\tV(set):\t\t" << BOLDWHITE << dPowerSupplyChannel->getSetVoltage() << RESET;
+        LOG(INFO) << "\tV(meas):\t" << BOLDWHITE << dPowerSupplyChannel->getOutputVoltage() << RESET;
+        LOG(INFO) << "\tI_max(set):\t" << BOLDWHITE << dPowerSupplyChannel->getCurrentCompliance() << RESET;
+        LOG(INFO) << "\tI(meas):\t" << BOLDWHITE << dPowerSupplyChannel->getCurrent() << RESET;
+
+    // }
+    // else
+    // {
+    //     LOG(INFO) << cPowerSupply << " not found!";
+    // }
 
 #endif
 

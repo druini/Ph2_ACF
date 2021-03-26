@@ -22,7 +22,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 {
     LOG(INFO) << BOLDBLUE << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
-    //Load register map from configuration file
+    // Load register map from configuration file
     ChipRegMap clpGBTRegMap = pChip->getRegMap();
     for(const auto& cRegItem: clpGBTRegMap)
     {
@@ -65,7 +65,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     }
     // Now pick one configuration mode
     if(fUseOpticalLink)
-        fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+        fBoardFW->WriteOptoLinkRegister(pAddress, pValue, pVerifLoop);
     else
     {
         // use PS-ROH test card USB interface
@@ -81,7 +81,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     {
         // Now pick one configuration mode
         if(fUseOpticalLink)
-            fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+            fBoardFW->WriteOptoLinkRegister(pAddress, pValue, pVerifLoop);
         else
         {
             // use PS-ROH test card USB interface
@@ -104,7 +104,7 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
 {
     setBoard(pChip->getBeBoardId());
     uint16_t cReadBack = 0;
-    if(fUseOpticalLink) { cReadBack = fBoardFW->ReadOptoLinkRegister(pChip, pAddress); }
+    if(fUseOpticalLink) { cReadBack = fBoardFW->ReadOptoLinkRegister(pAddress); }
     else
     {
 // use PS-ROH test card USB interface
@@ -723,7 +723,7 @@ uint64_t D19clpGBTInterface::GetBERTErrors(Ph2_HwDescription::Chip* pChip)
     return ((cResult4 << 32) | (cResult3 << 24) | (cResult2 << 16) | (cResult1 << 8) | cResult0);
 }
 
-float D19clpGBTInterface::PerformBERTest(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern)
+float D19clpGBTInterface::PerformPRBSTest(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern)
 {
     if(pPattern == 0)
         LOG(INFO) << BOLDMAGENTA << "Performing BER test with PRBS" << RESET;
