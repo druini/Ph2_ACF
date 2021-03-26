@@ -20,11 +20,13 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap) : lpGBTInterface(pBoardMap) {}
-
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB){}
+    ~D19clpGBTInterface()
+    {
 #ifdef __TCUSB__
-    TC_PSROH fTC_PSROH;
+        if(fTC_USB != nullptr) delete fTC_USB;
 #endif
+    }
 
     // ###################################
     // # LpGBT register access functions #
@@ -203,15 +205,25 @@ class D19clpGBTInterface : public lpGBTInterface
 
     std::map<uint8_t, std::string> fI2CStatusMap = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
 
-    // OT specific objects
-    bool fUseOpticalLink = false;
+    std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
+
+    // ###################################
+    // # Outer Tracker specific objects  #
+    // ###################################
+    bool fUseOpticalLink = true;
+    bool fUseCPB         = true;
 #ifdef __TCUSB__
-    std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
+    #ifdef __ROH_USB__
+        TC_PSROH*                                    fTC_USB;
+        std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
                                                                 {"L_SSA", TC_PSROH::measurement::L_SSA_RST},
                                                                 {"R_MPA", TC_PSROH::measurement::R_MPA_RST},
                                                                 {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
                                                                 {"R_SSA", TC_PSROH::measurement::R_SSA_RST}};
+    #elif __SEH_USB__
+        TC_2SSEH*                                    fTC_USB;
+    #endif
 #endif
 };
 } // namespace Ph2_HwInterface

@@ -140,9 +140,10 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
                 if(cFirstOpticalGroup->flpGBT != nullptr)
                 {
-                    LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for LpGBT" << RESET;
-                    flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap);
+                    LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
+                    flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstBoard->ifUseOpticalLink(), cFirstBoard->ifUseCPB());
                 }
+                LOG(INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;
 
                 if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
                 {

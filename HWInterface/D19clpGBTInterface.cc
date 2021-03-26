@@ -20,38 +20,57 @@ namespace Ph2_HwInterface
 {
 bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
-    LOG(INFO) << BOLDBLUE << "Configuring lpGBT" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
     // Load register map from configuration file
-    ChipRegMap clpGBTRegMap = pChip->getRegMap();
-    for(const auto& cRegItem: clpGBTRegMap)
+    if(!fUseOpticalLink)
     {
+      ChipRegMap clpGBTRegMap = pChip->getRegMap();
+      for(const auto& cRegItem: clpGBTRegMap)
+      {
         if(cRegItem.second.fAddress < 0x13c)
         {
-            LOG(INFO) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec << "]"
+            LOG(INFO) << BOLDBLUE << "\tWriting 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec << "]"
                       << RESET;
             WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
         }
+      }
     }
-    ConfigurePSROH(pChip, 5);
+    PrintChipMode(pChip);
+    SetPUSMDone(pChip, true, true);
+    uint16_t cIter = 0, cMaxIter = 200;
+    while(!IsPUSMDone(pChip) && cIter < cMaxIter)
+    {
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        cIter++;
+    }
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
+    LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
+    ConfigurePSROH(pChip);
     return true;
 }
 
-/*-------------------------------------------------------------------------*/
-/* Read/Write LpGBT chip registers                                         */
-/*-------------------------------------------------------------------------*/
+/*---------------------------------*/
+/* Read/Write LpGBT chip registers */
+/*---------------------------------*/
 
 bool D19clpGBTInterface::WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
-    LOG(DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "\t Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
     return WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
 }
 
-uint16_t D19clpGBTInterface::ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) { return ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress); }
+uint16_t D19clpGBTInterface::ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode)
+{
+    uint8_t cReadBack = ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress);
+    LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
+    return cReadBack;
+}
 
 bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop)
 {
     setBoard(pChip->getBeBoardId());
+    uint8_t cReadBack = 0;
     // Make sure the value is not > 8 bits
     if(pValue > 0xFF)
     {
@@ -65,54 +84,58 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     }
     // Now pick one configuration mode
     if(fUseOpticalLink)
-        fBoardFW->WriteOptoLinkRegister(pAddress, pValue, pVerifLoop);
+    {
+        if(fUseCPB)
+            return fBoardFW->WriteLpGBTRegister(pAddress, pValue, pVerifLoop);
+        else
+            return fBoardFW->WriteOptoLinkRegister(pAddress, pValue, pVerifLoop);
+    }
     else
     {
         // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-        fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
+        fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
     }
-    if(!pVerifLoop) return true;
-    // Verify success of Write
-    uint8_t cReadBack = ReadReg(pChip, pAddress);
-    uint8_t cIter = 0, cMaxIter = 10;
-    while(cReadBack != pValue && cIter < cMaxIter)
-    {
-        // Now pick one configuration mode
-        if(fUseOpticalLink)
-            fBoardFW->WriteOptoLinkRegister(pAddress, pValue, pVerifLoop);
-        else
+    return true;
+    // FIXME USB interface needs verification loop here or library ?
+    if(!pVerifLoop)
+        // Verify success of Write
+        if(!fUseOpticalLink)
         {
-            // use PS-ROH test card USB interface
+            uint8_t cIter = 0, cMaxIter = 50;
+            while(cReadBack != pValue && cIter < cMaxIter)
+            {
+                // Now pick one configuration mode
+                // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-            fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
+                cReadBack = fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
+                cIter++;
+            }
+            if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT register write mismatch"));
         }
-        cReadBack = ReadReg(pChip, pAddress);
-        cIter++;
-    }
-    if(cReadBack != pValue)
-    {
-        LOG(INFO) << BOLDRED << "REGISTER WRITE MISMATCH" << RESET;
-        throw std::runtime_error(std::string("lpGBT register write mismatch"));
-    }
     return true;
 }
 
 uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress)
 {
     setBoard(pChip->getBeBoardId());
-    uint16_t cReadBack = 0;
-    if(fUseOpticalLink) { cReadBack = fBoardFW->ReadOptoLinkRegister(pAddress); }
+    if(fUseOpticalLink)
+    {
+        if(fUseCPB)
+            return fBoardFW->ReadLpGBTRegister(pAddress);
+        else
+            return fBoardFW->ReadOptoLinkRegister(pAddress);
+    }
     else
     {
 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-        cReadBack = fTC_PSROH.read_i2c(pAddress);
+        return fTC_USB->read_i2c(pAddress);
 #endif
     }
-    return cReadBack;
+    return 0;
 }
 
 bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerifLoop)
