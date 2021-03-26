@@ -145,9 +145,13 @@ bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const 
     return writeGood;
 }
 
-/*-------------------------------------------------------------------------*/
-/* lpGBT configuration functions                                           */
-/*-------------------------------------------------------------------------*/
+/*-------------------------------*/
+/* lpGBT configuration functions */
+/*-------------------------------*/
+void D19clpGBTInterface::SetPUSMDone(Ph2_HwDescription::Chip* pChip, bool pPllConfigDone, bool pDllConfigDone)
+{
+    WriteChipReg(pChip, "POWERUP2", pDllConfigDone << 2 | pPllConfigDone << 1);
+}
 
 void D19clpGBTInterface::ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode)
 {
