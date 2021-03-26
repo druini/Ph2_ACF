@@ -279,41 +279,52 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
     }
 
     LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from xml file @@@" << RESET;
-
     for(const auto cBoard: *fDetectorContainer)
     {
         if(cBoard->getBoardType() != BoardType::RD53)
         {
-            uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
-
             // setting up back-end board
             fBeBoardInterface->ConfigureBoard(cBoard);
             LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
             LOG(INFO) << BOLDBLUE << "Now going to configure chips on Board " << int(cBoard->getId()) << RESET;
 
-            // CIC start-up
+            // Link start-up
+            // first configure lpGBT
+            bool cIslpGBTI2C = !cBoard->ifUseOpticalLink();
             for(auto cOpticalGroup: *cBoard)
             {
+                if(cOpticalGroup->flpGBT == nullptr) continue;
+
+                // are these needed?
+                uint8_t cLinkId = cOpticalGroup->getId();
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
+                    cIslpGBTI2C                         = !cBoard->ifUseOpticalLink();
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                    // To be uncommented if crate is used
-                    // clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "i2c", false);
-                    clpGBTInterface->SetConfigMode(cOpticalGroup->flpGBT, "serial", false);
-                    clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
-                    // clpGBTInterface->PrintChipMode(cOpticalGroup->flpGBT);
-                    uint8_t  cPUSMStatus = clpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
-                    uint16_t cIter = 0, cMaxIter = 2000;
-                    while(cPUSMStatus != 18 && cIter < cMaxIter)
-                    {
-                        LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +cPUSMStatus << RESET;
-                        cPUSMStatus = clpGBTInterface->GetPUSMStatus(cOpticalGroup->flpGBT);
-                        cIter++;
+                    if(cIslpGBTI2C){ 
+#ifdef __TCUSB__
+                        clpGBTInterface->InitialiseTCUSBHandler(); 
+#endif
                     }
-                    if(cPUSMStatus != 18) exit(EXIT_FAILURE);
-                    LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
+                    clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
                 }
+            }
+            // Check lpGBT Link Lock
+            if(cIslpGBTI2C)
+            {
+                LOG(INFO) << BOLDBLUE << "Checking optical link link .." << RESET;
+                bool clpGBTlock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
+                if(!clpGBTlock)
+                {
+                    LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
+                    exit(0);
+                }
+            }
+            for(auto cOpticalGroup: *cBoard)
+            {
                 uint8_t cLinkId = cOpticalGroup->getId();
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
                 LOG(INFO) << BOLDMAGENTA << "CIC start-up seqeunce for hybrids on link " << +cLinkId << RESET;
                 for(auto cHybrid: *cOpticalGroup)
                 {
