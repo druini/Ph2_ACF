@@ -740,11 +740,30 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    uint8_t  flpGBTAddress = 0x70;
+    const uint8_t                   flpGBTAddress = 0x70;
+    const uint8_t                   fI2CFrequency = 3; // 1 MHz
+    std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}};
+    // Functions for standard uDTC
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
     void     ResetOptoLink() override;
     bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
     uint32_t ReadOptoLinkRegister(uint32_t pAddress) override;
+    // ##########################################
+    // # Read/Write new Command Processor Block #
+    // ##########################################
+    // functions for new Command Processor Block
+    void                  ResetCPB() override;
+    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose = false) override;
+    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose = false) override;
+    // function to read/write lpGBT registers
+    bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
+    uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override;
+    // function for I2C transactions using lpGBT I2C Masters
+    bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override;
+    uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) override;
+    // function for front-end slow control
+    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) override;
+    uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) override;
 };
 } // namespace Ph2_HwInterface
 
