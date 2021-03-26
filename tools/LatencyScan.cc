@@ -38,7 +38,7 @@ void LatencyScan::MeasureTriggerTDC()
         BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(board->getIndex()));
 
         ReadNEvents(theBoard, fNevents);
-        const std::vector<Event*>& events = GetEvents(theBoard);
+        const std::vector<Event*>& events = GetEvents();
 
         board->getSummary<std::vector<uint16_t>>().resize(fTDCBins);
 
@@ -107,7 +107,7 @@ void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
             ReadNEvents(theBoard, fNevents);
 
             for(auto opticalGroup : *board){
-                const std::vector<Event*>& events = GetEvents(theBoard);
+                const std::vector<Event*>& events = GetEvents();
                 for(auto hybrid: *opticalGroup)
                 { 
                     uint32_t cHitSum = 0;
@@ -116,7 +116,9 @@ void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
                         // first, reset the hit counter - I need separate counters for each event
                         int cHitCounter = 0;
                         for(auto chip: *hybrid){
-                            cHitCounter += cEvent->GetNHits(hybrid->getId(), chip->getId());
+                            if (chip->getFrontEndType() == FrontEndType::MPA) cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNPixelClusters(hybrid->getId(), chip->getId());
+                            else if (chip->getFrontEndType() == FrontEndType::SSA) cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(hybrid->getId(), static_cast<SSA*> (chip)->getPartid());
+                            else cHitCounter += cEvent->GetNHits(hybrid->getId(), chip->getId());
                         }
                         cHitSum += cHitCounter; //TODO: It would be nice to fill per event so you could have the errors correct, maybe do with occupancy 
                         
@@ -211,7 +213,7 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
             for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
 
             this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
-            const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+            const std::vector<Event*>& cEvents = this->GetEvents();
             // Loop over Events from this Acquisition
             for(auto& cEvent: cEvents)
             {
@@ -352,7 +354,7 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
             for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
 
             this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
-            const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+            const std::vector<Event*>& cEvents = this->GetEvents();
             // Loop over Events from this Acquisition
             for(auto& cEvent: cEvents)
             {
@@ -429,7 +431,7 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
                         continue;
                     }
 
-                    const std::vector<Event*>& events = GetEvents(theBoard);
+                    const std::vector<Event*>& events = GetEvents();
                     cNevents += events.size();
                     for(auto cOpticalGroup: *pBoard)
                     {
