@@ -33,7 +33,7 @@ class LatencyScan : public Tool
   public:
     LatencyScan();
     ~LatencyScan();
-    void                                Initialise(uint32_t pStartLatency, uint32_t pLatencyRange);
+    void                                Initialise();
     void                                ScanLatency(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
     std::map<HybridContainer*, uint8_t> ScanStubLatency(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
     void                                MeasureTriggerTDC();
@@ -56,11 +56,14 @@ class LatencyScan : public Tool
     uint32_t fNevents;
     // uint32_t fInitialThreshold;
     uint32_t fHoleMode;
+    uint32_t fStartLatency;
+    uint32_t fLatencyRange;
     uint32_t fNCbc;
     uint8_t  fTestPulseAmplitude;
     uint32_t trigSource;
 
     const uint32_t fTDCBins = 8;
+    //this is effectively the max value for Latency Range
 
     int convertLatencyPhase(uint32_t pStartLatency, uint32_t cLatency, uint32_t cPhase)
     {

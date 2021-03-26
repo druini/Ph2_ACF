@@ -16,6 +16,7 @@
 #include "../Utils/Occupancy.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/Utilities.h"
+#include "../Utils/GenericDataArray.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
@@ -24,8 +25,8 @@
 
 //========================================================================================================================
 DQMHistogramLatencyScan::DQMHistogramLatencyScan() {
-    fStartLatency = 0;
-    fStartLatency = 0;
+    fLatencyRange = 40;
+    fStartLatency = 80;
 
 }
 
@@ -35,13 +36,18 @@ DQMHistogramLatencyScan::~DQMHistogramLatencyScan() {}
 //========================================================================================================================
 void DQMHistogramLatencyScan::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
+    //need to get settings from settings map
+    parseSettings(pSettingsMap);
+
+
 
     uint32_t fTDCBins = 8; //from LatencyScan.h
 
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
+    LOG(INFO) << "Setting histograms with range " << fLatencyRange << " and start value " << fStartLatency;
 
-    HistContainer<TH1F> hLatency("LatencyValue", "Latency Value", 1, 0, 1);
-    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fLatencyHistograms, hLatency);
+    HistContainer<TH1F> hLatency("LatencyValue", "Latency Value", fLatencyRange, fStartLatency, fStartLatency+fLatencyRange);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHistograms, hLatency);
 
     HistContainer<TH1F> hStub("StubValue", "Stub Value", 1, 0, 1);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fStubHistograms, hStub);
@@ -58,10 +64,29 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, const DetectorContainer
 }
 
 //========================================================================================================================
-bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer) { return false; }
+bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer) {
+
+    const size_t VECSIZE = 1000;
+    HybridContainerStream< EmptyContainer, EmptyContainer,  GenericDataArray<VECSIZE, uint32_t> > theLatencyStream("LatencyScan");
+
+    if(theLatencyStream.attachBuffer(&dataBuffer))
+    {
+        std::cout << "Matched Latency Stream!!!!!\n";
+        theLatencyStream.decodeHybridData(fDetectorData);
+        fillLatencyPlots(fDetectorData);
+        fDetectorData.cleanDataStored();
+        return true;
+    }
+
+    return false;
+
+
+
+
+ }
 
 //========================================================================================================================
-void DQMHistogramLatencyScan::process() {
+void DQMHistogramLatencyScan::process() { 
 
     for(auto board: fLatencyHistograms)
     {
@@ -69,19 +94,17 @@ void DQMHistogramLatencyScan::process() {
         {
             for(auto hybrid: *opticalGroup)
             {
-                TCanvas* latencyCanvas    = new TCanvas(("Latency_" + std::to_string(hybrid->getId())).data(), ("Latency " + std::to_string(hybrid->getId())).data(), 10, 0, 500, 500);
+                TCanvas* latencyCanvas    = new TCanvas(("Latency_" + std::to_string(hybrid->getId())).data(), ("Latency " + std::to_string(hybrid->getId())).data(), 500,500);
 
-                latencyCanvas->DivideSquare(hybrid->size());
+                //latencyCanvas->DivideSquare(hybrid->size());
 
-                for(auto chip: *hybrid)
-                {
-                    latencyCanvas->cd(chip->getIndex() + 1);
-                    TH1F* latencyHistogram = chip->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    latencyCanvas->cd();
+                    TH1F* latencyHistogram = hybrid->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    LOG(INFO) << "Drawing histogram with integral " << latencyHistogram->Integral();
                     latencyHistogram->GetXaxis()->SetTitle("Trigger Latency");
                     latencyHistogram->GetYaxis()->SetTitle("# of hits");
                     latencyHistogram->DrawCopy();
 
-                }
             }
         }
     }    
@@ -93,8 +116,13 @@ void DQMHistogramLatencyScan::reset(void) {}
 
 void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency)
 { 
+    //this is effectively the max value for the latency range
+    const size_t VECSIZE = 1000;
+
+    LOG(INFO) << "i am filling";
     for(auto board: theLatency)
     {
+
         for(auto opticalGroup: *board)
         {
             for(auto hybrid: *opticalGroup)
@@ -102,11 +130,24 @@ void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency
                 if(!hybrid->hasSummary()) continue;
                 TH1F* hybridLatencyHistogram =
                     fLatencyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                hybridLatencyHistogram->SetBinContent(hybrid->getSummary<std::pair<uint16_t, int>>().first, hybrid->getSummary<std::pair<uint16_t, int>>().second );
-            }
-        }
-    }
 
+                for(uint32_t i = 0; i < fLatencyRange ; i++){
+
+                    uint32_t lat = i + fStartLatency;
+                    uint32_t hits = hybrid->getSummary<GenericDataArray<VECSIZE, uint32_t>>()[i];
+                    
+                    float error = 0;
+                    if (hits > 0 ) error = hits * sqrt(float(1./ hits));
+
+                    LOG(INFO) << "filling hybrid " << hybrid->getIndex() << " with latency " << lat << " and hits " << hits << " and error " << error;
+                    hybridLatencyHistogram->SetBinContent(i, hits);
+                    hybridLatencyHistogram->SetBinError(i, error);
+                }
+            }
+
+        }
+        
+    }
 
 }
 void DQMHistogramLatencyScan::fillStubLatency(DetectorDataContainer& theStubLatency)
@@ -129,4 +170,25 @@ void DQMHistogramLatencyScan::fillTriggerTDC(DetectorDataContainer& theTriggerTD
         }
     }
 
+}
+
+void DQMHistogramLatencyScan::parseSettings(const Ph2_System::SettingsMap& pSettingsMap)
+{
+    auto cSetting = pSettingsMap.find("StartLatency");
+    if(cSetting != std::end(pSettingsMap))
+        fStartLatency = cSetting->second;
+    else
+        fStartLatency = 0;
+
+    cSetting = pSettingsMap.find("LatencyRange");
+    if(cSetting != std::end(pSettingsMap))
+        fLatencyRange = cSetting->second;
+    else
+        fLatencyRange = 512;
+
+    cSetting = pSettingsMap.find("Nevents");
+    if(cSetting != std::end(pSettingsMap))
+        fNEvents = cSetting->second;
+    else
+        fNEvents = 100;
 }
