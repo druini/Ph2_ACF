@@ -346,7 +346,7 @@ void D19clpGBTInterface::ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_
     WriteChipReg(pChip, cRegName, cValueChnCntr);
 }
 
-void D19clpGBTInterface::ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint8_t pDriveStr, uint8_t pEnFTune, uint16_t pDelay)
+void D19clpGBTInterface::ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint16_t pDelay, uint8_t pDriveStr, uint8_t pEnFTune)
 {
     LOG(INFO) << BOLDMAGENTA << "Configuring Phase Shifter" << RESET;
     // Configure Rx Phase Shifter

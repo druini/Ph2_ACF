@@ -92,7 +92,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // Configure lpGBT Rx channels phase
     void ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
     // Configure lpGBT Phase Shifter
-    void ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint8_t pDriveStr, uint8_t pEnFTune, uint16_t pDelay);
+    void ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint16_t pDelay, uint8_t pDriveStr=0, uint8_t pEnFTune=0);
 
     // ####################################
     // # LpGBT specific routine functions #
