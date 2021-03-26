@@ -359,11 +359,11 @@ void D19clpGBTInterface::ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, cons
     }
 }
 
-/*-------------------------------------------------------------------------*/
-/* lpGBT specific routine functions                                        */
-/*-------------------------------------------------------------------------*/
+/*----------------------------------*/
+/* lpGBT specific routine functions */
+/*----------------------------------*/
 
-void D19clpGBTInterface::PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups)
+void D19clpGBTInterface::PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain)
 {
     LOG(INFO) << BOLDMAGENTA << "Starting phase training of Rx Groups" << RESET;
     // Launch Rx Phase Training
@@ -379,29 +379,36 @@ void D19clpGBTInterface::PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std:
         else if(cGroup == 6)
             cTrainRxReg = "EPRXTrain32";
 
-        WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
-        WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
+	//Starting or Stopping training
+        if(pTrain)
+            WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
+        else
+            WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
     }
 }
 
 void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
+    uint8_t cChipRate = GetChipRate(pChip);
     // Phase Align Rx Channels
+    // Set data source for channels 0,2 to PRBS
+    ConfigureRxSource(pChip, pGroups, 1);
     // Turn ON PRBS for channels 0,2
     ConfigureRxPRBS(pChip, pGroups, pChannels, true);
     // Find Phase
     // Configure Rx Phase Shifter
     uint16_t cDelay = 0x00;
-    uint8_t  cFreq = 4, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
-    ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
+    uint8_t  cFreq = (cChipRate == 5) ? 4 : 5; // 4 --> 320 MHz || 5 --> 640 MHz
+    ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDelay);
     // Phase Train channels 0,2
-    PhaseTrainRx(pChip, pGroups);
+    PhaseTrainRx(pChip, pGroups, true);
     for(const auto& cGroup: pGroups)
     {
         // Wait until channels lock
         LOG(INFO) << BOLDMAGENTA << "Phase Aligning Rx Group " << +cGroup << RESET;
         do
         {
+            LOG(DEBUG) << "Locking state Group " << +cGroup << " 0b" << std::bitset<8>(ReadChipReg(pChip, "EPRX" + std::to_string(cGroup) + "Locked")) << RESET;
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         } while(!IsRxLocked(pChip, cGroup, pChannels));
         LOG(INFO) << BOLDBLUE << "    Group " << +cGroup << BOLDGREEN << " LOCKED" << RESET;
@@ -413,13 +420,18 @@ void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std:
             ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
         }
     }
+    PhaseTrainRx(pChip, pGroups, false);
+    // Set back Rx groups to Fixed Phase tracking mode
     ConfigureRxGroups(pChip, pGroups, pChannels, 2, 0);
+    // Turn off PRBS for channels 0,2
     ConfigureRxPRBS(pChip, pGroups, pChannels, false);
+    // Set back Rx source to Normal data
+    ConfigureRxSource(pChip, pGroups, 0);
 }
 
-/*-------------------------------------------------------------------------*/
-/* lpGBT status functions                                                  */
-/*-------------------------------------------------------------------------*/
+/*------------------------*/
+/* lpGBT status functions */
+/*------------------------*/
 
 void D19clpGBTInterface::PrintChipMode(Ph2_HwDescription::Chip* pChip)
 {
@@ -444,7 +456,25 @@ void D19clpGBTInterface::PrintChipMode(Ph2_HwDescription::Chip* pChip)
     }
 }
 
-uint8_t D19clpGBTInterface::GetPUSMStatus(Ph2_HwDescription::Chip* pChip) { return ReadChipReg(pChip, "PUSMStatus"); }
+uint8_t D19clpGBTInterface::GetChipRate(Ph2_HwDescription::Chip* pChip)
+{
+    if(((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4) >= 8)
+        return 10;
+    else
+        return 5;
+}
+
+uint8_t D19clpGBTInterface::GetPUSMStatus(Ph2_HwDescription::Chip* pChip)
+{
+    uint8_t cPUSMStatus = ReadChipReg(pChip, "PUSMStatus");
+    LOG(INFO) << BOLDBLUE << "lpGBT PUSM Status : " << ((cPUSMStatus == 18) ? BOLDGREEN : BOLDRED) << fPUSMStatusMap[cPUSMStatus] << RESET;
+    return cPUSMStatus;
+}
+
+bool D19clpGBTInterface::IsPUSMDone(Ph2_HwDescription::Chip* pChip)
+{
+    return GetPUSMStatus(pChip) == 18;
+}
 
 uint8_t D19clpGBTInterface::GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel)
 {
@@ -460,8 +490,7 @@ uint8_t D19clpGBTInterface::GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t p
 
 bool D19clpGBTInterface::IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels)
 {
-    // Cheks if Rx channels are locked #FIXME needs to check depending on the
-    // enabled channels not on all (0x0F)
+    // Check Rx channels lock status
     std::string cRXLockedReg = "EPRX" + std::to_string(pGroup) + "Locked";
     uint8_t     cChannelMask = 0x00;
     for(auto cChannel: pChannels) cChannelMask += (1 << cChannel);
