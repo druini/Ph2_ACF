@@ -742,6 +742,7 @@ void Tool::CreateReport()
     report.open(fDirectoryName + "/TestReport.txt", std::ofstream::out | std::ofstream::app);
     report.close();
 }
+
 void Tool::AmmendReport(std::string pString)
 {
     std::ofstream report;
@@ -758,6 +759,7 @@ std::pair<float, float> Tool::getStats(std::vector<float> pData)
     float cStandardDeviation = std::sqrt(std::accumulate(cTmp.begin(), cTmp.end(), 0.) / (cTmp.size() - 1.));
     return std::make_pair(cMean, cStandardDeviation);
 }
+
 std::pair<std::vector<float>, std::vector<float>> Tool::getDerivative(std::vector<float> pData, std::vector<float> pValues, bool pIgnoreNegative)
 {
     std::vector<float> cWeights(pData.size());
@@ -770,6 +772,7 @@ std::pair<std::vector<float>, std::vector<float>> Tool::getDerivative(std::vecto
     pValues.erase(pValues.begin(), pValues.begin() + 1);
     return std::make_pair(cWeights, pValues);
 }
+
 std::pair<float, float> Tool::evalNoise(std::vector<float> pData, std::vector<float> pValues, bool pIgnoreNegative)
 {
     std::vector<float> cWeights(pData.size());

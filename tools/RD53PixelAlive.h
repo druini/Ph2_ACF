@@ -73,7 +73,7 @@ class PixelAlive : public Tool
     DetectorDataContainer                    theTrgIDContainer;
 
     void fillHisto();
-    void chipErrorReport();
+    void chipErrorReport() const;
 
   protected:
     std::string fileRes;

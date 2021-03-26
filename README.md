@@ -55,13 +55,13 @@ More details on the hardware needed to setup the system can be bound here: https
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware (see instructions: `IT-DAQ setup and run` before running this command)
 
 *A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`) <br />
-A golden firmware can be downloaded from here: https://cernbox.cern.ch/index.php/s/5tUCio08PEfTf0a <br />
+A golden firmware can be downloaded from here: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/Downloads/sdgoldenimage.img <br />
 A detailed manual about the firmware can be found here: https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/blob/master/doc/IT-uDTC_fw_manual_v1.0.pdf
 
 **IT-DAQ setup and run:**
 1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
 2. Install: `boost` by running `sudo yum install boost-devel`, `CERN ROOT` from https://root.cern.ch, and `IPbus` from http://ipbus.web.cern.ch/ipbus (either using `sudo yum` or from source)
-3. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
+3. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git`
 4. `cd Ph2_ACF; source setup.sh; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
 5. `mkdir choose_a_name`
 6. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
@@ -93,8 +93,9 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 9. Threshold adjustment
 10. Injection delay scan
 11. Clock delay scan
-12. Physics
-13. Bit Error Rate test
+12. Data readback optimization
+13. Physics
+14. Bit Error Rate test
 ```
 Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 
