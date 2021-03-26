@@ -281,7 +281,7 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
     auto& cThisHitCheckContainer  = fHitCheckContainer.at(pBoard->getIndex());
     auto& cThisStubCheckContainer = fStubCheckContainer.at(pBoard->getIndex());
 
-    const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+    const std::vector<Event*>& cEvents = this->GetEvents();
     LOG(DEBUG) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from board." << RESET;
 
     for(auto cOpticalGroup: *pBoard)
@@ -483,7 +483,7 @@ void DataChecker::AsyncTest()
             BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
             LOG(INFO) << BOLDRED << "Reading counters .. " << RESET;
             this->ReadNEvents(theBoard, this->findValueInSettings("Nevents"));
-            const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+            const std::vector<Event*>& cEvents = this->GetEvents();
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
@@ -500,7 +500,7 @@ void DataChecker::AsyncTest()
             }
             LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadNEvents" << RESET;
         }
-        // const std::vector<Event*>& cEvents = this->GetEvents ( theBoard );
+        // const std::vector<Event*>& cEvents = this->GetEvents();
     }
     LOG(INFO) << BOLDBLUE << "Done!" << RESET;
 }
@@ -538,7 +538,7 @@ void DataChecker::ReadDataTest()
         // }while( std::cin.get()!='\n');
         LOG(INFO) << BOLDRED << "Reading data .. " << RESET;
         this->ReadData(theBoard, true);
-        const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
 
         uint32_t cN = 0;
@@ -590,7 +590,7 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
 
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
         this->ReadNEvents(cBeBoard, cNevents);
-        const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
         uint32_t cN = 0;
         for(auto& cEvent: cEvents)
@@ -627,7 +627,7 @@ void DataChecker::CollectEvents()
         {
             int cEventsToRead = (cBurst == (cNBursts - 1)) ? (cNevents % cMaxNevents) : cMaxNevents;
             this->ReadNEvents(cBeBoard, cEventsToRead);
-            const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+            const std::vector<Event*>& cEvents = this->GetEvents();
             LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
             cNrecordedEvents += cEvents.size();
         }
@@ -657,7 +657,7 @@ void DataChecker::ReadNeventsTest()
         }
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
         this->ReadNEvents(cBeBoard, 1);
-        const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
 
         uint32_t cN = 0;
@@ -873,7 +873,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                 fBeBoardInterface->Stop(theBoard);
                 // this->ReadNEvents ( theBoard , cEventsPerPoint);
                 this->ReadData(theBoard, true);
-                const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+                const std::vector<Event*>& cEvents = this->GetEvents();
                 // matching
                 for(auto cOpticalGroup: *cBoard)
                 {
@@ -1029,7 +1029,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         //                     //if( cResync)
         //                     //    fBeBoardInterface->ChipReSync ( cBoard );
         //                     this->ReadNEvents ( cBoard , cEventsPerPoint);
-        //                     const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
+        //                     const std::vector<Event*>& cEvents = this->GetEvents();
         //                     // matching
         //                     for (auto& cHybrid : cBoard->fHybridVector)
         //                     {
@@ -1215,7 +1215,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         //         //             if( cResync)
         //         //                 fBeBoardInterface->ChipReSync ( cBoard );
         //         //             this->ReadNEvents ( cBoard , cEventsPerPoint);
-        //         //             const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
+        //         //             const std::vector<Event*>& cEvents = this->GetEvents();
         //         //             // matching
         //         //             for (auto& cHybrid : cBoard->fHybridVector)
         //         //             {
@@ -1851,7 +1851,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
                     LOG(INFO) << BOLDBLUE << "\t..L1A latency set to " << +cDelay << " stub latency set to " << +cStubDelay << " so delay is " << +(cDelay - cStubDelay) << RESET;
 
                     this->ReadNEvents(cBeBoard, 5);
-                    const std::vector<Event*>& cEventsWithStubs = this->GetEvents(cBeBoard);
+                    const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
                     LOG(INFO) << BOLDBLUE << +cEventsWithStubs.size() << " events read back from FC7 with ReadData" << RESET;
                     for(auto& cEvent: cEventsWithStubs)
                     {
@@ -1960,7 +1960,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
                 LOG(INFO) << BOLDBLUE << "Stub latency set to " << +cStubDelay << RESET;
 
                 this->ReadNEvents(cBeBoard, 5);
-                const std::vector<Event*>& cEventsWithStubs = this->GetEvents(cBeBoard);
+                const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
                 LOG(INFO) << BOLDBLUE << +cEventsWithStubs.size() << " events read back from FC7 with ReadData" << RESET;
                 for(auto& cEvent: cEventsWithStubs)
                 {
@@ -2144,7 +2144,7 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
 
         // read events
         this->ReadNEvents(pBoard, cEventsPerPoint);
-        const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         LOG(DEBUG) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
         // check for matches
         for(auto cOpticalGroup: *pBoard)
@@ -2315,7 +2315,7 @@ void DataChecker::ClusterCheck(std::vector<uint8_t> pChannels)
                     fReadoutChipInterface->maskChannelsGroup(cChip, &fCBCMask);
                 }
                 this->ReadNEvents(cBoard, cNevents);
-                const std::vector<Event*>& cEvents = this->GetEvents(cBoard);
+                const std::vector<Event*>& cEvents = this->GetEvents();
                 LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
                 for(auto cChip: *cHybrid)
                 {
