@@ -104,7 +104,7 @@ class BeBoardFWInterface : public RegManager
     virtual void              ProgramCdce() {}
 
     // this is temporary until the modified command processor block is in place
-    virtual void selectLink(uint8_t pLinkId, uint32_t pWait_ms = 100) {}
+    virtual void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) = 0;
 
     /*! \brief Get the list of available FPGA configuration (or firmware images)*/
     virtual std::vector<std::string> getFpgaConfigList() { return std::vector<std::string>(); }

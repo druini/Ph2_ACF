@@ -93,8 +93,9 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 9. Threshold adjustment
 10. Injection delay scan
 11. Clock delay scan
-12. Physics
-13. Bit Error Rate test
+12. Data readback optimization
+13. Physics
+14. Bit Error Rate test
 ```
 Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 

@@ -62,6 +62,8 @@ class RD53FWInterface : public BeBoardFWInterface
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
     void     ChipReset() override;
     void     ChipReSync() override;
+
+    void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
     // #############################
 
     // ####################################
@@ -182,7 +184,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
     bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
     uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress) override;
-    void     SetActiveLink(const uint32_t linkNumber);
 
     // ###########################################
     // # Member functions to handle the firmware #
