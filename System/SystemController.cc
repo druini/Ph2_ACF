@@ -284,7 +284,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
     {
         if(cBoard->getBoardType() != BoardType::RD53)
         {
-	    uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
+            uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
 
             // setting up back-end board
             fBeBoardInterface->ConfigureBoard(cBoard);
@@ -305,9 +305,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 {
                     cIslpGBTI2C                         = !cBoard->ifUseOpticalLink();
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                    if(cIslpGBTI2C){ 
+                    if(cIslpGBTI2C)
+                    {
 #ifdef __TCUSB__
-                        clpGBTInterface->InitialiseTCUSBHandler(); 
+                        clpGBTInterface->InitialiseTCUSBHandler();
 #endif
                     }
                     clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);

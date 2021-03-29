@@ -176,7 +176,7 @@ int main(int argc, char** argv)
             LOG(INFO) << "Turn off all channels" << cPowerSupply;
             for(auto channelName: channelNames) { theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOff(); }
         }
-	if(cTurnOn) // No channel given but turn off called -> Turn off power supply master output
+        if(cTurnOn) // No channel given but turn off called -> Turn off power supply master output
         {
             LOG(INFO) << "Turn on all channels" << cPowerSupply;
             for(auto channelName: channelNames) { theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOn(); }

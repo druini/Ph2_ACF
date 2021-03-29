@@ -222,8 +222,8 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                         }
                     }
 
-                    LOG(INFO) << BOLDMAGENTA << ">>> Best " << BOLDYELLOW << regName << BOLDMAGENTA << " for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
-                              << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " <<<" << RESET;
+                    LOG(INFO) << BOLDMAGENTA << ">>> Best " << BOLDYELLOW << regName << BOLDMAGENTA << " for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
+                              << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " <<<" << RESET;
 
                     // ######################################################
                     // # Fill latency container and download new DAC values #
@@ -249,7 +249,7 @@ void DataReadbackOptimization::fillHisto()
 
 void DataReadbackOptimization::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
 {
-    const size_t TAPsize  = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
     for(auto i = 0u; i < dacList.size(); i++)
     {

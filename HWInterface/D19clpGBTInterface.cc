@@ -25,23 +25,23 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     // Load register map from configuration file
     if(!fUseOpticalLink)
     {
-      ChipRegMap clpGBTRegMap = pChip->getRegMap();
-      for(const auto& cRegItem: clpGBTRegMap)
-      {
-        if(cRegItem.second.fAddress < 0x13c)
+        ChipRegMap clpGBTRegMap = pChip->getRegMap();
+        for(const auto& cRegItem: clpGBTRegMap)
         {
-            LOG(INFO) << BOLDBLUE << "\tWriting 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec << "]"
-                      << RESET;
-            WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+            if(cRegItem.second.fAddress < 0x13c)
+            {
+                LOG(INFO) << BOLDBLUE << "\tWriting 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec
+                          << "]" << RESET;
+                WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+            }
         }
-      }
     }
     PrintChipMode(pChip);
     SetPUSMDone(pChip, true, true);
     uint16_t cIter = 0, cMaxIter = 200;
     while(!IsPUSMDone(pChip) && cIter < cMaxIter)
     {
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cIter++;
     }
     if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
@@ -148,10 +148,7 @@ bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const 
 /*-------------------------------*/
 /* lpGBT configuration functions */
 /*-------------------------------*/
-void D19clpGBTInterface::SetPUSMDone(Ph2_HwDescription::Chip* pChip, bool pPllConfigDone, bool pDllConfigDone)
-{
-    WriteChipReg(pChip, "POWERUP2", pDllConfigDone << 2 | pPllConfigDone << 1);
-}
+void D19clpGBTInterface::SetPUSMDone(Ph2_HwDescription::Chip* pChip, bool pPllConfigDone, bool pDllConfigDone) { WriteChipReg(pChip, "POWERUP2", pDllConfigDone << 2 | pPllConfigDone << 1); }
 
 void D19clpGBTInterface::ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode)
 {
@@ -379,7 +376,7 @@ void D19clpGBTInterface::PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std:
         else if(cGroup == 6)
             cTrainRxReg = "EPRXTrain32";
 
-	//Starting or Stopping training
+        // Starting or Stopping training
         if(pTrain)
             WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
         else
@@ -398,7 +395,7 @@ void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std:
     // Find Phase
     // Configure Rx Phase Shifter
     uint16_t cDelay = 0x00;
-    uint8_t  cFreq = (cChipRate == 5) ? 4 : 5; // 4 --> 320 MHz || 5 --> 640 MHz
+    uint8_t  cFreq  = (cChipRate == 5) ? 4 : 5; // 4 --> 320 MHz || 5 --> 640 MHz
     ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDelay);
     // Phase Train channels 0,2
     PhaseTrainRx(pChip, pGroups, true);
@@ -471,10 +468,7 @@ uint8_t D19clpGBTInterface::GetPUSMStatus(Ph2_HwDescription::Chip* pChip)
     return cPUSMStatus;
 }
 
-bool D19clpGBTInterface::IsPUSMDone(Ph2_HwDescription::Chip* pChip)
-{
-    return GetPUSMStatus(pChip) == 18;
-}
+bool D19clpGBTInterface::IsPUSMDone(Ph2_HwDescription::Chip* pChip) { return GetPUSMStatus(pChip) == 18; }
 
 uint8_t D19clpGBTInterface::GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel)
 {
@@ -508,7 +502,7 @@ uint8_t D19clpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t
 {
     // Gets I2C Master status
     std::string cI2CStatReg = "I2CM" + std::to_string(pMaster) + "Status";
-    uint8_t cStatus =  ReadChipReg(pChip, cI2CStatReg);
+    uint8_t     cStatus     = ReadChipReg(pChip, cI2CStatReg);
     LOG(DEBUG) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << fI2CStatusMap[cStatus] << RESET;
     return cStatus;
 }
@@ -608,8 +602,11 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     // Write Read Command and then Read from Read Data Register
     // Procedure and registers depend on number on Bytes
 
-    if(pNBytes == 1){ WriteChipReg(pChip, cI2CCmdReg, 0x3); }
-    else { WriteChipReg(pChip, cI2CCmdReg, 0xD); }
+    if(pNBytes == 1) { WriteChipReg(pChip, cI2CCmdReg, 0x3); }
+    else
+    {
+        WriteChipReg(pChip, cI2CCmdReg, 0xD);
+    }
     // wait until the transaction is done
     uint8_t cMaxIter = 100, cIter = 0;
     do
@@ -622,7 +619,7 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
         LOG(INFO) << BOLDRED << "I2C Read Transaction FAILED" << RESET;
         throw std::runtime_error(std::string("in D19clpGBTInterface::ReadI2C : I2C Transaction failed"));
     }
-    //return read back value
+    // return read back value
     if(pNBytes == 1)
     {
         std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "ReadByte";
@@ -640,8 +637,7 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     }
 }
 
-bool D19clpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster)
-{ return (GetI2CStatus(pChip, pMaster) == 4); }
+bool D19clpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster) { return (GetI2CStatus(pChip, pMaster) == 4); }
 
 /*-------------------------*/
 /* lpGBT ADC-DAC functions */
@@ -757,7 +753,7 @@ void D19clpGBTInterface::ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pC
 void D19clpGBTInterface::ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pEnable, uint8_t pUpDown)
 {
     uint8_t cPullEnH = ReadChipReg(pChip, "PIOPullEnaH"), cPullEnL = ReadChipReg(pChip, "PIOPullEnaL");
-    uint8_t cUpDownH = ReadChipReg(pChip, "PIOUpDownH"), cUpDownL = ReadChipReg(pChip, "PIOUpDownL"); 
+    uint8_t cUpDownH = ReadChipReg(pChip, "PIOUpDownH"), cUpDownL = ReadChipReg(pChip, "PIOUpDownL");
     for(auto cGPIO: pGPIOs)
     {
         if(cGPIO < 8)
@@ -776,8 +772,6 @@ void D19clpGBTInterface::ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const
     WriteChipReg(pChip, "PIOUpDownH", cUpDownH);
     WriteChipReg(pChip, "PIOUpDownL", cUpDownL);
 }
-
-
 
 /*---------------------------------*/
 /* Bit Error Rate Tester functions */
@@ -803,20 +797,11 @@ void D19clpGBTInterface::ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, ui
     WriteChipReg(pChip, "BERTDataPattern3", (pPattern & (0xFF << 24)) >> 24);
 }
 
-uint8_t D19clpGBTInterface::GetBERTStatus(Ph2_HwDescription::Chip* pChip) 
-{ 
-    return ReadChipReg(pChip, "BERTStatus"); 
-}
+uint8_t D19clpGBTInterface::GetBERTStatus(Ph2_HwDescription::Chip* pChip) { return ReadChipReg(pChip, "BERTStatus"); }
 
-bool D19clpGBTInterface::IsBERTDone(Ph2_HwDescription::Chip* pChip)
-{ 
-    return (GetBERTStatus(pChip) & 0x1) == 1;
-}
+bool D19clpGBTInterface::IsBERTDone(Ph2_HwDescription::Chip* pChip) { return (GetBERTStatus(pChip) & 0x1) == 1; }
 
-bool D19clpGBTInterface::IsBERTEmptyData(Ph2_HwDescription::Chip* pChip)
-{ 
-    return ((GetBERTStatus(pChip) & (0x1 << 2)) >> 2) == 1; 
-}
+bool D19clpGBTInterface::IsBERTEmptyData(Ph2_HwDescription::Chip* pChip) { return ((GetBERTStatus(pChip) & (0x1 << 2)) >> 2) == 1; }
 
 uint64_t D19clpGBTInterface::GetBERTErrors(Ph2_HwDescription::Chip* pChip)
 {
@@ -831,74 +816,73 @@ uint64_t D19clpGBTInterface::GetBERTErrors(Ph2_HwDescription::Chip* pChip)
 
 float D19clpGBTInterface::GetBERTResult(Ph2_HwDescription::Chip* pChip)
 {
-    //make sure BERT is stopped
+    // make sure BERT is stopped
     StartBERT(pChip, false);
-    //start BERT
+    // start BERT
     StartBERT(pChip, true);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    //Wait for BERT to end
+    // Wait for BERT to end
     while(!IsBERTDone(pChip))
     {
         LOG(INFO) << BOLDBLUE << "\tBERT still running ... " << RESET;
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    //Throw error if empty data
+    // Throw error if empty data
     if(IsBERTEmptyData(pChip))
     {
-        //stop BERT
+        // stop BERT
         StartBERT(pChip, false);
         LOG(INFO) << BOLDRED << "BERT : All zeros at input ... exiting" << RESET;
         throw std::runtime_error(std::string("BERT : All zeros at input"));
     }
-    //Get BERT Error counters
+    // Get BERT Error counters
     LOG(DEBUG) << BOLDBLUE << "\t\tReading BERT counter" << RESET;
-    uint64_t cErrors      = GetBERTErrors(pChip);
-    //Compute number of bits checked
-    uint8_t cMeasTime = (ReadChipReg(pChip, "BERTConfig") & (0xF << 4)) >> 4;
-    uint64_t cNClkCycles = std::pow(2, 5 + cMeasTime*2);
-    uint8_t cNBitsPerClkCycle = (GetChipRate(pChip) == 5) ? 8 : 16; //5G(320MHz) == 8 bits/clk, 10G(640MHz) == 16 bits/clk
-    uint64_t cBitsChecked = cNClkCycles*cNBitsPerClkCycle;
-    //Stop BERT
+    uint64_t cErrors = GetBERTErrors(pChip);
+    // Compute number of bits checked
+    uint8_t  cMeasTime         = (ReadChipReg(pChip, "BERTConfig") & (0xF << 4)) >> 4;
+    uint64_t cNClkCycles       = std::pow(2, 5 + cMeasTime * 2);
+    uint8_t  cNBitsPerClkCycle = (GetChipRate(pChip) == 5) ? 8 : 16; // 5G(320MHz) == 8 bits/clk, 10G(640MHz) == 16 bits/clk
+    uint64_t cBitsChecked      = cNClkCycles * cNBitsPerClkCycle;
+    // Stop BERT
     StartBERT(pChip, false);
     LOG(INFO) << BOLDWHITE << "\tBits checked  : " << +cBitsChecked << RESET;
     LOG(INFO) << BOLDWHITE << "\tBits in error : " << +cErrors << RESET;
-    //return fraction of errors
-    return (float)cErrors/cBitsChecked;
+    // return fraction of errors
+    return (float)cErrors / cBitsChecked;
 }
 
-
 /*-------------------------------*/
-/* Eye Opening Monitor functions */ 
+/* Eye Opening Monitor functions */
 /*-------------------------------*/
 void D19clpGBTInterface::ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator, bool pEnableEOM)
 {
-    //configure EOM parameters and enable the block
+    // configure EOM parameters and enable the block
     WriteChipReg(pChip, "EOMConfigH", pEndOfCountSelect << 4 | pByPassPhaseInterpolator << 2 | pEnableEOM << 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5)); //wait for few ms for voltages to stabilize
+    std::this_thread::sleep_for(std::chrono::milliseconds(5)); // wait for few ms for voltages to stabilize
 }
 
 void D19clpGBTInterface::StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM)
 {
-    //Start/Stop EOM
+    // Start/Stop EOM
     uint8_t cRegisterValue = ReadChipReg(pChip, "EOMConfigH");
     WriteChipReg(pChip, "EOMConfigH", (cRegisterValue & ~(0x1 << 1)) | (pStartEOM << 1));
 }
 
 void D19clpGBTInterface::SelectEOMPhase(Ph2_HwDescription::Chip* pChip, uint8_t pPhase)
 {
-    //Select EOM Sampling Phase
+    // Select EOM Sampling Phase
     WriteChipReg(pChip, "EOMConfigL", pPhase);
 }
 
 void D19clpGBTInterface::SelectEOMVof(Ph2_HwDescription::Chip* pChip, uint8_t pVof)
 {
-    //Select EOM comparator voltage
+    // Select EOM comparator voltage
     WriteChipReg(pChip, "EOMvofSel", pVof);
-} 
+}
 
 uint8_t D19clpGBTInterface::GetEOMStatus(Ph2_HwDescription::Chip* pChip)
 {
-    //Get EOM status
+    // Get EOM status
     uint8_t cEOMStatus = ReadChipReg(pChip, "EOMStatus");
     LOG(DEBUG) << BOLDBLUE << "Eye Opening Monitor status : " << fEOMStatusMap[(cEOMStatus & (0x3 << 2)) >> 2] << RESET;
     return cEOMStatus;
@@ -906,7 +890,7 @@ uint8_t D19clpGBTInterface::GetEOMStatus(Ph2_HwDescription::Chip* pChip)
 
 uint16_t D19clpGBTInterface::GetEOMCounter(Ph2_HwDescription::Chip* pChip)
 {
-    //Get EOM tick counters
+    // Get EOM tick counters
     return (ReadChipReg(pChip, "EOMCounterValueH") << 8 | ReadChipReg(pChip, "EOMCounterValueL") << 0);
 }
 
@@ -919,10 +903,10 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUse
     if(pUseOpticalLink)
     {
 #ifdef __TCUSB__
-        #ifdef __ROH_USB__
-            LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
-            if(pToggleTC) fTC_USB->toggle_SCI2C();
-        #endif
+#ifdef __ROH_USB__
+        LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
+        if(pToggleTC) fTC_USB->toggle_SCI2C();
+#endif
 #endif
         LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
         fUseOpticalLink = true;
@@ -942,14 +926,14 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUse
 
 #ifdef __TCUSB__
 void D19clpGBTInterface::InitialiseTCUSBHandler()
-{ 
-    #ifdef __ROH_USB__
-        fTC_USB = new TC_PSROH(); 
-        LOG(INFO) << BOLDGREEN << "Initialised PS-ROH TestCard USB Handler" << RESET;
-    #elif __SEH_USB__
-        fTC_USB = new TC_2SSEH(); 
-        LOG(INFO) << BOLDGREEN << "Initialised 2S-SEH TestCard USB Handler" << RESET;
-    #endif
+{
+#ifdef __ROH_USB__
+    fTC_USB = new TC_PSROH();
+    LOG(INFO) << BOLDGREEN << "Initialised PS-ROH TestCard USB Handler" << RESET;
+#elif __SEH_USB__
+    fTC_USB = new TC_2SSEH();
+    LOG(INFO) << BOLDGREEN << "Initialised 2S-SEH TestCard USB Handler" << RESET;
+#endif
 }
 #endif
 
@@ -1023,10 +1007,7 @@ bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
             cReadBack = cicRead(pChip, pFeId, pRegisterAddress);
             cIter++;
         }
-        if(cReadBack != pRegisterValue)
-        {
-            throw std::runtime_error(std::string("CIC readback mismatch"));
-        }
+        if(cReadBack != pRegisterValue) { throw std::runtime_error(std::string("CIC readback mismatch")); }
     }
     return true;
 }
@@ -1060,10 +1041,7 @@ bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
             cReadBack = ssaRead(pChip, pFeId, pChipId, pRegisterAddress);
             cIter++;
         }
-        if(cReadBack != pRegisterValue)
-        {
-            throw std::runtime_error(std::string("SSA readback mismatch"));
-        }
+        if(cReadBack != pRegisterValue) { throw std::runtime_error(std::string("SSA readback mismatch")); }
     }
     return true;
 }
@@ -1098,10 +1076,7 @@ bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
             cReadBack = mpaRead(pChip, pFeId, pChipId, pRegisterAddress);
             cIter++;
         }
-        if(cReadBack != pRegisterValue)
-        {
-            throw std::runtime_error(std::string("MPA readback mismatch"));
-        }
+        if(cReadBack != pRegisterValue) { throw std::runtime_error(std::string("MPA readback mismatch")); }
     }
     return true;
 }
