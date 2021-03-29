@@ -235,7 +235,8 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("bit-error-rate"))
     {
         uint32_t cBERTPattern32 = cmd.foundOption("ber-pattern") ? convertAnyInt(cmd.optionValue("ber-pattern").c_str()) : 0x00000000;
-        // cPSROHTester.RunBERT(1, 5, 8, 0, cBERTPattern32);
+        uint8_t cCoarseSource = 1, cFineSource = 4, cMeasTime = 5;
+        cPSROHTester.LpGBTRunBitErrorRateTest(cCoarseSource, cFineSource, cMeasTime, cBERTPattern32);
     }
 
     /***************/
