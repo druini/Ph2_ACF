@@ -283,6 +283,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
     {
         if(cBoard->getBoardType() != BoardType::RD53)
         {
+	    uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
+
             // setting up back-end board
             fBeBoardInterface->ConfigureBoard(cBoard);
             LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;

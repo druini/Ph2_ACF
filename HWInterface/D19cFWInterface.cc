@@ -927,6 +927,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         // now configure SCA + GBTx
         configureLink(pBoard);
     }
+
+    fUseOpticalLink = pBoard->ifUseOpticalLink();
     if(fUseOpticalLink)
     {
         LOG(INFO) << BOLDBLUE << "Configuring optical link.." << RESET;
