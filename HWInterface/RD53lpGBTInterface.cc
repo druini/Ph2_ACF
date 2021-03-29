@@ -70,7 +70,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     RD53lpGBTInterface::ConfigureClocks(pChip, {28}, 6, 7, 0, 0, 0, 0);
 
     RD53lpGBTInterface::ConfigureRxGroups(pChip, {6}, {0}, 3, 0);
-    RD53lpGBTInterface::ConfigureRxChannels(pChip, {6}, {0}, 1, 1, 1, 0, 0);
+    RD53lpGBTInterface::ConfigureRxChannels(pChip, {6}, {0}, 1, 1, 1, 0, 12);
     RD53lpGBTInterface::InternalPhaseAlignRx(pChip, {6}, {0});
 
     RD53lpGBTInterface::ConfigureTxGroups(pChip, {3}, {0}, 2);
@@ -377,7 +377,7 @@ void RD53lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uin
     for(const auto& cGroup: pGroups)
     {
         // Wait until channels lock
-        LOG(INFO) << GREEN << "Phase aligning Rx Group: " << BOLDYELLOW << +cGroup << RESET;
+        LOG(INFO) << GREEN << "Phase aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
         do
         {
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
@@ -388,7 +388,7 @@ void RD53lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uin
         for(const auto& cChannel: pChannels)
         {
             uint8_t cCurrPhase = RD53lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-            LOG(INFO) << BOLDBLUE << "\t\t--> Channel: " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +cCurrPhase << RESET;
+            LOG(INFO) << BOLDBLUE << "\t\t--> Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +cCurrPhase << RESET;
             RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
         }
     }
@@ -402,7 +402,11 @@ void RD53lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uin
     RD53lpGBTInterface::ConfigureRxSource(pChip, pGroups, RD53lpGBTconstants::PATTERN_NORMAL);
 }
 
-void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip* pChip, OpticalGroup* pOpticalGroup, BeBoardFWInterface* pBeBoardFWInterface, ReadoutChipInterface* pReadoutChipInterface)
+void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
+                                              const BeBoard*        pBoard,
+                                              const OpticalGroup*   pOpticalGroup,
+                                              BeBoardFWInterface*   pBeBoardFWInterface,
+                                              ReadoutChipInterface* pReadoutChipInterface)
 {
     const bool   given_time     = true;
     const double frames_or_time = 2;
@@ -425,12 +429,13 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip* pChip, OpticalGroup* pOptica
 
                     for(uint8_t phase = 0; phase < 16; phase++)
                     {
-                        LOG(INFO) << BOLDMAGENTA << ">>> Phase value = " << BOLDYELLOW << +phase << BOLDMAGENTA << " <<<" << RESET;
+                        LOG(INFO) << BOLDMAGENTA << ">>> Phase value = " << BOLDYELLOW << +phase << BOLDMAGENTA << " of (0-15) <<<" << RESET;
+                        RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, phase);
 
                         // @TMP@ : set TAP0
+                        static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
                         static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
 
-                        RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, phase);
                         double result = RD53lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
                         if((bestBERtest == -1) || (result < bestBERtest))
                         {
@@ -441,7 +446,7 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip* pChip, OpticalGroup* pOptica
                         static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
                     }
 
-                    LOG(INFO) << BOLDBLUE << "\t--> Rx Group: " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel: " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +bestPhase
+                    LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +bestPhase
                               << RESET;
 
                     RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
