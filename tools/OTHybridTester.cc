@@ -97,6 +97,12 @@ void OTHybridTester::LpGBTInjectULExternalPattern(bool pStart, uint8_t pPattern)
 
 void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
 {
+    uint8_t  cMatch;
+    uint8_t  cShift;
+    uint8_t  cWrappedByte;
+    uint32_t cWrappedData;
+    uint8_t pPattern = 202;
+    bool     res = false;
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -113,7 +119,7 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
             D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
             cFWInterface->selectLink(cOpticalGroup->getId());
             LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-            cFWInterface->StubDebug(true, 6);
+            //cFWInterface->StubDebug(true, 6);
             // enable stub debug - allows you to 'scope' the stub output
             cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
             cFWInterface->ChipTestPulse();
@@ -121,12 +127,69 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
             std::vector<std::string> cLines(0);
             size_t                   cLine = 0;
             // int cStrLength=0;
-            do
+            /* do
             {
                 std::vector<std::string> cOutputWords(0);
                 for(size_t cIndex = 0; cIndex < 5; cIndex++)
                 {
                     auto cWord   = cWords[cLine * 10 + cIndex];
+                    LOG(INFO) << "cLine: " <<+cLine<< " cIndex: " << +cIndex <<" cWord "<< cWord<< RESET;
+                    auto cString = std::bitset<32>(cWord).to_string();
+                    for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
+                }
+
+                std::string cOutput_wSpace = "";
+                std::string cOutput        = "";
+                for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
+                {
+                    cOutput_wSpace += *cIt + " ";
+                    cOutput += *cIt;
+                }
+                LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+                cLines.push_back(cOutput);
+                // cStrLength = cOutput.length();
+                cLine++;
+            } while(cLine < 6); */
+
+            do
+            {
+            uint32_t cCicOutOutput = cWords[cLine * 10];
+            LOG(INFO) << BOLDBLUE << "Scoped output on Stub Line " << +cLine << ": " << std::bitset<32>(cCicOutOutput) << RESET;
+
+            cMatch = 32;
+            cShift = 0;
+            for(uint8_t shift = 0; shift < 8; shift++)
+            {
+                cWrappedByte = (pPattern >> shift) | (pPattern << (8 - shift));
+                cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
+                LOG(DEBUG) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
+                LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
+                int popcount = __builtin_popcountll(cWrappedData ^ cCicOutOutput);
+                if(popcount < cMatch)
+                {
+                    cMatch = popcount;
+                    cShift = shift;
+                }
+                LOG(DEBUG) << BOLDBLUE << "Line " << +cLine << " Shift " << +shift << " Match " << +popcount << RESET;
+            }
+            LOG(INFO) << BOLDBLUE << "Found for stub line " << +cLine << " a minimal bit difference of " << +cMatch << " for a bit shift of " << +cShift << RESET;
+
+// #ifdef __USE_ROOT__
+//             fillSummaryTree(cMapIterator->first + "_match", cMatch);
+//             fillSummaryTree(cMapIterator->first + "_shift", cShift);
+// #endif
+            if((cMatch == 0)) { LOG(INFO) << BOLDGREEN << "CIC Out Test passed for stub line " << +cLine << RESET; }
+            else
+            {
+                LOG(INFO) << BOLDRED << "CIC Out Test failed for stub line " << +cLine << RESET;
+                res = false;
+            }
+            
+                std::vector<std::string> cOutputWords(0);
+                for(size_t cIndex = 0; cIndex < 5; cIndex++)
+                {
+                auto cWord   = cWords[cLine * 10 + cIndex];
+                    LOG(INFO) << "cLine: " <<+cLine<< " cIndex: " << +cIndex <<" cWord "<< cWord<< RESET;
                     auto cString = std::bitset<32>(cWord).to_string();
                     for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
                 }
