@@ -159,20 +159,25 @@ class D19clpGBTInterface : public lpGBTInterface
     // Configure GPIO Pull (Up/Down) -- (Enable/Disable)
     void ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pPullEn, uint8_t pPullUpDown);
 
-    // #####################
-    // # LpGBT BERT Tester #
-    // #####################
+    // ###############################
+    // # LpGBT Bit Error Rate Tester #
+    // ###############################
     // configure BER tester
-    void ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, bool pStart);
+    void ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable=false);
+    // start BER tester
+    void StartBERT(Ph2_HwDescription::Chip* pChip, bool pStartBERT = true);
     // configure BER pattern
     void ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
     // get BER status
     uint8_t GetBERTStatus(Ph2_HwDescription::Chip* pChip);
+    // get if BER done
+    bool IsBERTDone(Ph2_HwDescription::Chip* pChip);
+    // get if BER tester received empty data
+    bool IsBERTEmptyData(Ph2_HwDescription::Chip* pChip);
     // get BERT errors
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
-    // perform BER test
-    float PerformPRBSTest(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern);
-    bool  RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0) override { return true; }
+    // Run Bit Error Test
+    float GetBERTResult(Ph2_HwDescription::Chip* pChip);
 
     void StartPRBSpattern(Ph2_HwDescription::Chip* pChip) override{};
     void StopPRBSpattern(Ph2_HwDescription::Chip* pChip) override{};
