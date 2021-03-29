@@ -236,6 +236,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("bit-error-rate"))
     {
         uint32_t cBERTPattern32 = cmd.foundOption("ber-pattern") ? convertAnyInt(cmd.optionValue("ber-pattern").c_str()) : 0x00000000;
+	//FIXME still hard coded
         uint8_t cCoarseSource = 1, cFineSource = 4, cMeasTime = 5;
         cPSROHTester.LpGBTRunBitErrorRateTest(cCoarseSource, cFineSource, cMeasTime, cBERTPattern32);
     }
