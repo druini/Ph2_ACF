@@ -150,7 +150,14 @@ class D19clpGBTInterface : public lpGBTInterface
     // ########################
     // # LpGBT GPIO functions #
     // ########################
-    void ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pInOut, uint8_t pHighLow, uint8_t pDriveStr, uint8_t pPullEn, uint8_t pPullUpDown);
+    // Configure GPIO direction (In/Out)
+    void ConfigureGPIODirection(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir);
+    // Configure GPIO Level (High/Low)
+    void ConfigureGPIOLevel(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pOut);
+    // Configure FPIO Driver Strenght
+    void ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDriveStr);
+    // Configure GPIO Pull (Up/Down) -- (Enable/Disable)
+    void ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pPullEn, uint8_t pPullUpDown);
 
     // #####################
     // # LpGBT BERT Tester #

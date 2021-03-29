@@ -703,51 +703,78 @@ uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::
     return (cADCvalue1 << 8 | cADCvalue2);
 }
 
-/*-------------------------------------------------------------------------*/
-/* General Purpose Input Output                                            */
-/*-------------------------------------------------------------------------*/
-void D19clpGBTInterface::ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir, uint8_t pOut, uint8_t pDriveStr, uint8_t pPullEn, uint8_t pUpDown)
+bool D19clpGBTInterface::IsReadADCDone(Ph2_HwDescription::Chip* pChip) { return (((ReadChipReg(pChip, "ADCStatusH") & 0x40) >> 6) == 1); }
+
+/*------------------------------*/
+/* General Purpose Input Output */
+/*------------------------------*/
+
+void D19clpGBTInterface::ConfigureGPIODirection(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir)
 {
-    LOG(INFO) << BOLDMAGENTA << "Configuring GPIOs" << RESET;
-    uint8_t cDirH      = ReadChipReg(pChip, "PIODirH");
-    uint8_t cDirL      = ReadChipReg(pChip, "PIODirL");
-    uint8_t cOutH      = ReadChipReg(pChip, "PIOOutH");
-    uint8_t cOutL      = ReadChipReg(pChip, "PIOOutL");
+    uint8_t cDirH = ReadChipReg(pChip, "PIODirH");
+    uint8_t cDirL = ReadChipReg(pChip, "PIODirL");
+    for(auto cGPIO: pGPIOs)
+    {
+        if(cGPIO < 8)
+            cDirL = (cDirL & ~(1 << cGPIO)) | (pDir << cGPIO);
+        else
+            cDirH = (cDirH & ~(1 << (cGPIO - 8))) | (pDir << (cGPIO - 8));
+    }
+    WriteChipReg(pChip, "PIODirH", cDirH);
+    WriteChipReg(pChip, "PIODirL", cDirL);
+}
+
+void D19clpGBTInterface::ConfigureGPIOLevel(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pOut)
+{
+    uint8_t cOutH = ReadChipReg(pChip, "PIOOutH");
+    uint8_t cOutL = ReadChipReg(pChip, "PIOOutL");
+    for(auto cGPIO: pGPIOs)
+    {
+        if(cGPIO < 8)
+            cOutL = (cOutL & ~(1 << cGPIO)) | (pOut << cGPIO);
+        else
+            cOutH = (cOutH & ~(1 << (cGPIO - 8))) | (pOut << (cGPIO - 8));
+    }
+    WriteChipReg(pChip, "PIOOutH", cOutH);
+    WriteChipReg(pChip, "PIOOutL", cOutL);
+}
+
+void D19clpGBTInterface::ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDriveStr)
+{
     uint8_t cDriveStrH = ReadChipReg(pChip, "PIODriveStrengthH");
     uint8_t cDriveStrL = ReadChipReg(pChip, "PIODriveStrengthL");
-    uint8_t cPullEnH   = ReadChipReg(pChip, "PIOPullEnaH");
-    uint8_t cPullEnL   = ReadChipReg(pChip, "PIOPullEnaL");
-    uint8_t cUpDownH   = ReadChipReg(pChip, "PIOUpDownH");
-    uint8_t cUpDownL   = ReadChipReg(pChip, "PIOUpDownL");
+    for(auto cGPIO: pGPIOs)
+    {
+        if(cGPIO < 8)
+            cDriveStrL = (cDriveStrL & ~(1 << cGPIO)) | (pDriveStr << cGPIO);
+        else
+            cDriveStrH = (cDriveStrH & ~(1 << (cGPIO - 8))) | (pDriveStr << (cGPIO - 8));
+    }
+    WriteChipReg(pChip, "PIODriveStrengthH", cDriveStrH);
+    WriteChipReg(pChip, "PIODriveStrengthL", cDriveStrL);
+}
+
+void D19clpGBTInterface::ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pEnable, uint8_t pUpDown)
+{
+    uint8_t cPullEnH = ReadChipReg(pChip, "PIOPullEnaH"), cPullEnL = ReadChipReg(pChip, "PIOPullEnaL");
+    uint8_t cUpDownH = ReadChipReg(pChip, "PIOUpDownH"), cUpDownL = ReadChipReg(pChip, "PIOUpDownL"); 
     for(auto cGPIO: pGPIOs)
     {
         if(cGPIO < 8)
         {
-            cDirL |= (pDir << cGPIO);
-            cOutL |= (pOut << cGPIO);
-            cDriveStrL |= (pDriveStr << cGPIO);
-            cPullEnL |= (pPullEn << cGPIO);
-            cUpDownL |= (pUpDown << cGPIO);
+            cPullEnL = (cPullEnL & ~(1 << cGPIO)) | (pEnable << cGPIO);
+            cUpDownL = (cUpDownL & ~(1 << cGPIO)) | (pUpDown << cGPIO);
         }
         else
         {
-            cDirH |= (pDir << (cGPIO - 8));
-            cOutH |= (pOut << (cGPIO - 8));
-            cDriveStrH |= (pDriveStr << (cGPIO - 8));
-            cPullEnH |= (pPullEn << (cGPIO - 8));
-            cUpDownH |= (pUpDown << (cGPIO - 8));
+            cPullEnH = (cPullEnH & ~(1 << (cGPIO - 8))) | (pEnable << (cGPIO - 8));
+            cUpDownH = (cUpDownH & ~(1 << (cGPIO - 8))) | (pUpDown << (cGPIO - 8));
         }
     }
-    WriteChipReg(pChip, "PIODirL", cDirL);
-    WriteChipReg(pChip, "PIODirH", cDirH);
-    WriteChipReg(pChip, "PIOOutL", cOutL);
-    WriteChipReg(pChip, "PIOOutH", cOutH);
-    WriteChipReg(pChip, "PIODriveStrengthL", cDriveStrL);
-    WriteChipReg(pChip, "PIODriveStrengthH", cDriveStrH);
-    WriteChipReg(pChip, "PIOPullEnaL", cPullEnL);
     WriteChipReg(pChip, "PIOPullEnaH", cPullEnH);
-    WriteChipReg(pChip, "PIOUpDownL", cUpDownL);
+    WriteChipReg(pChip, "PIOPullEnaL", cPullEnL);
     WriteChipReg(pChip, "PIOUpDownH", cUpDownH);
+    WriteChipReg(pChip, "PIOUpDownL", cUpDownL);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -1037,4 +1064,3 @@ uint32_t D19clpGBTInterface::mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFe
     return cReadBack;
 }
 } // namespace Ph2_HwInterface
-bool D19clpGBTInterface::IsReadADCDone(Ph2_HwDescription::Chip* pChip) { return (((ReadChipReg(pChip, "ADCStatusH") & 0x40) >> 6) == 1); }
