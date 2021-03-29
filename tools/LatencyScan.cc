@@ -78,11 +78,7 @@ void LatencyScan::MeasureTriggerTDC()
 
 }
 
-<<<<<<< HEAD
 void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
-=======
-std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
->>>>>>> Dev
 {
     LOG(INFO) << "Scanning Latency ... ";
     uint32_t cIterationCount = 0;
@@ -118,8 +114,9 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint16_t pStartLate
                         // first, reset the hit counter - I need separate counters for each event
                         int cHitCounter = 0;
                         for(auto chip: *hybrid){
-                            if (chip->getFrontEndType() == FrontEndType::MPA) cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNPixelClusters(hybrid->getId(), chip->getId());
-                            else if (chip->getFrontEndType() == FrontEndType::SSA) cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(hybrid->getId(), static_cast<SSA*> (chip)->getPartid());
+                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
+                            if (theChip->getFrontEndType() == FrontEndType::MPA) cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNPixelClusters(hybrid->getId(), chip->getId());
+                            else if (theChip->getFrontEndType() == FrontEndType::SSA) cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(hybrid->getId(), static_cast<SSA*> (theChip)->getPartid());
                             else cHitCounter += cEvent->GetNHits(hybrid->getId(), chip->getId());
                         }
                         cHitSum += cHitCounter; //TODO: It would be nice to fill per event so you could have the errors correct, maybe do with occupancy 
