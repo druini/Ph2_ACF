@@ -199,7 +199,7 @@ void D19clpGBTInterface::ConfigureTxGroups(Ph2_HwDescription::Chip* pChip, const
         else if(cGroup == 2 || cGroup == 3)
             cEnableTxReg = "EPTX32Enable";
         uint8_t cValueEnableTx = ReadChipReg(pChip, cEnableTxReg);
-        for(const auto cChannel: pChannels) cValueEnableTx += (1 << (cChannel + 4 * (cGroup % 2)));
+        for(const auto cChannel: pChannels) cValueEnableTx |= (1 << (cChannel + 4 * (cGroup % 2)));
         WriteChipReg(pChip, cEnableTxReg, cValueEnableTx);
     }
 }
@@ -298,11 +298,11 @@ void D19clpGBTInterface::ConfigureRxSource(Ph2_HwDescription::Chip* pChip, const
     for(const auto& cGroup: pGroups)
     {
         if(pSource == 0)
-            LOG(INFO) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to NORMAL " << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to NORMAL " << RESET;
         else if(pSource == 1)
-            LOG(INFO) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to PRBS7 " << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to PRBS7 " << RESET;
         else if(pSource == 4 || pSource == 5)
-            LOG(INFO) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to Constant Pattern" << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Configuring Rx Group " << +cGroup << " Source to Constant Pattern" << RESET;
         std::string cRxSourceReg;
         if(cGroup == 0 || cGroup == 1)
             cRxSourceReg = "ULDataSource1";
