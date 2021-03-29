@@ -113,7 +113,7 @@ class BeBoardFWInterface : public RegManager
     virtual void DeleteFpgaConfig(const std::string& strId) {}
 
     /*! \brief Run Bit Error Rate test */
-    virtual bool RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
+    virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
 
     /*!
      * \brief Encode a/several word(s) readable for a Chip
@@ -266,10 +266,10 @@ class BeBoardFWInterface : public RegManager
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)       = 0;
-    virtual void     ResetOptoLink()                                                                   = 0;
-    virtual bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) = 0;
-    virtual uint32_t ReadOptoLinkRegister(uint32_t pAddress)                                           = 0;
+    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                    = 0;
+    virtual void     ResetOptoLink()                                                                                                                = 0;
+    virtual bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) = 0;
+    virtual uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress)                                                       = 0;
 
     // ##########################################
     // # Read/Write new Command Processor Block #

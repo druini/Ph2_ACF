@@ -226,7 +226,8 @@ void SystemController::RunBERtest(std::string chain2test, bool given_time, doubl
 // # chain2test = "LPGBT-FE" #
 // ###########################
 {
-    if((chain2test != "BE-FE") && (chain2test != "BE-LPGBT") && (chain2test != "LPGBT-FE")) throw Exception("[SystemController::RunBERtest] Option non recognized");
+    if((chain2test != "BE-FE") && (chain2test != "BE-LPGBT") && (chain2test != "LPGBT-FE"))
+        throw Exception("[SystemController::RunBERtest] Option non recognized: " + chain2test + " (use BE-FE, BE-LPGBT, or LPGBT-FE)");
 
     if(chain2test == "BE-LPGBT")
         for(const auto cBoard: *fDetectorContainer)
@@ -239,8 +240,8 @@ void SystemController::RunBERtest(std::string chain2test, bool given_time, doubl
                     flpGBTInterface->StartPRBSpattern(cOpticalGroup->flpGBT);
 
                     LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << RESET << GREEN
-                              << "]: " << BOLDYELLOW
-                              << ((fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), 0, frontendSpeed) == true) ? "PASSED" : "NOT PASSED") << RESET; // @TMP@
+                              << "]: " << BOLDYELLOW << ((fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), 0, frontendSpeed) == 0) ? "PASSED" : "NOT PASSED")
+                              << RESET; // @TMP@
 
                     flpGBTInterface->StopPRBSpattern(cOpticalGroup->flpGBT);
                 }
@@ -259,8 +260,8 @@ void SystemController::RunBERtest(std::string chain2test, bool given_time, doubl
                         LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
                                   << ((((chain2test != "LPGBT-FE") &&
-                                        (fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), cChip->getId(), frontendSpeed) == true)) ||
-                                       ((chain2test == "LPGBT-FE") && (flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, 6, 0, given_time, frames_or_time, frontendSpeed) == true))) // @TMP@
+                                        (fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), cChip->getId(), frontendSpeed) == 0)) ||
+                                       ((chain2test == "LPGBT-FE") && (flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, 6, 0, given_time, frames_or_time, frontendSpeed) == 0))) // @TMP@
                                           ? "PASSED"
                                           : "NOT PASSED")
                                   << RESET;
@@ -415,9 +416,9 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
 
                     if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
-                        LOG(INFO) << BOLDBLUE << "\t--> LpGBT chip configured" << RESET;
+                        LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
                     else
-                        LOG(ERROR) << BOLDRED << "\t--> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ")" << RESET;
+                        LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
                 }
 
             // #######################
@@ -441,7 +442,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         for(const auto cChip: *cHybrid)
                         {
                             LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
-                            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(static_cast<RD53*>(cChip));
+                            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
                         }
                     }
                 LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
@@ -454,15 +455,15 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ############################
             // # Configure frontend chips #
             // ############################
-            LOG(INFO) << CYAN << "=== Configuring frontend chip registers ===" << RESET;
+            LOG(INFO) << CYAN << "===== Configuring frontend chip registers =====" << RESET;
             for(auto cOpticalGroup: *cBoard)
             {
-                if(cOpticalGroup->flpGBT != nullptr) // @TMP@
+                if(cOpticalGroup->flpGBT != nullptr)
                 {
-                    if(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->DidIwriteChipReg(6) == true)
-                        LOG(INFO) << GREEN << "Check writing frontent chip reg: " << BOLDYELLOW << "GOOD" << RESET;
+                    if(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->DidIwriteChipReg(6) == true) // @TMP@
+                        LOG(INFO) << GREEN << "Check writing frontend chip reg --> " << BOLDYELLOW << "GOOD" << RESET;
                     else
-                        LOG(INFO) << GREEN << "Check writing frontent chip reg: " << BOLDRED << "BAD" << RESET;
+                        LOG(INFO) << GREEN << "Check writing frontend chip reg --> " << BOLDRED << "BAD" << RESET;
                 }
 
                 for(auto cHybrid: *cOpticalGroup)
@@ -474,13 +475,13 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
                         if(resetTDAC == true) static_cast<RD53*>(cChip)->resetTDAC();
                         static_cast<RD53*>(cChip)->copyMaskToDefault();
-                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cChip));
+                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
                         LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
                         // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
                     }
                 }
             }
-            LOG(INFO) << CYAN << "================== Done ===================" << RESET;
+            LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
             RD53Event::ForkDecodingThreads();

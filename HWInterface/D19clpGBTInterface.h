@@ -40,7 +40,6 @@ class D19clpGBTInterface : public lpGBTInterface
     bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop = true);
     uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
-    bool     RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0) override {return true;};
     void     StartPRBSpattern(Ph2_HwDescription::Chip* pChip) override {};
     void     StopPRBSpattern(Ph2_HwDescription::Chip* pChip) override {};
 
@@ -178,9 +177,10 @@ class D19clpGBTInterface : public lpGBTInterface
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
     // Run Bit Error Test
     float GetBERTResult(Ph2_HwDescription::Chip* pChip);
+    double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0) override { return 0; }
 
-    // #####################################
-    // # LpGBT Eye Opening Monitor Tester  #
+    // ####################################
+    // # LpGBT Eye Opening Monitor Tester #
     // ####################################
     // Configure Eye Opening Monitor
     void ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator=false, bool pEnableEOM=true);
