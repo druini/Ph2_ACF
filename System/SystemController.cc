@@ -292,7 +292,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
 
             // Link start-up
             // first configure lpGBT
-            bool cIslpGBTI2C = !cBoard->ifUseOpticalLink();
+            bool cIslpGBTI2C = false;
             for(auto cOpticalGroup: *cBoard)
             {
                 if(cOpticalGroup->flpGBT == nullptr) continue;
