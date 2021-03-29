@@ -232,6 +232,7 @@ void SystemController::RunBERtest(std::string chain2test, bool given_time, doubl
         for(const auto cBoard: *fDetectorContainer)
         {
             uint32_t frontendSpeed = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+            // uint32_t frontendSpeed = static_cast<RD53FWInterface*>(fBeBoardInterface)->ReadoutSpeed();
 
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
@@ -393,6 +394,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ########################
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ConfigureFromXML(cBoard);
 
+
             // ########################
             // # Configure LpGBT chip #
             // ########################
@@ -402,7 +404,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
 
                     if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
+                    {
+                        static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, cOpticalGroup, this->fBeBoardFWMap[cBoard->getId()], fReadoutChipInterface);
                         LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
+                    }
                     else
                         LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
                 }

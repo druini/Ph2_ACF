@@ -531,7 +531,7 @@ std::pair<uint16_t, float> D19cFWInterface::readADC(std::string pValueToRead, bo
     cADCreading.second = cGBTx.convertAdcReading(cADCreading.first, pValueToRead);
     return cADCreading;
 }
-void D19cFWInterface::selectLink(uint8_t pLinkId, uint32_t cWait_ms)
+void D19cFWInterface::selectLink(const uint8_t pLinkId, uint32_t cWait_ms)
 {
     if(fOptical)
     {
