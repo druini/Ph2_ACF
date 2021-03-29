@@ -107,6 +107,8 @@ class D19clpGBTInterface : public lpGBTInterface
     // ################################
     // Print out lpGBT chip mode (data rate, FEC, transmission mode)
     void PrintChipMode(Ph2_HwDescription::Chip* pChip);
+    // Get lpGBT Chip Rate
+    uint8_t GetChipRate(Ph2_HwDescription::Chip* pChip);
     // Get lpGBT Rx Group Delay-Locked-Loop state machine
     uint8_t GetRxDllStatus(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
     // Get lpGBT Rx Channel phase
@@ -115,6 +117,7 @@ class D19clpGBTInterface : public lpGBTInterface
     bool IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels);
     // Get lpGBT Power Up State Machine status
     uint8_t GetPUSMStatus(Ph2_HwDescription::Chip* pChip);
+    bool IsPUSMDone(Ph2_HwDescription::Chip* pChip);
 
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
@@ -166,8 +169,21 @@ class D19clpGBTInterface : public lpGBTInterface
     // ###################################
     // # Outer Tracker specific funtions #
     // ###################################
+#ifdef __TCUSB__
+    void      InitialiseTCUSBHandler();
+    #ifdef __ROH_USB__
+        void      SetTCUSBHandler(TC_PSROH* pTC_PSROH) { fTC_USB = pTC_PSROH; }
+        TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
+    #elif __SEH_USB__
+        void      SetTCUSBHandler(TC_2SSEH* pTC_2SSEH) { fTC_USB = pTC_2SSEH; }
+        TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
+    #endif
+
+#endif
+    // Sets the flag used to select which lpGBT configuration interface to use
+    void SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
     // configure PS-ROH
-    void ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t pRate);
+    void ConfigurePSROH(Ph2_HwDescription::Chip* pChip);
     // cbc read/write
     bool cbcWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pPage, uint8_t pRegistergAddress, uint8_t pRegisterValue, bool pReadBack = true, bool pSetPage = false)
     {

@@ -822,40 +822,64 @@ float D19clpGBTInterface::PerformPRBSTest(Ph2_HwDescription::Chip* pChip, uint8_
 void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, const std::string& pMode, bool pToggle)
 {
     if(pMode == "serial")
+
+/*-----------------------*/
+/* OT specific functions */
+/*-----------------------*/
+
+void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC)
+{
+    if(pUseOpticalLink)
     {
 #ifdef __TCUSB__
-        LOG(INFO) << BOLDBLUE << "serial before toggle" << RESET;
-        if(pToggle) fTC_PSROH.toggle_SCI2C();
+        #ifdef __ROH_USB__
+            LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
+            if(pToggleTC) fTC_USB->toggle_SCI2C();
+        #endif
 #endif
-        LOG(INFO) << BOLDGREEN << "Switched software flag to Serial Interface configuration mode" << RESET;
+        LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
         fUseOpticalLink = true;
-    }
-    else if(pMode == "i2c")
-    {
-        LOG(INFO) << BOLDGREEN << "Switched software flag to I2C Slave Interface configuration mode" << RESET;
-        fUseOpticalLink = false;
+        if(pUseCPB)
+        {
+            LOG(INFO) << BOLDGREEN << "Using Command Processor Block" << RESET;
+            fUseCPB = true;
+        }
     }
     else
     {
-        LOG(INFO) << BOLDRED << "Wrong configuration mode : choose [serial] or [i2c]" << RESET;
-        throw std::runtime_error(std::string("lpGBT wrong configuration mode"));
+        LOG(INFO) << BOLDGREEN << "Using I2C Slave Interface configuration mode" << RESET;
+        fUseOpticalLink = false;
+        fUseCPB         = false;
     }
 }
 
-void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t pRate)
+#ifdef __TCUSB__
+void D19clpGBTInterface::InitialiseTCUSBHandler()
+{ 
+    #ifdef __ROH_USB__
+        fTC_USB = new TC_PSROH(); 
+        LOG(INFO) << BOLDGREEN << "Initialised PS-ROH TestCard USB Handler" << RESET;
+    #elif __SEH_USB__
+        fTC_USB = new TC_2SSEH(); 
+        LOG(INFO) << BOLDGREEN << "Initialised 2S-SEH TestCard USB Handler" << RESET;
+    #endif
+}
+#endif
+
+void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 {
-    LOG(INFO) << "Applying PS-ROH lpGBT configuration" << RESET;
+    uint8_t cChipRate = GetChipRate(pChip);
+    LOG(INFO) << BOLDGREEN << "Applying PS-ROH-" << +cChipRate << "G lpGBT configuration" << RESET;
     // Configure High Speed Link Tx Rx Polarity
     ConfigureHighSpeedPolarity(pChip, 1, 0);
     // Clocks
     std::vector<uint8_t> cClocks  = {1, 6, 11, 26};
-    uint8_t              cClkFreq = (pRate == 5) ? 4 : 5, cClkDriveStr = 7, cClkInvert = 1;
+    uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 7, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
     uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
-    ConfigureTxSource(pChip, cTxGroups, 0); // 0 --> link data, 3 --> constant pattern
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
     {
@@ -865,10 +889,10 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t 
     // Rx configuration and Phase Align
     // Configure Rx Groups
     std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
-    uint8_t              cRxDataRate = 2, cRxTrackMode = 0;
+    uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 7;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)
@@ -891,14 +915,14 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t 
     PhaseAlignRx(pChip, cRxGroups, cRxChannels);
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
-    // setting GPIO levels Uncomment this for Skeleton test
-    ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
-    WriteChipReg(pChip, "POWERUP2", 0x06);
+    // Setting GPIO levels for Skeleton test
+    ConfigureGPIODirection(pChip, {0, 1, 3, 6, 9, 12}, 1);
+    ConfigureGPIOLevel(pChip, {0, 1, 3, 6, 9, 12}, 1);
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
 {
-    LOG(INFO) << BOLDBLUE << "CIC Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "CIC Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
     WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, (pRegisterValue << 16) | cInvertedRegister, 3);
     if(pRetry)
@@ -907,14 +931,14 @@ bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
         uint8_t cIter = 0, cMaxIter = 10;
         while(cReadBack != pRegisterValue && cIter < cMaxIter)
         {
+            LOG(INFO) << BOLDRED << "CIC I2C ReadBack Mismatch in hybrid " << +pFeId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
             WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, (pRegisterValue << 16) | cInvertedRegister, 3);
             cReadBack = cicRead(pChip, pFeId, pRegisterAddress);
             cIter++;
         }
         if(cReadBack != pRegisterValue)
         {
-            LOG(INFO) << BOLDRED << "CIC I2C ReadBack Mismatch in hybrid " << +pFeId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
-            throw std::runtime_error(std::string("I2C readback mismatch"));
+            throw std::runtime_error(std::string("CIC readback mismatch"));
         }
     }
     return true;
@@ -925,29 +949,33 @@ uint32_t D19clpGBTInterface::cicRead(Ph2_HwDescription::Chip* pChip, uint8_t pFe
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
     WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, cInvertedRegister, 2);
     uint8_t cReadBack = ReadI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, 1);
-    LOG(INFO) << BOLDYELLOW << "CIC Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "CIC Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     return cReadBack;
 }
 
 bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
 {
-    LOG(INFO) << BOLDBLUE << "SSA Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+    bool cWriteOnlyReg = (pRegisterAddress & 0x7f) == 0x00;
+    LOG(DEBUG) << BOLDBLUE << "SSA Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
     WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x20 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
+
+    if(cWriteOnlyReg) return true;
+
     if(pRetry)
     {
         uint8_t cReadBack = ssaRead(pChip, pFeId, pChipId, pRegisterAddress);
         uint8_t cIter = 0, cMaxIter = 10;
         while(cReadBack != pRegisterValue && cIter < cMaxIter)
         {
+            LOG(INFO) << BOLDRED << "SSA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
             WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x20 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
             cReadBack = ssaRead(pChip, pFeId, pChipId, pRegisterAddress);
             cIter++;
         }
         if(cReadBack != pRegisterValue)
         {
-            LOG(INFO) << BOLDRED << "SSA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
-            throw std::runtime_error(std::string("I2C readback mismatch"));
+            throw std::runtime_error(std::string("SSA readback mismatch"));
         }
     }
     return true;
