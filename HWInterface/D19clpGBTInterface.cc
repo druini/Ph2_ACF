@@ -20,6 +20,11 @@ namespace Ph2_HwInterface
 {
 bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
+#ifdef __SEH_USB__
+    fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
+    LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+#endif
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
     SetConfigMode(pChip, fUseOpticalLink, fUseCPB);
@@ -46,8 +51,11 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     if(cPUSMStatus != 18) exit(0);
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
+#ifdef __ROH_USB__
     ConfigurePSROH(pChip);
-    // Configure2SSEH(pChip);
+#elif __SEH_USB__
+    Configure2SSEH(pChip);
+#endif
     return true;
 }
 
