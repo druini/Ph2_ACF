@@ -179,8 +179,21 @@ class D19clpGBTInterface : public lpGBTInterface
     // Run Bit Error Test
     float GetBERTResult(Ph2_HwDescription::Chip* pChip);
 
-    void StartPRBSpattern(Ph2_HwDescription::Chip* pChip) override{};
-    void StopPRBSpattern(Ph2_HwDescription::Chip* pChip) override{};
+    // #####################################
+    // # LpGBT Eye Opening Monitor Tester  #
+    // ####################################
+    // Configure Eye Opening Monitor
+    void ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator=false, bool pEnableEOM=true);
+    // Start Eye Opening Monitor
+    void StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM=true);
+    // Select Eye Opening Monitor sampling phase
+    void SelectEOMPhase(Ph2_HwDescription::Chip* pChip, uint8_t pPhase);
+    // Select Eye Opening Monitor comparator voltage
+    void SelectEOMVof(Ph2_HwDescription::Chip* pChip, uint8_t pVof);
+    // Get Eye Opening Monitor status
+    uint8_t GetEOMStatus(Ph2_HwDescription::Chip* pChip);
+    // Get Eye Opening Monitor counter value
+    uint16_t GetEOMCounter(Ph2_HwDescription::Chip* pChip);
 
     // ###################################
     // # Outer Tracker specific funtions #
