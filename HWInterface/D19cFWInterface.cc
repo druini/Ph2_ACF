@@ -4480,7 +4480,12 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
     uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
     uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
     uint8_t               cIter = 0, cMaxIter = 50;
-    while(cReadBackRegAddr != 0x018d && cIter < cMaxIter)
+    uint16_t cI2CReadByteRegAddr = 0;
+    //pick correct register address to check
+    if(pMasterId == 2) cI2CReadByteRegAddr = 0x018d;
+    else if(pMasterId == 0) cI2CReadByteRegAddr = 0x0163;
+    //check reply
+    while(cReadBackRegAddr != cI2CReadByteRegAddr && cIter < cMaxIter)
     {
         ResetCPB();
         cReplyVector.clear();
