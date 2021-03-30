@@ -408,10 +408,9 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                                               BeBoardFWInterface*   pBeBoardFWInterface,
                                               ReadoutChipInterface* pReadoutChipInterface)
 {
+    const double frames_or_time = 0.5; // @CONST@
     const bool   given_time     = true;
-    const double frames_or_time = 1;
-
-    uint32_t frontendSpeed = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
+    uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
 
     LOG(INFO) << GREEN << "Phase alignment ongoing for LpGBT chip: " << BOLDYELLOW << pChip->getId() << RESET;
 
