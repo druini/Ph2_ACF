@@ -80,32 +80,32 @@ int main(int argc, char** argv)
     DeviceHandler ps_deviceHandler;
     ps_deviceHandler.readSettings(docPath, docSettings); // Includes connection configuration/initialization
 
-    PowerSupply* dPowerSupply = ps_deviceHandler.getPowerSupply(cPowerSupply);  // Will throw std::out_of_range error if not found
+    PowerSupply*        dPowerSupply        = ps_deviceHandler.getPowerSupply(cPowerSupply); // Will throw std::out_of_range error if not found
     PowerSupplyChannel* dPowerSupplyChannel = dPowerSupply->getChannel(cPowerSupplyChannel);
 
     // if(dPowerSupply->isOpen()) // power supply doesn't have isOpen method
     // {
-        if(cTurnOff)
+    if(cTurnOff)
+    {
+        LOG(INFO) << "Turn off " << cPowerSupply;
+        dPowerSupplyChannel->turnOff();
+    }
+    else
+    {
+        if(cmd.foundOption("v_max")) { dPowerSupplyChannel->setVoltageCompliance(cVoltsLimit); }
+        if(cmd.foundOption("i_max")) { dPowerSupplyChannel->setCurrentCompliance(cAmpsLimit); }
+        if(cmd.foundOption("v"))
         {
-            LOG(INFO) << "Turn off " << cPowerSupply;
-            dPowerSupplyChannel->turnOff();
+            dPowerSupplyChannel->setVoltage(cVolts);
+            dPowerSupplyChannel->turnOn();
         }
-        else
-        {
-            if(cmd.foundOption("v_max")) { dPowerSupplyChannel->setVoltageCompliance(cVoltsLimit); }
-            if(cmd.foundOption("i_max")) { dPowerSupplyChannel->setCurrentCompliance(cAmpsLimit); }
-            if(cmd.foundOption("v"))
-            {
-                dPowerSupplyChannel->setVoltage(cVolts);
-                dPowerSupplyChannel->turnOn();
-            }
-        }
-        sleep(1);
-        LOG(INFO) << BOLDWHITE << cPowerSupply << " channel " << cPowerSupplyChannel << " status:" RESET;
-        LOG(INFO) << "\tV(set):\t\t" << BOLDWHITE << dPowerSupplyChannel->getSetVoltage() << RESET;
-        LOG(INFO) << "\tV(meas):\t" << BOLDWHITE << dPowerSupplyChannel->getOutputVoltage() << RESET;
-        LOG(INFO) << "\tI_max(set):\t" << BOLDWHITE << dPowerSupplyChannel->getCurrentCompliance() << RESET;
-        LOG(INFO) << "\tI(meas):\t" << BOLDWHITE << dPowerSupplyChannel->getCurrent() << RESET;
+    }
+    sleep(1);
+    LOG(INFO) << BOLDWHITE << cPowerSupply << " channel " << cPowerSupplyChannel << " status:" RESET;
+    LOG(INFO) << "\tV(set):\t\t" << BOLDWHITE << dPowerSupplyChannel->getSetVoltage() << RESET;
+    LOG(INFO) << "\tV(meas):\t" << BOLDWHITE << dPowerSupplyChannel->getOutputVoltage() << RESET;
+    LOG(INFO) << "\tI_max(set):\t" << BOLDWHITE << dPowerSupplyChannel->getCurrentCompliance() << RESET;
+    LOG(INFO) << "\tI(meas):\t" << BOLDWHITE << dPowerSupplyChannel->getCurrent() << RESET;
 
     // }
     // else
