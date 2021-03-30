@@ -405,7 +405,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
 
                     if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
                     {
-                        static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, cOpticalGroup, this->fBeBoardFWMap[cBoard->getId()], fReadoutChipInterface);
+                        static_cast<RD53lpGBTInterface*>(flpGBTInterface)
+                            ->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, cBoard, cOpticalGroup, this->fBeBoardFWMap[cBoard->getId()], fReadoutChipInterface);
                         LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
                     }
                     else
