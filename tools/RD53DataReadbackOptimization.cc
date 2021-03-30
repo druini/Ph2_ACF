@@ -14,6 +14,11 @@ using namespace Ph2_HwInterface;
 
 void DataReadbackOptimization::ConfigureCalibration()
 {
+    // ##############################
+    // # Initialize sub-calibration #
+    // ##############################
+    BERtest::ConfigureCalibration();
+
     // #######################
     // # Retrieve parameters #
     // #######################
@@ -28,7 +33,6 @@ void DataReadbackOptimization::ConfigureCalibration()
     stopValueTAP1  = this->findValueInSettings("TAP1Stop");
     startValueTAP2 = this->findValueInSettings("TAP2Start");
     stopValueTAP2  = this->findValueInSettings("TAP2Stop");
-    timeXstep      = this->findValueInSettings("TimePerStep");
     doDisplay      = this->findValueInSettings("DisplayHisto");
     doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings("SaveBinaryData");
@@ -47,11 +51,6 @@ void DataReadbackOptimization::ConfigureCalibration()
     nSteps = (stopValueTAP2 - startValueTAP2 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP2 - startValueTAP2 + 1);
     step   = floor((stopValueTAP2 - startValueTAP2 + 1) / nSteps);
     for(auto i = 0u; i < nSteps; i++) dacListTAP2.push_back(startValueTAP2 + step * i);
-
-    // #######################
-    // # Initialize progress #
-    // #######################
-    RD53RunProgress::total() += DataReadbackOptimization::getNumberIterations();
 
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
@@ -262,28 +261,17 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
         // ################
         // # Run analysis #
         // ################
-        for(const auto cBoard: *fDetectorContainer)
-        {
-            uint32_t frontendSpeed = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+        BERtest::run();
 
+        // ######################
+        // # Save BER test data #
+        // ######################
+        for(const auto cBoard: *theContainer)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                    {
-                        fReadoutChipInterface->StartPRBSpattern(cChip);
-
-                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i] =
-                            fBeBoardFWMap[cBoard->getId()]->RunBERtest(true, timeXstep, 6, cHybrid->getId(), cChip->getId(), frontendSpeed); // @TMP@
-
-                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
-
-                        fReadoutChipInterface->StopPRBSpattern(cChip);
-
-                        // @TMP@
-                        // static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_TAP0_BIAS", RD53Shared::setBits(cChip->getRegItem(regName).fBitSize));
-                        // static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_TAP1_BIAS", 0);
-                    }
-        }
+                        cChip->getSummary<GenericDataArray<TAPsize>>().data[i] =
+                            BERtest::theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<double>();
 
         // ##############################################
         // # Send periodic data to minitor the progress #

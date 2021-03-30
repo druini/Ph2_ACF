@@ -10,8 +10,8 @@
 #ifndef RD53lpGBTInterface_H
 #define RD53lpGBTInterface_H
 
-#include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/RD53FWInterface.h"
+#include "../HWInterface/ReadoutChipInterface.h"
 /* #include "../Utils/Container.h" */
 #include "../Utils/RD53Shared.h"
 #include "lpGBTInterface.h"

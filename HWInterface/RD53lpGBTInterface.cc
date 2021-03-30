@@ -7,9 +7,9 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
+#include "RD53lpGBTInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/RD53Interface.h"
-#include "RD53lpGBTInterface.h"
 
 using namespace Ph2_HwDescription;
 
@@ -409,7 +409,7 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                                               ReadoutChipInterface* pReadoutChipInterface)
 {
     const bool   given_time     = true;
-    const double frames_or_time = 2;
+    const double frames_or_time = 1;
 
     uint32_t frontendSpeed = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
 
@@ -417,40 +417,39 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
 
     for(const auto cHybrid: *pOpticalGroup)
         for(const auto cChip: *cHybrid)
-          // @TMP@
-            // for(const auto& cGroup: cChip.pGroups)
-            //     for(const auto& cChannel: cChip.pChannels)
+        // @TMP@
+        // for(const auto& cGroup: cChip.pGroups)
+        //     for(const auto& cChannel: cChip.pChannels)
+        {
+            uint8_t cGroup   = 6;
+            uint8_t cChannel = 0;
+
+            uint8_t bestPhase   = 0;
+            double  bestBERtest = -1;
+
+            for(uint8_t phase = 0; phase < 16; phase++)
+            {
+                LOG(INFO) << BOLDMAGENTA << ">>> Phase value = " << BOLDYELLOW << +phase << BOLDMAGENTA << " of (0-15) <<<" << RESET;
+                RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, phase);
+
+                // @TMP@ : set TAP0
+                static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
+                static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
+
+                double result = RD53lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
+                if((bestBERtest == -1) || (result < bestBERtest))
                 {
-                    uint8_t cGroup   = 6;
-                    uint8_t cChannel = 0;
-
-                    uint8_t bestPhase   = 0;
-                    double  bestBERtest = -1;
-
-                    for(uint8_t phase = 0; phase < 16; phase++)
-                    {
-                        LOG(INFO) << BOLDMAGENTA << ">>> Phase value = " << BOLDYELLOW << +phase << BOLDMAGENTA << " of (0-15) <<<" << RESET;
-                        RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, phase);
-
-                        // @TMP@ : set TAP0
-                        static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
-                        static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
-
-                        double result = RD53lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
-                        if((bestBERtest == -1) || (result < bestBERtest))
-                        {
-                            bestPhase   = phase;
-                            bestBERtest = result;
-                        }
-
-                        static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
-                    }
-
-                    LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +bestPhase
-                              << RESET;
-
-                    RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
+                    bestPhase   = phase;
+                    bestBERtest = result;
                 }
+
+                static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
+            }
+
+            LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +bestPhase << RESET;
+
+            RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
+        }
 }
 
 // ################################

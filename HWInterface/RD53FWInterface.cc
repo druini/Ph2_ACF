@@ -859,9 +859,11 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
     }
 
+    const uint32_t time2send = 2; // [10 MHz clock cycles] @CONST@
     LOG(INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
-              << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject +
-                                    RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime))
+              << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + time2send +
+                                    RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime + time2send +
+                                    RD53FWInterface::localCfgFastCmd.trigger_duration / 4))
               << std::setprecision(-1) << " Hz" << RESET;
     RD53Shared::resetDefaultFloat();
 

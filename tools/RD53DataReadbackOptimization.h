@@ -10,12 +10,7 @@
 #ifndef RD53DataReadbackOptimization_H
 #define RD53DataReadbackOptimization_H
 
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/GenericDataArray.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53Shared.h"
-#include "Tool.h"
+#include "RD53BERtest.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53DataReadbackOptimizationHistograms.h"
@@ -25,7 +20,7 @@
 // #########################################
 // # Data Readback Optimization test suite #
 // #########################################
-class DataReadbackOptimization : public Tool
+class DataReadbackOptimization : public BERtest
 {
   public:
     void Running() override;
@@ -33,14 +28,13 @@ class DataReadbackOptimization : public Tool
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string fileRes_, int currentRun);
-    void   initializeFiles(const std::string fileRes_, int currentRun);
-    void   run();
-    void   draw(bool saveData = true);
-    void   analyze();
-    void   analyze(const std::string& regName, const std::vector<uint16_t>& dacListTAP, const DetectorDataContainer& theTAPscanContainer, DetectorDataContainer& theTAPContainer);
-    size_t getNumberIterations() { return 1; }
-    void   saveChipRegisters(int currentRun);
+    void localConfigure(const std::string fileRes_, int currentRun);
+    void initializeFiles(const std::string fileRes_, int currentRun);
+    void run();
+    void draw(bool saveData = true);
+    void analyze();
+    void analyze(const std::string& regName, const std::vector<uint16_t>& dacListTAP, const DetectorDataContainer& theTAPscanContainer, DetectorDataContainer& theTAPContainer);
+    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     DataReadbackOptimizationHistograms* histos;
@@ -57,7 +51,6 @@ class DataReadbackOptimization : public Tool
     size_t stopValueTAP1;
     size_t startValueTAP2;
     size_t stopValueTAP2;
-    size_t timeXstep;
     size_t nEvents;
 
     std::vector<uint16_t> dacListTAP0;
