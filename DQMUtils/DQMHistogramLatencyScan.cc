@@ -137,7 +137,7 @@ void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency
                     uint32_t hits = hybrid->getSummary<GenericDataArray<VECSIZE, uint32_t>>()[i];
                     
                     float error = 0;
-                    if (hits > 0 ) error = hits * sqrt(float(1./ hits));
+                    if (hits > 0 ) error = sqrt(float(hits));
 
                     LOG(INFO) << "filling hybrid " << hybrid->getIndex() << " with latency " << lat << " and hits " << hits << " and error " << error;
                     hybridLatencyHistogram->SetBinContent(i, hits);
