@@ -208,7 +208,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             cDACtoADCMultiGraph->Draw("AL");
             cDACtoADCMultiGraph->GetXaxis()->SetTitle("DAC");
             cDACtoADCMultiGraph->GetYaxis()->SetTitle("ADC");
-            cDACtoADCCanvas->BuildLegend(0, .2, .8, .9);
+            cDACtoADCCanvas->BuildLegend();
             cDACtoADCMultiGraph->Write();
         }
     }
