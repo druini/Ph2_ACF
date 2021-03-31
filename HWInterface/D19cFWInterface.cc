@@ -267,7 +267,7 @@ void D19cFWInterface::configureCDCE(uint16_t pClockRate, std::pair<std::string, 
     else
     {
         LOG(ERROR) << BOLDRED << "...\tIncorrect MGT clock." << RESET;
-        exit(0);
+        throw std::runtime_error("Incorrect MGT clock");
     }
     // ddr3 clock reference
     cWriteBuffer[2] = 0xEB840302; // reg2 (out2=240mhz,lvds  phase shift  0deg) 0xEB840302
@@ -290,7 +290,7 @@ void D19cFWInterface::configureCDCE(uint16_t pClockRate, std::pair<std::string, 
     else
     {
         LOG(ERROR) << BOLDRED << "...\tIncorrect REFERENCE ID." << RESET;
-        exit(0);
+        throw std::runtime_error("Incorrect REFERENCE ID");
     }
     // selecting the vco
     if(pCDCEselect.second == 40)
@@ -306,7 +306,7 @@ void D19cFWInterface::configureCDCE(uint16_t pClockRate, std::pair<std::string, 
     else
     {
         LOG(ERROR) << BOLDRED << "...\tUnknown CDCE ref rate" << RESET;
-        exit(0);
+        throw std::runtime_error("Unknown CDCE ref rate");
     }
     // rc network parameters, dont touch
     cWriteBuffer[7] = 0xBD800DF7; // # reg7
@@ -739,7 +739,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     if(!c40MhzLocked || !cRefClockLocked)
     {
         LOG(ERROR) << BOLDRED << "One of the clocks failed to LOCK!" << RESET;
-        exit(0);
+        throw std::runtime_error("One of the clocks failed to LOCK");
     }
 
     // read info about current firmware
@@ -922,7 +922,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         if(!cGBTlock)
         {
             LOG(INFO) << BOLDRED << "GBT link failed to LOCK!" << RESET;
-            exit(0);
+            throw std::runtime_error(std::string("GBT link failed to LOCK!"));
         }
         // now configure SCA + GBTx
         configureLink(pBoard);
@@ -936,7 +936,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         if(!clpGBTlock)
         {
             LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
-            exit(0);
+            throw std::runtime_error(std::string("lpGBT link failed to LOCK!"));
         }
     }
 
@@ -1684,7 +1684,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                             if(cAttempts > 10)
                             {
                                 LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
-                                exit(0);
+                                throw std::runtime_error(std::string("Back-end alignment FAILED"));
                             }
                             // try again
                             LOG(INFO) << BOLDBLUE << "Trying to reset phase on GBTx... bit slip of 0!" << RESET;
@@ -1705,7 +1705,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                 if(pTuner.fDone != 1)
                 {
                     LOG(ERROR) << BOLDRED << "FAILED " << BOLDBLUE << " to tune stub line " << +(cLineId - 1) << " in the back-end." << RESET;
-                    exit(0);
+                    throw std::runtime_error("Failed to tune a stub line in the back-end");
                 }
             }
         }
@@ -2131,7 +2131,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
         if(pBoard->getEventType() == EventType::ZS)
         {
             LOG(ERROR) << "ZS Event only with handshake!!! Exiting...";
-            exit(1);
+            throw std::runtime_error("ZS Event can only be used with handshake");
         }
         cNEvents = this->GetData(pBoard, pData);
         // read all the words
@@ -4166,13 +4166,13 @@ void D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, 
             else
             {
                 LOG(ERROR) << RED << "Backplane configuration is NOT VALID" << RESET;
-                exit(0);
+                throw std::runtime_error(std::string("Backplane configuration is NOT VALID"));
             }
             if(CardValid) { LOG(INFO) << BLUE << "Card configuration VALID" << RESET; }
             else
             {
                 LOG(ERROR) << RED << "Card configuration is NOT VALID" << RESET;
-                exit(0);
+                throw std::runtime_error(std::string("Card configuration is NOT VALID"));
             }
         }
         else
@@ -4270,7 +4270,7 @@ void D19cFWInterface::Align_out()
             uint32_t tuning_state_cbc0 = ReadReg("fc7_daq_stat.physical_interface_block.state_tuning_cbc0");
             uint32_t tuning_state_cbc1 = ReadReg("fc7_daq_stat.physical_interface_block.state_tuning_cbc1");
             LOG(INFO) << "tuning state cbc0: " << tuning_state_cbc0 << ", cbc1: " << tuning_state_cbc1;
-            exit(1);
+            throw std::runtime_error("Clock Data Timing tuning failed");
         }
 
         this->ChipReSync();
@@ -4462,7 +4462,6 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
         cI2CStatus   = cReplyVector[7] & 0xFF;
         LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed" << RESET;
         cIter++;
-        exit(0);
     }
     if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2C Transaction Failed"));
     return true;
