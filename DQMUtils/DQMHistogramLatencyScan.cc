@@ -25,8 +25,6 @@
 
 //========================================================================================================================
 DQMHistogramLatencyScan::DQMHistogramLatencyScan() {
-    fLatencyRange = 40;
-    fStartLatency = 80;
 
 }
 
@@ -38,8 +36,6 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, const DetectorContainer
 {
     //need to get settings from settings map
     parseSettings(pSettingsMap);
-
-
 
     uint32_t fTDCBins = 8; //from LatencyScan.h
 
@@ -66,14 +62,23 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, const DetectorContainer
 //========================================================================================================================
 bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer) {
 
-    const size_t VECSIZE = 1000;
     HybridContainerStream< EmptyContainer, EmptyContainer,  GenericDataArray<VECSIZE, uint32_t> > theLatencyStream("LatencyScan");
+    HybridContainerStream< EmptyContainer, EmptyContainer,  GenericDataArray<TDCBINS, uint32_t> > theTriggerTDCStream("LatencyScanTriggerTDC");
 
     if(theLatencyStream.attachBuffer(&dataBuffer))
     {
         std::cout << "Matched Latency Stream!!!!!\n";
         theLatencyStream.decodeHybridData(fDetectorData);
         fillLatencyPlots(fDetectorData);
+        fDetectorData.cleanDataStored();
+        return true;
+    }
+
+    if(theTriggerTDCStream.attachBuffer(&dataBuffer))
+    {
+        std::cout << "Matched TriggerTDC!!!!!\n";
+        theLatencyStream.decodeHybridData(fDetectorData);
+        fillTriggerTDCPlots(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;
     }
@@ -116,9 +121,6 @@ void DQMHistogramLatencyScan::reset(void) {}
 
 void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency)
 { 
-    //this is effectively the max value for the latency range
-    const size_t VECSIZE = 1000;
-
     LOG(INFO) << "i am filling";
     for(auto board: theLatency)
     {
@@ -158,15 +160,19 @@ void DQMHistogramLatencyScan::fill2DLatency(DetectorDataContainer& the2DLatency)
 {
 
 }
-void DQMHistogramLatencyScan::fillTriggerTDC(DetectorDataContainer& theTriggerTDC, uint32_t TDCBins)
+void DQMHistogramLatencyScan::fillTriggerTDCPlots(DetectorDataContainer& theTriggerTDC)
 {
     for(auto board: theTriggerTDC)
     {
-        for(size_t tdcValue = 0; tdcValue < TDCBins; ++tdcValue)
+
+        for(uint32_t tdcValue = 0; tdcValue < TDCBINS; ++tdcValue)
         {
+            LOG(INFO) << "tdc value " << tdcValue;
+            auto sum = board->at(0)->at(0)->getSummary<GenericDataArray<TDCBINS, uint32_t>>();
+            LOG(INFO) << "with value " << sum[tdcValue];
             TH1F* boardTriggerTDCHistogram =
                     fTriggerTDCHistograms.at(board->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-            boardTriggerTDCHistogram->SetBinContent(tdcValue + 1, board->getSummary<std::vector<uint16_t>>()[tdcValue]); 
+            boardTriggerTDCHistogram->SetBinContent(tdcValue + 1, sum[tdcValue]); 
         }
     }
 

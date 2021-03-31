@@ -63,7 +63,8 @@ class LatencyScan : public Tool
     uint32_t trigSource;
 
     const uint32_t fTDCBins = 8;
-    //this is effectively the max value for Latency Range
+    static const size_t TDCBINS = 10;
+    static const size_t VECSIZE = 1000;
 
     int convertLatencyPhase(uint32_t pStartLatency, uint32_t cLatency, uint32_t cPhase)
     {

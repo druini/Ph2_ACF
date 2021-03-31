@@ -30,20 +30,20 @@ void LatencyScan::MeasureTriggerTDC()
     LOG(INFO) << "Measuring Trigger TDC ... ";
 
     DetectorDataContainer theTriggerTDCContainer;
-    ContainerFactory::copyAndInitBoard<std::vector<uint16_t>>(*fDetectorContainer, theTriggerTDCContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<TDCBINS, uint32_t>>(*fDetectorContainer, theTriggerTDCContainer);
 
-    // Take Data for all Hybrids
     for(auto board: theTriggerTDCContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(board->getIndex()));
 
         ReadNEvents(theBoard, fNevents);
         const std::vector<Event*>& events = GetEvents();
-        board->getSummary<std::vector<uint16_t>>().resize(fTDCBins);
+        std::vector<uint32_t> values(TDCBINS-1, 0);
 
         for(auto& cEvent: events)
         {
             uint8_t cTDCVal = cEvent->GetTDC();
+            LOG(INFO) << "TDC Val is " << cTDCVal; 
 
             if(theBoard->getBoardType() == BoardType::D19C)
             {
@@ -61,15 +61,21 @@ void LatencyScan::MeasureTriggerTDC()
                           << std::endl;
             else
             {
-                board->getSummary<std::vector<uint16_t>>()[cTDCVal]++;
+                //Board level value, just fill the first optical group & hybrid with the value for streaming simplicity
+               values[cTDCVal]++; 
             }
+        }
+        LOG(INFO) << "hybrid? " << board->at(0)->at(0)->getIndex();
+        for(uint32_t v=0; v < fTDCBins; v++){
+            LOG(INFO) << "filling " << v << " with " << values[v];
+            board->at(0)->at(0)->getSummary<GenericDataArray<TDCBINS, uint32_t>>()[v] = values[v];
         }
     }
 
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.fillTriggerTDC(theTriggerTDCContainer, fTDCBins);
 #else
-    auto theTriggerTDCStream = prepareHybridContainerStreamer<EmptyContainer, uint16_t, EmptyContainer>();
+    auto theTriggerTDCStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<TDCBINS, uint32_t>>("TriggerTDC");
     for(auto board: theTriggerTDCContainer)
     {
         if(fStreamerEnabled) theTriggerTDCStream.streamAndSendBoard(board, fNetworkStreamer);
@@ -90,7 +96,7 @@ void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
 
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
     //this is effectively the max value for the latency range
-    const size_t VECSIZE = 1000;
+    
     DetectorDataContainer theLatencyContainer;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint32_t>>(*fDetectorContainer, theLatencyContainer);
 
@@ -119,7 +125,7 @@ void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
                             else if (theChip->getFrontEndType() == FrontEndType::SSA) cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(hybrid->getId(), static_cast<SSA*> (theChip)->getPartid());
                             else cHitCounter += cEvent->GetNHits(hybrid->getId(), chip->getId());
                         }
-                        cHitSum += cHitCounter; //TODO: It would be nice to fill per event so you could have the errors correct, maybe do with occupancy 
+                        cHitSum += cHitCounter; //TODO: It would be nice to fill per event so you could have the errors correct, maybe do with occupancy? 
                         
                     } // end event loop
 
