@@ -535,7 +535,7 @@ void RD53Interface::Reset(Ph2_HwDescription::ReadoutChip* pChip, const int reset
         break;
 
     default: RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false); break;
-      }
+    }
 }
 
 void RD53Interface::ChipErrorReport(ReadoutChip* pChip)

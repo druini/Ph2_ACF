@@ -267,7 +267,7 @@ void D19cFWInterface::configureCDCE(uint16_t pClockRate, std::pair<std::string, 
     else
     {
         LOG(ERROR) << BOLDRED << "...\tIncorrect MGT clock." << RESET;
-        exit(0);
+        throw std::runtime_error("Incorrect MGT clock");
     }
     // ddr3 clock reference
     cWriteBuffer[2] = 0xEB840302; // reg2 (out2=240mhz,lvds  phase shift  0deg) 0xEB840302
@@ -290,7 +290,7 @@ void D19cFWInterface::configureCDCE(uint16_t pClockRate, std::pair<std::string, 
     else
     {
         LOG(ERROR) << BOLDRED << "...\tIncorrect REFERENCE ID." << RESET;
-        exit(0);
+        throw std::runtime_error("Incorrect REFERENCE ID");
     }
     // selecting the vco
     if(pCDCEselect.second == 40)
@@ -306,7 +306,7 @@ void D19cFWInterface::configureCDCE(uint16_t pClockRate, std::pair<std::string, 
     else
     {
         LOG(ERROR) << BOLDRED << "...\tUnknown CDCE ref rate" << RESET;
-        exit(0);
+        throw std::runtime_error("Unknown CDCE ref rate");
     }
     // rc network parameters, dont touch
     cWriteBuffer[7] = 0xBD800DF7; // # reg7
@@ -417,6 +417,72 @@ void D19cFWInterface::powerAllFMCs(bool pEnable)
     this->WriteReg("sysreg.fmc_pwr.pg_c2m", (int)pEnable);
     this->WriteReg("sysreg.fmc_pwr.l12_pwr_en", (int)pEnable);
     this->WriteReg("sysreg.fmc_pwr.l8_pwr_en", (int)pEnable);
+}
+
+bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
+{
+    // reset lpGBT core
+    this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // check links are up
+    std::vector<std::string> cStates      = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
+    bool                     cLinksLocked = true;
+    uint8_t                  cMaxAttempts = 10;
+    uint8_t                  cAttempCount = 0;
+    do
+    {
+        cLinksLocked = true;
+        LOG(INFO) << BOLDBLUE << "RESET APPLIED" << RESET;
+        for(auto cOpticalReadout: *pBoard)
+        {
+            uint8_t cLinkId = cOpticalReadout->getId();
+            // reset here for good measure
+            uint32_t cCommand = (0x0 << 22) | ((cLinkId & 0x3f) << 26);
+            this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            // get link status
+            cCommand = (0x1 << 22) | ((cLinkId & 0x3f) << 26);
+            this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            bool cGBTxLocked = true;
+            // read back status register
+            LOG(INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
+            uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
+            LOG(INFO) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
+            std::vector<std::string> cStates = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
+            uint8_t                  cIndex  = 1;
+            for(auto cState: cStates)
+            {
+                uint8_t cStatus = (cLinkStatus >> (3 - cIndex)) & 0x1;
+                cGBTxLocked &= (cStatus == 1);
+                if(cStatus == 1)
+                    LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDGREEN << "\t : LOCKED" << RESET;
+                else
+                    LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDRED << "\t : FAILED" << RESET;
+                cIndex++;
+            }
+            cLinksLocked = cLinksLocked && cGBTxLocked;
+        }
+        if(cLinksLocked)
+        {
+            LOG(INFO) << BOLDGREEN << "All links locked." << RESET;
+            break;
+        }
+        else
+        {
+            LOG(DEBUG) << BOLDRED << "Resetting lpGBT link .. no lock" << RESET;
+            // reset lpGBT core
+            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        cAttempCount++;
+    } while(!cLinksLocked && cAttempCount < cMaxAttempts);
+    return cLinksLocked;
 }
 
 bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
@@ -673,7 +739,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     if(!c40MhzLocked || !cRefClockLocked)
     {
         LOG(ERROR) << BOLDRED << "One of the clocks failed to LOCK!" << RESET;
-        exit(0);
+        throw std::runtime_error("One of the clocks failed to LOCK");
     }
 
     // read info about current firmware
@@ -856,10 +922,22 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         if(!cGBTlock)
         {
             LOG(INFO) << BOLDRED << "GBT link failed to LOCK!" << RESET;
-            exit(0);
+            throw std::runtime_error(std::string("GBT link failed to LOCK!"));
         }
         // now configure SCA + GBTx
         configureLink(pBoard);
+    }
+
+    fUseOpticalLink = pBoard->ifUseOpticalLink();
+    if(fUseOpticalLink)
+    {
+        LOG(INFO) << BOLDBLUE << "Configuring optical link.." << RESET;
+        bool clpGBTlock = LinkLock(pBoard);
+        if(!clpGBTlock)
+        {
+            LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
+            throw std::runtime_error(std::string("lpGBT link failed to LOCK!"));
+        }
     }
 
     // resetting hard
@@ -1606,7 +1684,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                             if(cAttempts > 10)
                             {
                                 LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
-                                exit(0);
+                                throw std::runtime_error(std::string("Back-end alignment FAILED"));
                             }
                             // try again
                             LOG(INFO) << BOLDBLUE << "Trying to reset phase on GBTx... bit slip of 0!" << RESET;
@@ -1627,7 +1705,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                 if(pTuner.fDone != 1)
                 {
                     LOG(ERROR) << BOLDRED << "FAILED " << BOLDBLUE << " to tune stub line " << +(cLineId - 1) << " in the back-end." << RESET;
-                    exit(0);
+                    throw std::runtime_error("Failed to tune a stub line in the back-end");
                 }
             }
         }
@@ -2053,7 +2131,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
         if(pBoard->getEventType() == EventType::ZS)
         {
             LOG(ERROR) << "ZS Event only with handshake!!! Exiting...";
-            exit(1);
+            throw std::runtime_error("ZS Event can only be used with handshake");
         }
         cNEvents = this->GetData(pBoard, pData);
         // read all the words
@@ -3998,6 +4076,7 @@ void D19cFWInterface::DisconnectMultiplexingSetup(uint8_t pWait_ms)
             c = true;
             std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
             CardsDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.cards_disconnected") == 1);
+            LOG(DEBUG) << BOLDBLUE << "Set-up scanned : " << +ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") << RESET;
         }
 
         while(!BackplanesDisconnected)
@@ -4006,6 +4085,7 @@ void D19cFWInterface::DisconnectMultiplexingSetup(uint8_t pWait_ms)
             b = true;
             std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
             BackplanesDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplanes_disconnected") == 1);
+            LOG(DEBUG) << BOLDBLUE << "Set-up scanned : " << +ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") << RESET;
         }
 
         if(CardsDisconnected && BackplanesDisconnected)
@@ -4017,19 +4097,22 @@ void D19cFWInterface::DisconnectMultiplexingSetup(uint8_t pWait_ms)
 }
 
 // scan setup with multiplexing backplane
+// scan setup with multiplexing backplane
 uint32_t D19cFWInterface::ScanMultiplexingSetup(uint8_t pWait_ms)
 {
     int AvailableBackplanesCards = 0;
     this->DisconnectMultiplexingSetup();
-    WriteReg("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.backplane_num", 0xF);
-    WriteReg("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.card_num", 0xF);
-    std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
+
+    LOG(INFO) << BOLDBLUE << "Sending a global reset to the FC7 ..... " << RESET;
+    this->WriteReg("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
     bool ConfigurationRequired = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.configuration_required") == 1);
     bool SystemNotConfigured   = false;
     if(ConfigurationRequired)
     {
         SystemNotConfigured = true;
-        WriteReg("fc7_daq_ctrl.physical_interface_block.multiplexing_bp.setup_configure", 0x1);
+        WriteReg("fc7_daq_ctrl.physical_interface_block.multiplexing_bp.setup_scan", 0x1);
     }
 
     if(SystemNotConfigured == true)
@@ -4057,9 +4140,8 @@ uint32_t D19cFWInterface::ScanMultiplexingSetup(uint8_t pWait_ms)
 }
 
 // configure setup with multiplexing backplane
-uint32_t D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms)
+void D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms)
 {
-    uint32_t cAvailableCards = 0;
     this->DisconnectMultiplexingSetup();
     WriteReg("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.backplane_num", 0xF & ~(1 << (3 - BackplaneNum)));
     WriteReg("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.card_num", 0xF & ~(1 << (3 - CardNum)));
@@ -4070,44 +4152,31 @@ uint32_t D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardN
     {
         SystemNotConfigured = true;
         WriteReg("fc7_daq_ctrl.physical_interface_block.multiplexing_bp.setup_configure", 0x1);
-        cAvailableCards = ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.available_backplanes_cards");
+        std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
     }
 
     if(SystemNotConfigured == true)
     {
-        bool SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
-        bool s            = false;
-        LOG(INFO) << GREEN << "============================" << RESET;
-        LOG(INFO) << BOLDGREEN << "Scan setup" << RESET;
-        while(!SetupScanned)
-        {
-            if(s == false) LOG(INFO) << "Scanning setup";
-            s = true;
-            std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
-            SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
-        }
-
+        bool SetupScanned   = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
         bool BackplaneValid = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplane_valid") == 1);
         bool CardValid      = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.card_valid") == 1);
         if(SetupScanned)
         {
-            LOG(INFO) << GREEN << "============================" << RESET;
-            LOG(INFO) << BOLDGREEN << "Setup is scanned" << RESET;
             if(BackplaneValid) { LOG(INFO) << BLUE << "Backplane configuration VALID" << RESET; }
             else
             {
                 LOG(ERROR) << RED << "Backplane configuration is NOT VALID" << RESET;
-                exit(0);
+                throw std::runtime_error(std::string("Backplane configuration is NOT VALID"));
             }
             if(CardValid) { LOG(INFO) << BLUE << "Card configuration VALID" << RESET; }
             else
             {
                 LOG(ERROR) << RED << "Card configuration is NOT VALID" << RESET;
-                exit(0);
+                throw std::runtime_error(std::string("Card configuration is NOT VALID"));
             }
-            // LOG (INFO) << BLUE << AvailableBackplanesCards << RESET;
-            // printAvailableBackplanesCards(parseAvailableBackplanesCards(AvailableBackplanesCards,false));
         }
+        else
+            LOG(ERROR) << RED << "First you must scan the setup! Map of present backplanes and cards is not available!" << RESET;
 
         bool SetupConfigured = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_configured") == 1);
         bool c               = false;
@@ -4130,7 +4199,6 @@ uint32_t D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardN
             {
                 LOG(INFO) << GREEN << "============================" << RESET;
                 LOG(INFO) << BOLDGREEN << "Setup with backplane " << BackplaneNum << " and card " << CardNum << " is configured" << RESET;
-                cAvailableCards = ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.available_backplanes_cards");
             }
             else
             {
@@ -4139,7 +4207,6 @@ uint32_t D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardN
             }
         }
     }
-    return cAvailableCards;
 }
 // MPA specific
 void D19cFWInterface::Pix_write_MPA(Chip* cMPA, ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data)
@@ -4203,7 +4270,7 @@ void D19cFWInterface::Align_out()
             uint32_t tuning_state_cbc0 = ReadReg("fc7_daq_stat.physical_interface_block.state_tuning_cbc0");
             uint32_t tuning_state_cbc1 = ReadReg("fc7_daq_stat.physical_interface_block.state_tuning_cbc1");
             LOG(INFO) << "tuning state cbc0: " << tuning_state_cbc0 << ", cbc1: " << tuning_state_cbc1;
-            exit(1);
+            throw std::runtime_error("Clock Data Timing tuning failed");
         }
 
         this->ChipReSync();
@@ -4218,27 +4285,39 @@ void D19cFWInterface::Align_out()
 
 void D19cFWInterface::ResetOptoLink()
 {
-    std::vector<std::pair<std::string, uint32_t>> cVecReg;
-    cVecReg.push_back({"fc7_daq_ctrl.optical_block.ic", 0x00});
-    cVecReg.push_back({"fc7_daq_cnfg.optical_block.ic", 0x00});
-    cVecReg.push_back({"fc7_daq_cnfg.optical_block.gbtx", 0x00});
-    this->WriteStackReg(cVecReg);
+    // cVecReg.push_back({"fc7_daq_ctrl.optical_block.ic.reset", 0x1});
+    // cVecReg.push_back({"fc7_daq_ctrl.optical_block.ic.reset", 0x0});
+    this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic", 0x00}, {"fc7_daq_cnfg.optical_block.ic", 0x00}, {"fc7_daq_cnfg.optical_block.gbtx", 0x00}});
 }
 
 bool D19cFWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
 {
     // Reset
     ResetOptoLink();
+    selectLink(linkNumber);
     // Config transaction register
-    this->WriteReg("fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress);
-    this->WriteReg("fc7_daq_cnfg.optical_block.gbtx.data", pData);
-    this->WriteReg("fc7_daq_cnfg.optical_block.ic.register", pAddress);
+    this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pData}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
     // Perform transaction
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.write", 0x01);
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.write", 0x00);
+    this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.write", 0x00}});
     //
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_write", 0x01);
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_write", 0x00);
+    this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.start_write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.start_write", 0x00}});
+
+    if(!pVerifLoop) return true;
+    uint8_t cReadBack = ReadOptoLinkRegister(linkNumber, pAddress);
+    uint8_t cIter = 0, cMaxIter = 50;
+    while(cReadBack != pData && cIter < cMaxIter)
+    {
+        LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteOptoLinkRegister] : lpGBT register write mismatch... retrying" << RESET;
+        // Config transaction register
+        this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pData}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
+        // Perform transaction
+        this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.write", 0x00}});
+        //
+        this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.start_write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.start_write", 0x00}});
+        cReadBack = ReadOptoLinkRegister(linkNumber, pAddress);
+        cIter++;
+    }
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT register write mismatch"));
     return true;
 }
 
@@ -4246,18 +4325,211 @@ uint32_t D19cFWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const 
 {
     // Reset
     ResetOptoLink();
+    selectLink(linkNumber);
     // Config transaction register
-    this->WriteReg("fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress);
-    this->WriteReg("fc7_daq_cnfg.optical_block.ic.register", pAddress);
-    this->WriteReg("fc7_daq_cnfg.optical_block.ic.nwords", 0x01);
+    this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}, {"fc7_daq_cnfg.optical_block.ic.nwords", 0x01}});
     // Perform transaction
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_read", 0x01);
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.start_read", 0x00);
+    this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.start_read", 0x01}, {"fc7_daq_ctrl.optical_block.ic.start_read", 0x00}});
     //
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.read", 0x01);
-    this->WriteReg("fc7_daq_ctrl.optical_block.ic.read", 0x00);
-    //
+    this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.read", 0x01}, {"fc7_daq_ctrl.optical_block.ic.read", 0x00}});
     uint32_t cReadBack = this->ReadReg("fc7_daq_stat.optical_block.ic.data");
+    LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pAddress << std::dec << "]" << RESET;
+    return cReadBack;
+}
+
+// ##########################################
+// # Read/Write new Command Processor Block #
+// #########################################
+void D19cFWInterface::ResetCPB()
+{
+    // Soft reset the GBT-SC worker
+    std::vector<uint32_t> cCommandVector;
+    cCommandVector.clear();
+    uint8_t cWorkerId = 0, cFunctionId = 2;
+    // reset shoudl be 0x00020010
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
+    WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
+}
+
+void D19cFWInterface::WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose)
+{
+    uint8_t cWordIndex = 0;
+    if(pVerbose)
+    {
+        for(auto cCommandWord: pCommandVector)
+        {
+            LOG(INFO) << GREEN << "\t Write command word " << +cWordIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cCommandWord << std::dec << RESET;
+            cWordIndex++;
+        }
+    }
+    WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", pCommandVector);
+}
+
+std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords, bool pVerbose)
+{
+    std::vector<uint32_t> cReplyVector = ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", pNWords);
+    uint8_t               cFifoIndex   = 0;
+    if(pVerbose)
+    {
+        for(auto cReplyWord: cReplyVector)
+        {
+            LOG(INFO) << YELLOW << "\t Read reply word " << +cFifoIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cReplyWord << std::dec << RESET;
+            cFifoIndex++;
+        }
+        LOG(INFO) << "\t lpgbtsc FSM state : 0b" << std::bitset<8>(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state")) << RESET;
+    }
+    return cReplyVector;
+}
+
+bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop)
+{
+    // Use new Command Processor Block
+    uint8_t               cWorkerId = 16, cFunctionId = 3;
+    std::vector<uint32_t> cCommandVector;
+    cCommandVector.clear();
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pRegisterAddress << 0);
+    cCommandVector.push_back(pRegisterValue << 0);
+    WriteCommandCPB(cCommandVector);
+    std::vector<uint32_t> cReplyVector     = ReadReplyCPB(10);
+    uint8_t               cParityCheck     = cReplyVector[2] & 0xFF;
+    uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
+    uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+    if(!pVerifLoop) return (cReadBack == pRegisterValue && cReadBackRegAddr == pRegisterAddress);
+    uint8_t cIter = 0, cMaxIter = 50;
+    while((cReadBack != pRegisterValue || cReadBackRegAddr != pRegisterAddress || cParityCheck != 1) && cIter < cMaxIter)
+    {
+        ResetCPB();
+        LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
+        cReplyVector.clear();
+        WriteCommandCPB(cCommandVector);
+        cReplyVector     = ReadReplyCPB(10);
+        cParityCheck     = cReplyVector[2] & 0xFF;
+        cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+        cReadBack        = cReplyVector[7] & 0xFF;
+        cIter++;
+    };
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block"));
+    return true;
+}
+
+uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
+{
+    uint8_t               cWorkerId = 16, cFunctionId = 2;
+    std::vector<uint32_t> cCommandVector;
+    cCommandVector.clear();
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pRegisterAddress << 0);
+    WriteCommandCPB(cCommandVector);
+    std::vector<uint32_t> cReplyVector     = ReadReplyCPB(10);
+    uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
+    uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+    uint8_t               cIter = 0, cMaxIter = 20;
+    while((cReadBackRegAddr != pRegisterAddress) && cIter < cMaxIter)
+    {
+        ResetCPB();
+        LOG(INFO) << BOLDRED << "[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
+        cReplyVector.clear();
+        WriteCommandCPB(cCommandVector);
+        cReplyVector     = ReadReplyCPB(10);
+        cReadBack        = cReplyVector[7] & 0xFF;
+        cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+        cIter++;
+    };
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block"));
+    LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+    return cReadBack;
+}
+
+// function for I2C transactions using lpGBT I2C Masters
+bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes)
+{
+    uint8_t               cWorkerId = 16, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
+    std::vector<uint32_t> cCommandVector;
+    cCommandVector.clear();
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
+    cCommandVector.push_back(cMasterConfig << 24 | pSlaveData << 0);
+    WriteCommandCPB(cCommandVector);
+    std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
+    uint8_t               cI2CStatus   = cReplyVector[7] & 0xFF;
+    uint8_t               cIter = 0, cMaxIter = 50;
+    while(cI2CStatus != 4 && cIter < cMaxIter)
+    {
+        ResetCPB();
+        cReplyVector.clear();
+        WriteCommandCPB(cCommandVector);
+        cReplyVector = ReadReplyCPB(10);
+        cI2CStatus   = cReplyVector[7] & 0xFF;
+        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed" << RESET;
+        cIter++;
+    }
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2C Transaction Failed"));
+    return true;
+}
+
+uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)
+{
+    uint8_t               cWorkerId = 16, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
+    std::vector<uint32_t> cCommandVector;
+    cCommandVector.clear();
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
+    cCommandVector.push_back(cMasterConfig << 24);
+    WriteCommandCPB(cCommandVector);
+    std::vector<uint32_t> cReplyVector     = ReadReplyCPB(10);
+    uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
+    uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+    uint8_t               cIter = 0, cMaxIter = 50;
+    uint16_t cI2CReadByteRegAddr = 0;
+    //pick correct register address to check
+    if(pMasterId == 2) cI2CReadByteRegAddr = 0x018d;
+    else if(pMasterId == 0) cI2CReadByteRegAddr = 0x0163;
+    //check reply
+    while(cReadBackRegAddr != cI2CReadByteRegAddr && cIter < cMaxIter)
+    {
+        ResetCPB();
+        cReplyVector.clear();
+        WriteCommandCPB(cCommandVector);
+        cReplyVector     = ReadReplyCPB(10);
+        cReadBack        = cReplyVector[7] & 0xFF;
+        cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+        cIter++;
+    };
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CRead] : Corrupted CPB reply frame"));
+    return cReadBack;
+}
+
+bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
+{
+    LOG(DEBUG) << BOLDBLUE << " Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+    uint8_t  cChipId           = ((pChip->getFrontEndType() == FrontEndType::CIC) || (pChip->getFrontEndType() == FrontEndType::CIC2)) ? 0 : pChip->getId();
+    uint8_t  cChipAddress      = fFEAddressMap[pChip->getFrontEndType()] + cChipId;
+    uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
+    I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, (pRegisterValue << 16) | cInvertedRegister, 3);
+    if(pRetry)
+    {
+        uint8_t cReadBack = ReadFERegister(pChip, pRegisterAddress);
+        ;
+        uint8_t cIter = 0, cMaxIter = 10;
+        while(cReadBack != pRegisterValue && cIter < cMaxIter)
+        {
+            LOG(INFO) << BOLDRED << "I2C ReadBack Mismatch in hybrid " << +pChip->getHybridId() << " Chip " << +cChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
+            I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, (pRegisterValue << 16) | cInvertedRegister, 3);
+            cReadBack = ReadFERegister(pChip, pRegisterAddress);
+            ;
+            cIter++;
+        }
+        if(cReadBack != pRegisterValue) { throw std::runtime_error(std::string("I2C readback mismatch")); }
+    }
+    return true;
+}
+
+uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
+{
+    uint8_t  cChipId           = ((pChip->getFrontEndType() == FrontEndType::CIC) || (pChip->getFrontEndType() == FrontEndType::CIC2)) ? 0 : pChip->getId();
+    uint8_t  cChipAddress      = fFEAddressMap[pChip->getFrontEndType()] + cChipId;
+    uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
+    I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, cInvertedRegister, 2);
+    uint32_t cReadBack = I2CRead(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, 1);
     return cReadBack;
 }
 
