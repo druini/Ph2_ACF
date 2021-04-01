@@ -95,14 +95,14 @@ void OTHybridTester::LpGBTInjectULExternalPattern(bool pStart, uint8_t pPattern)
     }
 }
 
-void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
+bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
 {
     uint8_t  cMatch;
     uint8_t  cShift;
     uint8_t  cWrappedByte;
     uint32_t cWrappedData;
-    uint8_t pPattern = 202;
-    bool     res = false;
+    LOG(INFO) << BOLDGREEN << "Checking against : " << std::bitset<8>(pPattern) << RESET;
+    bool     res = true;
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -126,35 +126,13 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
             auto                     cWords = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
             std::vector<std::string> cLines(0);
             size_t                   cLine = 0;
-            // int cStrLength=0;
-            /* do
-            {
-                std::vector<std::string> cOutputWords(0);
-                for(size_t cIndex = 0; cIndex < 5; cIndex++)
-                {
-                    auto cWord   = cWords[cLine * 10 + cIndex];
-                    LOG(INFO) << "cLine: " <<+cLine<< " cIndex: " << +cIndex <<" cWord "<< cWord<< RESET;
-                    auto cString = std::bitset<32>(cWord).to_string();
-                    for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
-                }
-
-                std::string cOutput_wSpace = "";
-                std::string cOutput        = "";
-                for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
-                {
-                    cOutput_wSpace += *cIt + " ";
-                    cOutput += *cIt;
-                }
-                LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
-                cLines.push_back(cOutput);
-                // cStrLength = cOutput.length();
-                cLine++;
-            } while(cLine < 6); */
-
             do
             {
+            #ifdef __SEH_USB__
+            if(cLine==7){continue;} //makeing sure missing stub line pair is skipped in 2S case
+            #endif
             uint32_t cCicOutOutput = cWords[cLine * 10];
-            LOG(INFO) << BOLDBLUE << "Scoped output on Stub Line " << +cLine << ": " << std::bitset<32>(cCicOutOutput) << RESET;
+            LOG(INFO) << BOLDBLUE << "Scoped output on Stub Line " <<BOLDGREEN <<+cLine <<BOLDBLUE<< ": " << std::bitset<32>(cCicOutOutput) << RESET;
 
             cMatch = 32;
             cShift = 0;
@@ -172,7 +150,7 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
                 }
                 LOG(DEBUG) << BOLDBLUE << "Line " << +cLine << " Shift " << +shift << " Match " << +popcount << RESET;
             }
-            LOG(INFO) << BOLDBLUE << "Found for stub line " << +cLine << " a minimal bit difference of " << +cMatch << " for a bit shift of " << +cShift << RESET;
+            LOG(INFO) << BOLDBLUE << "Found for stub line " <<BOLDWHITE <<+cLine<<BOLDBLUE << " a minimal bit difference of "<<BOLDWHITE << +cMatch<<BOLDBLUE << " for a bit shift of " <<BOLDWHITE<< +cShift << RESET;
 
 // #ifdef __USE_ROOT__
 //             fillSummaryTree(cMapIterator->first + "_match", cMatch);
@@ -185,11 +163,11 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
                 res = false;
             }
             
-                std::vector<std::string> cOutputWords(0);
+                /* std::vector<std::string> cOutputWords(0);
                 for(size_t cIndex = 0; cIndex < 5; cIndex++)
                 {
                 auto cWord   = cWords[cLine * 10 + cIndex];
-                    LOG(INFO) << "cLine: " <<+cLine<< " cIndex: " << +cIndex <<" cWord "<< cWord<< RESET;
+                    LOG(INFO) << "cLine: " <<+cLine<< " cIndex: " << +cIndex <<" cWord "<< std::bitset<32>(cWord)<< RESET;
                     auto cString = std::bitset<32>(cWord).to_string();
                     for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
                 }
@@ -202,7 +180,7 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
                     cOutput += *cIt;
                 }
                 LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
-                cLines.push_back(cOutput);
+                cLines.push_back(cOutput); */
                 // cStrLength = cOutput.length();
                 cLine++;
             } while(cLine < 6);
@@ -212,9 +190,62 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
             cFWInterface->ResetReadout();
 
             LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-            cFWInterface->L1ADebug();
+            //cFWInterface->L1ADebug();
+
+            cFWInterface->ConfigureTriggerFSM(0, 10, 3);
+    
+    // disable back-pressure
+    cFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
+    cFWInterface->Start();
+    std::this_thread::sleep_for(std::chrono::microseconds(1 * 1000));
+    cFWInterface->Stop();
+
+    auto cWordsL1A = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+    uint32_t cCicOutOutputL1A = cWordsL1A[0];
+    LOG(INFO) << BOLDBLUE << "Scoped output on L1A Line: " << std::bitset<32>(cCicOutOutputL1A) << RESET;
+
+            cMatch = 32;
+            cShift = 0;
+            for(uint8_t shift = 0; shift < 8; shift++)
+            {
+                cWrappedByte = (pPattern >> shift) | (pPattern << (8 - shift));
+                cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
+                LOG(DEBUG) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
+                LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
+                int popcount = __builtin_popcountll(cWrappedData ^ cCicOutOutputL1A);
+                if(popcount < cMatch)
+                {
+                    cMatch = popcount;
+                    cShift = shift;
+                }
+                LOG(DEBUG) << BOLDBLUE << "Line L1A Shift " << +shift << " Match " << +popcount << RESET;
+            }
+            LOG(INFO) << BOLDBLUE << "Found for L1A a minimal bit difference of "<<BOLDWHITE << +cMatch<<BOLDBLUE << " for a bit shift of " <<BOLDWHITE<< +cShift << RESET;
+    if((cMatch == 0)) { LOG(INFO) << BOLDGREEN << "CIC Out Test passed for L1A line" << RESET; }
+            else
+            {
+                LOG(INFO) << BOLDRED << "CIC Out Test failed for L1A line" << RESET;
+                res = false;
+            }
+            // #ifdef __USE_ROOT__
+            // fllSummaryTree("L1A_match", cMatch);
+            // fillSummaryTree("L1A_shift", cShift);
+            // #endif
+    uint32_t cL1ATotalWrong=0;
+    uint32_t cL1ATotal=0;
+    cWrappedByte = (pPattern >> cShift) | (pPattern << (8 - cShift));
+    cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
+    for(uint32_t cWord: cWordsL1A)
+    {
+        cL1ATotalWrong += __builtin_popcountll(cWrappedData ^ cWord);
+        cL1ATotal +=32;
+    }
+    LOG(INFO) <<"L1A total wrong bits: " <<BOLDBLUE << +cL1ATotalWrong<< " in a total of: "<<+cL1ATotal << RESET;
+
+    cFWInterface->ResetReadout();
         }
     }
+    return res;
 }
 
 void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
@@ -333,14 +364,22 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0 << " +/- " << cReg_Class.b_0_error << "  Parameter 2   " << cReg_Class.b_1
                           << " +/- " << cReg_Class.b_1_error << RESET;
                 LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << " +/- " << cFit->GetParError(0) << "  Parameter 2   " << cFit->GetParameter(1)
-                          << " +/- " << cFit->GetParError(1) << RESET;
+                          << " +/- " << cFit->GetParError(1) << " Chi^2 "<< cFit->GetChisquare() << " NDF " << cFit-> GetNDF()<< RESET;
                 LOG(INFO) << BOLDBLUE << "DAC value = "
                           << ""
                           << " --- ADC value = "
                           << "" << RESET;
                 int cTrim = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "VREFCNTR");
                 LOG(INFO) << BOLDBLUE << "Trim value " << cTrim << RESET;
+                // ---Information also included in ROOT file of the fit
+                fillSummaryTree(Form("ADC%i_p0", cADCId), cReg_Class.b_0);
+                fillSummaryTree(Form("ADC%i_p1", cADCId), cReg_Class.b_1);
+                fillSummaryTree(Form("ADC%i_p0_sigma", cADCId), cReg_Class.b_0_error);
+                fillSummaryTree(Form("ADC%i_p1_sigma", cADCId), cReg_Class.b_1_error);
+                fillSummaryTree(Form("ADC%i_chisquare", cADCId), cFit->GetChisquare());
+                fillSummaryTree(Form("ADC%i_ndf", cADCId), cFit-> GetNDF());
             }
+            fillSummaryTree("VREFCNTR",cTrim);
             fResultFile->cd();
             cDACtoADCTree->Write();
             cDACtoADCMultiGraph->Draw("AL");
@@ -407,7 +446,6 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     {
         if(cBoard->at(0)->flpGBT == nullptr)
         {
-            LOG(INFO) << BOLDRED << "No lpGBT to test ADCs!" << RESET;
             cReturn = false;
             continue;
         }
@@ -596,7 +634,7 @@ bool OTHybridTester::LpGBTTestVTRx()
                 cRecent  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1);
                 cResult  = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1);
                 cSuccess = cSuccess && cRecent && (cResult == cMapIterator->second);
-                if(cRecent && (cResult == cMapIterator->second)) { LOG(INFO) << BOLDGREEN << "VTRx+ register " << cMapIterator->first << " contains the default value " << cResult << " ." << RESET; }
+                if(cRecent && (cResult == cMapIterator->second)) { LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cResult << " ." << RESET; }
                 else
                 {
                     LOG(INFO) << BOLDRED << "Error in VTRx+ register " << cMapIterator->first << " ." << RESET;
