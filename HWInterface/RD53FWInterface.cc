@@ -1277,15 +1277,15 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     {
         time2run   = frames_or_time;
         frames2run = time2run * fps;
-        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(0) << time2run << RESET << GREEN << "s will send about " << BOLDYELLOW << frames2run << RESET << GREEN
-                  << " frames" << RESET;
+        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(1) << time2run << RESET << GREEN << "s will send about " << BOLDYELLOW << std::setprecision(0) << frames2run
+                  << RESET << GREEN << " frames" << RESET;
     }
     else
     {
         frames2run = frames_or_time;
         time2run   = frames2run / fps;
-        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(0) << frames2run << RESET << GREEN << " frames will take about " << BOLDYELLOW << time2run << RESET << GREEN
-                  << "s" << RESET;
+        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(0) << frames2run << RESET << GREEN << " frames will take about " << BOLDYELLOW << std::setprecision(1)
+                  << time2run << RESET << GREEN << "s" << RESET;
     }
 
     // Configure number of printouts and calculate the frequency of printouts
