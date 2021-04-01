@@ -190,6 +190,7 @@ int main(int argc, char* argv[])
     {
         
             bool cStatus = cPSROHTester.LpGBTTestResetLines();
+            cPSROHTester.LpGBTTestGPILines();
             
     }
 
