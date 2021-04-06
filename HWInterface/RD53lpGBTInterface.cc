@@ -408,7 +408,7 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                                               BeBoardFWInterface*   pBeBoardFWInterface,
                                               ReadoutChipInterface* pReadoutChipInterface)
 {
-    const double frames_or_time = 0.5; // @CONST@
+    const double frames_or_time = 1; // @CONST@
     const bool   given_time     = true;
     uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
 
@@ -725,15 +725,15 @@ double RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChan
     {
         time2run   = frames_or_time;
         frames2run = time2run * fps;
-        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(1) << time2run << RESET << GREEN << "s will send about " << BOLDYELLOW << std::setprecision(0) << frames2run
-                  << RESET << GREEN << " frames" << RESET;
+        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(0) << time2run << RESET << GREEN << "s will send about " << BOLDYELLOW << frames2run << RESET << GREEN
+                  << " frames" << RESET;
     }
     else
     {
         frames2run = frames_or_time;
         time2run   = frames2run / fps;
-        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(0) << frames2run << RESET << GREEN << " frames will take about " << BOLDYELLOW << std::setprecision(1)
-                  << time2run << RESET << GREEN << "s" << RESET;
+        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(0) << frames2run << RESET << GREEN << " frames will take about " << BOLDYELLOW << time2run << RESET << GREEN
+                  << "s" << RESET;
     }
     uint32_t BERTMeasTime = (log2(time2run * 40e6) - 5) / 2.;
 
@@ -759,8 +759,8 @@ double RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChan
     {
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
 
-        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << std::setprecision(1) << time_per_step * idx << RESET << GREEN << "s" << RESET;
-        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << std::setprecision(0) << RD53lpGBTInterface::GetBERTErrors(pChip) << RESET;
+        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s" << RESET;
+        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << RD53lpGBTInterface::GetBERTErrors(pChip) << RESET;
         idx++;
     }
     frames2run = time_per_step * idx * fps;
