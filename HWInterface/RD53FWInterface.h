@@ -71,20 +71,6 @@ class RD53FWInterface : public BeBoardFWInterface
     // ####################################
     bool     CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
     uint32_t ReadoutSpeed();
-    bool     DidIwriteChipReg(uint16_t optGroup_id)
-    {
-        const uint32_t checkPattern = 0x55555555; // @CONST@
-
-        RegManager::WriteReg("user.ctrl_regs.PRBS_checker.upgroup_addr", optGroup_id);
-
-        RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::SET_SEL_OUT_ADDR, RD53Constants::PATTERN_CLOCK);
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-        uint32_t readPattern = RegManager::ReadReg("user.stat_regs.rate_measurement_bx_counter");
-        RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::SET_SEL_OUT_ADDR, RD53Constants::PATTERN_AURORA);
-
-        if(readPattern == checkPattern) return true;
-        return false;
-    }
 
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #

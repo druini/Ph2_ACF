@@ -424,7 +424,9 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
             uint8_t cChannel = 0;
 
             uint8_t bestPhase   = 0;
+            uint8_t worstPhase  = 16;
             double  bestBERtest = -1;
+	    bool    foundGap    = false;
 
             for(uint8_t phase = 0; phase < 16; phase++)
             {
@@ -436,14 +438,28 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
 
                 double result = RD53lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
-                if((bestBERtest == -1) || (result < bestBERtest))
+
+                if(bestBERtest == -1)
                 {
                     bestPhase   = phase;
                     bestBERtest = result;
                 }
+		else if(result < bestBERtest)
+                {
+                    bestPhase   = phase;
+                    bestBERtest = result;
+                }
+		else if((result == bestBERtest) && (worstPhase == 16)) foundGap = true;
+		else if((foundGap == true) && (result > bestBERtest))
+		{
+		    worstPhase = phase;
+		    foundGap   = false;
+		}
 
                 static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
             }
+
+	    bestPhase = (bestPhase + (worstPhase < bestPhase ? 15 : worstPhase)) / 2;
 
             LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +bestPhase << RESET;
 
