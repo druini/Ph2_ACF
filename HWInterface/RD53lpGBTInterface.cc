@@ -759,8 +759,8 @@ double RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChan
     {
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
 
-        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s" << RESET;
-        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << RD53lpGBTInterface::GetBERTErrors(pChip) << RESET;
+        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << std::setprecision(1) << time_per_step * idx << RESET << GREEN << "s" << RESET;
+        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << std::setprecision(0) << RD53lpGBTInterface::GetBERTErrors(pChip) << RESET;
         idx++;
     }
     frames2run = time_per_step * idx * fps;
