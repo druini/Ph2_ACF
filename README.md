@@ -29,7 +29,7 @@ dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 23/02/2021
++ Last change made to this section: 06/04/2021
 ```
 
 **Suggested software and firmware versions:**
