@@ -13,6 +13,7 @@
 #include "../Utils/RD53Shared.h"
 #include "../Utils/argvparser.h"
 
+#include "../tools/RD53BERtest.h"
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53DataReadbackOptimization.h"
 #include "../tools/RD53Gain.h"
@@ -120,7 +121,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay datarbopt physics eudaq prbstime prbsframes]",
+                     "injdelay clkdelay datarbopt physics eudaq bertest]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -551,6 +552,20 @@ int main(int argc, char** argv)
             cd.analyze();
             cd.draw();
         }
+        else if(whichCalib == "bertest")
+        {
+            // ################
+            // # Run BER test #
+            // ################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Bit Error Rate test @@@" << RESET;
+
+            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_BERtest");
+            BERtest     bt;
+            bt.Inherit(&mySysCntr);
+            bt.localConfigure(fileName, runNumber);
+            bt.run();
+            bt.draw();
+        }
         else if(whichCalib == "physics")
         {
             // ###############
@@ -604,34 +619,6 @@ int main(int argc, char** argv)
             LOG(WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
             exit(EXIT_FAILURE);
 #endif
-        }
-        else if((whichCalib == "prbstime") || (whichCalib == "prbsframes"))
-        {
-            // ################
-            // # Run BER test #
-            // ################
-            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Bit Error Rate test @@@" << RESET;
-
-            if(cmd.argument(0) == "")
-            {
-                if(whichCalib == "prbstime") { LOG(ERROR) << BOLDRED << "Failed to specify duration of BER test; use \"-c prbstime <TIME IN SECONDS (e.g. 10)>\"" << RESET; }
-                else if(whichCalib == "prbsframes")
-                {
-                    LOG(ERROR) << BOLDRED << "Failed to specify number of frames for BER test; use \"-c prbsframes <NUMBER OF FRAMES (e.g. 1e9)>\"" << RESET;
-                }
-                exit(EXIT_FAILURE);
-            }
-            if(cmd.argument(1) == "")
-            {
-                LOG(ERROR) << BOLDRED << "Failed to specify which connection to test [BE-FE, BE-LPGBT, LPGBT-FE]" << RESET;
-                exit(EXIT_FAILURE);
-            }
-
-            double frames_or_time = atof(cmd.argument(0).c_str());
-            bool   given_time     = false;
-            if(whichCalib == "prbstime") given_time = true;
-
-            mySysCntr.RunBERtest(cmd.argument(1), given_time, frames_or_time);
         }
         else if((program == false) && (whichCalib != ""))
         {
