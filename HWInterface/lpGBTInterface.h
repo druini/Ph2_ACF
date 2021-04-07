@@ -40,12 +40,11 @@ class lpGBTInterface : public ChipInterface
     void StartPRBSpattern(Ph2_HwDescription::Chip* pChip);
     void StopPRBSpattern(Ph2_HwDescription::Chip* pChip);
 
-    virtual double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0);
-    virtual void   ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
-                                        const Ph2_HwDescription::BeBoard*      pBoard,
-                                        const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
-                                        Ph2_HwInterface::BeBoardFWInterface*   pBeBoardFWInterface,
-                                        ReadoutChipInterface*                  pReadoutChipInterface){};
+    virtual void ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
+                                      const Ph2_HwDescription::BeBoard*      pBoard,
+                                      const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
+                                      Ph2_HwInterface::BeBoardFWInterface*   pBeBoardFWInterface,
+                                      ReadoutChipInterface*                  pReadoutChipInterface){};
 
     // #######################################
     // # LpGBT block configuration functions #
@@ -91,9 +90,10 @@ class lpGBTInterface : public ChipInterface
     // ##############
     // # LpGBT BERT #
     // ##############
-    void  ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable = false);
-    void  ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
-    float GetBERTResult(Ph2_HwDescription::Chip* pChip) { return 0; }; // @TMP@
+    void   ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable = false);
+    void   ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
+    double GetBERTResult(Ph2_HwDescription::Chip* pChip) { return 0; }; // @TMP@
+    double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0);
 
   protected:
     // #######################################

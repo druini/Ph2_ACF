@@ -489,10 +489,7 @@ void lpGBTInterface::ConfigureGPIOPull(Chip* pChip, const std::vector<uint8_t>& 
 // # LpGBT ADC-DAC functions #
 // ###########################
 
-void lpGBTInterface::ConfigureADC(Chip* pChip, uint8_t pGainSelect, bool pADCEnable, bool pStartConversion)
-{
-    WriteChipReg(pChip, "ADCConfig", pStartConversion << 7 | pADCEnable << 2 | pGainSelect);
-}
+void lpGBTInterface::ConfigureADC(Chip* pChip, uint8_t pGainSelect, bool pADCEnable, bool pStartConversion) { WriteChipReg(pChip, "ADCConfig", pStartConversion << 7 | pADCEnable << 2 | pGainSelect); }
 
 void lpGBTInterface::ConfigureCurrentDAC(Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput)
 {
@@ -604,7 +601,7 @@ uint64_t lpGBTInterface::GetBERTErrors(Chip* pChip)
     return ((cResult4 << 32) | (cResult3 << 24) | (cResult2 << 16) | (cResult1 << 8) | cResult0);
 }
 /*
-float lpGBTInterface::GetBERTResult(Chip* pChip)
+double lpGBTInterface::GetBERTResult(Chip* pChip)
 {
   lpGBTInterface::StartBERT(pChip, false); // Stop
   lpGBTInterface::StartBERT(pChip, true);  // Start
@@ -639,7 +636,7 @@ float lpGBTInterface::GetBERTResult(Chip* pChip)
   LOG(INFO) << BOLDBLUE << "\t--> Bits in error : " << BOLDYELLOW << +cErrors << RESET;
 
   // Return fraction of errors
-  return (float)cErrors / cBitsChecked;
+  return (double)cErrors / cBitsChecked;
 }
 */
 double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
@@ -686,7 +683,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // # Start #
     // #########
     lpGBTInterface::StartBERT(pChip, false); // Stop
-    lpGBTInterface::StartBERT(pChip, true); // Stert
+    lpGBTInterface::StartBERT(pChip, true);  // Stert
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
     LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << RESET;
