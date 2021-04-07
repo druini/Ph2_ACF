@@ -87,6 +87,7 @@ namespace Ph2_HwInterface
 {
 class D19cFpgaConfig;
 class D19cSSAEvent;
+class D19clpGBTInterface;
 /*!
  * \class Cbc3Fc7FWInterface
  *
@@ -129,8 +130,9 @@ class D19cFWInterface : public BeBoardFWInterface
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
 
     // some useful stuff
-    int  fResetAttempts;
-    void Align_out();
+    int                 fResetAttempts;
+    void                Align_out();
+    D19clpGBTInterface* fLocalLpGBTInterface;
 
   public:
     /*!
@@ -402,7 +404,9 @@ class D19cFWInterface : public BeBoardFWInterface
     void ConfigureAntennaFSM(uint16_t pNtriggers = 1, uint16_t pTriggerRate = 1, uint16_t pL1Delay = 100);
 
     void L1ADebug(uint8_t pWait_ms = 1);
+    void L1ACompare(uint8_t pWait_ms = 1);
     void StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
+    void StubCompare(bool pWithTestPulse = true, uint8_t pNlines = 5);
     bool L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
     bool L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
     bool L1Tuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
@@ -417,6 +421,7 @@ class D19cFWInterface : public BeBoardFWInterface
     std::pair<uint16_t, float> readADC(std::string pValueToRead = "AMUX_L", bool pApplyCorrection = false);
     void                       setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
     void                       setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
+    void                       LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface);
 
     // CDCE
     void configureCDCE_old(uint16_t pClockRate = 120);

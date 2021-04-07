@@ -144,7 +144,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstBoard->ifUseOpticalLink(), cFirstBoard->ifUseCPB());
                 }
                 LOG(INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;
-
                 if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for FrontEnd Hybrids.." << +cFirstOpticalGroup->size() << " hybrid(s) found ..." << RESET;
@@ -164,6 +163,11 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         {
                             LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
                             fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+                            if(cFirstOpticalGroup->flpGBT != nullptr)
+                            {
+                                auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+                                (static_cast<SSAInterface*>(fReadoutChipInterface))->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT);
+                            }
                         }
                         else if(cChipType == FrontEndType::MPA)
                         {
@@ -173,6 +177,13 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     }
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
                     fCicInterface = new CicInterface(fBeBoardFWMap);
+                    if(cFirstOpticalGroup->flpGBT != nullptr)
+                    {
+                        auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+                        fCicInterface->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT);
+                        // link lpGBT
+                        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLpGBT(clpGBTInterface);
+                    }
                 }
             }
         }
@@ -347,7 +358,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         fCicInterface->ConfigureChip(cCic);
 
                         // CIC start-up
-                        uint8_t cModeSelect = (static_cast<ReadoutChip*>(theOuterTrackerHybrid->at(0))->getFrontEndType() != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
+                        auto         cFirstROC = static_cast<ReadoutChip*>(theOuterTrackerHybrid->at(0));
+                        FrontEndType cType     = FrontEndType::CBC3;
+                        if(cFirstROC != nullptr) cType = cFirstROC->getFrontEndType();
+                        uint8_t cModeSelect = (cType != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
                         // select CIC mode
                         bool cSuccess = fCicInterface->SelectMode(cCic, cModeSelect);
                         if(!cSuccess)
@@ -466,7 +480,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     else
                         LOG(INFO) << GREEN << "Check writing frontend chip reg --> " << BOLDRED << "BAD" << RESET;
                 }
-
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     LOG(INFO) << GREEN << "Configuring chip of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;

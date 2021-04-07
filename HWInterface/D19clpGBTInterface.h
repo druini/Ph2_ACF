@@ -13,6 +13,7 @@
 #include "lpGBTInterface.h"
 #ifdef __TCUSB__
 #include "USB_a.h"
+#include "USB_libusb.h"
 #endif
 
 namespace Ph2_HwInterface
@@ -21,7 +22,12 @@ class D19clpGBTInterface : public lpGBTInterface
 {
   public:
     D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB) {}
-    ~D19clpGBTInterface() {}
+    ~D19clpGBTInterface()
+    {
+#ifdef __TCUSB__
+        if(fTC_USB != nullptr) delete fTC_USB;
+#endif
+    }
 
     // ###################################
     // # LpGBT register access functions #
@@ -144,6 +150,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // ########################
     // # LpGBT GPIO functions #
     // ########################
+    bool ReadGPIO(Ph2_HwDescription::Chip* pChip, const uint8_t& pGPIO);
     // Configure GPIO direction (In/Out)
     void ConfigureGPIODirection(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir);
     // Configure GPIO Level (High/Low)
@@ -208,6 +215,8 @@ class D19clpGBTInterface : public lpGBTInterface
     void SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
     // configure PS-ROH
     void ConfigurePSROH(Ph2_HwDescription::Chip* pChip);
+    // configure 2S-SEH
+    void Configure2SSEH(Ph2_HwDescription::Chip* pChip);
     // cbc read/write
     bool cbcWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pPage, uint8_t pRegistergAddress, uint8_t pRegisterValue, bool pReadBack = true, bool pSetPage = false)
     {
@@ -282,8 +291,13 @@ class D19clpGBTInterface : public lpGBTInterface
                                                                 {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
                                                                 { "R_SSA",
                                                                   TC_PSROH::measurement::R_SSA_RST }};
+
 #elif __SEH_USB__
-    TC_2SSEH* fTC_USB;
+    TC_2SSEH*                                         fTC_USB;
+    std::map<std::string, TC_2SSEH::resetMeasurement> fSehResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
+                                                                        {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
+                                                                        {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
+                                                                        {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
 #endif
 #endif
 };

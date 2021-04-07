@@ -1,3 +1,4 @@
+
 /*!
 
         \file                           D19cFWInterface.h
@@ -15,6 +16,7 @@
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "../Utils/D19cSSAEvent.h"
 #include "D19cFpgaConfig.h"
+#include "D19clpGBTInterface.h"
 #include "GbtInterface.h"
 #include <chrono>
 #include <time.h>
@@ -30,7 +32,8 @@ namespace Ph2_HwInterface
 D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId)
     : BeBoardFWInterface(puHalConfigFileName, pBoardId), fpgaConfig(nullptr), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
-    fResetAttempts = 0;
+    fResetAttempts       = 0;
+    fLocalLpGBTInterface = nullptr;
 }
 
 D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler)
@@ -40,13 +43,15 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
         fSaveToFile = false;
     else
         fSaveToFile = true;
-    fResetAttempts = 0;
+    fResetAttempts       = 0;
+    fLocalLpGBTInterface = nullptr;
 }
 
 D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable)
     : BeBoardFWInterface(pId, pUri, pAddressTable), fpgaConfig(nullptr), fFileHandler(nullptr), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
-    fResetAttempts = 0;
+    fResetAttempts       = 0;
+    fLocalLpGBTInterface = nullptr;
 }
 
 D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler)
@@ -56,7 +61,8 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
         fSaveToFile = false;
     else
         fSaveToFile = true;
-    fResetAttempts = 0;
+    fResetAttempts       = 0;
+    fLocalLpGBTInterface = nullptr;
 }
 
 void D19cFWInterface::setFileHandler(FileHandler* pHandler)
@@ -752,9 +758,11 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     fCBC3Emulator         = (ReadReg("fc7_daq_stat.general.info.implementation") == 2);
     fIsDDR3Readout        = (ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type") == 1);
     if(fIsDDR3Readout == 1) LOG(INFO) << BOLDBLUE << "DD3 Readout .... " << RESET;
-    fI2CVersion = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
+    fI2CVersion     = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
+    fOptical        = pBoard->ifOptical();
+    fUseOpticalLink = pBoard->ifUseOpticalLink();
 
-    if(fI2CVersion >= 1)
+    if(fI2CVersion >= 1 && fOptical)
     {
         fI2CSlaveMap.clear();
         fSlaveMap.clear();
@@ -843,77 +851,6 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
     }
 
-    // if(fI2CVersion >= 1)
-    // {
-    //   fSlaveMap.clear();
-    //   // assuming only one type of CIC per board ...
-    //   for( auto cHybrid : *pBoard )
-    //   {
-    //       for (auto cFe : *cHybrid )
-    //       {
-    //         auto cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
-    //         auto& cCic = cOuterTrackerHybrid->fCic;
-    //         uint8_t cBaseAddress;
-    //         uint8_t cNBytes;
-    //         if( cCic != NULL )
-    //         {
-    //           for ( auto cChip : *cFe)
-    //           {
-    //             //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
-    //             cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x41;
-    //             cNBytes = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 2 : 1;
-    //             fSlaveMap.push_back({ static_cast<uint8_t>(cBaseAddress + cChip->getId()), cNBytes , 1, 1, 1, 1,
-    //             cChip->getId()});
-    //           }// chips
-    //           cBaseAddress = 0x60;
-    //           cNBytes=2;
-    //           fSlaveMap.push_back({ cBaseAddress, cNBytes , 1, 1, 1, 1, 8});
-    //         }
-    //         else
-    //         {
-    //           for ( auto cChip : *cFe)
-    //           {
-    //             //auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
-    //             if( cChip->getFrontEndType() == FrontEndType::CBC3 )
-    //               continue;
-    //             // TO - DO .. check MPA address
-    //             cBaseAddress = ( cChip->getFrontEndType()  == FrontEndType::SSA ) ? 0x20 : 0x40;
-    //             cBaseAddress += cChip->getId();
-    //             cNBytes = 2;
-    //             LOG (INFO) << BOLDBLUE << "Adding slave with I2C address 0x"
-    //               << std::hex <<  +cBaseAddress << std::dec
-    //               << RESET;
-    //             fSlaveMap.push_back({ cBaseAddress, cNBytes , 1, 1, 1, 1, cChip->getId()});
-    //           }// chips
-    //         }
-    //       }//hybrids
-    //   }//hybrids
-    //   // and then loop over map and write
-    //   for (unsigned int ism = 0; ism < fSlaveMap.size(); ism++)
-    //   {
-    //     // setting the params
-    //     uint32_t shifted_i2c_address =  fSlaveMap[ism][0] << 25;
-    //     uint32_t shifted_register_address_nbytes = fSlaveMap[ism][1]<<10;
-    //     uint32_t shifted_data_wr_nbytes = fSlaveMap[ism][2]<<5;
-    //     uint32_t shifted_data_rd_nbytes = fSlaveMap[ism][3]<<0;
-    //     uint32_t shifted_stop_for_rd_en = fSlaveMap[ism][4]<<24;
-    //     uint32_t shifted_nack_en = fSlaveMap[ism][5]<<23;
-
-    //     // writing the item to the firmware
-    //     uint32_t final_item = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes +
-    //     shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en; std::string curreg =
-    //     "fc7_daq_cnfg.command_processor_block.i2c_address_table.slave_" + std::to_string(ism) + "_config"; LOG (INFO)
-    //     << BOLDBLUE << "Writing "
-    //       << std::bitset<32>(final_item)
-    //       << " to register "
-    //       << curreg
-    //       << RESET;
-    //     this->WriteReg(curreg, final_item);
-    //   }
-    //   //this->SetI2CAddressTable();
-    // }
-
-    fOptical = pBoard->ifOptical();
     // if optical readout .. then configure links
     if(fOptical)
     {
@@ -926,6 +863,16 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
         // now configure SCA + GBTx
         configureLink(pBoard);
+    }
+    if(fUseOpticalLink)
+    {
+        LOG(INFO) << BOLDBLUE << "Configuring optical link.." << RESET;
+        bool clpGBTlock = LinkLock(pBoard);
+        if(!clpGBTlock)
+        {
+            LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
+            exit(0);
+        }
     }
 
     fUseOpticalLink = pBoard->ifUseOpticalLink();
@@ -963,8 +910,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         {
             for(auto cFe: *cOpticalGroup)
             {
-                auto                                          cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
-                auto&                                         cCic                = cOuterTrackerHybrid->fCic;
+                auto  cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+                auto& cCic                = cOuterTrackerHybrid->fCic;
+                if(cCic == nullptr) continue;
                 std::vector<std::pair<std::string, uint32_t>> cVecReg;
                 // make sure CIC is receiving clock
                 // cVecReg.push_back( {"fc7_daq_cnfg.physical_interface_block.cic.clock_enable" , 1 } ) ;
@@ -1009,9 +957,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     LOG(INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
     fNReadoutChip          = 0;
     fNHybrids              = 0;
-    uint16_t hybrid_enable = 0;
+    uint16_t hybrid_enable = 2;
     cVecReg.clear();
-    for(auto cHybrid: *pBoard)
+    /*for(auto cHybrid: *pBoard)
     {
         for(auto cFe: *cHybrid)
         {
@@ -1086,7 +1034,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                 fNHybrids += 1;
             }
         }
-    }
+    }*/
     LOG(INFO) << BOLDBLUE << +fNCic << " CICs enabled." << RESET;
     cVecReg.push_back({"fc7_daq_cnfg.global.hybrid_enable", hybrid_enable});
     LOG(INFO) << BOLDBLUE << "Setting hybrid enable register to " << std::bitset<32>(hybrid_enable) << RESET;
@@ -1366,6 +1314,31 @@ void D19cFWInterface::L1ADebug(uint8_t pWait_ms)
 
     this->ResetReadout();
 }
+
+void D19cFWInterface::L1ACompare(uint8_t pWait_ms)
+{
+    this->ConfigureTriggerFSM(0, 10, 3);
+    // disable back-pressure
+    this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
+    this->Start();
+    std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
+    this->Stop();
+
+    auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+    LOG(INFO) << BOLDBLUE << "Hits debug ...." << RESET;
+    std::string cBuffer = "";
+    for(auto cWord: cWords)
+    {
+        auto                     cString = std::bitset<32>(cWord).to_string();
+        std::vector<std::string> cOutputWords(0);
+        for(size_t cIndex = 0; cIndex < 4; cIndex++) { cOutputWords.push_back(cString.substr(cIndex * 8, 8)); }
+        std::string cOutput = "";
+        for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--) { cOutput += *cIt + " "; }
+        LOG(INFO) << BOLDBLUE << cOutput << RESET;
+    }
+
+    this->ResetReadout();
+}
 void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
 {
     // enable stub debug - allows you to 'scope' the stub output
@@ -1438,6 +1411,48 @@ void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
     //   cLine++;
     // }while( cLine < pNlines );
     // disbale stub debug
+    this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
+    this->ResetReadout();
+}
+
+void D19cFWInterface::StubCompare(bool pWithTestPulse, uint8_t pNlines)
+{
+    // enable stub debug - allows you to 'scope' the stub output
+    this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
+
+    if(pWithTestPulse)
+        this->ChipTestPulse();
+    else
+        this->Trigger(0);
+
+    auto                     cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
+    std::vector<std::string> cLines(0);
+    size_t                   cLine = 0;
+    // int cStrLength=0;
+    do
+    {
+        std::vector<std::string> cOutputWords(0);
+        for(size_t cIndex = 0; cIndex < 5; cIndex++)
+        {
+            auto cWord   = cWords[cLine * 10 + cIndex];
+            auto cString = std::bitset<32>(cWord).to_string();
+            for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
+        }
+
+        std::string cOutput_wSpace = "";
+        std::string cOutput        = "";
+        for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
+        {
+            cOutput_wSpace += *cIt + " ";
+            cOutput += *cIt;
+        }
+        LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+        cLines.push_back(cOutput);
+        // cStrLength = cOutput.length();
+        cLine++;
+    } while(cLine < pNlines);
+
+    // disable stub debug
     this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
     this->ResetReadout();
 }
@@ -1929,6 +1944,10 @@ void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
         throw std::runtime_error(std::string("Trying to read SSA counters when EventType does not match..."));
     }
 }
+void D19cFWInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface)
+{
+    // fLocalLpGBTInterface = pLpGBTInterface;
+}
 void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
     // get event type
@@ -1938,72 +1957,236 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
         pData.clear();
         for(auto cOpticalGroup: *pBoard)
         {
+            auto& clpGBT = cOpticalGroup->flpGBT;
             for(auto cFe: *cOpticalGroup)
             {
                 for(auto cChip: *cFe)
                 {
+                    uint8_t cMaster = (cChip->getHybridId() % 2 == 0) ? 2 : 0;
                     LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from SSA" << +cChip->getId() << RESET;
-                    bool                  cWrite = false;
-                    std::vector<uint32_t> cVec;
-                    cVec.clear();
-                    std::vector<uint32_t> cReplies;
-                    cReplies.clear();
-                    for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                    if(clpGBT == nullptr)
                     {
-                        // MSB
-                        ChipRegItem cReg_Counters_MSB;
-                        cReg_Counters_MSB.fPage    = 0x00;
-                        cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
-                        cReg_Counters_MSB.fValue   = 0x00;
-                        this->EncodeReg(cReg_Counters_MSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
-                        // this->ReadChipBlockReg( cVec );
-                        // cReplies.push_back(cVec[0]);
-                        // cVec.clear();
-                        // LSB
-                        ChipRegItem cReg_Counters_LSB;
-                        cReg_Counters_LSB.fPage    = 0x00;
-                        cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
-                        cReg_Counters_LSB.fValue   = 0x00;
-                        this->EncodeReg(cReg_Counters_LSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
-                        // this->ReadChipBlockReg( cVec );
-                        // cReplies.push_back(cVec[0]);
-                        // cVec.clear();
+                        bool                  cWrite = false;
+                        std::vector<uint32_t> cVec;
+                        cVec.clear();
+                        std::vector<uint32_t> cReplies;
+                        cReplies.clear();
+                        for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                        {
+                            // MSB
+                            ChipRegItem cReg_Counters_MSB;
+                            cReg_Counters_MSB.fPage    = 0x00;
+                            cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
+                            cReg_Counters_MSB.fValue   = 0x00;
+                            this->EncodeReg(cReg_Counters_MSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
+                            // this->ReadChipBlockReg( cVec );
+                            // cReplies.push_back(cVec[0]);
+                            // cVec.clear();
+                            // LSB
+                            ChipRegItem cReg_Counters_LSB;
+                            cReg_Counters_LSB.fPage    = 0x00;
+                            cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
+                            cReg_Counters_LSB.fValue   = 0x00;
+                            this->EncodeReg(cReg_Counters_LSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
+                            // this->ReadChipBlockReg( cVec );
+                            // cReplies.push_back(cVec[0]);
+                            // cVec.clear();
+                        }
+                        // read back
+                        this->ReadChipBlockReg(cVec);
+                        // set in data vector
+                        uint32_t cDataWord    = 0x0000;
+                        uint32_t cWordCounter = 0;
+                        uint16_t cIndx        = 0;
+                        for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                        {
+                            uint8_t     cSSAId;
+                            bool        cFailed = false;
+                            bool        cRead;
+                            ChipRegItem cReg_Counters_MSB;
+                            cReg_Counters_MSB.fPage    = 0x00;
+                            cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
+                            cReg_Counters_MSB.fValue   = 0x00;
+                            ChipRegItem cReg_Counters_LSB;
+                            cReg_Counters_LSB.fPage    = 0x00;
+                            cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
+                            cReg_Counters_LSB.fValue   = 0x00;
+                            this->DecodeReg(cReg_Counters_MSB, cSSAId, cVec[cIndx], cRead, cFailed);
+                            this->DecodeReg(cReg_Counters_LSB, cSSAId, cVec[cIndx + 1], cRead, cFailed);
+                            cIndx += 2;
+                            uint16_t cCounterValue = ((cReg_Counters_MSB.fValue & 0xFF) << 8) | (cReg_Counters_LSB.fValue & 0xFF);
+                            if(cChnl < 10)
+                            {
+                                LOG(DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
+                                           << " LSB " << +(cReg_Counters_LSB.fValue & 0xFF) << " MSB " << +(cReg_Counters_MSB.fValue & 0xFF) << RESET;
+                            }
+                            cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
+                            if((cWordCounter & 0x1) == 1)
+                            {
+                                pData.push_back(cDataWord);
+                                cDataWord = 0x0000;
+                            }
+                            cWordCounter++;
+                        }
                     }
-                    // read back
-                    this->ReadChipBlockReg(cVec);
-                    // set in data vector
-                    uint32_t cDataWord    = 0x0000;
-                    uint32_t cWordCounter = 0;
-                    uint16_t cIndx        = 0;
-                    for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                    else
                     {
-                        uint8_t     cSSAId;
-                        bool        cFailed = false;
-                        bool        cRead;
-                        ChipRegItem cReg_Counters_MSB;
-                        cReg_Counters_MSB.fPage    = 0x00;
-                        cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
-                        cReg_Counters_MSB.fValue   = 0x00;
-                        ChipRegItem cReg_Counters_LSB;
-                        cReg_Counters_LSB.fPage    = 0x00;
-                        cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
-                        cReg_Counters_LSB.fValue   = 0x00;
-                        this->DecodeReg(cReg_Counters_MSB, cSSAId, cVec[cIndx], cRead, cFailed);
-                        this->DecodeReg(cReg_Counters_LSB, cSSAId, cVec[cIndx + 1], cRead, cFailed);
-                        cIndx += 2;
-                        uint16_t cCounterValue = ((cReg_Counters_MSB.fValue & 0xFF) << 8) | (cReg_Counters_LSB.fValue & 0xFF);
-                        if(cChnl < 10)
+                        // set in data vector
+                        uint32_t cDataWord     = 0x0000;
+                        uint32_t cWordCounter  = 0;
+                        uint8_t  cFreq         = 3;
+                        uint8_t  cSCLDriveMode = 0;
+                        uint8_t  cSlaveAddress = 0x20 + cChip->getId();
+                        for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                         {
-                            LOG(DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
-                                       << " LSB " << +(cReg_Counters_LSB.fValue & 0xFF) << " MSB " << +(cReg_Counters_MSB.fValue & 0xFF) << RESET;
-                        }
-                        cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
-                        if((cWordCounter & 0x1) == 1)
-                        {
-                            pData.push_back(cDataWord);
-                            cDataWord = 0x0000;
-                        }
-                        cWordCounter++;
+                            // MSB
+                            std::vector<int> cRegs{0x0801 + cChnl, 0x0901 + cChnl};
+                            std::vector<int> cValues(0);
+                            for(auto cReg: cRegs)
+                            {
+                                ChipRegItem cReg_Counters_MSB;
+                                cReg_Counters_MSB.fPage    = 0x00;
+                                cReg_Counters_MSB.fAddress = cReg;
+                                uint16_t cInvertedRegister = ((cReg_Counters_MSB.fAddress & (0xFF << 8 * 0)) << 8) | ((cReg_Counters_MSB.fAddress & (0xFF << 8 * 1)) >> 8);
+                                // write address
+                                // dummy write
+                                // configure I2C
+                                uint8_t cNBytes = 2;
+                                {
+                                    std::string cI2CCntrlReg = "I2CM" + std::to_string(cMaster) + "Data0";
+                                    uint8_t     cValueCntrl  = (cFreq << 0) | (cNBytes << 2) | (cSCLDriveMode << 7);
+                                    // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCntrlReg).fAddress, cValueCntrl, true);
+                                    WriteLpGBTRegister(clpGBT->getRegItem(cI2CCntrlReg).fAddress, cValueCntrl, true);
+
+                                    std::string cI2CCmdReg0 = "I2CM" + std::to_string(cMaster) + "Cmd";
+                                    // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg0).fAddress, 0x0, true);
+                                    WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg0).fAddress, 0x0, true);
+
+                                    // Prepare Address Register
+                                    std::string cI2CAddressReg = "I2CM" + std::to_string(cMaster) + "Address";
+                                    // Write Slave Address
+                                    // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CAddressReg).fAddress, cSlaveAddress, true);
+                                    WriteLpGBTRegister(clpGBT->getRegItem(cI2CAddressReg).fAddress, cSlaveAddress, true);
+
+                                    // Write Data to Data Register
+                                    for(uint8_t cByte = 0; cByte < 4; cByte++)
+                                    {
+                                        std::string cI2CDataReg = "I2CM" + std::to_string(cMaster) + "Data" + std::to_string(cByte);
+                                        if(cByte < cNBytes)
+                                        {
+                                            // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CDataReg).fAddress, (cInvertedRegister & (0xFF << 8 * cByte)) >> 8 * cByte, true);
+                                            WriteLpGBTRegister(clpGBT->getRegItem(cI2CDataReg).fAddress, (cInvertedRegister & (0xFF << 8 * cByte)) >> 8 * cByte, true);
+                                        }
+                                        else
+                                        {
+                                            // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CDataReg).fAddress, 0x00, true);
+                                            WriteLpGBTRegister(clpGBT->getRegItem(cI2CDataReg).fAddress, 0x00, true);
+                                        }
+                                    }
+
+                                    // Prepare Command Register
+                                    std::string cI2CCmdReg1 = "I2CM" + std::to_string(cMaster) + "Cmd";
+                                    // If Multi-Byte, write command to save data locally before transfer to slave
+                                    // FIXME for now this only provides a maximum of 32 bits (4 Bytes) write
+                                    // Write Command to launch I2C transaction
+                                    if(cNBytes == 1)
+                                    {
+                                        // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0x2, true);
+                                        WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0x2, true);
+                                    }
+                                    else
+                                    {
+                                        // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0x8, true);
+                                        WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0x8, true);
+                                        //
+                                        // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0xc, true);
+                                        WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0xc, true);
+                                    }
+                                    // wait until the transaction is done
+                                    uint8_t cMaxIter = 10, cIter = 0;
+                                    bool    cSuccess = false;
+                                    do
+                                    {
+                                        LOG(DEBUG) << BOLDBLUE << "Waiting for I2C transaction to finisih" << RESET;
+                                        std::string cI2CStatReg = "I2CM" + std::to_string(cMaster) + "Status";
+                                        // uint8_t     cStatus = ReadOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CStatReg).fAddress);
+                                        uint8_t cStatus = ReadLpGBTRegister(clpGBT->getRegItem(cI2CStatReg).fAddress);
+                                        cSuccess        = (cStatus == 4);
+                                        cIter++;
+                                    } while(cIter < cMaxIter && !cSuccess);
+                                    if(!cSuccess)
+                                    {
+                                        LOG(INFO) << BOLDRED << "ERROR I2C write" << RESET;
+                                        exit(0);
+                                    }
+                                } // write
+
+                                // then read
+                                uint8_t cValue = 0;
+                                {
+                                    // Read Data from Slave Address using I2C Master
+                                    // configure I2C
+                                    cFreq                    = 3; // 1 MHz
+                                    cNBytes                  = 1;
+                                    std::string cI2CCntrlReg = "I2CM" + std::to_string(cMaster) + "Data0";
+                                    uint8_t     cValueCntrl  = (cFreq << 0) | (cNBytes << 2) | (cSCLDriveMode << 7);
+                                    // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCntrlReg).fAddress, cValueCntrl, true);
+                                    WriteLpGBTRegister(clpGBT->getRegItem(cI2CCntrlReg).fAddress, cValueCntrl, true);
+                                    //
+                                    std::string cI2CCmdReg2 = "I2CM" + std::to_string(cMaster) + "Cmd";
+                                    // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg2).fAddress, 0x0, true);
+                                    WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg2).fAddress, 0x0, true);
+
+                                    // Prepare Address Register
+                                    std::string cI2CAddressReg = "I2CM" + std::to_string(cMaster) + "Address";
+                                    // Prepare Command Register
+                                    std::string cI2CCmdReg3 = "I2CM" + std::to_string(cMaster) + "Cmd";
+                                    // Write Slave Address
+                                    // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CAddressReg).fAddress, cSlaveAddress, true);
+                                    WriteLpGBTRegister(clpGBT->getRegItem(cI2CAddressReg).fAddress, cSlaveAddress, true);
+                                    // Write Read Command and then Read from Read Data Register
+                                    // Procedure and registers depend on number on Bytes
+                                    if(cNBytes == 1)
+                                    {
+                                        // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg3).fAddress, 0x3, true);
+                                        WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg3).fAddress, 0x3, true);
+
+                                        std::string cI2CDataReg = "I2CM" + std::to_string(cMaster) + "ReadByte";
+                                        // cValue = ReadOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CDataReg).fAddress);
+                                        cValue = ReadLpGBTRegister(clpGBT->getRegItem(cI2CDataReg).fAddress);
+                                    }
+                                    else
+                                    {
+                                        // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg3).fAddress, 0xD, true);
+                                        WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg3).fAddress, 0xD, true);
+
+                                        uint32_t cReadData = 0;
+                                        for(uint8_t cByte = 0; cByte < cNBytes; cByte++)
+                                        {
+                                            std::string cI2CDataReg = "I2CM" + std::to_string(cMaster) + "Read" + std::to_string(15 - cByte);
+                                            // cReadData |= ((uint32_t)ReadOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CDataReg).fAddress) << cByte);
+                                            cReadData |= ((uint32_t)ReadLpGBTRegister(clpGBT->getRegItem(cI2CDataReg).fAddress) << cByte);
+                                        }
+                                        cValue = cReadData;
+                                    }
+                                }
+                                // cReg_Counters_MSB.fValue = cValue;
+                                cValues.push_back(cValue);
+                            }
+                            uint16_t cCounterValue = ((cValues[0] & 0xFF) << 8) | (cValues[1] & 0xFF);
+                            if(cChnl % 10 == 0)
+                            {
+                                LOG(INFO) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
+                                          << " LSB " << +(cValues[1]) << " MSB " << +(cValues[0]) << RESET;
+                            }
+                            cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
+                            if((cWordCounter & 0x1) == 1)
+                            {
+                                pData.push_back(cDataWord);
+                                cDataWord = 0x0000;
+                            }
+                            cWordCounter++;
+                        } // chnl loop
                     }
                 } // chip loop
             }     // hybrid loop
@@ -2380,7 +2563,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     else
     {
         fFastCommandDuration = 0;
-        LOG(DEBUG) << BOLDBLUE << "Async SSA [trigger source == 10]" << RESET;
+        LOG(INFO) << BOLDBLUE << "Async SSA [trigger source == 10]" << RESET;
         this->ReconfigureTriggerFSM(cVecReg);
         // resync + clear counters
         this->PS_Clear_counters(fFastCommandDuration);
@@ -2397,7 +2580,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         uint32_t cIterations = 0;
         do
         {
-            LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+            LOG(INFO) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             cIterations++;
         } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < 10);
