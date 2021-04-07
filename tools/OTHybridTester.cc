@@ -22,12 +22,13 @@ void OTHybridTester::FindUSBHandler()
     {
         if(cBoard->at(0)->flpGBT != nullptr)
         {
-            LOG(INFO) << BOLDYELLOW << "Found lpGBT" << RESET;
+            LOG(DEBUG) << BOLDYELLOW << "Found lpGBT" << RESET;
             cThereIsLpGBT = true;
         }
         else
         {
-            LOG(INFO) << BOLDYELLOW << "Did not find lpGBT" << RESET;
+            LOG(DEBUG) << BOLDYELLOW << "Did not find lpGBT" << RESET;
+            cThereIsLpGBT = false;
         }
     }
     if(!cThereIsLpGBT)
@@ -292,6 +293,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
 void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDACValue, uint32_t pMaxDACValue, uint32_t pStep)
 {
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    int                 cTrim           = -1;
 #ifdef __USE_ROOT__
     for(auto cBoard: *fDetectorContainer)
     {
@@ -370,7 +372,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                           << ""
                           << " --- ADC value = "
                           << "" << RESET;
-                int cTrim = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "VREFCNTR");
+                cTrim = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "VREFCNTR");
                 LOG(INFO) << BOLDBLUE << "Trim value " << cTrim << RESET;
                 // ---Information also included in ROOT file of the fit
                 fillSummaryTree(Form("ADC%i_p0", cADCId), cReg_Class.b_0);

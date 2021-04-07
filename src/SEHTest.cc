@@ -52,7 +52,9 @@ int main(int argc, char* argv[])
     // Load pattern
     cmd.defineOption("internal-pattern", "Internally Generated LpGBT Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("internal-pattern", "ip");
-    cmd.defineOption("external-pattern", "Externally Generated LpGBT Pattern using the Data Player for Control FC7", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+    cmd.defineOption("external-pattern",
+                     "Externally Generated LpGBT Pattern using the Data Player for Control FC7; Also, an automated comparision is performed",
+                     ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("external-pattern", "ep");
 
     cmd.defineOption("cic-pattern", "Externally Generated LpGBT Pattern using CIC output", ArgvParser::NoOptionAttribute /*| ArgvParser::OptionRequires*/);
@@ -67,9 +69,6 @@ int main(int argc, char* argv[])
     // test ADC channels
     cmd.defineOption("testADC", "Test LpGBT ADCs on SEH");
     cmd.defineOptionAlternative("testADC", "a");
-    // test optical r/w
-    cmd.defineOption("optical", "Test LpGBT read/write through optical link");
-    cmd.defineOptionAlternative("optical", "o");
     // clock test
     cmd.defineOption("clock-test", "Run clock tests", ArgvParser::NoOptionAttribute);
     // fast command test
@@ -175,7 +174,7 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.bookSummaryTree();
     LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
-    cTool.ConfigureHw();
+    // cTool.ConfigureHw();
 
     // Initialize BackEnd & Control LpGBT Tester
     SEHTester cSEHTester;
@@ -206,9 +205,10 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDYELLOW << "You are using the default parameter set stored in fDefaultParameters" << RESET;
     }
 
-    /***************/
-    /* TEST UPLINK */
-    /***************/
+    /*******************/
+    /*   TEST UPLINK   */
+    /* E-links CIC_OUT */
+    /*******************/
     if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
     {
         /* INTERNALLY GENERATED PATTERN */
@@ -224,15 +224,39 @@ int main(int argc, char* argv[])
         {
             uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
             cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
-            cSEHTester.LpGBTCheckULPattern(true);
+            bool cStatus = cSEHTester.LpGBTCheckULPattern(true);
             cSEHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
+            if(cStatus) { LOG(INFO) << BOLDGREEN << "CIC_Out test passed." << RESET; }
+            else
+            {
+                LOG(INFO) << BOLDRED << "CIC_Out test failed." << RESET;
+            }
         }
     }
 
-    // Test 2S SEH Reset Lines
-    if(cmd.foundOption("testReset")) { bool cStatus = cSEHTester.LpGBTTestResetLines(); }
-    // Test VTRx+ slow control
+    /****************************/
+    /* TEST RESET LINES (GPIOs) */
+    /*     And test GPIs        */
+    /****************************/
+    if(cmd.foundOption("testReset"))
+    {
+        bool cStatus = cSEHTester.LpGBTTestResetLines();
+        if(cStatus) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
+        else
+        {
+            LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
+        }
+        cStatus = cSEHTester.LpGBTTestGPILines();
+        if(cStatus) { LOG(INFO) << BOLDGREEN << "Power Good test passed." << RESET; }
+        else
+        {
+            LOG(INFO) << BOLDRED << "Power Good test failed." << RESET;
+        }
+    }
 
+    /****************************/
+    /*  Test VTRx+ slow control */
+    /****************************/
     if(cmd.foundOption("testVTRxplus"))
     {
         bool cStatus = cSEHTester.LpGBTTestVTRx();
@@ -242,7 +266,10 @@ int main(int argc, char* argv[])
         else
             LOG(INFO) << BOLDRED << "VTRx+ slow control test failed." << RESET;
     }
-    // Test LpGBT I2C Masters
+
+    /****************************/
+    /*  Test LpGBT I2C Masters */
+    /****************************/
     if(cmd.foundOption("testI2C"))
     {
         std::vector<uint8_t> cMasters = {0, 2};
@@ -252,7 +279,10 @@ int main(int argc, char* argv[])
         else
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDRED << " failed" << RESET;
     }
-    // Testing linearity of ADC and AMUX lines
+
+    /**********************************/
+    /* TEST ANALOG-DIGITAL-CONVERTERS */
+    /**********************************/
     if(cmd.foundOption("testADC"))
     {
         // cSEHTester.ToyTestFixedADCs();
