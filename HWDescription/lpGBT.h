@@ -27,8 +27,12 @@ class lpGBT : public Chip
     void    saveRegMap(const std::string& fileName) override;
     uint8_t getNumberOfBits(const std::string& dacName) override { return 0; }
 
+    void setPhaseRxAligned(const bool done) { phaseRxAligned = done; };
+    bool getPhaseRxAligned() { return phaseRxAligned; };
+
   private:
     std::string configFileName;
+    bool        phaseRxAligned; // @TMP@
 };
 } // namespace Ph2_HwDescription
 

@@ -13,7 +13,7 @@
       <lpGBT_Files path="./" />
       <lpGBT configfile="CMSIT_LpGBT.txt">
         <Settings
-            EPRXDllConfig = "81"
+            EPRX60ChnCntr_phase = "6"
             />
       </lpGBT>
       -->
