@@ -3,19 +3,19 @@
 ##########
 # CACTUS #
 ##########
-# export CACTUSBIN=/opt/cactus/bin
-# export CACTUSLIB=/opt/cactus/lib
-# export CACTUSINCLUDE=/opt/cactus/include
-export CACTUSROOT=/opt/cactus_from_source/uhal/
+export CACTUSBIN=/opt/cactus/bin
+export CACTUSLIB=/opt/cactus/lib
+export CACTUSINCLUDE=/opt/cactus/include
+#export CACTUSROOT=/opt/cactus_from_source/uhal/
 
-export CACTUSINCLUDE=$CACTUSROOT/uhal/include/
-export CACTUSLIB=$CACTUSROOT/uhal/lib
+#export CACTUSINCLUDE=$CACTUSROOT/uhal/include/
+#export CACTUSLIB=$CACTUSROOT/uhal/lib
 
-export CACTUSLOGINCLUDE=$CACTUSROOT/log/include/
-export CACTUSLOGLIB=$CACTUSROOT/log/lib/
+#export CACTUSLOGINCLUDE=$CACTUSROOT/log/include/
+#export CACTUSLOGLIB=$CACTUSROOT/log/lib/
 
-export CACTUSGRAMMARINCLUDE=$CACTUSROOT/grammars/include/
-export CACTUSGRAMMARLIB=$CACTUSROOT/grammars/lib/
+#export CACTUSGRAMMARINCLUDE=$CACTUSROOT/grammars/include/
+#export CACTUSGRAMMARLIB=$CACTUSROOT/grammars/lib/
 
 #########
 # BOOST #
@@ -127,8 +127,8 @@ export CompileForShep=false
 export CompileWithEUDAQ=false
 
 # Compile with TC_USB library
-export CompileWithTCUSB=true
-export UseTCUSBforROH=false
+export CompileWithTCUSB=false
+export UseTCUSBforROH=true
 
 # Clang-format command
 if command -v clang-format &> /dev/null; then

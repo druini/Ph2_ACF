@@ -53,7 +53,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
-    #ifdef __ROH_USB__
+#ifdef __ROH_USB__
     ConfigurePSROH(pChip);
 #elif __SEH_USB__
     Configure2SSEH(pChip);
@@ -1014,7 +1014,6 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Setting GPIO levels for Skeleton test
     ConfigureGPIODirection(pChip, {0, 1, 3, 6, 9, 12}, 1);
     ConfigureGPIOLevel(pChip, {0, 1, 3, 6, 9, 12}, 1);
-    
 }
 
 // Preliminary

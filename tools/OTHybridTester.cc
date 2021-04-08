@@ -611,8 +611,8 @@ bool OTHybridTester::LpGBTTestGPILines()
                 {
                     LOG(INFO) << BOLDGREEN << "GPIO connected to " << cMapIterator->first << " is high!" << RESET;
                 }
-                cMapIterator++;
                 fillSummaryTree(cMapIterator->first.c_str(), cReadGPI);
+                cMapIterator++;
             }
         }
     }

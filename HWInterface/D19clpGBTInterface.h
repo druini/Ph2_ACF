@@ -206,8 +206,8 @@ class D19clpGBTInterface : public lpGBTInterface
     void      SetTCUSBHandler(TC_PSROH* pTC_PSROH) { fTC_USB = pTC_PSROH; }
     TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
 #elif __SEH_USB__
-    void      SetTCUSBHandler(TC_2SSEH* pTC_2SSEH) { fTC_USB = pTC_2SSEH; }
-    TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
+    void                                              SetTCUSBHandler(TC_2SSEH* pTC_2SSEH) { fTC_USB = pTC_2SSEH; }
+    TC_2SSEH*                                         GetTCUSBHandler() { return fTC_USB; }
 #endif
 
 #endif
