@@ -345,9 +345,10 @@ Follow these instructions to install and compile the libraries:
 
 1. Clone the GitHub repo and run cmake
   
-        $> git clone https://:@gitlab.cern.ch:8443/fravera/Ph2_ACF.git
+        $> git clone https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git 
         $> cd Ph2_ACF
         $> source setup.sh
+        $> mkdir build 
         $> cd build 
         $> cmake ..
 
