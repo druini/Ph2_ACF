@@ -600,7 +600,7 @@ uint64_t lpGBTInterface::GetBERTErrors(Chip* pChip)
 
     return ((cResult4 << 32) | (cResult3 << 24) | (cResult2 << 16) | (cResult1 << 8) | cResult0);
 }
-/*
+
 double lpGBTInterface::GetBERTResult(Chip* pChip)
 {
   lpGBTInterface::StartBERT(pChip, false); // Stop
@@ -638,7 +638,7 @@ double lpGBTInterface::GetBERTResult(Chip* pChip)
   // Return fraction of errors
   return (double)cErrors / cBitsChecked;
 }
-*/
+
 double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
 // ####################
 // # frontendSpeed    #
@@ -676,8 +676,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // # Configuring #
     // ###############
     lpGBTInterface::ConfigureRxSource(pChip, {pGroup}, lpGBTconstants::PATTERN_NORMAL);
-    lpGBTInterface::ConfigureBERT(pChip, 0, fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)], BERTMeasTime); // @TMP@
-    WriteChipReg(pChip, "BERTSource", (fGroup2BERTsourceCourse[pGroup] << 4) | fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)]);
+    lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)], BERTMeasTime);
 
     // #########
     // # Start #

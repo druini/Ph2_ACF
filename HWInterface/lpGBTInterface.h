@@ -92,7 +92,7 @@ class lpGBTInterface : public ChipInterface
     // ##############
     void   ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable = false);
     void   ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
-    double GetBERTResult(Ph2_HwDescription::Chip* pChip) { return 0; }; // @TMP@
+    double GetBERTResult(Ph2_HwDescription::Chip* pChip);
     double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0);
 
   protected:
