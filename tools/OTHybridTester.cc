@@ -399,14 +399,15 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 // Need statistics on spread of RSSI and temperature sensors
 bool OTHybridTester::LpGBTTestFixedADCs()
 {
-    bool                                cReturn = true;
+    bool cReturn = true;
+#ifdef __USE_ROOT__
+#ifdef __TCUSB__
     std::map<std::string, std::string>  cADCsMap;
     std::map<std::string, float>*       cDefaultParameters;
     std::map<std::string, std::string>* cADCNametoPinMapping;
     std::string                         cADCNameString;
     std::vector<int>                    cADCValueVect;
-#ifdef __USE_ROOT__
-#ifdef __TCUSB__
+
     auto cFixedADCsTree = new TTree("FixedADCs", "lpGBT ADCs not tied to AMUX");
     cFixedADCsTree->Branch("Id", &cADCNameString);
     cFixedADCsTree->Branch("AdcValue", &cADCValueVect);

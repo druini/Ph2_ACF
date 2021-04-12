@@ -190,6 +190,10 @@ int main(int argc, char* argv[])
     {
         bool cStatus = cPSROHTester.LpGBTTestResetLines();
         cPSROHTester.LpGBTTestGPILines();
+        if(cStatus)
+            LOG(INFO) << BOLDBLUE << "Reset test passed." << RESET;
+        else
+            LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
     }
 
     // Test VTRx+ slow control
