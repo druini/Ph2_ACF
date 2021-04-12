@@ -1,3 +1,0 @@
-Spannung 1.0
-Strom 2.5
-HV  100

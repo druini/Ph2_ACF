@@ -25,7 +25,11 @@ class D19clpGBTInterface : public lpGBTInterface
     ~D19clpGBTInterface()
     {
 #ifdef __TCUSB__
-        if(fTC_USB != nullptr) delete fTC_USB;
+        if(fTC_USB != nullptr)
+        {
+            delete fTC_USB;
+            fTC_USB = nullptr;
+        }
 #endif
     }
 
