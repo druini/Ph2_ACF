@@ -99,7 +99,6 @@ int main(int argc, char** argv)
     DeviceHandler theHandler;
     theHandler.readSettings(docPath, docSettings);
 
-<<<<<<< HEAD
     PowerSupply*        dPowerSupply        = ps_deviceHandler.getPowerSupply(cPowerSupply); // Will throw std::out_of_range error if not found
     PowerSupplyChannel* dPowerSupplyChannel = dPowerSupply->getChannel(cPowerSupplyChannel);
 
