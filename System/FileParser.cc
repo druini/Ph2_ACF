@@ -4,6 +4,8 @@
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/RD53.h"
+#include "../HWDescription/lpGBT.h"
+#include "../Utils/Utilities.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -293,6 +295,22 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, fileName);
             theOpticalGroup->addlpGBT(thelpGBT);
 
+            //initialize lpGBT settings
+            for(const pugi::xml_attribute& attr : theChild.attributes())
+            {
+                os << GREEN << "|\t|\t|---- " << attr.name() << " : " << BOLDYELLOW << attr.value() << "\n" << RESET;
+                if(std::string(attr.name()) == "RxHSLPolarity")
+                    thelpGBT->setRxHSLPolarity(convertAnyInt(theChild.attribute("RxHSLPolarity").value()));
+                else if(std::string(attr.name()) == "TxHSLPolarity")
+                    thelpGBT->setTxHSLPolarity(convertAnyInt(theChild.attribute("TxHSLPolarity").value()));
+                else if(std::string(attr.name()) == "RxDataRate")
+                    thelpGBT->setRxDataRate(convertAnyInt(theChild.attribute("RxDataRate").value()));
+                else if(std::string(attr.name()) == "TxDataRate")
+                    thelpGBT->setTxDataRate(convertAnyInt(theChild.attribute("TxDataRate").value()));
+                else if(std::string(attr.name()) == "ClockFrequency")
+                    thelpGBT->setClocksFrequency(convertAnyInt(theChild.attribute("ClockFrequency").value()));
+            }
+
             pugi::xml_node clpGBTSettings = theChild.child("Settings");
             if(clpGBTSettings != nullptr)
             {
@@ -561,6 +579,21 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("MPA") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("CIC") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53") != std::string::npos;
+            
+            //Now parse Hybrid mapping to lpGBT
+            if(cName == "MapTolpGBT" && pOpticalGroup->flpGBT != nullptr)
+            {
+                // LOG(INFO) << BOLDBLUE << "Mapping Hybrid " << +pHybridNode.attribute("Id").as_int() << " to lpGBT" << RESET;
+                // os << BOLDCYAN << "|"
+                //     << "  "
+                //     << "|"
+                //     << "   "
+                //     << "|"
+                //     << "----" << cName << "  "
+                //     << "Id" << pHybridNode.attribute("Id").as_int() << RESET << std::endl
+                parseMapToLpGBT(cChild, pOpticalGroup->flpGBT, os);
+            }
+
             if(cIsTrackerASIC)
             {
                 if(cName.find("_Files") != std::string::npos) { cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute("path").value())); }
@@ -583,6 +616,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     }
                     else if(cName.find("CIC") != std::string::npos)
                     {
+
                         bool         cCIC1 = (cName.find("CIC2") == std::string::npos);
                         FrontEndType cType = cCIC1 ? FrontEndType::CIC : FrontEndType::CIC2;
                         pBoard->setFrontEndType(cType);
@@ -971,6 +1005,26 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
                << std::endl;
         }
     }
+}
+
+void FileParser::parseMapToLpGBT(pugi::xml_node pMapTolpGBTNode, Ph2_HwDescription::lpGBT* plpGBT, std::ostream& os)
+{
+    std::string cRxGroups = pMapTolpGBTNode.attribute("RxGroups").value();
+    std::string cRxChannels = pMapTolpGBTNode.attribute("RxChannels").value();
+    std::string cTxGroups = pMapTolpGBTNode.attribute("TxGroups").value();
+    std::string cTxChannels = pMapTolpGBTNode.attribute("TxChannels").value();
+    std::string cClocks = pMapTolpGBTNode.attribute("Clocks").value();
+    //
+    plpGBT->addRxGroups(SplitToVector(cRxGroups, ','));
+    os << GREEN << "|\t|\t|\t|---- RxGroups : " << cRxGroups << RESET << std::endl;
+    plpGBT->addRxChannels(SplitToVector(cRxChannels, ','));
+    os << GREEN << "|\t|\t|\t|---- RxChannels : " << cRxChannels << RESET << std::endl;
+    plpGBT->addTxGroups(SplitToVector(cTxGroups, ','));
+    os << GREEN << "|\t|\t|\t|---- TxGroups : " << cTxGroups << RESET << std::endl;
+    plpGBT->addTxChannels(SplitToVector(cTxChannels, ','));
+    os << GREEN << "|\t|\t|\t|---- TxChannels : " << cTxChannels << RESET << std::endl;
+    plpGBT->addClocks(SplitToVector(cClocks, ','));
+    os << GREEN << "|\t|\t|\t|---- Clocks : " << cClocks << RESET << std::endl;
 }
 
 // ########################
