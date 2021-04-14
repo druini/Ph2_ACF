@@ -11,6 +11,7 @@
 #define D19clpGBTInterface_H
 
 #include "lpGBTInterface.h"
+#include "../HWDescription/lpGBT.h"
 #ifdef __TCUSB__
 #include "USB_a.h"
 #endif
@@ -227,6 +228,12 @@ class D19clpGBTInterface : public lpGBTInterface
     uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
 
   private:
+    //
+    std::map<uint8_t, uint8_t> fClockFrequencyMap = {{0,0}, {40, 1}, {80, 2}, {160, 3}, {320, 4}, {640, 5}, {1280, 7}};
+    std::map<uint8_t, uint8_t> fTxDataRateMap = {{0,0}, {80,1}, {160, 2}, {320, 3}};
+    std::map<uint8_t, uint8_t> f5GRxDataRateMap = {{0,0}, {160,1}, {320, 2}, {640, 3}};
+    std::map<uint8_t, uint8_t> f10GRxDataRateMap = {{0,0}, {320,1}, {640, 2}, {1280, 3}};
+
     std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},
                                                    {"ADC1", 1},
                                                    {"ADC2", 2},

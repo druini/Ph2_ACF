@@ -939,18 +939,20 @@ void D19clpGBTInterface::InitialiseTCUSBHandler()
 
 void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 {
+    lpGBT* clpGBT = static_cast<lpGBT*>(pChip);  
     uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying PS-ROH-" << +cChipRate << "G lpGBT configuration" << RESET;
     // Configure High Speed Link Tx Rx Polarity
-    ConfigureHighSpeedPolarity(pChip, 1, 0);
+    ConfigureHighSpeedPolarity(pChip, clpGBT->getTxHSLPolarity(), clpGBT->getRxHSLPolarity());
     // Clocks
-    std::vector<uint8_t> cClocks  = {1, 6, 11, 26};
-    uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 7, cClkInvert = 1;
-    uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
+    std::vector<uint8_t> cClocks  = clpGBT->getClocks();
+    uint8_t              cClkFreq = fClockFrequencyMap.at(clpGBT->getClocksFrequency());
+    uint8_t              cClkDriveStr = 7, cClkInvert = 1, cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
-    std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
-    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    std::vector<uint8_t> cTxGroups = clpGBT->getTxGroups(), cTxChannels = clpGBT->getTxChannels();
+    uint8_t              cTxDataRate = fTxDataRateMap.at(clpGBT->getTxDataRate());
+    uint8_t cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
     {
@@ -959,8 +961,18 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     }
     // Rx configuration and Phase Align
     // Configure Rx Groups
-    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
-    uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
+    std::vector<uint8_t> cRxGroups = clpGBT->getRxGroups(), cRxChannels = clpGBT->getRxChannels();
+    uint8_t              cRxDataRate = 0; 
+    switch (cChipRate){
+        case 5 : 
+           cRxDataRate = f5GRxDataRateMap.at(clpGBT->getRxDataRate()); 
+           break;
+        case 10 : 
+           cRxDataRate = f10GRxDataRateMap.at(clpGBT->getRxDataRate()); 
+           break;
+    }
+    uint8_t              cRxTrackMode = 1;
+
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 7;
