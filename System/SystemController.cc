@@ -367,15 +367,18 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     // Configure readout-chips [CBCs, MPAs, SSAs]
                     for(auto cReadoutChip: *cHybrid)
                     {
-                        ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
-                        if(!bIgnoreI2c)
+                        if(cReadoutChip != nullptr)
                         {
-                            LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
-                            fReadoutChipInterface->ConfigureChip(theReadoutChip);
+                            ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
+                            if(!bIgnoreI2c)
+                            {
+                                LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
+                                fReadoutChipInterface->ConfigureChip(theReadoutChip);
+                            }
+                            // if SSA + ASYNC
+                            // make sure ROCs are configured for that
+                            if(theReadoutChip->getFrontEndType() == FrontEndType::SSA) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync); }
                         }
-                        // if SSA + ASYNC
-                        // make sure ROCs are configured for that
-                        if(theReadoutChip->getFrontEndType() == FrontEndType::SSA) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync); }
                     }
                 }
             }
