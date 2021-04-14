@@ -193,3 +193,15 @@ std::string expandEnvironmentVariables(std::string s)
 
     return expandEnvironmentVariables(pre + value + post);
 }
+
+std::vector<uint8_t> SplitToVector(const std::string& str, const char delimiter)
+{
+    std::vector<uint8_t> v;
+    std::stringstream ss(str);
+    while(ss.good()){
+        std::string substr;
+        std::getline(ss, substr, delimiter);
+        v.push_back(std::stoi(substr));
+    }
+    return v;
+}

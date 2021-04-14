@@ -19,6 +19,7 @@
 #include <ios>
 #include <iostream>
 #include <istream>
+#include <sstream>
 #include <limits>
 #include <math.h>
 #include <memory>
@@ -101,5 +102,8 @@ std::string expandEnvironmentVariables(std::string s);
 
 // get run number from file
 void getRunNumber(const std::string& pPath, int& pRunNumber, bool pIncrement = true);
+
+// split int string list into int vector
+std::vector<uint8_t> SplitToVector(const std::string& str, const char delimiter);
 
 #endif
