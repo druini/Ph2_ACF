@@ -1009,22 +1009,11 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
 
 void FileParser::parseMapToLpGBT(pugi::xml_node pMapTolpGBTNode, Ph2_HwDescription::lpGBT* plpGBT, std::ostream& os)
 {
-    std::string cRxGroups = pMapTolpGBTNode.attribute("RxGroups").value();
-    std::string cRxChannels = pMapTolpGBTNode.attribute("RxChannels").value();
-    std::string cTxGroups = pMapTolpGBTNode.attribute("TxGroups").value();
-    std::string cTxChannels = pMapTolpGBTNode.attribute("TxChannels").value();
-    std::string cClocks = pMapTolpGBTNode.attribute("Clocks").value();
-    //
-    plpGBT->addRxGroups(SplitToVector(cRxGroups, ','));
-    os << GREEN << "|\t|\t|\t|---- RxGroups : " << cRxGroups << RESET << std::endl;
-    plpGBT->addRxChannels(SplitToVector(cRxChannels, ','));
-    os << GREEN << "|\t|\t|\t|---- RxChannels : " << cRxChannels << RESET << std::endl;
-    plpGBT->addTxGroups(SplitToVector(cTxGroups, ','));
-    os << GREEN << "|\t|\t|\t|---- TxGroups : " << cTxGroups << RESET << std::endl;
-    plpGBT->addTxChannels(SplitToVector(cTxChannels, ','));
-    os << GREEN << "|\t|\t|\t|---- TxChannels : " << cTxChannels << RESET << std::endl;
-    plpGBT->addClocks(SplitToVector(cClocks, ','));
-    os << GREEN << "|\t|\t|\t|---- Clocks : " << cClocks << RESET << std::endl;
+    plpGBT->addRxGroups(SplitToVector(pMapTolpGBTNode.attribute("RxGroups").value(), ','));
+    plpGBT->addRxChannels(SplitToVector(pMapTolpGBTNode.attribute("RxChannels").value(), ','));
+    plpGBT->addTxGroups(SplitToVector(pMapTolpGBTNode.attribute("TxGroups").value(), ','));
+    plpGBT->addTxChannels(SplitToVector(pMapTolpGBTNode.attribute("TxChannels").value(), ','));
+    plpGBT->addClocks(SplitToVector(pMapTolpGBTNode.attribute("Clocks").value(), ','));
 }
 
 // ########################
