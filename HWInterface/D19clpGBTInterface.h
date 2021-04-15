@@ -36,22 +36,6 @@ class D19clpGBTInterface : public lpGBTInterface
     uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
 
-    // ##############################################
-    // # LpGBT I2C Masters functions (Slow Control) #
-    // ##############################################
-    // Reset I2C Masters
-    void ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
-    // Configure lpGBT I2C Master
-    void ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode);
-    // I2C Write transaction using the lpGBT I2C Master
-    bool WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes);
-    // I2C Read transaction using the lpGBT I2C Master
-    uint32_t ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes);
-    // Get lpGBT I2C Master status
-    uint8_t GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
-    // Check if I2C Transaction is successful
-    bool IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
-
     // ###################################
     // # Outer Tracker specific funtions #
     // ###################################
