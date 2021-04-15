@@ -99,41 +99,6 @@ int main(int argc, char** argv)
     DeviceHandler theHandler;
     theHandler.readSettings(docPath, docSettings);
 
-<<<<<<< HEAD
-    PowerSupply*        dPowerSupply        = ps_deviceHandler.getPowerSupply(cPowerSupply); // Will throw std::out_of_range error if not found
-    PowerSupplyChannel* dPowerSupplyChannel = dPowerSupply->getChannel(cPowerSupplyChannel);
-
-    // if(dPowerSupply->isOpen()) // power supply doesn't have isOpen method
-    // {
-    if(cTurnOff)
-    {
-        LOG(INFO) << "Turn off " << cPowerSupply;
-        dPowerSupplyChannel->turnOff();
-    }
-    else
-    {
-        if(cmd.foundOption("v_max")) { dPowerSupplyChannel->setVoltageCompliance(cVoltsLimit); }
-        if(cmd.foundOption("i_max")) { dPowerSupplyChannel->setCurrentCompliance(cAmpsLimit); }
-        if(cmd.foundOption("v"))
-        {
-            dPowerSupplyChannel->setVoltage(cVolts);
-            dPowerSupplyChannel->turnOn();
-        }
-    }
-    sleep(1);
-    LOG(INFO) << BOLDWHITE << cPowerSupply << " channel " << cPowerSupplyChannel << " status:" RESET;
-    LOG(INFO) << "\tV(set):\t\t" << BOLDWHITE << dPowerSupplyChannel->getSetVoltage() << RESET;
-    LOG(INFO) << "\tV(meas):\t" << BOLDWHITE << dPowerSupplyChannel->getOutputVoltage() << RESET;
-    LOG(INFO) << "\tI_max(set):\t" << BOLDWHITE << dPowerSupplyChannel->getCurrentCompliance() << RESET;
-    LOG(INFO) << "\tI(meas):\t" << BOLDWHITE << dPowerSupplyChannel->getCurrent() << RESET;
-
-    // }
-    // else
-    // {
-    //     LOG(INFO) << cPowerSupply << " not found!";
-    // }
-
-=======
     try
     {
         theHandler.getPowerSupply(cPowerSupply);
@@ -246,8 +211,7 @@ int main(int argc, char** argv)
             }
         }
     }
->>>>>>> 86189c5a9f6731c059a5fdeaeb12ab1c45a1bd82
 #endif
 
-        return 0;
+    return 0;
 }
