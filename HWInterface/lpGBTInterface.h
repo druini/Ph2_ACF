@@ -95,6 +95,16 @@ class lpGBTInterface : public ChipInterface
     double GetBERTResult(Ph2_HwDescription::Chip* pChip);
     double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0);
 
+    // ##############################################
+    // # LpGBT I2C Masters functions (Slow Control) #
+    // ##############################################
+    void     ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
+    void     ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode);
+    bool     WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes);
+    uint32_t ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes);
+    uint8_t  GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
+    bool     IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
+
   protected:
     // #######################################
     // # LpGBT block configuration functions #
@@ -207,6 +217,8 @@ class lpGBTInterface : public ChipInterface
     std::map<std::string, uint8_t> revertedPUSMStatusMap;
 
     std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
+
+    std::map<uint8_t, std::string> fI2CStatusMap = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
 };
 } // namespace Ph2_HwInterface
 

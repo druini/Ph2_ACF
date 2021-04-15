@@ -760,4 +760,141 @@ uint8_t lpGBTInterface::GetEOMStatus(Chip* pChip)
 
 uint16_t lpGBTInterface::GetEOMCounter(Chip* pChip) { return (ReadChipReg(pChip, "EOMCounterValueH") << 8 | ReadChipReg(pChip, "EOMCounterValueL") << 0); }
 
+// ##############################################
+// # LpGBT I2C Masters functions (Slow Control) #
+// ##############################################
+
+void lpGBTInterface::ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters)
+{
+    LOG(INFO) << GREEN << "Reseting I2C Masters" << RESET;
+    std::vector<uint8_t> cBitPosition = {2, 1, 0};
+    uint8_t              cResetMask   = 0;
+
+    for(const auto& cMaster: pMasters) cResetMask |= (1 << cBitPosition[cMaster]);
+
+    WriteChipReg(pChip, "RST0", 0);
+    WriteChipReg(pChip, "RST0", cResetMask);
+    WriteChipReg(pChip, "RST0", 0);
+}
+
+void lpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode)
+{
+    // First let's write configuration data into the I2C Master Data register
+    std::string cI2CCntrlReg = "I2CM" + std::to_string(pMaster) + "Data0";
+    uint8_t     cValueCntrl  = (pFreq << 0) | (pNBytes << 2) | (pSCLDriveMode << 7);
+    WriteChipReg(pChip, cI2CCntrlReg, cValueCntrl);
+
+    // Now let's write Command (0x00) to the Command register to tranfer Configuration to the I2C Master Control register
+    std::string cI2CCmdReg = "I2CM" + std::to_string(pMaster) + "Cmd";
+    WriteChipReg(pChip, cI2CCmdReg, 0x00);
+}
+
+bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes)
+{
+    // Write Data to Slave Address using I2C Master
+    uint8_t cFreq = 3; // 1 MHz
+    lpGBTInterface::ConfigureI2C(pChip, pMaster, cFreq, (pNBytes > 1) ? pNBytes : 0, 0);
+
+    // Prepare Address Register
+    // Write Slave Address
+    std::string cI2CAddressReg = "I2CM" + std::to_string(pMaster) + "Address";
+    WriteChipReg(pChip, cI2CAddressReg, pSlaveAddress);
+
+    // Write Data to Data Register
+    for(uint8_t cByte = 0; cByte < 4; cByte++)
+    {
+        std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "Data" + std::to_string(cByte);
+        if(cByte < pNBytes)
+            WriteChipReg(pChip, cI2CDataReg, (pData & (0xFF << 8 * cByte)) >> 8 * cByte);
+        else
+            WriteChipReg(pChip, cI2CDataReg, 0x00);
+    }
+
+    // Prepare Command Register
+    std::string cI2CCmdReg = "I2CM" + std::to_string(pMaster) + "Cmd";
+    // If Multi-Byte, write command to save data locally before transfer to slave
+    // FIXME for now this only provides a maximum of 32 bits (4 Bytes) write
+    // Write Command to launch I2C transaction
+    if(pNBytes == 1)
+        WriteChipReg(pChip, cI2CCmdReg, 0x2);
+    else
+    {
+        WriteChipReg(pChip, cI2CCmdReg, 0x8);
+        WriteChipReg(pChip, cI2CCmdReg, 0xC);
+    }
+    // Wait until the transaction is done
+    uint8_t cMaxIter = 100, cIter = 0;
+    do
+    {
+        LOG(DEBUG) << GREEN << "Waiting for I2C Write transaction to finisih" << RESET;
+        cIter++;
+    } while(cIter < cMaxIter && !IsI2CSuccess(pChip, pMaster));
+    if(cIter == cMaxIter)
+    {
+        LOG(INFO) << BOLDRED << "I2C Write Transaction FAILED" << RESET;
+        throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
+    }
+    return true;
+}
+
+uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes)
+{
+    // Read Data from Slave Address using I2C Master
+    uint8_t cFreq = 3; // 1 MHz
+    lpGBTInterface::ConfigureI2C(pChip, pMaster, cFreq, pNBytes, 0);
+    // Prepare Address Register
+    std::string cI2CAddressReg = "I2CM" + std::to_string(pMaster) + "Address";
+    // Write Slave Address
+    WriteChipReg(pChip, cI2CAddressReg, pSlaveAddress);
+
+    // Prepare Command Register
+    std::string cI2CCmdReg = "I2CM" + std::to_string(pMaster) + "Cmd";
+    // Write Read Command and then Read from Read Data Register
+    // Procedure and registers depend on number on Bytes
+
+    if(pNBytes == 1) { WriteChipReg(pChip, cI2CCmdReg, 0x3); }
+    else
+    {
+        WriteChipReg(pChip, cI2CCmdReg, 0xD);
+    }
+    // Wait until the transaction is done
+    uint8_t cIter = 0;
+    do
+    {
+        LOG(DEBUG) << GREEN << "Waiting for I2C Read transaction to finisih" << RESET;
+        cIter++;
+    } while(cIter < lpGBTconstants::MAXATTEMPTS && !lpGBTInterface::IsI2CSuccess(pChip, pMaster));
+    if(cIter == lpGBTconstants::MAXATTEMPTS)
+    {
+        LOG(INFO) << GREEN << "I2C Read Transaction FAILED" << RESET;
+        throw std::runtime_error(std::string("in D19clpGBTInterface::ReadI2C : I2C Transaction failed"));
+    }
+    // Return read back value
+    if(pNBytes == 1)
+    {
+        std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "ReadByte";
+        return ReadChipReg(pChip, cI2CDataReg);
+    }
+    else
+    {
+        uint32_t cReadData = 0;
+        for(uint8_t cByte = 0; cByte < pNBytes; cByte++)
+        {
+            std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "Read" + std::to_string(15 - cByte);
+            cReadData |= ((uint32_t)ReadChipReg(pChip, cI2CDataReg) << cByte);
+        }
+        return cReadData;
+    }
+}
+
+uint8_t lpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster)
+{
+    std::string cI2CStatReg = "I2CM" + std::to_string(pMaster) + "Status";
+    uint8_t     cStatus     = ReadChipReg(pChip, cI2CStatReg);
+    LOG(DEBUG) << GREEN << "I2C Master " << +pMaster << " -- Status : " << lpGBTInterface::fI2CStatusMap[cStatus] << RESET;
+    return cStatus;
+}
+
+bool lpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster) { return (lpGBTInterface::GetI2CStatus(pChip, pMaster) == 4); }
+
 } // namespace Ph2_HwInterface
