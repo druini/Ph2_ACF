@@ -978,9 +978,6 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
 // ########################
 void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os)
 {
-    os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << theChipNode.attribute("Id").value() << BOLDBLUE << ", Lane: " << BOLDYELLOW
-       << theChipNode.attribute("Lane").value() << BOLDBLUE << ", File: " << BOLDYELLOW << expandEnvironmentVariables(theChipNode.attribute("configfile").value()) << RESET << std::endl;
-
     std::string cFileName;
 
     if(cFilePrefix.empty() == false)
@@ -990,6 +987,9 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
     }
     else
         cFileName = expandEnvironmentVariables(theChipNode.attribute("configfile").value());
+
+    os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << theChipNode.attribute("Id").value() << BOLDBLUE << ", Lane: " << BOLDYELLOW
+       << theChipNode.attribute("Lane").value() << BOLDBLUE << ", File: " << BOLDYELLOW << cFileName << RESET << std::endl;
 
     uint32_t     chipId   = theChipNode.attribute("Id").as_int();
     uint32_t     chipLane = theChipNode.attribute("Lane").as_int();

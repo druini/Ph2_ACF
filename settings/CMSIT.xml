@@ -10,7 +10,7 @@
     <!-- Frontend chip configuration -->
     <OpticalGroup Id="0" FMCId="0">
       <!--
-      <lpGBT_Files path="./" />
+      <lpGBT_Files path="${PWD}/" />
       <lpGBT configfile="CMSIT_LpGBT.txt">
         <Settings
             EPRX60ChnCntr_phase = "6"
@@ -18,7 +18,7 @@
       </lpGBT>
       -->
       <Hybrid Id="0" Status="1">
-        <RD53_Files path="./" />
+        <RD53_Files path="${PWD}/" />
 
         <RD53 Id="0" Lane="0" configfile="CMSIT_RD53.txt">
           <!-- Overwrite .txt configuration file settings -->
