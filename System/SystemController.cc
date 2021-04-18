@@ -49,6 +49,7 @@ void SystemController::Inherit(const SystemController* pController)
     fNetworkStreamer      = pController->fNetworkStreamer;
     fDetectorContainer    = pController->fDetectorContainer;
     fCicInterface         = pController->fCicInterface;
+    fPowerSupplyClient    = pController->fPowerSupplyClient;
 }
 
 void SystemController::Destroy()
@@ -80,6 +81,9 @@ void SystemController::Destroy()
 
     delete fNetworkStreamer;
     fNetworkStreamer = nullptr;
+
+    delete fPowerSupplyClient;
+    fPowerSupplyClient = nullptr;
 
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
@@ -121,6 +125,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         fNetworkStreamer = new TCPPublishServer(6000, 1);
         fNetworkStreamer->startAccept();
     }
+
+
 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
@@ -235,6 +241,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
 
             // setting up back-end board
+            #ifdef __POWERSUPPLY__
+                fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
+                fPowerSupplyClient->connect();
+                fBeBoardInterface->setPowerSupplyClient(cBoard, fPowerSupplyClient);
+            #endif
             fBeBoardInterface->ConfigureBoard(cBoard);
             LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
             LOG(INFO) << BOLDBLUE << "Now going to configure chips on Board " << int(cBoard->getId()) << RESET;
@@ -249,6 +260,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 // are these needed?
                 uint8_t cLinkId = cOpticalGroup->getId();
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
+
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
                     cIslpGBTI2C                         = !cBoard->ifUseOpticalLink();

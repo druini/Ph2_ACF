@@ -25,6 +25,7 @@
 #include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/lpGBTInterface.h"
 #include "../NetworkUtils/TCPPublishServer.h"
+#include "../NetworkUtils/TCPClient.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Container.h"
 #include "../Utils/D19cCbc3Event.h"
@@ -80,6 +81,7 @@ class SystemController
     bool               fStreamerEnabled;
     TCPPublishServer*  fNetworkStreamer;
     DetectorMonitor*   fDetectorMonitor;
+    TCPClient*         fPowerSupplyClient {nullptr};
 
     /*!
      * \brief Constructor of the SystemController class

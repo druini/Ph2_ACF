@@ -24,7 +24,7 @@ link_directories(${UHAL_UHAL_LIB_PREFIX})
 link_directories(${PROJECT_SOURCE_DIR/lib})
 
 # Initial set of libraries
-set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_NetworkUtils)
+set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_NetworkUtils caenhvwrapper)
 
 # Check for ZMQ installed
 if(ZMQ_FOUND)
@@ -65,41 +65,28 @@ if(Boost_FOUND)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time -lboost_iostreams")
 endif()
 
+# Find root and link against it
+if(${ROOT_FOUND})
+    include_directories(${ROOT_INCLUDE_DIRS})
+    set(LIBS ${LIBS} ${ROOT_LIBRARIES})
+    if(NoDataShipping)
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
+    endif()
+
+    #check for THttpServer
+    if(${ROOT_HAS_HTTP})
+        set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
+    endif()
+endif()
+
 ####################################
 ## EXECUTABLES
 ####################################
 
-# # CMSITminiDAQ
-# add_executable(CMSITminiDAQ CMSITminiDAQ.cc)
-# target_link_libraries(CMSITminiDAQ ${LIBS} Ph2_Tools RootWeb)
-
-# # miniDAQ
-# add_executable(miniDAQ miniDAQ.cc publisher.cc publisher.h ../DQMUtils/DQMEvent.h ../DQMUtils/DQMEvent.cc ../DQMUtils/SLinkDQMHistogrammer.cc ../DQMUtils/SLinkDQMHistogrammer.cc)
-# target_link_libraries(miniDAQ ${LIBS} RootWeb)
-
-# # miniDQM
-#add_executable(miniDQM miniDQM.cc publisher.cc publisher.h ../DQMUtils/DQMHistogrammer.cc ../DQMUtils/DQMHistogrammer.h)
-#target_link_libraries(miniDQM ${LIBS} Ph2_Tools RootWeb)
-
-# # miniSLinkDQM
-# add_executable(miniSLinkDQM miniSLinkDQM.cc publisher.cc publisher.h ../DQMUtils/DQMEvent.h ../DQMUtils/DQMEvent.cc ../DQMUtils/SLinkDQMHistogrammer.cc ../DQMUtils/SLinkDQMHistogrammer.h)
-# target_link_libraries(miniSLinkDQM ${LIBS} RootWeb)
-
-# RunController
-if(CompileForHerd)
-    add_executable(RunController RunController.cc MiddlewareController.cc)
-    target_link_libraries(RunController ${LIBS} Ph2_Tools)
-endif()
-
-# PowerSupplyController
-if(${PH2_POWERSUPPLY_FOUND})
-    include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
-    link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
-    set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES} caenhvwrapper)
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
-    add_executable(PowerSupplyController PowerSupplyController.cc PowerSupplyInterface.cc)
-    target_link_libraries(PowerSupplyController ${LIBS})
-endif()
+# SlowControlMonitorController
+add_executable(SlowControlMonitorController SlowControlMonitorController.cc SlowControlMonitorInterface.cc)
+target_link_libraries(SlowControlMonitorController ${LIBS})
 
 
 # file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/miniDAQ *.cc)

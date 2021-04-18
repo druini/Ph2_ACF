@@ -24,6 +24,7 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include "../Utils/easylogging++.h"
 #include "D19cFpgaConfig.h"
 #include "RegManager.h"
+#include "../NetworkUtils/TCPClient.h"
 
 #include <uhal/uhal.hpp>
 
@@ -60,6 +61,14 @@ class BeBoardFWInterface : public RegManager
      * \param puHalConfigFileName : path of the uHal Config File*/
     BeBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
     BeBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
+
+    void setPowerSupplyClient(TCPClient* thePowerSupplyClient)
+    {
+        std::cout<<__PRETTY_FUNCTION__<<std::endl;
+        std::cout<<fPowerSupplyClient<<std::endl;
+        fPowerSupplyClient = thePowerSupplyClient;
+        std::cout<<__PRETTY_FUNCTION__<<std::endl;
+    };
 
     /*!
      * \brief set a FileHandler Object and enable saving to file!
@@ -293,6 +302,7 @@ class BeBoardFWInterface : public RegManager
     uint32_t fNPackets{0};
     uint32_t numAcq{0};
     uint32_t nbMaxAcq{0};
+    TCPClient* fPowerSupplyClient;
 
     // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value
     // comparison
