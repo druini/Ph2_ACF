@@ -184,6 +184,7 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, phase);
 
                 static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
+                // static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Uplinks(cChip); // @TMP@
                 static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
 
                 double result = lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
