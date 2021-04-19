@@ -215,7 +215,11 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
             }
 
-            LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +bestPhase << RESET;
+            if(bestBERtest == 0)
+                LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +bestPhase
+                          << RESET;
+            else
+                LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDRED << " has no good phase" << RESET;
 
             lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
             static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
