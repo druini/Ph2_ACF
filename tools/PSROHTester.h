@@ -11,7 +11,7 @@
 #ifndef PSROHTester_h__
 #define PSROHTester_h__
 #include "OTHybridTester.h"
-
+#ifdef __USE_ROOT__
 using namespace Ph2_HwDescription;
 
 class PSROHTester : public OTHybridTester
@@ -78,4 +78,5 @@ class PSROHTester : public OTHybridTester
     static const int NBRAMADDR = 1024;
 };
 
+#endif
 #endif

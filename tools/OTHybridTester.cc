@@ -4,7 +4,7 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
-
+#ifdef __USE_ROOT__
 OTHybridTester::OTHybridTester() : Tool() {}
 
 OTHybridTester::~OTHybridTester()
@@ -815,3 +815,4 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
         }
     }
 }
+#endif

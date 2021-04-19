@@ -10,6 +10,8 @@
  */
 #ifndef SEHTester_h__
 #define SEHTester_h__
+#ifdef __USE_ROOT__
+
 #include "OTHybridTester.h"
 //
 #ifdef __TCUSB__
@@ -159,4 +161,5 @@ class SEHTester : public OTHybridTester
                                                        {"PTAT_BPOL2V5_Nominal", 0.6},
                                                        {"PTAT_BPOL12V_Nominal", 0.6}};
 };
+#endif
 #endif

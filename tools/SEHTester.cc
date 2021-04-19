@@ -1,3 +1,4 @@
+#ifdef __USE_ROOT__
 #include "SEHTester.h"
 #include "linearFitter.h"
 #include <fstream>
@@ -1533,3 +1534,5 @@ void SEHTester::Stop()
 void SEHTester::Pause() {}
 
 void SEHTester::Resume() {}
+
+#endif
