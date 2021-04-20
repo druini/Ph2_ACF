@@ -27,7 +27,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # Add the library
     add_library(Ph2_Interface STATIC ${SOURCES} ${HEADERS})
 
-    set(LIBS ${LIBS} Ph2_Description Ph2_NetworkUtils cactus_uhal_uhal cactus_uhal_log boost_regex)
+    set(LIBS ${LIBS} Ph2_Description NetworkUtils cactus_uhal_uhal cactus_uhal_log boost_regex)
     #check for PowerSupply
     if(${PH2_POWERSUPPLY_FOUND})
       include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
