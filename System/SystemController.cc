@@ -126,12 +126,10 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         fNetworkStreamer->startAccept();
     }
 
-
-
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
-    
+
     fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
@@ -139,8 +137,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         delete fPowerSupplyClient;
         fPowerSupplyClient = nullptr;
     }
-    for(const auto board : *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
-    
+    for(const auto board: *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
 
     if(fDetectorContainer->size() > 0)
     {

@@ -45,7 +45,6 @@ void BeBoardInterface::setPowerSupplyClient(const Ph2_HwDescription::BeBoard* pB
     fBoardFW->setPowerSupplyClient(fPowerSupplyClient);
 }
 
-
 void BeBoardInterface::enableFileHandler(BeBoard* pBoard)
 {
     setBoard(pBoard->getId());

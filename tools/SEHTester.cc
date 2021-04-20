@@ -119,7 +119,6 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
     cUinIinCanvas->Write();
 
 #endif
-
 }
 
 int SEHTester::exampleFit()

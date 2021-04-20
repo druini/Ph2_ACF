@@ -3,12 +3,12 @@
 
 #include "../NetworkUtils/TCPClient.h"
 
-#include <string>
 #include <map>
 #include <sstream>
+#include <string>
 
 class TGraph;
-class TFile ;
+class TFile;
 
 class SlowControlMonitorInterface : public TCPClient
 {
@@ -19,7 +19,7 @@ class SlowControlMonitorInterface : public TCPClient
     void readDeviceStatus();
 
   private:
-    void initialize();
+    void        initialize();
     std::string getVariableValue(std::string variable, std::string buffer)
     {
         size_t begin = buffer.find(variable) + variable.size() + 1;
@@ -33,18 +33,18 @@ class SlowControlMonitorInterface : public TCPClient
         size_t listEnd   = buffer.find('}', listBegin);
 
         std::vector<std::string> variableList;
-        std::stringstream s_stream(buffer.substr(listBegin, listEnd - listBegin));
-        while(s_stream.good()) {
+        std::stringstream        s_stream(buffer.substr(listBegin, listEnd - listBegin));
+        while(s_stream.good())
+        {
             std::string substr;
-            getline(s_stream, substr, ','); //get first string delimited by comma
+            getline(s_stream, substr, ','); // get first string delimited by comma
             variableList.push_back(substr);
         }
         return std::move(variableList);
     }
 
-    TFile *fMonitorFile;
+    TFile*                         fMonitorFile;
     std::map<std::string, TGraph*> fMonitoringPlotMap;
-    
 };
 
 #endif
