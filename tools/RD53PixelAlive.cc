@@ -277,7 +277,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                             .data1[i - 1];
                         deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
                         if(deltaBCID >= int(BCIDsize))
-                            LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaBCID out of range: " << deltaBCID << RESET;
+                            LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
                         else
                             theBCIDContainer.at(cBoard->getIndex())
                                 ->at(cOpticalGroup->getIndex())
@@ -309,7 +309,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                              .data2[i - 1];
                         deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
                         if(deltaTrgID >= int(TrgIDsize))
-                            LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaTrgID out of range: " << deltaTrgID << RESET;
+                            LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
                         else
                             theTrgIDContainer.at(cBoard->getIndex())
                                 ->at(cOpticalGroup->getIndex())

@@ -708,7 +708,7 @@ class D19cFWInterface : public BeBoardFWInterface
     ///////////////////////////////////////////////////////
     //      Optical readout                                 //
     /////////////////////////////////////////////////////
-    void selectLink(uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override;
+    void selectLink(const uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override;
 
     ///////////////////////////////////////////////////////
     //      Multiplexing crate                          //
