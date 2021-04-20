@@ -19,6 +19,8 @@ PowerSupplyInterface::~PowerSupplyInterface(void) { std::cout << __PRETTY_FUNCTI
 //========================================================================================================================
 std::string PowerSupplyInterface::interpretMessage(const std::string& buffer)
 {
+    std::lock_guard<std::mutex> theGuard(fMutex);
+
     std::cout << __PRETTY_FUNCTION__ << " Message received from OTSDAQ: " << buffer << std::endl;
 
     if(buffer == "Initialize") // Changing the status changes the mode in threadMain (BBC) function

@@ -8,6 +8,7 @@
 #include "PowerSupplyChannel.h"
 
 #include <string>
+#include <mutex>
 
 class PowerSupplyInterface : public TCPServer
 {
@@ -33,6 +34,7 @@ class PowerSupplyInterface : public TCPServer
 
     std::string getTimeStamp();
 
+    std::mutex fMutex;
 };
 
 #endif
