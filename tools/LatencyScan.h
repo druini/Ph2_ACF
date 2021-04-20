@@ -17,7 +17,7 @@
 #include "../Utils/Visitor.h"
 #include "Tool.h"
 #ifdef __USE_ROOT__
-#include "../DQMUtils/DQMLatencyScan.h"
+#include "../DQMUtils/DQMHistogramLatencyScan.h"
 #endif
 
 
@@ -33,7 +33,7 @@ class LatencyScan : public Tool
   public:
     LatencyScan();
     ~LatencyScan();
-    void                                Initialise();
+    void                                Initialize();
     void                                ScanLatency(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
     std::map<HybridContainer*, uint8_t> ScanStubLatency(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
     void                                MeasureTriggerTDC();

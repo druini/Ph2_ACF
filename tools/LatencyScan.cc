@@ -9,7 +9,7 @@ LatencyScan::LatencyScan() : Tool() {}
 
 LatencyScan::~LatencyScan() {}
 
-void LatencyScan::Initialise()
+void LatencyScan::Initialize()
 {
     fHoleMode                     = findValueInSettings("HoleMode", 1);
     fNevents                      = findValueInSettings("Nevents", 10);
@@ -24,7 +24,6 @@ void LatencyScan::Initialise()
 }
 
 
-/* LESYA: this needs to be re-formatted to standard container structure -- note this returned an empty canvas before*/
 void LatencyScan::MeasureTriggerTDC()
 {
     LOG(INFO) << "Measuring Trigger TDC ... ";
@@ -73,7 +72,7 @@ void LatencyScan::MeasureTriggerTDC()
     }
 
 #ifdef __USE_ROOT__
-    fDQMHistogramLatencyScan.fillTriggerTDC(theTriggerTDCContainer, fTDCBins);
+    fDQMHistogramLatencyScan.fillTriggerTDCPlots(theTriggerTDCContainer);
 #else
     auto theTriggerTDCStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<TDCBINS, uint32_t>>("TriggerTDC");
     for(auto board: theTriggerTDCContainer)
@@ -152,6 +151,9 @@ void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
 #endif
 
 }
+
+
+
 
 void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
 {/*
@@ -581,7 +583,7 @@ void LatencyScan::ConfigureCalibration() { CreateResultDirectory("Results/Run_La
 void LatencyScan::Running() {
     LOG(INFO) << "Starting Latency Scan";
     
-    Initialise();
+    Initialize();
     ScanLatency(fStartLatency, fLatencyRange);
     //MeasureTriggerTDC();
     LOG(INFO) << "Done with Latency Scan";
