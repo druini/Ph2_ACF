@@ -1,5 +1,7 @@
 #include "SlowControlMonitorInterface.h"
 #include "Utils/easylogging++.h"
+#include "../Utils/ConsoleColor.h"
+
 #include <chrono>
 #include <thread>
 #include <signal.h>

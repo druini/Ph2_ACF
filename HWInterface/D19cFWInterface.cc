@@ -618,8 +618,6 @@ std::pair<uint16_t, float> D19cFWInterface::readADC(std::string pValueToRead, bo
 }
 void D19cFWInterface::selectLink(const uint8_t pLinkId, uint32_t cWait_ms)
 {
-    std::cout<<fPowerSupplyClient<<std::endl;
-
     if(fOptical)
     {
         this->WriteReg("fc7_daq_cnfg.optical_block.mux", pLinkId);
