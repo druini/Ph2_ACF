@@ -603,40 +603,40 @@ uint64_t lpGBTInterface::GetBERTErrors(Chip* pChip)
 
 double lpGBTInterface::GetBERTResult(Chip* pChip)
 {
-  lpGBTInterface::StartBERT(pChip, false); // Stop
-  lpGBTInterface::StartBERT(pChip, true);  // Start
-  std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+    lpGBTInterface::StartBERT(pChip, false); // Stop
+    lpGBTInterface::StartBERT(pChip, true);  // Start
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
-  // Wait for BERT to end
-  while(lpGBTInterface::IsBERTDone(pChip) == false)
-  {
-      LOG(INFO) << BOLDBLUE << "\t--> BERT still running ... " << RESET;
-      std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
-  }
+    // Wait for BERT to end
+    while(lpGBTInterface::IsBERTDone(pChip) == false)
+    {
+        LOG(INFO) << BOLDBLUE << "\t--> BERT still running ... " << RESET;
+        std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+    }
 
-  // Throw error if empty data
-  if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
-  {
-      // Stop BERT
-      lpGBTInterface::StartBERT(pChip, false);
-      LOG(INFO) << BOLDRED << "BERT : All zeros at input ... exiting" << RESET;
-      throw std::runtime_error(std::string("BERT : All zeros at input"));
-  }
+    // Throw error if empty data
+    if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
+    {
+        // Stop BERT
+        lpGBTInterface::StartBERT(pChip, false);
+        LOG(INFO) << BOLDRED << "BERT : All zeros at input ... exiting" << RESET;
+        throw std::runtime_error(std::string("BERT : All zeros at input"));
+    }
 
-  // Compute number of bits checked
-  uint64_t cErrors           = lpGBTInterface::GetBERTErrors(pChip);
-  uint8_t  cMeasTime         = (ReadChipReg(pChip, "BERTConfig") & (0xF << 4)) >> 4;
-  uint64_t cNClkCycles       = std::pow(2, 5 + cMeasTime * 2);
-  uint8_t  cNBitsPerClkCycle = (lpGBTInterface::GetChipRate(pChip) == 5) ? 8 : 16; // 5G(320MHz) == 8 bits/clk, 10G(640MHz) == 16 bits/clk
-  uint64_t cBitsChecked      = cNClkCycles * cNBitsPerClkCycle;
+    // Compute number of bits checked
+    uint64_t cErrors           = lpGBTInterface::GetBERTErrors(pChip);
+    uint8_t  cMeasTime         = (ReadChipReg(pChip, "BERTConfig") & (0xF << 4)) >> 4;
+    uint64_t cNClkCycles       = std::pow(2, 5 + cMeasTime * 2);
+    uint8_t  cNBitsPerClkCycle = (lpGBTInterface::GetChipRate(pChip) == 5) ? 8 : 16; // 5G(320MHz) == 8 bits/clk, 10G(640MHz) == 16 bits/clk
+    uint64_t cBitsChecked      = cNClkCycles * cNBitsPerClkCycle;
 
-  // Stop BERT
-  lpGBTInterface::StartBERT(pChip, false);
-  LOG(INFO) << BOLDBLUE << "\t--> Bits checked  : " << BOLDYELLOW << +cBitsChecked << RESET;
-  LOG(INFO) << BOLDBLUE << "\t--> Bits in error : " << BOLDYELLOW << +cErrors << RESET;
+    // Stop BERT
+    lpGBTInterface::StartBERT(pChip, false);
+    LOG(INFO) << BOLDBLUE << "\t--> Bits checked  : " << BOLDYELLOW << +cBitsChecked << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Bits in error : " << BOLDYELLOW << +cErrors << RESET;
 
-  // Return fraction of errors
-  return (double)cErrors / cBitsChecked;
+    // Return fraction of errors
+    return (double)cErrors / cBitsChecked;
 }
 
 double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
