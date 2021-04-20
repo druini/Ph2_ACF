@@ -131,12 +131,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
-    # Power supplt
-    find_package(PH2_POWERSUPPLY) #========================================================
-    if(PH2_POWERSUPPLY_FOUND)
-        message(STATUS "    Building the PowerSupply components")
-    endif(PH2_POWERSUPPLY_FOUND)
-
     # Ph2_TCUSB [USB control of hybrids]
     if ($ENV{CompileWithTCUSB})
       find_package(PH2_TCUSB)  
@@ -223,6 +217,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     add_subdirectory(Utils)
     add_subdirectory(NetworkUtils)
+    add_subdirectory(SlowControlMonitor)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
     #set(ENV{PATH} "$ENV{PATH}:${PROJECT_SOURCE_DIR}/bin")
@@ -262,12 +257,6 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
-
-    # ZeroMQ
-    find_package(PH2_POWERSUPPLY) #========================================================
-    if(PH2_POWERSUPPLY_FOUND)
-        message(STATUS "    Building the PowerSupply components")
-    endif(PH2_POWERSUPPLY_FOUND)
 
     # ZeroMQ 
     find_package(ZMQ)         #========================================================

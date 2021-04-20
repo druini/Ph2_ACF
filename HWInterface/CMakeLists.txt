@@ -12,6 +12,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
+    include_directories(${PROJECT_SOURCE_DIR}/NetworkUtils)
     include_directories(${PROJECT_SOURCE_DIR})
 
     # Replace this with find_package
@@ -26,17 +27,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # Add the library
     add_library(Ph2_Interface STATIC ${SOURCES} ${HEADERS})
 
-    set(LIBS ${LIBS} Ph2_Description cactus_uhal_uhal cactus_uhal_log boost_regex)
-    #check for PowerSupply
-    if(${PH2_POWERSUPPLY_FOUND})
-      include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
-      link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
-      #message(${PH2_POWERSUPPLY_LIBRARY_DIRS})
-      #message(${PH2_POWERSUPPLY_LIBRARIES})
-      #set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
-      TARGET_LINK_LIBRARIES(Ph2_Interface ${PH2_POWERSUPPLY_LIBRARIES})
-      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
-    endif()
+    set(LIBS ${LIBS} Ph2_Description NetworkUtils cactus_uhal_uhal cactus_uhal_log boost_regex)
 
     # Check for TestCard USBDriver
     TARGET_LINK_LIBRARIES(Ph2_Interface ${LIBS})

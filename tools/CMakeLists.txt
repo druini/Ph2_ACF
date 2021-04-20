@@ -71,12 +71,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
         endif($ENV{UseTCUSBforROH})
     endif(${PH2_TCUSB_FOUND})
-    if(${PH2_POWERSUPPLY_FOUND})
-      include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
-      link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
-      set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
-      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
-    endif()
+    
     #last but not least, find root and link against it
     if(NoDataShipping)
         if(${ROOT_FOUND})

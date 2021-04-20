@@ -495,11 +495,20 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     }
 
     // switch off SEH
-    LOG(INFO) << BOLDRED << "Please switch off the SEH... press any key to continue once you have done so..." << RESET;
-    do
+    if(fPowerSupplyClient == nullptr)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while(std::cin.get() != '\n');
+        LOG(INFO) << BOLDRED << "Please switch off the SEH... press any key to continue once you have done so..." << RESET;
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        } while(std::cin.get() != '\n');
+    }
+    else
+    {
+        LOG(INFO) << BOLDRED << "Switching off the LV using Power Supply Server..." << RESET;
+        fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
     // system("/home/modtest/Programming/power_supply/bin/TurnOff -c /home/modtest/Programming/power_supply/config/config.xml ");
     // std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
     // resync CDCE
@@ -513,12 +522,22 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
     // std::this_thread::sleep_for (std::chrono::milliseconds (500) );
     bool cLinksLocked = true;
+
     // tell user to switch on SEH
-    LOG(INFO) << BOLDRED << "Please switch on the SEH... press any key to continue once you have done so..." << RESET;
-    do
+    if(fPowerSupplyClient == nullptr)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while(std::cin.get() != '\n');
+        LOG(INFO) << BOLDRED << "Please switch on the SEH... press any key to continue once you have done so..." << RESET;
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        } while(std::cin.get() != '\n');
+    }
+    else
+    {
+        LOG(INFO) << BOLDRED << "Switching on the LV using Power Supply Server..." << RESET;
+        fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
     // system("/home/modtest/Programming/power_supply/bin/TurnOn -c /home/modtest/Programming/power_supply/config/config.xml ");
     // std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
 

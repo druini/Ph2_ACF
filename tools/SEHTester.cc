@@ -60,83 +60,12 @@ void SEHTester::readTestParameters(std::string file)
     }
 }
 
-void SEHTester::RampPowerSupply(std::string fHWFile, std::string fPowerSupply)
+void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId)
 {
-#ifdef __POWERSUPPLY__
-    // el::Helpers::installLogDispatchCallback<gui::LogDispatcher>("GUILogDispatcher");
-    // gui::init("/tmp/guiDummyPipe");
-    std::string docPath = fHWFile;
-    LOG(INFO) << "Init PS with " << docPath;
-
-    pugi::xml_document docSettings;
-
-    DeviceHandler theHandler;
-    theHandler.readSettings(docPath, docSettings);
-
-    try
+    if(fPowerSupplyClient == nullptr)
     {
-        theHandler.getPowerSupply(fPowerSupply);
-    }
-    catch(const std::out_of_range& oor)
-    {
-        std::cerr << "Out of Range error: " << oor.what() << '\n';
-        exit(0);
-    }
-
-    std::vector<std::pair<std::string, bool>> channelNames;
-    std::string                               fChannel;
-    bool                                      fFoundChannel = false;
-    pugi::xml_document                        doc;
-    if(!doc.load_file(fHWFile.c_str())) throw std::runtime_error(std::string("Error Loading HW file"));
-    pugi::xml_node devices = doc.child("Devices");
-    for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
-    {
-        std::string s(ps.attribute("ID").value());
-        if(s == fPowerSupply)
-        {
-            for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
-            {
-                std::string name(channel.attribute("ID").value());
-                std::string use(channel.attribute("InUse").value());
-
-                channelNames.push_back(std::make_pair(name, use == "Yes"));
-                if(use == "Yes")
-                {
-                    LOG(INFO) << BOLDBLUE << "Channel " << name << " will be used" RESET;
-                    if(fFoundChannel)
-                    {
-                        LOG(INFO) << "Too many channels activated";
-                        exit(1);
-                    }
-                    fFoundChannel = true;
-                    fChannel      = name;
-                }
-            }
-        }
-    }
-
-    for(auto channelName: channelNames)
-    {
-        if(channelName.second)
-        {
-            LOG(INFO) << BOLDWHITE << fPowerSupply << " status of channel " << channelName.first << ":" RESET;
-            bool        isOn       = theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->isOn();
-            std::string isOnResult = isOn ? "1" : "0";
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            std::string voltageCompliance = std::to_string(theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->getVoltageCompliance());
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            std::string voltage = std::to_string(theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->getVoltage());
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            std::string currentCompliance = std::to_string(theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->getCurrentCompliance());
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            std::string current = "-";
-            if(isOn) { current = std::to_string(theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->getCurrent()); }
-            LOG(INFO) << "\tIsOn:\t\t" << BOLDWHITE << isOnResult << RESET;
-            LOG(INFO) << "\tV_max(set):\t\t" << BOLDWHITE << voltageCompliance << RESET;
-            LOG(INFO) << "\tV(meas):\t" << BOLDWHITE << voltage << RESET;
-            LOG(INFO) << "\tI_max(set):\t" << BOLDWHITE << currentCompliance << RESET;
-            LOG(INFO) << "\tI(meas):\t" << BOLDWHITE << current << RESET;
-        }
+        LOG(ERROR) << BOLDRED << "Not connected to the power supply!!! RampPowerSupply cannot be executed" << RESET;
+        throw std::runtime_error("RampPowerSupply cannot be executed");
     }
 
 #ifdef __USE_ROOT__
@@ -158,7 +87,8 @@ void SEHTester::RampPowerSupply(std::string fHWFile, std::string fPowerSupply)
     float U_SEH;
     while(cVolts < 10.01)
     {
-        theHandler.getPowerSupply(fPowerSupply)->getChannel(fChannel)->setVoltage(cVolts);
+        std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + "ChannelId:" + channelId + ",Voltage:" + std::to_string(cVolts);
+        fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
         std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
 #ifdef __TCUSB__
@@ -189,7 +119,6 @@ void SEHTester::RampPowerSupply(std::string fHWFile, std::string fPowerSupply)
 
     cUinIinCanvas->Write();
 
-#endif
 #endif
 }
 
