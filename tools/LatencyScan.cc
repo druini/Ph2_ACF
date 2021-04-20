@@ -156,7 +156,7 @@ void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
 
 
 void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
-{/*
+{
     // check if TP trigger is being used
     for(auto cBoard: *fDetectorContainer)
     {
@@ -203,9 +203,8 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
     }
 
     DetectorDataContainer theStubContainer;
-    ContainerFactory::copyAndInitHybrid<std::vector<int>>(*fDetectorContainer, theStubContainer);
-    //LESYA: come back to this, I think it shouldn't mattter if you 
-    // scan stub latency
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint32_t>>(*fDetectorContainer, theStubContainer);
+
     for(uint8_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++)
     {
         // container to hold scan result
@@ -214,7 +213,7 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
 
 
         LOG(INFO) << BOLDBLUE << "Stub Latency " << +cLat << RESET;
-        for(auto cBoard: theStubContainer)
+        for(auto cBoard: *fDetectorContainer)
         {
             int      cNStubs           = 0;
             BeBoard* cBeBoard          = static_cast<BeBoard*>(cBoard);
@@ -235,7 +234,7 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
                     auto& cMatchesThisOpticalGroup = cMatchesThisBoard->at(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto& cCic               = static_cast<OuterTrackerHybrid*>(cHybrid->getIndex())->fCic;
+                        auto& cCic               = static_cast<OuterTrackerHybrid*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex()))->fCic;
                         auto& cMatchesThisHybrid = cMatchesThisOpticalGroup->at(cHybrid->getIndex());
                         if(cCic != NULL)
                         {
@@ -306,18 +305,25 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    TH1F* cTmpHist    = dynamic_cast<TH1F*>(getHist(cHybrid, "hybrid_stub_latency"));
-                    int   cBin        = cTmpHist->FindBin(cLat);
-                    float cBinContent = cTmpHist->GetBinContent(cBin);
-                    cBinContent += cNStubs;
-                    cTmpHist->SetBinContent(cBin, cBinContent);
+                    theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint32_t>>()[cLat - pStartLatency] = cNStubs;
+
                 } // hybrid
             }     // hybrid
 
         } // board
     }     // latency
 
-*/}
+#ifdef __USE_ROOT__
+    fDQMHistogramLatencyScan.fillStubLatencyPlots(theLatencyContainer);
+#else
+    auto theStubStream = prepareHybridContainerStreamer< EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint32_t> >();
+    for(auto board: theStubContainer)
+    {
+        if(fStreamerEnabled) theStubStream.streamAndSendBoard(board, fNetworkStreamer);
+    }
+#endif
+
+}
 std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartLatency, uint8_t pLatencyRange)
 {   /*
     // Now the actual scan
