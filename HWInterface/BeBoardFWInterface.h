@@ -64,10 +64,7 @@ class BeBoardFWInterface : public RegManager
 
     void setPowerSupplyClient(TCPClient* thePowerSupplyClient)
     {
-        std::cout<<__PRETTY_FUNCTION__<<std::endl;
-        std::cout<<fPowerSupplyClient<<std::endl;
         fPowerSupplyClient = thePowerSupplyClient;
-        std::cout<<__PRETTY_FUNCTION__<<std::endl;
     };
 
     /*!

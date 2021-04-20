@@ -204,9 +204,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         add_subdirectory(System)
     endif()
 
-    # if(CompileForHerd)
+    if(CompileForHerd)
         add_subdirectory(miniDAQ)
-    # endif()
+    endif()
 
     if(CompileForShep OR NoDataShipping)
         add_subdirectory(DQMUtils)

@@ -86,21 +86,8 @@ endif()
 # target_link_libraries(miniSLinkDQM ${LIBS} RootWeb)
 
 # RunController
-if(CompileForHerd)
-    add_executable(RunController RunController.cc MiddlewareController.cc)
-    target_link_libraries(RunController ${LIBS} Ph2_Tools)
-endif()
-
-# PowerSupplyController
-if(${PH2_POWERSUPPLY_FOUND})
-    include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
-    link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
-    set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES} caenhvwrapper)
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
-    add_executable(PowerSupplyController PowerSupplyController.cc PowerSupplyInterface.cc)
-    target_link_libraries(PowerSupplyController ${LIBS})
-endif()
-
+add_executable(RunController RunController.cc MiddlewareController.cc)
+target_link_libraries(RunController ${LIBS} Ph2_Tools)
 
 # file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/miniDAQ *.cc)
 

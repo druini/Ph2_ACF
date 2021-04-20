@@ -131,6 +131,16 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
+    
+    fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
+    if(!fPowerSupplyClient->connect(1))
+    {
+        std::cerr << "Cannot connect to the Power Supply Server" << '\n';
+        delete fPowerSupplyClient;
+        fPowerSupplyClient = nullptr;
+    }
+    for(const auto board : *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
+    
 
     if(fDetectorContainer->size() > 0)
     {
@@ -241,11 +251,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
 
             // setting up back-end board
-            #ifdef __POWERSUPPLY__
-                fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
-                fPowerSupplyClient->connect();
-                fBeBoardInterface->setPowerSupplyClient(cBoard, fPowerSupplyClient);
-            #endif
             fBeBoardInterface->ConfigureBoard(cBoard);
             LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
             LOG(INFO) << BOLDBLUE << "Now going to configure chips on Board " << int(cBoard->getId()) << RESET;
