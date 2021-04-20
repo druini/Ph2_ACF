@@ -45,8 +45,11 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, const DetectorContainer
     HistContainer<TH1F> hLatency("LatencyValue", "Latency Value", fLatencyRange, fStartLatency, fStartLatency+fLatencyRange);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHistograms, hLatency);
 
-    HistContainer<TH1F> hStub("StubValue", "Stub Value", 1, 0, 1);
-    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fStubHistograms, hStub);
+    HistContainer<TH1F> hStub("StubLatencyValue", "Stub Latency Value", fLatencyRange, fStartLatency, fStartLatency+fLatencyRange);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubLatencyHistograms, hStub);
+
+    HistContainer<TH1F> hStubScan("StubScanLatencyValue", "Stub Scan Latency Value", fLatencyRange, fStartLatency, fStartLatency+fLatencyRange);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubScanLatencyHistograms, hStubScan);
 
     HistContainer<TH2F> hLatencyScan2D("LatencyScan2D", "LatencyScan2D", 1, 0, 1, 1, 0, 1);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fLatencyScan2DHistograms, hLatencyScan2D);
@@ -64,6 +67,7 @@ bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer) {
 
     HybridContainerStream< EmptyContainer, EmptyContainer,  GenericDataArray<VECSIZE, uint32_t> > theLatencyStream("LatencyScan");
     HybridContainerStream< EmptyContainer, EmptyContainer,  GenericDataArray<VECSIZE, uint32_t> > theStubStream("LatencyScanStub");
+    HybridContainerStream< EmptyContainer, EmptyContainer,  GenericDataArray<VECSIZE, uint32_t> > theStubScanStream("LatencyScanStubScan");
     HybridContainerStream< EmptyContainer, EmptyContainer,  GenericDataArray<TDCBINS, uint32_t> > theTriggerTDCStream("LatencyScanTriggerTDC");
 
     if(theLatencyStream.attachBuffer(&dataBuffer))
@@ -84,7 +88,7 @@ bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer) {
         return true;
     }
 
-    if(theTriggerTDCStream.attachBuffer(&dataBuffer))
+    if(theStubStream.attachBuffer(&dataBuffer))
     {
         std::cout << "Matched Stub Latency!!!!!\n";
         theStubStream.decodeHybridData(fDetectorData);
@@ -92,6 +96,16 @@ bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer) {
         fDetectorData.cleanDataStored();
         return true;
     }
+    
+    if(theStubScanStream.attachBuffer(&dataBuffer))
+    {
+        std::cout << "Matched Stub Latency!!!!!\n";
+        theStubScanStream.decodeHybridData(fDetectorData);
+        fillStubScanLatencyPlots(fDetectorData);
+        fDetectorData.cleanDataStored();
+        return true;
+    }
+
 
     return false;
 
@@ -170,7 +184,7 @@ void DQMHistogramLatencyScan::fillStubLatencyPlots(DetectorDataContainer& theStu
             {
                 if(!hybrid->hasSummary()) continue;
                 TH1F* hybridLatencyHistogram =
-                    fStubHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    fStubLatencyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
                 for(uint32_t i = 0; i < fLatencyRange ; i++){
 
@@ -189,10 +203,39 @@ void DQMHistogramLatencyScan::fillStubLatencyPlots(DetectorDataContainer& theStu
         }
         
     }
-
-
-
 }
+
+void DQMHistogramLatencyScan::fillStubScanLatencyPlots(DetectorDataContainer& theStubScanLatency)
+{
+    for(auto board: theStubScanLatency)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                if(!hybrid->hasSummary()) continue;
+                TH1F* hybridLatencyHistogram =
+                    fStubScanLatencyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+
+                for(uint32_t i = 0; i < fLatencyRange ; i++){
+
+                    uint32_t lat = i + fStartLatency;
+                    uint32_t hits = hybrid->getSummary<GenericDataArray<VECSIZE, uint32_t>>()[i];
+                    
+                    float error = 0;
+                    if (hits > 0 ) error = sqrt(float(hits));
+
+                    LOG(INFO) << "filling hybrid " << hybrid->getIndex() << " with latency " << lat << " and hits " << hits << " and error " << error;
+                    hybridLatencyHistogram->SetBinContent(i, hits);
+                    hybridLatencyHistogram->SetBinError(i, error);
+                }
+            }
+
+        }
+    }
+}
+
+
 void DQMHistogramLatencyScan::fill2DLatency(DetectorDataContainer& the2DLatency)
 {
 
