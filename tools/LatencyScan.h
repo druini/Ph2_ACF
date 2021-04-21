@@ -18,6 +18,12 @@
 #include "Tool.h"
 #ifdef __USE_ROOT__
 #include "../DQMUtils/DQMHistogramLatencyScan.h"
+#include "TCanvas.h"
+#include "TF1.h"
+#include "TGaxis.h"
+#include "TH1F.h"
+#include "TH2F.h"
+#include "TString.h"
 #endif
 
 
@@ -33,9 +39,13 @@ class LatencyScan : public Tool
   public:
     LatencyScan();
     ~LatencyScan();
-    void                                Initialize();
+    void                                Initialize(uint32_t pStartLatency, uint32_t pLatencyRange);
+    //this is used by commission, and supervisor
     void                                ScanLatency(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
+    //this is used by MPALatency -- only defined if USE_ROOT -- ideally should be replaced to avoid duplication
     std::map<HybridContainer*, uint8_t> ScanStubLatency(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
+    //this is used by MPALatency -- only defined if USE_ROOT -- ideally should be replaced to avoid duplication
+    std::map<HybridContainer*, uint8_t> ScanLatency_root(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
     void                                MeasureTriggerTDC();
     void                                ScanLatency2D(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
     void                                StubLatencyScan(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
@@ -49,6 +59,7 @@ class LatencyScan : public Tool
 
   private:
     int  countStubs(Ph2_HwDescription::Hybrid* pFe, const Ph2_HwInterface::Event* pEvent, std::string pHistName, uint8_t pParameter);
+    int  countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency);
     void updateHists(std::string pHistName, bool pFinal);
     void parseSettings();
 
