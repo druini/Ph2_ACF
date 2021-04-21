@@ -26,7 +26,6 @@
 #include "TString.h"
 #endif
 
-
 using namespace Ph2_System;
 
 /*!
@@ -39,12 +38,12 @@ class LatencyScan : public Tool
   public:
     LatencyScan();
     ~LatencyScan();
-    void                                Initialize(uint32_t pStartLatency, uint32_t pLatencyRange);
-    //this is used by commission, and supervisor
-    void                                ScanLatency(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
-    //this is used by MPALatency -- only defined if USE_ROOT -- ideally should be replaced to avoid duplication
+    void Initialize(uint32_t pStartLatency, uint32_t pLatencyRange);
+    // this is used by commission, and supervisor
+    void ScanLatency(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
+    // this is used by MPALatency -- only defined if USE_ROOT -- ideally should be replaced to avoid duplication
     std::map<HybridContainer*, uint8_t> ScanStubLatency(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
-    //this is used by MPALatency -- only defined if USE_ROOT -- ideally should be replaced to avoid duplication
+    // this is used by MPALatency -- only defined if USE_ROOT -- ideally should be replaced to avoid duplication
     std::map<HybridContainer*, uint8_t> ScanLatency_root(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
     void                                MeasureTriggerTDC();
     void                                ScanLatency2D(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
@@ -73,9 +72,9 @@ class LatencyScan : public Tool
     uint8_t  fTestPulseAmplitude;
     uint32_t trigSource;
 
-    const uint32_t fTDCBins = 8;
-    static const size_t TDCBINS = 10;
-    static const size_t VECSIZE = 1000;
+    const uint32_t      fTDCBins = 8;
+    static const size_t TDCBINS  = 10;
+    static const size_t VECSIZE  = 1000;
 
     int convertLatencyPhase(uint32_t pStartLatency, uint32_t cLatency, uint32_t cPhase)
     {
@@ -107,4 +106,3 @@ class LatencyScan : public Tool
 };
 
 #endif
-

@@ -6,9 +6,9 @@
 
 #include "CBCHistogramPulseShape.h"
 #include "DQMHistogramCalibrationExample.h"
+#include "DQMHistogramLatencyScan.h"
 #include "DQMHistogramPedeNoise.h"
 #include "DQMHistogramPedestalEqualization.h"
-#include "DQMHistogramLatencyScan.h"
 #include "DQMInterface.h"
 #include "RD53ClockDelayHistograms.h"
 #include "RD53GainHistograms.h"

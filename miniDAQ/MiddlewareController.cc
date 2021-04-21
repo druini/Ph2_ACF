@@ -5,9 +5,9 @@
 #include "../tools/CBCPulseShape.h"
 #include "../tools/CalibrationExample.h"
 #include "../tools/CombinedCalibration.h"
+#include "../tools/LatencyScan.h"
 #include "../tools/PedeNoise.h"
 #include "../tools/PedestalEqualization.h"
-#include "../tools/LatencyScan.h"
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53Gain.h"
 #include "../tools/RD53GainOptimization.h"
@@ -92,7 +92,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
         else if(getVariableValue("Calibration", buffer) == "cbcPulseShape")
             theSystemController_ = new CombinedCalibration<BackEndAlignment, CBCPulseShape>;
         else if(getVariableValue("Calibration", buffer) == "OTLatency")
-            theSystemController_ = new CombinedCalibration<BackEndAlignment, LatencyScan>;            
+            theSystemController_ = new CombinedCalibration<BackEndAlignment, LatencyScan>;
 
         else if(getVariableValue("Calibration", buffer) == "pixelalive")
             theSystemController_ = new CombinedCalibration<PixelAlive>;
