@@ -217,7 +217,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     add_subdirectory(Utils)
     add_subdirectory(NetworkUtils)
-    add_subdirectory(SlowControlMonitor)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
     #set(ENV{PATH} "$ENV{PATH}:${PROJECT_SOURCE_DIR}/bin")
