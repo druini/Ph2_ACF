@@ -196,7 +196,7 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                     {
                         auto current =
                             theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i];
-                        if(current < best)
+                        if((current >= 0) &&(current < best))
                         {
                             regVal = dacListTAP[i];
                             best   = current;

@@ -103,7 +103,6 @@ void BERtest::run()
                               << "]: " << BOLDYELLOW << (value == 0 ? "PASSED" : "NOT PASSED") << RESET;
 
                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
-
                     flpGBTInterface->StopPRBSpattern(cOpticalGroup->flpGBT);
                 }
         }
@@ -125,8 +124,8 @@ void BERtest::run()
                         LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW << (value == 0 ? "PASSED" : "NOT PASSED") << RESET;
 
+                        fReadoutChipInterface->StopPRBSpattern(cChip);
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
-
                         fReadoutChipInterface->StopPRBSpattern(cChip);
                     }
         }
