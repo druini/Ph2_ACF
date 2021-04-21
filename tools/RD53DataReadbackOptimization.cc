@@ -51,11 +51,6 @@ void DataReadbackOptimization::ConfigureCalibration()
     nSteps = (stopValueTAP2 - startValueTAP2 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP2 - startValueTAP2 + 1);
     step   = floor((stopValueTAP2 - startValueTAP2 + 1) / nSteps);
     for(auto i = 0u; i < nSteps; i++) dacListTAP2.push_back(startValueTAP2 + step * i);
-
-    // ############################################################
-    // # Create directory for: raw data, config files, histograms #
-    // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
 }
 
 void DataReadbackOptimization::Running()
