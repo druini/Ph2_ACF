@@ -35,7 +35,7 @@ class LatencyScan : public Tool
     ~LatencyScan();
     void                                Initialize();
     void                                ScanLatency(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
-    void                                ScanStubLatency(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
+    std::map<HybridContainer*, uint8_t> ScanStubLatency(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
     void                                MeasureTriggerTDC();
     void                                ScanLatency2D(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
     void                                StubLatencyScan(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
