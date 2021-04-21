@@ -47,8 +47,8 @@ class LatencyScan : public Tool
     //this is used by MPALatency -- only defined if USE_ROOT -- ideally should be replaced to avoid duplication
     std::map<HybridContainer*, uint8_t> ScanLatency_root(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
     void                                MeasureTriggerTDC();
-    void                                ScanLatency2D(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
-    void                                StubLatencyScan(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
+    void                                ScanLatency2D(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
+    void                                StubLatencyScan(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
     void                                writeObjects();
 
     void Running() override;

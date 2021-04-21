@@ -63,7 +63,7 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
     //Histogram Fillers
     void fillLatencyPlots(DetectorDataContainer& theLatency);
     void fillStubLatencyPlots(DetectorDataContainer& theStubLatency);
-    void fill2DLatency(DetectorDataContainer& the2DLatency);
+    void fill2DLatencyPlots(DetectorDataContainer& the2DLatency);
     void fillTriggerTDCPlots(DetectorDataContainer& theTriggerTDC);
 
   private:
