@@ -181,7 +181,6 @@ int main(int argc, char* argv[])
 
     if(cLatency || cStubLatency)
     {
-#ifdef __USE_ROOT__
         LatencyScan cLatencyScan;
         cLatencyScan.Inherit(&cTool);
         cLatencyScan.Initialize(cStartLatency, cLatencyRange);
@@ -211,18 +210,15 @@ int main(int argc, char* argv[])
 #endif
 
         cLatencyScan.writeObjects();
-#endif
     }
 
     else if(cTriggerTDC)
     {
-#ifdef __USE_ROOT__
         LatencyScan cLatencyScan;
         cLatencyScan.Inherit(&cTool);
         cLatencyScan.Initialize(cStartLatency, cLatencyRange);
         cLatencyScan.MeasureTriggerTDC();
         cLatencyScan.writeObjects();
-#endif
     }
 
     else if(cSignal)

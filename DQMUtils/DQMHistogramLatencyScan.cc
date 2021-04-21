@@ -24,7 +24,11 @@
 #include "TH2F.h"
 
 //========================================================================================================================
-DQMHistogramLatencyScan::DQMHistogramLatencyScan() {}
+DQMHistogramLatencyScan::DQMHistogramLatencyScan()
+{
+    fStartLatency = 999;
+    fLatencyRange = 999;
+}
 
 //========================================================================================================================
 DQMHistogramLatencyScan::~DQMHistogramLatencyScan() {}
@@ -225,21 +229,22 @@ void DQMHistogramLatencyScan::fillTriggerTDCPlots(DetectorDataContainer& theTrig
 
 void DQMHistogramLatencyScan::parseSettings(const Ph2_System::SettingsMap& pSettingsMap)
 {
-    auto cSetting = pSettingsMap.find("StartLatency");
-    if(cSetting != std::end(pSettingsMap))
-        fStartLatency = cSetting->second;
-    else
-        fStartLatency = 0;
+    // don't override user-set settings
+    if(fStartLatency == 999)
+    {
+        auto cSetting = pSettingsMap.find("StartLatency");
+        if(cSetting != std::end(pSettingsMap))
+            fStartLatency = cSetting->second;
+        else
+            fStartLatency = 0;
+    }
 
-    cSetting = pSettingsMap.find("LatencyRange");
-    if(cSetting != std::end(pSettingsMap))
-        fLatencyRange = cSetting->second;
-    else
-        fLatencyRange = 512;
-
-    cSetting = pSettingsMap.find("Nevents");
-    if(cSetting != std::end(pSettingsMap))
-        fNEvents = cSetting->second;
-    else
-        fNEvents = 100;
+    if(fLatencyRange == 999)
+    {
+        auto cSetting = pSettingsMap.find("LatencyRange");
+        if(cSetting != std::end(pSettingsMap))
+            fLatencyRange = cSetting->second;
+        else
+            fLatencyRange = 512;
+    }
 }

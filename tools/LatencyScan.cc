@@ -17,6 +17,8 @@ void LatencyScan::Initialize(uint32_t pStartLatency, uint32_t pLatencyRange)
     fNevents      = findValueInSettings("Nevents", 10);
 
 #ifdef __USE_ROOT__
+    fDQMHistogramLatencyScan.setStartLatency(fStartLatency);
+    fDQMHistogramLatencyScan.setLatencyRange(fLatencyRange);
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
@@ -88,8 +90,8 @@ void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
     uint32_t cIterationCount = 0;
 
     // //Fabio - clean BEGIN
-    setFWTestPulse();
-    setSystemTestPulse(200, 0, true, false);
+    // setFWTestPulse();
+    // setSystemTestPulse(200, 0, true, false);
     // //Fabio - clean END
 
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);

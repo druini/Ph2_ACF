@@ -81,7 +81,6 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
 
     uint32_t fStartLatency;
     uint32_t fLatencyRange;
-    uint32_t fNEvents;
 
     static const size_t VECSIZE = 1000;
     static const size_t TDCBINS = 8;
