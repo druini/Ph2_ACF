@@ -859,9 +859,11 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
     }
 
+    const uint32_t time2send = 2; // [10 MHz clock cycles] @CONST@
     LOG(INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
-              << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject +
-                                    RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime))
+              << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + time2send +
+                                    RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime + time2send +
+                                    RD53FWInterface::localCfgFastCmd.trigger_duration / 4))
               << std::setprecision(-1) << " Hz" << RESET;
     RD53Shared::resetDefaultFloat();
 
@@ -944,7 +946,7 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
 bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
 {
     // OptoChip ID
-    RD53FWInterface::SetActiveLink(linkNumber);
+    RD53FWInterface::selectLink(linkNumber);
 
     // Config
     RegManager::WriteStackReg(
@@ -973,7 +975,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uin
 uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress)
 {
     // OptoChip ID
-    RD53FWInterface::SetActiveLink(linkNumber);
+    RD53FWInterface::selectLink(linkNumber);
 
     // Config
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", RD53lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
@@ -998,7 +1000,7 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const 
     return cRead;
 }
 
-void RD53FWInterface::SetActiveLink(const uint32_t linkNumber) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", linkNumber); }
+void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
 
 // ###########################################
 // # Member functions to handle the firmware #
@@ -1257,6 +1259,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 
 double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed)
 // ####################
+// # frontendSpeed    #
 // # 1.28 Gbit/s  = 0 #
 // # 640 Mbit/s   = 1 #
 // # 320 Mbit/s   = 2 #
@@ -1274,15 +1277,15 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     {
         time2run   = frames_or_time;
         frames2run = time2run * fps;
-        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(0) << time2run << RESET << GREEN << "s will send about " << BOLDYELLOW << frames2run << RESET << GREEN
-                  << " frames" << RESET;
+        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(1) << time2run << RESET << GREEN << "s will send about " << BOLDYELLOW << std::setprecision(0) << frames2run
+                  << RESET << GREEN << " frames" << RESET;
     }
     else
     {
         frames2run = frames_or_time;
         time2run   = frames2run / fps;
-        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(0) << frames2run << RESET << GREEN << " frames will take about " << BOLDYELLOW << time2run << RESET << GREEN
-                  << "s" << RESET;
+        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(0) << frames2run << RESET << GREEN << " frames will take about " << BOLDYELLOW << std::setprecision(1)
+                  << time2run << RESET << GREEN << "s" << RESET;
     }
 
     // Configure number of printouts and calculate the frequency of printouts

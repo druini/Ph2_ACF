@@ -6,6 +6,17 @@
 export CACTUSBIN=/opt/cactus/bin
 export CACTUSLIB=/opt/cactus/lib
 export CACTUSINCLUDE=/opt/cactus/include
+export CACTUSROOT=/opt/cactus/
+#export CACTUSROOT=/opt/cactus_from_source/uhal/
+
+#export CACTUSINCLUDE=$CACTUSROOT/uhal/include/
+#export CACTUSLIB=$CACTUSROOT/uhal/lib
+
+#export CACTUSLOGINCLUDE=$CACTUSROOT/log/include/
+#export CACTUSLOGLIB=$CACTUSROOT/log/lib/
+
+#export CACTUSGRAMMARINCLUDE=$CACTUSROOT/grammars/include/
+#export CACTUSGRAMMARLIB=$CACTUSROOT/grammars/lib/
 
 #########
 # BOOST #
@@ -85,6 +96,8 @@ export ZmqFlag='-D__ZMQ__'
 export USBINSTFlag='-D__USBINST__'
 export Amc13Flag='-D__AMC13__'
 export TCUSBFlag='-D__TCUSB__'
+export TCUSBforROHFlag='-D__ROH_USB__'
+export TCUSBforSEHFlag='-D__SEH_USB__'
 export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
@@ -113,6 +126,10 @@ export CompileForShep=false
 
 # Compile with EUDAQ libraries
 export CompileWithEUDAQ=false
+
+# Compile with TC_USB library
+export CompileWithTCUSB=false
+export UseTCUSBforROH=false
 
 # Clang-format command
 if command -v clang-format &> /dev/null; then

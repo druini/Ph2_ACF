@@ -15,7 +15,6 @@
 #include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/GainAndIntercept.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53Shared.h"
 #include "Tool.h"
 
 #ifdef __USE_ROOT__

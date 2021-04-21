@@ -14,7 +14,6 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53Shared.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "Tool.h"
 

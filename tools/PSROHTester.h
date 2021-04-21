@@ -1,42 +1,24 @@
 /*!
- *
- * \file PSROHHybridTester_h__.h
- * \brief PSROHHybridTester_h__ class, PSROHHybridTester_h__ of the hardware
- *
- * \Support : inna.makarenko@cern.ch
- * \Support : younes.otarid@cern.ch
- *
+
+        \file                   PSROHTester.h
+        \brief                  Class for PS-ROH hybrids test using a testcard
+        \author                 Younes OTARID
+        \version                1.0
+        \date                   17/12/2020
+        Support :               mail to : younes.otarid@cern.ch
+
  */
-
-#ifndef PSROHHybridTester_h__
-#define PSROHHybridTester_h__
-
-#include "../HWInterface/DPInterface.h"
-#include "Tool.h"
-
-#ifdef __USE_ROOT__
-#include "TAxis.h"
-#include "TGraph.h"
-#include "TMultiGraph.h"
-#include "TObject.h"
-#include "TString.h"
-#include "TTree.h"
-#endif
-
-#ifdef __TCUSB__
-#include "USB_a.h"
-#endif
-
-#include <map>
-#include <string>
+#ifndef PSROHTester_h__
+#define PSROHTester_h__
+#include "OTHybridTester.h"
 
 using namespace Ph2_HwDescription;
 
-class PSROHHybridTester : public Tool
+class PSROHTester : public OTHybridTester
 {
   public:
-    PSROHHybridTester();
-    ~PSROHHybridTester();
+    PSROHTester();
+    ~PSROHTester();
 
     void Initialise();
     void Start(int currentRun);
@@ -59,15 +41,6 @@ class PSROHHybridTester : public Tool
     void WritePatternToBRAM(const std::string& sFileName);
     void FastCommandScope();
 
-    void TestULInternalPattern(uint32_t pPattern);
-    void InjectExternalPattern(uint8_t pPattern);
-    void TestULExternalPattern();
-    bool TestResetLines(uint8_t pValue = 0x00);
-    void PrepareFCMDTest(uint8_t pSource = 0, uint8_t pPattern = 0xCA);
-    bool TestI2CMaster(const std::vector<uint8_t>& pMasters);
-    void TestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep);
-    void TestOpticalRW(uint32_t pNTries = 1000);
-
   private:
     void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
     void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandPattern, const std::string& userFilename);
@@ -82,15 +55,6 @@ class PSROHHybridTester : public Tool
     void CheckHybridInputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
     // void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string & pFastCommand ,  uint8_t pDuartion=1);
-
-#ifdef __TCUSB__
-    std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
-                                                                {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
-                                                                {"L_SSA", TC_PSROH::measurement::L_SSA_RST},
-                                                                {"R_MPA", TC_PSROH::measurement::R_MPA_RST},
-                                                                {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
-                                                                {"R_SSA", TC_PSROH::measurement::R_SSA_RST}};
-#endif
 
     std::map<std::string, uint8_t> fInputDebugMap = {{"l_fcmd_cic", 0},
                                                      {"r_fcmd_cic", 1},

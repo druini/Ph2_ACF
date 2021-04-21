@@ -7,6 +7,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
+    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
@@ -17,6 +19,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Library dirs
     link_directories(${UHAL_UHAL_LIB_PREFIX})
+    link_directories(${UHAL_LOG_LIB_PREFIX})
+    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
 
     # Find source files
     file(GLOB HEADERS *.h)
@@ -61,9 +65,19 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         link_directories(${PH2_TCUSB_LIBRARY_DIRS})
         set(LIBS ${LIBS} usb ${PH2_TCUSB_LIBRARIES})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
+        if($ENV{UseTCUSBforROH})
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
+        else($ENV{UseTCUSBforROH})
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
+        endif($ENV{UseTCUSBforROH})
+    endif(${PH2_TCUSB_FOUND})
+    if(${PH2_POWERSUPPLY_FOUND})
+      include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
+      link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
+      set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
     endif()
-
-    # Find root and link against it
+    #last but not least, find root and link against it
     if(NoDataShipping)
         if(${ROOT_FOUND})
             include_directories(${ROOT_INCLUDE_DIRS})

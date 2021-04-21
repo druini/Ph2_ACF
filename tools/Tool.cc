@@ -25,6 +25,7 @@ Tool::Tool()
     fCanvasMap()
     , fChipHistMap()
     , fHybridHistMap()
+    , fSummaryTree(nullptr)
     ,
 #endif
     fType()
@@ -115,6 +116,7 @@ void Tool::Inherit(const Tool* pTool)
     fType          = pTool->fType;
     fDirectoryName = pTool->fDirectoryName;
 #ifdef __USE_ROOT__
+    fSummaryTree    = pTool->fSummaryTree;
     fCanvasMap      = pTool->fCanvasMap;
     fChipHistMap    = pTool->fChipHistMap;
     fHybridHistMap  = pTool->fHybridHistMap;
@@ -214,6 +216,37 @@ void Tool::SoftDestroy()
 }
 
 #ifdef __USE_ROOT__
+TString  Tool::fSummaryTreeParameter = ""; // Is this ok here?
+Double_t Tool::fSummaryTreeValue     = 0.0;
+
+/*!
+ * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
+ */
+void Tool::bookSummaryTree() // MINE
+{
+    fResultFile->cd();
+    fSummaryTreeParameter = "";
+    fSummaryTreeValue     = 0;
+    fSummaryTree          = new TTree("summaryTree", "Most relevant results");
+    fSummaryTree->Branch("Parameter", &fSummaryTreeParameter);
+    fSummaryTree->Branch("Value", &fSummaryTreeValue);
+}
+
+/*!
+ * \brief Insert data into the summary tree
+ * \param cParameter : Name of the measurement to be stored
+ * \param cValue: Value of the measurement to be stored
+ */
+void Tool::fillSummaryTree(TString cParameter, Double_t cValue) // MINE
+{
+    fResultFile->cd();
+    fSummaryTreeParameter.Clear();
+    fSummaryTreeParameter = cParameter;
+    fSummaryTreeValue     = cValue;
+    if(fSummaryTree) fSummaryTree->Fill();
+}
+
+TString Tool::getDirectoryName() { return fDirectoryName.c_str(); }
 
 void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject)
 {
@@ -427,6 +460,9 @@ void Tool::SaveResults()
         std::string cPdfName = fDirectoryName + "/" + cCanvas.second->GetName() + ".pdf";
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
+    // Save summary TTree
+    // fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
+
 #endif
 
     // fResultFile->Write();
@@ -765,9 +801,7 @@ std::pair<std::vector<float>, std::vector<float>> Tool::getDerivative(std::vecto
     std::vector<float> cWeights(pData.size());
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
     // replace negative entries with 0s
-    if(pIgnoreNegative)
-        std::replace_if(
-            cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
+    if(pIgnoreNegative) std::replace_if(cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
     cWeights.erase(cWeights.begin(), cWeights.begin() + 1);
     pValues.erase(pValues.begin(), pValues.begin() + 1);
     return std::make_pair(cWeights, pValues);
@@ -778,9 +812,7 @@ std::pair<float, float> Tool::evalNoise(std::vector<float> pData, std::vector<fl
     std::vector<float> cWeights(pData.size());
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
     cWeights.erase(cWeights.begin(), cWeights.begin() + 1);
-    if(pIgnoreNegative)
-        std::replace_if(
-            cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
+    if(pIgnoreNegative) std::replace_if(cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
     float cN            = static_cast<float>(cWeights.size() - std::count(cWeights.begin(), cWeights.end(), 0.));
     float cSumOfWeights = std::accumulate(cWeights.begin(), cWeights.end(), 0.);
     // weighted sum of scan values to get pedestal
@@ -1381,7 +1413,10 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
                 else
                     fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue);
     else
+    {
+        LOG(INFO) << BOLDBLUE << "Broadcasting to chips on board.." << RESET;
         fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
+    }
 }
 
 // set same local dac for all BeBoard

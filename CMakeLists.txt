@@ -138,10 +138,18 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(PH2_POWERSUPPLY_FOUND)
 
     # Ph2_TCUSB [USB control of hybrids]
-    find_package(PH2_TCUSB)
-    if(PH2_TCUSB_FOUND)
-        message(STATUS "    Building the TestCards USB components")
-    endif(PH2_TCUSB_FOUND)
+    if ($ENV{CompileWithTCUSB})
+      find_package(PH2_TCUSB)  
+      if(PH2_TCUSB_FOUND)
+        if($ENV{UseTCUSBforROH})
+            message(STATUS "    Building the ROH TestCards USB components")
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
+        else($ENV{UseTCUSBforROH})
+            message(STATUS "    Building the SEH TestCards USB components")
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
+        endif($ENV{UseTCUSBforROH})
+      endif(PH2_TCUSB_FOUND)
+    endif($ENV{CompileWithTCUSB})
 
     # EUDAQ
     if ($ENV{CompileWithEUDAQ})
@@ -164,11 +172,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # Boost
     file(GLOB_RECURSE uhal_boost /opt/cactus/*version.hpp)
     if(uhal_boost)
-        MESSAGE(STATUS "    Found boost installation that comes with uHAL, using this version") 
+        MESSAGE(STATUS "    Found boost installation that comes with uHAL, using this version")
             set(Boost_NO_SYSTEM_PATHS TRUE)
             if(Boost_NO_SYSTEM_PATHS)
                 if(${CACTUS_FOUND})
-                    set(BOOST_ROOT ${CACTUS_ROOT})
+                    set(BOOST_ROOT /opt/cactus)
                 else(${CACTUS_FOUND})
                     set(BOOST_ROOT /opt/cactus)
                 endif(${CACTUS_FOUND})
@@ -256,6 +264,12 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     endif(PH2_ANTENNA_FOUND)
 
     # ZeroMQ
+    find_package(PH2_POWERSUPPLY) #========================================================
+    if(PH2_POWERSUPPLY_FOUND)
+        message(STATUS "    Building the PowerSupply components")
+    endif(PH2_POWERSUPPLY_FOUND)
+
+    # ZeroMQ 
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)
@@ -263,7 +277,8 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         endif(PH2_USBINSTLIB_FOUND)
     endif(ZMQ_FOUND)
 
-    # EUDAQ
+
+   # EUDAQ
     if ($ENV{CompileWithEUDAQ})
         set(USE_EUDAQ ON)
         include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
