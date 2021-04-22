@@ -388,34 +388,51 @@ int main(int argc, char** argv)
             // #############################################
             // # Address different subsets of the detector #
             // #############################################
-            // @TMP@
-            // const int detDivision = 8;
-            // auto      query       = [](int indx, int division, int thr) { return (division / thr < 1 ? indx < 1 : indx < 2); };
-            // for(auto i = 0; query(i, detDivision, 8); i++)
-            // {
-            //     auto detectorSubset = [i](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == i); };
-            //     if(query(1, detDivision, 8) == true) pa.fDetectorContainer->setOpticalGroupQueryFunction(detectorSubset);
+            bool testSubDetector = false;
+            bool doTwice         = false;
+            int  evenORodd       = 0;
+            do
+            {
+              if(testSubDetector == true)
+              {
+                  if(pa.fDetectorContainer->size() != 1)
+                  {
+                      auto boardSubset = [evenORodd](const BoardContainer* theBoard) { return (theBoard->getId() % 2 == evenORodd); };
+                      pa.fDetectorContainer->setBoardQueryFunction(boardSubset);
+                      doTwice = true;
+                  }
+                  else if(pa.fDetectorContainer->at(0)->size() != 1)
+                  {
+                      auto optoGroupSubset = [evenORodd](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == evenORodd); };
+                      pa.fDetectorContainer->setOpticalGroupQueryFunction(optoGroupSubset);
+                      doTwice = true;
+                  }
+                  else if(pa.fDetectorContainer->at(0)->at(0)->size() != 1)
+                  {
+                      auto hybridSubset = [evenORodd](const HybridContainer* theHybrid) { return (theHybrid->getId() % 2 == evenORodd); };
+                      pa.fDetectorContainer->setHybridQueryFunction(hybridSubset);
+                      doTwice = true;
+                  }
+                  else if(pa.fDetectorContainer->at(0)->at(0)->at(0)->size() != 1)
+                  {
+                      auto chipSubset = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
+                      pa.fDetectorContainer->setReadoutChipQueryFunction(chipSubset);
+                      doTwice = true;
+                  }
+              }
 
-            //     for(auto j = 0; query(j, detDivision, 4); j++)
-            //     {
-            //         auto detectorSubset = [j](const ModuleContainer* theModule) { return (theModule->getId() % 2 == j); };
-            //         if(query(1, detDivision, 4) == true) pa.fDetectorContainer->setHybridQueryFunction(detectorSubset);
+              pa.run();
+              pa.analyze();
+              pa.draw();
+              RD53RunProgress::current() = 0;
 
-            //         for(auto k = 0; query(k, detDivision, 2); k++)
-            //         {
-            //             auto detectorSubset = [k](const ChipContainer* theChip) { return (theChip->getId() % 2 == k); };
-            //             if(query(1, detDivision, 2) == true) pa.fDetectorContainer->setReadoutChipQueryFunction(detectorSubset);
+              pa.fDetectorContainer->resetReadoutChipQueryFunction();
+              pa.fDetectorContainer->resetHybridQueryFunction();
+              pa.fDetectorContainer->resetOpticalGroupQueryFunction();
+              pa.fDetectorContainer->resetBoardQueryFunction();
 
-            pa.run();
-            pa.analyze();
-            pa.draw();
-
-            //             pa.fDetectorContainer->resetReadoutChipQueryFunction();
-            //         }
-            //         pa.fDetectorContainer->resetHybridQueryFunction();
-            //     }
-            //     pa.fDetectorContainer->resetOpticalGroupQueryFunction();
-            // }
+              evenORodd++;
+            } while((doTwice == true) && (evenORodd < 2));
         }
         else if(whichCalib == "noise")
         {
@@ -623,7 +640,6 @@ int main(int argc, char** argv)
         else if((program == false) && (whichCalib != ""))
         {
             LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
-            mySysCntr.Destroy();
             exit(EXIT_FAILURE);
         }
 
