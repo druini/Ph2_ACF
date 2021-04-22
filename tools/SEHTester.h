@@ -10,18 +10,15 @@
  */
 #ifndef SEHTester_h__
 #define SEHTester_h__
+#ifdef __USE_ROOT__
+
 #include "OTHybridTester.h"
 //
 #ifdef __TCUSB__
 #include "USB_a.h"
 #include "USB_libusb.h"
 #endif
-#ifdef __POWERSUPPLY__
-// Libraries
-#include "DeviceHandler.h"
-#include "PowerSupply.h"
-#include "PowerSupplyChannel.h"
-#endif
+
 #ifdef __USE_ROOT__
 #include "TAxis.h"
 #include "TF1.h"
@@ -58,7 +55,7 @@ class SEHTester : public OTHybridTester
 
     void SEHInputsDebug();
     void TurnOn();
-    void RampPowerSupply(std::string fHWFile, std::string fPowerSupply);
+    void RampPowerSupply(std::string powerSupplyId, std::string channelId);
     void CheckFastCommands(const std::string& sFastCommandPattern, const std::string& userFilename);
     void CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
@@ -159,4 +156,5 @@ class SEHTester : public OTHybridTester
                                                        {"PTAT_BPOL2V5_Nominal", 0.6},
                                                        {"PTAT_BPOL12V_Nominal", 0.6}};
 };
+#endif
 #endif

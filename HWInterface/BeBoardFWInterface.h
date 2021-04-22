@@ -18,6 +18,7 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include "../HWDescription/MPA.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWDescription/SSA.h"
+#include "../NetworkUtils/TCPClient.h"
 #include "../Utils/Exception.h"
 #include "../Utils/FileHandler.h"
 #include "../Utils/Utilities.h"
@@ -60,6 +61,8 @@ class BeBoardFWInterface : public RegManager
      * \param puHalConfigFileName : path of the uHal Config File*/
     BeBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
     BeBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
+
+    void setPowerSupplyClient(TCPClient* thePowerSupplyClient) { fPowerSupplyClient = thePowerSupplyClient; };
 
     /*!
      * \brief set a FileHandler Object and enable saving to file!
@@ -289,10 +292,11 @@ class BeBoardFWInterface : public RegManager
     virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)                                               = 0;
 
   protected:
-    uint32_t fBlockSize{0};
-    uint32_t fNPackets{0};
-    uint32_t numAcq{0};
-    uint32_t nbMaxAcq{0};
+    uint32_t   fBlockSize{0};
+    uint32_t   fNPackets{0};
+    uint32_t   numAcq{0};
+    uint32_t   nbMaxAcq{0};
+    TCPClient* fPowerSupplyClient;
 
     // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value
     // comparison

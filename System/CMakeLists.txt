@@ -27,16 +27,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Add the library
     add_library(Ph2_System STATIC ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_NetworkUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils NetworkUtils)
     TARGET_LINK_LIBRARIES(Ph2_System ${LIBS})
 
-    #check for PowerSupply
-    if(${PH2_POWERSUPPLY_FOUND})
-      include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
-      link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
-      #set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
-      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
-    endif()
       #check for TestCard USBDriver
       if(${PH2_TCUSB_FOUND})
         include_directories(${PH2_TCUSB_INCLUDE_DIRS})
