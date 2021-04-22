@@ -48,6 +48,7 @@
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
 #define ARBITRARYDELAY 2 // [seconds]
+#define TESTSUBDETECTOR false
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -388,12 +389,11 @@ int main(int argc, char** argv)
             // #############################################
             // # Address different subsets of the detector #
             // #############################################
-            bool testSubDetector = false;
-            bool doTwice         = false;
-            int  evenORodd       = 0;
+            int  evenORodd = 0;
+            bool doTwice   = false;
             do
             {
-              if(testSubDetector == true)
+              if(TESTSUBDETECTOR == true)
               {
                   if(pa.fDetectorContainer->size() != 1)
                   {
