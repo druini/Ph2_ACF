@@ -142,7 +142,6 @@ void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency
 
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {
-                    uint32_t lat  = i + fStartLatency;
                     uint32_t hits = hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
 
                     float error = 0;
@@ -168,7 +167,6 @@ void DQMHistogramLatencyScan::fillStubLatencyPlots(DetectorDataContainer& theStu
 
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {
-                    uint32_t lat  = i + fStartLatency;
                     uint32_t hits = hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
 
                     float error = 0;
@@ -196,7 +194,6 @@ void DQMHistogramLatencyScan::fill2DLatencyPlots(DetectorDataContainer& the2DLat
                 {
                     for(uint8_t cStubLatency = 0; cStubLatency < i + fStartLatency; cStubLatency++)
                     {
-                        uint32_t lat  = i + fStartLatency;
                         uint32_t hits = hybrid->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][i];
 
                         hybridLatencyHistogram->SetBinContent(cStubLatency, i, hits);
