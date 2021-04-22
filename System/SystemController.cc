@@ -49,6 +49,7 @@ void SystemController::Inherit(const SystemController* pController)
     fNetworkStreamer      = pController->fNetworkStreamer;
     fDetectorContainer    = pController->fDetectorContainer;
     fCicInterface         = pController->fCicInterface;
+    fPowerSupplyClient    = pController->fPowerSupplyClient;
 }
 
 void SystemController::Destroy()
@@ -80,6 +81,9 @@ void SystemController::Destroy()
 
     delete fNetworkStreamer;
     fNetworkStreamer = nullptr;
+
+    delete fPowerSupplyClient;
+    fPowerSupplyClient = nullptr;
 
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
@@ -125,6 +129,15 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
+
+    fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
+    if(!fPowerSupplyClient->connect(1))
+    {
+        std::cerr << "Cannot connect to the Power Supply Server" << '\n';
+        delete fPowerSupplyClient;
+        fPowerSupplyClient = nullptr;
+    }
+    for(const auto board: *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
 
     if(fDetectorContainer->size() > 0)
     {
@@ -249,6 +262,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 // are these needed?
                 uint8_t cLinkId = cOpticalGroup->getId();
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
+
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
                     cIslpGBTI2C                         = !cBoard->ifUseOpticalLink();

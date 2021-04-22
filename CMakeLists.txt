@@ -94,7 +94,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_9_NOERROR_FLAGS}")
       endif()
     endif ()
-    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS}")
+    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
     if(NoDataShipping)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     endif()
@@ -130,12 +130,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
-
-    # Power supplt
-    find_package(PH2_POWERSUPPLY) #========================================================
-    if(PH2_POWERSUPPLY_FOUND)
-        message(STATUS "    Building the PowerSupply components")
-    endif(PH2_POWERSUPPLY_FOUND)
 
     # Ph2_TCUSB [USB control of hybrids]
     if ($ENV{CompileWithTCUSB})
@@ -262,12 +256,6 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
-
-    # ZeroMQ
-    find_package(PH2_POWERSUPPLY) #========================================================
-    if(PH2_POWERSUPPLY_FOUND)
-        message(STATUS "    Building the PowerSupply components")
-    endif(PH2_POWERSUPPLY_FOUND)
 
     # ZeroMQ 
     find_package(ZMQ)         #========================================================

@@ -20,7 +20,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
     # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_DQMUtils Ph2_NetworkUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_DQMUtils NetworkUtils)
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
@@ -53,14 +53,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         link_directories(${PH2_ANTENNA_LIBRARY_DIRS})
         set(LIBS ${LIBS} ${PH2_ANTENNA_LIBRARIES} usb)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
-    endif()
-
-    # Check for PowerSupply
-    if(${PH2_POWERSUPPLY_FOUND})
-      include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
-      link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
-      set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
-      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
     endif()
 
     # Check for TestCard USBDriver
@@ -122,12 +114,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
           target_link_libraries(${name} ${LIBS} Ph2_RootUtils RootWeb)
         else()
           target_link_libraries(${name} ${LIBS})
-        endif()
-        #check for PowerSupply
-        if ("${name}" STREQUAL "powersupply")
-            if(${PH2_POWERSUPPLY_FOUND})
-                target_link_libraries(${name} ${LIBS} "${PH2_POWERSUPPLY_LIBRARIES}")
-            endif()
         endif()
     endforeach(sourcefile ${BINARIES})
 
