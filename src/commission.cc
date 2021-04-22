@@ -108,9 +108,9 @@ int main(int argc, char* argv[])
     bool batchMode = (cmd.foundOption("batch")) ? true : false;
     bool cAllChan  = (cmd.foundOption("allChan")) ? true : false;
 
-    int      cSignalRange      = (cmd.foundOption("signal")) ? convertAnyInt(cmd.optionValue("signal").c_str()) : 30;
-    int      cSignalFitRange   = (cmd.foundOption("signalFit")) ? convertAnyInt(cmd.optionValue("signalFit").c_str()) : 10;
-    uint8_t  cAntennaPotential = (cmd.foundOption("antenna")) ? convertAnyInt(cmd.optionValue("antenna").c_str()) : 0;
+    int     cSignalRange      = (cmd.foundOption("signal")) ? convertAnyInt(cmd.optionValue("signal").c_str()) : 30;
+    int     cSignalFitRange   = (cmd.foundOption("signalFit")) ? convertAnyInt(cmd.optionValue("signalFit").c_str()) : 10;
+    uint8_t cAntennaPotential = (cmd.foundOption("antenna")) ? convertAnyInt(cmd.optionValue("antenna").c_str()) : 0;
 
     TApplication cApp("Root Application", &argc, argv);
 

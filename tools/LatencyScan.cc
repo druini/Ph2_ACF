@@ -480,7 +480,7 @@ void LatencyScan::Running()
 
     Initialize();
     ScanLatency();
-    //StubLatencyScan();
+    // StubLatencyScan();
     // MeasureTriggerTDC();
     LOG(INFO) << "Done with Latency Scan";
 }
@@ -497,12 +497,6 @@ void LatencyScan::Stop()
 void LatencyScan::Pause() {}
 
 void LatencyScan::Resume() {}
-
-
-
-
-
-
 
 // these functions are used by MPA latency that relies on their output histograms
 // they should be replaced to avoid duplication

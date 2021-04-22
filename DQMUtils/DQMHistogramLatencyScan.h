@@ -70,6 +70,5 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
 
     uint32_t fStartLatency;
     uint32_t fLatencyRange;
-
 };
 #endif

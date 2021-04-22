@@ -212,7 +212,7 @@ void DQMHistogramLatencyScan::fillTriggerTDCPlots(DetectorDataContainer& theTrig
     {
         for(uint32_t tdcValue = 0; tdcValue < TDCBINS; ++tdcValue)
         {
-            auto sum = board->at(0)->at(0)->getSummary<GenericDataArray<TDCBINS, uint16_t>>();
+            auto  sum                      = board->at(0)->at(0)->getSummary<GenericDataArray<TDCBINS, uint16_t>>();
             TH1F* boardTriggerTDCHistogram = fTriggerTDCHistograms.at(board->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
             boardTriggerTDCHistogram->SetBinContent(tdcValue + 1, sum[tdcValue]);
         }
@@ -221,7 +221,6 @@ void DQMHistogramLatencyScan::fillTriggerTDCPlots(DetectorDataContainer& theTrig
 
 void DQMHistogramLatencyScan::parseSettings(const Ph2_System::SettingsMap& pSettingsMap)
 {
-
     auto cSetting = pSettingsMap.find("StartLatency");
     if(cSetting != std::end(pSettingsMap))
         fStartLatency = cSetting->second;
@@ -233,5 +232,4 @@ void DQMHistogramLatencyScan::parseSettings(const Ph2_System::SettingsMap& pSett
         fLatencyRange = cSetting->second;
     else
         fLatencyRange = 512;
-
 }
