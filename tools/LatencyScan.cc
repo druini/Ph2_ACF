@@ -9,16 +9,14 @@ LatencyScan::LatencyScan() : Tool() {}
 
 LatencyScan::~LatencyScan() {}
 
-void LatencyScan::Initialize(uint32_t pStartLatency, uint32_t pLatencyRange)
+void LatencyScan::Initialize()
 {
-    fStartLatency = pStartLatency;
-    fLatencyRange = pLatencyRange;
+    fStartLatency = findValueInSettings("StartLatency", 1);
+    fLatencyRange = findValueInSettings("LatencyRange", 1);
     fHoleMode     = findValueInSettings("HoleMode", 1);
     fNevents      = findValueInSettings("Nevents", 10);
 
 #ifdef __USE_ROOT__
-    fDQMHistogramLatencyScan.setStartLatency(fStartLatency);
-    fDQMHistogramLatencyScan.setLatencyRange(fLatencyRange);
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
@@ -84,7 +82,7 @@ void LatencyScan::MeasureTriggerTDC()
 #endif
 }
 
-void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
+void LatencyScan::ScanLatency()
 {
     LOG(INFO) << "Scanning Latency ... ";
     uint32_t cIterationCount = 0;
@@ -102,7 +100,7 @@ void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
     for(auto board: theLatencyContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(board->getIndex()));
-        for(uint16_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++)
+        for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
         {
             //  Set a Latency Value on all FEs
             cVisitor.setLatency(cLat);
@@ -134,7 +132,7 @@ void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
                     } // end event loop
 
                     LOG(INFO) << "FE: " << +hybrid->getId() << "; Latency " << +cLat << " clock cycles; Hits " << cHitSum << "; Events " << fNevents;
-                    hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - pStartLatency] = cHitSum;
+                    hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] = cHitSum;
                 } // end hybrid
 
             } // end optical group
@@ -155,7 +153,7 @@ void LatencyScan::ScanLatency(uint16_t pStartLatency, uint16_t pLatencyRange)
 #endif
 }
 
-void LatencyScan::StubLatencyScan(uint16_t pStartLatency, uint16_t pLatencyRange)
+void LatencyScan::StubLatencyScan()
 {
     // check if TP trigger is being used
     for(auto cBoard: *fDetectorContainer)
@@ -205,7 +203,7 @@ void LatencyScan::StubLatencyScan(uint16_t pStartLatency, uint16_t pLatencyRange
     DetectorDataContainer theStubContainer;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theStubContainer);
 
-    for(uint8_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++)
+    for(uint8_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
     {
         // container to hold scan result
         DetectorDataContainer* cMatchedEvents = new DetectorDataContainer();
@@ -304,7 +302,7 @@ void LatencyScan::StubLatencyScan(uint16_t pStartLatency, uint16_t pLatencyRange
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - pStartLatency] = cNStubs;
+                    theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] = cNStubs;
 
                 } // hybrid
             }     // hybrid
@@ -323,7 +321,7 @@ void LatencyScan::StubLatencyScan(uint16_t pStartLatency, uint16_t pLatencyRange
 #endif
 }
 
-void LatencyScan::ScanLatency2D(uint16_t pStartLatency, uint16_t pLatencyRange)
+void LatencyScan::ScanLatency2D()
 {
     DetectorDataContainer theLatencyContainer;
     // 2D array -- hit latency vs stub latency
@@ -331,7 +329,7 @@ void LatencyScan::ScanLatency2D(uint16_t pStartLatency, uint16_t pLatencyRange)
 
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
     int            cNSteps = 0;
-    for(uint16_t cLatency = pStartLatency; cLatency < pStartLatency + pLatencyRange; cLatency++)
+    for(uint16_t cLatency = fStartLatency; cLatency < fStartLatency + fLatencyRange; cLatency++)
     {
         //  Set a Latency Value on all FEs
         cVisitor.setLatency(cLatency);
@@ -393,7 +391,7 @@ void LatencyScan::ScanLatency2D(uint16_t pStartLatency, uint16_t pLatencyRange)
                             theLatencyContainer.at(pBoard->getIndex())
                                 ->at(cOpticalGroup->getIndex())
                                 ->at(cFe->getIndex())
-                                ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - pStartLatency)] += cNEvents_wBoth;
+                                ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - fStartLatency)] += cNEvents_wBoth;
                         }
                     }
 
@@ -425,7 +423,7 @@ void LatencyScan::ScanLatency2D(uint16_t pStartLatency, uint16_t pLatencyRange)
                 int cMaxNEvents_wBoth    = 0;
 
                 // run same loop as before
-                for(uint16_t cLatency = pStartLatency; cLatency < pStartLatency + pLatencyRange; cLatency++)
+                for(uint16_t cLatency = fStartLatency; cLatency < fStartLatency + fLatencyRange; cLatency++)
                 {
                     // maximum stub latency can only be L1 latency ...
                     for(uint8_t cStubLatency = 0; cStubLatency < cLatency; cStubLatency++)
@@ -433,7 +431,7 @@ void LatencyScan::ScanLatency2D(uint16_t pStartLatency, uint16_t pLatencyRange)
                         uint16_t val = theLatencyContainer.at(pBoard->getIndex())
                                            ->at(cOpticalGroup->getIndex())
                                            ->at(cFe->getIndex())
-                                           ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - pStartLatency)];
+                                           ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - fStartLatency)];
 
                         if(val >= cMaxNEvents_wBoth)
                         {
@@ -480,9 +478,9 @@ void LatencyScan::Running()
 {
     LOG(INFO) << "Starting Latency Scan";
 
-    Initialize(findValueInSettings("StartLatency", 0), findValueInSettings("LatencyRange", 512));
-    // StubScanLatency(fStartLatency, fLatencyRange);
-    StubLatencyScan(fStartLatency, fLatencyRange);
+    Initialize();
+    ScanLatency();
+    //StubLatencyScan();
     // MeasureTriggerTDC();
     LOG(INFO) << "Done with Latency Scan";
 }
@@ -499,6 +497,12 @@ void LatencyScan::Stop()
 void LatencyScan::Pause() {}
 
 void LatencyScan::Resume() {}
+
+
+
+
+
+
 
 // these functions are used by MPA latency that relies on their output histograms
 // they should be replaced to avoid duplication

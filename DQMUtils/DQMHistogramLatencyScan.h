@@ -53,17 +53,6 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
     void reset(void) override;
     // virtual void summarizeHistos();
 
-    void setStartLatency(uint32_t pStartLatency)
-    {
-        LOG(INFO) << "Setting Start Latency  " << pStartLatency;
-        fStartLatency = pStartLatency;
-    }
-    void setLatencyRange(uint32_t pLatencyRange)
-    {
-        LOG(INFO) << "Setting LatencyRange  " << pLatencyRange;
-        fLatencyRange = pLatencyRange;
-    }
-
     // Histogram Fillers
     void fillLatencyPlots(DetectorDataContainer& theLatency);
     void fillStubLatencyPlots(DetectorDataContainer& theStubLatency);
@@ -82,7 +71,5 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
     uint32_t fStartLatency;
     uint32_t fLatencyRange;
 
-    static const size_t VECSIZE = 1000;
-    static const size_t TDCBINS = 8;
 };
 #endif

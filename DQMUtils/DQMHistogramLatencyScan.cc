@@ -39,8 +39,6 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, const DetectorContainer
     // need to get settings from settings map
     parseSettings(pSettingsMap);
 
-    uint32_t fTDCBins = 8; // from LatencyScan.h
-
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     LOG(INFO) << "Setting histograms with range " << fLatencyRange << " and start value " << fStartLatency;
 
@@ -53,7 +51,7 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, const DetectorContainer
     HistContainer<TH2F> hLatencyScan2D("LatencyScan2D", "LatencyScan2D", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange, fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fLatencyScan2DHistograms, hLatencyScan2D);
 
-    HistContainer<TH1F> hTriggerTDC("TriggerTDC", "Trigger TDC", fTDCBins, -0.5, fTDCBins - 0.5);
+    HistContainer<TH1F> hTriggerTDC("TriggerTDC", "Trigger TDC", TDCBINS, -0.5, TDCBINS - 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fTriggerTDCHistograms, hTriggerTDC);
 }
 
@@ -119,7 +117,6 @@ void DQMHistogramLatencyScan::process()
 
                 latencyCanvas->cd();
                 TH1F* latencyHistogram = hybrid->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                LOG(INFO) << "Drawing histogram with integral " << latencyHistogram->Integral();
                 latencyHistogram->GetXaxis()->SetTitle("Trigger Latency");
                 latencyHistogram->GetYaxis()->SetTitle("# of hits");
                 latencyHistogram->DrawCopy();
@@ -151,7 +148,6 @@ void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency
                     float error = 0;
                     if(hits > 0) error = sqrt(float(hits));
 
-                    LOG(INFO) << "filling hybrid " << hybrid->getIndex() << " with latency " << lat << " and hits " << hits << " and error " << error;
                     hybridLatencyHistogram->SetBinContent(i, hits);
                     hybridLatencyHistogram->SetBinError(i, error);
                 }
@@ -178,7 +174,6 @@ void DQMHistogramLatencyScan::fillStubLatencyPlots(DetectorDataContainer& theStu
                     float error = 0;
                     if(hits > 0) error = sqrt(float(hits));
 
-                    LOG(INFO) << "filling hybrid " << hybrid->getIndex() << " with latency " << lat << " and hits " << hits << " and error " << error;
                     hybridLatencyHistogram->SetBinContent(i, hits);
                     hybridLatencyHistogram->SetBinError(i, error);
                 }
@@ -204,7 +199,6 @@ void DQMHistogramLatencyScan::fill2DLatencyPlots(DetectorDataContainer& the2DLat
                         uint32_t lat  = i + fStartLatency;
                         uint32_t hits = hybrid->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][i];
 
-                        LOG(INFO) << "filling hybrid " << hybrid->getIndex() << " with hit latency " << lat << ", stub latency " << cStubLatency << "and hits " << hits;
                         hybridLatencyHistogram->SetBinContent(cStubLatency, i, hits);
                     }
                 }
@@ -218,9 +212,7 @@ void DQMHistogramLatencyScan::fillTriggerTDCPlots(DetectorDataContainer& theTrig
     {
         for(uint32_t tdcValue = 0; tdcValue < TDCBINS; ++tdcValue)
         {
-            LOG(INFO) << "tdc value " << tdcValue;
             auto sum = board->at(0)->at(0)->getSummary<GenericDataArray<TDCBINS, uint16_t>>();
-            LOG(INFO) << "with value " << sum[tdcValue];
             TH1F* boardTriggerTDCHistogram = fTriggerTDCHistograms.at(board->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
             boardTriggerTDCHistogram->SetBinContent(tdcValue + 1, sum[tdcValue]);
         }
@@ -229,22 +221,17 @@ void DQMHistogramLatencyScan::fillTriggerTDCPlots(DetectorDataContainer& theTrig
 
 void DQMHistogramLatencyScan::parseSettings(const Ph2_System::SettingsMap& pSettingsMap)
 {
-    // don't override user-set settings
-    if(fStartLatency == 999)
-    {
-        auto cSetting = pSettingsMap.find("StartLatency");
-        if(cSetting != std::end(pSettingsMap))
-            fStartLatency = cSetting->second;
-        else
-            fStartLatency = 0;
-    }
 
-    if(fLatencyRange == 999)
-    {
-        auto cSetting = pSettingsMap.find("LatencyRange");
-        if(cSetting != std::end(pSettingsMap))
-            fLatencyRange = cSetting->second;
-        else
-            fLatencyRange = 512;
-    }
+    auto cSetting = pSettingsMap.find("StartLatency");
+    if(cSetting != std::end(pSettingsMap))
+        fStartLatency = cSetting->second;
+    else
+        fStartLatency = 0;
+
+    cSetting = pSettingsMap.find("LatencyRange");
+    if(cSetting != std::end(pSettingsMap))
+        fLatencyRange = cSetting->second;
+    else
+        fLatencyRange = 512;
+
 }

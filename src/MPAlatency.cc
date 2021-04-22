@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDRED << "Inherit" << RESET;
     cLatencyScan.Inherit(&cTool);
     LOG(INFO) << BOLDRED << "INIT" << RESET;
-    cLatencyScan.Initialize(0, 100);
+    cLatencyScan.Initialize();
     LOG(INFO) << BOLDRED << "Scan" << RESET;
     pBoard->setFrontEndType(FrontEndType::MPA);
 
@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    cLatencyScan.Initialize(0, 100);
+    cLatencyScan.Initialize();
     auto hitlatssa = cLatencyScan.ScanLatency_root(30, 50);
 
     for(auto cOpticalGroup: *pBoard)
