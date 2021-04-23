@@ -22,16 +22,7 @@ class D19clpGBTInterface : public lpGBTInterface
 {
   public:
     D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB) {}
-    ~D19clpGBTInterface()
-    {
-#ifdef __TCUSB__
-        if(fTC_USB != nullptr)
-        {
-            delete fTC_USB;
-            fTC_USB = nullptr;
-        }
-#endif
-    }
+    ~D19clpGBTInterface() {}
 
     // ###################################
     // # LpGBT register access functions #

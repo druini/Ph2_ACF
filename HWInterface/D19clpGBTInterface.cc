@@ -1055,8 +1055,9 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     {
         for(const auto cChannel: cRxChannels)
         {
-            if(cGroup == 4 && cChannel == 0) cRxInvert = 0;
-            if(cGroup == 5 && cChannel == 0)
+            if(cGroup == 6 && cChannel == 0)
+                cRxInvert = 0;
+            else if(cGroup == 5 && cChannel == 0)
                 cRxInvert = 0;
             else
                 cRxInvert = 1;
@@ -1066,9 +1067,9 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     PhaseAlignRx(pChip, cRxGroups, cRxChannels);
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
-    // Setting GPIO levels Uncomment this for Skeleton test
-    // ConfigureGPIO(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1, 1, 0, 0, 0);
-    // ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
+    // Setting GPIO levels Resets are high
+    ConfigureGPIODirection(pChip, {0, 3, 6, 8}, 1);
+    ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
