@@ -124,7 +124,7 @@ void SEHTester::RampPowerSupply(std::string fHWFile, std::string fPowerSupply)
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             std::string voltageCompliance = std::to_string(theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->getVoltageCompliance());
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            std::string voltage = std::to_string(theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->getVoltage());
+            std::string voltage = std::to_string(theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->getOutputVoltage());
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             std::string currentCompliance = std::to_string(theHandler.getPowerSupply(fPowerSupply)->getChannel(channelName.first)->getCurrentCompliance());
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -449,17 +449,26 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
     // Create TTree for Iout to Iin conversion in DC/DC
-    auto cIouttoIinTree = new TTree("tIouttoIinTree", "Iout to Iin conversion in DC/DC");
     auto cEfficencyTree = new TTree("tEfficency", "DC/DC Efficency");
     // Create variables for TTree branches
+    std::vector<float>       cUoutRValVect;
+    std::vector<float>       cUoutLValVect;
+    std::vector<float>       cU2v5ValVect;
+    std::vector<float>       cIoutRValVect;
+    std::vector<float>       cIoutLValVect;
     std::vector<float>       cIoutValVect;
     std::vector<float>       cIinValVect;
+    std::vector<float>       cUinValVect;
     std::vector<float>       cEfficencyValVect;
     std::vector<std::string> cSideValVect;
     // Create TTree Branches
-    cIouttoIinTree->Branch("Iout", &cIoutValVect);
-    cIouttoIinTree->Branch("Iin", &cIinValVect);
-    cIouttoIinTree->Branch("side", &cSideValVect);
+    cEfficencyTree->Branch("Uout_R", &cUoutRValVect);
+    cEfficencyTree->Branch("Uout_L", &cUoutLValVect);
+    cEfficencyTree->Branch("Uout_2v5", &cU2v5ValVect);
+    cEfficencyTree->Branch("Iin", &cIinValVect);
+    cEfficencyTree->Branch("Uin", &cUinValVect);
+    cEfficencyTree->Branch("Iout_R", &cIoutRValVect);
+    cEfficencyTree->Branch("Iout_L", &cIoutLValVect);
     cEfficencyTree->Branch("Iout", &cIoutValVect);
     cEfficencyTree->Branch("Efficency", &cEfficencyValVect);
     cEfficencyTree->Branch("side", &cSideValVect);
@@ -467,16 +476,23 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 
     auto cObj1 = gROOT->FindObject("mgIouttoIin");
     auto cObj2 = gROOT->FindObject("mgEfficency");
+    auto cObj3 = gROOT->FindObject("mgUouttoIout");
     if(cObj1) delete cObj1;
     if(cObj2) delete cObj2;
+    if(cObj3) delete cObj3;
 
     auto cIouttoIinMultiGraph = new TMultiGraph();
     cIouttoIinMultiGraph->SetName("mgIouttoIin");
     cIouttoIinMultiGraph->SetTitle("DC/DC - Iout to Iin conversion");
 
+    auto cUouttoIoutMultiGraph = new TMultiGraph();
+    cUouttoIoutMultiGraph->SetName("mgUouttoIout");
+    cUouttoIoutMultiGraph->SetTitle("DC/DC - Uout vs Iout conversion");
+
     auto cEfficencyMultiGraph = new TMultiGraph();
     cEfficencyMultiGraph->SetName("mgEfficency");
     cEfficencyMultiGraph->SetTitle("DC/DC conversion efficency");
+
     LOG(INFO) << BOLDMAGENTA << "Testing DC/DC" << RESET;
     int iterator = 1;
     // We run three times; Only right side, only left side and load on both sides
@@ -485,9 +501,9 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
         fTC_USB->set_load1(false, false, 0);
         fTC_USB->set_load2(false, false, 0);
 
-        cIoutValVect.clear(), cIinValVect.clear();
-        cEfficencyValVect.clear();
-        cSideValVect.clear();
+        cIoutRValVect.clear(), cIinValVect.clear(), cUoutRValVect.clear(), cUoutLValVect.clear();
+        cEfficencyValVect.clear(), cU2v5ValVect.clear(), cIoutLValVect.clear();
+        cSideValVect.clear(), cUinValVect.clear(), cIoutLValVect.clear();
 
         for(int cLoadValue = pMinLoadValue; cLoadValue <= (int)pMaxLoadValue; cLoadValue += pStep)
         {
@@ -497,6 +513,7 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
             float I_P1V2_L;
             float U_P1V2_R;
             float U_P1V2_L;
+            float U_P2V5 = 0;
 
             if(cSide == "both")
             {
@@ -506,7 +523,7 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
             if(cSide == "left") { fTC_USB->set_load1(true, false, cLoadValue); }
             if(cSide == "right") { fTC_USB->set_load2(true, false, cLoadValue); }
             // Delay needs to be optimized during functional testing
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1500));
             fTC_USB->read_load(fTC_USB->I_P1V2_R, I_P1V2_R);
             fTC_USB->read_load(fTC_USB->I_P1V2_L, I_P1V2_L);
             fTC_USB->read_supply(fTC_USB->I_SEH, I_SEH);
@@ -517,6 +534,12 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
             // The input binning is performed in DAC values, the result is binned in the measured current
             cIoutValVect.push_back(I_P1V2_R + I_P1V2_L);
             cIinValVect.push_back(I_SEH);
+            cUinValVect.push_back(U_SEH);
+            cU2v5ValVect.push_back(U_P2V5);
+            cIoutRValVect.push_back(I_P1V2_R);
+            cUoutRValVect.push_back(U_P1V2_R);
+            cIoutLValVect.push_back(I_P1V2_L);
+            cUoutLValVect.push_back(U_P1V2_L);
             cSideValVect.push_back(cSide);
             if(I_SEH * U_SEH == 0) { cEfficencyValVect.push_back(-1); }
             else
@@ -524,8 +547,8 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
                 cEfficencyValVect.push_back((I_P1V2_R * U_P1V2_R + I_P1V2_L * U_P1V2_L) / (I_SEH * U_SEH));
             }
         }
-        cIouttoIinTree->Fill();
         cEfficencyTree->Fill();
+
         auto    cIouttoIinGraph = new TGraph(cIoutValVect.size(), cIoutValVect.data(), cIinValVect.data());
         TString str             = cSide;
         cIouttoIinGraph->SetName(str);
@@ -544,6 +567,26 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
         cEfficencyGraph->SetLineWidth(3);
         cEfficencyGraph->SetMarkerStyle(iterator + 20);
         cEfficencyMultiGraph->Add(cEfficencyGraph);
+
+        auto cUoutRtoIoutRGraph = new TGraph(cIoutRValVect.size(), cIoutRValVect.data(), cUoutRValVect.data());
+        str                     = "Voltage right side current drawn " + cSide;
+        cUoutRtoIoutRGraph->SetName(str);
+        cUoutRtoIoutRGraph->SetTitle(str);
+        cUoutRtoIoutRGraph->SetLineColor(iterator);
+        cUoutRtoIoutRGraph->SetFillColor(0);
+        cUoutRtoIoutRGraph->SetLineWidth(3);
+        cUoutRtoIoutRGraph->SetMarkerStyle(iterator + 20);
+        cUouttoIoutMultiGraph->Add(cUoutRtoIoutRGraph);
+
+        auto cUoutLtoIoutLGraph = new TGraph(cIoutLValVect.size(), cIoutLValVect.data(), cUoutLValVect.data());
+        str                     = "Voltage left side current drawn " + cSide;
+        cUoutLtoIoutLGraph->SetName(str);
+        cUoutLtoIoutLGraph->SetTitle(str);
+        cUoutLtoIoutLGraph->SetLineColor(iterator);
+        cUoutLtoIoutLGraph->SetFillColor(0);
+        cUoutLtoIoutLGraph->SetLineWidth(3);
+        cUoutLtoIoutLGraph->SetMarkerStyle(iterator + 30);
+        cUouttoIoutMultiGraph->Add(cUoutLtoIoutLGraph);
         iterator++;
     }
 
@@ -551,23 +594,28 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     fTC_USB->set_load2(false, false, 0);
 
     fResultFile->cd();
-    cIouttoIinTree->Write();
     cEfficencyTree->Write();
-    auto cIouttoIinCanvas = new TCanvas("tIouttoIin", "Iout to Iin conversion in DC/DC", 750, 500);
 
-    cIouttoIinMultiGraph->Draw("ALP");
-    cIouttoIinMultiGraph->GetXaxis()->SetTitle("Iout [A]");
-    cIouttoIinMultiGraph->GetYaxis()->SetTitle("Iin [A]");
+    auto cUouttoIoutCanvas = new TCanvas("tUouttoIout", "Uout versus Iout DC/DC", 750, 500);
+    cUouttoIoutMultiGraph->Draw("ALP");
+    cUouttoIoutMultiGraph->GetXaxis()->SetTitle("Iout [A]");
+    cUouttoIoutMultiGraph->GetYaxis()->SetTitle("Uout [V]");
+    cUouttoIoutCanvas->BuildLegend();
+    cUouttoIoutCanvas->Write();
 
-    cIouttoIinCanvas->BuildLegend();
-    cIouttoIinCanvas->Write();
     auto cEfficencyCanvas = new TCanvas("tEfficency", "DC/DC conversion efficency", 750, 500);
     cEfficencyMultiGraph->Draw("ALP");
     cEfficencyMultiGraph->GetXaxis()->SetTitle("Iout [A]");
     cEfficencyMultiGraph->GetYaxis()->SetTitle("Efficency");
-
     cEfficencyCanvas->BuildLegend();
     cEfficencyCanvas->Write();
+
+    auto cIouttoIinCanvas = new TCanvas("tIouttoIin", "Iout to Iin conversion in DC/DC", 750, 500);
+    cIouttoIinMultiGraph->Draw("ALP");
+    cIouttoIinMultiGraph->GetXaxis()->SetTitle("Iout [A]");
+    cIouttoIinMultiGraph->GetYaxis()->SetTitle("Iin [A]");
+    cIouttoIinCanvas->BuildLegend();
+    cIouttoIinCanvas->Write();
 #endif
 #endif
 #endif
@@ -737,7 +785,7 @@ void SEHTester::TestCardVoltages()
         c2SSEHMapIterator++;
 
     } while(c2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
+    // fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     auto d2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
@@ -749,7 +797,136 @@ void SEHTester::TestCardVoltages()
         d2SSEHMapIterator++;
 
     } while(d2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    fTC_USB->set_SehSupply(fTC_USB->sehSupply_Off);
+    // fTC_USB->set_SehSupply(fTC_USB->sehSupply_Off);
+#endif
+#endif
+}
+
+// Fixed in this context means: The ADC pin is not an AMUX pin
+// Need statistics on spread of RSSI and temperature sensors
+void SEHTester::DCDCOutputEvaluation()
+{
+#ifdef __USE_ROOT__
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
+    std::map<std::string, TC_2SSEH::loadMeasurement> c2SSEHOutputVoltageMeasurements = {{"U_P1V2_R", TC_2SSEH::loadMeasurement::U_P1V2_R}, {"U_P1V2_L", TC_2SSEH::loadMeasurement::U_P1V2_L}};
+    std::vector<float>                               cDCDCValueVect;
+    float                                            cDCDCValue;
+    auto                                             cDCDCOutputTree  = new TTree("DCDCOutput", "lpGBT ADCs not tied to AMUX");
+    auto                                             cDCDCMapIterator = c2SSEHOutputVoltageMeasurements.begin();
+    gStyle->SetOptStat(0);
+
+    auto cStackedHistogramm = new THStack("cDCDCOutput", "DC/DC Output Voltages");
+    int  cIt                = 0;
+    auto gRandom            = new TRandom3();
+    do
+    {
+        cDCDCOutputTree->Branch(cDCDCMapIterator->first.c_str(), &cDCDCValueVect);
+        auto cHistogramm = new TH1F(cDCDCMapIterator->first.c_str(), cDCDCMapIterator->first.c_str(), 30, 0, 3);
+        // cHistogramm->SetFillColor(cIt+1);
+        cHistogramm->SetMarkerStyle(cIt + 21);
+        cHistogramm->SetMarkerColor(cIt + 1);
+        cDCDCValueVect.clear();
+        for(int cIteration = 0; cIteration < 100; ++cIteration)
+        {
+            cDCDCValue = fTC_USB->read_load(cDCDCMapIterator->second, cDCDCValue);
+            cDCDCValue += gRandom->Rndm();
+            cDCDCValueVect.push_back(cDCDCValue);
+            cHistogramm->Fill(cDCDCValue);
+            // std::this_thread::sleep_for(std::chrono::milliseconds(1200));
+        }
+        cStackedHistogramm->Add(cHistogramm);
+
+        cDCDCOutputTree->Fill();
+        cDCDCMapIterator++;
+        cIt++;
+    } while(cDCDCMapIterator != c2SSEHOutputVoltageMeasurements.end());
+
+    auto cDCDCOutputCanvas = new TCanvas("cDCDcOutput", "DC DC Output voltages", 10, 10, 700, 700);
+    gPad->SetGrid();
+    cStackedHistogramm->Draw("nostack,p");
+    cStackedHistogramm->GetXaxis()->SetTitle("Output Voltage");
+    cStackedHistogramm->GetYaxis()->SetTitle("Count");
+    cDCDCOutputCanvas->BuildLegend();
+    fResultFile->cd();
+    cDCDCOutputCanvas->Write();
+    cDCDCOutputTree->Write();
+
+//     auto cADCHistogram = new TH2I("cADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
+//     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
+
+//     auto  cADCsMapIterator = cADCsMap.begin();
+//     int   cADCValue;
+//     int   cBinCount         = 1;
+//     float cConversionFactor = 1. / 1024.;
+
+//     fillSummaryTree("ADC conversion factor", cConversionFactor);
+//     for(auto cBoard: *fDetectorContainer)
+//     {
+//         if(cBoard->at(0)->flpGBT == nullptr)
+//         {
+//             cReturn = false;
+//             continue;
+//         }
+//         for(auto cOpticalGroup: *cBoard)
+//         {
+//             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+//             // Configure Temperature sensor
+//             clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0xff);
+//             do
+//             {
+//                 cADCValueVect.clear();
+//                 cADCNameString = cADCsMapIterator->first;
+//                 cADCHistogram->GetXaxis()->SetBinLabel(cBinCount, cADCsMapIterator->first.c_str());
+
+//                 for(int cIteration = 0; cIteration < 10; ++cIteration)
+//                 {
+//                     cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, (*cADCNametoPinMapping)[cADCsMapIterator->first]);
+//                     // cADCValue-=34;
+//                     cADCValueVect.push_back(cADCValue);
+//                     cADCHistogram->Fill(cADCsMapIterator->first.c_str(), cADCValue, 1);
+//                 }
+
+//                 float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
+//                 float mean          = sum / cADCValueVect.size();
+//                 float cDifference_V = std::fabs((*cDefaultParameters)[cADCsMapIterator->second] - mean * cConversionFactor);
+//                 fillSummaryTree(cADCsMapIterator->first.c_str(), mean * cConversionFactor);
+//                 // Still hard coded threshold for imidiate boolean result, actual values are stored
+//                 if(cDifference_V > 0.1)
+//                 {
+//                     LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << mean * cConversionFactor << " V, nominal value is "
+//                               << (*cDefaultParameters)[cADCsMapIterator->second] << " V" << RESET;
+//                     cReturn = false;
+//                 }
+//                 else
+//                 {
+//                     LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << mean * cConversionFactor << " V, nominal value is "
+//                               << (*cDefaultParameters)[cADCsMapIterator->second] << " V" << RESET;
+//                 }
+//                 cFixedADCsTree->Fill();
+//                 cADCsMapIterator++;
+//                 cBinCount++;
+
+//             } while(cADCsMapIterator != cADCsMap.end());
+//         }
+//     }
+//     auto cADCCanvas = new TCanvas("tFixedADCs", "lpGBT ADCs not tied to AMUX", 1600, 900);
+//     cADCCanvas->SetRightMargin(0.2);
+//     cADCHistogram->GetXaxis()->SetTitle("ADC channel");
+//     cADCHistogram->GetYaxis()->SetTitle("ADC count");
+
+//     cADCHistogram->Draw("colz");
+//     cADCCanvas->Write();
+//     cFixedADCsTree->Write();
+
+// #ifdef __SEH_USB__
+//     fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
+
+// #endif
+// #endif
+// #endif
+//     return cReturn;
+#endif
 #endif
 #endif
 }

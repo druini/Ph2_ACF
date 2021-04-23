@@ -28,6 +28,7 @@
 #include "TGraph.h"
 #include "TGraphErrors.h"
 #include "TH2.h"
+#include "THStack.h"
 #include "TLegend.h"
 #include "TMultiGraph.h"
 #include "TObject.h"
@@ -78,6 +79,7 @@ class SEHTester : public OTHybridTester
     void TestBiasVoltage(uint16_t pBiasVoltage);
     int  exampleFit();
     void readTestParameters(std::string file);
+    void DCDCOutputEvaluation();
     // bool TestFixedADCs();
     // bool ToyTestFixedADCs();
 

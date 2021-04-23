@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     ArgvParser cmd;
 
     // init
-    cmd.setIntroductoryDescription("CMS Ph2_ACF  Data acquisition test and Data dump");
+    cmd.setIntroductoryDescription("Binary to test a 2S-SEH with a test card");
     // error codes
     cmd.addErrorCode(0, "Success");
     cmd.addErrorCode(1, "Error");
@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
     // cSEHTester.exampleFit();
     cSEHTester.Inherit(&cTool);
     cSEHTester.FindUSBHandler();
-
+    cSEHTester.DCDCOutputEvaluation();
     if(cmd.foundOption("powersupply"))
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control" << RESET;
@@ -411,7 +411,7 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     // Destroy Tools
     cTool.Destroy();
-    cTool.Destroy();
+    // cTool.Destroy();
 
     if(!batchMode) cApp.Run();
     return 0;
