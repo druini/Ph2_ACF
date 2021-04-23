@@ -29,12 +29,12 @@ dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 23/02/2021
++ Last change made to this section: 06/04/2021
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `master` / `IT-v3.9.10`
-- Firmware tag: `3.6`
+- Software git branch / tag : `Dev` / `IT-v4.0`
+- Firmware tag: `4.0`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 **FC7 setup:**
@@ -61,7 +61,7 @@ A detailed manual about the firmware can be found here: https://gitlab.cern.ch/c
 **IT-DAQ setup and run:**
 1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
 2. Install: `boost` by running `sudo yum install boost-devel`, `CERN ROOT` from https://root.cern.ch, and `IPbus` from http://ipbus.web.cern.ch/ipbus (either using `sudo yum` or from source)
-3. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git`
+3. Checkout the DAQ code from git: `git clone --recursive https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git`
 4. `cd Ph2_ACF; source setup.sh; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
 5. `mkdir choose_a_name`
 6. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
@@ -93,9 +93,9 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 9. Threshold adjustment
 10. Injection delay scan
 11. Clock delay scan
-12. Data readback optimization
-13. Physics
-14. Bit Error Rate test
+12. Bit Error Rate test
+13. Data read back optimisation
+14. Physics
 ```
 Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 
@@ -345,7 +345,7 @@ Follow these instructions to install and compile the libraries:
 
 1. Clone the GitHub repo and run cmake
   
-        $> git clone https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git 
+        $> git clone --recursive https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git 
         $> cd Ph2_ACF
         $> source setup.sh
         $> mkdir build 

@@ -62,6 +62,8 @@ class RD53FWInterface : public BeBoardFWInterface
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
     void     ChipReset() override;
     void     ChipReSync() override;
+
+    void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
     // #############################
 
     // ####################################
@@ -69,20 +71,6 @@ class RD53FWInterface : public BeBoardFWInterface
     // ####################################
     bool     CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
     uint32_t ReadoutSpeed();
-    bool     DidIwriteChipReg(uint16_t optGroup_id)
-    {
-        const uint32_t checkPattern = 0x55555555; // @CONST@
-
-        RegManager::WriteReg("user.ctrl_regs.PRBS_checker.upgroup_addr", optGroup_id);
-
-        RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::SET_SEL_OUT_ADDR, RD53Constants::PATTERN_CLOCK);
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-        uint32_t readPattern = RegManager::ReadReg("user.stat_regs.rate_measurement_bx_counter");
-        RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::SET_SEL_OUT_ADDR, RD53Constants::PATTERN_AURORA);
-
-        if(readPattern == checkPattern) return true;
-        return false;
-    }
 
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
@@ -182,7 +170,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
     bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
     uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress) override;
-    void     SetActiveLink(const uint32_t linkNumber);
 
     // ##########################################
     // # Read/Write new Command Processor Block #

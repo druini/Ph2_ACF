@@ -10,6 +10,9 @@
 #ifndef RD53lpGBTInterface_H
 #define RD53lpGBTInterface_H
 
+#include "../HWInterface/RD53FWInterface.h"
+#include "../HWInterface/ReadoutChipInterface.h"
+/* #include "../Utils/Container.h" */
 #include "../Utils/RD53Shared.h"
 #include "lpGBTInterface.h"
 
@@ -44,6 +47,12 @@ class RD53lpGBTInterface : public lpGBTInterface
     void     StartPRBSpattern(Ph2_HwDescription::Chip* pChip) override;
     void     StopPRBSpattern(Ph2_HwDescription::Chip* pChip) override;
     // #############################
+
+    void ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
+                              const Ph2_HwDescription::BeBoard*      pBoard,
+                              const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
+                              Ph2_HwInterface::BeBoardFWInterface*   pBeBoardFWInterface,
+                              ReadoutChipInterface*                  pReadoutChipInterface);
 
   private:
     bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop = true);
@@ -90,7 +99,7 @@ class RD53lpGBTInterface : public lpGBTInterface
     // # LpGBT specific routine functions #
     // ####################################
     void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain);
-    void PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    void InternalPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
 
     // ################################
     // # LpGBT block status functions #

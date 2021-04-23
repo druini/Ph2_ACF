@@ -49,6 +49,7 @@ void SystemController::Inherit(const SystemController* pController)
     fNetworkStreamer      = pController->fNetworkStreamer;
     fDetectorContainer    = pController->fDetectorContainer;
     fCicInterface         = pController->fCicInterface;
+    fPowerSupplyClient    = pController->fPowerSupplyClient;
 }
 
 void SystemController::Destroy()
@@ -80,6 +81,9 @@ void SystemController::Destroy()
 
     delete fNetworkStreamer;
     fNetworkStreamer = nullptr;
+
+    delete fPowerSupplyClient;
+    fPowerSupplyClient = nullptr;
 
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
@@ -125,6 +129,15 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
+
+    fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
+    if(!fPowerSupplyClient->connect(1))
+    {
+        std::cerr << "Cannot connect to the Power Supply Server" << '\n';
+        delete fPowerSupplyClient;
+        fPowerSupplyClient = nullptr;
+    }
+    for(const auto board: *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
 
     if(fDetectorContainer->size() > 0)
     {
@@ -219,58 +232,6 @@ void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std:
                 }
 }
 
-void SystemController::RunBERtest(std::string chain2test, bool given_time, double frames_or_time)
-// ###########################
-// # chain2test = "BE-FE"    #
-// # chain2test = "BE-LPGBT" #
-// # chain2test = "LPGBT-FE" #
-// ###########################
-{
-    if((chain2test != "BE-FE") && (chain2test != "BE-LPGBT") && (chain2test != "LPGBT-FE"))
-        throw Exception("[SystemController::RunBERtest] Option non recognized: " + chain2test + " (use BE-FE, BE-LPGBT, or LPGBT-FE)");
-
-    if(chain2test == "BE-LPGBT")
-        for(const auto cBoard: *fDetectorContainer)
-        {
-            uint32_t frontendSpeed = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
-
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                {
-                    flpGBTInterface->StartPRBSpattern(cOpticalGroup->flpGBT);
-
-                    LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << RESET << GREEN
-                              << "]: " << BOLDYELLOW << ((fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), 0, frontendSpeed) == 0) ? "PASSED" : "NOT PASSED")
-                              << RESET; // @TMP@
-
-                    flpGBTInterface->StopPRBSpattern(cOpticalGroup->flpGBT);
-                }
-        }
-    else
-        for(const auto cBoard: *fDetectorContainer)
-        {
-            uint32_t frontendSpeed = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
-
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid)
-                    {
-                        fReadoutChipInterface->StartPRBSpattern(cChip);
-
-                        LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
-                                  << ((((chain2test != "LPGBT-FE") &&
-                                        (fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), cChip->getId(), frontendSpeed) == 0)) ||
-                                       ((chain2test == "LPGBT-FE") && (flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, 6, 0, given_time, frames_or_time, frontendSpeed) == 0))) // @TMP@
-                                          ? "PASSED"
-                                          : "NOT PASSED")
-                                  << RESET;
-
-                        fReadoutChipInterface->StopPRBSpattern(cChip);
-                    }
-        }
-}
-
 void SystemController::ConfigureHw(bool bIgnoreI2c)
 {
     if(fDetectorContainer == nullptr)
@@ -301,6 +262,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 // are these needed?
                 uint8_t cLinkId = cOpticalGroup->getId();
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
+
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
                     cIslpGBTI2C                         = !cBoard->ifUseOpticalLink();
@@ -417,7 +379,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
 
                     if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
+                    {
+                        static_cast<RD53lpGBTInterface*>(flpGBTInterface)
+                            ->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, cBoard, cOpticalGroup, this->fBeBoardFWMap[cBoard->getId()], fReadoutChipInterface);
                         LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
+                    }
                     else
                         LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
                 }
@@ -459,14 +425,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             LOG(INFO) << CYAN << "===== Configuring frontend chip registers =====" << RESET;
             for(auto cOpticalGroup: *cBoard)
             {
-                if(cOpticalGroup->flpGBT != nullptr)
-                {
-                    if(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->DidIwriteChipReg(6) == true) // @TMP@
-                        LOG(INFO) << GREEN << "Check writing frontend chip reg --> " << BOLDYELLOW << "GOOD" << RESET;
-                    else
-                        LOG(INFO) << GREEN << "Check writing frontend chip reg --> " << BOLDRED << "BAD" << RESET;
-                }
-
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     LOG(INFO) << GREEN << "Configuring chip of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
