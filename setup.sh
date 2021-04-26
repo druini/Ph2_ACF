@@ -6,6 +6,17 @@
 export CACTUSBIN=/opt/cactus/bin
 export CACTUSLIB=/opt/cactus/lib
 export CACTUSINCLUDE=/opt/cactus/include
+export CACTUSROOT=/opt/cactus/
+#export CACTUSROOT=/opt/cactus_from_source/uhal/
+
+#export CACTUSINCLUDE=$CACTUSROOT/uhal/include/
+#export CACTUSLIB=$CACTUSROOT/uhal/lib
+
+#export CACTUSLOGINCLUDE=$CACTUSROOT/log/include/
+#export CACTUSLOGLIB=$CACTUSROOT/log/lib/
+
+#export CACTUSGRAMMARINCLUDE=$CACTUSROOT/grammars/include/
+#export CACTUSGRAMMARLIB=$CACTUSROOT/grammars/lib/
 
 #########
 # BOOST #
@@ -54,7 +65,6 @@ export AMC13DIR=$CACTUSINCLUDE/amc13
 export ANTENNADIR=$PH2ACF_BASE_DIR/../CMSPh2_AntennaDriver
 export USBINSTDIR=$PH2ACF_BASE_DIR/../Ph2_USBInstDriver
 export EUDAQDIR=$PH2ACF_BASE_DIR/../eudaq
-export POWERSUPPLYDIR=$PH2ACF_BASE_DIR/../power_supply
 
 ###########
 # ANTENNA #
@@ -91,7 +101,6 @@ export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
 export EuDaqFlag='-D__EUDAQ__'
-export PowerSupplyFlag='-D__POWERSUPPLY__'
 
 ################
 # Compilations #

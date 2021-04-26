@@ -495,11 +495,20 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     }
 
     // switch off SEH
-    LOG(INFO) << BOLDRED << "Please switch off the SEH... press any key to continue once you have done so..." << RESET;
-    do
+    if(fPowerSupplyClient == nullptr)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while(std::cin.get() != '\n');
+        LOG(INFO) << BOLDRED << "Please switch off the SEH... press any key to continue once you have done so..." << RESET;
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        } while(std::cin.get() != '\n');
+    }
+    else
+    {
+        LOG(INFO) << BOLDRED << "Switching off the LV using Power Supply Server..." << RESET;
+        fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
     // system("/home/modtest/Programming/power_supply/bin/TurnOff -c /home/modtest/Programming/power_supply/config/config.xml ");
     // std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
     // resync CDCE
@@ -513,12 +522,22 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
     // std::this_thread::sleep_for (std::chrono::milliseconds (500) );
     bool cLinksLocked = true;
+
     // tell user to switch on SEH
-    LOG(INFO) << BOLDRED << "Please switch on the SEH... press any key to continue once you have done so..." << RESET;
-    do
+    if(fPowerSupplyClient == nullptr)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while(std::cin.get() != '\n');
+        LOG(INFO) << BOLDRED << "Please switch on the SEH... press any key to continue once you have done so..." << RESET;
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        } while(std::cin.get() != '\n');
+    }
+    else
+    {
+        LOG(INFO) << BOLDRED << "Switching on the LV using Power Supply Server..." << RESET;
+        fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
     // system("/home/modtest/Programming/power_supply/bin/TurnOn -c /home/modtest/Programming/power_supply/config/config.xml ");
     // std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
 
@@ -597,7 +616,7 @@ std::pair<uint16_t, float> D19cFWInterface::readADC(std::string pValueToRead, bo
     cADCreading.second = cGBTx.convertAdcReading(cADCreading.first, pValueToRead);
     return cADCreading;
 }
-void D19cFWInterface::selectLink(uint8_t pLinkId, uint32_t cWait_ms)
+void D19cFWInterface::selectLink(const uint8_t pLinkId, uint32_t cWait_ms)
 {
     if(fOptical)
     {
@@ -4480,11 +4499,13 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
     uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
     uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
     uint8_t               cIter = 0, cMaxIter = 50;
-    uint16_t cI2CReadByteRegAddr = 0;
-    //pick correct register address to check
-    if(pMasterId == 2) cI2CReadByteRegAddr = 0x018d;
-    else if(pMasterId == 0) cI2CReadByteRegAddr = 0x0163;
-    //check reply
+    uint16_t              cI2CReadByteRegAddr = 0;
+    // pick correct register address to check
+    if(pMasterId == 2)
+        cI2CReadByteRegAddr = 0x018d;
+    else if(pMasterId == 0)
+        cI2CReadByteRegAddr = 0x0163;
+    // check reply
     while(cReadBackRegAddr != cI2CReadByteRegAddr && cIter < cMaxIter)
     {
         LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Received corrupted reply from command processor block ... retrying" << RESET;
