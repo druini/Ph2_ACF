@@ -181,12 +181,13 @@ int main(int argc, char* argv[])
     // cSEHTester.exampleFit();
     cSEHTester.Inherit(&cTool);
     cSEHTester.FindUSBHandler();
-    cSEHTester.DCDCOutputEvaluation();
+    //cSEHTester.RampPowerSupply("MyRohdeSchwarz", "LV_Module3");
+    //SEHTester.DCDCOutputEvaluation();
     if(cmd.foundOption("powersupply"))
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control" << RESET;
         cSEHTester.TurnOn();
-        cSEHTester.RampPowerSupply(cHWFile, cPowerSupply);
+        cSEHTester.RampPowerSupply("MyRohdeSchwarz", "LV_Module3");
     }
     else
     {
