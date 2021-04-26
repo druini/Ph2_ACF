@@ -18,6 +18,7 @@
 #include <fstream>
 #include <ios>
 #include <iostream>
+#include <algorithm>
 #include <istream>
 #include <sstream>
 #include <limits>
@@ -104,6 +105,16 @@ std::string expandEnvironmentVariables(std::string s);
 void getRunNumber(const std::string& pPath, int& pRunNumber, bool pIncrement = true);
 
 // split int string list into int vector
-std::vector<uint8_t> SplitToVector(const std::string& str, const char delimiter);
+std::vector<uint8_t> splitToVector(const std::string& str, const char delimiter);
+
+template <typename T>
+void addNoDuplicate(std::vector<T>& vector, const std::vector<T>& vector2add)
+{
+    for(auto element : vector2add)
+    {
+        if(std::find(vector.begin(), vector.end(), element) == vector.end())
+            vector.push_back(element);
+    }
+}
 
 #endif
