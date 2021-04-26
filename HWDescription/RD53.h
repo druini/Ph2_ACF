@@ -203,7 +203,25 @@ class RD53 : public ReadoutChip
         uint8_t cal_aux_delay;
     };
 
+    struct lpGbtMap
+    {
+        uint8_t RxGroup;
+        uint8_t RxChannel;
+        uint8_t TxGroup;
+        uint8_t TxChannel;
+    };
+    void setRxGroup(uint8_t pRxGroup){ flpGbtMap.RxGroup = pRxGroup; }
+    void setRxChannel(uint8_t pRxChannel){ flpGbtMap.RxChannel = pRxChannel; }
+    void setTxGroup(uint8_t pTxGroup){ flpGbtMap.TxGroup = pTxGroup; }
+    void setTxChannel(uint8_t pTxChannel){ flpGbtMap.TxChannel = pTxChannel; }
+    uint8_t getRxGroup(){ return flpGbtMap.RxGroup; }
+    uint8_t getRxChannel(){ return flpGbtMap.RxChannel; }
+    uint8_t getTxGroup(){ return flpGbtMap.TxGroup; }
+    uint8_t getTxChannel(){ return flpGbtMap.TxChannel; }
+
   private:
+
+    lpGbtMap flpGbtMap;
     std::vector<perColumnPixelData> fPixelsMask;
     std::vector<perColumnPixelData> fPixelsMaskDefault;
     std::string                     configFileName;
