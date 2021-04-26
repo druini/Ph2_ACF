@@ -12,6 +12,7 @@
 
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/easylogging++.h"
+#include "../Utils/Utilities.h"
 #include "Chip.h"
 
 #include <iomanip>
@@ -30,36 +31,36 @@ class lpGBT : public Chip
     void setRxHSLPolarity(uint8_t pRxHSLPolarity){ fRxHSLPolarity = pRxHSLPolarity; }
     void setTxHSLPolarity(uint8_t pTxHSLPolarity){ fTxHSLPolarity = pTxHSLPolarity; }
 
-    void addClocks(const std::vector<uint8_t> pClocks){ 
-      fClocks.insert(fClocks.end(), pClocks.begin(), pClocks.end()); 
+    void addClocks(const std::vector<uint8_t>& pClocks){ 
+        addNoDuplicate<uint8_t>(fClocks, pClocks);
     }
 
     void setClocksFrequency(uint8_t pClocksFrequency){ 
-      fClocksFrequency = pClocksFrequency; 
+        fClocksFrequency = pClocksFrequency; 
     }
 
-    void addRxGroups(const std::vector<uint8_t> pRxGroups){ 
-      fRxGroups.insert(fRxGroups.end(), pRxGroups.begin(), pRxGroups.end()); 
+    void addRxGroups(const std::vector<uint8_t>& pRxGroups){ 
+        addNoDuplicate<uint8_t>(fRxGroups, pRxGroups);
     }
 
-    void addRxChannels(const std::vector<uint8_t> pRxChannels){ 
-      fRxChannels.insert(fRxChannels.end(), pRxChannels.begin(), pRxChannels.end()); 
+    void addRxChannels(const std::vector<uint8_t>& pRxChannels){ 
+        addNoDuplicate<uint8_t>(fRxChannels, pRxChannels);
     }
 
     void setRxDataRate(uint8_t pRxDataRate){ 
-      fRxDataRate = pRxDataRate; 
+        fRxDataRate = pRxDataRate; 
     }
 
-    void addTxGroups(const std::vector<uint8_t> pTxGroups){ 
-      fTxGroups.insert(fTxGroups.end(), pTxGroups.begin(), pTxGroups.end()); 
+    void addTxGroups(const std::vector<uint8_t>& pTxGroups){ 
+        addNoDuplicate<uint8_t>(fTxGroups, pTxGroups);
     }
 
-    void addTxChannels(const std::vector<uint8_t> pTxChannels){ 
-      fTxChannels.insert(fTxChannels.end(), pTxChannels.begin(), pTxChannels.end()); 
+    void addTxChannels(const std::vector<uint8_t>& pTxChannels){ 
+        addNoDuplicate<uint8_t>(fTxChannels, pTxChannels);
     }
 
     void setTxDataRate(uint8_t pTxDataRate){ 
-      fTxDataRate = pTxDataRate; 
+        fTxDataRate = pTxDataRate; 
     }
 
     std::vector<uint8_t> getClocks(){ return fClocks; }
@@ -79,15 +80,8 @@ class lpGBT : public Chip
   private:
     std::string configFileName;
     //
-    std::vector<uint8_t> fClocks;
-    uint8_t fClocksFrequency;
-    //
-    std::vector<uint8_t> fRxGroups, fRxChannels;
-    uint8_t fRxDataRate;
-    //
-    std::vector<uint8_t> fTxGroups, fTxChannels;
-    uint8_t fTxDataRate;
-    //
+    std::vector<uint8_t> fClocks, fRxGroups, fRxChannels, fTxGroups, fTxChannels;
+    uint8_t fClocksFrequency, fRxDataRate, fTxDataRate;
     uint8_t fRxHSLPolarity, fTxHSLPolarity;
 };
 } // namespace Ph2_HwDescription
