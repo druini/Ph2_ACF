@@ -94,7 +94,7 @@ class FileParser
     void parseMPA(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix);
     void parseMPASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cMPA);
     //
-    void parseMapToLpGBT(pugi::xml_node pMapTolpGBTNode, Ph2_HwDescription::lpGBT* plpGBT, std::ostream& os);
+    void parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, Ph2_HwDescription::lpGBT* plpGBT, std::ostream& os);
 
     // ########################
     // # RD53 specific parser #
