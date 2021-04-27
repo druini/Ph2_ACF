@@ -11,6 +11,7 @@
 #include "../tools/CBCMonitor.h"
 #include "../tools/DetectorMonitor.h"
 #include "../tools/RD53Monitor.h"
+#include "../tools/SEHMonitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -207,6 +208,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             fDetectorMonitor = new CBCMonitor(*this, theDetectorMonitorConfig);
         else if(monitoringType == "RD53")
             fDetectorMonitor = new RD53Monitor(*this, theDetectorMonitorConfig);
+        else if(monitoringType == "2SSEH")
+            fDetectorMonitor = new SEHMonitor(*this, theDetectorMonitorConfig);
         else
         {
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;

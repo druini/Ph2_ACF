@@ -156,6 +156,13 @@
 	  <Setting name="SignalScanStep">2</Setting>
       <Setting name="FitSignal">0</Setting>
 </Settings>
+
+<MonitoringSettings>
+    <Monitoring enable="1" type="2SSEH">
+        <MonitoringSleepTime>1000</MonitoringSleepTime>
+        <MonitoringElements   VTRX_RSSI_ADC="0" I_SEH="1" ModuleKunz="0"/>
+    </Monitoring>   
+</MonitoringSettings>
 </HwDescription>
 
 <Devices>
