@@ -744,6 +744,17 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
                                {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, 0x0008, 0)}});
 
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
+
+    std::cout << "AAAAAAAAAAAAA" << std::endl;
+    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_6.delay_after_init_prime") << std::endl;
+    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_7.delay_after_ecr") << std::endl;
+    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero") << std::endl;
+    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_4.cal_data_prime") << std::endl;
+    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse") << std::endl;
+    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_5.cal_data_inject") << std::endl;
+    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse") << std::endl;
+    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse") << std::endl;
+
 }
 
 void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
@@ -767,7 +778,8 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
 // #  |---------------------------------------------------------------------------| #
 // ##################################################################################
 {
-    const double FSMperiod = 1. / 10e6; // Referred to 10 MHz clock @CONST@
+    const double  mainClock = 40e6; // @CONST@
+    const uint8_t chipId    = RD53Constants::BROADCAST_CHIPID;
     enum INJtype
     {
         None,
@@ -780,8 +792,6 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         BeforePrimeCal = 8,
         Loop           = 460
     };
-
-    uint8_t chipId = RD53Constants::BROADCAST_CHIPID;
 
     // #############################
     // # Configuring FastCmd block #
@@ -859,11 +869,10 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
     }
 
-    const uint32_t time2send = 2; // [10 MHz clock cycles] @CONST@
     LOG(INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
-              << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + time2send +
-                                    RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime + time2send +
-                                    RD53FWInterface::localCfgFastCmd.trigger_duration / 4))
+              << mainClock / ((RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + 1) * 4 + 7 +
+                              (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime + 1) * 4 + 7 +
+                              RD53FWInterface::localCfgFastCmd.trigger_duration)
               << std::setprecision(-1) << " Hz" << RESET;
     RD53Shared::resetDefaultFloat();
 
