@@ -24,6 +24,7 @@
 class BERtest : public Tool
 {
   public:
+    ~BERtest() { this->CloseResultFile(); }
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;

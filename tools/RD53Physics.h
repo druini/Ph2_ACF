@@ -32,6 +32,7 @@ class Physics : public Tool
 
   public:
     Physics() { Physics::setGenericEvtConverter(RD53dummyEvtConverter()); }
+    ~Physics() { this->CloseResultFile(); }
 
     void Running() override;
     void Stop() override;

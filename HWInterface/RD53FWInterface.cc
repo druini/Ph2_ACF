@@ -744,17 +744,6 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
                                {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, 0x0008, 0)}});
 
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
-
-    std::cout << "AAAAAAAAAAAAA" << std::endl;
-    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_6.delay_after_init_prime") << std::endl;
-    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_7.delay_after_ecr") << std::endl;
-    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero") << std::endl;
-    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_4.cal_data_prime") << std::endl;
-    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse") << std::endl;
-    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_5.cal_data_inject") << std::endl;
-    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse") << std::endl;
-    std::cout << RegManager::ReadReg("user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse") << std::endl;
-
 }
 
 void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
@@ -797,7 +786,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
     // # Configuring FastCmd block #
     // #############################
     RD53FWInterface::localCfgFastCmd.n_triggers       = 0;
-    RD53FWInterface::localCfgFastCmd.trigger_duration = ((injType == INJtype::None) && (RD53FWInterface::localCfgFastCmd.trigger_source == TriggerSource::FastCMDFSM) ? 0 : nTRIGxEvent - 1);
+    RD53FWInterface::localCfgFastCmd.trigger_duration = nTRIGxEvent - 1;
 
     if(injType == INJtype::Digital)
     {

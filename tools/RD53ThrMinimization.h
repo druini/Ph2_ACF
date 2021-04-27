@@ -22,6 +22,7 @@
 class ThrMinimization : public PixelAlive
 {
   public:
+    ~ThrMinimization() { this->CloseResultFile(); }
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;

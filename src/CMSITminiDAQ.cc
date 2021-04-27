@@ -48,6 +48,7 @@
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
 #define ARBITRARYDELAY 2 // [seconds]
+#define TESTSUBDETECTOR false
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -388,30 +389,50 @@ int main(int argc, char** argv)
             // #############################################
             // # Address different subsets of the detector #
             // #############################################
-            for(auto evenORodd = 0; evenORodd < 2; evenORodd++)
+            int  evenORodd = 0;
+            bool doTwice   = false;
+            do
+            {
+              if(TESTSUBDETECTOR == true)
               {
-                  auto boardSubset = [evenORodd](const BoardContainer* theBoard) { return (theBoard->getId() % 2 == evenORodd); };
-                  pa.fDetectorContainer->setBoardQueryFunction(boardSubset);
-
-                  auto optoGroupSubset = [evenORodd](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == evenORodd); };
-                  pa.fDetectorContainer->setOpticalGroupQueryFunction(optoGroupSubset);
-
-                  auto hybridSubset = [evenORodd](const HybridContainer* theHybrid) { return (theHybrid->getId() % 2 == evenORodd); };
-                  pa.fDetectorContainer->setHybridQueryFunction(hybridSubset);
-
-                  auto chipSubset = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
-                  pa.fDetectorContainer->setReadoutChipQueryFunction(chipSubset);
-
-                  pa.run();
-                  pa.analyze();
-
-                  pa.fDetectorContainer->resetReadoutChipQueryFunction();
-                  pa.fDetectorContainer->resetHybridQueryFunction();
-                  pa.fDetectorContainer->resetOpticalGroupQueryFunction();
-                  pa.fDetectorContainer->resetBoardQueryFunction();
+                  if(pa.fDetectorContainer->size() != 1)
+                  {
+                      auto boardSubset = [evenORodd](const BoardContainer* theBoard) { return (theBoard->getId() % 2 == evenORodd); };
+                      pa.fDetectorContainer->setBoardQueryFunction(boardSubset);
+                      doTwice = true;
+                  }
+                  else if(pa.fDetectorContainer->at(0)->size() != 1)
+                  {
+                      auto optoGroupSubset = [evenORodd](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == evenORodd); };
+                      pa.fDetectorContainer->setOpticalGroupQueryFunction(optoGroupSubset);
+                      doTwice = true;
+                  }
+                  else if(pa.fDetectorContainer->at(0)->at(0)->size() != 1)
+                  {
+                      auto hybridSubset = [evenORodd](const HybridContainer* theHybrid) { return (theHybrid->getId() % 2 == evenORodd); };
+                      pa.fDetectorContainer->setHybridQueryFunction(hybridSubset);
+                      doTwice = true;
+                  }
+                  else if(pa.fDetectorContainer->at(0)->at(0)->at(0)->size() != 1)
+                  {
+                      auto chipSubset = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
+                      pa.fDetectorContainer->setReadoutChipQueryFunction(chipSubset);
+                      doTwice = true;
+                  }
               }
 
+              pa.run();
+              pa.analyze();
               pa.draw();
+              RD53RunProgress::current() = 0;
+
+              pa.fDetectorContainer->resetReadoutChipQueryFunction();
+              pa.fDetectorContainer->resetHybridQueryFunction();
+              pa.fDetectorContainer->resetOpticalGroupQueryFunction();
+              pa.fDetectorContainer->resetBoardQueryFunction();
+
+              evenORodd++;
+            } while((doTwice == true) && (evenORodd < 2));
         }
         else if(whichCalib == "noise")
         {

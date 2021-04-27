@@ -27,6 +27,7 @@
 class PixelAlive : public Tool
 {
   public:
+    ~PixelAlive() { this->CloseResultFile(); }
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;

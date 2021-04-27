@@ -23,6 +23,7 @@
 class DataReadbackOptimization : public BERtest
 {
   public:
+    ~DataReadbackOptimization() { this->CloseResultFile(); }
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
@@ -41,17 +42,12 @@ class DataReadbackOptimization : public BERtest
 #endif
 
   private:
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
     size_t startValueTAP0;
     size_t stopValueTAP0;
     size_t startValueTAP1;
     size_t stopValueTAP1;
     size_t startValueTAP2;
     size_t stopValueTAP2;
-    size_t nEvents;
 
     std::vector<uint16_t> dacListTAP0;
     std::vector<uint16_t> dacListTAP1;
@@ -65,7 +61,7 @@ class DataReadbackOptimization : public BERtest
     DetectorDataContainer theTAP2Container;
 
     void fillHisto();
-    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
+    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
     void chipErrorReport() const;
 
   protected:
@@ -73,7 +69,6 @@ class DataReadbackOptimization : public BERtest
     int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
-    bool        saveBinaryData;
 };
 
 #endif
