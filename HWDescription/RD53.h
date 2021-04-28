@@ -203,31 +203,31 @@ class RD53 : public ReadoutChip
         uint8_t cal_aux_delay;
     };
 
-    struct lpGbtMap
+    // #################
+    // # LpGBT mapping #
+    // #################
+    void    setRxGroup(uint8_t pRxGroup) { fLpGBTmap.RxGroup = pRxGroup; }
+    void    setRxChannel(uint8_t pRxChannel) { fLpGBTmap.RxChannel = pRxChannel; }
+    void    setTxGroup(uint8_t pTxGroup) { fLpGBTmap.TxGroup = pTxGroup; }
+    void    setTxChannel(uint8_t pTxChannel) { fLpGBTmap.TxChannel = pTxChannel; }
+    uint8_t getRxGroup() { return fLpGBTmap.RxGroup; }
+    uint8_t getRxChannel() { return fLpGBTmap.RxChannel; }
+    uint8_t getTxGroup() { return fLpGBTmap.TxGroup; }
+    uint8_t getTxChannel() { return fLpGBTmap.TxChannel; }
+
+  private:
+    struct LpGBTmap
     {
         uint8_t RxGroup;
         uint8_t RxChannel;
         uint8_t TxGroup;
         uint8_t TxChannel;
-    };
-    void setRxGroup(uint8_t pRxGroup){ flpGbtMap.RxGroup = pRxGroup; }
-    void setRxChannel(uint8_t pRxChannel){ flpGbtMap.RxChannel = pRxChannel; }
-    void setTxGroup(uint8_t pTxGroup){ flpGbtMap.TxGroup = pTxGroup; }
-    void setTxChannel(uint8_t pTxChannel){ flpGbtMap.TxChannel = pTxChannel; }
-    uint8_t getRxGroup(){ return flpGbtMap.RxGroup; }
-    uint8_t getRxChannel(){ return flpGbtMap.RxChannel; }
-    uint8_t getTxGroup(){ return flpGbtMap.TxGroup; }
-    uint8_t getTxChannel(){ return flpGbtMap.TxChannel; }
-
-  private:
-
-    lpGbtMap flpGbtMap;
+    } fLpGBTmap;
     std::vector<perColumnPixelData> fPixelsMask;
     std::vector<perColumnPixelData> fPixelsMaskDefault;
     std::string                     configFileName;
     uint8_t                         myChipLane;
 };
-
 } // namespace Ph2_HwDescription
 
 // ###############################

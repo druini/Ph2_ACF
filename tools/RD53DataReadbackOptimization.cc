@@ -8,8 +8,6 @@
 */
 
 #include "RD53DataReadbackOptimization.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/GenericDataArray.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -163,17 +161,18 @@ void DataReadbackOptimization::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(fileRes);
-    LOG(INFO) << BOLDBLUE << "\t--> DataReadbackOptimization saving histograms..." << RESET;
+    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+    {
+        this->InitResultFile(fileRes);
+        LOG(INFO) << BOLDBLUE << "\t--> DataReadbackOptimization saving histograms..." << RESET;
+    }
 
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     DataReadbackOptimization::fillHisto();
     histos->process();
     this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
-
-    this->CloseResultFile();
 #endif
 }
 
@@ -198,7 +197,7 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                     {
                         auto current =
                             theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i];
-                        if(current < best)
+                        if((current >= 0) && (current < best))
                         {
                             regVal = dacListTAP[i];
                             best   = current;

@@ -116,7 +116,7 @@ class BeBoardFWInterface : public RegManager
     virtual void DeleteFpgaConfig(const std::string& strId) {}
 
     /*! \brief Run Bit Error Rate test */
-    virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
+    virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
 
     /*!
      * \brief Encode a/several word(s) readable for a Chip

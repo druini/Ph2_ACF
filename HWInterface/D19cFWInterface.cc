@@ -981,9 +981,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         {
             for(auto cFe: *cOpticalGroup)
             {
-                auto                                          cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+                auto cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
                 if(cOuterTrackerHybrid->fCic == nullptr) continue;
-                auto&                                         cCic                = cOuterTrackerHybrid->fCic;
+                auto&                                         cCic = cOuterTrackerHybrid->fCic;
                 std::vector<std::pair<std::string, uint32_t>> cVecReg;
                 // make sure CIC is receiving clock
                 // cVecReg.push_back( {"fc7_daq_cnfg.physical_interface_block.cic.clock_enable" , 1 } ) ;

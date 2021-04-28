@@ -27,6 +27,7 @@
 class ThrAdjustment : public PixelAlive
 {
   public:
+    ~ThrAdjustment() { this->CloseResultFile(); }
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;

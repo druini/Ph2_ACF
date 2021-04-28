@@ -9,17 +9,18 @@
 
     <!-- Frontend chip configuration -->
     <OpticalGroup Id="0" FMCId="0">
-      <lpGBT_Files path="./settings/lpGBTFiles/" />
-      <lpGBT Id="0" configfile="CMSOT_lpGBT.txt" 
-              RxHSLPolarity="0" TxHSLPolarity="1" 
-              RxDataRate="1280" TxDataRate="320" ClockFrequency="1280">
+      <!--
+      <lpGBT_Files path="${PWD}/" />
+      <lpGBT Id="0" configfile="CMSIT_LpGBT.txt" RxHSLPolarity="1" TxHSLPolarity="0" RxDataRate="1280" TxDataRate="160">
         <Settings
-        />
+            EPRX60ChnCntr_phase = "6"
+            />
       </lpGBT>
+      -->
       <Hybrid Id="0" Status="1">
-        <RD53_Files path="./" />
+        <RD53_Files path="${PWD}/" />
 
-          <RD53 Id="0" Lane="0" configfile="CMSIT_RD53.txt" RxGroups="0" RxChannels="6" TxGroups="0" TxChannels="0">
+        <RD53 Id="0" Lane="0" configfile="CMSIT_RD53.txt" RxGroups="6" RxChannels="0" TxGroups="3" TxChannels="0">
           <!-- Overwrite .txt configuration file settings -->
           <Settings
               PA_IN_BIAS_LIN         =  "350"

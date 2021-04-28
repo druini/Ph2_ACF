@@ -8,7 +8,6 @@
 */
 
 #include "RD53BERtest.h"
-#include "../Utils/ContainerFactory.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -94,19 +93,20 @@ void BERtest::run()
 
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
-                {
-                    flpGBTInterface->StartPRBSpattern(cOpticalGroup->flpGBT);
+                    // for(auto cGroup: cOpticalGroup->flpGBT->getRxGroups())
+                    //     for(auto cChannels: cOpticalGroup->flpGBT->getRxChannels())
+                        {
+                            flpGBTInterface->StartPRBSpattern(cOpticalGroup->flpGBT);
 
-                    auto value = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), 0, frontendSpeed); // @TMP@
-                    theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(0)->getSummary<double>() = value;
+                            auto value = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), 0, frontendSpeed); // @TMP@
+                            theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(0)->getSummary<double>() = value;
 
-                    LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << RESET << GREEN
-                              << "]: " << BOLDYELLOW << (value == 0 ? "PASSED" : "NOT PASSED") << RESET;
+                            LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << RESET
+                                      << GREEN << "]: " << BOLDYELLOW << (value == 0 ? "PASSED" : "NOT PASSED") << RESET;
 
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
-
-                    flpGBTInterface->StopPRBSpattern(cOpticalGroup->flpGBT);
-                }
+                            static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
+                            flpGBTInterface->StopPRBSpattern(cOpticalGroup->flpGBT);
+                        }
         }
     else
         for(const auto cBoard: *fDetectorContainer)
@@ -117,17 +117,20 @@ void BERtest::run()
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
+                        uint8_t cGroup   = static_cast<RD53*>(cChip)->getRxGroup();
+                        uint8_t cChannel = static_cast<RD53*>(cChip)->getRxChannel();
+
                         fReadoutChipInterface->StartPRBSpattern(cChip);
 
-                        auto value = (chain2test == 0 ? fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, 6, cHybrid->getId(), cChip->getId(), frontendSpeed)
-                                                      : flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, 6, 0, given_time, frames_or_time, frontendSpeed)); // @TMP@
+                        auto value = (chain2test == 0 ? fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), cChip->getId(), frontendSpeed)
+                                                      : flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, cGroup, cChannel, given_time, frames_or_time, frontendSpeed));
                         theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<double>() = value;
 
                         LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW << (value == 0 ? "PASSED" : "NOT PASSED") << RESET;
 
+                        fReadoutChipInterface->StopPRBSpattern(cChip);
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
-
                         fReadoutChipInterface->StopPRBSpattern(cChip);
                     }
         }
@@ -140,17 +143,18 @@ void BERtest::draw()
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(fileRes);
-    LOG(INFO) << BOLDBLUE << "\t--> BERtest saving histograms..." << RESET;
+    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+    {
+        this->InitResultFile(fileRes);
+        LOG(INFO) << BOLDBLUE << "\t--> BERtest saving histograms..." << RESET;
+    }
 
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     BERtest::fillHisto();
     histos->process();
     this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
-
-    this->CloseResultFile();
 #endif
 }
 

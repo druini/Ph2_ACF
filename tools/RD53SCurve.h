@@ -31,6 +31,7 @@ class SCurve : public Tool
     ~SCurve()
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
+        this->CloseResultFile();
     }
 
     void Running() override;

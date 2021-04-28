@@ -27,6 +27,7 @@
 class ThrEqualization : public PixelAlive
 {
   public:
+    ~ThrEqualization() { this->CloseResultFile(); }
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;

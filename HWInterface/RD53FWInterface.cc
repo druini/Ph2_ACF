@@ -767,7 +767,8 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
 // #  |---------------------------------------------------------------------------| #
 // ##################################################################################
 {
-    const double FSMperiod = 1. / 10e6; // Referred to 10 MHz clock @CONST@
+    const double  mainClock = 40e6; // @CONST@
+    const uint8_t chipId    = RD53Constants::BROADCAST_CHIPID;
     enum INJtype
     {
         None,
@@ -781,13 +782,11 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         Loop           = 460
     };
 
-    uint8_t chipId = RD53Constants::BROADCAST_CHIPID;
-
     // #############################
     // # Configuring FastCmd block #
     // #############################
     RD53FWInterface::localCfgFastCmd.n_triggers       = 0;
-    RD53FWInterface::localCfgFastCmd.trigger_duration = ((injType == INJtype::None) && (RD53FWInterface::localCfgFastCmd.trigger_source == TriggerSource::FastCMDFSM) ? 0 : nTRIGxEvent - 1);
+    RD53FWInterface::localCfgFastCmd.trigger_duration = nTRIGxEvent - 1;
 
     if(injType == INJtype::Digital)
     {
@@ -859,11 +858,10 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
     }
 
-    const uint32_t time2send = 2; // [10 MHz clock cycles] @CONST@
     LOG(INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
-              << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + time2send +
-                                    RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime + time2send +
-                                    RD53FWInterface::localCfgFastCmd.trigger_duration / 4))
+              << mainClock / ((RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + 1) * 4 + 7 +
+                              (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime + 1) * 4 + 7 +
+                              RD53FWInterface::localCfgFastCmd.trigger_duration)
               << std::setprecision(-1) << " Hz" << RESET;
     RD53Shared::resetDefaultFloat();
 
@@ -950,7 +948,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uin
 
     // Config
     RegManager::WriteStackReg(
-        {{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_din", pData}, {"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", RD53lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
+        {{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_din", pData}, {"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
 
     // Perform operation
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_wr_en", 0x1},
@@ -978,7 +976,7 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const 
     RD53FWInterface::selectLink(linkNumber);
 
     // Config
-    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", RD53lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
 
     // Perform operation
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_2.ic_nb_of_words_to_read", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_send_rd_cmd", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_send_rd_cmd", 0x0}});
@@ -986,16 +984,6 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const 
     // Actual readback one word at a time
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x0}});
     uint32_t cRead = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_fifo_dout");
-
-    // @TMP@
-    // uint32_t chipAddrRx    = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_chip_addr"); // Should be the same as RD53lpGBTconstants::LPGBTADDRESS
-    // uint32_t regAddrRx     = RegManager::ReadReg("user.stat_regs.lpgbt_sc_2.reg_addr_rx");
-    // uint32_t nWords2Read   = RegManager::ReadReg("user.stat_regs.lpgbt_sc_2.nb_of_words_rx");
-    // bool     isRxFIFOempty = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
-
-    // LOG(INFO) << GREEN << std::hex << "Chip address 0x" << BOLDYELLOW << std::uppercase << chipAddrRx << RESET << GREEN << ". Reg address 0x" << BOLDYELLOW << std::uppercase << regAddrRx << RESET
-    //           << GREEN << ". Nb of words received 0x" << BOLDYELLOW << std::uppercase << nWords2Read << RESET << GREEN << ". FIFO readback data 0x" << BOLDYELLOW << std::uppercase << cRead << RESET
-    //           << GREEN << ". FIFO empty flag " << BOLDYELLOW << (isRxFIFOempty == true ? "true" : "false") << std::dec << RESET;
 
     return cRead;
 }
@@ -1257,7 +1245,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 // # Bit Error Rate test #
 // #######################
 
-double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed)
+double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed)
 // ####################
 // # frontendSpeed    #
 // # 1.28 Gbit/s  = 0 #

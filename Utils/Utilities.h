@@ -13,17 +13,17 @@
 #define __UTILITIES_H__
 
 #include "../HWDescription/Definition.h"
+#include <algorithm>
 #include <bitset>
 #include <cstdio>
 #include <fstream>
 #include <ios>
 #include <iostream>
-#include <algorithm>
 #include <istream>
-#include <sstream>
 #include <limits>
 #include <math.h>
 #include <memory>
+#include <sstream>
 #include <stdint.h>
 #include <string>
 #include <sys/stat.h>
@@ -110,10 +110,9 @@ std::vector<uint8_t> splitToVector(const std::string& str, const char delimiter)
 template <typename T>
 void addNoDuplicate(std::vector<T>& vector, const std::vector<T>& vector2add)
 {
-    for(auto element : vector2add)
+    for(auto element: vector2add)
     {
-        if(std::find(vector.begin(), vector.end(), element) == vector.end())
-            vector.push_back(element);
+        if(std::find(vector.begin(), vector.end(), element) == vector.end()) vector.push_back(element);
     }
 }
 

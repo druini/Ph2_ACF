@@ -133,7 +133,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
-        std::cerr << "Cannot connect to the Power Supply Server" << '\n';
         delete fPowerSupplyClient;
         fPowerSupplyClient = nullptr;
     }
@@ -383,12 +382,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
 
                     if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
                     {
-                        static_cast<RD53lpGBTInterface*>(flpGBTInterface)
-                            ->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, cBoard, cOpticalGroup, this->fBeBoardFWMap[cBoard->getId()], fReadoutChipInterface);
+                        flpGBTInterface->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, cBoard, cOpticalGroup, this->fBeBoardFWMap[cBoard->getId()], fReadoutChipInterface);
                         LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
                     }
                     else
-                        LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
+                        LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +lpGBTconstants::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
                 }
 
             // #######################
@@ -439,7 +437,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         static_cast<RD53*>(cChip)->copyMaskToDefault();
                         static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
                         LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
-                        // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
+                        // static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0); @TMP@
                     }
                 }
             }
