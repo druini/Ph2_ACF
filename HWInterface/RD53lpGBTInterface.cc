@@ -55,15 +55,13 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[PUSMStatus] << RESET;
 
     // ###############################
-    // # Configure Up and Down links # // @TMP@
+    // # Configure Up and Down links #
     // ###############################
-    RD53lpGBTInterface::ConfigureClocks(pChip, {28}, 6, 7, 0, 0, 0, 0);
+    RD53lpGBTInterface::ConfigureRxGroups(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], 0);
+    RD53lpGBTInterface::ConfigureRxChannels(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), 1, 1, 1, 0, 12);
 
-    RD53lpGBTInterface::ConfigureRxGroups(pChip, {6}, {0}, 3, 0);
-    RD53lpGBTInterface::ConfigureRxChannels(pChip, {6}, {0}, 1, 1, 1, 0, 0);
-
-    RD53lpGBTInterface::ConfigureTxGroups(pChip, {3}, {0}, 2);
-    RD53lpGBTInterface::ConfigureTxChannels(pChip, {3}, {0}, 3, 3, 0, 0, 1);
+    RD53lpGBTInterface::ConfigureTxGroups(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), fTxDataRateMap[static_cast<lpGBT*>(pChip)->getTxDataRate()]);
+    RD53lpGBTInterface::ConfigureTxChannels(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), 3, 3, 0, 0, 1);
 
     // ####################################################
     // # Programming registers as from configuration file #
@@ -165,12 +163,9 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
 
     for(const auto cHybrid: *pOpticalGroup)
         for(const auto cChip: *cHybrid)
-        // @TMP@
-        // for(const auto& cGroup: cChip.pGroups)
-        //     for(const auto& cChannel: cChip.pChannels)
         {
-            uint8_t cGroup   = 6;
-            uint8_t cChannel = 0;
+            uint8_t cGroup   = static_cast<RD53*>(cChip)->getRxGroup();
+            uint8_t cChannel = static_cast<RD53*>(cChip)->getRxChannel();
 
             uint8_t bestPhase      = 0;
             uint8_t bestPhaseStart = 0;
@@ -184,7 +179,6 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, phase);
 
                 static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
-                // static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Uplinks(cChip); // @TMP@
                 static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
 
                 double result = lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);

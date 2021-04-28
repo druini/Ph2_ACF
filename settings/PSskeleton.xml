@@ -10,17 +10,18 @@
     <OpticalGroup Id="0" FMCId="0">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
+        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt" 
+               RxHSLPolarity="0" TxHSLPolarity="1" 
+               RxDataRate="320" TxDataRate="320" ClockFrequency="320">
           <Settings
           />
         </lpGBT>
-
         <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
                <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
             </Global>
-
-<!--           <SSA Id="3" configfile="SSA.txt" />
+<!--
+           <SSA Id="3" configfile="SSA.txt" />
             <SSA_Files path="./settings/SSAFiles/" />
             <SSA Id="0" configfile="SSA.txt" />
             <SSA Id="1" configfile="SSA.txt" />
@@ -30,7 +31,7 @@
             <SSA Id="7" configfile="SSA.txt" />
 -->
             <CIC_Files path="./settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" />
+            <CIC Id="8" configfile="CIC_default.txt" RxGroups="0,4,5,6" RxChannels="0,2" TxGroups="0,3" TxChannels="0" Clocks="1,26"/>
         </Hybrid>
     </OpticalGroup>
     

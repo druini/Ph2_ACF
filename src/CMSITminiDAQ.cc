@@ -48,7 +48,7 @@
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
 #define ARBITRARYDELAY 2 // [seconds]
-#define TESTSUBDETECTOR false
+#define TESTSUBDETECTORY false
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -183,10 +183,9 @@ int main(int argc, char** argv)
     if(whichCalib != "") fileName += "_" + whichCalib;
     fileName += ".log";
     el::Configurations conf(std::string(std::getenv(BASEDIR)) + "/settings/logger.conf");
-    conf.set(el::Level::Global, el::ConfigurationType::Format, "|%thread|%levshort| %msg");
+    conf.set(el::Level::Global, el::ConfigurationType::Format, "|%datetime{%h:%m:%s}|%levshort|%msg");
     conf.set(el::Level::Global, el::ConfigurationType::Filename, fileName);
     el::Loggers::reconfigureAllLoggers(conf);
-    // el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Filename, fileName);
 
     // ######################
     // # Supervisor section #
@@ -393,45 +392,45 @@ int main(int argc, char** argv)
             bool doTwice   = false;
             do
             {
-              if(TESTSUBDETECTOR == true)
-              {
-                  if(pa.fDetectorContainer->size() != 1)
-                  {
-                      auto boardSubset = [evenORodd](const BoardContainer* theBoard) { return (theBoard->getId() % 2 == evenORodd); };
-                      pa.fDetectorContainer->setBoardQueryFunction(boardSubset);
-                      doTwice = true;
-                  }
-                  else if(pa.fDetectorContainer->at(0)->size() != 1)
-                  {
-                      auto optoGroupSubset = [evenORodd](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == evenORodd); };
-                      pa.fDetectorContainer->setOpticalGroupQueryFunction(optoGroupSubset);
-                      doTwice = true;
-                  }
-                  else if(pa.fDetectorContainer->at(0)->at(0)->size() != 1)
-                  {
-                      auto hybridSubset = [evenORodd](const HybridContainer* theHybrid) { return (theHybrid->getId() % 2 == evenORodd); };
-                      pa.fDetectorContainer->setHybridQueryFunction(hybridSubset);
-                      doTwice = true;
-                  }
-                  else if(pa.fDetectorContainer->at(0)->at(0)->at(0)->size() != 1)
-                  {
-                      auto chipSubset = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
-                      pa.fDetectorContainer->setReadoutChipQueryFunction(chipSubset);
-                      doTwice = true;
-                  }
-              }
+                if(TESTSUBDETECTORY == true)
+                {
+                    if(pa.fDetectorContainer->size() != 1)
+                    {
+                        auto boardSubset = [evenORodd](const BoardContainer* theBoard) { return (theBoard->getId() % 2 == evenORodd); };
+                        pa.fDetectorContainer->setBoardQueryFunction(boardSubset);
+                        doTwice = true;
+                    }
+                    else if(pa.fDetectorContainer->at(0)->size() != 1)
+                    {
+                        auto optoGroupSubset = [evenORodd](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == evenORodd); };
+                        pa.fDetectorContainer->setOpticalGroupQueryFunction(optoGroupSubset);
+                        doTwice = true;
+                    }
+                    else if(pa.fDetectorContainer->at(0)->at(0)->size() != 1)
+                    {
+                        auto hybridSubset = [evenORodd](const HybridContainer* theHybrid) { return (theHybrid->getId() % 2 == evenORodd); };
+                        pa.fDetectorContainer->setHybridQueryFunction(hybridSubset);
+                        doTwice = true;
+                    }
+                    else if(pa.fDetectorContainer->at(0)->at(0)->at(0)->size() != 1)
+                    {
+                        auto chipSubset = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
+                        pa.fDetectorContainer->setReadoutChipQueryFunction(chipSubset);
+                        doTwice = true;
+                    }
+                }
 
-              pa.run();
-              pa.analyze();
-              pa.draw();
-              RD53RunProgress::current() = 0;
+                pa.run();
+                pa.analyze();
+                pa.draw();
+                RD53RunProgress::current() = 0;
 
-              pa.fDetectorContainer->resetReadoutChipQueryFunction();
-              pa.fDetectorContainer->resetHybridQueryFunction();
-              pa.fDetectorContainer->resetOpticalGroupQueryFunction();
-              pa.fDetectorContainer->resetBoardQueryFunction();
+                pa.fDetectorContainer->resetReadoutChipQueryFunction();
+                pa.fDetectorContainer->resetHybridQueryFunction();
+                pa.fDetectorContainer->resetOpticalGroupQueryFunction();
+                pa.fDetectorContainer->resetBoardQueryFunction();
 
-              evenORodd++;
+                evenORodd++;
             } while((doTwice == true) && (evenORodd < 2));
         }
         else if(whichCalib == "noise")

@@ -341,4 +341,12 @@ uint32_t D19clpGBTInterface::mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFe
     LOG(DEBUG) << BOLDYELLOW << "MPA Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     return cReadBack;
 }
+
+bool D19clpGBTInterface::ReadGPIO(Ph2_HwDescription::Chip* pChip, const uint8_t& pGPIO)
+{
+    LOG(INFO) << BOLDBLUE << "Reading GPIO value from " << std::to_string(pGPIO) << RESET;
+    uint8_t cPIOInH = ReadChipReg(pChip, "PIOInH");
+    uint8_t cPIOInL = ReadChipReg(pChip, "PIOInL");
+    return ((cPIOInH << 8 | cPIOInL) >> pGPIO) & 1;
+}
 } // namespace Ph2_HwInterface

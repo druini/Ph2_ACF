@@ -495,11 +495,20 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     }
 
     // switch off SEH
-    LOG(INFO) << BOLDRED << "Please switch off the SEH... press any key to continue once you have done so..." << RESET;
-    do
+    if(fPowerSupplyClient == nullptr)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while(std::cin.get() != '\n');
+        LOG(INFO) << BOLDRED << "Please switch off the SEH... press any key to continue once you have done so..." << RESET;
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        } while(std::cin.get() != '\n');
+    }
+    else
+    {
+        LOG(INFO) << BOLDRED << "Switching off the LV using Power Supply Server..." << RESET;
+        fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
     // system("/home/modtest/Programming/power_supply/bin/TurnOff -c /home/modtest/Programming/power_supply/config/config.xml ");
     // std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
     // resync CDCE
@@ -513,12 +522,22 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
     // std::this_thread::sleep_for (std::chrono::milliseconds (500) );
     bool cLinksLocked = true;
+
     // tell user to switch on SEH
-    LOG(INFO) << BOLDRED << "Please switch on the SEH... press any key to continue once you have done so..." << RESET;
-    do
+    if(fPowerSupplyClient == nullptr)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while(std::cin.get() != '\n');
+        LOG(INFO) << BOLDRED << "Please switch on the SEH... press any key to continue once you have done so..." << RESET;
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        } while(std::cin.get() != '\n');
+    }
+    else
+    {
+        LOG(INFO) << BOLDRED << "Switching on the LV using Power Supply Server..." << RESET;
+        fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
     // system("/home/modtest/Programming/power_supply/bin/TurnOn -c /home/modtest/Programming/power_supply/config/config.xml ");
     // std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
 
@@ -939,7 +958,6 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             throw std::runtime_error(std::string("lpGBT link failed to LOCK!"));
         }
     }
-
     // resetting hard
     if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
     {
@@ -963,8 +981,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         {
             for(auto cFe: *cOpticalGroup)
             {
-                auto                                          cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
-                auto&                                         cCic                = cOuterTrackerHybrid->fCic;
+                auto cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+                if(cOuterTrackerHybrid->fCic == nullptr) continue;
+                auto&                                         cCic = cOuterTrackerHybrid->fCic;
                 std::vector<std::pair<std::string, uint32_t>> cVecReg;
                 // make sure CIC is receiving clock
                 // cVecReg.push_back( {"fc7_daq_cnfg.physical_interface_block.cic.clock_enable" , 1 } ) ;
@@ -1058,6 +1077,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             cReplies.clear();
             if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
             {
+                if(cOuterTrackerHybrid->fCic == nullptr) continue;
                 auto& cCic = cOuterTrackerHybrid->fCic;
                 LOG(INFO) << BOLDBLUE << "CIC " << +cCic->getId() << " on FE" << +cFe->getId() << RESET;
                 size_t cIndex       = 0;
@@ -4455,12 +4475,12 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
     uint8_t               cIter = 0, cMaxIter = 50;
     while(cI2CStatus != 4 && cIter < cMaxIter)
     {
+        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed ... retrying" << RESET;
         ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector = ReadReplyCPB(10);
         cI2CStatus   = cReplyVector[7] & 0xFF;
-        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed" << RESET;
         cIter++;
     }
     if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2C Transaction Failed"));
@@ -4488,12 +4508,14 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
     // check reply
     while(cReadBackRegAddr != cI2CReadByteRegAddr && cIter < cMaxIter)
     {
+        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Received corrupted reply from command processor block ... retrying" << RESET;
         ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector     = ReadReplyCPB(10);
         cReadBack        = cReplyVector[7] & 0xFF;
         cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Corrupted CPB reply frame" << RESET;
         cIter++;
     };
     if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CRead] : Corrupted CPB reply frame"));
@@ -4517,7 +4539,6 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
             LOG(INFO) << BOLDRED << "I2C ReadBack Mismatch in hybrid " << +pChip->getHybridId() << " Chip " << +cChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
             I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, (pRegisterValue << 16) | cInvertedRegister, 3);
             cReadBack = ReadFERegister(pChip, pRegisterAddress);
-            ;
             cIter++;
         }
         if(cReadBack != pRegisterValue) { throw std::runtime_error(std::string("I2C readback mismatch")); }

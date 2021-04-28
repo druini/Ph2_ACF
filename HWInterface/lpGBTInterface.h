@@ -174,6 +174,11 @@ class lpGBTInterface : public ChipInterface
     // ##############
     // # LpGBT maps #
     // ##############
+    std::map<uint16_t, uint8_t> fClockFrequencyMap = {{0, 0}, {40, 1}, {80, 2}, {160, 3}, {320, 4}, {640, 5}, {1280, 7}};
+    std::map<uint16_t, uint8_t> fTxDataRateMap     = {{0, 0}, {80, 1}, {160, 2}, {320, 3}};
+    std::map<uint16_t, uint8_t> f5GRxDataRateMap   = {{0, 0}, {160, 1}, {320, 2}, {640, 3}};
+    std::map<uint16_t, uint8_t> f10GRxDataRateMap  = {{0, 0}, {320, 1}, {640, 2}, {1280, 3}};
+
     std::map<uint8_t, uint8_t> fGroup2BERTsourceCourse      = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}};
     std::map<uint8_t, uint8_t> fChannelSpeed2BERTsourceFine = {{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {6, 5}, {8, 6}}; // channel + 4 * (2 - frontendSpeed)
 
