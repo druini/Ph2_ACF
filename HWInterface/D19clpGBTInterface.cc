@@ -44,26 +44,26 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         }
     }
 
-    //TEST
-    lpGBT* clpGBT = static_cast<lpGBT*>(pChip);  
-    uint8_t cRxDataRate = clpGBT->getRxDataRate(), cTxDataRate = clpGBT->getTxDataRate(), cClocksFrequency = clpGBT->getClocksFrequency();
-    std::vector<uint8_t> cRxGroups = clpGBT->getRxGroups();
-    std::vector<uint8_t> cRxChannels = clpGBT->getRxChannels();
-    std::vector<uint8_t> cTxGroups = clpGBT->getTxGroups();
-    std::vector<uint8_t> cTxChannels = clpGBT->getTxChannels();
-    LOG(INFO) << "RxDataRate = " << +cRxDataRate << "; TxDataRate = " << +cTxDataRate << "; ClocksFrequency = " << +cClocksFrequency << RESET;
-    std::vector<uint8_t> cClocks = clpGBT->getClocks();
-    LOG(INFO) << "Clocks : " << RESET;
-    for(auto cClock : cClocks) LOG(INFO) << +cClock << " " << RESET;
-    LOG(INFO) << "RxGroups : " << RESET;
-    for(auto cRxGroup : cRxGroups) LOG(INFO) << +cRxGroup << " " << RESET;
-    LOG(INFO) << "cRxChannels : " << RESET;
-    for(auto cRxChannel : cRxChannels) LOG(INFO) << +cRxChannel << " " << RESET;
-    LOG(INFO) << "TxGroups : " << RESET;
-    for(auto cTxGroup : cTxGroups) LOG(INFO) << +cTxGroup << " " << RESET;
-    LOG(INFO) << "TxChannels : " << RESET;
-    for(auto cTxChannel : cTxChannels) LOG(INFO) << +cTxChannel << " " << RESET;
-    exit(0);
+    // //TEST
+    // lpGBT* clpGBT = static_cast<lpGBT*>(pChip);  
+    // uint8_t cRxDataRate = clpGBT->getRxDataRate(), cTxDataRate = clpGBT->getTxDataRate(), cClocksFrequency = clpGBT->getClocksFrequency();
+    // std::vector<uint8_t> cRxGroups = clpGBT->getRxGroups();
+    // std::vector<uint8_t> cRxChannels = clpGBT->getRxChannels();
+    // std::vector<uint8_t> cTxGroups = clpGBT->getTxGroups();
+    // std::vector<uint8_t> cTxChannels = clpGBT->getTxChannels();
+    // LOG(INFO) << "RxDataRate = " << +cRxDataRate << "; TxDataRate = " << +cTxDataRate << "; ClocksFrequency = " << +cClocksFrequency << RESET;
+    // std::vector<uint8_t> cClocks = clpGBT->getClocks();
+    // LOG(INFO) << "Clocks : " << RESET;
+    // for(auto cClock : cClocks) LOG(INFO) << +cClock << " " << RESET;
+    // LOG(INFO) << "RxGroups : " << RESET;
+    // for(auto cRxGroup : cRxGroups) LOG(INFO) << +cRxGroup << " " << RESET;
+    // LOG(INFO) << "cRxChannels : " << RESET;
+    // for(auto cRxChannel : cRxChannels) LOG(INFO) << +cRxChannel << " " << RESET;
+    // LOG(INFO) << "TxGroups : " << RESET;
+    // for(auto cTxGroup : cTxGroups) LOG(INFO) << +cTxGroup << " " << RESET;
+    // LOG(INFO) << "TxChannels : " << RESET;
+    // for(auto cTxChannel : cTxChannels) LOG(INFO) << +cTxChannel << " " << RESET;
+    // exit(0);
 
     PrintChipMode(pChip);
     SetPUSMDone(pChip, true, true);
@@ -86,10 +86,6 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 #elif __SEH_USB__
     Configure2SSEH(pChip);
 #endif
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
     return true;
 }
 
