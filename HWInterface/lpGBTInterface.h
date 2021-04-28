@@ -73,7 +73,6 @@ class lpGBTInterface : public ChipInterface
     void ConfigureGPIOLevel(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pOut);
     bool ReadGPIO(Ph2_HwDescription::Chip* pChip, uint8_t pGPIO);
 
-
     // ###########################
     // # LpGBT ADC-DAC functions #
     // ###########################

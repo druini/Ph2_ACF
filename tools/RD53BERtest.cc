@@ -93,20 +93,20 @@ void BERtest::run()
 
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
-                    // for(auto cGroup: cOpticalGroup->flpGBT->getRxGroups())
-                    //     for(auto cChannels: cOpticalGroup->flpGBT->getRxChannels())
-                        {
-                            flpGBTInterface->StartPRBSpattern(cOpticalGroup->flpGBT);
+                // for(auto cGroup: cOpticalGroup->flpGBT->getRxGroups())
+                //     for(auto cChannels: cOpticalGroup->flpGBT->getRxChannels())
+                {
+                    flpGBTInterface->StartPRBSpattern(cOpticalGroup->flpGBT);
 
-                            auto value = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), 0, frontendSpeed); // @TMP@
-                            theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(0)->getSummary<double>() = value;
+                    auto value = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), 0, frontendSpeed); // @TMP@
+                    theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(0)->getSummary<double>() = value;
 
-                            LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << RESET
-                                      << GREEN << "]: " << BOLDYELLOW << (value == 0 ? "PASSED" : "NOT PASSED") << RESET;
+                    LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << RESET << GREEN
+                              << "]: " << BOLDYELLOW << (value == 0 ? "PASSED" : "NOT PASSED") << RESET;
 
-                            static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
-                            flpGBTInterface->StopPRBSpattern(cOpticalGroup->flpGBT);
-                        }
+                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
+                    flpGBTInterface->StopPRBSpattern(cOpticalGroup->flpGBT);
+                }
         }
     else
         for(const auto cBoard: *fDetectorContainer)

@@ -57,7 +57,8 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // ###############################
     // # Configure Up and Down links #
     // ###############################
-    RD53lpGBTInterface::ConfigureRxGroups(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], 0);
+    RD53lpGBTInterface::ConfigureRxGroups(
+        pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], 0);
     RD53lpGBTInterface::ConfigureRxChannels(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), 1, 1, 1, 0, 12);
 
     RD53lpGBTInterface::ConfigureTxGroups(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), fTxDataRateMap[static_cast<lpGBT*>(pChip)->getTxDataRate()]);

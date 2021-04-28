@@ -74,8 +74,6 @@ class D19clpGBTInterface : public lpGBTInterface
     bool     mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false);
     uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
 
-
-
   private:
     // ###################################
     // # Outer Tracker specific objects  #
@@ -101,7 +99,6 @@ class D19clpGBTInterface : public lpGBTInterface
                                                                         {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
 #endif
 #endif
-
 };
 } // namespace Ph2_HwInterface
 #endif
