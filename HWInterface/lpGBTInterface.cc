@@ -487,7 +487,7 @@ void lpGBTInterface::ConfigureGPIOPull(Chip* pChip, const std::vector<uint8_t>& 
 
 bool lpGBTInterface::ReadGPIO(Ph2_HwDescription::Chip* pChip, uint8_t pGPIO)
 {
-    LOG(INFO) << BOLDBLUE << "Reading GPIO value from " << std::to_string(pGPIO) << RESET;
+    LOG(INFO) << GREEN << "Reading GPIO value from " << BOLDYELLOW << std::to_string(pGPIO) << RESET;
     uint8_t cPIOInH = ReadChipReg(pChip, "PIOInH");
     uint8_t cPIOInL = ReadChipReg(pChip, "PIOInL");
     return ((cPIOInH << 8 | cPIOInL) >> pGPIO) & 1;
