@@ -43,6 +43,28 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
             }
         }
     }
+
+    //TEST
+    lpGBT* clpGBT = static_cast<lpGBT*>(pChip);  
+    uint8_t cRxDataRate = clpGBT->getRxDataRate(), cTxDataRate = clpGBT->getTxDataRate(), cClocksFrequency = clpGBT->getClocksFrequency();
+    std::vector<uint8_t> cRxGroups = clpGBT->getRxGroups();
+    std::vector<uint8_t> cRxChannels = clpGBT->getRxChannels();
+    std::vector<uint8_t> cTxGroups = clpGBT->getTxGroups();
+    std::vector<uint8_t> cTxChannels = clpGBT->getTxChannels();
+    LOG(INFO) << "RxDataRate = " << +cRxDataRate << "; TxDataRate = " << +cTxDataRate << "; ClocksFrequency = " << +cClocksFrequency << RESET;
+    std::vector<uint8_t> cClocks = clpGBT->getClocks();
+    LOG(INFO) << "Clocks : " << RESET;
+    for(auto cClock : cClocks) LOG(INFO) << +cClock << " " << RESET;
+    LOG(INFO) << "RxGroups : " << RESET;
+    for(auto cRxGroup : cRxGroups) LOG(INFO) << +cRxGroup << " " << RESET;
+    LOG(INFO) << "cRxChannels : " << RESET;
+    for(auto cRxChannel : cRxChannels) LOG(INFO) << +cRxChannel << " " << RESET;
+    LOG(INFO) << "TxGroups : " << RESET;
+    for(auto cTxGroup : cTxGroups) LOG(INFO) << +cTxGroup << " " << RESET;
+    LOG(INFO) << "TxChannels : " << RESET;
+    for(auto cTxChannel : cTxChannels) LOG(INFO) << +cTxChannel << " " << RESET;
+    exit(0);
+
     PrintChipMode(pChip);
     SetPUSMDone(pChip, true, true);
     uint16_t cIter = 0, cMaxIter = 200;
@@ -53,11 +75,21 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
+
+
+    
+
+    // ConfigurePSROH(pChip);
+    Configure2SSEH(pChip);
 #ifdef __ROH_USB__
     ConfigurePSROH(pChip);
 #elif __SEH_USB__
     Configure2SSEH(pChip);
 #endif
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
     return true;
 }
 
@@ -961,6 +993,58 @@ void D19clpGBTInterface::InitialiseTCUSBHandler()
 #endif
 }
 #endif
+
+// Preliminary
+void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
+{
+    uint8_t cChipRate = GetChipRate(pChip);
+    LOG(INFO) << BOLDGREEN << "Applying 2S-SEH 5G lpGBT configuration" << RESET;
+    // Configure High Speed Link Tx Rx Polarity
+    ConfigureHighSpeedPolarity(pChip, 1, 0);
+
+    // Clocks
+    std::vector<uint8_t> cClocks  = {1, 11}; // Reduced number of clocks and only 320 MHz
+    uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 7, cClkInvert = 1;
+    uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
+    ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+    // Tx Groups and Channels
+    std::vector<uint8_t> cTxGroups ={0, 2}, cTxChannels = {0};
+    uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
+    for(const auto& cGroup: cTxGroups)
+    {
+        if(cGroup == 0) cTxInvert = 1;
+        if(cGroup == 2) cTxInvert = 0;
+        for(const auto& cChannel: cTxChannels) ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
+    }
+    // Rx configuration and Phase Align
+    // Configure Rx Groups
+    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
+    uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
+    ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
+    // Configure Rx Channels
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 12;
+    for(const auto& cGroup: cRxGroups)
+    {
+        for(const auto cChannel: cRxChannels)
+        {
+            if(cGroup == 6 && cChannel == 0)
+                cRxInvert = 0;
+            else if(cGroup == 5 && cChannel == 0)
+                cRxInvert = 0;
+            else
+                cRxInvert = 1;
+            if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+        }
+    }
+    //PhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    // Reset I2C Masters
+    ResetI2C(pChip, {0, 1, 2});
+    // Setting GPIO levels Uncomment this for Skeleton test
+    // Setting GPIO levels for Skeleton test
+    ConfigureGPIODirection(pChip, {0, 3, 6, 8}, 1);
+    ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);
+}
 
 void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 {
