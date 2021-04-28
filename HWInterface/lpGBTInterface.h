@@ -226,6 +226,7 @@ class lpGBTInterface : public ChipInterface
 
     std::map<uint8_t, std::string> fI2CStatusMap = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
 };
+
 } // namespace Ph2_HwInterface
 
 #endif

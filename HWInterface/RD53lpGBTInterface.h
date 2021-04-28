@@ -34,5 +34,6 @@ class RD53lpGBTInterface : public lpGBTInterface
     bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop = true);
     uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
 };
+
 } // namespace Ph2_HwInterface
 #endif
