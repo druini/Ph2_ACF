@@ -294,7 +294,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, fileName);
             theOpticalGroup->addlpGBT(thelpGBT);
 
-            // initialize lpGBT settings from xml (only for IT)
+            // Initialize LpGBT settings from XML (only for IT)
             if(pBoard->getBoardType() == BoardType::RD53)
             {
                 for(const pugi::xml_attribute& attr: theChild.attributes())
@@ -679,9 +679,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                 }
             }
         }
-        // Finally map front-end to lpGBT
-        if(pBoard->getBoardType() == BoardType::RD53 && pOpticalGroup->flpGBT != nullptr) 
-            this->parseHybridToLpGBT(pHybridNode, cHybrid, pOpticalGroup->flpGBT, os);
+
+        // Finally map front-end to LpGBT
+        if(pBoard->getBoardType() == BoardType::RD53 && pOpticalGroup->flpGBT != nullptr) this->parseHybridToLpGBT(pHybridNode, cHybrid, pOpticalGroup->flpGBT, os);
     }
 }
 
@@ -1007,13 +1007,13 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             std::vector<uint8_t> cTxGroups   = splitToVector(cChild.attribute("TxGroups").value(), ',');
             std::vector<uint8_t> cTxChannels = splitToVector(cChild.attribute("TxChannels").value(), ',');
 
-            // retrieve groups and channels from CIC node attirbutes and propagate to lpGBT class
+            // Retrieve groups and channels from CIC node attirbutes and propagate to LpGBT class
             plpGBT->addRxGroups(cRxGroups);
             plpGBT->addRxChannels(cRxChannels);
             plpGBT->addTxGroups(cTxGroups);
             plpGBT->addTxChannels(cTxChannels);
 
-            // In the case of IT propagate lpGBT mapping the front-end chip
+            // In the case of IT propagate LpGBT mapping the front-end chip
             uint8_t cChipId = cChild.attribute("Id").as_int();
             static_cast<RD53*>(cHybrid->at(cChipId))->setRxGroup(cRxGroups[0]);
             static_cast<RD53*>(cHybrid->at(cChipId))->setRxChannel(cRxChannels[0]);

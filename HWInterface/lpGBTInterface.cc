@@ -374,7 +374,7 @@ uint8_t lpGBTInterface::GetChipRate(Chip* pChip)
     uint8_t cValueConfigPins = ((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4);
     if(cValueConfigPins <= 7)
         return 5;
-    else if (cValueConfigPins <= 15)
+    else if(cValueConfigPins <= 15)
         return 10;
     else
         throw std::runtime_error(std::string("lpGBT hard wired configuration doesn't exist"));
@@ -833,18 +833,21 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
         WriteChipReg(pChip, cI2CCmdReg, 0x8);
         WriteChipReg(pChip, cI2CCmdReg, 0xC);
     }
+
     // Wait until the transaction is done
-    uint8_t cMaxIter = 100, cIter = 0;
+    uint8_t cIter = 0;
     do
     {
         LOG(DEBUG) << GREEN << "Waiting for I2C Write transaction to finisih" << RESET;
         cIter++;
-    } while(cIter < cMaxIter && !IsI2CSuccess(pChip, pMaster));
-    if(cIter == cMaxIter)
+    } while(cIter < lpGBTconstants::MAXATTEMPTS && !IsI2CSuccess(pChip, pMaster));
+
+    if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
         LOG(INFO) << BOLDRED << "I2C Write Transaction FAILED" << RESET;
         throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
     }
+
     return true;
 }
 
@@ -865,9 +868,8 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
 
     if(pNBytes == 1) { WriteChipReg(pChip, cI2CCmdReg, 0x3); }
     else
-    {
         WriteChipReg(pChip, cI2CCmdReg, 0xD);
-    }
+
     // Wait until the transaction is done
     uint8_t cIter = 0;
     do
@@ -880,6 +882,7 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
         LOG(INFO) << GREEN << "I2C Read Transaction FAILED" << RESET;
         throw std::runtime_error(std::string("in D19clpGBTInterface::ReadI2C : I2C Transaction failed"));
     }
+
     // Return read back value
     if(pNBytes == 1)
     {
