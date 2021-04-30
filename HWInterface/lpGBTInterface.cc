@@ -371,10 +371,13 @@ void lpGBTInterface::PrintChipMode(Chip* pChip)
 
 uint8_t lpGBTInterface::GetChipRate(Chip* pChip)
 {
-    if(((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4) >= 8)
+    uint8_t cValueConfigPins = ((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4);
+    if(cValueConfigPins <= 7)
+        return 5;
+    else if (cValueConfigPins <= 15)
         return 10;
     else
-        return 5;
+        throw std::runtime_error(std::string("lpGBT hard wired configuration doesn't exist"));
 }
 
 uint8_t lpGBTInterface::GetPUSMStatus(Chip* pChip) { return ReadChipReg(pChip, "PUSMStatus"); }

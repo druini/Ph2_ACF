@@ -273,7 +273,6 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
     uint32_t      cFMCId          = pOpticalGroupNode.attribute("FMCId").as_int();
     uint32_t      cBoardId        = pBoard->getId();
     OpticalGroup* theOpticalGroup = pBoard->addOpticalGroupContainer(cBoardId, new OpticalGroup(cBoardId, cFMCId, cOpticalGroupId));
-    bool          cHasHybrid      = pOpticalGroupNode.child("Hybrid") != nullptr;
 
     for(pugi::xml_node theChild: pOpticalGroupNode.children())
     {
@@ -295,20 +294,23 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, fileName);
             theOpticalGroup->addlpGBT(thelpGBT);
 
-            // initialize lpGBT settings
-            for(const pugi::xml_attribute& attr: theChild.attributes())
+            // initialize lpGBT settings from xml (only for IT)
+            if(pBoard->getBoardType() == BoardType::RD53)
             {
-                os << BOLDBLUE << "|\t|\t|---- " << attr.name() << ": " << BOLDYELLOW << attr.value() << "\n" << RESET;
-                if(std::string(attr.name()) == "RxHSLPolarity")
-                    thelpGBT->setRxHSLPolarity(convertAnyInt(theChild.attribute("RxHSLPolarity").value()));
-                else if(std::string(attr.name()) == "TxHSLPolarity")
-                    thelpGBT->setTxHSLPolarity(convertAnyInt(theChild.attribute("TxHSLPolarity").value()));
-                else if(std::string(attr.name()) == "RxDataRate")
-                    thelpGBT->setRxDataRate(convertAnyInt(theChild.attribute("RxDataRate").value()));
-                else if(std::string(attr.name()) == "TxDataRate")
-                    thelpGBT->setTxDataRate(convertAnyInt(theChild.attribute("TxDataRate").value()));
-                else if(std::string(attr.name()) == "ClockFrequency")
-                    thelpGBT->setClocksFrequency(convertAnyInt(theChild.attribute("ClockFrequency").value()));
+                for(const pugi::xml_attribute& attr: theChild.attributes())
+                {
+                    os << BOLDBLUE << "|\t|\t|---- " << attr.name() << ": " << BOLDYELLOW << attr.value() << "\n" << RESET;
+                    if(std::string(attr.name()) == "RxHSLPolarity")
+                        thelpGBT->setRxHSLPolarity(convertAnyInt(theChild.attribute("RxHSLPolarity").value()));
+                    else if(std::string(attr.name()) == "TxHSLPolarity")
+                        thelpGBT->setTxHSLPolarity(convertAnyInt(theChild.attribute("TxHSLPolarity").value()));
+                    else if(std::string(attr.name()) == "RxDataRate")
+                        thelpGBT->setRxDataRate(convertAnyInt(theChild.attribute("RxDataRate").value()));
+                    else if(std::string(attr.name()) == "TxDataRate")
+                        thelpGBT->setTxDataRate(convertAnyInt(theChild.attribute("TxDataRate").value()));
+                    else if(std::string(attr.name()) == "ClockFrequency")
+                        thelpGBT->setClocksFrequency(convertAnyInt(theChild.attribute("ClockFrequency").value()));
+                }
             }
 
             pugi::xml_node clpGBTSettings = theChild.child("Settings");
@@ -324,16 +326,6 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                     os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
                 }
             }
-        }
-        // if no hybrid, that means we are in OT TestCard mode and thus lpGBT mapping is default
-        if(!cHasHybrid && (theOpticalGroup->flpGBT != nullptr))
-        {
-            // set default values for groups and channels (all groups and channels)
-            theOpticalGroup->flpGBT->addRxGroups({0, 1, 2, 3, 4, 5, 6});
-            theOpticalGroup->flpGBT->addRxChannels({0, 2});
-            theOpticalGroup->flpGBT->addTxGroups({0, 1, 2, 3});
-            theOpticalGroup->flpGBT->addTxChannels({0});
-            theOpticalGroup->flpGBT->addClocks({1, 6, 11, 26});
         }
     }
 }
@@ -684,11 +676,12 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                         pBoard->setFrontEndType(FrontEndType::MPA);
                         this->parseMPA(cChild, cHybrid, cConfigFileDirectory);
                     }
-                    // Finally map front-end to lpGBT
-                    if(pOpticalGroup->flpGBT != nullptr) this->parseHybridToLpGBT(pHybridNode, cHybrid, pOpticalGroup->flpGBT, os);
                 }
             }
         }
+        // Finally map front-end to lpGBT
+        if(pBoard->getBoardType() == BoardType::RD53 && pOpticalGroup->flpGBT != nullptr) 
+            this->parseHybridToLpGBT(pHybridNode, cHybrid, pOpticalGroup->flpGBT, os);
     }
 }
 
@@ -1007,33 +1000,25 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
     {
         std::string cChildName = cChild.name();
         if(cChildName.find("_Files") != std::string::npos) continue;
-        if(cChildName.find("CIC") != std::string::npos || cChildName.find("RD53") != std::string::npos)
+        if(cChildName.find("RD53") != std::string::npos)
         {
             std::vector<uint8_t> cRxGroups   = splitToVector(cChild.attribute("RxGroups").value(), ',');
             std::vector<uint8_t> cRxChannels = splitToVector(cChild.attribute("RxChannels").value(), ',');
             std::vector<uint8_t> cTxGroups   = splitToVector(cChild.attribute("TxGroups").value(), ',');
             std::vector<uint8_t> cTxChannels = splitToVector(cChild.attribute("TxChannels").value(), ',');
+
             // retrieve groups and channels from CIC node attirbutes and propagate to lpGBT class
             plpGBT->addRxGroups(cRxGroups);
             plpGBT->addRxChannels(cRxChannels);
             plpGBT->addTxGroups(cTxGroups);
             plpGBT->addTxChannels(cTxChannels);
-            // Only parse clocks for OT
-            if(cChildName.find("CIC") != std::string::npos)
-            {
-                std::vector<uint8_t> cClocks = splitToVector(cChild.attribute("Clocks").value(), ',');
-                plpGBT->addClocks(cClocks);
-            }
 
             // In the case of IT propagate lpGBT mapping the front-end chip
-            if(cChildName.find("RD53") != std::string::npos)
-            {
-                uint8_t cChipId = cChild.attribute("Id").as_int();
-                static_cast<RD53*>(cHybrid->at(cChipId))->setRxGroup(cRxGroups[0]);
-                static_cast<RD53*>(cHybrid->at(cChipId))->setRxChannel(cRxChannels[0]);
-                static_cast<RD53*>(cHybrid->at(cChipId))->setTxGroup(cTxGroups[0]);
-                static_cast<RD53*>(cHybrid->at(cChipId))->setTxChannel(cTxChannels[0]);
-            }
+            uint8_t cChipId = cChild.attribute("Id").as_int();
+            static_cast<RD53*>(cHybrid->at(cChipId))->setRxGroup(cRxGroups[0]);
+            static_cast<RD53*>(cHybrid->at(cChipId))->setRxChannel(cRxChannels[0]);
+            static_cast<RD53*>(cHybrid->at(cChipId))->setTxGroup(cTxGroups[0]);
+            static_cast<RD53*>(cHybrid->at(cChipId))->setTxChannel(cTxChannels[0]);
         }
     }
 }
