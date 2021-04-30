@@ -72,7 +72,7 @@ class SCurve : public Tool
     ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
     void fillHisto();
-    void computeStats(const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+    void computeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
     void chipErrorReport() const;
 
   protected:
