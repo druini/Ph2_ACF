@@ -26,6 +26,7 @@
 #include "../tools/RD53ThrAdjustment.h"
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
+#include "../tools/RD53VoltageTuning.h"
 
 #include <chrono>
 #include <thread>
@@ -122,7 +123,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay datarbopt physics eudaq bertest]",
+                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -582,6 +583,22 @@ int main(int argc, char** argv)
             bt.run();
             bt.draw();
         }
+	else if(whichCalib == "voltagetuning")
+        {
+            // ##############################
+            // # Run Threshold Minimization #
+            // ##############################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Voltage Tuning @@@" << RESET;
+
+            std::string   fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_VoltageTuning");
+            VoltageTuning vt;
+            vt.Inherit(&mySysCntr);
+            vt.localConfigure(fileName, runNumber);
+            vt.run();
+            vt.analyze();
+            vt.draw();
+        }
+
         else if(whichCalib == "physics")
         {
             // ###############
