@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
     cSEHTester.Inherit(&cTool);
     cSEHTester.FindUSBHandler();
     // cSEHTester.RampPowerSupply("MyRohdeSchwarz", "LV_Module3");
-    // SEHTester.DCDCOutputEvaluation();
+    cSEHTester.DCDCOutputEvaluation();
     if(cmd.foundOption("powersupply"))
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control" << RESET;
@@ -329,7 +329,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("leak"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring leakage current" << RESET;
-        cSEHTester.TestLeakageCurrent(cLeakVoltage, 600);
+        cSEHTester.TestLeakageCurrent(cLeakVoltage, 20);
     }
 
     if(cmd.foundOption("bias"))
@@ -412,7 +412,7 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     // Destroy Tools
     cTool.Destroy();
-    // cTool.Destroy();
+    cTool.Destroy();
 
     if(!batchMode) cApp.Run();
     return 0;

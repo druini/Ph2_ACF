@@ -81,19 +81,20 @@ class SEHTester : public OTHybridTester
     // bool ToyTestFixedADCs();
 
   private:
-    void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
-    bool FastCommandChecker(Ph2_HwDescription::BeBoard* pBoard, uint8_t pPattern);
-    void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandPattern, const std::string& userFilename);
-    void CheckClocks(Ph2_HwDescription::BeBoard* pBoard);
-    void CheckFastCommandsBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandLine);
-    void WritePatternToBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string&);
-    void ClearRefBRAM(Ph2_HwDescription::BeBoard* pBoard);
-    void ClearBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string& sBRAMToReset = "ref");
-    void ReadCheckAddrBRAM(Ph2_HwDescription::BeBoard* pBoard, int iCheckBRAMAddr = 0);
-    void ReadRefAddrBRAM(Ph2_HwDescription::BeBoard* pBoard, int iRefBRAMAddr = 0);
-
-    void CheckHybridInputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
-    void CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
+    void        FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
+    bool        FastCommandChecker(Ph2_HwDescription::BeBoard* pBoard, uint8_t pPattern);
+    void        CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandPattern, const std::string& userFilename);
+    void        CheckClocks(Ph2_HwDescription::BeBoard* pBoard);
+    void        CheckFastCommandsBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandLine);
+    void        WritePatternToBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string&);
+    void        ClearRefBRAM(Ph2_HwDescription::BeBoard* pBoard);
+    void        ClearBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string& sBRAMToReset = "ref");
+    void        ReadCheckAddrBRAM(Ph2_HwDescription::BeBoard* pBoard, int iCheckBRAMAddr = 0);
+    void        ReadRefAddrBRAM(Ph2_HwDescription::BeBoard* pBoard, int iRefBRAMAddr = 0);
+    float       getMeasurement(std::string name);
+    std::string getVariableValue(std::string variable, std::string buffer);
+    void        CheckHybridInputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
+    void        CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
     // void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string & pFastCommand ,  uint8_t pDuartion=1);
     std::map<std::string, std::string> f2SSEHClockMap = {
         {"320_r_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r"},
@@ -136,7 +137,8 @@ class SEHTester : public OTHybridTester
     std::map<std::string, TC_2SSEH::loadMeasurement> f2SSEHLoadMeasurements = {{"U_P1V2_R", TC_2SSEH::loadMeasurement::U_P1V2_R},
                                                                                {"I_P1V2_R", TC_2SSEH::loadMeasurement::I_P1V2_R},
                                                                                {"U_P1V2_L", TC_2SSEH::loadMeasurement::U_P1V2_L},
-                                                                               {"I_P1V2_L", TC_2SSEH::loadMeasurement::I_P1V2_L}};
+                                                                               {"I_P1V2_L", TC_2SSEH::loadMeasurement::I_P1V2_L},
+                                                                               {"P2V5_VTRx_MON", TC_2SSEH::loadMeasurement::P2V5_VTRx_MON}};
 
     std::map<std::string, TC_2SSEH::temperatureMeasurement> f2SSEHTemperatureMeasurements = {{"Temp1", TC_2SSEH::temperatureMeasurement::Temp1},
                                                                                              {"Temp2", TC_2SSEH::temperatureMeasurement::Temp2},

@@ -10,7 +10,10 @@ OTHybridTester::OTHybridTester() : Tool() {}
 OTHybridTester::~OTHybridTester()
 {
 #ifdef __TCUSB__
+#ifdef __TCP_SERVER__
+#else
     if(fTC_USB != nullptr) delete fTC_USB;
+#endif
 #endif
 }
 
@@ -32,11 +35,21 @@ void OTHybridTester::FindUSBHandler()
         }
     }
     if(!cThereIsLpGBT)
+    {
 #ifdef __ROH_USB__
         fTC_USB = new TC_PSROH();
 #elif __SEH_USB__
+#ifdef __TCP_SERVER__
+        if(fTestcardClient == nullptr)
+        {
+            LOG(ERROR) << BOLDRED << "Not connected to the test card! Test cannot be executed" << RESET;
+            throw std::runtime_error("Test card cannot be reached");
+        }
+#else
         fTC_USB = new TC_2SSEH();
 #endif
+#endif
+    }
     else
         fTC_USB = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetTCUSBHandler();
 #endif
@@ -339,7 +352,11 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 #ifdef __ROH_USB__
                     fTC_USB->dac_output(cDACValue);
 #elif __SEH_USB__
+#ifdef __TCP_SERVER__
+                    fTestcardClient->sendAndReceivePacket("set_AMUX,rightValue:" + std::to_string(cDACValue) + ",leftValue:" + std::to_string(cDACValue) + ",");
+#else
                     fTC_USB->set_AMUX(cDACValue, cDACValue);
+#endif
 #endif
 #endif
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
@@ -422,9 +439,11 @@ bool OTHybridTester::LpGBTTestFixedADCs()
                 {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
     cDefaultParameters   = &f2SSEHDefaultParameters;
     cADCNametoPinMapping = &f2SSEHADCInputMap;
-
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_P1V25_L_Sense:On");
+#else
     fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-
+#endif
 #elif __ROH_USB__
 
     cADCsMap = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
@@ -505,8 +524,11 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cFixedADCsTree->Write();
 
 #ifdef __SEH_USB__
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_P1V25_L_Sense:Off");
+#else
     fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
-
+#endif
 #endif
 #endif
 #endif
@@ -540,7 +562,7 @@ bool OTHybridTester::LpGBTTestResetLines()
     std::vector<uint8_t>                         cGPIOs      = {0, 1, 3, 6, 9, 12};
 #elif __SEH_USB__
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
-    std::vector<uint8_t> cGPIOs = {0, 3, 6, 8};
+    std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
 #endif
 
     for(auto cLevel: cLevels)
@@ -554,7 +576,11 @@ bool OTHybridTester::LpGBTTestResetLines()
 #ifdef __ROH_USB__
             fTC_USB->adc_get(cMapIterator->second, cMeasurement);
 #elif __SEH_USB__
+#ifdef __TCP_SERVER__
+            cMeasurement = this->getMeasurement("read_reset:" + cMapIterator->first);
+#else
             fTC_USB->read_reset(cMapIterator->second, cMeasurement);
+#endif
 #endif
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
             cStatus              = cStatus && (cDifference_mV <= 100);
@@ -815,4 +841,19 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
         }
     }
 }
+#ifdef __TCP_SERVER__
+float OTHybridTester::getMeasurement(std::string name)
+{
+    std::string buffer = fTestcardClient->sendAndReceivePacket(name);
+    float       value  = std::stof(this->getVariableValue("value", buffer));
+    return value;
+}
+std::string OTHybridTester::getVariableValue(std::string variable, std::string buffer)
+{
+    size_t begin = buffer.find(variable) + variable.size() + 1;
+    size_t end   = buffer.find(',', begin);
+    if(end == std::string::npos) end = buffer.size();
+    return buffer.substr(begin, end - begin);
+}
+#endif
 #endif

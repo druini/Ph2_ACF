@@ -22,7 +22,11 @@ namespace Ph2_HwInterface
 bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
 #ifdef __SEH_USB__
+#ifdef __TCP_SERVER__
+
+#else
     fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
+#endif
     LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 #endif
@@ -956,7 +960,10 @@ void D19clpGBTInterface::InitialiseTCUSBHandler()
     fTC_USB = new TC_PSROH();
     LOG(INFO) << BOLDGREEN << "Initialised PS-ROH TestCard USB Handler" << RESET;
 #elif __SEH_USB__
+#ifdef __TCP_SERVER__
+#else
     fTC_USB = new TC_2SSEH();
+#endif
     LOG(INFO) << BOLDGREEN << "Initialised 2S-SEH TestCard USB Handler" << RESET;
 #endif
 }
