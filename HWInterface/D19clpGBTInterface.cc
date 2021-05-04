@@ -23,7 +23,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 {
 #ifdef __SEH_USB__
 #ifdef __TCP_SERVER__
-
+    fTestcardClient->sendAndReceivePacket("TurnOn");
 #else
     fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
 #endif
@@ -111,7 +111,11 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
 #ifdef __TCUSB__
         // use 2S_SEH test card USB interface
         // fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
+#ifdef __TCP_SERVER__
+        fTestcardClient->sendAndReceivePacket("write_i2c,address:" + std::to_string(pAddress) + ",value:" + static_cast<char>(pValue));
+#else
         fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
+#endif
 #endif
     }
     return true;
@@ -128,7 +132,12 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
 #ifdef __TCUSB__
                 // Dont really see the point here. Write_i2c does not return a read back???
                 // cReadBack = fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
-                cReadBack = fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
+#ifdef __TCP_SERVER__
+                std::string buffer = fTestcardClient->sendAndReceivePacket("read_i2c,address:" + std::to_string(pAddress) + ",");
+                cReadBack          = std::stoi(this->getVariableValue("value", buffer));
+#else
+                cReadBack = fTC_USB->read_i2c(pAddress);
+#endif
 #endif
                 cIter++;
             }
@@ -152,7 +161,12 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
         // return fTC_2SSEH.read_i2c(pAddress);
+#ifdef __TCP_SERVER__
+        std::string buffer = fTestcardClient->sendAndReceivePacket("read_i2c,address:" + std::to_string(pAddress) + ",");
+        return std::stoi(this->getVariableValue("value", buffer));
+#else
         return fTC_USB->read_i2c(pAddress);
+#endif
 #endif
     }
     return 0;
@@ -1077,6 +1091,13 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     // Setting GPIO levels Resets are high
     ConfigureGPIODirection(pChip, {0, 3, 6, 8}, 1);
     ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);
+}
+std::string D19clpGBTInterface::getVariableValue(std::string variable, std::string buffer)
+{
+    size_t begin = buffer.find(variable) + variable.size() + 1;
+    size_t end   = buffer.find(',', begin);
+    if(end == std::string::npos) end = buffer.size();
+    return buffer.substr(begin, end - begin);
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)

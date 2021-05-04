@@ -211,7 +211,8 @@ class D19clpGBTInterface : public lpGBTInterface
     // configure PS-ROH
     void ConfigurePSROH(Ph2_HwDescription::Chip* pChip);
     // configure 2S-SEH
-    void Configure2SSEH(Ph2_HwDescription::Chip* pChip);
+    void        Configure2SSEH(Ph2_HwDescription::Chip* pChip);
+    std::string getVariableValue(std::string variable, std::string buffer);
     // cbc read/write
     bool cbcWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pPage, uint8_t pRegistergAddress, uint8_t pRegisterValue, bool pReadBack = true, bool pSetPage = false)
     {
@@ -229,6 +230,9 @@ class D19clpGBTInterface : public lpGBTInterface
     // mpa read/write
     bool     mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false);
     uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
+#ifdef __TCP_SERVER__
+    TCPClient* fTestcardClient = fBoardFW->getTestcardClient();
+#endif
 
   private:
     std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},

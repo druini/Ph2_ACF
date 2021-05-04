@@ -64,7 +64,8 @@ class BeBoardFWInterface : public RegManager
 
     void setPowerSupplyClient(TCPClient* thePowerSupplyClient) { fPowerSupplyClient = thePowerSupplyClient; };
 #ifdef __TCP_SERVER__
-    void setTestcardClient(TCPClient* theTestcardClient) { fTestcardClient = theTestcardClient; };
+    void       setTestcardClient(TCPClient* theTestcardClient) { fTestcardClient = theTestcardClient; };
+    TCPClient* getTestcardClient() { return fTestcardClient; };
 #endif
     /*!
      * \brief set a FileHandler Object and enable saving to file!
