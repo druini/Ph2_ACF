@@ -404,14 +404,6 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
             // #################################
             const uint32_t hybrid_id         = cHybrid->getId();
             const uint32_t chips_en_to_check = RD53FWInterface::GetHybridEnabledChips(cHybrid);
-            const uint32_t channel_up        = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
-
-            if((channel_up & chips_en_to_check) == chips_en_to_check)
-            {
-                LOG(INFO) << GREEN << "Board/OpticalGroup/Hybrid [" << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << hybrid_id << RESET << GREEN << "] already locked"
-                          << RESET;
-                continue;
-            }
 
             // ################################
             // # Try different init sequences #
