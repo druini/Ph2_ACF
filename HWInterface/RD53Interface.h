@@ -61,11 +61,9 @@ class RD53Interface : public ReadoutChipInterface
     void SendHybridCommandsPack(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList);
 
   private:
-    void InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip);
-
+    void                                       InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip);
     std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName);
     void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
-    /* void                                       WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, std::vector<uint16_t> chipCommandList, bool writeNow = true); @TMP@ */
 
     template <typename T>
     void sendCommand(Ph2_HwDescription::ReadoutChip* pChip, const T& cmd)

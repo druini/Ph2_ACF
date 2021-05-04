@@ -209,6 +209,23 @@ void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hy
     RD53FWInterface::SendChipCommandsPack(commandList);
 }
 
+bool RD53FWInterface::CheckWriteCommandFIFO(const int whichFlag)
+// ####################################
+// # whichFlag = 0 --> FIFO error     #
+// # whichFlag = 1 --> FIFO not empty #
+// # whichFlag = 2 --> FIFO full      #
+// ####################################
+{
+    switch(whichFlag)
+    {
+    case 0: return RegManager::ReadReg("user.stat_regs.slow_cmd.error_flag");
+    case 1: return RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_empty");
+    case 2: return RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full");
+    }
+
+    return false;
+}
+
 void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList)
 {
     const size_t n32bitWords = (data.size() / 2) + (data.size() % 2);
