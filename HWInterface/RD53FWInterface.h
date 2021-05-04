@@ -97,7 +97,7 @@ class RD53FWInterface : public BeBoardFWInterface
     {
         IPBus = 1,
         FastCMDFSM,
-        UserDefined, // --> It needs to set IPbus register "autozero_freq"
+        UserDefined, // --> Related to IPbus register "autozero_freq"
         Disabled = 0
     };
 
@@ -170,23 +170,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
     bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
     uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress) override;
-
-    // ##########################################
-    // # Read/Write new Command Processor Block #
-    // ##########################################
-    // functions for new Command Processor Block
-    void                  ResetCPB() {}
-    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose = false) override {}
-    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose = false) override { return {0}; }
-    // function to read/write lpGBT registers
-    bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override { return true; }
-    uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override { return 0; }
-    // function for I2C transactions using lpGBT I2C Masters
-    bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override { return true; };
-    uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) override { return 0; };
-    // function for front-end slow control
-    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = true) override { return true; };
-    uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) override { return 0; };
 
     // ###########################################
     // # Member functions to handle the firmware #
