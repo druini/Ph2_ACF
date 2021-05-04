@@ -583,11 +583,11 @@ int main(int argc, char** argv)
             bt.run();
             bt.draw();
         }
-	else if(whichCalib == "voltagetuning")
+        else if(whichCalib == "voltagetuning")
         {
-            // ##############################
-            // # Run Threshold Minimization #
-            // ##############################
+            // ######################
+            // # Run Voltage Tuning #
+            // ######################
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing Voltage Tuning @@@" << RESET;
 
             std::string   fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_VoltageTuning");
@@ -598,7 +598,6 @@ int main(int argc, char** argv)
             vt.analyze();
             vt.draw();
         }
-
         else if(whichCalib == "physics")
         {
             // ###############

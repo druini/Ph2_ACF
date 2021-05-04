@@ -8,7 +8,6 @@
 */
 
 #include "RD53VoltageTuning.h"
-#include "../Utils/ContainerFactory.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -18,14 +17,12 @@ void VoltageTuning::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-
-    targetDig = this->findValueInSettings("VDDDTrimTarget", 1.3);
-    targetAna = this->findValueInSettings("VDDATrimTarget", 1.2);
-    
+    doDisplay    = this->findValueInSettings("DisplayHisto");
+    targetDig    = this->findValueInSettings("VDDDTrimTarget", 1.3);
+    targetAna    = this->findValueInSettings("VDDATrimTarget", 1.2);
     toleranceDig = this->findValueInSettings("VDDDTrimTolerance", 0.02);
     toleranceAna = this->findValueInSettings("VDDATrimTolerance", 0.02);
-    
+
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
     // ############################################################
@@ -44,10 +41,14 @@ void VoltageTuning::Running()
 
 void VoltageTuning::sendData()
 {
-    auto theStream = prepareChipContainerStreamer<EmptyContainer, double>("VoltageTuning");
+    auto theDigStreamer = prepareChipContainerStreamer<EmptyContainer, double>("VoltageDig");
+    auto theAnaStreamer = prepareChipContainerStreamer<EmptyContainer, double>("VoltageAna");
 
     if(fStreamerEnabled == true)
-        for(const auto cBoard: theVoltageTuningContainer) theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    {
+        for(const auto cBoard: theDigContainer) theDigStreamer.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theAnaContainer) theAnaStreamer.streamAndSendBoard(cBoard, fNetworkStreamer);
+    }
 }
 
 void VoltageTuning::Stop()
@@ -57,6 +58,7 @@ void VoltageTuning::Stop()
     Tool::Stop();
 
     VoltageTuning::draw();
+    this->closeFileHandler();
 
     RD53RunProgress::reset();
 }
@@ -88,124 +90,117 @@ void VoltageTuning::initializeFiles(const std::string fileRes_, int currentRun)
 
 void VoltageTuning::run()
 {
-    // ############################
-    // # Scan VDDD first #
-    // ############################
+    const int conversionFactor = 2; // @CONST@
+
+    // #############
+    // # Scan VDDD #
+    // #############
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theAnaContainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theDigContainer);
 
     auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
-    
     for(const auto cBoard: *fDetectorContainer)
-      for(const auto cOpticalGroup: *cBoard)
-	for(const auto cHybrid: *cOpticalGroup)
-	  for(const auto cChip: *cHybrid){
-				
-	    
-	    /// start VDDD
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    // ##############
+                    // # Start VDDD #
+                    // ##############
 
-	    LOG(INFO) << BOLDGREEN << "VDDD tuning for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << GREEN << "] starts with target value = " << targetDig << " and tolerance = " << toleranceDig  << RESET;
-	    
-	    
-	    std::vector<double> trimVoltageDig;
-	    std::vector<int> trimVoltageDigIndex;
+                    LOG(INFO) << GREEN << "VDDD tuning for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                              << +cChip->getId() << std::setprecision(2) << RESET << GREEN << "] starts with target value = " << BOLDYELLOW << targetDig << RESET << GREEN
+                              << " and tolerance = " << BOLDYELLOW << toleranceDig << RESET;
 
-	    // default
-	    auto defaultDig = bits::pack<5,5>(16, 16);
-	    RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", defaultDig);
-	    double initDig = RD53ChipInterface->ReadChipMonitor(cChip,"VOUT_dig_ShuLDO")*2;
+                    std::vector<float> trimVoltageDig;
+                    std::vector<int>   trimVoltageDigIndex;
 
-	    std::vector<int> scanrangeDig = createScanRange(targetDig, initDig);
-	    bool isUpward = false;
-	    
-	    if(initDig < targetDig) isUpward = true;
+                    auto defaultDig = bits::pack<5, 5>(16, 16);
+                    RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", defaultDig);
+                    float initDig = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_dig_ShuLDO") * conversionFactor;
 
-	    for(auto vTrim : scanrangeDig){
+                    std::vector<int> scanrangeDig = VoltageTuning::createScanRange(cChip, "VOLTAGE_TRIM_DIG", targetDig, initDig);
+                    bool             isUpward     = false;
 
-	      auto vTrimDecimal = bits::pack<5,5>(16, vTrim);
-	      
-	      RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", vTrimDecimal);
-	      double readingDig = RD53ChipInterface->ReadChipMonitor(cChip,"VOUT_dig_ShuLDO")*2;
-	      double diff = abs(readingDig - targetDig);
+                    if(initDig < targetDig) isUpward = true;
 
-	      trimVoltageDig.push_back(diff);
-	      trimVoltageDigIndex.push_back(vTrim);
+                    for(auto vTrim: scanrangeDig)
+                    {
+                        auto vTrimDecimal = bits::pack<5, 5>(16, vTrim);
 
-	      if(isUpward && readingDig > (targetDig + toleranceDig)) break;
-	      if(!isUpward && readingDig < (targetDig - toleranceDig)) break;
-	      
-	    }
+                        RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", vTrimDecimal);
+                        float readingDig = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_dig_ShuLDO") * conversionFactor;
+                        float diff       = fabs(readingDig - targetDig);
 
+                        trimVoltageDig.push_back(diff);
+                        trimVoltageDigIndex.push_back(vTrim);
 
-	    int minDigIndex = std::min_element(trimVoltageDig.begin(),trimVoltageDig.end()) - trimVoltageDig.begin();
-	    int vdddNewSetting = trimVoltageDigIndex[minDigIndex];
+                        if(isUpward && readingDig > (targetDig + toleranceDig)) break;
+                        if(!isUpward && readingDig < (targetDig - toleranceDig)) break;
+                    }
 
+                    int minDigIndex    = std::min_element(trimVoltageDig.begin(), trimVoltageDig.end()) - trimVoltageDig.begin();
+                    int vdddNewSetting = trimVoltageDigIndex[minDigIndex];
 
-	    LOG(INFO) << BOLDGREEN << "VDDD best setting found for " << vdddNewSetting << " with diff = " << trimVoltageDig[minDigIndex]  << RESET;
-	    /// start VDDA
+                    LOG(INFO) << GREEN << "VDDD best setting: " << BOLDYELLOW << vdddNewSetting << std::setprecision(2) << RESET << GREEN << ", difference with respect to target = " << BOLDYELLOW
+                              << trimVoltageDig[minDigIndex] << RESET << GREEN << " V" << RESET;
 
-	    LOG(INFO) << BOLDGREEN << "VDDA tuning for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << GREEN << "] starts with target value = " << targetAna << " and tolerance = " << toleranceAna << " and with VDDD = " << vdddNewSetting  << RESET;
-	    	    
-	    std::vector<double> trimVoltageAna;
-	    std::vector<int> trimVoltageAnaIndex;
+                    // ##############
+                    // # Start VDDA #
+                    // ##############
 
-	    // default
-	    auto defaultAna = bits::pack<5,5>(16, vdddNewSetting);
-	    RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", defaultAna);
+                    LOG(INFO) << GREEN << "VDDA tuning for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                              << +cChip->getId() << std::setprecision(2) << RESET << GREEN << "] starts with target value = " << BOLDYELLOW << targetAna << RESET << GREEN
+                              << " and tolerance = " << BOLDYELLOW << toleranceAna << RESET << GREEN << " and with VDDD = " << BOLDYELLOW << vdddNewSetting << RESET;
 
-	    double initAna = RD53ChipInterface->ReadChipMonitor(cChip,"VOUT_ana_ShuLDO")*2;
+                    std::vector<float> trimVoltageAna;
+                    std::vector<int>   trimVoltageAnaIndex;
 
-	    std::vector<int> scanrangeAna = createScanRange(targetAna, initAna);
-	    isUpward = false;
-	    
-	    if(initAna < targetAna) isUpward = true;
-	    
-	    for(auto vTrim : scanrangeAna){
+                    auto defaultAna = bits::pack<5, 5>(16, vdddNewSetting);
+                    RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", defaultAna);
+                    float initAna = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_ana_ShuLDO") * conversionFactor;
 
-	      auto vTrimDecimal = bits::pack<5,5>(vTrim, vdddNewSetting);
+                    std::vector<int> scanrangeAna = VoltageTuning::createScanRange(cChip, "VOLTAGE_TRIM_ANA", targetAna, initAna);
+                    isUpward                      = false;
 
-	      RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", vTrimDecimal);
-	      double readingAna = RD53ChipInterface->ReadChipMonitor(cChip,"VOUT_ana_ShuLDO")*2;
+                    if(initAna < targetAna) isUpward = true;
 
-	      double diff = abs(readingAna - targetAna);
+                    for(auto vTrim: scanrangeAna)
+                    {
+                        auto vTrimDecimal = bits::pack<5, 5>(vTrim, vdddNewSetting);
 
-	      trimVoltageAna.push_back(diff);
-	      trimVoltageAnaIndex.push_back(vTrim);
+                        RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", vTrimDecimal);
+                        float readingAna = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_ana_ShuLDO") * conversionFactor;
+                        float diff       = fabs(readingAna - targetAna);
 
-	      if(isUpward && readingAna > (targetAna + toleranceAna)) break;
-	      if(!isUpward && readingAna < (targetAna - toleranceAna)) break;
-      
-	    }
+                        trimVoltageAna.push_back(diff);
+                        trimVoltageAnaIndex.push_back(vTrim);
 
+                        if(isUpward && readingAna > (targetAna + toleranceAna)) break;
+                        if(!isUpward && readingAna < (targetAna - toleranceAna)) break;
+                    }
 
-	    int minAnaIndex = std::min_element(trimVoltageAna.begin(),trimVoltageAna.end()) - trimVoltageAna.begin();
+                    int minAnaIndex    = std::min_element(trimVoltageAna.begin(), trimVoltageAna.end()) - trimVoltageAna.begin();
+                    int vddaNewSetting = trimVoltageAnaIndex[minAnaIndex];
 
-	    int vddaNewSetting = trimVoltageAnaIndex[minAnaIndex];
+                    LOG(INFO) << GREEN << "VDDA best setting: " << BOLDYELLOW << vddaNewSetting << std::setprecision(2) << RESET << GREEN << ", difference with respect to target = " << BOLDYELLOW
+                              << trimVoltageAna[minAnaIndex] << RESET << GREEN << " V" << RESET;
 
-	    LOG(INFO) << BOLDGREEN << "VDDA best setting found for " << vddaNewSetting << " with diff = " << trimVoltageAna[minAnaIndex]  << RESET;
-	    
-	    
-	    auto finalDecimal = bits::pack<5,5>(vddaNewSetting, vdddNewSetting);
+                    auto finalDecimal = bits::pack<5, 5>(vddaNewSetting, vdddNewSetting);
 
-	    RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", finalDecimal);
+                    RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", finalDecimal);
 
-	    auto finalVDDD = RD53ChipInterface->ReadChipMonitor(cChip,"VOUT_dig_ShuLDO")*2;
-	    
-	    auto finalVDDA = RD53ChipInterface->ReadChipMonitor(cChip,"VOUT_ana_ShuLDO")*2;
-	    
+                    auto finalVDDD = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_dig_ShuLDO") * conversionFactor;
+                    auto finalVDDA = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_ana_ShuLDO") * conversionFactor;
 
-	    LOG(INFO) << BOLDGREEN << "Results: VDDD=" << vdddNewSetting << " (" << std::bitset<5>(vdddNewSetting) << "), VDDD=" << vddaNewSetting << " ("<< std::bitset<5>(vddaNewSetting) << ") -> " << finalDecimal <<  " hex (0x" << std::hex << finalDecimal << ")" << std::dec << RESET;
-	    LOG(INFO) << BOLDGREEN << "\t Final VDDD reading =" << finalVDDD << RESET;
-	    LOG(INFO) << BOLDGREEN << "\t Final VDDA reading =" << finalVDDA << RESET;
-	    
+                    LOG(INFO) << CYAN << "Final voltage readings after tuning" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Final VDDD reading = " << std::setprecision(2) << BOLDYELLOW << finalVDDD << BOLDYELLOW << " V" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Final VDDA reading = " << std::setprecision(2) << BOLDYELLOW << finalVDDA << BOLDYELLOW << " V" << RESET;
 
-	    theDigContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = vdddNewSetting;
-	    theAnaContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = vddaNewSetting;
-	    
-	  }
-
-    
+                    theDigContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = vdddNewSetting;
+                    theAnaContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = vddaNewSetting;
+                }
 }
 
 void VoltageTuning::draw()
@@ -224,49 +219,39 @@ void VoltageTuning::draw()
     this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
-
-    this->CloseResultFile();
 #endif
 }
 
 void VoltageTuning::analyze()
 {
-    for(const auto cBoard: theDigContainer)
+    for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
-                    LOG(INFO) << GREEN << "VDDD for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << cChip->getSummary<uint16_t>() << RESET;
-
-    for(const auto cBoard: theAnaContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                    LOG(INFO) << GREEN << "VDDA for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << cChip->getSummary<uint16_t>() << RESET;
-
+                    LOG(INFO) << GREEN << "VDDD and VDDA for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                              << +cChip->getId() << RESET << GREEN << "] are: VDDD = " << BOLDYELLOW
+                              << theDigContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET << GREEN
+                              << ", VDDA = " << BOLDYELLOW
+                              << theAnaContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
 }
-
-
 
 void VoltageTuning::fillHisto()
 {
 #ifdef __USE_ROOT__
-    histos->fill_ana(theAnaContainer);
-    histos->fill_dig(theDigContainer);
+    histos->fillDig(theDigContainer);
+    histos->fillAna(theAnaContainer);
 #endif
 }
 
-std::vector<int> VoltageTuning::createScanRange(double target, double initial){
-  
-  std::vector<int> scanrange;
+std::vector<int> VoltageTuning::createScanRange(Chip* pChip, const std::string regName, float target, float initial)
+{
+    std::vector<int> scanRange;
 
-  if(initial <= target){
-    for(int vTrim = 16; vTrim <= 31; vTrim++) scanrange.push_back(vTrim);
-  }else if(initial > target){
-    for(int vTrim = 16; vTrim >= 0; vTrim--) scanrange.push_back(vTrim);
-  }
+    if(initial <= target)
+        for(int vTrim = (RD53Shared::setBits(pChip->getRegItem(regName).fBitSize) + 1) / 2; vTrim <= static_cast<int>(RD53Shared::setBits(pChip->getRegItem(regName).fBitSize)); vTrim++)
+            scanRange.push_back(vTrim);
+    else if(initial > target)
+        for(int vTrim = (RD53Shared::setBits(pChip->getRegItem(regName).fBitSize) + 1) / 2; vTrim >= 0; vTrim--) scanRange.push_back(vTrim);
 
-  return scanrange;
-  
+    return scanRange;
 }

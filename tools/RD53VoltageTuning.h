@@ -24,8 +24,8 @@
 class VoltageTuning : public Tool
 {
   public:
-  ~VoltageTuning() { this->CloseResultFile(); }
-  void Running() override;
+    ~VoltageTuning() { this->CloseResultFile(); }
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void sendData() override;
@@ -35,28 +35,24 @@ class VoltageTuning : public Tool
     void run();
     void draw();
     void analyze();
-  
+
 #ifdef __USE_ROOT__
     VoltageTuningHistograms* histos;
 #endif
 
   private:
+    float targetDig;
+    float targetAna;
+    float toleranceDig;
+    float toleranceAna;
 
-  double targetDig;
-  double targetAna;
-  double toleranceDig;
-  double toleranceAna;
+    DetectorDataContainer theAnaContainer;
+    DetectorDataContainer theDigContainer;
 
-  DetectorDataContainer theAnaContainer;
-  DetectorDataContainer theDigContainer;
+    void             fillHisto();
+    std::vector<int> createScanRange(Ph2_HwDescription::Chip* pChip, const std::string regName, float target, float initial);
 
-  void fillHisto();
-
-  std::vector<int> createScanRange(double target, double initial);
-  
   protected:
-    DetectorDataContainer theVoltageTuningContainer;
-
     std::string fileRes;
     int         theCurrentRun;
     bool        doDisplay;
