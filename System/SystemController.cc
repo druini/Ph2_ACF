@@ -386,7 +386,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
                     }
                     else
-                        LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +lpGBTconstants::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
+                        LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
                 }
 
             // #######################

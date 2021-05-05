@@ -26,6 +26,8 @@ const int      NLATENCYBINS  = 2;                                               
 const int      MAXBITCHIPREG = 16;                                              // Maximum number of bits of a chp register
 const size_t   NTHREADS      = round(std::thread::hardware_concurrency() / 2.); // Number of potential threads for the current CPU (removing hyper-threading)
 const uint32_t DEEPSLEEP     = 100000;                                          // [microseconds]
+const uint8_t  READOUTSLEEP  = 50;                                              // [microseconds]
+const uint8_t  MAXATTEMPTS   = 40;                                              // Maximum number of attempts
 const int      MINSTEPS      = 10;                                              // Minimum number of steps for a scan
 
 std::string fromInt2Str(int val);

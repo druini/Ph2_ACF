@@ -40,7 +40,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // #####################
     uint8_t      PUSMStatus = RD53lpGBTInterface::GetPUSMStatus(pChip);
     unsigned int nAttempts  = 0;
-    while((PUSMStatus != revertedPUSMStatusMap["READY"]) && (nAttempts < lpGBTconstants::MAXATTEMPTS))
+    while((PUSMStatus != revertedPUSMStatusMap["READY"]) && (nAttempts < RD53Shared::MAXATTEMPTS))
     {
         PUSMStatus = RD53lpGBTInterface::GetPUSMStatus(pChip);
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
@@ -119,7 +119,7 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
     {
         status = fBoardFW->WriteOptoLinkRegister(pChip->getId(), pAddress, pValue, pVerifLoop);
         nAttempts++;
-    } while((pVerifLoop == true) && (status == false) && (nAttempts < lpGBTconstants::MAXATTEMPTS));
+    } while((pVerifLoop == true) && (status == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
 
     if((pVerifLoop == true) && (status == false)) throw Exception("[RD53lpGBTInterface::WriteReg] LpGBT register writing issue");
 

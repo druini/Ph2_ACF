@@ -155,7 +155,7 @@ void Physics::run()
         theGuard.lock();
         genericEvtConverter(RD53Event::decodedEvents);
         theGuard.unlock();
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53FWconstants::READOUTSLEEP));
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
         numberOfEventsPerRun += RD53Event::decodedEvents.size();
     }
 }

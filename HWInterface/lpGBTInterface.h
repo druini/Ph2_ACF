@@ -12,6 +12,7 @@
 #define lpGBTInterface_H
 
 #include "../HWDescription/lpGBT.h"
+#include "../Utils/RD53Shared.h"
 #include "ChipInterface.h"
 #include "ReadoutChipInterface.h"
 
@@ -20,13 +21,11 @@
 // ##########################
 namespace lpGBTconstants
 {
-const uint8_t  LPGBTADDRESS      = 0x70;   // LpGBT chip address
-const uint32_t DEEPSLEEP         = 100000; // [microseconds]
-const uint8_t  MAXATTEMPTS       = 10;     // Maximum number of attempts
-const uint8_t  PATTERN_PRBS      = 0x1;    // Start PRBS pattern
-const uint8_t  PATTERN_NORMAL    = 0x0;    // Start normal-mode pattern
-const uint8_t  fictitiousGroup   = 6;      // Fictitious group used when no need to speficy frontend chip
-const uint8_t  fictitiousChannel = 0;      // Fictitious channel used when no need to speficy frontend chip
+const uint8_t LPGBTADDRESS      = 0x70; // LpGBT chip address
+const uint8_t PATTERN_PRBS      = 0x1;  // Start PRBS pattern
+const uint8_t PATTERN_NORMAL    = 0x0;  // Start normal-mode pattern
+const uint8_t fictitiousGroup   = 6;    // Fictitious group used when no need to speficy frontend chip
+const uint8_t fictitiousChannel = 0;    // Fictitious channel used when no need to speficy frontend chip
 } // namespace lpGBTconstants
 
 namespace Ph2_HwInterface
