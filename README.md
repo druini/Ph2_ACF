@@ -33,8 +33,8 @@ dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `Dev` / `v4-00`
-- Firmware tag: `4.0`
+- Software git branch / tag : `Dev` / `v4-01`
+- Firmware tag: `4.1`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 **FC7 setup:**
