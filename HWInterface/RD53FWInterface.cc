@@ -866,7 +866,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
     }
     else
-        LOG(ERROR) << BOLDRED << "Option not recognized " << injType << RESET;
+        LOG(ERROR) << BOLDRED << "Option not recognized " << BOLDYELLOW << injType << RESET;
 
     // @TMP@
     if(enableAutozero == true)
