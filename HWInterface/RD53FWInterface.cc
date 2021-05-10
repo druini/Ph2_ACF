@@ -1009,6 +1009,8 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const 
 
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
 
+void RD53FWInterface::SelectBERcheckBitORFrame(const uint8_t bitORframe) { RegManager::WriteReg("user.ctrl_regs.PRBS_checker.error_cntr_sel", bitORframe); }
+
 // ###########################################
 // # Member functions to handle the firmware #
 // ###########################################
@@ -1336,7 +1338,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
 
         double percent_done = frameCounter / frames2run * 100.;
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << percent_done << RESET << GREEN << "% done)" << RESET;
-        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << RegManager::ReadReg("user.stat_regs.prbs_ber_cntr") << RESET;
+        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << RegManager::ReadReg("user.stat_regs.prbs_ber_cntr") << RESET << GREEN << " frames with error(s)" << RESET;
         if(given_time == true)
             run_done = (time_per_step * idx >= time2run);
         else
@@ -1357,7 +1359,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     auto nErrors = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
-    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET;
+    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s)" << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
     return nErrors;

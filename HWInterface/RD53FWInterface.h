@@ -64,6 +64,8 @@ class RD53FWInterface : public BeBoardFWInterface
     void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
     // #############################
 
+    void SelectBERcheckBitORFrame(const uint8_t bitORframe);
+
     // ####################################
     // # Check AURORA lock on data stream #
     // ####################################
