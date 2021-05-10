@@ -1009,6 +1009,8 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const 
 
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
 
+void RD53FWInterface::SelectBERcheckBitORFrame(const uint8_t bitORframe) { RegManager::WriteReg("user.ctrl_regs.PRBS_checker.error_cntr_sel", bitORframe); }
+
 // ###########################################
 // # Member functions to handle the firmware #
 // ###########################################

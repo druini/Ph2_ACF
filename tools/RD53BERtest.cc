@@ -22,6 +22,11 @@ void BERtest::ConfigureCalibration()
     frames_or_time = this->findValueInSettings("framesORtime");
     doDisplay      = this->findValueInSettings("DisplayHisto");
 
+    // ##########################################################################################
+    // # Select BER counter meaning: number of frames with errors or number of bits with errors #
+    // ##########################################################################################
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->SelectBERcheckBitORFrame(0);
+
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
     // ############################################################
@@ -93,8 +98,6 @@ void BERtest::run()
 
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
-                // for(auto cGroup: cOpticalGroup->flpGBT->getRxGroups())
-                //     for(auto cChannels: cOpticalGroup->flpGBT->getRxChannels())
                 {
                     flpGBTInterface->StartPRBSpattern(cOpticalGroup->flpGBT);
 
