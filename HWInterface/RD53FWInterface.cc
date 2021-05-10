@@ -866,7 +866,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
     }
     else
-        LOG(ERROR) << BOLDRED << "Option not recognized " << injType << RESET;
+        LOG(ERROR) << BOLDRED << "Option not recognized " << BOLDYELLOW << injType << RESET;
 
     // @TMP@
     if(enableAutozero == true)
@@ -1336,7 +1336,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
 
         double percent_done = frameCounter / frames2run * 100.;
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << percent_done << RESET << GREEN << "% done)" << RESET;
-        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << RegManager::ReadReg("user.stat_regs.prbs_ber_cntr") << RESET;
+        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << RegManager::ReadReg("user.stat_regs.prbs_ber_cntr") << RESET << GREEN << " frames with error(s)" << RESET;
         if(given_time == true)
             run_done = (time_per_step * idx >= time2run);
         else
@@ -1357,7 +1357,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     auto nErrors = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
-    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET;
+    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s)" << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
     return nErrors;
