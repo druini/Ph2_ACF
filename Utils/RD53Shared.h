@@ -28,7 +28,7 @@ const size_t   NTHREADS      = round(std::thread::hardware_concurrency() / 2.); 
 const uint32_t DEEPSLEEP     = 100000;                                          // [microseconds]
 const uint8_t  READOUTSLEEP  = 50;                                              // [microseconds]
 const uint8_t  MAXATTEMPTS   = 40;                                              // Maximum number of attempts
-const int      MINSTEPS      = 10;                                              // Minimum number of steps for a scan
+const int      MAXSTEPS      = 10;                                              // Maximum number of steps for a scan
 
 std::string fromInt2Str(int val);
 std::string composeFileName(const std::string& configFileName, const std::string& fName2Add);
