@@ -22,6 +22,7 @@
 class ClockDelay : public PixelAlive
 {
   public:
+    ~ClockDelay() { this->CloseResultFile(); }
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;

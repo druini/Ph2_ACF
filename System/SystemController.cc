@@ -133,7 +133,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
-        std::cerr << "Cannot connect to the Power Supply Server" << '\n';
         delete fPowerSupplyClient;
         fPowerSupplyClient = nullptr;
     }
@@ -329,15 +328,18 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     // Configure readout-chips [CBCs, MPAs, SSAs]
                     for(auto cReadoutChip: *cHybrid)
                     {
-                        ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
-                        if(!bIgnoreI2c)
+                        if(cReadoutChip != nullptr)
                         {
-                            LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
-                            fReadoutChipInterface->ConfigureChip(theReadoutChip);
+                            ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
+                            if(!bIgnoreI2c)
+                            {
+                                LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
+                                fReadoutChipInterface->ConfigureChip(theReadoutChip);
+                            }
+                            // if SSA + ASYNC
+                            // make sure ROCs are configured for that
+                            if(theReadoutChip->getFrontEndType() == FrontEndType::SSA) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync); }
                         }
-                        // if SSA + ASYNC
-                        // make sure ROCs are configured for that
-                        if(theReadoutChip->getFrontEndType() == FrontEndType::SSA) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync); }
                     }
                 }
             }
@@ -380,12 +382,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
 
                     if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
                     {
-                        static_cast<RD53lpGBTInterface*>(flpGBTInterface)
-                            ->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, cBoard, cOpticalGroup, this->fBeBoardFWMap[cBoard->getId()], fReadoutChipInterface);
+                        flpGBTInterface->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, cBoard, cOpticalGroup, this->fBeBoardFWMap[cBoard->getId()], fReadoutChipInterface);
                         LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
                     }
                     else
-                        LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
+                        LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
                 }
 
             // #######################
@@ -395,29 +396,27 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(txStatus, rxStatus, mgtStatus);
 
-            do
-            {
-                // ######################################################
-                // # Configure down and up links to/from frontend chips #
-                // ######################################################
-                LOG(INFO) << CYAN << "=== Configuring frontend chip communication ===" << RESET;
-                static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Downlink(cBoard);
-                for(auto cOpticalGroup: *cBoard)
-                    for(auto cHybrid: *cOpticalGroup)
+            // ######################################################
+            // # Configure down and up links to/from frontend chips #
+            // ######################################################
+            LOG(INFO) << CYAN << "=== Configuring frontend chip communication ===" << RESET;
+            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Downlink(cBoard);
+            for(auto cOpticalGroup: *cBoard)
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    LOG(INFO) << GREEN << "Initializing chip communication of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
+                    for(const auto cChip: *cHybrid)
                     {
-                        LOG(INFO) << GREEN << "Initializing chip communication of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
-                        for(const auto cChip: *cHybrid)
-                        {
-                            LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
-                            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
-                        }
+                        LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
+                        static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
                     }
-                LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
+                }
+            LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
 
-                // ####################################
-                // # Check AURORA lock on data stream #
-                // ####################################
-            } while(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard) == false);
+            // ####################################
+            // # Check AURORA lock on data stream #
+            // ####################################
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard);
 
             // ############################
             // # Configure frontend chips #
@@ -436,7 +435,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         static_cast<RD53*>(cChip)->copyMaskToDefault();
                         static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
                         LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
-                        // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
+                        // static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0); @TMP@
                     }
                 }
             }

@@ -23,6 +23,7 @@
 class DataReadbackOptimization : public BERtest
 {
   public:
+    ~DataReadbackOptimization() { this->CloseResultFile(); }
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;

@@ -4,6 +4,8 @@
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/RD53.h"
+#include "../HWDescription/lpGBT.h"
+#include "../Utils/Utilities.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -274,8 +276,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
 
     for(pugi::xml_node theChild: pOpticalGroupNode.children())
     {
-        if(static_cast<std::string>(theChild.name()) == "Hybrid")
-            this->parseHybridContainer(theChild, theOpticalGroup, os, pBoard);
+        if(static_cast<std::string>(theChild.name()) == "Hybrid") { this->parseHybridContainer(theChild, theOpticalGroup, os, pBoard); }
         else if(static_cast<std::string>(theChild.name()) == "lpGBT_Interface")
         {
             pBoard->setUseOpticalLink(convertAnyInt(theChild.attribute("useOpticalLink").value()));
@@ -293,10 +294,29 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, fileName);
             theOpticalGroup->addlpGBT(thelpGBT);
 
+            // Initialize LpGBT settings from XML (only for IT)
+            if(pBoard->getBoardType() == BoardType::RD53)
+            {
+                for(const pugi::xml_attribute& attr: theChild.attributes())
+                {
+                    os << BOLDBLUE << "|\t|\t|---- " << attr.name() << ": " << BOLDYELLOW << attr.value() << "\n" << RESET;
+                    if(std::string(attr.name()) == "RxHSLPolarity")
+                        thelpGBT->setRxHSLPolarity(convertAnyInt(theChild.attribute("RxHSLPolarity").value()));
+                    else if(std::string(attr.name()) == "TxHSLPolarity")
+                        thelpGBT->setTxHSLPolarity(convertAnyInt(theChild.attribute("TxHSLPolarity").value()));
+                    else if(std::string(attr.name()) == "RxDataRate")
+                        thelpGBT->setRxDataRate(convertAnyInt(theChild.attribute("RxDataRate").value()));
+                    else if(std::string(attr.name()) == "TxDataRate")
+                        thelpGBT->setTxDataRate(convertAnyInt(theChild.attribute("TxDataRate").value()));
+                    else if(std::string(attr.name()) == "ClockFrequency")
+                        thelpGBT->setClocksFrequency(convertAnyInt(theChild.attribute("ClockFrequency").value()));
+                }
+            }
+
             pugi::xml_node clpGBTSettings = theChild.child("Settings");
             if(clpGBTSettings != nullptr)
             {
-                os << BOLDCYAN << "|\t|\t|----lpGBT settings" << RESET << std::endl;
+                os << BOLDCYAN << "|\t|\t|----LpGBT settings" << RESET << std::endl;
 
                 for(const pugi::xml_attribute& attr: clpGBTSettings.attributes())
                 {
@@ -530,12 +550,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
 
     if(cStatus)
     {
-        os << BOLDBLUE << "|"
-           << "       "
-           << "|"
+        os << BOLDBLUE << "|       |"
            << "----" << pHybridNode.name() << " --> " << BOLDBLUE << pHybridNode.first_attribute().name() << ": " << BOLDYELLOW << pHybridNode.attribute("Id").value() << BOLDBLUE
-           << ", FMCId: " << BOLDYELLOW << pOpticalGroup->getFMCId() << BOLDBLUE << ", Status: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("Status").value()) << BOLDBLUE
-           << ", LinkId: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("LinkId").value()) << RESET << std::endl;
+           << ", Status: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("Status").value()) << BOLDBLUE << RESET << std::endl;
 
         Hybrid* cHybrid;
         if(pBoard->getBoardType() == BoardType::RD53)
@@ -561,6 +578,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("MPA") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("CIC") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53") != std::string::npos;
+
             if(cIsTrackerASIC)
             {
                 if(cName.find("_Files") != std::string::npos) { cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute("path").value())); }
@@ -661,6 +679,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                 }
             }
         }
+
+        // Finally map front-end to LpGBT
+        if(pBoard->getBoardType() == BoardType::RD53 && pOpticalGroup->flpGBT != nullptr) this->parseHybridToLpGBT(pHybridNode, cHybrid, pOpticalGroup->flpGBT, os);
     }
 }
 
@@ -973,14 +994,40 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
     }
 }
 
+void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, Ph2_HwDescription::lpGBT* plpGBT, std::ostream& os)
+{
+    for(pugi::xml_node cChild: pHybridNode.children())
+    {
+        std::string cChildName = cChild.name();
+        if(cChildName.find("_Files") != std::string::npos) continue;
+        if(cChildName.find("RD53") != std::string::npos)
+        {
+            std::vector<uint8_t> cRxGroups   = splitToVector(cChild.attribute("RxGroups").value(), ',');
+            std::vector<uint8_t> cRxChannels = splitToVector(cChild.attribute("RxChannels").value(), ',');
+            std::vector<uint8_t> cTxGroups   = splitToVector(cChild.attribute("TxGroups").value(), ',');
+            std::vector<uint8_t> cTxChannels = splitToVector(cChild.attribute("TxChannels").value(), ',');
+
+            // Retrieve groups and channels from CIC node attirbutes and propagate to LpGBT class
+            plpGBT->addRxGroups(cRxGroups);
+            plpGBT->addRxChannels(cRxChannels);
+            plpGBT->addTxGroups(cTxGroups);
+            plpGBT->addTxChannels(cTxChannels);
+
+            // In the case of IT propagate LpGBT mapping the front-end chip
+            uint8_t cChipId = cChild.attribute("Id").as_int();
+            static_cast<RD53*>(cHybrid->at(cChipId))->setRxGroup(cRxGroups[0]);
+            static_cast<RD53*>(cHybrid->at(cChipId))->setRxChannel(cRxChannels[0]);
+            static_cast<RD53*>(cHybrid->at(cChipId))->setTxGroup(cTxGroups[0]);
+            static_cast<RD53*>(cHybrid->at(cChipId))->setTxChannel(cTxChannels[0]);
+        }
+    }
+}
+
 // ########################
 // # RD53 specific parser #
 // ########################
 void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os)
 {
-    os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << theChipNode.attribute("Id").value() << BOLDBLUE << ", Lane: " << BOLDYELLOW
-       << theChipNode.attribute("Lane").value() << BOLDBLUE << ", File: " << BOLDYELLOW << expandEnvironmentVariables(theChipNode.attribute("configfile").value()) << RESET << std::endl;
-
     std::string cFileName;
 
     if(cFilePrefix.empty() == false)
@@ -990,6 +1037,9 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
     }
     else
         cFileName = expandEnvironmentVariables(theChipNode.attribute("configfile").value());
+
+    os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << theChipNode.attribute("Id").value() << BOLDBLUE << ", Lane: " << BOLDYELLOW
+       << theChipNode.attribute("Lane").value() << BOLDBLUE << ", File: " << BOLDYELLOW << cFileName << RESET << std::endl;
 
     uint32_t     chipId   = theChipNode.attribute("Id").as_int();
     uint32_t     chipLane = theChipNode.attribute("Lane").as_int();

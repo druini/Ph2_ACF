@@ -27,6 +27,7 @@
 class GainOptimization : public Gain
 {
   public:
+    ~GainOptimization() { this->CloseResultFile(); }
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
