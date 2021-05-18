@@ -1360,7 +1360,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
               << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / frames2run * 100 << RESET << GREEN << "%)" << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
-    return nErrors;
+    return nErrors / frames2run;
 }
 
 } // namespace Ph2_HwInterface
