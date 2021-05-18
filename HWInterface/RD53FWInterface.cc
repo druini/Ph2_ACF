@@ -1314,7 +1314,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     // #########
     WriteStackReg({{"user.ctrl_regs.PRBS_checker.start_checker", 1}, {"user.ctrl_regs.PRBS_checker.start_checker", 0}});
 
-    LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << RESET;
+    LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << std::fixed << std::setprecision(0) << RESET;
     bool     run_done     = false;
     int      idx          = 1;
     uint64_t frameCounter = 0;
