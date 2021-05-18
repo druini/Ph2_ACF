@@ -39,11 +39,14 @@ class lpGBTInterface : public ChipInterface
     void StartPRBSpattern(Ph2_HwDescription::Chip* pChip);
     void StopPRBSpattern(Ph2_HwDescription::Chip* pChip);
 
-    virtual void ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
+    virtual bool ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
                                       const Ph2_HwDescription::BeBoard*      pBoard,
                                       const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
                                       Ph2_HwInterface::BeBoardFWInterface*   pBeBoardFWInterface,
-                                      ReadoutChipInterface*                  pReadoutChipInterface){};
+                                      ReadoutChipInterface*                  pReadoutChipInterface)
+    {
+        return true;
+    };
 
     // #######################################
     // # LpGBT block configuration functions #

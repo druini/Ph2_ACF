@@ -272,7 +272,6 @@
         VIN_dig_ShuLDO  = "0"
         VOUT_dig_ShuLDO = "1"
         ADCbandgap      = "1"
-        VOUT_BG         = "1"
         Iref            = "1"
         TEMPSENS_1      = "1"
         TEMPSENS_4      = "1"

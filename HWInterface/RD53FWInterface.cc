@@ -1355,8 +1355,8 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     auto nErrors = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
-    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors / frameCounter * 100 << RESET << GREEN
-              << "% of errors" << RESET;
+    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s), i.e. BER = " << BOLDYELLOW << nErrors * nBitInClkPeriod / frames2run << RESET
+              << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / frames2run * 100 << RESET << GREEN << "%)" << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
     return nErrors;

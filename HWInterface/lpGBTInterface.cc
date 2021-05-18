@@ -666,15 +666,9 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     double         time2run;
 
     if(given_time == true)
-    {
-        time2run   = frames_or_time;
-        frames2run = time2run * fps;
-    }
+        time2run = frames_or_time;
     else
-    {
-        frames2run = frames_or_time;
-        time2run   = frames2run / fps;
-    }
+        time2run = frames_or_time / fps;
     uint32_t BERTMeasTime = (log2(time2run * mainClock) - 5) / 2.;
     frames2run            = fBERTMeasTimeMap[BERTMeasTime];
 
@@ -721,8 +715,8 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // Read PRBS frame counter
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frames2run << RESET;
-    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors / frames2run * 100 << RESET << GREEN
-              << "% of errors" << RESET;
+    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s), i.e. BER = " << BOLDYELLOW << nErrors * nBitInClkPeriod / frames2run << RESET
+              << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / frames2run * 100 << RESET << GREEN << "%)" << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
     return nErrors;
