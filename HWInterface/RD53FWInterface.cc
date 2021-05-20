@@ -1315,10 +1315,10 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     // #########
     WriteStackReg({{"user.ctrl_regs.PRBS_checker.start_checker", 1}, {"user.ctrl_regs.PRBS_checker.start_checker", 0}});
 
-    LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << RESET;
+    LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << std::fixed << std::setprecision(0) << RESET;
     bool     run_done     = false;
     int      idx          = 1;
-    uint64_t frameCounter = 0;
+    uint64_t frameCounter = 0, nErrors = 0;
     while(run_done == false)
     {
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
@@ -1332,10 +1332,11 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
             return -1;
         }
         frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
+        nErrors += RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
 
         double percent_done = frameCounter / frames2run * 100.;
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << percent_done << RESET << GREEN << "% done)" << RESET;
-        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << RegManager::ReadReg("user.stat_regs.prbs_ber_cntr") << RESET << GREEN << " frames with error(s)" << RESET;
+        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s)" << RESET;
         if(given_time == true)
             run_done = (time_per_step * idx >= time2run);
         else
@@ -1353,14 +1354,14 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
     cntr_hi      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
     frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
-    auto nErrors = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
+    nErrors += RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
-    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors / frameCounter * 100 << RESET << GREEN
-              << "% of errors" << RESET;
+    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s), i.e. BER = " << BOLDYELLOW << nErrors * nBitInClkPeriod / frames2run << RESET
+              << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / frames2run * 100 << RESET << GREEN << "%)" << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
-    return nErrors;
+    return nErrors / frames2run;
 }
 
 } // namespace Ph2_HwInterface

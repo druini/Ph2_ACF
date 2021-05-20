@@ -46,8 +46,10 @@ class DataReadbackOptimization : public BERtest
     size_t stopValueTAP0;
     size_t startValueTAP1;
     size_t stopValueTAP1;
+    bool   invTAP1;
     size_t startValueTAP2;
     size_t stopValueTAP2;
+    bool   invTAP2;
 
     std::vector<uint16_t> dacListTAP0;
     std::vector<uint16_t> dacListTAP1;
