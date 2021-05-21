@@ -262,7 +262,11 @@ void Gain::draw(bool saveData)
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze()
 {
-    float              gain, gainErr, intercept, interceptErr;
+    float gain, gainErr, intercept, interceptErr, chi2, NdF;
+
+    std::vector<float> par(NGAINPAR, 0);
+    std::vector<float> parErr(NGAINPAR, 0);
+
     std::vector<float> x(dacList.size(), 0);
     std::vector<float> y(dacList.size(), 0);
     std::vector<float> e(dacList.size(), 0);
@@ -301,7 +305,11 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                                .fPhError;
                                 }
 
-                                Gain::computeStats(x, y, e, gain, gainErr, intercept, interceptErr);
+                                Gain::computeStats(x, y, e, par, parErr, chi2, NdF);
+                                intercept    = par[0];
+                                interceptErr = parErr[0];
+                                gain         = par[1];
+                                gainErr      = parErr[1];
 
                                 if(gain != 0)
                                 {
@@ -371,8 +379,32 @@ void Gain::fillHisto()
     histos->fillGainAndIntercept(*theGainAndInterceptContainer);
 #endif
 }
+/*
+void Gain::computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, std::vector<float>& par, std::vector<float>& parErr, float& chi2, float& NdF)
+{
+  using namespace boost::numeric::ublas;
 
-void Gain::computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, float& gain, float& gainErr, float& intercept, float& interceptErr)
+  matrix<float> H(x.size(), NGAINPAR);
+  matrix<float> V(x.size(), x.size());
+
+  for(auto r = 0u; r < H.size1(); r++)
+  {
+      H(r, 0) = 1;
+      H(r, 1) = x[r];
+      // H(r, 2) = log(x[r]);
+  }
+
+  for(auto r = 0u; r < V.size1(); r++) V(r, r) = e[r] * e[r];
+
+  auto test = inverse(H);
+
+  auto parCov = inverse(prod((trans(H), prod(inverse(V), H))));
+  par         = prod(parCov, prod(trans(H), prod(inverse(V), y)));
+
+  for(auto c = 0; c < NGAINPAR; c++) parErr[c] = sqrt(parCov(c, c));
+}
+*/
+void Gain::computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, std::vector<float>& par, std::vector<float>& parErr, float& chi2, float& NdF)
 // ##############################################
 // # Linear regression with least-square method #
 // # Model: y = f(x) = q + mx                   #
@@ -391,10 +423,10 @@ void Gain::computeStats(const std::vector<float>& x, const std::vector<float>& y
     float it = 0;
     float det;
 
-    intercept    = 0;
-    gain         = 0;
-    interceptErr = 0;
-    gainErr      = 0;
+    par[0]    = 0;
+    par[1]    = 0;
+    parErr[0] = 0;
+    parErr[1] = 0;
 
     // #######
     // # XtX #
@@ -426,15 +458,15 @@ void Gain::computeStats(const std::vector<float>& x, const std::vector<float>& y
         for(auto i = 0u; i < x.size(); i++)
             if(e[i] != 0)
             {
-                intercept += (ai + bi * x[i]) * y[i];
-                gain += (ci + di * x[i]) * y[i];
+                par[0] += (ai + bi * x[i]) * y[i];
+                par[1] += (ci + di * x[i]) * y[i];
 
-                interceptErr += (ai + bi * x[i]) * (ai + bi * x[i]) * e[i] * e[i];
-                gainErr += (ci + di * x[i]) * (ci + di * x[i]) * e[i] * e[i];
+                parErr[0] += (ai + bi * x[i]) * (ai + bi * x[i]) * e[i] * e[i];
+                parErr[1] += (ci + di * x[i]) * (ci + di * x[i]) * e[i] * e[i];
             }
 
-        interceptErr = sqrt(interceptErr);
-        gainErr      = sqrt(gainErr);
+        parErr[0] = sqrt(parErr[0]);
+        parErr[1] = sqrt(parErr[1]);
     }
 }
 

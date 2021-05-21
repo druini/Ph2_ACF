@@ -17,10 +17,17 @@
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "Tool.h"
 
+#include <boost/numeric/ublas/matrix.hpp>
+
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53GainHistograms.h"
 #include "TApplication.h"
 #endif
+
+// #############
+// # CONSTANTS #
+// #############
+#define NGAINPAR 3 // Number of parameters for gain data regression
 
 // ###################
 // # Gain test suite #
@@ -72,7 +79,7 @@ class Gain : public Tool
     ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
     void fillHisto();
-    void computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, float& gain, float& gainErr, float& intercept, float& interceptErr);
+    void computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, std::vector<float>& par, std::vector<float>& parErr, float& chi2, float& NdF);
     void chipErrorReport() const;
 
   protected:
