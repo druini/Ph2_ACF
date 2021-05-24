@@ -13,11 +13,9 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerRecycleBin.h"
-#include "../Utils/GainAndIntercept.h"
+#include "../Utils/GainFit.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "Tool.h"
-
-#include <boost/numeric/ublas/matrix.hpp>
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53GainHistograms.h"
@@ -27,7 +25,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define NGAINPAR 3 // Number of parameters for gain data regression
+#define NGAINPAR 4 // Number of parameters for gain data regression
 
 // ###################
 // # Gain test suite #
@@ -75,11 +73,11 @@ class Gain : public Tool
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
     std::vector<DetectorDataContainer*>      detectorContainerVector;
-    std::shared_ptr<DetectorDataContainer>   theGainAndInterceptContainer;
+    std::shared_ptr<DetectorDataContainer>   theGainContainer;
     ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
     void fillHisto();
-    void computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, std::vector<float>& par, std::vector<float>& parErr, float& chi2, float& NdF);
+    void computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, std::vector<float>& par, std::vector<float>& parErr, float& chi2, float& DoF);
     void chipErrorReport() const;
 
   protected:

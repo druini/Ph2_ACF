@@ -14,7 +14,7 @@
 #include "../System/SystemController.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
-#include "../Utils/GainAndIntercept.h"
+#include "../Utils/GainFit.h"
 #include "../Utils/RD53Shared.h"
 #include "DQMHistogramBase.h"
 
@@ -24,7 +24,9 @@
 // #############
 // # CONSTANTS #
 // #############
-#define INTERCEPT_HALFRANGE 6 // [ToT]
+#define INTERCEPT_HALFRANGE 6   // [ToT]
+#define QUADRATIC_HALFRANGE 1e6 // [ToT*ToT]
+#define LOG_HALFRANGE 2         // [ln(ToT)]
 
 class GainHistograms : public DQMHistogramBase
 {
@@ -35,7 +37,7 @@ class GainHistograms : public DQMHistogramBase
     void reset() override{};
 
     void fillOccupancy(const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL);
-    void fillGainAndIntercept(const DetectorDataContainer& GainAndInterceptContainer);
+    void fillGain(const DetectorDataContainer& GainContainer);
 
   private:
     DetectorDataContainer DetectorData;
@@ -43,10 +45,18 @@ class GainHistograms : public DQMHistogramBase
     DetectorDataContainer Occupancy2D;
     DetectorDataContainer ErrorReadOut2D;
     DetectorDataContainer ErrorFit2D;
+
     DetectorDataContainer Gain1D;
     DetectorDataContainer Intercept1D;
+    DetectorDataContainer Quadratic1D;
+    DetectorDataContainer Log1D;
+    DetectorDataContainer Chi2DoF1D;
+
     DetectorDataContainer Gain2D;
     DetectorDataContainer Intercept2D;
+    DetectorDataContainer Quadratic2D;
+    DetectorDataContainer Log2D;
+    DetectorDataContainer Chi2DoF2D;
 
     size_t nEvents;
     size_t nSteps;

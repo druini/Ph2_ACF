@@ -295,15 +295,15 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                         size_t cnt    = 0;
                         for(auto row = 0u; row < RD53::nRows; row++)
                             for(auto col = 0u; col < RD53::nCols; col++)
-                                if(cChip->getChannel<GainAndIntercept>(row, col).fGain > 0)
+                                if(cChip->getChannel<GainFit>(row, col).fGain > 0)
                                 {
-                                    stdDev += cChip->getChannel<GainAndIntercept>(row, col).fGain * cChip->getChannel<GainAndIntercept>(row, col).fGain;
+                                    stdDev += cChip->getChannel<GainFit>(row, col).fGain * cChip->getChannel<GainFit>(row, col).fGain;
                                     cnt++;
                                 }
-                        stdDev          = (cnt != 0 ? stdDev / cnt : 0) - cChip->getSummary<GainAndIntercept>().fGain * cChip->getSummary<GainAndIntercept>().fGain;
+                        stdDev          = (cnt != 0 ? stdDev / cnt : 0) - cChip->getSummary<GainFit>().fGain * cChip->getSummary<GainFit>().fGain;
                         stdDev          = (stdDev > 0 ? sqrt(stdDev) : 0);
                         size_t ToTpoint = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) - 2;
-                        float  newValue = (ToTpoint - cChip->getSummary<GainAndIntercept>().fIntercept) / (cChip->getSummary<GainAndIntercept>().fGain + NSTDEV * stdDev);
+                        float  newValue = (ToTpoint - cChip->getSummary<GainFit>().fIntercept) / (cChip->getSummary<GainFit>().fGain + NSTDEV * stdDev);
 
                         // ########################
                         // # Save best DAC values #
