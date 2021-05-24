@@ -24,9 +24,10 @@
 // #############
 // # CONSTANTS #
 // #############
-#define INTERCEPT_HALFRANGE 6   // [ToT]
-#define QUADRATIC_HALFRANGE 1e6 // [ToT*ToT]
-#define LOG_HALFRANGE 2         // [ln(ToT)]
+#define INTERCEPT_HALFRANGE 20   // [ToT]
+#define GAIN_HALFRANGE 2e-2      // [ToT / VCal]
+#define QUADRATIC_HALFRANGE 1e-6 // [ToT / VCal^2]
+#define LOG_HALFRANGE 4          // [ToT / ln(VCal)]
 
 class GainHistograms : public DQMHistogramBase
 {

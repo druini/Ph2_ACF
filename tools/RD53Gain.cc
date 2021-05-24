@@ -371,9 +371,9 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                 for(const auto cChip: *cHybrid)
                 {
                     LOG(INFO) << GREEN << "Average gain for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << +cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(4) << cChip->getSummary<GainFit, GainFit>().fGain << RESET << GREEN
+                              << +cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::scientific << std::setprecision(2) << cChip->getSummary<GainFit, GainFit>().fGain << RESET << GREEN
                               << " (ToT/Delta_VCal)" << std::setprecision(-1) << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW << std::fixed << std::setprecision(4)
+                    LOG(INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW << std::scientific << std::setprecision(2)
                               << theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << std::setprecision(-1)
                               << RESET;
                     RD53Shared::resetDefaultFloat();

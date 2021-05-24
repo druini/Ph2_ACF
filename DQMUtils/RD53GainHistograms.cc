@@ -34,19 +34,19 @@ void GainHistograms::book(TFile* theOutputFile, const DetectorContainer& theDete
     auto hErrorFit2D = CanvasContainer<TH2F>("FitErrors", "Fit Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorFit2D, hErrorFit2D, "Columns", "Rows");
 
-    auto hGain1D = CanvasContainer<TH1F>("Gain1D", "Gain1D", 100, 0, 20e-3);
+    auto hGain1D = CanvasContainer<TH1F>("Gain1D", "Gain1D", 100, -GAIN_HALFRANGE, GAIN_HALFRANGE);
     bookImplementer(theOutputFile, theDetectorStructure, Gain1D, hGain1D, "Gain (ToT/VCal)", "Entries");
 
     auto hIntercept1D = CanvasContainer<TH1F>("Intercept1D", "Intercept1D", 100, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
     bookImplementer(theOutputFile, theDetectorStructure, Intercept1D, hIntercept1D, "Intercept (ToT)", "Entries");
 
     auto hQuadratic1D = CanvasContainer<TH1F>("Quadratic1D", "Quadratic1D", 100, -QUADRATIC_HALFRANGE, QUADRATIC_HALFRANGE);
-    bookImplementer(theOutputFile, theDetectorStructure, Quadratic1D, hQuadratic1D, "Quadratic (ToT^{2})", "Entries");
+    bookImplementer(theOutputFile, theDetectorStructure, Quadratic1D, hQuadratic1D, "Quadratic (ToT/VCal^{2})", "Entries");
 
     auto hLog1D = CanvasContainer<TH1F>("Log1D", "Log1D", 100, -LOG_HALFRANGE, LOG_HALFRANGE);
-    bookImplementer(theOutputFile, theDetectorStructure, Log1D, hLog1D, "Log (ln(ToT))", "Entries");
+    bookImplementer(theOutputFile, theDetectorStructure, Log1D, hLog1D, "Log (ToT/ln(VCal))", "Entries");
 
-    auto hChi2DoF1D = CanvasContainer<TH1F>("Chi2DoF1D", "Chi2DoF1D", 100, 0, 10);
+    auto hChi2DoF1D = CanvasContainer<TH1F>("Chi2DoF1D", "Chi2DoF1D", 100, 0, 4);
     bookImplementer(theOutputFile, theDetectorStructure, Chi2DoF1D, hChi2DoF1D, "#chi^{2}/D.o.F.", "Entries");
 
     auto hGain2D = CanvasContainer<TH2F>("Gain2D", "Gain Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
