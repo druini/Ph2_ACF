@@ -265,7 +265,7 @@ void Gain::draw(bool saveData)
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze()
 {
-    float gain, gainErr, intercept, interceptErr, quadratic, quadraticErr, log, logErr, chi2, DoF;
+    float slope, slopeErr, intercept, interceptErr, quadratic, quadraticErr, log, logErr, chi2, DoF;
 
     std::vector<float> par(NGAINPAR, 0);
     std::vector<float> parErr(NGAINPAR, 0);
@@ -276,8 +276,6 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
 
     theGainContainer = std::make_shared<DetectorDataContainer>();
     ContainerFactory::copyAndInitStructure<GainFit>(*fDetectorContainer, *theGainContainer);
-    DetectorDataContainer theMaxGainContainer;
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, theMaxGainContainer, gain = 0);
 
     size_t index = 0;
     for(const auto cBoard: *fDetectorContainer)
@@ -314,18 +312,18 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                 Gain::computeStats(x, y, e, par, parErr, chi2, DoF);
                                 intercept    = par[0];
                                 interceptErr = parErr[0];
-                                gain         = par[1];
-                                gainErr      = parErr[1];
+                                slope        = par[1];
+                                slopeErr     = parErr[1];
                                 quadratic    = par[2];
                                 quadraticErr = parErr[2];
                                 log          = par[3];
                                 logErr       = parErr[3];
 
-                                if(gain != 0)
+                                if(chi2 != 0)
                                 {
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fGain = gain;
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fGainError =
-                                        gainErr;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlope = slope;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeError =
+                                        slopeErr;
 
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fIntercept =
                                         intercept;
@@ -351,12 +349,9 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
 
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 = chi2;
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fDoF  = DoF;
-
-                                    if(gain > theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>())
-                                        theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() = gain;
                                 }
                                 else
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fGain =
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 =
                                         RD53Shared::FITERROR;
                             }
 
@@ -371,11 +366,8 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                 for(const auto cChip: *cHybrid)
                 {
                     LOG(INFO) << GREEN << "Average gain for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << +cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::scientific << std::setprecision(2) << cChip->getSummary<GainFit, GainFit>().fGain << RESET << GREEN
+                              << +cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::scientific << std::setprecision(2) << cChip->getSummary<GainFit, GainFit>().fSlope << RESET << GREEN
                               << " (ToT/Delta_VCal)" << std::setprecision(-1) << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW << std::scientific << std::setprecision(2)
-                              << theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << std::setprecision(-1)
-                              << RESET;
                     RD53Shared::resetDefaultFloat();
                 }
 
@@ -410,9 +402,9 @@ void Gain::computeStats(const std::vector<float>& x, const std::vector<float>& y
     }
     if(DoF < 1) return;
 
-    ublas::matrix<float> H(nData, NGAINPAR);
-    ublas::matrix<float> V(nData, nData);
-    ublas::vector<float> myY(nData);
+    ublas::matrix<double> H(nData, NGAINPAR);
+    ublas::matrix<double> V(nData, nData);
+    ublas::vector<double> myY(nData);
 
     for(auto c = 0u; c < V.size2(); c++)
         for(auto r = 0u; r < V.size1(); r++) V(r, c) = 0;
@@ -435,15 +427,15 @@ void Gain::computeStats(const std::vector<float>& x, const std::vector<float>& y
     auto invV(V);
     for(r = 0; r < nData; r++) invV(r, r) = 1 / V(r, r);
 
-    ublas::matrix<float> tmpMtx(ublas::prod(invV, H));
-    ublas::matrix<float> invParCov(ublas::prod(ublas::trans(H), tmpMtx));
-    auto                 parCov(invParCov);
+    ublas::matrix<double> tmpMtx(ublas::prod(invV, H));
+    ublas::matrix<double> invParCov(ublas::prod(ublas::trans(H), tmpMtx));
+    auto                  parCov(invParCov);
 
-    if(RD53Shared::mtxInversion<float>(invParCov, parCov) != 0)
+    if(RD53Shared::mtxInversion<double>(invParCov, parCov) != 0)
     {
-        ublas::vector<float> tmpVec1(ublas::prod(invV, myY));
-        ublas::vector<float> tmpVec2(ublas::prod(ublas::trans(H), tmpVec1));
-        ublas::vector<float> myPar(ublas::prod(parCov, tmpVec2));
+        ublas::vector<double> tmpVec1(ublas::prod(invV, myY));
+        ublas::vector<double> tmpVec2(ublas::prod(ublas::trans(H), tmpVec1));
+        ublas::vector<double> myPar(ublas::prod(parCov, tmpVec2));
 
         std::copy(myPar.begin(), myPar.end(), par.begin());
 
@@ -452,8 +444,8 @@ void Gain::computeStats(const std::vector<float>& x, const std::vector<float>& y
         // ################
         // # Compute chi2 #
         // ################
-        ublas::vector<float> num(myY - ublas::prod(H, myPar));
-        ublas::vector<float> tmpNum(ublas::prod(invV, num));
+        ublas::vector<double> num(myY - ublas::prod(H, myPar));
+        ublas::vector<double> tmpNum(ublas::prod(invV, num));
         chi2 = ublas::inner_prod(num, tmpNum);
     }
 }

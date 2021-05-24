@@ -34,11 +34,11 @@ void GainHistograms::book(TFile* theOutputFile, const DetectorContainer& theDete
     auto hErrorFit2D = CanvasContainer<TH2F>("FitErrors", "Fit Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorFit2D, hErrorFit2D, "Columns", "Rows");
 
-    auto hGain1D = CanvasContainer<TH1F>("Gain1D", "Gain1D", 100, -GAIN_HALFRANGE, GAIN_HALFRANGE);
-    bookImplementer(theOutputFile, theDetectorStructure, Gain1D, hGain1D, "Gain (ToT/VCal)", "Entries");
-
     auto hIntercept1D = CanvasContainer<TH1F>("Intercept1D", "Intercept1D", 100, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
     bookImplementer(theOutputFile, theDetectorStructure, Intercept1D, hIntercept1D, "Intercept (ToT)", "Entries");
+
+    auto hSlope1D = CanvasContainer<TH1F>("Slope1D", "Slope1D", 100, -SLOPE_HALFRANGE, SLOPE_HALFRANGE);
+    bookImplementer(theOutputFile, theDetectorStructure, Slope1D, hSlope1D, "Slope (ToT/VCal)", "Entries");
 
     auto hQuadratic1D = CanvasContainer<TH1F>("Quadratic1D", "Quadratic1D", 100, -QUADRATIC_HALFRANGE, QUADRATIC_HALFRANGE);
     bookImplementer(theOutputFile, theDetectorStructure, Quadratic1D, hQuadratic1D, "Quadratic (ToT/VCal^{2})", "Entries");
@@ -49,11 +49,11 @@ void GainHistograms::book(TFile* theOutputFile, const DetectorContainer& theDete
     auto hChi2DoF1D = CanvasContainer<TH1F>("Chi2DoF1D", "Chi2DoF1D", 100, 0, 4);
     bookImplementer(theOutputFile, theDetectorStructure, Chi2DoF1D, hChi2DoF1D, "#chi^{2}/D.o.F.", "Entries");
 
-    auto hGain2D = CanvasContainer<TH2F>("Gain2D", "Gain Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
-    bookImplementer(theOutputFile, theDetectorStructure, Gain2D, hGain2D, "Column", "Row");
-
     auto hIntercept2D = CanvasContainer<TH2F>("Intercept2D", "Intercept Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
     bookImplementer(theOutputFile, theDetectorStructure, Intercept2D, hIntercept2D, "Column", "Row");
+
+    auto hSlope2D = CanvasContainer<TH2F>("Slope2D", "Slope Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+    bookImplementer(theOutputFile, theDetectorStructure, Slope2D, hSlope2D, "Column", "Row");
 
     auto hQuadratic2D = CanvasContainer<TH2F>("Quadratic2D", "Quadratic Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
     bookImplementer(theOutputFile, theDetectorStructure, Quadratic2D, hQuadratic2D, "Column", "Row");
@@ -119,18 +119,18 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
                 {
                     if(cChip->getChannelContainer<GainFit>() == nullptr) continue;
 
-                    auto* Gain1DHist = Gain1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
                     auto* Intercept1DHist =
                         Intercept1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* Slope1DHist = Slope1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
                     auto* Quadratic1DHist =
                         Quadratic1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
                     auto* Log1DHist = Log1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
                     auto* Chi2DoF1DHist =
                         Chi2DoF1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    auto* Gain2DHist = Gain2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
                     auto* Intercept2DHist =
                         Intercept2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+                    auto* Slope2DHist = Slope2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
                     auto* Quadratic2DHist =
                         Quadratic2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
                     auto* Log2DHist = Log2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
@@ -142,15 +142,15 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(cChip->getChannel<GainFit>(row, col).fGain == RD53Shared::FITERROR)
+                            if(cChip->getChannel<GainFit>(row, col).fChi2 == RD53Shared::FITERROR)
                                 ErrorFit2DHist->Fill(col + 1, row + 1);
-                            else if(cChip->getChannel<GainFit>(row, col).fGain != 0)
+                            else if(cChip->getChannel<GainFit>(row, col).fChi2 != 0)
                             {
                                 // #################
                                 // # 1D histograms #
                                 // #################
-                                Gain1DHist->Fill(cChip->getChannel<GainFit>(row, col).fGain);
                                 Intercept1DHist->Fill(cChip->getChannel<GainFit>(row, col).fIntercept);
+                                Slope1DHist->Fill(cChip->getChannel<GainFit>(row, col).fSlope);
                                 Quadratic1DHist->Fill(cChip->getChannel<GainFit>(row, col).fQuadratic);
                                 Log1DHist->Fill(cChip->getChannel<GainFit>(row, col).fLog);
                                 Chi2DoF1DHist->Fill(cChip->getChannel<GainFit>(row, col).fChi2 / cChip->getChannel<GainFit>(row, col).fDoF);
@@ -158,7 +158,7 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
                                 // #################
                                 // # 2D histograms #
                                 // #################
-                                Gain2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fGain);
+                                Slope2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fSlope);
                                 Intercept2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fIntercept);
                                 Quadratic2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fQuadratic);
                                 Log2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fLog);
@@ -173,14 +173,14 @@ void GainHistograms::process()
     draw<TH2F>(ErrorReadOut2D, "gcolz");
     draw<TH2F>(ErrorFit2D, "gcolz");
 
-    draw<TH1F>(Gain1D, "", true, "Gain (ToT/electrons)");
     draw<TH1F>(Intercept1D);
+    draw<TH1F>(Slope1D, "", true, "Slope (ToT/electrons)");
     draw<TH1F>(Quadratic1D);
     draw<TH1F>(Log1D);
     draw<TH1F>(Chi2DoF1D);
 
-    draw<TH2F>(Gain2D, "gcolz");
     draw<TH2F>(Intercept2D, "gcolz");
+    draw<TH2F>(Slope2D, "gcolz");
     draw<TH2F>(Quadratic2D, "gcolz");
     draw<TH2F>(Log2D, "gcolz");
     draw<TH2F>(Chi2DoF2D, "gcolz");

@@ -291,32 +291,41 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                         // ##############################################
                         // # Search for maximum and build discriminator #
                         // ##############################################
-                        float  stdDev = 0;
-                        size_t cnt    = 0;
+                        float  avg         = 0;
+                        float  stdDev      = 0;
+                        size_t cnt         = 0;
                         for(auto row = 0u; row < RD53::nRows; row++)
                             for(auto col = 0u; col < RD53::nCols; col++)
-                                if(cChip->getChannel<GainFit>(row, col).fGain > 0)
+                                if(cChip->getChannel<GainFit>(row, col).fChi2 != 0)
                                 {
-                                    stdDev += cChip->getChannel<GainFit>(row, col).fGain * cChip->getChannel<GainFit>(row, col).fGain;
+                                    float ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fIntercept,
+                                                                            cChip->getChannel<GainFit>(row, col).fSlope,
+                                                                            cChip->getChannel<GainFit>(row, col).fQuadratic,
+                                                                            cChip->getChannel<GainFit>(row, col).fLog},
+                                                                           RD53chargeConverter::Charge2VCal(target));
+                                    avg += ToTatTarget;
+                                    stdDev += ToTatTarget * ToTatTarget;
                                     cnt++;
                                 }
-                        stdDev          = (cnt != 0 ? stdDev / cnt : 0) - cChip->getSummary<GainFit>().fGain * cChip->getSummary<GainFit>().fGain;
-                        stdDev          = (stdDev > 0 ? sqrt(stdDev) : 0);
-                        size_t ToTpoint = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) - 2;
-                        float  newValue = (ToTpoint - cChip->getSummary<GainFit>().fIntercept) / (cChip->getSummary<GainFit>().fGain + NSTDEV * stdDev);
+                        avg              = cnt != 0 ? avg / cnt : 0;
+                        stdDev           = (cnt != 0 ? stdDev / cnt : 0) - avg * avg;
+                        stdDev           = (stdDev > 0 ? sqrt(stdDev) : 0);
+                        float  newValue  = avg + NSTDEV * stdDev;
+
+                        size_t targetToT = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) - 1; // @CONST@ : 15 = nohit, 14 = overflow
 
                         // ########################
                         // # Save best DAC values #
                         // ########################
                         float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>();
-                        if(fabs(newValue - target) < fabs(oldValue - target))
+                        if(fabs(newValue - targetToT) < fabs(oldValue - targetToT))
                         {
                             bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() = newValue;
                             bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                                 midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                         }
 
-                        if((newValue > target) || (newValue < 0))
+                        if((newValue > targetToT) || (stdDev == 0))
 
                             maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                                 midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();

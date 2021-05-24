@@ -52,6 +52,8 @@ class Gain : public Tool
     size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * nSteps; }
     void   saveChipRegisters(int currentRun);
 
+    static float gainFunction(const std::vector<float>& par, float q) { return par[0] + par[1] * q + par[2] * q * q + par[3] * log(q); }
+
 #ifdef __USE_ROOT__
     GainHistograms* histos;
 #endif

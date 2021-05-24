@@ -20,8 +20,8 @@ void GainFit::makeSummaryAverage(const std::vector<GainFit>* theGainVector, cons
 
     float cnt = 0;
 
-    fGain           = 0;
-    fGainError      = 0;
+    fSlope           = 0;
+    fSlopeError      = 0;
     fIntercept      = 0;
     fInterceptError = 0;
     fQuadratic      = 0;
@@ -33,10 +33,10 @@ void GainFit::makeSummaryAverage(const std::vector<GainFit>* theGainVector, cons
 
     for(size_t iContainer = 0; iContainer < theGainVector->size(); iContainer++)
     {
-        if(theGainVector->at(iContainer).fGainError > 0)
+        if(theGainVector->at(iContainer).fSlopeError > 0)
         {
-            fGain += theGainVector->at(iContainer).fGain * theNumberOfEnabledChannelsList[iContainer] / (theGainVector->at(iContainer).fGainError * theGainVector->at(iContainer).fGainError);
-            fGainError += theNumberOfEnabledChannelsList[iContainer] / (theGainVector->at(iContainer).fGainError * theGainVector->at(iContainer).fGainError);
+            fSlope += theGainVector->at(iContainer).fSlope * theNumberOfEnabledChannelsList[iContainer] / (theGainVector->at(iContainer).fSlopeError * theGainVector->at(iContainer).fSlopeError);
+            fSlopeError += theNumberOfEnabledChannelsList[iContainer] / (theGainVector->at(iContainer).fSlopeError * theGainVector->at(iContainer).fSlopeError);
         }
 
         if(theGainVector->at(iContainer).fInterceptError > 0)
@@ -65,10 +65,10 @@ void GainFit::makeSummaryAverage(const std::vector<GainFit>* theGainVector, cons
         cnt++;
     }
 
-    if(fGainError > 0)
+    if(fSlopeError > 0)
     {
-        fGain /= fGainError;
-        fGainError = sqrt(1. / fGainError);
+        fSlope /= fSlopeError;
+        fSlopeError = sqrt(1. / fSlopeError);
     }
 
     if(fInterceptError > 0)

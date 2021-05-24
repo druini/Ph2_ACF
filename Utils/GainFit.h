@@ -18,10 +18,10 @@
 class GainFit
 {
   public:
-    GainFit() : fGain(0), fGainError(0), fIntercept(0), fInterceptError(0), fQuadratic(0), fQuadraticError(0), fLog(0), fLogError(0), fChi2(0), fDoF(0) {}
+    GainFit() : fSlope(0), fSlopeError(0), fIntercept(0), fInterceptError(0), fQuadratic(0), fQuadraticError(0), fLog(0), fLogError(0), fChi2(0), fDoF(0) {}
     ~GainFit() {}
 
-    void print(void) { std::cout << fGain << "\t" << fIntercept << "\t" << fQuadratic << "\t" << fLog << "\t" << fChi2 << "\t" << fDoF << std::endl; }
+    void print(void) { std::cout << fSlope << "\t" << fIntercept << "\t" << fQuadratic << "\t" << fLog << "\t" << fChi2 << "\t" << fDoF << std::endl; }
 
     template <typename T>
     void makeChannelAverage(const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents)
@@ -30,8 +30,8 @@ class GainFit
     void makeSummaryAverage(const std::vector<GainFit>* theGainVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents);
     void normalize(const uint32_t numberOfEvents) {}
 
-    float fGain;
-    float fGainError;
+    float fSlope;
+    float fSlopeError;
 
     float fIntercept;
     float fInterceptError;
@@ -52,8 +52,8 @@ GainFit::makeChannelAverage<GainFit>(const ChipContainer* theChipContainer, cons
 {
     float cnt = 0;
 
-    fGain           = 0;
-    fGainError      = 0;
+    fSlope           = 0;
+    fSlopeError      = 0;
     fIntercept      = 0;
     fInterceptError = 0;
     fQuadratic      = 0;
@@ -67,11 +67,11 @@ GainFit::makeChannelAverage<GainFit>(const ChipContainer* theChipContainer, cons
         for(auto col = 0u; col < theChipContainer->getNumberOfCols(); col++)
             if(chipOriginalMask->isChannelEnabled(row, col) && cTestChannelGroup->isChannelEnabled(row, col))
             {
-                if(theChipContainer->getChannel<GainFit>(row, col).fGainError > 0)
+                if(theChipContainer->getChannel<GainFit>(row, col).fSlopeError > 0)
                 {
-                    fGain += theChipContainer->getChannel<GainFit>(row, col).fGain /
-                             (theChipContainer->getChannel<GainFit>(row, col).fGainError * theChipContainer->getChannel<GainFit>(row, col).fGainError);
-                    fGainError += 1. / (theChipContainer->getChannel<GainFit>(row, col).fGainError * theChipContainer->getChannel<GainFit>(row, col).fGainError);
+                    fSlope += theChipContainer->getChannel<GainFit>(row, col).fSlope /
+                             (theChipContainer->getChannel<GainFit>(row, col).fSlopeError * theChipContainer->getChannel<GainFit>(row, col).fSlopeError);
+                    fSlopeError += 1. / (theChipContainer->getChannel<GainFit>(row, col).fSlopeError * theChipContainer->getChannel<GainFit>(row, col).fSlopeError);
                 }
 
                 if(theChipContainer->getChannel<GainFit>(row, col).fInterceptError > 0)
@@ -101,10 +101,10 @@ GainFit::makeChannelAverage<GainFit>(const ChipContainer* theChipContainer, cons
                 cnt++;
             }
 
-    if(fGainError > 0)
+    if(fSlopeError > 0)
     {
-        fGain /= fGainError;
-        fGainError = sqrt(1. / fGainError);
+        fSlope /= fSlopeError;
+        fSlopeError = sqrt(1. / fSlopeError);
     }
 
     if(fInterceptError > 0)
