@@ -66,6 +66,7 @@ class Gain : public Tool
     size_t nEvents;
     size_t startValue;
     size_t stopValue;
+    float  targetCharge;
     size_t nSteps;
     size_t offset;
     size_t nHITxCol;

@@ -36,8 +36,8 @@ class GainFit
     float fIntercept;
     float fInterceptError;
 
-    float fQuadratic;
-    float fQuadraticError;
+    float  fQuadratic;
+    double fQuadraticError;
 
     float fLog;
     float fLogError;
@@ -52,8 +52,8 @@ GainFit::makeChannelAverage<GainFit>(const ChipContainer* theChipContainer, cons
 {
     float cnt = 0;
 
-    fSlope           = 0;
-    fSlopeError      = 0;
+    fSlope          = 0;
+    fSlopeError     = 0;
     fIntercept      = 0;
     fInterceptError = 0;
     fQuadratic      = 0;
@@ -70,7 +70,7 @@ GainFit::makeChannelAverage<GainFit>(const ChipContainer* theChipContainer, cons
                 if(theChipContainer->getChannel<GainFit>(row, col).fSlopeError > 0)
                 {
                     fSlope += theChipContainer->getChannel<GainFit>(row, col).fSlope /
-                             (theChipContainer->getChannel<GainFit>(row, col).fSlopeError * theChipContainer->getChannel<GainFit>(row, col).fSlopeError);
+                              (theChipContainer->getChannel<GainFit>(row, col).fSlopeError * theChipContainer->getChannel<GainFit>(row, col).fSlopeError);
                     fSlopeError += 1. / (theChipContainer->getChannel<GainFit>(row, col).fSlopeError * theChipContainer->getChannel<GainFit>(row, col).fSlopeError);
                 }
 
@@ -113,7 +113,7 @@ GainFit::makeChannelAverage<GainFit>(const ChipContainer* theChipContainer, cons
         fInterceptError = sqrt(1. / fInterceptError);
     }
 
-    if(fQuadratic > 0)
+    if(fQuadraticError > 0)
     {
         fQuadratic /= fQuadraticError;
         fQuadraticError = sqrt(1. / fQuadraticError);

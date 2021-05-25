@@ -27,6 +27,7 @@ void Gain::ConfigureCalibration()
     nEvents        = this->findValueInSettings("nEvents");
     startValue     = this->findValueInSettings("VCalHstart");
     stopValue      = this->findValueInSettings("VCalHstop");
+    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings("TargetCharge"));
     nSteps         = this->findValueInSettings("VCalHnsteps");
     offset         = this->findValueInSettings("VCalMED");
     nHITxCol       = this->findValueInSettings("nHITxCol");
@@ -321,7 +322,8 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
 
                                 if(chi2 != 0)
                                 {
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlope = slope;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlope =
+                                        slope;
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeError =
                                         slopeErr;
 
@@ -365,9 +367,15 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << GREEN << "Average gain for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << +cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::scientific << std::setprecision(2) << cChip->getSummary<GainFit, GainFit>().fSlope << RESET << GREEN
-                              << " (ToT/Delta_VCal)" << std::setprecision(-1) << RESET;
+                    float ToTatTarget = Gain::gainFunction({cChip->getSummary<GainFit, GainFit>().fIntercept,
+                                                            cChip->getSummary<GainFit, GainFit>().fSlope,
+                                                            cChip->getSummary<GainFit, GainFit>().fQuadratic,
+                                                            cChip->getSummary<GainFit, GainFit>().fLog},
+                                                           targetCharge);
+                    LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                              << +cChip->getId() << RESET << GREEN << "] at VCal = " << BOLDYELLOW << std::fixed << std::setprecision(2) << targetCharge << RESET << GREEN << " (" << BOLDYELLOW
+                              << RD53chargeConverter::VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is " << BOLDYELLOW << ToTatTarget << RESET << GREEN << " (ToT)"
+                              << std::setprecision(-1) << RESET;
                     RD53Shared::resetDefaultFloat();
                 }
 
@@ -431,14 +439,14 @@ void Gain::computeStats(const std::vector<float>& x, const std::vector<float>& y
     ublas::matrix<double> invParCov(ublas::prod(ublas::trans(H), tmpMtx));
     auto                  parCov(invParCov);
 
-    if(RD53Shared::mtxInversion<double>(invParCov, parCov) != 0)
+    auto det = RD53Shared::mtxInversion<double>(invParCov, parCov);
+    if((isnan(det) == false) && (det != 0))
     {
         ublas::vector<double> tmpVec1(ublas::prod(invV, myY));
         ublas::vector<double> tmpVec2(ublas::prod(ublas::trans(H), tmpVec1));
         ublas::vector<double> myPar(ublas::prod(parCov, tmpVec2));
 
         std::copy(myPar.begin(), myPar.end(), par.begin());
-
         for(auto c = 0; c < NGAINPAR; c++) parErr[c] = sqrt(parCov(c, c));
 
         // ################

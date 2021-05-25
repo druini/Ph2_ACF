@@ -291,9 +291,9 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                         // ##############################################
                         // # Search for maximum and build discriminator #
                         // ##############################################
-                        float  avg         = 0;
-                        float  stdDev      = 0;
-                        size_t cnt         = 0;
+                        float  avg    = 0;
+                        float  stdDev = 0;
+                        size_t cnt    = 0;
                         for(auto row = 0u; row < RD53::nRows; row++)
                             for(auto col = 0u; col < RD53::nCols; col++)
                                 if(cChip->getChannel<GainFit>(row, col).fChi2 != 0)
@@ -302,17 +302,17 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                                                                             cChip->getChannel<GainFit>(row, col).fSlope,
                                                                             cChip->getChannel<GainFit>(row, col).fQuadratic,
                                                                             cChip->getChannel<GainFit>(row, col).fLog},
-                                                                           RD53chargeConverter::Charge2VCal(target));
+                                                                           target);
                                     avg += ToTatTarget;
                                     stdDev += ToTatTarget * ToTatTarget;
                                     cnt++;
                                 }
-                        avg              = cnt != 0 ? avg / cnt : 0;
-                        stdDev           = (cnt != 0 ? stdDev / cnt : 0) - avg * avg;
-                        stdDev           = (stdDev > 0 ? sqrt(stdDev) : 0);
-                        float  newValue  = avg + NSTDEV * stdDev;
+                        avg            = cnt != 0 ? avg / cnt : 0;
+                        stdDev         = (cnt != 0 ? stdDev / cnt : 0) - avg * avg;
+                        stdDev         = (stdDev > 0 ? sqrt(stdDev) : 0);
+                        float newValue = avg + NSTDEV * stdDev;
 
-                        size_t targetToT = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) - 1; // @CONST@ : 15 = nohit, 14 = overflow
+                        size_t targetToT = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION);
 
                         // ########################
                         // # Save best DAC values #

@@ -20,8 +20,8 @@ void GainFit::makeSummaryAverage(const std::vector<GainFit>* theGainVector, cons
 
     float cnt = 0;
 
-    fSlope           = 0;
-    fSlopeError      = 0;
+    fSlope          = 0;
+    fSlopeError     = 0;
     fIntercept      = 0;
     fInterceptError = 0;
     fQuadratic      = 0;
@@ -77,7 +77,7 @@ void GainFit::makeSummaryAverage(const std::vector<GainFit>* theGainVector, cons
         fInterceptError = sqrt(1. / fInterceptError);
     }
 
-    if(fQuadratic > 0)
+    if(fQuadraticError > 0)
     {
         fQuadratic /= fQuadraticError;
         fQuadraticError = sqrt(1. / fQuadraticError);
