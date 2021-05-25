@@ -225,10 +225,10 @@ void SCurve::draw()
                         myString.clear();
                         myString.str("");
                         myString << this->fDirectoryName + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_SCurve_"
-                                 << "B" << std::setfill('0') << std::setw(2) << cBoard->getId() << "_"
-                                 << "O" << std::setfill('0') << std::setw(2) << cOpticalGroup->getId() << "_"
-                                 << "M" << std::setfill('0') << std::setw(2) << cHybrid->getId() << "_"
-                                 << "C" << std::setfill('0') << std::setw(2) << cChip->getId() << ".dat";
+                                 << "B" << std::setfill('0') << std::setw(2) << +cBoard->getId() << "_"
+                                 << "O" << std::setfill('0') << std::setw(2) << +cOpticalGroup->getId() << "_"
+                                 << "M" << std::setfill('0') << std::setw(2) << +cHybrid->getId() << "_"
+                                 << "C" << std::setfill('0') << std::setw(2) << +cChip->getId() << ".dat";
                         std::ofstream fileOutID(myString.str(), std::ios::out);
                         for(auto i = 0u; i < dacList.size(); i++)
                         {
