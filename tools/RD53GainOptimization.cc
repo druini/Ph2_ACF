@@ -261,7 +261,6 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                                   << " <<<" << RESET;
                     }
 
-                    // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, chipCommandList, hybridId);
                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
                 }
 
@@ -296,7 +295,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                         size_t cnt    = 0;
                         for(auto row = 0u; row < RD53::nRows; row++)
                             for(auto col = 0u; col < RD53::nCols; col++)
-                                if(cChip->getChannel<GainFit>(row, col).fChi2 != 0)
+                                if((cChip->getChannel<GainFit>(row, col).fChi2 != 0) && (cChip->getChannel<GainFit>(row, col).fChi2 != RD53Shared::FITERROR))
                                 {
                                     float ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fIntercept,
                                                                             cChip->getChannel<GainFit>(row, col).fSlope,
@@ -307,11 +306,10 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                                     stdDev += ToTatTarget * ToTatTarget;
                                     cnt++;
                                 }
-                        avg            = cnt != 0 ? avg / cnt : 0;
-                        stdDev         = (cnt != 0 ? stdDev / cnt : 0) - avg * avg;
-                        stdDev         = (stdDev > 0 ? sqrt(stdDev) : 0);
-                        float newValue = avg + NSTDEV * stdDev;
-
+                        avg              = cnt != 0 ? avg / cnt : 0;
+                        stdDev           = (cnt != 0 ? stdDev / cnt : 0) - avg * avg;
+                        stdDev           = (stdDev > 0 ? sqrt(stdDev) : 0);
+                        float  newValue  = avg + NSTDEV * stdDev;
                         size_t targetToT = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION);
 
                         // ########################
@@ -369,7 +367,6 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                         LOG(WARNING) << BOLDRED << ">>> Best " << BOLDYELLOW << regName << BOLDRED << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                      << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "] was not found <<<" << RESET;
 
-                // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, chipCommandList, hybridId);
                 static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
             }
 
