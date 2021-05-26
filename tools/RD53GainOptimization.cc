@@ -295,7 +295,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                         size_t cnt    = 0;
                         for(auto row = 0u; row < RD53::nRows; row++)
                             for(auto col = 0u; col < RD53::nCols; col++)
-                                if((cChip->getChannel<GainFit>(row, col).fChi2 != 0) && (cChip->getChannel<GainFit>(row, col).fChi2 != RD53Shared::FITERROR))
+                                if(cChip->getChannel<GainFit>(row, col).fChi2 > 0)
                                 {
                                     float ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fIntercept,
                                                                             cChip->getChannel<GainFit>(row, col).fSlope,
