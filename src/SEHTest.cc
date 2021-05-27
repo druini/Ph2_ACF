@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control" << RESET;
         cSEHTester.TurnOn();
-        cSEHTester.RampPowerSupply(cHWFile, cPowerSupply);
+        cSEHTester.RampPowerSupply("MyRohdeSchwarz", "LV_Module3");
     }
     else
     {
