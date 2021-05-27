@@ -31,9 +31,8 @@
 #include <chrono>
 #include <thread>
 
-#ifdef __USE_ROOT__
 #include "TApplication.h"
-#endif
+#include "TROOT.h"
 
 #ifdef __EUDAQ__
 #include "../tools/RD53eudaqProducer.h"
@@ -197,7 +196,6 @@ int main(int argc, char** argv)
     // ######################
     if(supervisor == true)
     {
-#ifdef __USE_ROOT__
         // #######################
         // # Run Supervisor Mode #
         // #######################
@@ -305,10 +303,6 @@ int main(int argc, char** argv)
             theApp.Run();
         else
             theApp.Terminate(0);
-#else
-        LOG(WARNING) << BOLDBLUE << "ROOT flag was OFF during compilation" << RESET;
-        exit(EXIT_FAILURE);
-#endif
     }
     else
     {
@@ -634,9 +628,8 @@ int main(int argc, char** argv)
             // ######################
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing EUDAQ data taking @@@" << RESET;
 
-#ifdef __USE_ROOT__
             gROOT->SetBatch(true);
-#endif
+
             RD53eudaqProducer theEUDAQproducer(mySysCntr, configFile, "RD53eudaqProducer", eudaqRunCtr);
             try
             {
