@@ -311,6 +311,12 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                                         ->at(cChip->getIndex())
                                         ->getChannel<ThresholdAndNoise>(row, col)
                                         .fNoise = rms;
+                                    theThresholdAndNoiseContainer->at(cBoard->getIndex())
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<ThresholdAndNoise>(row, col)
+                                        .fNoiseError = (nHits > 1 ? rms / sqrt(nHits) * sqrt(sqrt(2 / (nHits - 1))) : 0);
 
                                     if(mean > theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>())
                                         theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() = mean;

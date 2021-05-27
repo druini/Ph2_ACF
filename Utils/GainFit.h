@@ -36,8 +36,8 @@ class GainFit
     float fIntercept;
     float fInterceptError;
 
-    float  fQuadratic;
-    double fQuadraticError;
+    float fQuadratic;
+    float fQuadraticError;
 
     float fLog;
     float fLogError;

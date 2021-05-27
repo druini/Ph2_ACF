@@ -161,9 +161,13 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
                                 // # 2D histograms #
                                 // #################
                                 Slope2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fSlope);
+                                Slope2DHist->SetBinError(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fSlopeError);
                                 Intercept2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fIntercept);
+                                Intercept2DHist->SetBinError(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fInterceptError);
                                 Quadratic2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fQuadratic);
+                                Quadratic2DHist->SetBinError(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fQuadraticError);
                                 Log2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fLog);
+                                Log2DHist->SetBinError(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fLogError);
                                 Chi2DoF2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fChi2 / cChip->getChannel<GainFit>(row, col).fDoF);
                             }
                 }
