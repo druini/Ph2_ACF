@@ -143,7 +143,7 @@ bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pa
 // # LpGBT specific routine functions #
 // ####################################
 
-void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
+bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                                               const BeBoard*        pBoard,
                                               const OpticalGroup*   pOpticalGroup,
                                               BeBoardFWInterface*   pBeBoardFWInterface,
@@ -151,6 +151,7 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
 {
     const double frames_or_time = 1; // @CONST@
     const bool   given_time     = true;
+    bool         allGood        = true;
     uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
 
     LOG(INFO) << GREEN << "Phase alignment ongoing for LpGBT chip: " << BOLDYELLOW << pChip->getId() << RESET;
@@ -159,7 +160,7 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
     if(static_cast<lpGBT*>(pChip)->getPhaseRxAligned() == true)
     {
         LOG(INFO) << BOLDBLUE << "\t--> The phase for this chip was already aligned (maybe from configuration file)" << RESET;
-        return;
+        return true;
     }
 
     for(const auto cHybrid: *pOpticalGroup)
@@ -215,11 +216,16 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +bestPhase
                           << RESET;
             else
+            {
                 LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDRED << " has no good phase" << RESET;
+                allGood = false;
+            }
 
             lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
-            static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
+            static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // @TMP@
         }
+
+    return allGood;
 }
 
 } // namespace Ph2_HwInterface
