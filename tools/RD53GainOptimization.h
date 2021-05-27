@@ -27,7 +27,13 @@
 class GainOptimization : public Gain
 {
   public:
-    ~GainOptimization() { this->CloseResultFile(); }
+    ~GainOptimization()
+    {
+#ifdef __USE_ROOT__
+        this->CloseResultFile();
+#endif
+    }
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;

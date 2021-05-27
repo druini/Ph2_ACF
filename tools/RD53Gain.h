@@ -36,7 +36,9 @@ class Gain : public Tool
     ~Gain()
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
+#ifdef __USE_ROOT__
         this->CloseResultFile();
+#endif
     }
 
     void Running() override;
