@@ -13,7 +13,9 @@
 #include "../Utils/RD53Shared.h"
 #include "../Utils/argvparser.h"
 
+#include "../tools/RD53BERtest.h"
 #include "../tools/RD53ClockDelay.h"
+#include "../tools/RD53DataReadbackOptimization.h"
 #include "../tools/RD53Gain.h"
 #include "../tools/RD53GainOptimization.h"
 #include "../tools/RD53InjectionDelay.h"
@@ -24,6 +26,7 @@
 #include "../tools/RD53ThrAdjustment.h"
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
+#include "../tools/RD53VoltageTuning.h"
 
 #include <chrono>
 #include <thread>
@@ -46,6 +49,7 @@
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
 #define ARBITRARYDELAY 2 // [seconds]
+#define TESTSUBDETECTORY false
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -73,6 +77,8 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     unsigned int          errors       = 0;
     std::vector<uint32_t> data;
 
+    RD53Event::ForkDecodingThreads();
+
     LOG(INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
     mySysCntr.addFileHandler(binaryFile, 'r');
     LOG(INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
@@ -90,10 +96,14 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
             RD53Event::PrintEvents({decodedEvents[i]});
         }
 
-    LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
-    int avgEventSize = data.size() / decodedEvents.size();
-    LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN << " events"
-              << RESET;
+    if(decodedEvents.size() != 0)
+    {
+        LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
+        int avgEventSize = data.size() / decodedEvents.size();
+        LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN
+                  << " events" << RESET;
+    }
+
     mySysCntr.closeFileHandler();
 }
 
@@ -113,7 +123,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay physics eudaq prbstime prbsframes]",
+                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -174,10 +184,9 @@ int main(int argc, char** argv)
     if(whichCalib != "") fileName += "_" + whichCalib;
     fileName += ".log";
     el::Configurations conf(std::string(std::getenv(BASEDIR)) + "/settings/logger.conf");
-    conf.set(el::Level::Global, el::ConfigurationType::Format, "|%thread|%levshort| %msg");
+    conf.set(el::Level::Global, el::ConfigurationType::Format, "|%datetime{%h:%m:%s}|%levshort|%msg");
     conf.set(el::Level::Global, el::ConfigurationType::Filename, fileName);
     el::Loggers::reconfigureAllLoggers(conf);
-    // el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Filename, fileName);
 
     // ######################
     // # Supervisor section #
@@ -301,7 +310,7 @@ int main(int argc, char** argv)
     {
         SystemController mySysCntr;
 
-        if((reset == true) || (binaryFile != "") || (whichCalib == "prbstime") || (whichCalib == "prbsframes"))
+        if((reset == true) || (binaryFile != ""))
         {
             // ######################################
             // # Reset hardware or read binary file #
@@ -351,6 +360,20 @@ int main(int argc, char** argv)
             la.analyze();
             la.draw();
         }
+        else if(whichCalib == "datarbopt")
+        {
+            // ##################################
+            // # Run Data Readback Optimization #
+            // ##################################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Data Readback Optimization @@@" << RESET;
+
+            std::string              fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_DataReadbackOptimization");
+            DataReadbackOptimization dro;
+            dro.Inherit(&mySysCntr);
+            dro.localConfigure(fileName, runNumber);
+            dro.run();
+            dro.draw();
+        }
         else if(whichCalib == "pixelalive")
         {
             // ##################
@@ -366,34 +389,50 @@ int main(int argc, char** argv)
             // #############################################
             // # Address different subsets of the detector #
             // #############################################
-            // @TMP@
-            // const int detDivision = 8;
-            // auto      query       = [](int indx, int division, int thr) { return (division / thr < 1 ? indx < 1 : indx < 2); };
-            // for(auto i = 0; query(i, detDivision, 8); i++)
-            // {
-            //     auto detectorSubset = [i](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == i); };
-            //     if(query(1, detDivision, 8) == true) pa.fDetectorContainer->setOpticalGroupQueryFunction(detectorSubset);
+            int  evenORodd = 0;
+            bool doTwice   = false;
+            do
+            {
+                if(TESTSUBDETECTORY == true)
+                {
+                    if(pa.fDetectorContainer->size() != 1)
+                    {
+                        auto boardSubset = [evenORodd](const BoardContainer* theBoard) { return (theBoard->getId() % 2 == evenORodd); };
+                        pa.fDetectorContainer->setBoardQueryFunction(boardSubset);
+                        doTwice = true;
+                    }
+                    else if(pa.fDetectorContainer->at(0)->size() != 1)
+                    {
+                        auto optoGroupSubset = [evenORodd](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == evenORodd); };
+                        pa.fDetectorContainer->setOpticalGroupQueryFunction(optoGroupSubset);
+                        doTwice = true;
+                    }
+                    else if(pa.fDetectorContainer->at(0)->at(0)->size() != 1)
+                    {
+                        auto hybridSubset = [evenORodd](const HybridContainer* theHybrid) { return (theHybrid->getId() % 2 == evenORodd); };
+                        pa.fDetectorContainer->setHybridQueryFunction(hybridSubset);
+                        doTwice = true;
+                    }
+                    else if(pa.fDetectorContainer->at(0)->at(0)->at(0)->size() != 1)
+                    {
+                        auto chipSubset = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
+                        pa.fDetectorContainer->setReadoutChipQueryFunction(chipSubset);
+                        doTwice = true;
+                    }
+                }
 
-            //     for(auto j = 0; query(j, detDivision, 4); j++)
-            //     {
-            //         auto detectorSubset = [j](const ModuleContainer* theModule) { return (theModule->getId() % 2 == j); };
-            //         if(query(1, detDivision, 4) == true) pa.fDetectorContainer->setHybridQueryFunction(detectorSubset);
+                pa.run();
+                pa.analyze();
+                pa.draw();
+                RD53RunProgress::current() = 0;
 
-            //         for(auto k = 0; query(k, detDivision, 2); k++)
-            //         {
-            //             auto detectorSubset = [k](const ChipContainer* theChip) { return (theChip->getId() % 2 == k); };
-            //             if(query(1, detDivision, 2) == true) pa.fDetectorContainer->setReadoutChipQueryFunction(detectorSubset);
+                pa.fDetectorContainer->resetReadoutChipQueryFunction();
+                pa.fDetectorContainer->resetHybridQueryFunction();
+                pa.fDetectorContainer->resetOpticalGroupQueryFunction();
+                pa.fDetectorContainer->resetBoardQueryFunction();
 
-            pa.run();
-            pa.analyze();
-            pa.draw();
-
-            //             pa.fDetectorContainer->resetReadoutChipQueryFunction();
-            //         }
-            //         pa.fDetectorContainer->resetHybridQueryFunction();
-            //     }
-            //     pa.fDetectorContainer->resetOpticalGroupQueryFunction();
-            // }
+                evenORodd++;
+            } while((doTwice == true) && (evenORodd < 2));
         }
         else if(whichCalib == "noise")
         {
@@ -530,6 +569,35 @@ int main(int argc, char** argv)
             cd.analyze();
             cd.draw();
         }
+        else if(whichCalib == "bertest")
+        {
+            // ################
+            // # Run BER test #
+            // ################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Bit Error Rate test @@@" << RESET;
+
+            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_BERtest");
+            BERtest     bt;
+            bt.Inherit(&mySysCntr);
+            bt.localConfigure(fileName, runNumber);
+            bt.run();
+            bt.draw();
+        }
+        else if(whichCalib == "voltagetuning")
+        {
+            // ######################
+            // # Run Voltage Tuning #
+            // ######################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Voltage Tuning @@@" << RESET;
+
+            std::string   fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_VoltageTuning");
+            VoltageTuning vt;
+            vt.Inherit(&mySysCntr);
+            vt.localConfigure(fileName, runNumber);
+            vt.run();
+            vt.analyze();
+            vt.draw();
+        }
         else if(whichCalib == "physics")
         {
             // ###############
@@ -584,34 +652,6 @@ int main(int argc, char** argv)
             exit(EXIT_FAILURE);
 #endif
         }
-        else if((whichCalib == "prbstime") || (whichCalib == "prbsframes"))
-        {
-            // ################
-            // # Run BER test #
-            // ################
-            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Bit Error Rate test @@@" << RESET;
-
-            if(cmd.argument(0) == "")
-            {
-                if(whichCalib == "prbstime") { LOG(ERROR) << BOLDRED << "Failed to specify duration of BER test; use \"-c prbstime <TIME IN SECONDS (e.g. 10)>\"" << RESET; }
-                else if(whichCalib == "prbsframes")
-                {
-                    LOG(ERROR) << BOLDRED << "Failed to specify number of frames for BER test; use \"-c prbsframes <NUMBER OF FRAMES (e.g. 1e9)>\"" << RESET;
-                }
-                exit(EXIT_FAILURE);
-            }
-            if(cmd.argument(1) == "")
-            {
-                LOG(ERROR) << BOLDRED << "Failed to specify which connection to test [BE-LPGBT-FE, BE-LPGBT, LPGBT-FE]" << RESET;
-                exit(EXIT_FAILURE);
-            }
-
-            double frames_or_time = atof(cmd.argument(0).c_str());
-            bool   given_time     = false;
-            if(whichCalib == "prbstime") given_time = true;
-
-            mySysCntr.RunBERtest(cmd.argument(1), given_time, frames_or_time);
-        }
         else if((program == false) && (whichCalib != ""))
         {
             LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
@@ -638,7 +678,6 @@ int main(int argc, char** argv)
         // # Destroy System Controller #
         // #############################
         mySysCntr.Destroy();
-        // fDetectorMonitor->startMonitoring();
 
         LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
     }

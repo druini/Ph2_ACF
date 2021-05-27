@@ -14,7 +14,6 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53Shared.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "Tool.h"
 
@@ -32,6 +31,7 @@ class SCurve : public Tool
     ~SCurve()
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
+        this->CloseResultFile();
     }
 
     void Running() override;
@@ -72,8 +72,8 @@ class SCurve : public Tool
     ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
     void fillHisto();
-    void computeStats(const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
-    void chipErrorReport();
+    void computeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+    void chipErrorReport() const;
 
   protected:
     std::string fileRes;

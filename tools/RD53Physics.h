@@ -32,6 +32,7 @@ class Physics : public Tool
 
   public:
     Physics() { Physics::setGenericEvtConverter(RD53dummyEvtConverter()); }
+    ~Physics() { this->CloseResultFile(); }
 
     void Running() override;
     void Stop() override;
@@ -71,7 +72,7 @@ class Physics : public Tool
     DetectorDataContainer                    theTrgIDContainer;
 
     void fillHisto();
-    void chipErrorReport();
+    void chipErrorReport() const;
     void clearContainers(Ph2_HwDescription::BeBoard* cBoard);
 
   protected:
