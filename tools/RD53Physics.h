@@ -46,7 +46,6 @@ class Physics : public Tool
     void analyze(bool doReadBinary = false);
     void saveChipRegisters(int currentRun);
     void fillDataContainer(Ph2_HwDescription::BeBoard* cBoard);
-    /* void monitor(); */
 
     void setGenericEvtConverter(evtConvType arg)
     {
