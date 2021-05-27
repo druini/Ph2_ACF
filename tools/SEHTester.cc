@@ -182,7 +182,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     float cVHVJ8 = 0;
 
     fTC_USB->set_HV(false, true, true, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fTC_USB->set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
 
     std::this_thread::sleep_for(std::chrono::milliseconds(15000));
@@ -266,8 +266,10 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cDACtoHVCanvas->Write();
     cBiasVoltageTree->Fill();
     cBiasVoltageTree->Write();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
     fTC_USB->set_HV(false, false, false, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 #endif
 #endif
 #endif
@@ -277,6 +279,14 @@ void SEHTester::TurnOn()
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
     fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
+#endif
+#endif
+}
+void SEHTester::TurnOff()
+{
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
+    fTC_USB->set_SehSupply(fTC_USB->sehSupply_Off);
 #endif
 #endif
 }
@@ -368,6 +378,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     cMonCanvas->Write();
 
     fTC_USB->set_HV(false, false, false, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 #endif
 #endif
 #endif
@@ -433,7 +444,7 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 
         cIoutRValVect.clear(), cIinValVect.clear(), cUoutRValVect.clear(), cUoutLValVect.clear();
         cEfficencyValVect.clear(), cU2v5ValVect.clear(), cIoutLValVect.clear();
-        cSideValVect.clear(), cUinValVect.clear(), cIoutLValVect.clear();
+        cSideValVect.clear(), cUinValVect.clear(), cIoutValVect.clear();
 
         for(int cLoadValue = pMinLoadValue; cLoadValue <= (int)pMaxLoadValue; cLoadValue += pStep)
         {
@@ -450,10 +461,10 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
                 fTC_USB->set_load1(true, false, cLoadValue);
                 fTC_USB->set_load2(true, false, cLoadValue);
             }
-            if(cSide == "left") { fTC_USB->set_load1(true, false, cLoadValue); }
-            if(cSide == "right") { fTC_USB->set_load2(true, false, cLoadValue); }
+            if(cSide == "left") { fTC_USB->set_load2(true, false, cLoadValue); }
+            if(cSide == "right") { fTC_USB->set_load1(true, false, cLoadValue); }
             // Delay needs to be optimized during functional testing
-            std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
             fTC_USB->read_load(fTC_USB->I_P1V2_R, I_P1V2_R);
             fTC_USB->read_load(fTC_USB->I_P1V2_L, I_P1V2_L);
             fTC_USB->read_supply(fTC_USB->I_SEH, I_SEH);
@@ -739,11 +750,12 @@ void SEHTester::DCDCOutputEvaluation()
 #ifdef __USE_ROOT__
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
-    std::map<std::string, TC_2SSEH::loadMeasurement> c2SSEHOutputVoltageMeasurements = {{"U_P1V2_R", TC_2SSEH::loadMeasurement::U_P1V2_R}, {"U_P1V2_L", TC_2SSEH::loadMeasurement::U_P1V2_L}};
-    std::vector<float>                               cDCDCValueVect;
-    float                                            cDCDCValue;
-    auto                                             cDCDCOutputTree  = new TTree("DCDCOutput", "lpGBT ADCs not tied to AMUX");
-    auto                                             cDCDCMapIterator = c2SSEHOutputVoltageMeasurements.begin();
+    std::map<std::string, TC_2SSEH::loadMeasurement> c2SSEHOutputVoltageMeasurements = {
+        {"U_P1V2_R", TC_2SSEH::loadMeasurement::U_P1V2_R}, {"U_P1V2_L", TC_2SSEH::loadMeasurement::U_P1V2_L}, {"P2V5_VTRx_MON", TC_2SSEH::loadMeasurement::P2V5_VTRx_MON}};
+    std::vector<float> cDCDCValueVect;
+    float              cDCDCValue;
+    auto               cDCDCOutputTree  = new TTree("DCDCOutput", "lpGBT ADCs not tied to AMUX");
+    auto               cDCDCMapIterator = c2SSEHOutputVoltageMeasurements.begin();
     gStyle->SetOptStat(0);
 
     auto cStackedHistogramm = new THStack("cDCDCOutput", "DC/DC Output Voltages");
@@ -753,17 +765,17 @@ void SEHTester::DCDCOutputEvaluation()
     {
         cDCDCOutputTree->Branch(cDCDCMapIterator->first.c_str(), &cDCDCValueVect);
         auto cHistogramm = new TH1F(cDCDCMapIterator->first.c_str(), cDCDCMapIterator->first.c_str(), 30, 0, 3);
-        // cHistogramm->SetFillColor(cIt+1);
+        cHistogramm->SetFillColor(cIt + 1);
         cHistogramm->SetMarkerStyle(cIt + 21);
         cHistogramm->SetMarkerColor(cIt + 1);
         cDCDCValueVect.clear();
-        for(int cIteration = 0; cIteration < 100; ++cIteration)
+        for(int cIteration = 0; cIteration < 10; ++cIteration)
         {
-            cDCDCValue = fTC_USB->read_load(cDCDCMapIterator->second, cDCDCValue);
-            cDCDCValue += gRandom->Rndm();
+            fTC_USB->read_load(cDCDCMapIterator->second, cDCDCValue);
+            // cDCDCValue += gRandom->Rndm();
             cDCDCValueVect.push_back(cDCDCValue);
             cHistogramm->Fill(cDCDCValue);
-            // std::this_thread::sleep_for(std::chrono::milliseconds(1200));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1200));
         }
         cStackedHistogramm->Add(cHistogramm);
 
