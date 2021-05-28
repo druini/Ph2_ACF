@@ -174,15 +174,16 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.bookSummaryTree();
     LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
-    // cTool.ConfigureHw();
+    SEHTester cSEHTester;
+    cSEHTester.Inherit(&cTool);
+
+    cSEHTester.FindUSBHandler();
+    cSEHTester.TurnOn();
+    cTool.ConfigureHw();
 
     // Initialize BackEnd & Control LpGBT Tester
-    SEHTester cSEHTester;
     // cSEHTester.exampleFit();
-    cSEHTester.Inherit(&cTool);
-    cSEHTester.FindUSBHandler();
-    // cSEHTester.RampPowerSupply("MyRohdeSchwarz", "LV_Module3");
-    cSEHTester.DCDCOutputEvaluation();
+    // cSEHTester.DCDCOutputEvaluation();
     if(cmd.foundOption("powersupply"))
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control" << RESET;
@@ -289,7 +290,7 @@ int main(int argc, char* argv[])
         // cSEHTester.ToyTestFixedADCs();
         cSEHTester.LpGBTTestFixedADCs();
         std::vector<std::string> cADCs = {"ADC0", "ADC3"};
-        cSEHTester.LpGBTTestADC(cADCs, 0, 0x4000, 330); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
+        cSEHTester.LpGBTTestADC(cADCs, 0, 0xe00, 300); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
     }
 
     // Test Fast Commands
@@ -323,7 +324,7 @@ int main(int argc, char* argv[])
     {
         // cSEHTester.exampleFit();
         LOG(INFO) << BOLDBLUE << "Efficency Test" << RESET;
-        cSEHTester.TestEfficency(0, 100, 5);
+        cSEHTester.TestEfficency(0, 2500, 500);
     }
 
     if(cmd.foundOption("leak"))

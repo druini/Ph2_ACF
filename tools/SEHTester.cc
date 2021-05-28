@@ -1,4 +1,3 @@
-#ifdef __USE_ROOT__
 #include "SEHTester.h"
 #include "linearFitter.h"
 #include <fstream>
@@ -195,6 +194,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:" + std::to_string(pBiasVoltage) + ",");
 #else
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fTC_USB->set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
 #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(15000));
@@ -299,6 +299,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 #else
     fTC_USB->set_HV(false, false, false, 0);
 #endif
+std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 #endif
 #endif
 #endif
@@ -311,6 +312,18 @@ void SEHTester::TurnOn()
     fTestcardClient->sendAndReceivePacket("TurnOn");
 #else
     fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
+#endif
+#endif
+#endif
+}
+void SEHTester::TurnOff()
+{
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("TurnOff");
+#else
+    fTC_USB->set_SehSupply(fTC_USB->sehSupply_Off);
 #endif
 #endif
 #endif
@@ -415,6 +428,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:0,");
 #else
     fTC_USB->set_HV(false, false, false, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 #endif
 #endif
 #endif
@@ -485,7 +499,7 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 #endif
         cIoutRValVect.clear(), cIinValVect.clear(), cUoutRValVect.clear(), cUoutLValVect.clear();
         cEfficencyValVect.clear(), cU2v5ValVect.clear(), cIoutLValVect.clear();
-        cSideValVect.clear(), cUinValVect.clear(), cIoutLValVect.clear();
+        cSideValVect.clear(), cUinValVect.clear(), cIoutValVect.clear();
 
         for(int cLoadValue = pMinLoadValue; cLoadValue <= (int)pMaxLoadValue; cLoadValue += pStep)
         {
@@ -499,8 +513,8 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 #ifdef __TCP_SERVER__
             if(cSide == "both")
             {
-                fTestcardClient->sendAndReceivePacket("set_load1,enable:1,path:0,value:" + std::to_string(cLoadValue) + ",");
                 fTestcardClient->sendAndReceivePacket("set_load2,enable:1,path:0,value:" + std::to_string(cLoadValue) + ",");
+                fTestcardClient->sendAndReceivePacket("set_load1,enable:1,path:0,value:" + std::to_string(cLoadValue) + ",");
             }
             if(cSide == "left") { fTestcardClient->sendAndReceivePacket("set_load1,enable:1,path:0,value:" + std::to_string(cLoadValue) + ","); }
             if(cSide == "right") { fTestcardClient->sendAndReceivePacket("set_load2,enable:1,path:0,value:" + std::to_string(cLoadValue) + ","); }
@@ -510,11 +524,11 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
                 fTC_USB->set_load1(true, false, cLoadValue);
                 fTC_USB->set_load2(true, false, cLoadValue);
             }
-            if(cSide == "left") { fTC_USB->set_load1(true, false, cLoadValue); }
-            if(cSide == "right") { fTC_USB->set_load2(true, false, cLoadValue); }
+            if(cSide == "left") { fTC_USB->set_load2(true, false, cLoadValue); }
+            if(cSide == "right") { fTC_USB->set_load1(true, false, cLoadValue); }
 #endif
             // Delay needs to be optimized during functional testing
-            std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 #ifdef __TCP_SERVER__
             I_P1V2_R = this->getMeasurement("read_load:I_P1V2_R");
             I_P1V2_L = this->getMeasurement("read_load:I_P1V2_L");
@@ -834,9 +848,9 @@ void SEHTester::DCDCOutputEvaluation()
     {
         cDCDCOutputTree->Branch(cDCDCMapIterator->first.c_str(), &cDCDCValueVect);
         auto cHistogramm = new TH1F(cDCDCMapIterator->first.c_str(), cDCDCMapIterator->first.c_str(), 30, 0, 3);
-        // cHistogramm->SetFillColor(cIt+1);
-        // cHistogramm->SetMarkerStyle(cIt + 21);
-        // cHistogramm->SetMarkerColor(cIt + 1);
+        cHistogramm->SetFillColor(cIt+1);
+        cHistogramm->SetMarkerStyle(cIt + 21);
+        cHistogramm->SetMarkerColor(cIt + 1);
         cDCDCValueVect.clear();
         for(int cIteration = 0; cIteration < 10; ++cIteration)
         {
@@ -845,7 +859,7 @@ void SEHTester::DCDCOutputEvaluation()
 #else
             fTC_USB->read_load(cDCDCMapIterator->second, cDCDCValue);
 #endif
-            cDCDCValue += gRandom->Rndm();
+            //cDCDCValue += gRandom->Rndm();
             cDCDCValueVect.push_back(cDCDCValue);
             cHistogramm->Fill(cDCDCValue);
             std::this_thread::sleep_for(std::chrono::milliseconds(1200));
@@ -1740,5 +1754,4 @@ std::string SEHTester::getVariableValue(std::string variable, std::string buffer
     if(end == std::string::npos) end = buffer.size();
     return buffer.substr(begin, end - begin);
 }
-#endif
 #endif

@@ -50,8 +50,12 @@ void OTHybridTester::FindUSBHandler()
 #endif
 #endif
     }
+    
+#ifdef __TCP_SERVER__
+#else
     else
         fTC_USB = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetTCUSBHandler();
+#endif
 #endif
 }
 
@@ -123,30 +127,108 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            if(pIsExternal)
+            for(int hybridNumber = 0; hybridNumber < 2; hybridNumber++)
             {
-                clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
-                clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            }
-            fBeBoardInterface->setBoard(cBoard->getId());
-            D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-            cFWInterface->selectLink(cOpticalGroup->getId());
-            LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-            // cFWInterface->StubDebug(true, 6);
-            // enable stub debug - allows you to 'scope' the stub output
-            cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
-            cFWInterface->ChipTestPulse();
-            auto                     cWords = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
-            std::vector<std::string> cLines(0);
-            size_t                   cLine = 0;
-            do
-            {
-#ifdef __SEH_USB__
-                if(cLine == 7) { continue; } // makeing sure missing stub line pair is skipped in 2S case
+                if(pIsExternal)
+                {
+                    clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
+                    clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                }
+                fBeBoardInterface->setBoard(cBoard->getId());
+                D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
+                cFWInterface->selectLink(cOpticalGroup->getId());
+                LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
+                // cFWInterface->StubDebug(true, 6);
+                // enable stub debug - allows you to 'scope' the stub output
+
+                cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
+                cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
+                cFWInterface->ChipTestPulse();
+                auto                     cWords = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
+                std::vector<std::string> cLines(0);
+                size_t                   cLine = 0;
+                do
+                {
+                    uint32_t cCicOutOutput = cWords[cLine * 10];
+                    LOG(INFO) << BOLDBLUE << "Scoped output on Stub Line " << BOLDGREEN << +cLine << BOLDBLUE << ": " << std::bitset<32>(cCicOutOutput) << " for hybrid side " << +hybridNumber
+                              << RESET;
+
+                    cMatch = 32;
+                    cShift = 0;
+                    for(uint8_t shift = 0; shift < 8; shift++)
+                    {
+                        cWrappedByte = (pPattern >> shift) | (pPattern << (8 - shift));
+                        cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
+                        LOG(DEBUG) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
+                        LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
+                        int popcount = __builtin_popcountll(cWrappedData ^ cCicOutOutput);
+                        if(popcount < cMatch)
+                        {
+                            cMatch = popcount;
+                            cShift = shift;
+                        }
+                        LOG(DEBUG) << BOLDBLUE << "Line " << +cLine << " Shift " << +shift << " Match " << +popcount << RESET;
+                    }
+                    LOG(INFO) << BOLDBLUE << "Found for stub line " << BOLDWHITE << +cLine << BOLDBLUE << " a minimal bit difference of " << BOLDWHITE << +cMatch << BOLDBLUE << " for a bit shift of "
+                              << BOLDWHITE << +cShift << RESET;
+
+#ifdef __USE_ROOT__
+                    fillSummaryTree(Form("stub_%d_hybrid_%d_match", int(cLine), hybridNumber), cMatch);
+                    fillSummaryTree(Form("stub_%d_hybrid_%d_shift", int(cLine), hybridNumber), cShift);
 #endif
-                uint32_t cCicOutOutput = cWords[cLine * 10];
-                LOG(INFO) << BOLDBLUE << "Scoped output on Stub Line " << BOLDGREEN << +cLine << BOLDBLUE << ": " << std::bitset<32>(cCicOutOutput) << RESET;
+                    if((cMatch == 0)) { LOG(INFO) << BOLDGREEN << "CIC Out Test passed for stub line " << +cLine << " for hybrid side " << +hybridNumber << RESET; }
+                    else
+                    {
+                        LOG(INFO) << BOLDRED << "CIC Out Test failed for stub line " << +cLine << " for hybrid side " << +hybridNumber << RESET;
+                        res = false;
+                    }
+
+                    /* std::vector<std::string> cOutputWords(0);
+                    for(size_t cIndex = 0; cIndex < 5; cIndex++)
+                    {
+                    auto cWord   = cWords[cLine * 10 + cIndex];
+                        LOG(INFO) << "cLine: " <<+cLine<< " cIndex: " << +cIndex <<" cWord "<< std::bitset<32>(cWord)<< RESET;
+                        auto cString = std::bitset<32>(cWord).to_string();
+                        for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
+                    }
+
+                    std::string cOutput_wSpace = "";
+                    std::string cOutput        = "";
+                    for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
+                    {
+                        cOutput_wSpace += *cIt + " ";
+                        cOutput += *cIt;
+                    }
+                    LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+                    cLines.push_back(cOutput); */
+                    // cStrLength = cOutput.length();
+                    cLine++;
+#ifdef __SEH_USB__
+                } while(cLine < 5); // makeing sure missing stub line pair is skipped in 2S case
+#else
+                } while(cLine < 6);
+#endif
+
+                // disable stub debug
+                cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
+                cFWInterface->ResetReadout();
+
+                LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
+                // cFWInterface->L1ADebug();
+                // cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", 0xff);
+                cFWInterface->ConfigureTriggerFSM(0, 10, 3);
+
+                // disable back-pressure
+                cFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
+                cFWInterface->Start();
+                std::this_thread::sleep_for(std::chrono::microseconds(1 * 1000));
+                cFWInterface->Stop();
+
+                auto     cWordsL1A        = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+                uint32_t cCicOutOutputL1A = cWordsL1A[0];
+                LOG(INFO) << BOLDBLUE << "Scoped output on L1A Line: " << std::bitset<32>(cCicOutOutputL1A) << " for hybrid side " << +hybridNumber << RESET;
 
                 cMatch = 32;
                 cShift = 0;
@@ -156,108 +238,43 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
                     LOG(DEBUG) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
                     LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
-                    int popcount = __builtin_popcountll(cWrappedData ^ cCicOutOutput);
+                    int popcount = __builtin_popcountll(cWrappedData ^ cCicOutOutputL1A);
                     if(popcount < cMatch)
                     {
                         cMatch = popcount;
                         cShift = shift;
                     }
-                    LOG(DEBUG) << BOLDBLUE << "Line " << +cLine << " Shift " << +shift << " Match " << +popcount << RESET;
+                    LOG(DEBUG) << BOLDBLUE << "Line L1A Shift " << +shift << " Match " << +popcount << RESET;
                 }
-                LOG(INFO) << BOLDBLUE << "Found for stub line " << BOLDWHITE << +cLine << BOLDBLUE << " a minimal bit difference of " << BOLDWHITE << +cMatch << BOLDBLUE << " for a bit shift of "
-                          << BOLDWHITE << +cShift << RESET;
-
-                // #ifdef __USE_ROOT__
-                //             fillSummaryTree(cMapIterator->first + "_match", cMatch);
-                //             fillSummaryTree(cMapIterator->first + "_shift", cShift);
-                // #endif
-                if((cMatch == 0)) { LOG(INFO) << BOLDGREEN << "CIC Out Test passed for stub line " << +cLine << RESET; }
+                LOG(INFO) << BOLDBLUE << "Found for L1A a minimal bit difference of " << BOLDWHITE << +cMatch << BOLDBLUE << " for a bit shift of " << BOLDWHITE << +cShift << RESET;
+                if((cMatch == 0))
+                {
+                    LOG(INFO) << BOLDGREEN << "CIC Out Test passed for L1A line"
+                              << " for hybrid side " << +hybridNumber << RESET;
+                }
                 else
                 {
-                    LOG(INFO) << BOLDRED << "CIC Out Test failed for stub line " << +cLine << RESET;
+                    LOG(INFO) << BOLDRED << "CIC Out Test failed for L1A line"
+                              << " for hybrid side " << +hybridNumber << RESET;
                     res = false;
                 }
-
-                /* std::vector<std::string> cOutputWords(0);
-                for(size_t cIndex = 0; cIndex < 5; cIndex++)
+#ifdef __USE_ROOT__
+                fillSummaryTree(Form("L1A_hybrid_%d_match", hybridNumber), cMatch);
+                fillSummaryTree(Form("L1A_hybrid_%d_shift", hybridNumber), cShift);
+#endif
+                uint32_t cL1ATotalWrong = 0;
+                uint32_t cL1ATotal      = 0;
+                cWrappedByte            = (pPattern >> cShift) | (pPattern << (8 - cShift));
+                cWrappedData            = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
+                for(uint32_t cWord: cWordsL1A)
                 {
-                auto cWord   = cWords[cLine * 10 + cIndex];
-                    LOG(INFO) << "cLine: " <<+cLine<< " cIndex: " << +cIndex <<" cWord "<< std::bitset<32>(cWord)<< RESET;
-                    auto cString = std::bitset<32>(cWord).to_string();
-                    for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
+                    cL1ATotalWrong += __builtin_popcountll(cWrappedData ^ cWord);
+                    cL1ATotal += 32;
                 }
+                LOG(INFO) << "L1A total wrong bits: " << BOLDBLUE << +cL1ATotalWrong << " in a total of: " << +cL1ATotal << RESET;
 
-                std::string cOutput_wSpace = "";
-                std::string cOutput        = "";
-                for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
-                {
-                    cOutput_wSpace += *cIt + " ";
-                    cOutput += *cIt;
-                }
-                LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
-                cLines.push_back(cOutput); */
-                // cStrLength = cOutput.length();
-                cLine++;
-            } while(cLine < 6);
-
-            // disable stub debug
-            cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
-            cFWInterface->ResetReadout();
-
-            LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-            // cFWInterface->L1ADebug();
-
-            cFWInterface->ConfigureTriggerFSM(0, 10, 3);
-
-            // disable back-pressure
-            cFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
-            cFWInterface->Start();
-            std::this_thread::sleep_for(std::chrono::microseconds(1 * 1000));
-            cFWInterface->Stop();
-
-            auto     cWordsL1A        = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
-            uint32_t cCicOutOutputL1A = cWordsL1A[0];
-            LOG(INFO) << BOLDBLUE << "Scoped output on L1A Line: " << std::bitset<32>(cCicOutOutputL1A) << RESET;
-
-            cMatch = 32;
-            cShift = 0;
-            for(uint8_t shift = 0; shift < 8; shift++)
-            {
-                cWrappedByte = (pPattern >> shift) | (pPattern << (8 - shift));
-                cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
-                LOG(DEBUG) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
-                LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
-                int popcount = __builtin_popcountll(cWrappedData ^ cCicOutOutputL1A);
-                if(popcount < cMatch)
-                {
-                    cMatch = popcount;
-                    cShift = shift;
-                }
-                LOG(DEBUG) << BOLDBLUE << "Line L1A Shift " << +shift << " Match " << +popcount << RESET;
+                cFWInterface->ResetReadout();
             }
-            LOG(INFO) << BOLDBLUE << "Found for L1A a minimal bit difference of " << BOLDWHITE << +cMatch << BOLDBLUE << " for a bit shift of " << BOLDWHITE << +cShift << RESET;
-            if((cMatch == 0)) { LOG(INFO) << BOLDGREEN << "CIC Out Test passed for L1A line" << RESET; }
-            else
-            {
-                LOG(INFO) << BOLDRED << "CIC Out Test failed for L1A line" << RESET;
-                res = false;
-            }
-            // #ifdef __USE_ROOT__
-            // fllSummaryTree("L1A_match", cMatch);
-            // fillSummaryTree("L1A_shift", cShift);
-            // #endif
-            uint32_t cL1ATotalWrong = 0;
-            uint32_t cL1ATotal      = 0;
-            cWrappedByte            = (pPattern >> cShift) | (pPattern << (8 - cShift));
-            cWrappedData            = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
-            for(uint32_t cWord: cWordsL1A)
-            {
-                cL1ATotalWrong += __builtin_popcountll(cWrappedData ^ cWord);
-                cL1ATotal += 32;
-            }
-            LOG(INFO) << "L1A total wrong bits: " << BOLDBLUE << +cL1ATotalWrong << " in a total of: " << +cL1ATotal << RESET;
-
-            cFWInterface->ResetReadout();
         }
     }
     return res;
@@ -287,10 +304,14 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            clpGBTInterface->ResetI2C(cOpticalGroup->flpGBT, {0, 1, 2});
+            std::this_thread::sleep_for(std::chrono::milliseconds(30));
             for(const auto cMaster: pMasters)
             {
                 uint8_t cSlaveAddress = 0x60;
-                uint8_t cSuccess      = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x9, 1);
+
+                uint8_t cSuccess = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x0901, 2);
+                // cSuccess      = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x9, 1);
                 if(cSuccess)
                     LOG(INFO) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED" << RESET;
                 else
@@ -356,6 +377,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                     fTestcardClient->sendAndReceivePacket("set_AMUX,rightValue:" + std::to_string(cDACValue) + ",leftValue:" + std::to_string(cDACValue) + ",");
 #else
                     fTC_USB->set_AMUX(cDACValue, cDACValue);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 #endif
 #endif
 #endif
@@ -476,7 +498,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
         {
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             // Configure Temperature sensor
-            clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0xff);
+            clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
             do
             {
                 cADCValueVect.clear();
@@ -568,23 +590,26 @@ bool OTHybridTester::LpGBTTestResetLines()
     for(auto cLevel: cLevels)
     {
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(12000));
         auto cMapIterator = cResetLines.begin();
         bool cStatus      = true;
         do
         {
 #ifdef __ROH_USB__
             fTC_USB->adc_get(cMapIterator->second, cMeasurement);
+            float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
 #elif __SEH_USB__
 #ifdef __TCP_SERVER__
             cMeasurement = this->getMeasurement("read_reset:" + cMapIterator->first);
 #else
             fTC_USB->read_reset(cMapIterator->second, cMeasurement);
+
+            
 #endif
+float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement * 1000.);
 #endif
-            float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
-            cStatus              = cStatus && (cDifference_mV <= 100);
-            cValid               = cValid && cStatus;
+            cStatus = cStatus && (cDifference_mV <= 100);
+            cValid  = cValid && cStatus;
 
             if(cDifference_mV > 100)
             {

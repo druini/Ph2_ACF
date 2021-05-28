@@ -21,6 +21,7 @@ namespace Ph2_HwInterface
 {
 bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
+#ifdef __TCUSB__
 #ifdef __SEH_USB__
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("TurnOn");
@@ -29,6 +30,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 #endif
     LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+#endif
 #endif
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
@@ -537,7 +539,8 @@ uint8_t D19clpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t
     // Gets I2C Master status
     std::string cI2CStatReg = "I2CM" + std::to_string(pMaster) + "Status";
     uint8_t     cStatus     = ReadChipReg(pChip, cI2CStatReg);
-    LOG(DEBUG) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << fI2CStatusMap[cStatus] << RESET;
+    LOG(INFO) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << fI2CStatusMap[cStatus] << RESET;
+    LOG(INFO) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << +cStatus << RESET;
     return cStatus;
 }
 
@@ -555,9 +558,15 @@ void D19clpGBTInterface::ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vec
         cResetMask |= (1 << cBitPosition[cMaster]);
         // generating reset pulse on dedicated register bit
     }
-    WriteChipReg(pChip, "RST0", 0);
-    WriteChipReg(pChip, "RST0", cResetMask);
-    WriteChipReg(pChip, "RST0", 0);
+    WriteChipReg(pChip, "RST0", 0, true);
+    ReadChipReg(pChip, "RST0");
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    LOG(INFO) << BOLDRED << "reset mask " << +cResetMask << RESET;
+    WriteChipReg(pChip, "RST0", cResetMask, true);
+    ReadChipReg(pChip, "RST0");
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    WriteChipReg(pChip, "RST0", 0, true);
+    ReadChipReg(pChip, "RST0");
 }
 
 void D19clpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode)
@@ -608,7 +617,7 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
         WriteChipReg(pChip, cI2CCmdReg, 0xC);
     }
     // wait until the transaction is done
-    uint8_t cMaxIter = 100, cIter = 0;
+    uint8_t cMaxIter = 10, cIter = 0;
     do
     {
         LOG(DEBUG) << BOLDBLUE << "Waiting for I2C Write transaction to finisih" << RESET;
@@ -617,7 +626,8 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     if(cIter == cMaxIter)
     {
         LOG(INFO) << BOLDRED << "I2C Write Transaction FAILED" << RESET;
-        throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
+        // throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
+        return false;
     }
     return true;
 }
@@ -653,7 +663,7 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     if(cIter == cMaxIter)
     {
         LOG(INFO) << BOLDRED << "I2C Read Transaction FAILED" << RESET;
-        throw std::runtime_error(std::string("in D19clpGBTInterface::ReadI2C : I2C Transaction failed"));
+        // throw std::runtime_error(std::string("in D19clpGBTInterface::ReadI2C : I2C Transaction failed"));
     }
     // return read back value
     if(pNBytes == 1)
@@ -689,7 +699,7 @@ void D19clpGBTInterface::ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, con
     // Enables current DAC without changing the voltage DAC
     uint8_t cDACConfigH = ReadChipReg(pChip, "DACConfigH");
     WriteChipReg(pChip, "DACConfigH", cDACConfigH | 0x40);
-    // Sets output current for the current DAC. Current = CURDACSelect * XX uA.
+    // Sets output current for the current DAC. Current = CURDACSelect * ~3.5 uA.
     WriteChipReg(pChip, "CURDACValue", pCurrentDACOutput);
     // Setting Nth bit in this register attaches current DAC to ADCN pin. Current source can be attached to any number of channels
     uint8_t cCURDACCHN = 0;
@@ -1043,7 +1053,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     // uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying 2S-SEH 5G lpGBT configuration" << RESET;
     // Configure High Speed Link Tx Rx Polarity
-    ConfigureHighSpeedPolarity(pChip, 1, 0);
+    /* ConfigureHighSpeedPolarity(pChip, 1, 0);
 
     // Clocks
     std::vector<uint8_t> cClocks  = {1, 11}; // Reduced number of clocks and only 320 MHz
@@ -1090,7 +1100,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Resets are high
     ConfigureGPIODirection(pChip, {0, 3, 6, 8}, 1);
-    ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);
+    ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);*/
 }
 std::string D19clpGBTInterface::getVariableValue(std::string variable, std::string buffer)
 {
