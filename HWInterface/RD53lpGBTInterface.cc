@@ -58,7 +58,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // # Configure Up and Down links #
     // ###############################
     RD53lpGBTInterface::ConfigureRxGroups(
-        pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], 0);
+        pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
     RD53lpGBTInterface::ConfigureRxChannels(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), 1, 1, 1, 0, 12);
 
     RD53lpGBTInterface::ConfigureTxGroups(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), fTxDataRateMap[static_cast<lpGBT*>(pChip)->getTxDataRate()]);
@@ -143,6 +143,53 @@ bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pa
 // # LpGBT specific routine functions #
 // ####################################
 
+void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)
+{
+    const uint8_t              cChipRate = lpGBTInterface::GetChipRate(pChip);
+    const std::vector<uint8_t> pGroups   = static_cast<lpGBT*>(pChip)->getRxGroups();
+    const std::vector<uint8_t> pChannels = static_cast<lpGBT*>(pChip)->getRxChannels();
+
+    // Configure Rx Phase Shifter
+    uint16_t cDelay = 0x0;
+    uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
+    lpGBTInterface::ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
+
+    for(const auto cHybrid: *pOpticalGroup)
+        for(const auto cChip: *cHybrid)
+        {
+            static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
+            static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
+        }
+
+    lpGBTInterface::PhaseTrainRx(pChip, pGroups, true);
+
+    for(const auto& cGroup: pGroups)
+    {
+        // Wait until channels lock
+        LOG(INFO) << GREEN << "Phase aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+        } while(lpGBTInterface::IsRxLocked(pChip, cGroup, pChannels) == false);
+        LOG(INFO) << BOLDBLUE << "\t--> Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " LOCKED" << RESET;
+
+        // Set new phase
+        for(const auto& cChannel: pChannels)
+        {
+            uint8_t cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
+            LOG(INFO) << BOLDBLUE << "\t\t--> Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +cCurrPhase << RESET;
+            lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
+        }
+    }
+    lpGBTInterface::PhaseTrainRx(pChip, pGroups, false);
+
+    for(const auto cHybrid: *pOpticalGroup)
+        for(const auto cChip: *cHybrid) static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
+
+    // Set back Rx groups to fixed phase
+    lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
+}
+
 bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                                               const BeBoard*        pBoard,
                                               const OpticalGroup*   pOpticalGroup,
@@ -183,7 +230,7 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
                 static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
 
-                double result = lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
+                const double result = lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
 
                 // #########################################################
                 // # Search for largest interval and set into middle point #
