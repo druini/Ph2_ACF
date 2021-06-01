@@ -13,7 +13,7 @@
 #include "RD53PixelAlive.h"
 
 #ifdef __USE_ROOT__
-//#include "../DQMUtils/RD53LatencyHistograms.h"
+#include "../DQMUtils/RD53GenericDacDacScanHistograms.h"
 #endif
 
 // ##############################
@@ -39,18 +39,14 @@ class GenericDacDacScan : public PixelAlive
     void   run();
     void   draw(bool saveData = true);
     void   analyze();
-    size_t getNumberIterations() { return 0; } // @TMP@
+    size_t getNumberIterations() { return PixelAlive::getNumberIterations() * ((stopValueDAC1 - startValueDAC1) / stepDAC1 + 1) * ((stopValueDAC2 - startValueDAC2) / stepDAC2 + 1); }
     void   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
-    /* GenericDacDacScanHistograms* histos; */
+    GenericDacDacScanHistograms* histos;
 #endif
 
   private:
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
     std::string regNameDAC1;
     size_t startValueDAC1;
     size_t stopValueDAC1;
@@ -59,8 +55,6 @@ class GenericDacDacScan : public PixelAlive
     size_t startValueDAC2;
     size_t stopValueDAC2;
     size_t stepDAC2;
-    size_t nEvents;
-    size_t nTRIGxEvent;
 
     std::vector<uint16_t> dac1List;
     std::vector<uint16_t> dac2List;
@@ -69,7 +63,7 @@ class GenericDacDacScan : public PixelAlive
     DetectorDataContainer theGenericDacDacScanContainer;
 
     void fillHisto();
-    void scanDacDac(const std::string& regNameDAC1, const std::string& regNameDAC2, const std::vector<uint16_t>& dac1List, const std::vector<uint16_t>& dac2List, uint32_t nEvents, DetectorDataContainer* theContainer);
+    void scanDacDac(const std::string& regNameDAC1, const std::string& regNameDAC2, const std::vector<uint16_t>& dac1List, const std::vector<uint16_t>& dac2List, DetectorDataContainer* theContainer);
     void chipErrorReport() const;
 
   protected:
@@ -78,6 +72,8 @@ class GenericDacDacScan : public PixelAlive
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;
+    bool        isDAC1ChipReg;
+    bool        isDAC2ChipReg;
 };
 
 #endif

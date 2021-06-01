@@ -23,12 +23,6 @@ void GenericDacDacScan::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nEvents        = this->findValueInSettings("nEvents");
-    nTRIGxEvent    = this->findValueInSettings("nTRIGxEvent");
     regNameDAC1    = this->findValueInSettings("RegNameDAC1");
     startValueDAC1 = this->findValueInSettings("StartValueDAC1");
     stopValueDAC1  = this->findValueInSettings("StopValueDAC1");
@@ -44,10 +38,16 @@ void GenericDacDacScan::ConfigureCalibration()
     // ##############################
     // # Initialize dac scan values #
     // ##############################
-    size_t nSteps = (stopValueDAC1 - startValueDAC1) / stepDAC1;
+    size_t nSteps = (stopValueDAC1 - startValueDAC1) / stepDAC1 + 1;
     for(auto i = 0u; i < nSteps; i++) dac1List.push_back(startValueDAC1 + stepDAC1 * i);
-    nSteps = (stopValueDAC2 - startValueDAC2) / stepDAC2;
+    nSteps = (stopValueDAC2 - startValueDAC2) / stepDAC2 + 1;
     for(auto i = 0u; i < nSteps; i++) dac2List.push_back(startValueDAC2 + stepDAC2 * i);
+
+    // ##################################
+    // # Check if it's RD53 or FPGA reg #
+    // ##################################
+    isDAC1ChipReg = (regNameDAC1.find(".") == std::string::npos ? true : false);
+    isDAC2ChipReg = (regNameDAC2.find(".") == std::string::npos ? true : false);
 
     // #######################
     // # Initialize progress #
@@ -74,10 +74,10 @@ void GenericDacDacScan::Running()
 
 void GenericDacDacScan::sendData()
 {
-    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    const size_t GenericDacDacScanSize = (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1) * (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
 
     auto theStream                  = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<GenericDacDacScanSize>>("Occ");
-    auto theGenericDacDacScanStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>("GenericDacDacScan");
+    auto theGenericDacDacScanStream = prepareChipContainerStreamer<EmptyContainer, std::pair<uint16_t, uint16_t>>("DACDAC");
 
     if(fStreamerEnabled == true)
     {
@@ -131,10 +131,10 @@ void GenericDacDacScan::initializeFiles(const std::string fileRes_, int currentR
 
 void GenericDacDacScan::run()
 {
-    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    const size_t GenericDacDacScanSize = (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1) * (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
 
     ContainerFactory::copyAndInitChip<GenericDataArray<GenericDacDacScanSize>>(*fDetectorContainer, theOccContainer);
-    GenericDacDacScan::scanDacDac(regNameDAC1, regNameDAC2, dac1List, dac2List, nEvents, &theOccContainer);
+    GenericDacDacScan::scanDacDac(regNameDAC1, regNameDAC2, dac1List, dac2List, &theOccContainer);
 
     // ################
     // # Error report #
@@ -168,99 +168,112 @@ void GenericDacDacScan::draw(bool saveData)
 
 void GenericDacDacScan::analyze()
 {
-    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    const size_t GenericDacDacScanSize = (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1) * (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
 
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theGenericDacDacScanContainer);
+    ContainerFactory::copyAndInitChip<std::pair<uint16_t, uint16_t>>(*fDetectorContainer, theGenericDacDacScanContainer);
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    auto best   = 0.;
-                    int  regVal = 0;
+                    auto best    = 0.;
+                    int  regVal1 = 0;
+                    int  regVal2 = 0;
 
                     for(auto i = 0u; i < dac1List.size(); i++)
-                    {
-                        auto current = theOccContainer.at(cBoard->getIndex())
-                                           ->at(cOpticalGroup->getIndex())
-                                           ->at(cHybrid->getIndex())
-                                           ->at(cChip->getIndex())
-                                           ->getSummary<GenericDataArray<GenericDacDacScanSize>>()
-                                           .data[i];
-                        if(current > best)
+                        for(auto j = 0u; j < dac2List.size(); j++)
                         {
-                            regVal = dac1List[i];
-                            best   = current;
+                            auto current = theOccContainer.at(cBoard->getIndex())
+                                               ->at(cOpticalGroup->getIndex())
+                                               ->at(cHybrid->getIndex())
+                                               ->at(cChip->getIndex())
+                                               ->getSummary<GenericDataArray<GenericDacDacScanSize>>()
+                                               .data[i * dac2List.size() + j];
+                            if(current > best)
+                            {
+                                regVal1 = dac1List[i];
+                                regVal2 = dac2List[j];
+                                best    = current;
+                            }
                         }
-                    }
 
-                    if(nTRIGxEvent > 1)
-                        LOG(INFO) << BOLDMAGENTA << ">>> Best latency for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                                  << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is within [" << BOLDYELLOW
-                                  << (regVal - (int)nTRIGxEvent + 1 >= 0 ? std::to_string(regVal - (int)nTRIGxEvent + 1) : "N.A.") << "," << regVal << BOLDMAGENTA << "] (n.bx) <<<" << RESET;
-                    else
-                        LOG(INFO) << BOLDMAGENTA << ">>> Best latency for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                                  << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " (n.bx) <<<" << RESET;
+                    LOG(INFO) << BOLDMAGENTA << ">>> Best register values for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] are " << BOLDYELLOW << regVal1 << BOLDMAGENTA << " for " << BOLDYELLOW << regNameDAC1 << BOLDMAGENTA
+                              << " and " << BOLDYELLOW << regVal2 << BOLDMAGENTA << " for " << BOLDYELLOW << regNameDAC2 << RESET;
 
                     // ######################################################
                     // # Fill latency container and download new DAC values #
                     // ######################################################
-                    theGenericDacDacScanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", regVal);
+                    theGenericDacDacScanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::pair<uint16_t, uint16_t>>() =
+                        std::pair<uint16_t, uint16_t>(regVal1, regVal2);
                 }
 }
 
 void GenericDacDacScan::fillHisto()
 {
 #ifdef __USE_ROOT__
-    // histos->fillOccupancy(theOccContainer);
-    // histos->fillGenericDacDacScan(theGenericDacDacScanContainer);
+    histos->fillOccupancy(theOccContainer);
+    histos->fillGenericDacDacScan(theGenericDacDacScanContainer);
 #endif
 }
 
-void GenericDacDacScan::scanDacDac(const std::string& regNameDAC1, const std::string& regNameDAC2, const std::vector<uint16_t>& dac1List, const std::vector<uint16_t>& dac2List, uint32_t nEvents, DetectorDataContainer* theContainer)
+void GenericDacDacScan::scanDacDac(const std::string& regNameDAC1, const std::string& regNameDAC2, const std::vector<uint16_t>& dac1List, const std::vector<uint16_t>& dac2List, DetectorDataContainer* theContainer)
 {
-    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    const size_t GenericDacDacScanSize = (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1) * (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
 
     for(auto i = 0u; i < dac1List.size(); i++)
-        for(auto i = 0u; i < dac2List.size(); i++)
-        {
-            // ###########################
-            // # Download new DAC values #
-            // ###########################
-            LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC1 << BOLDMAGENTA << " value = " << BOLDYELLOW << dac1List[i] << BOLDMAGENTA << " <<<" << RESET;
-            for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
+      {
+          // ###########################
+          // # Download new DAC values #
+          // ###########################
+          LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC1 << BOLDMAGENTA << " value = " << BOLDYELLOW << dac1List[i] << BOLDMAGENTA << " <<<" << RESET;
+          if(isDAC1ChipReg == true)
+              for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
+          else
+              for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC1, dac1List[i]);
 
-            // ################
-            // # Run analysis #
-            // ################
-            PixelAlive::run();
-            auto output = PixelAlive::analyze();
-            output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
+          for(auto j = 0u; j < dac2List.size(); j++)
+          {
+              // ###########################
+              // # Download new DAC values #
+              // ###########################
+              LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC2 << BOLDMAGENTA << " value = " << BOLDYELLOW << dac2List[j] << BOLDMAGENTA << " <<<" << RESET;
+              if(isDAC1ChipReg == true)
+                  for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
+              else
+                  for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC2, dac2List[j]);
 
-            // ###############
-            // # Save output #
-            // ###############
-            for(const auto cBoard: *output)
-                for(const auto cOpticalGroup: *cBoard)
-                    for(const auto cHybrid: *cOpticalGroup)
-                        for(const auto cChip: *cHybrid)
-                        {
-                            float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
-                            theContainer->at(cBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
-                                ->getSummary<GenericDataArray<GenericDacDacScanSize>>()
-                                .data[i] = occ;
-                        }
+              // ################
+              // # Run analysis #
+              // ################
+              PixelAlive::run();
+              auto output = PixelAlive::analyze();
+              output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
-            // ##############################################
-            // # Send periodic data to minitor the progress #
-            // ##############################################
-            GenericDacDacScan::sendData();
+              // ###############
+              // # Save output #
+              // ###############
+              for(const auto cBoard: *output)
+                  for(const auto cOpticalGroup: *cBoard)
+                      for(const auto cHybrid: *cOpticalGroup)
+                          for(const auto cChip: *cHybrid)
+                          {
+                              float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+                              theContainer->at(cBoard->getIndex())
+                                  ->at(cOpticalGroup->getIndex())
+                                  ->at(cHybrid->getIndex())
+                                  ->at(cChip->getIndex())
+                                  ->getSummary<GenericDataArray<GenericDacDacScanSize>>()
+                                  .data[i * dac2List.size() + j] = occ;
+                          }
+
+              // ##############################################
+              // # Send periodic data to minitor the progress #
+              // ##############################################
+              GenericDacDacScan::sendData();
         }
+      }
 }
 
 void GenericDacDacScan::chipErrorReport() const
