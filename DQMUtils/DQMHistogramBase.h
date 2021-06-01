@@ -80,10 +80,12 @@ class DQMHistogramBase
                          DetectorDataContainer&       dataContainer,
                          const CanvasContainer<Hist>& histContainer,
                          const char*                  XTitle = nullptr,
-                         const char*                  YTitle = nullptr)
+                         const char*                  YTitle = nullptr,
+                         const char*                  ZTitle = nullptr)
     {
         if(XTitle != nullptr) histContainer.fTheHistogram->SetXTitle(XTitle);
         if(YTitle != nullptr) histContainer.fTheHistogram->SetYTitle(YTitle);
+        if(ZTitle != nullptr) histContainer.fTheHistogram->SetZTitle(ZTitle);
 
         RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, histContainer);
     }
