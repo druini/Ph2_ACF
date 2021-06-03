@@ -218,62 +218,66 @@ void GenericDacDacScan::fillHisto()
 #endif
 }
 
-void GenericDacDacScan::scanDacDac(const std::string& regNameDAC1, const std::string& regNameDAC2, const std::vector<uint16_t>& dac1List, const std::vector<uint16_t>& dac2List, DetectorDataContainer* theContainer)
+void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
+                                   const std::string&           regNameDAC2,
+                                   const std::vector<uint16_t>& dac1List,
+                                   const std::vector<uint16_t>& dac2List,
+                                   DetectorDataContainer*       theContainer)
 {
     const size_t GenericDacDacScanSize = (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1) * (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
 
     for(auto i = 0u; i < dac1List.size(); i++)
-      {
-          // ###########################
-          // # Download new DAC values #
-          // ###########################
-          LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC1 << BOLDMAGENTA << " value = " << BOLDYELLOW << dac1List[i] << BOLDMAGENTA << " <<<" << RESET;
-          if(isDAC1ChipReg == true)
-              for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
-          else
-              for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC1, dac1List[i]);
+    {
+        // ###########################
+        // # Download new DAC values #
+        // ###########################
+        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC1 << BOLDMAGENTA << " value = " << BOLDYELLOW << dac1List[i] << BOLDMAGENTA << " <<<" << RESET;
+        if(isDAC1ChipReg == true)
+            for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
+        else
+            for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC1, dac1List[i]);
 
-          for(auto j = 0u; j < dac2List.size(); j++)
-          {
-              // ###########################
-              // # Download new DAC values #
-              // ###########################
-              LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC2 << BOLDMAGENTA << " value = " << BOLDYELLOW << dac2List[j] << BOLDMAGENTA << " <<<" << RESET;
-              if(isDAC1ChipReg == true)
-                  for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
-              else
-                  for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC2, dac2List[j]);
+        for(auto j = 0u; j < dac2List.size(); j++)
+        {
+            // ###########################
+            // # Download new DAC values #
+            // ###########################
+            LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC2 << BOLDMAGENTA << " value = " << BOLDYELLOW << dac2List[j] << BOLDMAGENTA << " <<<" << RESET;
+            if(isDAC1ChipReg == true)
+                for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
+            else
+                for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC2, dac2List[j]);
 
-              // ################
-              // # Run analysis #
-              // ################
-              PixelAlive::run();
-              auto output = PixelAlive::analyze();
-              output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
+            // ################
+            // # Run analysis #
+            // ################
+            PixelAlive::run();
+            auto output = PixelAlive::analyze();
+            output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
-              // ###############
-              // # Save output #
-              // ###############
-              for(const auto cBoard: *output)
-                  for(const auto cOpticalGroup: *cBoard)
-                      for(const auto cHybrid: *cOpticalGroup)
-                          for(const auto cChip: *cHybrid)
-                          {
-                              float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
-                              theContainer->at(cBoard->getIndex())
-                                  ->at(cOpticalGroup->getIndex())
-                                  ->at(cHybrid->getIndex())
-                                  ->at(cChip->getIndex())
-                                  ->getSummary<GenericDataArray<GenericDacDacScanSize>>()
-                                  .data[i * dac2List.size() + j] = occ;
-                          }
+            // ###############
+            // # Save output #
+            // ###############
+            for(const auto cBoard: *output)
+                for(const auto cOpticalGroup: *cBoard)
+                    for(const auto cHybrid: *cOpticalGroup)
+                        for(const auto cChip: *cHybrid)
+                        {
+                            float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+                            theContainer->at(cBoard->getIndex())
+                                ->at(cOpticalGroup->getIndex())
+                                ->at(cHybrid->getIndex())
+                                ->at(cChip->getIndex())
+                                ->getSummary<GenericDataArray<GenericDacDacScanSize>>()
+                                .data[i * dac2List.size() + j] = occ;
+                        }
 
-              // ##############################################
-              // # Send periodic data to minitor the progress #
-              // ##############################################
-              GenericDacDacScan::sendData();
+            // ##############################################
+            // # Send periodic data to minitor the progress #
+            // ##############################################
+            GenericDacDacScan::sendData();
         }
-      }
+    }
 }
 
 void GenericDacDacScan::chipErrorReport() const

@@ -48,13 +48,13 @@ class GenericDacDacScan : public PixelAlive
 
   private:
     std::string regNameDAC1;
-    size_t startValueDAC1;
-    size_t stopValueDAC1;
-    size_t stepDAC1;
+    size_t      startValueDAC1;
+    size_t      stopValueDAC1;
+    size_t      stepDAC1;
     std::string regNameDAC2;
-    size_t startValueDAC2;
-    size_t stopValueDAC2;
-    size_t stepDAC2;
+    size_t      startValueDAC2;
+    size_t      stopValueDAC2;
+    size_t      stepDAC2;
 
     std::vector<uint16_t> dac1List;
     std::vector<uint16_t> dac2List;

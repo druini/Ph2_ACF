@@ -27,12 +27,10 @@ void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWM
 
 void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile)
 {
-    if(pIsFile && pFilename.find(".xml") != std::string::npos)
-        parseSettingsxml(pFilename, pSettingsMap, os, pIsFile);
-    else if(!pIsFile)
+    if((pIsFile && pFilename.find(".xml") != std::string::npos) || (!pIsFile))
         parseSettingsxml(pFilename, pSettingsMap, os, pIsFile);
     else
-        LOG(ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xm" << RESET;
+        LOG(ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xml" << RESET;
 }
 
 void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
@@ -987,9 +985,20 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
 
         for(pugi::xml_node nSetting = nSettings.child("Setting"); nSetting; nSetting = nSetting.next_sibling())
         {
-            pSettingsMap[nSetting.attribute("name").value()] = convertAnyDouble(nSetting.first_child().value());
-            os << BOLDRED << "Setting" << RESET << " -- " << BOLDCYAN << nSetting.attribute("name").value() << RESET << ":" << BOLDYELLOW << convertAnyDouble(nSetting.first_child().value()) << RESET
-               << std::endl;
+            if((strcmp(nSetting.attribute("name").value(), "RegNameDAC1") == 0) || (strcmp(nSetting.attribute("name").value(), "RegNameDAC2") == 0))
+            {
+                // pSettingsMap[nSetting.attribute("name").value()] = nSetting.first_child().value();
+
+                os << BOLDRED << "Setting" << RESET << " -- " << BOLDCYAN << nSetting.attribute("name").value() << RESET << ":" << BOLDYELLOW << pSettingsMap[nSetting.attribute("name").value()]
+                   << RESET << std::endl;
+            }
+            else
+            {
+                pSettingsMap[nSetting.attribute("name").value()] = convertAnyDouble(nSetting.first_child().value());
+
+                os << BOLDRED << "Setting" << RESET << " -- " << BOLDCYAN << nSetting.attribute("name").value() << RESET << ":" << BOLDYELLOW << pSettingsMap[nSetting.attribute("name").value()]
+                   << RESET << std::endl;
+            }
         }
     }
 }
