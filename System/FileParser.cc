@@ -1047,12 +1047,18 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
     else
         cFileName = expandEnvironmentVariables(theChipNode.attribute("configfile").value());
 
-    os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << theChipNode.attribute("Id").value() << BOLDBLUE << ", Lane: " << BOLDYELLOW
-       << theChipNode.attribute("Lane").value() << BOLDBLUE << ", File: " << BOLDYELLOW << cFileName << RESET << std::endl;
+    uint32_t chipId     = theChipNode.attribute("Id").as_int();
+    uint32_t chipLane   = theChipNode.attribute("Lane").as_int();
+    uint8_t  cRxGroup   = theChipNode.attribute("RxGroups").as_int();
+    uint8_t  cRxChannel = theChipNode.attribute("RxChannels").as_int();
+    uint8_t  cTxGroup   = theChipNode.attribute("TxGroups").as_int();
+    uint8_t  cTxChannel = theChipNode.attribute("TxChannels").as_int();
 
-    uint32_t     chipId   = theChipNode.attribute("Id").as_int();
-    uint32_t     chipLane = theChipNode.attribute("Lane").as_int();
-    ReadoutChip* theChip  = cHybrid->addChipContainer(chipId, new RD53(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), chipId, chipLane, cFileName));
+    os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << chipId << BOLDBLUE << ", Lane: " << BOLDYELLOW << chipLane << BOLDBLUE << ", File: " << BOLDYELLOW
+       << cFileName << BOLDBLUE << ", RxGroup: " << BOLDYELLOW << +cRxGroup << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup
+       << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << RESET << std::endl;
+
+    ReadoutChip* theChip = cHybrid->addChipContainer(chipId, new RD53(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), chipId, chipLane, cFileName));
     theChip->setNumberOfChannels(RD53::nRows, RD53::nCols);
 
     this->parseRD53Settings(theChipNode, theChip, os);
