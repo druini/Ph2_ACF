@@ -181,7 +181,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     float cVHVJ7 = 0;
     float cVHVJ8 = 0;
 
-    fTC_USB->set_HV(false, true, true, 0);
+    /* fTC_USB->set_HV(false, true, true, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fTC_USB->set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
 
@@ -189,7 +189,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 
     fTC_USB->read_hvmon(fTC_USB->Mon, cUMon);
     fTC_USB->read_hvmon(fTC_USB->VHVJ7, cVHVJ7);
-    fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8);
+    fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8); */
     //----------------------------------------------------
     fTC_USB->set_HV(false, true, true, 0);
 
@@ -270,6 +270,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 
     fTC_USB->set_HV(false, false, false, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    fillSummaryTree("BiasDone", 1);
 #endif
 #endif
 #endif
@@ -379,6 +380,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 
     fTC_USB->set_HV(false, false, false, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    fillSummaryTree("LeakDone", 1);
 #endif
 #endif
 #endif
@@ -557,6 +559,8 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     cIouttoIinMultiGraph->GetYaxis()->SetTitle("Iin [A]");
     cIouttoIinCanvas->BuildLegend();
     cIouttoIinCanvas->Write();
+
+    fillSummaryTree("EfficencyDone", 1);
 #endif
 #endif
 #endif

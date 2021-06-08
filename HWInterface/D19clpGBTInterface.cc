@@ -1030,7 +1030,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     // uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying 2S-SEH 5G lpGBT configuration" << RESET;
     // Configure High Speed Link Tx Rx Polarity
-    /* ConfigureHighSpeedPolarity(pChip, 1, 0);
+    ConfigureHighSpeedPolarity(pChip, 1, 0);
 
     // Clocks
     std::vector<uint8_t> cClocks  = {1, 11}; // Reduced number of clocks and only 320 MHz
@@ -1077,7 +1077,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Resets are high
     ConfigureGPIODirection(pChip, {0, 3, 6, 8}, 1);
-    ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);*/
+    ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
