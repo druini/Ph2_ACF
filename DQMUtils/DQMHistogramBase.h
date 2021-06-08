@@ -11,6 +11,7 @@
 #ifndef __DQMHISTOGRAMBASE_H__
 #define __DQMHISTOGRAMBASE_H__
 
+#include <boost/any.hpp>
 #include <memory>
 #include <string>
 #include <vector>
@@ -136,10 +137,11 @@ class DQMHistogramBase
                     }
     }
 
-    double findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, double defaultValue = 0.) const
+    template <typename T = double>
+    T findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, T defaultValue = 0) const
     {
         auto setting = settingsMap.find(name);
-        return (setting != std::end(settingsMap) ? setting->second : defaultValue);
+        return (setting != std::end(settingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);
     }
 };
 

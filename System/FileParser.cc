@@ -987,17 +987,19 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
         {
             if((strcmp(nSetting.attribute("name").value(), "RegNameDAC1") == 0) || (strcmp(nSetting.attribute("name").value(), "RegNameDAC2") == 0))
             {
-                // pSettingsMap[nSetting.attribute("name").value()] = nSetting.first_child().value();
+                std::string value(nSetting.first_child().value());
+                value.erase(std::remove(value.begin(), value.end(), ' '), value.end());
+                pSettingsMap[nSetting.attribute("name").value()] = value;
 
-                os << BOLDRED << "Setting" << RESET << " -- " << BOLDCYAN << nSetting.attribute("name").value() << RESET << ":" << BOLDYELLOW << pSettingsMap[nSetting.attribute("name").value()]
-                   << RESET << std::endl;
+                os << BOLDRED << "Setting" << RESET << " -- " << BOLDCYAN << nSetting.attribute("name").value() << RESET << ":" << BOLDYELLOW
+                   << boost::any_cast<std::string>(pSettingsMap[nSetting.attribute("name").value()]) << RESET << std::endl;
             }
             else
             {
                 pSettingsMap[nSetting.attribute("name").value()] = convertAnyDouble(nSetting.first_child().value());
 
-                os << BOLDRED << "Setting" << RESET << " -- " << BOLDCYAN << nSetting.attribute("name").value() << RESET << ":" << BOLDYELLOW << pSettingsMap[nSetting.attribute("name").value()]
-                   << RESET << std::endl;
+                os << BOLDRED << "Setting" << RESET << " -- " << BOLDCYAN << nSetting.attribute("name").value() << RESET << ":" << BOLDYELLOW
+                   << boost::any_cast<double>(pSettingsMap[nSetting.attribute("name").value()]) << RESET << std::endl;
             }
         }
     }

@@ -23,11 +23,11 @@ void GenericDacDacScan::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    regNameDAC1    = this->findValueInSettings("RegNameDAC1");
+    regNameDAC1    = this->findValueInSettings<std::string>("RegNameDAC1");
     startValueDAC1 = this->findValueInSettings("StartValueDAC1");
     stopValueDAC1  = this->findValueInSettings("StopValueDAC1");
     stepDAC1       = this->findValueInSettings("StepDAC1");
-    regNameDAC2    = this->findValueInSettings("RegNameDAC2");
+    regNameDAC2    = this->findValueInSettings<std::string>("RegNameDAC2");
     startValueDAC2 = this->findValueInSettings("StartValueDAC2");
     stopValueDAC2  = this->findValueInSettings("StopValueDAC2");
     stepDAC2       = this->findValueInSettings("StepDAC2");

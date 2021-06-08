@@ -484,7 +484,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
     if(cSetting != std::end(fSettingsMap))
     {
         cCheck    = true;
-        cHoleMode = (cSetting->second == 1) ? true : false;
+        cHoleMode = (boost::any_cast<double>(cSetting->second) == 1) ? true : false;
     }
 
     std::string cMode;

@@ -18,6 +18,7 @@
 #include "../tools/RD53DataReadbackOptimization.h"
 #include "../tools/RD53Gain.h"
 #include "../tools/RD53GainOptimization.h"
+#include "../tools/RD53GenericDacDacScan.h"
 #include "../tools/RD53InjectionDelay.h"
 #include "../tools/RD53Latency.h"
 #include "../tools/RD53Physics.h"
@@ -122,7 +123,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning]",
+                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning, gendacdac]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -595,6 +596,21 @@ int main(int argc, char** argv)
             vt.run();
             vt.analyze();
             vt.draw();
+        }
+        else if(whichCalib == "gendacdac")
+        {
+            // ############################
+            // # Run Generic DAC-DAC Scan #
+            // ############################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Generic DAC-DAC scan @@@" << RESET;
+
+            std::string       fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_InjectionDelay");
+            GenericDacDacScan gs;
+            gs.Inherit(&mySysCntr);
+            gs.localConfigure(fileName, runNumber);
+            gs.run();
+            gs.analyze();
+            gs.draw();
         }
         else if(whichCalib == "physics")
         {

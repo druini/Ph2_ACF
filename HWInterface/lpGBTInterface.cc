@@ -689,7 +689,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << std::fixed << std::setprecision(0) << RESET;
-    int idx = 1;
+    int      idx = 1;
     uint64_t nErrors;
     while(lpGBTInterface::IsBERTDone(pChip) == false)
     {

@@ -43,6 +43,7 @@
 #include "../Utils/easylogging++.h"
 #include "FileParser.h"
 
+#include <boost/any.hpp>
 #include <future>
 #include <iostream>
 #include <stdlib.h>
@@ -57,7 +58,7 @@ class DetectorMonitor;
  */
 namespace Ph2_System
 {
-using SettingsMap = std::unordered_map<std::string, double>; /*!< Maps the settings */
+using SettingsMap = std::unordered_map<std::string, boost::any>; /*!< Maps the settings */
 
 /*!
  * \class SystemController
@@ -227,8 +228,21 @@ class SystemController
         return fEventList;
     }
 
-    void   DecodeData(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
-    double findValueInSettings(const std::string name, double defaultValue = 0.) const;
+    void DecodeData(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+
+    template <typename T = double>
+    typename std::enable_if<!std::is_same<T, std::string>::value, T>::type findValueInSettings(const std::string name, T defaultValue = 0) const
+    {
+        auto setting = fSettingsMap.find(name);
+        return (setting != std::end(fSettingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);
+    }
+
+    template <typename T>
+    typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type findValueInSettings(const std::string name, T defaultValue = "") const
+    {
+        auto setting = fSettingsMap.find(name);
+        return (setting != std::end(fSettingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);
+    }
 
   private:
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
@@ -239,6 +253,7 @@ class SystemController
     uint32_t                             fNCbc;
     FileParser                           fParser;
 };
+
 } // namespace Ph2_System
 
 #endif

@@ -59,9 +59,9 @@ void OpenFinder::Initialise(Parameters pParameters)
 
     // Read some settings from the map
     auto cSetting       = fSettingsMap.find("Nevents");
-    fEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    fEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
     cSetting            = fSettingsMap.find("TestPulseAmplitude");
-    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     // Set fTestPulse based on the test pulse amplitude
     fTestPulse = (fTestPulseAmplitude & 0x1);
     // Import the rest of parameters from the user settings
