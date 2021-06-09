@@ -125,7 +125,7 @@ void GenericDacDacScan::initializeFiles(const std::string fileRes_, int currentR
 
 #ifdef __USE_ROOT__
     delete histos;
-    // histos = new GenericDacDacScanHistograms;
+    histos = new GenericDacDacScanHistograms;
 #endif
 }
 
@@ -243,7 +243,7 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
             // # Download new DAC values #
             // ###########################
             LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC2 << BOLDMAGENTA << " value = " << BOLDYELLOW << dac2List[j] << BOLDMAGENTA << " <<<" << RESET;
-            if(isDAC1ChipReg == true)
+            if(isDAC2ChipReg == true)
                 for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
             else
                 for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC2, dac2List[j]);

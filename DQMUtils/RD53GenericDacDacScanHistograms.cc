@@ -18,11 +18,11 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, const DetectorConta
     // #######################
     // # Retrieve parameters #
     // #######################
-    regNameDAC1    = this->findValueInSettings(settingsMap, "RegNameDAC1");
+    regNameDAC1    = this->findValueInSettings<std::string>(settingsMap, "RegNameDAC1");
     startValueDAC1 = this->findValueInSettings(settingsMap, "StartValueDAC1");
     stopValueDAC1  = this->findValueInSettings(settingsMap, "StopValueDAC1");
     stepDAC1       = this->findValueInSettings(settingsMap, "StepDAC1");
-    regNameDAC2    = this->findValueInSettings(settingsMap, "RegNameDAC2");
+    regNameDAC2    = this->findValueInSettings<std::string>(settingsMap, "RegNameDAC2");
     startValueDAC2 = this->findValueInSettings(settingsMap, "StartValueDAC2");
     stopValueDAC2  = this->findValueInSettings(settingsMap, "StopValueDAC2");
     stepDAC2       = this->findValueInSettings(settingsMap, "StepDAC2");
