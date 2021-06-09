@@ -27,20 +27,20 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, const DetectorConta
     stopValueDAC2  = this->findValueInSettings(settingsMap, "StopValueDAC2");
     stepDAC2       = this->findValueInSettings(settingsMap, "StepDAC2");
 
-    auto hGenericDac1Scan = CanvasContainer<TH1F>("GenericDac1Scan", "GenericDac1Scan", (stopValueDAC1 - startValueDAC1) / stepDAC1 + 1, startValueDAC1, stopValueDAC1 + 1);
+    auto hGenericDac1Scan = CanvasContainer<TH1F>("GenericDac1Scan", "GenericDac1Scan", (stopValueDAC1 - startValueDAC1) / stepDAC1 + 1, startValueDAC1, stopValueDAC1 + stepDAC1);
     bookImplementer(theOutputFile, theDetectorStructure, GenericDac1Scan, hGenericDac1Scan, regNameDAC1.c_str(), "Entries");
 
-    auto hGenericDac2Scan = CanvasContainer<TH1F>("GenericDac2Scan", "GenericDac2Scan", (stopValueDAC2 - startValueDAC2) / stepDAC2 + 1, startValueDAC2, stopValueDAC2 + 1);
+    auto hGenericDac2Scan = CanvasContainer<TH1F>("GenericDac2Scan", "GenericDac2Scan", (stopValueDAC2 - startValueDAC2) / stepDAC2 + 1, startValueDAC2, stopValueDAC2 + stepDAC2);
     bookImplementer(theOutputFile, theDetectorStructure, GenericDac2Scan, hGenericDac2Scan, regNameDAC2.c_str(), "Entries");
 
     auto hOcc2D = CanvasContainer<TH2F>("GenericDacDacScanScan",
                                         "Generic DAC-DAC Scan",
                                         (stopValueDAC1 - startValueDAC1) / stepDAC1 + 1,
                                         startValueDAC1,
-                                        stopValueDAC1 + 1,
+                                        stopValueDAC1 + stepDAC1,
                                         (stopValueDAC2 - startValueDAC2) / stepDAC2 + 1,
                                         startValueDAC2,
-                                        stopValueDAC2 + 1);
+                                        stopValueDAC2 + stepDAC2);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, regNameDAC1.c_str(), regNameDAC2.c_str());
 }
 
@@ -85,7 +85,7 @@ void GenericDacDacScanHistograms::fillOccupancy(const DetectorDataContainer& Occ
 
                     for(auto i = 0; i < Occupancy2DHist->GetNbinsX(); i++)
                         for(auto j = 0; j < Occupancy2DHist->GetNbinsY(); j++)
-                            Occupancy2DHist->SetBinContent(i, j, cChip->getSummary<GenericDataArray<GenericDacDacScanSize>>().data[i * Occupancy2DHist->GetNbinsY() + j]);
+                            Occupancy2DHist->SetBinContent(i + 1, j + 1, cChip->getSummary<GenericDataArray<GenericDacDacScanSize>>().data[i * Occupancy2DHist->GetNbinsY() + j]);
                 }
 }
 

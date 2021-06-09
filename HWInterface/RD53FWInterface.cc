@@ -652,8 +652,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     bool retry;
     int  nAttempts = 0;
 
-    RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents;
-    RD53FWInterface::ConfigureFastCommands();
+    RD53FWInterface::WriteArbitraryRegister("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents);
 
     do
     {

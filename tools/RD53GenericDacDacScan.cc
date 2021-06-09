@@ -235,7 +235,7 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
         if(isDAC1ChipReg == true)
             for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
         else
-            for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC1, dac2List[i]);
+            for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC1, dac1List[i]);
 
         for(auto j = 0u; j < dac2List.size(); j++)
         {
@@ -244,7 +244,7 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
             // ###########################
             LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC2 << BOLDMAGENTA << " value = " << BOLDYELLOW << dac2List[j] << BOLDMAGENTA << " <<<" << RESET;
             if(isDAC2ChipReg == true)
-                for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
+                for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC2, dac2List[j]);
             else
                 for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC2, dac2List[j]);
 
