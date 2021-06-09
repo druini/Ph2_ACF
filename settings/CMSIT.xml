@@ -248,11 +248,11 @@
 
     <Setting name="RegNameDAC1">  VCAL_HIGH </Setting>
     <Setting name="StartValueDAC1">     250 </Setting>
-    <Setting name="StopValueDAC1">      500 </Setting>
+    <Setting name="StopValueDAC1">      600 </Setting>
     <Setting name="StepDAC1">            50 </Setting>
     <Setting name="RegNameDAC2"> user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse </Setting>
-    <Setting name="StartValueDAC2">      30 </Setting>
-    <Setting name="StopValueDAC2">       34 </Setting>
+    <Setting name="StartValueDAC2">      28 </Setting>
+    <Setting name="StopValueDAC2">       50 </Setting>
     <Setting name="StepDAC2">             1 </Setting>
 
     <Setting name="DoFast">               0 </Setting>
