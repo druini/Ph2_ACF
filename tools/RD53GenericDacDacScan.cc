@@ -142,9 +142,9 @@ void GenericDacDacScan::run()
     GenericDacDacScan::chipErrorReport();
 }
 
-void GenericDacDacScan::draw(bool saveData)
+void GenericDacDacScan::draw()
 {
-    if(saveData == true) GenericDacDacScan::saveChipRegisters(theCurrentRun);
+    GenericDacDacScan::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -235,7 +235,7 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
         if(isDAC1ChipReg == true)
             for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
         else
-            for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC1, dac1List[i]);
+            for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC1, dac2List[i]);
 
         for(auto j = 0u; j < dac2List.size(); j++)
         {

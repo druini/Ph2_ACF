@@ -44,8 +44,8 @@ class Physics : public Tool
     void ConfigureCalibration() override;
 
     void sendBoardData(const BoardContainer* cBoard);
-    void localConfigure(const std::string fileRes_, int currentRun);
-    void initializeFiles(const std::string fileRes_, int currentRun);
+    void localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void run();
     void draw();
     void analyze(bool doReadBinary = false);

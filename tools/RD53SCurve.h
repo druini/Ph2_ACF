@@ -41,8 +41,8 @@ class SCurve : public Tool
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void                                   localConfigure(const std::string fileRes_, int currentRun);
-    void                                   initializeFiles(const std::string fileRes_, int currentRun);
+    void                                   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void                                   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void                                   run();
     void                                   draw();
     std::shared_ptr<DetectorDataContainer> analyze();

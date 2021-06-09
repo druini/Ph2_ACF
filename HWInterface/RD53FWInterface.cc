@@ -1012,7 +1012,12 @@ void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { Reg
 
 void RD53FWInterface::SelectBERcheckBitORFrame(const uint8_t bitORframe) { RegManager::WriteReg("user.ctrl_regs.PRBS_checker.error_cntr_sel", bitORframe); }
 
-void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const uint32_t value) { RegManager::WriteReg(regName, value); }
+void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const uint32_t value)
+{
+    RegManager::WriteReg(regName, value);
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
+}
 
 // ###########################################
 // # Member functions to handle the firmware #

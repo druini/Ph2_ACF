@@ -604,7 +604,7 @@ int main(int argc, char** argv)
             // ############################
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing Generic DAC-DAC scan @@@" << RESET;
 
-            std::string       fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_InjectionDelay");
+            std::string       fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_GenericDacDac");
             GenericDacDacScan gs;
             gs.Inherit(&mySysCntr);
             gs.localConfigure(fileName, runNumber);

@@ -37,7 +37,7 @@ class GenericDacDacScan : public PixelAlive
     void   localConfigure(const std::string fileRes_, int currentRun);
     void   initializeFiles(const std::string fileRes_, int currentRun);
     void   run();
-    void   draw(bool saveData = true);
+    void   draw();
     void   analyze();
     size_t getNumberIterations() { return PixelAlive::getNumberIterations() * ((stopValueDAC1 - startValueDAC1) / stepDAC1 + 1) * ((stopValueDAC2 - startValueDAC2) / stepDAC2 + 1); }
     void   saveChipRegisters(int currentRun);
