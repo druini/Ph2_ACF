@@ -96,7 +96,8 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 12. Bit Error Rate test
 13. Data read back optimisation
 14. Chip internal voltage tuning
-15. Physics
+15. Generic DAC-DAC scan
+16. Physics
 ```
 Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 
