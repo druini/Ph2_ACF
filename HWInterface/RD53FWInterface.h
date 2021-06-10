@@ -64,6 +64,10 @@ class RD53FWInterface : public BeBoardFWInterface
     void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
     // #############################
 
+    // @TMP@
+    void PrintFrequencyLVDS();
+    void PrintErrorsLVDS();
+
     void SelectBERcheckBitORFrame(const uint8_t bitORframe);
     void WriteArbitraryRegister(const std::string& regName, const uint32_t value);
 

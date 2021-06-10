@@ -54,6 +54,9 @@ void SystemController::Inherit(const SystemController* pController)
 
 void SystemController::Destroy()
 {
+    for(const auto cBoard: *fDetectorContainer)
+        if(cBoard->getBoardType() == BoardType::RD53) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintErrorsLVDS(); // @TMP@
+
     this->closeFileHandler();
 
     LOG(INFO) << BOLDRED << ">>> Destroying interfaces <<<" << RESET;
@@ -446,7 +449,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     }
                 }
             }
+
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
+
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintFrequencyLVDS(); // @TMP@
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
             RD53Event::ForkDecodingThreads();
