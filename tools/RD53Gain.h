@@ -25,7 +25,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define NGAINPAR 4 // Number of parameters for gain data regression
+#define NGAINPAR 3 // Number of parameters for gain data regression
 
 // ###################
 // # Gain test suite #
@@ -54,7 +54,7 @@ class Gain : public Tool
     size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * nSteps; }
     void   saveChipRegisters(int currentRun);
 
-    static float gainFunction(const std::vector<float>& par, float q) { return par[0] + par[1] * q + par[2] * q * q + par[3] * log(q); }
+    static float gainFunction(const std::vector<float>& par, float q) { return par[0] + par[1] * q; }
 
 #ifdef __USE_ROOT__
     GainHistograms* histos;
@@ -82,7 +82,14 @@ class Gain : public Tool
     ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
     void fillHisto();
-    void computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, std::vector<float>& par, std::vector<float>& parErr, float& chi2, float& DoF);
+    void computeStats(const std::vector<float>& x,
+                      const std::vector<float>& y,
+                      const std::vector<float>& e,
+                      const std::vector<float>& o,
+                      std::vector<float>&       par,
+                      std::vector<float>&       parErr,
+                      float&                    chi2,
+                      float&                    DoF);
     void chipErrorReport() const;
 
   protected:

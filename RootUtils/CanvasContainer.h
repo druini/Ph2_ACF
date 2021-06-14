@@ -31,7 +31,7 @@ class CanvasContainer : public PlotContainer
     template <class... Args>
     CanvasContainer(Args... args)
     {
-        fTheHistogram = new Hist(args...);
+        fTheHistogram = new Hist(std::forward<Args>(args)...);
         fTheHistogram->SetDirectory(0);
         fCanvas = nullptr;
     }

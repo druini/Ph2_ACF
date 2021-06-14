@@ -25,10 +25,8 @@
 // #############
 // # CONSTANTS #
 // #############
-#define INTERCEPT_HALFRANGE 30   // [ToT]
-#define SLOPE_HALFRANGE 3e-2     // [ToT / VCal]
-#define QUADRATIC_HALFRANGE 1e-5 // [ToT / VCal^2]
-#define LOG_HALFRANGE 6          // [ToT / ln(VCal)]
+#define INTERCEPT_HALFRANGE 30 // [ToT]
+#define SLOPE_HALFRANGE 3e-2   // [ToT / VCal]
 
 class GainHistograms : public DQMHistogramBase
 {
@@ -51,14 +49,12 @@ class GainHistograms : public DQMHistogramBase
 
     DetectorDataContainer Intercept1D;
     DetectorDataContainer Slope1D;
-    DetectorDataContainer Quadratic1D;
-    DetectorDataContainer Log1D;
+    DetectorDataContainer SlopeLowQ1D;
     DetectorDataContainer Chi2DoF1D;
 
     DetectorDataContainer Intercept2D;
     DetectorDataContainer Slope2D;
-    DetectorDataContainer Quadratic2D;
-    DetectorDataContainer Log2D;
+    DetectorDataContainer SlopeLowQ2D;
     DetectorDataContainer Chi2DoF2D;
 
     size_t nEvents;

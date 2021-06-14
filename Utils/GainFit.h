@@ -18,10 +18,10 @@
 class GainFit
 {
   public:
-    GainFit() : fSlope(0), fSlopeError(0), fIntercept(0), fInterceptError(0), fQuadratic(0), fQuadraticError(0), fLog(0), fLogError(0), fChi2(0), fDoF(0) {}
+    GainFit() : fSlope(0), fSlopeError(0), fIntercept(0), fInterceptError(0), fSlopeLowQ(0), fSlopeLowQError(0), fChi2(0), fDoF(0) {}
     ~GainFit() {}
 
-    void print(void) { std::cout << fSlope << "\t" << fIntercept << "\t" << fQuadratic << "\t" << fLog << "\t" << fChi2 << "\t" << fDoF << std::endl; }
+    void print(void) { std::cout << fSlope << "\t" << fIntercept << "\t" << fSlopeLowQ << "\t" << fChi2 << "\t" << fDoF << std::endl; }
 
     template <typename T>
     void makeChannelAverage(const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents)
@@ -36,11 +36,8 @@ class GainFit
     float fIntercept;
     float fInterceptError;
 
-    float fQuadratic;
-    float fQuadraticError;
-
-    float fLog;
-    float fLogError;
+    float fSlopeLowQ;
+    float fSlopeLowQError;
 
     float fChi2;
     float fDoF;
@@ -56,10 +53,8 @@ GainFit::makeChannelAverage<GainFit>(const ChipContainer* theChipContainer, cons
     fSlopeError     = 0;
     fIntercept      = 0;
     fInterceptError = 0;
-    fQuadratic      = 0;
-    fQuadraticError = 0;
-    fLog            = 0;
-    fLogError       = 0;
+    fSlopeLowQ      = 0;
+    fSlopeLowQError = 0;
     fChi2           = 0;
     fDoF            = 0;
 
@@ -81,18 +76,11 @@ GainFit::makeChannelAverage<GainFit>(const ChipContainer* theChipContainer, cons
                     fInterceptError += 1. / (theChipContainer->getChannel<GainFit>(row, col).fInterceptError * theChipContainer->getChannel<GainFit>(row, col).fInterceptError);
                 }
 
-                if(theChipContainer->getChannel<GainFit>(row, col).fQuadraticError > 0)
+                if(theChipContainer->getChannel<GainFit>(row, col).fSlopeLowQError > 0)
                 {
-                    fQuadratic += theChipContainer->getChannel<GainFit>(row, col).fQuadratic /
-                                  (theChipContainer->getChannel<GainFit>(row, col).fQuadraticError * theChipContainer->getChannel<GainFit>(row, col).fQuadraticError);
-                    fQuadraticError += 1. / (theChipContainer->getChannel<GainFit>(row, col).fQuadraticError * theChipContainer->getChannel<GainFit>(row, col).fQuadraticError);
-                }
-
-                if(theChipContainer->getChannel<GainFit>(row, col).fLogError > 0)
-                {
-                    fLog +=
-                        theChipContainer->getChannel<GainFit>(row, col).fLog / (theChipContainer->getChannel<GainFit>(row, col).fLogError * theChipContainer->getChannel<GainFit>(row, col).fLogError);
-                    fLogError += 1. / (theChipContainer->getChannel<GainFit>(row, col).fLogError * theChipContainer->getChannel<GainFit>(row, col).fLogError);
+                    fSlopeLowQ += theChipContainer->getChannel<GainFit>(row, col).fSlopeLowQ /
+                                  (theChipContainer->getChannel<GainFit>(row, col).fSlopeLowQError * theChipContainer->getChannel<GainFit>(row, col).fSlopeLowQError);
+                    fSlopeLowQError += 1. / (theChipContainer->getChannel<GainFit>(row, col).fSlopeLowQError * theChipContainer->getChannel<GainFit>(row, col).fSlopeLowQError);
                 }
 
                 if(theChipContainer->getChannel<GainFit>(row, col).fChi2 > 0) fChi2 += theChipContainer->getChannel<GainFit>(row, col).fChi2;
@@ -113,16 +101,10 @@ GainFit::makeChannelAverage<GainFit>(const ChipContainer* theChipContainer, cons
         fInterceptError = sqrt(1. / fInterceptError);
     }
 
-    if(fQuadraticError > 0)
+    if(fSlopeLowQError > 0)
     {
-        fQuadratic /= fQuadraticError;
-        fQuadraticError = sqrt(1. / fQuadraticError);
-    }
-
-    if(fLogError > 0)
-    {
-        fLog /= fLogError;
-        fLogError = sqrt(1. / fLogError);
+        fSlopeLowQ /= fSlopeLowQError;
+        fSlopeLowQError = sqrt(1. / fSlopeLowQError);
     }
 
     if(fChi2 > 0) fChi2 /= cnt;
