@@ -466,7 +466,7 @@ void Gain::computeStats(const std::vector<float>& x, const std::vector<float>& y
             chi2 = ublas::inner_prod(num, tmpNum);
         }
 
-        if((chi2 == 0) || ((nPar == 4) && (par[3] - parErr[3] < 0)))
+        if((chi2 == 0) || ((nPar == NGAINPAR) && (par[3] - parErr[3] < 0)))
             nPar--;
         else
             break;
