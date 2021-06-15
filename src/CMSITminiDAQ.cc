@@ -49,7 +49,7 @@
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
 #define ARBITRARYDELAY 2 // [seconds]
-#define TESTSUBDETECTORY false
+#define TESTSUBDETECTOR false
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -392,7 +392,7 @@ int main(int argc, char** argv)
             bool doTwice   = false;
             do
             {
-                if(TESTSUBDETECTORY == true)
+                if(TESTSUBDETECTOR == true)
                 {
                     if(pa.fDetectorContainer->size() != 1)
                     {

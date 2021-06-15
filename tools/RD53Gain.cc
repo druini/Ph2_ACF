@@ -409,7 +409,7 @@ void Gain::computeStats(const std::vector<float>& x,
 // # Model: y = f(x) = [0] + [1]*x + [2]*x^2 + [3]*ln(x) #
 // #######################################################
 {
-    int nPar  = NGAINPAR - 1;
+    int nPar  = NGAINPAR - 1; // @TMP@
     int nData = 0;
 
     for(auto i = 0u; i < x.size(); i++)
@@ -482,7 +482,7 @@ void Gain::computeStats(const std::vector<float>& x,
     } while(nPar > 1);
 
     // #############################################
-    // # Extract best estimate of low-charge range #
+    // # Extract best estimate of low-charge range # // @TMP@
     // #############################################
     auto it = std::find(o.begin(), o.end(), 1.) - o.begin();
     if((it != static_cast<int>(o.size())) && (x[it] != 0)) par[NGAINPAR - 1] = y[it] / x[it];

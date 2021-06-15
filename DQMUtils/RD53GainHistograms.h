@@ -49,12 +49,12 @@ class GainHistograms : public DQMHistogramBase
 
     DetectorDataContainer Intercept1D;
     DetectorDataContainer Slope1D;
-    DetectorDataContainer SlopeLowQ1D;
+    DetectorDataContainer SlopeLowQ1D; // @TMP@
     DetectorDataContainer Chi2DoF1D;
 
     DetectorDataContainer Intercept2D;
     DetectorDataContainer Slope2D;
-    DetectorDataContainer SlopeLowQ2D;
+    DetectorDataContainer SlopeLowQ2D; // @TMP@
     DetectorDataContainer Chi2DoF2D;
 
     size_t nEvents;
