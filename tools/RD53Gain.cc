@@ -372,10 +372,16 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                                             cChip->getSummary<GainFit, GainFit>().fQuadratic,
                                                             cChip->getSummary<GainFit, GainFit>().fLog},
                                                            targetCharge);
-                    LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << +cChip->getId() << RESET << GREEN << "] at VCal = " << BOLDYELLOW << std::fixed << std::setprecision(2) << targetCharge << RESET << GREEN << " (" << BOLDYELLOW
-                              << RD53chargeConverter::VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is " << BOLDYELLOW << ToTatTarget << RESET << GREEN << " (ToT)"
-                              << std::setprecision(-1) << RESET;
+                    if(ToTatTarget >= RD53Shared::setBits(RD53Constants::NBIT_TDAC))
+                        LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                  << +cChip->getId() << RESET << GREEN << "] at VCal = " << BOLDYELLOW << std::fixed << std::setprecision(2) << targetCharge << RESET << GREEN << " (" << BOLDYELLOW
+                                  << RD53chargeConverter::VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is greater than " << BOLDYELLOW
+                                  << RD53Shared::setBits(RD53Constants::NBIT_TDAC) - 1 << RESET << GREEN << " (ToT)" << std::setprecision(-1) << RESET;
+                    else
+                        LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                  << +cChip->getId() << RESET << GREEN << "] at VCal = " << BOLDYELLOW << std::fixed << std::setprecision(2) << targetCharge << RESET << GREEN << " (" << BOLDYELLOW
+                                  << RD53chargeConverter::VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is " << BOLDYELLOW << ToTatTarget << RESET << GREEN << " (ToT)"
+                                  << std::setprecision(-1) << RESET;
                     RD53Shared::resetDefaultFloat();
                 }
 
@@ -391,71 +397,81 @@ void Gain::fillHisto()
 }
 
 void Gain::computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, std::vector<float>& par, std::vector<float>& parErr, float& chi2, float& DoF)
-// ###############################################
-// # Linear regression with least-square method  #
-// # Model: y = f(x) = a + b*x + c*x^2 + d*ln(x) #
-// ###############################################
+// #######################################################
+// # Linear regression with least-square method          #
+// # Model: y = f(x) = [0] + [1]*x + [2]*x^2 + [3]*ln(x) #
+// #######################################################
 {
+    int nPar  = NGAINPAR;
     int nData = 0;
 
     for(auto err: e)
         if(err != 0) nData++;
 
-    chi2 = 0;
-    DoF  = nData - NGAINPAR;
-    for(auto c = 0; c < NGAINPAR; c++)
+    do
     {
-        par[c]    = 0;
-        parErr[c] = 0;
-    }
-    if(DoF < 1) return;
-
-    ublas::matrix<double> H(nData, NGAINPAR);
-    ublas::matrix<double> V(nData, nData);
-    ublas::vector<double> myY(nData);
-
-    for(auto c = 0u; c < V.size2(); c++)
-        for(auto r = 0u; r < V.size1(); r++) V(r, c) = 0;
-
-    int r = 0;
-    for(auto i = 0u; i < x.size(); i++)
-        if(e[i] != 0)
+        chi2 = 0;
+        DoF  = nData - nPar;
+        for(auto c = 0; c < NGAINPAR; c++)
         {
-            H(r, 0) = 1;
-            H(r, 1) = x[i];
-            H(r, 2) = x[i] * x[i];
-            H(r, 3) = log(x[i]);
+            par[c]    = 0;
+            parErr[c] = 0;
+        }
+        if(DoF < 1) return;
 
-            V(r, r) = e[i] * e[i];
-            myY[r]  = y[i];
+        ublas::matrix<double> H(nData, nPar);
+        ublas::matrix<double> V(nData, nData);
+        ublas::vector<double> myY(nData);
 
-            r++;
+        for(auto c = 0u; c < V.size2(); c++)
+            for(auto r = 0u; r < V.size1(); r++) V(r, c) = 0;
+
+        int r = 0;
+        for(auto i = 0u; i < x.size(); i++)
+            if(e[i] != 0)
+            {
+                H(r, 0) = 1;
+                H(r, 1) = x[i];
+                if(H.size2() > 2) H(r, 2) = x[i] * x[i];
+                if(H.size2() > 3) H(r, 3) = log(x[i]);
+
+                V(r, r) = e[i] * e[i];
+                myY[r]  = y[i];
+
+                r++;
+            }
+
+        auto invV(V);
+        for(r = 0; r < nData; r++) invV(r, r) = 1 / V(r, r);
+
+        ublas::matrix<double> tmpMtx(ublas::prod(invV, H));
+        ublas::matrix<double> invParCov(ublas::prod(ublas::trans(H), tmpMtx));
+        auto                  parCov(invParCov);
+
+        auto det = RD53Shared::mtxInversion<double>(invParCov, parCov);
+        if((isnan(det) == false) && (det != 0))
+        {
+            ublas::vector<double> tmpVec1(ublas::prod(invV, myY));
+            ublas::vector<double> tmpVec2(ublas::prod(ublas::trans(H), tmpVec1));
+            ublas::vector<double> myPar(ublas::prod(parCov, tmpVec2));
+
+            std::copy(myPar.begin(), myPar.end(), par.begin());
+            for(auto c = 0; c < nPar; c++) parErr[c] = sqrt(parCov(c, c));
+
+            // ################
+            // # Compute chi2 #
+            // ################
+            ublas::vector<double> num(myY - ublas::prod(H, myPar));
+            ublas::vector<double> tmpNum(ublas::prod(invV, num));
+            chi2 = ublas::inner_prod(num, tmpNum);
         }
 
-    auto invV(V);
-    for(r = 0; r < nData; r++) invV(r, r) = 1 / V(r, r);
+        if((chi2 == 0) || ((nPar == 4) && (par[3] - parErr[3] < 0)))
+            nPar--;
+        else
+            break;
 
-    ublas::matrix<double> tmpMtx(ublas::prod(invV, H));
-    ublas::matrix<double> invParCov(ublas::prod(ublas::trans(H), tmpMtx));
-    auto                  parCov(invParCov);
-
-    auto det = RD53Shared::mtxInversion<double>(invParCov, parCov);
-    if((isnan(det) == false) && (det != 0))
-    {
-        ublas::vector<double> tmpVec1(ublas::prod(invV, myY));
-        ublas::vector<double> tmpVec2(ublas::prod(ublas::trans(H), tmpVec1));
-        ublas::vector<double> myPar(ublas::prod(parCov, tmpVec2));
-
-        std::copy(myPar.begin(), myPar.end(), par.begin());
-        for(auto c = 0; c < NGAINPAR; c++) parErr[c] = sqrt(parCov(c, c));
-
-        // ################
-        // # Compute chi2 #
-        // ################
-        ublas::vector<double> num(myY - ublas::prod(H, myPar));
-        ublas::vector<double> tmpNum(ublas::prod(invV, num));
-        chi2 = ublas::inner_prod(num, tmpNum);
-    }
+    } while(nPar > 1);
 }
 
 void Gain::chipErrorReport() const
