@@ -173,16 +173,18 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ###########################
     uint32_t inputClk = RegManager::ReadReg("user.stat_regs.clkin_rate");
     uint32_t gtxClk   = RegManager::ReadReg("user.stat_regs.gtx_refclk_rate");
-    LOG(INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz" << RESET;
-    LOG(INFO) << GREEN << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz" << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz"
+              << std::setprecision(-1) << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz"
+              << std::setprecision(-1) << RESET;
 
     // @TMP@
     RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 0);
-    uint32_t extCMDclk = RegManager::ReadReg("user.ctrl_regs.ctrl_cdr.cdr_freq_mon");
+    uint32_t extCMDclk = RegManager::ReadReg("user.stat_regs.cdr_freq_mon");
     RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 1);
-    uint32_t extSERclk = RegManager::ReadReg("user.ctrl_regs.ctrl_cdr.cdr_freq_mon");
-    LOG(INFO) << GREEN << "External CMD clock frequency: " << BOLDYELLOW << extCMDclk / 1000. << " MHz" << RESET;
-    LOG(INFO) << GREEN << "External Serializer clock frequency: " << BOLDYELLOW << extSERclk / 1000. << " MHz" << RESET;
+    uint32_t extSERclk = RegManager::ReadReg("user.stat_regs.cdr_freq_mon");
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "External CMD clock frequency: " << BOLDYELLOW << extCMDclk / 1000. << " MHz" << std::setprecision(-1) << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "External Serializer clock frequency: " << BOLDYELLOW << extSERclk / 1000. << " MHz" << std::setprecision(-1) << RESET;
 }
 
 void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
@@ -1018,7 +1020,7 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const 
 void RD53FWInterface::PrintFrequencyLVDS()
 {
     uint32_t LVDS = RegManager::ReadReg("user.stat_regs.gp_lvds_freq_mon");
-    LOG(INFO) << GREEN << "LVDS frequency: " << BOLDYELLOW << LVDS / 1000. << " MHz" << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "LVDS frequency: " << BOLDYELLOW << LVDS / 1000. << " MHz" << std::setprecision(-1) << RESET;
 }
 
 void RD53FWInterface::PrintErrorsLVDS()
@@ -1045,12 +1047,24 @@ void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { Reg
 
 void RD53FWInterface::SelectBERcheckBitORFrame(const uint8_t bitORframe) { RegManager::WriteReg("user.ctrl_regs.PRBS_checker.error_cntr_sel", bitORframe); }
 
-void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const uint32_t value)
+void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const uint32_t value, const bool doReset)
 {
     RegManager::WriteReg(regName, value);
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
+
+    if(doReset == true)
+    {
+        RD53FWInterface::ResetBoard();
+
+        // @TMP@
+        RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 0);
+        LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "[RD53FWInterface::WriteArbitraryRegister] External CMD clock: " << BOLDYELLOW
+                  << RegManager::ReadReg("user.stat_regs.cdr_freq_mon") / 1000. << " MHz" << std::setprecision(-1) << RESET;
+    }
 }
+
+uint32_t RD53FWInterface::ReadArbitraryRegister(const std::string& regName) { return RegManager::ReadReg(regName); }
 
 // ###########################################
 // # Member functions to handle the firmware #

@@ -68,8 +68,9 @@ class RD53FWInterface : public BeBoardFWInterface
     void PrintFrequencyLVDS();
     void PrintErrorsLVDS();
 
-    void SelectBERcheckBitORFrame(const uint8_t bitORframe);
-    void WriteArbitraryRegister(const std::string& regName, const uint32_t value);
+    void     SelectBERcheckBitORFrame(const uint8_t bitORframe);
+    void     WriteArbitraryRegister(const std::string& regName, const uint32_t value, const bool doReset = false);
+    uint32_t ReadArbitraryRegister(const std::string& regName);
 
     // ####################################
     // # Check AURORA lock on data stream #

@@ -188,7 +188,7 @@
     </node>
 
     <node id="ctrl_cdr"             address="0x0000001F"      permission="rw"      description="Signals for CDR bypass mode">
-      <node id="cdr_freq_mon"          mask="0x0000000F"      permission="rw"      description="Select the external cmd freq in cdr bypass. Default -0: 160Mhz, 1:140MHz, 2:145, 3:150, 4:155, 5:164, 6: 170, 7: 175, 8:180Mhz " />
+      <node id="cdr_freq_sel"          mask="0x0000000F"      permission="rw"      description="Select the external cmd freq in cdr bypass. Default -0: 160Mhz, 1:140MHz, 2:145, 3:150, 4:155, 5:164, 6: 170, 7: 175, 8:180Mhz " />
       <node id="cdr_addr"              mask="0x00000030"      permission="rw"      description="Used to select the cdr freq monitor in the terminal. 0: 160MhZ ext_cmd_clk, 1: 1.28G/640M hZ ext_ser_clk" />
     </node>
 
