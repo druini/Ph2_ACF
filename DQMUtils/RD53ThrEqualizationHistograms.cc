@@ -19,11 +19,11 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, const DetectorContain
     // #######################
     // # Retrieve parameters #
     // #######################
-    nEvents         = this->findValueInSettings(settingsMap, "nEvents");
+    nEvents         = this->findValueInSettings<double>(settingsMap, "nEvents");
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
 
-    const size_t colStart = this->findValueInSettings(settingsMap, "COLstart");
-    const size_t colStop  = this->findValueInSettings(settingsMap, "COLstop");
+    const size_t colStart = this->findValueInSettings<double>(settingsMap, "COLstart");
+    const size_t colStop  = this->findValueInSettings<double>(settingsMap, "COLstop");
     frontEnd              = RD53::getMajorityFE(colStart, colStop);
     if(frontEnd == &RD53::DIFF) TDACsize *= 2;
 

@@ -19,11 +19,11 @@ void SCurveHistograms::book(TFile* theOutputFile, const DetectorContainer& theDe
     // #######################
     // # Retrieve parameters #
     // #######################
-    nEvents    = this->findValueInSettings(settingsMap, "nEvents");
-    nSteps     = this->findValueInSettings(settingsMap, "VCalHnsteps");
-    startValue = this->findValueInSettings(settingsMap, "VCalHstart");
-    stopValue  = this->findValueInSettings(settingsMap, "VCalHstop");
-    offset     = this->findValueInSettings(settingsMap, "VCalMED");
+    nEvents    = this->findValueInSettings<double>(settingsMap, "nEvents");
+    nSteps     = this->findValueInSettings<double>(settingsMap, "VCalHnsteps");
+    startValue = this->findValueInSettings<double>(settingsMap, "VCalHstart");
+    stopValue  = this->findValueInSettings<double>(settingsMap, "VCalHstop");
+    offset     = this->findValueInSettings<double>(settingsMap, "VCalMED");
 
     auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue - offset, stopValue - offset, 2 * nEvents + 1, 0, 2 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "#DeltaVCal", "Efficiency");

@@ -17,20 +17,20 @@ void PixelAlive::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nEvents        = this->findValueInSettings("nEvents");
-    nEvtsBurst     = this->findValueInSettings("nEvtsBurst") < nEvents ? this->findValueInSettings("nEvtsBurst") : nEvents;
-    injType        = this->findValueInSettings("INJtype");
-    nHITxCol       = this->findValueInSettings("nHITxCol");
-    doFast         = this->findValueInSettings("DoFast");
-    thrOccupancy   = this->findValueInSettings("TargetOcc");
-    unstuckPixels  = this->findValueInSettings("UnstuckPixels");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    nEvents        = this->findValueInSettings<double>("nEvents");
+    nEvtsBurst     = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
+    injType        = this->findValueInSettings<double>("INJtype");
+    nHITxCol       = this->findValueInSettings<double>("nHITxCol");
+    doFast         = this->findValueInSettings<double>("DoFast");
+    thrOccupancy   = this->findValueInSettings<double>("TargetOcc");
+    unstuckPixels  = this->findValueInSettings<double>("UnstuckPixels");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     // ################################
     // # Custom channel group handler #

@@ -18,12 +18,12 @@ void DataReadbackOptimizationHistograms::book(TFile* theOutputFile, const Detect
     // #######################
     // # Retrieve parameters #
     // #######################
-    startValueTAP0 = this->findValueInSettings(settingsMap, "TAP0Start");
-    stopValueTAP0  = this->findValueInSettings(settingsMap, "TAP0Stop");
-    startValueTAP1 = this->findValueInSettings(settingsMap, "TAP1Start");
-    stopValueTAP1  = this->findValueInSettings(settingsMap, "TAP1Stop");
-    startValueTAP2 = this->findValueInSettings(settingsMap, "TAP2Start");
-    stopValueTAP2  = this->findValueInSettings(settingsMap, "TAP2Stop");
+    startValueTAP0 = this->findValueInSettings<double>(settingsMap, "TAP0Start");
+    stopValueTAP0  = this->findValueInSettings<double>(settingsMap, "TAP0Stop");
+    startValueTAP1 = this->findValueInSettings<double>(settingsMap, "TAP1Start");
+    stopValueTAP1  = this->findValueInSettings<double>(settingsMap, "TAP1Stop");
+    startValueTAP2 = this->findValueInSettings<double>(settingsMap, "TAP2Start");
+    stopValueTAP2  = this->findValueInSettings<double>(settingsMap, "TAP2Stop");
 
     size_t nSteps    = (stopValueTAP0 - startValueTAP0 + 1 >= RD53Shared::MAXSTEPS ? RD53Shared::MAXSTEPS : stopValueTAP0 - startValueTAP0 + 1);
     auto   hTAP0scan = CanvasContainer<TH1F>("TAP0scan", "TAP0 scan", nSteps, startValueTAP0, stopValueTAP0 + 1);

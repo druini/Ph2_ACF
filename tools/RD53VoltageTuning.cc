@@ -17,11 +17,11 @@ void VoltageTuning::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    doDisplay    = this->findValueInSettings("DisplayHisto");
-    targetDig    = this->findValueInSettings("VDDDTrimTarget", 1.3);
-    targetAna    = this->findValueInSettings("VDDATrimTarget", 1.2);
-    toleranceDig = this->findValueInSettings("VDDDTrimTolerance", 0.02);
-    toleranceAna = this->findValueInSettings("VDDATrimTolerance", 0.02);
+    doDisplay    = this->findValueInSettings<double>("DisplayHisto");
+    targetDig    = this->findValueInSettings<double>("VDDDTrimTarget", 1.3);
+    targetAna    = this->findValueInSettings<double>("VDDATrimTarget", 1.2);
+    toleranceDig = this->findValueInSettings<double>("VDDDTrimTolerance", 0.02);
+    toleranceAna = this->findValueInSettings<double>("VDDATrimTolerance", 0.02);
 
     // ############################################################
     // # Create directory for: raw data, config files, histograms #

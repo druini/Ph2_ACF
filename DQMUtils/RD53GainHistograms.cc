@@ -19,11 +19,11 @@ void GainHistograms::book(TFile* theOutputFile, const DetectorContainer& theDete
     // #######################
     // # Retrieve parameters #
     // #######################
-    nEvents    = this->findValueInSettings(settingsMap, "nEvents");
-    nSteps     = this->findValueInSettings(settingsMap, "VCalHnsteps");
-    startValue = this->findValueInSettings(settingsMap, "VCalHstart");
-    stopValue  = this->findValueInSettings(settingsMap, "VCalHstop");
-    offset     = this->findValueInSettings(settingsMap, "VCalMED");
+    nEvents    = this->findValueInSettings<double>(settingsMap, "nEvents");
+    nSteps     = this->findValueInSettings<double>(settingsMap, "VCalHnsteps");
+    startValue = this->findValueInSettings<double>(settingsMap, "VCalHstart");
+    stopValue  = this->findValueInSettings<double>(settingsMap, "VCalHstop");
+    offset     = this->findValueInSettings<double>(settingsMap, "VCalMED");
 
     auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue - offset, stopValue - offset, nEvents, 0, RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION));
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "#DeltaVCal", "ToT");

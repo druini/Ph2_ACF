@@ -56,12 +56,12 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     if(cWithMPA or cWithSSA) fChannelGroupHandler->setChannelGroupParameters(16, 120);
     fAllChan = pAllChan;
 
-    fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
-    fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups", 1);
-    fPlotSCurves                 = findValueInSettings("PlotSCurves", 0);
-    fFitSCurves                  = findValueInSettings("FitSCurves", 0);
-    fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude", 0);
-    fEventsPerPoint              = findValueInSettings("Nevents", 10);
+    fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
+    fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
+    fPlotSCurves                 = findValueInSettings<double>("PlotSCurves", 0);
+    fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
+    fPulseAmplitude              = findValueInSettings<double>("PedeNoisePulseAmplitude", 0);
+    fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
     fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
 
     LOG(INFO) << "Parsed settings:";
