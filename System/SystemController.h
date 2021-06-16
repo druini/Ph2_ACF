@@ -230,7 +230,7 @@ class SystemController
 
     void DecodeData(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
-    template<typename T>
+    template <typename T>
     T findValueInSettings(const std::string name, T defaultValue = T()) const
     {
         auto setting = fSettingsMap.find(name);

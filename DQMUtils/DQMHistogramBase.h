@@ -137,13 +137,12 @@ class DQMHistogramBase
                     }
     }
 
-    template<typename T>
+    template <typename T>
     T findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, T defaultValue = T()) const
     {
         auto setting = settingsMap.find(name);
         return (setting != std::end(settingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);
     }
-
 };
 
 #endif
