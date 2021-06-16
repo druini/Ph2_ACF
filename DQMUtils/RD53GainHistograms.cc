@@ -19,14 +19,17 @@ void GainHistograms::book(TFile* theOutputFile, const DetectorContainer& theDete
     // #######################
     // # Retrieve parameters #
     // #######################
-    nEvents    = this->findValueInSettings(settingsMap, "nEvents");
-    nSteps     = this->findValueInSettings(settingsMap, "VCalHnsteps");
-    startValue = this->findValueInSettings(settingsMap, "VCalHstart");
-    stopValue  = this->findValueInSettings(settingsMap, "VCalHstop");
-    offset     = this->findValueInSettings(settingsMap, "VCalMED");
+    nEvents    = this->findValueInSettings<double>(settingsMap, "nEvents");
+    nSteps     = this->findValueInSettings<double>(settingsMap, "VCalHnsteps");
+    startValue = this->findValueInSettings<double>(settingsMap, "VCalHstart");
+    stopValue  = this->findValueInSettings<double>(settingsMap, "VCalHstop");
+    offset     = this->findValueInSettings<double>(settingsMap, "VCalMED");
 
     auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue - offset, stopValue - offset, nEvents, 0, RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION));
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "#DeltaVCal", "ToT");
+
+    auto hOcc3D = CanvasContainer<TH3F>("GainMap", "Gain Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows, nSteps, startValue - offset, stopValue - offset);
+    bookImplementer(theOutputFile, theDetectorStructure, Occupancy3D, hOcc3D, "Column", "Row", "#DeltaVCal");
 
     auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorReadOut2D, hErrorReadOut2D, "Columns", "Rows");
@@ -98,13 +101,18 @@ void GainHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContain
                     if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
 
                     auto* hOcc2D = Occupancy2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+                    auto* hOcc3D = Occupancy3D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH3F>>().fTheHistogram;
                     auto* ErrorReadOut2DHist =
                         ErrorReadOut2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                         {
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED) hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fPh);
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED)
+                            {
+                                hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fPh);
+                                hOcc3D->SetBinContent(col + 1, row + 1, hOcc3D->GetZaxis()->FindBin(DELTA_VCAL), cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
+                            }
                             if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
                         }
                 }
@@ -176,6 +184,7 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
 void GainHistograms::process()
 {
     draw<TH2F>(Occupancy2D, "gcolz", true, "Charge (electrons)");
+    draw<TH3F>(Occupancy3D, "gcolz");
     draw<TH2F>(ErrorReadOut2D, "gcolz");
     draw<TH2F>(ErrorFit2D, "gcolz");
 

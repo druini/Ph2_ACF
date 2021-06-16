@@ -11,6 +11,7 @@
 #ifndef __DQMHISTOGRAMBASE_H__
 #define __DQMHISTOGRAMBASE_H__
 
+#include <boost/any.hpp>
 #include <memory>
 #include <string>
 #include <vector>
@@ -80,10 +81,12 @@ class DQMHistogramBase
                          DetectorDataContainer&       dataContainer,
                          const CanvasContainer<Hist>& histContainer,
                          const char*                  XTitle = nullptr,
-                         const char*                  YTitle = nullptr)
+                         const char*                  YTitle = nullptr,
+                         const char*                  ZTitle = nullptr)
     {
         if(XTitle != nullptr) histContainer.fTheHistogram->SetXTitle(XTitle);
         if(YTitle != nullptr) histContainer.fTheHistogram->SetYTitle(YTitle);
+        if(ZTitle != nullptr) histContainer.fTheHistogram->SetZTitle(ZTitle);
 
         RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, histContainer);
     }
@@ -134,10 +137,11 @@ class DQMHistogramBase
                     }
     }
 
-    double findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, double defaultValue = 0.) const
+    template <typename T>
+    T findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, T defaultValue = T()) const
     {
         auto setting = settingsMap.find(name);
-        return (setting != std::end(settingsMap) ? setting->second : defaultValue);
+        return (setting != std::end(settingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);
     }
 };
 

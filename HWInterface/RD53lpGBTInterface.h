@@ -24,6 +24,7 @@ class RD53lpGBTInterface : public lpGBTInterface
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
 
+    void PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface);
     bool ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
                               const Ph2_HwDescription::BeBoard*      pBoard,
                               const Ph2_HwDescription::OpticalGroup* pOpticalGroup,

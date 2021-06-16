@@ -19,14 +19,17 @@ void SCurveHistograms::book(TFile* theOutputFile, const DetectorContainer& theDe
     // #######################
     // # Retrieve parameters #
     // #######################
-    nEvents    = this->findValueInSettings(settingsMap, "nEvents");
-    nSteps     = this->findValueInSettings(settingsMap, "VCalHnsteps");
-    startValue = this->findValueInSettings(settingsMap, "VCalHstart");
-    stopValue  = this->findValueInSettings(settingsMap, "VCalHstop");
-    offset     = this->findValueInSettings(settingsMap, "VCalMED");
+    nEvents    = this->findValueInSettings<double>(settingsMap, "nEvents");
+    nSteps     = this->findValueInSettings<double>(settingsMap, "VCalHnsteps");
+    startValue = this->findValueInSettings<double>(settingsMap, "VCalHstart");
+    stopValue  = this->findValueInSettings<double>(settingsMap, "VCalHstop");
+    offset     = this->findValueInSettings<double>(settingsMap, "VCalMED");
 
     auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue - offset, stopValue - offset, 2 * nEvents + 1, 0, 2 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "#DeltaVCal", "Efficiency");
+
+    auto hOcc3D = CanvasContainer<TH3F>("SCurveMap", "SCurve Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows, nSteps, startValue - offset, stopValue - offset);
+    bookImplementer(theOutputFile, theDetectorStructure, Occupancy3D, hOcc3D, "Column", "Row", "#DeltaVCal");
 
     auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorReadOut2D, hErrorReadOut2D, "Columns", "Rows");
@@ -83,6 +86,7 @@ void SCurveHistograms::fillOccupancy(const DetectorDataContainer& OccupancyConta
                     if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
 
                     auto* hOcc2D = Occupancy2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+                    auto* hOcc3D = Occupancy3D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH3F>>().fTheHistogram;
                     auto* ErrorReadOut2DHist =
                         ErrorReadOut2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
                     auto* ToT2DHist = ToT2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
@@ -93,6 +97,7 @@ void SCurveHistograms::fillOccupancy(const DetectorDataContainer& OccupancyConta
                             if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED)
                             {
                                 hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(0) / 2.);
+                                hOcc3D->SetBinContent(col + 1, row + 1, hOcc3D->GetZaxis()->FindBin(DELTA_VCAL), cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
                                 ToT2DHist->SetBinContent(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                                 ToT2DHist->SetBinError(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPhError);
                             }
@@ -149,6 +154,7 @@ void SCurveHistograms::fillThrAndNoise(const DetectorDataContainer& ThrAndNoiseC
 void SCurveHistograms::process()
 {
     draw<TH2F>(Occupancy2D, "gcolz", true, "Charge (electrons)");
+    draw<TH3F>(Occupancy3D, "gcolz");
     draw<TH2F>(ErrorReadOut2D, "gcolz");
     draw<TH2F>(ErrorFit2D, "gcolz");
     draw<TH1F>(Threshold1D, "", true, "Threshold (electrons)");

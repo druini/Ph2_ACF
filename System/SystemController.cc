@@ -356,13 +356,13 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ###################
             // # Configuring FSM #
             // ###################
-            size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
-            size_t injType     = SystemController::findValueInSettings("INJtype");
-            size_t injLatency  = SystemController::findValueInSettings("InjLatency");
-            size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
-            size_t colStart    = SystemController::findValueInSettings("COLstart");
-            bool   resetMask   = SystemController::findValueInSettings("ResetMask");
-            bool   resetTDAC   = SystemController::findValueInSettings("ResetTDAC");
+            size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent");
+            size_t injType     = SystemController::findValueInSettings<double>("INJtype");
+            size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency");
+            size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays");
+            size_t colStart    = SystemController::findValueInSettings<double>("COLstart");
+            bool   resetMask   = SystemController::findValueInSettings<double>("ResetMask");
+            bool   resetTDAC   = SystemController::findValueInSettings<double>("ResetTDAC");
             LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
             LOG(INFO) << CYAN << "================== Done ==================" << RESET;
@@ -621,12 +621,6 @@ void SystemController::ReadASEvent(BeBoard* pBoard, uint32_t pNMsec, uint32_t pu
     this->DecodeData(pBoard, cData, 1, fBeBoardInterface->getBoardType(pBoard));
 }
 
-double SystemController::findValueInSettings(const std::string name, double defaultValue) const
-{
-    auto setting = fSettingsMap.find(name);
-    return (setting != std::end(fSettingsMap) ? setting->second : defaultValue);
-}
-
 // #################
 // # Data decoding #
 // #################
@@ -720,4 +714,5 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         } // end zero check
     }
 }
+
 } // namespace Ph2_System
