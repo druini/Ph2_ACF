@@ -16,6 +16,8 @@
 #include "../tools/RD53BERtest.h"
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53DataReadbackOptimization.h"
+#include "../tools/EyeScanOptimization.h"
+#include "../tools/RD53EyeDiag.h"
 #include "../tools/RD53Gain.h"
 #include "../tools/RD53GainOptimization.h"
 #include "../tools/RD53InjectionDelay.h"
@@ -372,6 +374,50 @@ int main(int argc, char** argv)
             dro.run();
             dro.draw();
         }
+	        else if(whichCalib == "eyescan")
+        {
+            // ##################################
+            // # Run Eye Scan optimization      #
+            // ##################################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Eye Scan Optimization Optimization @@@" << RESET;
+
+            std::string              fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_EyeDiagramScan");
+            EyeScanOptimization eso;
+            eso.Inherit(&mySysCntr);
+            eso.localConfigure(fileName, runNumber);
+            eso.Running();
+            eso.draw();
+        }
+        else if(whichCalib == "eyescan2d")
+        {
+            // ##################################
+            // # Run Eye Scan optimization      #
+            // ##################################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Eye Scan Optimization Optimization in 2D @@@" << RESET;
+
+            std::string              fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_EyeDiagramScan");
+            EyeScanOptimization eso;
+            eso.Inherit(&mySysCntr);
+            eso.localConfigure(fileName, runNumber, true);
+            eso.Running();
+            eso.draw();
+        }
+
+        else if(whichCalib == "eyediag")
+        {
+            // ##################################
+            // # Run Eye Scan optimization      #
+            // ##################################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Eye Diagram @@@" << RESET;
+
+            std::string              fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_EyeDiagram");
+            EyeDiag ed;
+	    ed.Inherit(&mySysCntr);
+            ed.localConfigure(fileName, runNumber);
+	    ed.Running();
+            ed.draw();
+        }
+
         else if(whichCalib == "pixelalive")
         {
             // ##################
