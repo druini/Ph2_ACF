@@ -41,10 +41,12 @@ void EyeDiag::ConfigureCalibration()
         LOG(ERROR) << BOLDRED << "Not connected to the oscilloscope!!! EyeDiag cannot be executed" << RESET;
         throw std::runtime_error("RampPowerSupply cannot be executed");
       }
-
     std::stringstream observablesstring;
-    for (auto & obs : observables)
-      observablesstring << obs << "|";
+    for (auto it = observables.begin(); it !=observables.end(); ++it){
+      observablesstring << *it;
+      if (std::next(it)!=observables.end())
+	observablesstring << "|";
+    }
     fPowerSupplyClient->sendAndReceivePacket(std::string("Scope:main:setEOM=")+observablesstring.str());
 
     // ############################################################
