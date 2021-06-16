@@ -484,7 +484,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
     if(cSetting != std::end(fSettingsMap))
     {
         cCheck    = true;
-        cHoleMode = (cSetting->second == 1) ? true : false;
+        cHoleMode = (boost::any_cast<double>(cSetting->second) == 1) ? true : false;
     }
 
     std::string cMode;
@@ -546,10 +546,9 @@ void Tool::InitResultFile(const std::string& pFilename)
 
 void Tool::CloseResultFile()
 {
-    LOG(INFO) << GREEN << "Closing result file" << RESET;
-
     if(fResultFile != nullptr)
     {
+        LOG(INFO) << GREEN << "Closing result file" << RESET;
         fResultFile->Close();
         delete fResultFile;
         fResultFile = nullptr;

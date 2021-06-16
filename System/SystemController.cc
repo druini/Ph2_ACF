@@ -54,6 +54,9 @@ void SystemController::Inherit(const SystemController* pController)
 
 void SystemController::Destroy()
 {
+    for(const auto cBoard: *fDetectorContainer)
+        if(cBoard->getBoardType() == BoardType::RD53) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintErrorsLVDS(); // @TMP@
+
     this->closeFileHandler();
 
     LOG(INFO) << BOLDRED << ">>> Destroying interfaces <<<" << RESET;
@@ -446,7 +449,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     }
                 }
             }
+
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
+
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintFrequencyLVDS(); // @TMP@
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
             RD53Event::ForkDecodingThreads();
@@ -621,12 +627,6 @@ void SystemController::ReadASEvent(BeBoard* pBoard, uint32_t pNMsec, uint32_t pu
     this->DecodeData(pBoard, cData, 1, fBeBoardInterface->getBoardType(pBoard));
 }
 
-double SystemController::findValueInSettings(const std::string name, double defaultValue) const
-{
-    auto setting = fSettingsMap.find(name);
-    return (setting != std::end(fSettingsMap) ? setting->second : defaultValue);
-}
-
 // #################
 // # Data decoding #
 // #################
@@ -720,4 +720,5 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         } // end zero check
     }
 }
+
 } // namespace Ph2_System

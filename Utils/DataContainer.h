@@ -459,7 +459,18 @@ class HybridDataContainer : public DataContainer<ChipDataContainer>
     {
         return static_cast<T*>(DataContainer<ChipDataContainer>::addObject(id, chip));
     }
-    ChipDataContainer* addChipDataContainer(uint16_t id, uint16_t row, uint16_t col = 1) { return DataContainer<ChipDataContainer>::addObject(id, new ChipDataContainer(id, row, col)); }
+    ChipDataContainer* addChipDataContainer(uint16_t id, uint16_t row, uint16_t col = 1)
+    {
+        try
+        {
+            DataContainer<ChipDataContainer>::getObject(id);
+        }
+        catch(std::exception& ex)
+        {
+            return DataContainer<ChipDataContainer>::addObject(id, new ChipDataContainer(id, row, col));
+        }
+        return DataContainer<ChipDataContainer>::getObject(id);
+    }
 
   private:
 };
@@ -476,7 +487,18 @@ class OpticalGroupDataContainer : public DataContainer<HybridDataContainer>
     {
         return static_cast<T*>(DataContainer<HybridDataContainer>::addObject(id, hybrid));
     }
-    HybridDataContainer* addHybridDataContainer(uint16_t id) { return DataContainer<HybridDataContainer>::addObject(id, new HybridDataContainer(id)); }
+    HybridDataContainer* addHybridDataContainer(uint16_t id)
+    {
+        try
+        {
+            DataContainer<HybridDataContainer>::getObject(id);
+        }
+        catch(std::exception& ex)
+        {
+            return DataContainer<HybridDataContainer>::addObject(id, new HybridDataContainer(id));
+        }
+        return DataContainer<HybridDataContainer>::getObject(id);
+    }
 
   private:
 };
@@ -493,7 +515,18 @@ class BoardDataContainer : public DataContainer<OpticalGroupDataContainer>
     {
         return static_cast<T*>(DataContainer<OpticalGroupDataContainer>::addObject(id, opticalGroup));
     }
-    OpticalGroupDataContainer* addOpticalGroupDataContainer(uint16_t id) { return DataContainer<OpticalGroupDataContainer>::addObject(id, new OpticalGroupDataContainer(id)); }
+    OpticalGroupDataContainer* addOpticalGroupDataContainer(uint16_t id)
+    {
+        try
+        {
+            DataContainer<OpticalGroupDataContainer>::getObject(id);
+        }
+        catch(std::exception& ex)
+        {
+            return DataContainer<OpticalGroupDataContainer>::addObject(id, new OpticalGroupDataContainer(id));
+        }
+        return DataContainer<OpticalGroupDataContainer>::getObject(id);
+    }
 
   private:
 };
@@ -511,7 +544,18 @@ class DetectorDataContainer : public DataContainer<BoardDataContainer>
     {
         return static_cast<T*>(DataContainer<BoardDataContainer>::addObject(id, board));
     }
-    BoardDataContainer* addBoardDataContainer(uint16_t id) { return DataContainer<BoardDataContainer>::addObject(id, new BoardDataContainer(id)); }
+    BoardDataContainer* addBoardDataContainer(uint16_t id)
+    {
+        try
+        {
+            DataContainer<BoardDataContainer>::getObject(id);
+        }
+        catch(std::exception& ex)
+        {
+            return DataContainer<BoardDataContainer>::addObject(id, new BoardDataContainer(id));
+        }
+        return DataContainer<BoardDataContainer>::getObject(id);
+    }
 
   private:
 };

@@ -45,7 +45,7 @@ void InjectionDelay::ConfigureCalibration()
     // # Initialize Latency #
     // ######################
     la.Inherit(this);
-    la.localConfigure("", -1);
+    la.localConfigure();
 
     // ##############################
     // # Injection register masking #
@@ -140,7 +140,7 @@ void InjectionDelay::initializeFiles(const std::string fileRes_, int currentRun)
     // ######################
     std::string fileName = fileRes;
     fileName.replace(fileRes.find("_InjectionDelay"), 15, "_Latency");
-    la.initializeFiles(fileName, -1);
+    la.initializeFiles(fileName);
 }
 
 void InjectionDelay::run()

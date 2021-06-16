@@ -20,6 +20,7 @@
 #include "../tools/RD53EyeDiag.h"
 #include "../tools/RD53Gain.h"
 #include "../tools/RD53GainOptimization.h"
+#include "../tools/RD53GenericDacDacScan.h"
 #include "../tools/RD53InjectionDelay.h"
 #include "../tools/RD53Latency.h"
 #include "../tools/RD53Physics.h"
@@ -50,7 +51,7 @@
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
 #define ARBITRARYDELAY 2 // [seconds]
-#define TESTSUBDETECTORY false
+#define TESTSUBDETECTOR false
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -124,7 +125,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning]",
+                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning, gendacdac]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -142,9 +143,9 @@ int main(int argc, char** argv)
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
 
-    cmd.defineOption("capture", "Capture communication with board (extension .raw)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("capture", "Capture communication with board (extension .bin)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption("replay", "Replay previously captured communication (extension .raw)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("replay", "Replay previously captured communication (extension .bin)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("runtime", "Set running time for physics mode", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("runtime", "t");
@@ -437,7 +438,7 @@ int main(int argc, char** argv)
             bool doTwice   = false;
             do
             {
-                if(TESTSUBDETECTORY == true)
+                if(TESTSUBDETECTOR == true)
                 {
                     if(pa.fDetectorContainer->size() != 1)
                     {
@@ -641,6 +642,21 @@ int main(int argc, char** argv)
             vt.run();
             vt.analyze();
             vt.draw();
+        }
+        else if(whichCalib == "gendacdac")
+        {
+            // ############################
+            // # Run Generic DAC-DAC Scan #
+            // ############################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Generic DAC-DAC scan @@@" << RESET;
+
+            std::string       fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_GenericDacDac");
+            GenericDacDacScan gs;
+            gs.Inherit(&mySysCntr);
+            gs.localConfigure(fileName, runNumber);
+            gs.run();
+            gs.analyze();
+            gs.draw();
         }
         else if(whichCalib == "physics")
         {
