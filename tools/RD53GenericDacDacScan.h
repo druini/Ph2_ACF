@@ -25,6 +25,7 @@ class GenericDacDacScan : public PixelAlive
     ~GenericDacDacScan()
     {
 #ifdef __USE_ROOT__
+        this->WriteRootFile();
         this->CloseResultFile();
 #endif
     }

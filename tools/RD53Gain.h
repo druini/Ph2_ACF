@@ -37,6 +37,7 @@ class Gain : public Tool
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
 #ifdef __USE_ROOT__
+        if(saveData == true) this->WriteRootFile();
         this->CloseResultFile();
 #endif
     }
@@ -98,6 +99,7 @@ class Gain : public Tool
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;
+    bool        saveData;
 };
 
 #endif

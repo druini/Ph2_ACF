@@ -155,7 +155,6 @@ void BERtest::draw()
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     BERtest::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif

@@ -94,10 +94,24 @@ void GainHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContain
                 {
                     if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
 
-                    auto* hOcc2D = Occupancy2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-                    auto* hOcc3D = Occupancy3D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH3F>>().fTheHistogram;
-                    auto* ErrorReadOut2DHist =
-                        ErrorReadOut2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+                    auto* hOcc2D = Occupancy2D.getObject(cBoard->getId())
+                                       ->getObject(cOpticalGroup->getId())
+                                       ->getObject(cHybrid->getId())
+                                       ->getObject(cChip->getId())
+                                       ->getSummary<CanvasContainer<TH2F>>()
+                                       .fTheHistogram;
+                    auto* hOcc3D = Occupancy3D.getObject(cBoard->getId())
+                                       ->getObject(cOpticalGroup->getId())
+                                       ->getObject(cHybrid->getId())
+                                       ->getObject(cChip->getId())
+                                       ->getSummary<CanvasContainer<TH3F>>()
+                                       .fTheHistogram;
+                    auto* ErrorReadOut2DHist = ErrorReadOut2D.getObject(cBoard->getId())
+                                                   ->getObject(cOpticalGroup->getId())
+                                                   ->getObject(cHybrid->getId())
+                                                   ->getObject(cChip->getId())
+                                                   ->getSummary<CanvasContainer<TH2F>>()
+                                                   .fTheHistogram;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
@@ -121,26 +135,62 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
                 {
                     if(cChip->getChannelContainer<GainFit>() == nullptr) continue;
 
-                    auto* Intercept1DHist =
-                        Intercept1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-                    auto* Slope1DHist =
-                        Slope1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-                    auto* SlopeLowQ1DHist =
-                        SlopeLowQ1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-                    auto* Chi2DoF1DHist =
-                        Chi2DoF1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* Intercept1DHist = Intercept1D.getObject(cBoard->getId())
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getObject(cChip->getId())
+                                                ->getSummary<CanvasContainer<TH1F>>()
+                                                .fTheHistogram;
+                    auto* Slope1DHist = Slope1D.getObject(cBoard->getId())
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
+                                            ->getSummary<CanvasContainer<TH1F>>()
+                                            .fTheHistogram;
+                    auto* SlopeLowQ1DHist = SlopeLowQ1D.getObject(cBoard->getId())
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getObject(cChip->getId())
+                                                ->getSummary<CanvasContainer<TH1F>>()
+                                                .fTheHistogram;
+                    auto* Chi2DoF1DHist = Chi2DoF1D.getObject(cBoard->getId())
+                                              ->getObject(cOpticalGroup->getId())
+                                              ->getObject(cHybrid->getId())
+                                              ->getObject(cChip->getId())
+                                              ->getSummary<CanvasContainer<TH1F>>()
+                                              .fTheHistogram;
 
-                    auto* Intercept2DHist =
-                        Intercept2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-                    auto* Slope2DHist =
-                        Slope2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-                    auto* SlopeLowQ2DHist =
-                        SlopeLowQ2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-                    auto* Chi2DoF2DHist =
-                        Chi2DoF2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+                    auto* Intercept2DHist = Intercept2D.getObject(cBoard->getId())
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getObject(cChip->getId())
+                                                ->getSummary<CanvasContainer<TH2F>>()
+                                                .fTheHistogram;
+                    auto* Slope2DHist = Slope2D.getObject(cBoard->getId())
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
+                                            ->getSummary<CanvasContainer<TH2F>>()
+                                            .fTheHistogram;
+                    auto* SlopeLowQ2DHist = SlopeLowQ2D.getObject(cBoard->getId())
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getObject(cChip->getId())
+                                                ->getSummary<CanvasContainer<TH2F>>()
+                                                .fTheHistogram;
+                    auto* Chi2DoF2DHist = Chi2DoF2D.getObject(cBoard->getId())
+                                              ->getObject(cOpticalGroup->getId())
+                                              ->getObject(cHybrid->getId())
+                                              ->getObject(cChip->getId())
+                                              ->getSummary<CanvasContainer<TH2F>>()
+                                              .fTheHistogram;
 
-                    auto* ErrorFit2DHist =
-                        ErrorFit2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+                    auto* ErrorFit2DHist = ErrorFit2D.getObject(cBoard->getId())
+                                               ->getObject(cOpticalGroup->getId())
+                                               ->getObject(cHybrid->getId())
+                                               ->getObject(cChip->getId())
+                                               ->getSummary<CanvasContainer<TH2F>>()
+                                               .fTheHistogram;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)

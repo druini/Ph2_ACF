@@ -14,6 +14,7 @@ using namespace Ph2_HwDescription;
 
 void PixelAliveHistograms::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
+    DetectorData.reset();
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
     // #######################

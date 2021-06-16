@@ -30,6 +30,7 @@ class PixelAlive : public Tool
     ~PixelAlive()
     {
 #ifdef __USE_ROOT__
+        if(saveData == true) this->WriteRootFile();
         this->CloseResultFile();
 #endif
     }
@@ -42,7 +43,7 @@ class PixelAlive : public Tool
     void                                   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
     void                                   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void                                   run();
-    void                                   draw(bool saveData = true);
+    void                                   draw(bool doSaveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t                                 getNumberIterations()
     {
@@ -88,6 +89,7 @@ class PixelAlive : public Tool
     bool        doDisplay;
     bool        doFast;
     bool        saveBinaryData;
+    bool        saveData;
 };
 
 #endif

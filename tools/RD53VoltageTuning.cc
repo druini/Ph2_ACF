@@ -216,7 +216,6 @@ void VoltageTuning::draw()
     histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
     VoltageTuning::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif

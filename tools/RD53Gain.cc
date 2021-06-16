@@ -192,16 +192,16 @@ void Gain::run()
     Gain::chipErrorReport();
 }
 
-void Gain::draw(bool saveData)
+void Gain::draw(bool doSaveData)
 {
-    if(saveData == true) Gain::saveChipRegisters(theCurrentRun);
+    if(doSaveData == true) Gain::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
+    if((doSaveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
         this->InitResultFile(fileRes);
         LOG(INFO) << BOLDBLUE << "\t--> Gain saving histograms..." << RESET;
@@ -210,7 +210,7 @@ void Gain::draw(bool saveData)
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Gain::fillHisto();
     histos->process();
-    if(saveData == true) this->WriteRootFile();
+    saveData = doSaveData;
 
     if(doDisplay == true) myApp->Run(true);
 #endif

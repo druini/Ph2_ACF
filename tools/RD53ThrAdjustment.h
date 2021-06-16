@@ -30,6 +30,7 @@ class ThrAdjustment : public PixelAlive
     ~ThrAdjustment()
     {
 #ifdef __USE_ROOT__
+        this->WriteRootFile();
         this->CloseResultFile();
 #endif
     }

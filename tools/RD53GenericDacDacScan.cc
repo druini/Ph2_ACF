@@ -160,7 +160,6 @@ void GenericDacDacScan::draw()
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     GenericDacDacScan::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif

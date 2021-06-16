@@ -30,6 +30,7 @@ class GainOptimization : public Gain
     ~GainOptimization()
     {
 #ifdef __USE_ROOT__
+        this->WriteRootFile();
         this->CloseResultFile();
 #endif
     }
