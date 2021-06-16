@@ -13,7 +13,6 @@ using namespace Ph2_HwDescription;
 
 void VoltageTuningHistograms::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
-    DetectorData.reset();
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
     auto hVoltageDig = CanvasContainer<TH1F>("VoltageDig", "Digital Voltage", 32, 0, 32);
