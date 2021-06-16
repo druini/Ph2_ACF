@@ -45,6 +45,7 @@ class BaseContainer
     virtual BaseContainer* getElement(uint16_t index) const = 0;
     bool                   isEnabled() const {return isEnabled_;}
     void                   setEnabled(bool enable) {isEnabled_ = enable;}
+    virtual void           setEnabledAll(bool enable)            = 0;
 
     void setIndex(uint16_t index) { index_ = index; }
 
@@ -87,6 +88,12 @@ class Container
     void cleanDataStored() override
     {
         for(auto container: *this) { container->cleanDataStored(); }
+    }
+
+    void setEnabledAll(bool enable) override
+    {
+        setEnabled(enable);
+        for(auto& container : *this) { container->setEnabledAll(enable); }
     }
 
     BaseContainer* getElement(uint16_t index) const override { return this->at(index); }
@@ -227,6 +234,11 @@ class ChipContainer : public BaseContainer
     {
         delete container_;
         container_ = nullptr;
+    }
+
+    void setEnabledAll(bool enable) override
+    {
+        setEnabled(enable);
     }
 
     BaseContainer* getElement(uint16_t index) const override
