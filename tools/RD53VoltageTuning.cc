@@ -90,9 +90,8 @@ void VoltageTuning::initializeFiles(const std::string fileRes_, int currentRun)
 
 void VoltageTuning::run()
 {
-    const int    conversionFactor = 2; // @CONST@
-    unsigned int it;
-    bool         doRepeat;
+    const int conversionFactor = 2; // @CONST@
+    bool      doRepeat;
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theAnaContainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theDigContainer);
@@ -108,6 +107,8 @@ void VoltageTuning::run()
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
+                        unsigned int it;
+
                         // ##############
                         // # Start VDDD #
                         // ##############
