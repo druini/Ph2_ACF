@@ -20,14 +20,16 @@ void GainFit::makeSummaryAverage(const std::vector<GainFit>* theGainVector, cons
 
     float cnt = 0;
 
-    fSlope          = 0;
-    fSlopeError     = 0;
-    fIntercept      = 0;
-    fInterceptError = 0;
-    fSlopeLowQ      = 0;
-    fSlopeLowQError = 0;
-    fChi2           = 0;
-    fDoF            = 0;
+    fSlope              = 0;
+    fSlopeError         = 0;
+    fIntercept          = 0;
+    fInterceptError     = 0;
+    fSlopeLowQ          = 0;
+    fSlopeLowQError     = 0;
+    fInterceptLowQ      = 0;
+    fInterceptLowQError = 0;
+    fChi2               = 0;
+    fDoF                = 0;
 
     for(size_t iContainer = 0; iContainer < theGainVector->size(); iContainer++)
     {
@@ -49,6 +51,13 @@ void GainFit::makeSummaryAverage(const std::vector<GainFit>* theGainVector, cons
             fSlopeLowQ +=
                 theGainVector->at(iContainer).fSlopeLowQ * theNumberOfEnabledChannelsList[iContainer] / (theGainVector->at(iContainer).fSlopeLowQError * theGainVector->at(iContainer).fSlopeLowQError);
             fSlopeLowQError += theNumberOfEnabledChannelsList[iContainer] / (theGainVector->at(iContainer).fSlopeLowQError * theGainVector->at(iContainer).fSlopeLowQError);
+        }
+
+        if(theGainVector->at(iContainer).fInterceptLowQError > 0)
+        {
+            fInterceptLowQ += theGainVector->at(iContainer).fInterceptLowQ * theNumberOfEnabledChannelsList[iContainer] /
+                              (theGainVector->at(iContainer).fInterceptLowQError * theGainVector->at(iContainer).fInterceptLowQError);
+            fInterceptLowQError += theNumberOfEnabledChannelsList[iContainer] / (theGainVector->at(iContainer).fInterceptLowQError * theGainVector->at(iContainer).fInterceptLowQError);
         }
 
         if(theGainVector->at(iContainer).fChi2 > 0) fChi2 += theGainVector->at(iContainer).fChi2;
@@ -73,6 +82,12 @@ void GainFit::makeSummaryAverage(const std::vector<GainFit>* theGainVector, cons
     {
         fSlopeLowQ /= fSlopeLowQError;
         fSlopeLowQError = sqrt(1. / fSlopeLowQError);
+    }
+
+    if(fInterceptLowQError > 0)
+    {
+        fInterceptLowQ /= fInterceptLowQError;
+        fInterceptLowQError = sqrt(1. / fInterceptLowQError);
     }
 
     if(fChi2 > 0) fChi2 /= cnt;

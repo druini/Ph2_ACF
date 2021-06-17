@@ -25,7 +25,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define NGAINPAR 3 // Number of parameters for gain data regression
+#define NGAINPAR 4 // Number of parameters for gain data regression
 
 // ###################
 // # Gain test suite #
