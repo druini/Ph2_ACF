@@ -137,15 +137,8 @@ class DQMHistogramBase
                     }
     }
 
-    template <typename T = double>
-    typename std::enable_if<!std::is_same<T, std::string>::value, T>::type findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, T defaultValue = 0) const
-    {
-        auto setting = settingsMap.find(name);
-        return (setting != std::end(settingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);
-    }
-
-    template <typename T = double>
-    typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, T defaultValue = "") const
+    template <typename T>
+    T findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, T defaultValue = T()) const
     {
         auto setting = settingsMap.find(name);
         return (setting != std::end(settingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);

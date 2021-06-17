@@ -29,7 +29,7 @@ class ChipContainer;
 class BaseContainer
 {
   public:
-    BaseContainer(uint16_t id = -1) : id_(id), index_(0) { ; }
+    BaseContainer(uint16_t id = -1) : id_(id), index_(0), isEnabled_(true) { ; }
 
     BaseContainer(const BaseContainer&) = delete;
     BaseContainer(BaseContainer&& theCopyContainer)
@@ -43,12 +43,16 @@ class BaseContainer
     uint16_t               getIndex(void) const { return index_; }
     virtual void           cleanDataStored(void)            = 0;
     virtual BaseContainer* getElement(uint16_t index) const = 0;
+    bool                   isEnabled() const { return isEnabled_; }
+    void                   setEnabled(bool enable) { isEnabled_ = enable; }
+    virtual void           setEnabledAll(bool enable) = 0;
 
     void setIndex(uint16_t index) { index_ = index; }
 
   private:
     uint16_t id_;
     uint16_t index_;
+    bool     isEnabled_;
 };
 
 template <class T>
@@ -84,6 +88,12 @@ class Container
     void cleanDataStored() override
     {
         for(auto container: *this) { container->cleanDataStored(); }
+    }
+
+    void setEnabledAll(bool enable) override
+    {
+        setEnabled(enable);
+        for(auto& container: *this) { container->setEnabledAll(enable); }
     }
 
     BaseContainer* getElement(uint16_t index) const override { return this->at(index); }
@@ -225,6 +235,8 @@ class ChipContainer : public BaseContainer
         delete container_;
         container_ = nullptr;
     }
+
+    void setEnabledAll(bool enable) override { setEnabled(enable); }
 
     BaseContainer* getElement(uint16_t index) const override
     {

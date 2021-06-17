@@ -18,7 +18,7 @@ void SSAPhysics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    saveRawData = this->findValueInSettings("SaveRawData");
+    saveRawData = this->findValueInSettings<double>("SaveRawData");
     doLocal     = false;
 
     // ###########################################

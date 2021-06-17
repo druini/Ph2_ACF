@@ -22,16 +22,16 @@ void DataReadbackOptimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    startValueTAP0 = this->findValueInSettings("TAP0Start");
-    stopValueTAP0  = this->findValueInSettings("TAP0Stop");
-    startValueTAP1 = this->findValueInSettings("TAP1Start");
-    stopValueTAP1  = this->findValueInSettings("TAP1Stop");
-    invTAP1        = this->findValueInSettings("InvTAP1");
-    startValueTAP2 = this->findValueInSettings("TAP2Start");
-    stopValueTAP2  = this->findValueInSettings("TAP2Stop");
-    invTAP2        = this->findValueInSettings("InvTAP2");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+    startValueTAP0 = this->findValueInSettings<double>("TAP0Start");
+    stopValueTAP0  = this->findValueInSettings<double>("TAP0Stop");
+    startValueTAP1 = this->findValueInSettings<double>("TAP1Start");
+    stopValueTAP1  = this->findValueInSettings<double>("TAP1Stop");
+    invTAP1        = this->findValueInSettings<double>("InvTAP1");
+    startValueTAP2 = this->findValueInSettings<double>("TAP2Start");
+    stopValueTAP2  = this->findValueInSettings<double>("TAP2Stop");
+    invTAP2        = this->findValueInSettings<double>("InvTAP2");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
 
     // ##############################
     // # Initialize dac scan values #

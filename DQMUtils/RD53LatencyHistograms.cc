@@ -19,9 +19,9 @@ void LatencyHistograms::book(TFile* theOutputFile, const DetectorContainer& theD
     // #######################
     // # Retrieve parameters #
     // #######################
-    nTRIGxEvent = this->findValueInSettings(settingsMap, "nTRIGxEvent");
-    startValue  = this->findValueInSettings(settingsMap, "LatencyStart");
-    stopValue   = this->findValueInSettings(settingsMap, "LatencyStop");
+    nTRIGxEvent = this->findValueInSettings<double>(settingsMap, "nTRIGxEvent");
+    startValue  = this->findValueInSettings<double>(settingsMap, "LatencyStart");
+    stopValue   = this->findValueInSettings<double>(settingsMap, "LatencyStop");
 
     auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue + nTRIGxEvent, startValue, stopValue + nTRIGxEvent);
     bookImplementer(theOutputFile, theDetectorStructure, Latency, hLatency, "Latency (n.bx)", "Entries");

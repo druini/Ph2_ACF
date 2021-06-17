@@ -88,7 +88,7 @@ void ShortFinder::Initialise()
     {
         fChannelGroupHandler = new CBCChannelGroupHandler();
         fChannelGroupHandler->setChannelGroupParameters(16, 2);
-        fSkipMaskedChannels = findValueInSettings("SkipMaskedChannels", 0);
+        fSkipMaskedChannels = findValueInSettings<double>("SkipMaskedChannels", 0);
         this->SetSkipMaskedChannels(fSkipMaskedChannels);
     }
     if(ShortFinder::fWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();

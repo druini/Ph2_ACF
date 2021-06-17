@@ -24,16 +24,16 @@ void GenericDacDacScan::ConfigureCalibration()
     // # Retrieve parameters #
     // #######################
     regNameDAC1    = this->findValueInSettings<std::string>("RegNameDAC1");
-    startValueDAC1 = this->findValueInSettings("StartValueDAC1");
-    stopValueDAC1  = this->findValueInSettings("StopValueDAC1");
-    stepDAC1       = this->findValueInSettings("StepDAC1");
+    startValueDAC1 = this->findValueInSettings<double>("StartValueDAC1");
+    stopValueDAC1  = this->findValueInSettings<double>("StopValueDAC1");
+    stepDAC1       = this->findValueInSettings<double>("StepDAC1");
     regNameDAC2    = this->findValueInSettings<std::string>("RegNameDAC2");
-    startValueDAC2 = this->findValueInSettings("StartValueDAC2");
-    stopValueDAC2  = this->findValueInSettings("StopValueDAC2");
-    stepDAC2       = this->findValueInSettings("StepDAC2");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    startValueDAC2 = this->findValueInSettings<double>("StartValueDAC2");
+    stopValueDAC2  = this->findValueInSettings<double>("StopValueDAC2");
+    stepDAC2       = this->findValueInSettings<double>("StepDAC2");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     // ##############################
     // # Initialize dac scan values #

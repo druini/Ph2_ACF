@@ -25,17 +25,17 @@ void ThrMinimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart        = this->findValueInSettings("ROWstart");
-    rowStop         = this->findValueInSettings("ROWstop");
-    colStart        = this->findValueInSettings("COLstart");
-    colStop         = this->findValueInSettings("COLstop");
-    nEvents         = this->findValueInSettings("nEvents");
-    targetOccupancy = this->findValueInSettings("TargetOcc");
-    ThrStart        = this->findValueInSettings("ThrStart");
-    ThrStop         = this->findValueInSettings("ThrStop");
-    doDisplay       = this->findValueInSettings("DisplayHisto");
-    doUpdateChip    = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData  = this->findValueInSettings("SaveBinaryData");
+    rowStart        = this->findValueInSettings<double>("ROWstart");
+    rowStop         = this->findValueInSettings<double>("ROWstop");
+    colStart        = this->findValueInSettings<double>("COLstart");
+    colStop         = this->findValueInSettings<double>("COLstop");
+    nEvents         = this->findValueInSettings<double>("nEvents");
+    targetOccupancy = this->findValueInSettings<double>("TargetOcc");
+    ThrStart        = this->findValueInSettings<double>("ThrStart");
+    ThrStop         = this->findValueInSettings<double>("ThrStop");
+    doDisplay       = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
 
     frontEnd = RD53::getMajorityFE(colStart, colStop);
     colStart = std::max(colStart, frontEnd->colStart);

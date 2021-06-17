@@ -19,13 +19,13 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, const DetectorConta
     // # Retrieve parameters #
     // #######################
     regNameDAC1    = this->findValueInSettings<std::string>(settingsMap, "RegNameDAC1");
-    startValueDAC1 = this->findValueInSettings(settingsMap, "StartValueDAC1");
-    stopValueDAC1  = this->findValueInSettings(settingsMap, "StopValueDAC1");
-    stepDAC1       = this->findValueInSettings(settingsMap, "StepDAC1");
+    startValueDAC1 = this->findValueInSettings<double>(settingsMap, "StartValueDAC1");
+    stopValueDAC1  = this->findValueInSettings<double>(settingsMap, "StopValueDAC1");
+    stepDAC1       = this->findValueInSettings<double>(settingsMap, "StepDAC1");
     regNameDAC2    = this->findValueInSettings<std::string>(settingsMap, "RegNameDAC2");
-    startValueDAC2 = this->findValueInSettings(settingsMap, "StartValueDAC2");
-    stopValueDAC2  = this->findValueInSettings(settingsMap, "StopValueDAC2");
-    stepDAC2       = this->findValueInSettings(settingsMap, "StepDAC2");
+    startValueDAC2 = this->findValueInSettings<double>(settingsMap, "StartValueDAC2");
+    stopValueDAC2  = this->findValueInSettings<double>(settingsMap, "StopValueDAC2");
+    stepDAC2       = this->findValueInSettings<double>(settingsMap, "StepDAC2");
 
     auto hGenericDac1Scan = CanvasContainer<TH1F>("GenericDac1Scan", "GenericDac1Scan", (stopValueDAC1 - startValueDAC1) / stepDAC1 + 1, startValueDAC1, stopValueDAC1 + stepDAC1);
     bookImplementer(theOutputFile, theDetectorStructure, GenericDac1Scan, hGenericDac1Scan, regNameDAC1.c_str(), "Entries");
