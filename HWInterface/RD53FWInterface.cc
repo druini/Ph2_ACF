@@ -8,6 +8,7 @@
 */
 
 #include "RD53FWInterface.h"
+#include "RD53Interface.h"
 
 using namespace Ph2_HwDescription;
 
@@ -1047,7 +1048,7 @@ void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { Reg
 
 void RD53FWInterface::SelectBERcheckBitORFrame(const uint8_t bitORframe) { RegManager::WriteReg("user.ctrl_regs.PRBS_checker.error_cntr_sel", bitORframe); }
 
-void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const uint32_t value, const bool doReset)
+void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const uint32_t value, const BeBoard* pBoard, ReadoutChipInterface* pReadoutChipInterface, const bool doReset)
 {
     RegManager::WriteReg(regName, value);
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
@@ -1056,6 +1057,13 @@ void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const u
     if(doReset == true)
     {
         RD53FWInterface::ResetBoard();
+
+        RD53FWInterface::ConfigureBoard(pBoard);
+        RD53FWInterface::ConfigureFromXML(pBoard);
+        static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
+        for(auto cOpticalGroup: *pBoard)
+            for(auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid) static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Uplinks(cChip);
 
         // @TMP@
         RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 0);
