@@ -249,7 +249,7 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
             else
                 for(const auto cBoard: *fDetectorContainer)
                     static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
-                        ->WriteArbitraryRegister(regNameDAC1, dac1List[i], cBoard, this->fReadoutChipInterface, (regNameDAC2.find("cdr") != std::string::npos ? true : false));
+                        ->WriteArbitraryRegister(regNameDAC2, dac2List[i], cBoard, this->fReadoutChipInterface, (regNameDAC2.find("cdr") != std::string::npos ? true : false));
 
             // ################
             // # Run analysis #

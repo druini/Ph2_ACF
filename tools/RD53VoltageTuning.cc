@@ -98,7 +98,7 @@ void VoltageTuning::run()
 
     auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
-    for (auto nAttempt = 0; nAttempt < RD53Shared::MAXATTEMPTS; nAttempt++)
+    for(auto nAttempt = 0; nAttempt < RD53Shared::MAXATTEMPTS; nAttempt++)
     {
         doRepeat = false;
 

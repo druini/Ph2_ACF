@@ -1057,13 +1057,8 @@ void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const u
     if(doReset == true)
     {
         RD53FWInterface::ResetBoard();
-
         RD53FWInterface::ConfigureBoard(pBoard);
-        RD53FWInterface::ConfigureFromXML(pBoard);
         static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
-        for(auto cOpticalGroup: *pBoard)
-            for(auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid) static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Uplinks(cChip);
 
         // @TMP@
         RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 0);
