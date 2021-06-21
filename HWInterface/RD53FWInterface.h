@@ -31,6 +31,7 @@ const uint8_t HEADEAR_WRTCMD     = 0xFF; // Header of chip write command sequenc
 const uint8_t NBIT_FWVER         = 16;   // Number of bits for the firmware version
 const uint8_t IPBUS_FASTDURATION = 1;    // Duration of a fast command in terms of 40 MHz clk cycles
 
+constexpr float VDDD2Volt(float val) { return (0.968 + val * 0.0115); }
 constexpr float CDR2Freq(float val) { return (140 + val * 5); }
 } // namespace RD53FWconstants
 

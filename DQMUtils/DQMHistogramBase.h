@@ -121,7 +121,28 @@ class DQMHistogramBase
                                                              RD53chargeConverter::VCal2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), isNoise),
                                                              510,
                                                              "-"));
-                            else if(additionalAxisType == "frequency")
+                            else if(additionalAxisType == "frequency") // @TMP@
+                            {
+                                axes.emplace_back(new TGaxis(myPad->GetUxmax(),
+                                                             myPad->GetUymin(),
+                                                             myPad->GetUxmax(),
+                                                             myPad->GetUymax(),
+                                                             RD53FWconstants::VDDD2Volt(hist->GetYaxis()->GetBinLowEdge(1)),
+                                                             RD53FWconstants::VDDD2Volt(hist->GetYaxis()->GetBinLowEdge(hist->GetYaxis()->GetNbins())),
+                                                             510,
+                                                             "-"));
+
+                                axes.back()->SetTitle("VDDD (V)");
+                                axes.back()->SetTitleOffset(1.2);
+                                axes.back()->SetTitleSize(0.035);
+                                axes.back()->SetTitleFont(40);
+                                axes.back()->SetLabelOffset(0.001);
+                                axes.back()->SetLabelSize(0.035);
+                                axes.back()->SetLabelFont(42);
+                                axes.back()->SetLabelColor(kRed);
+                                axes.back()->SetLineColor(kRed);
+                                axes.back()->Draw();
+
                                 axes.emplace_back(new TGaxis(myPad->GetUxmin(),
                                                              myPad->GetUymax(),
                                                              myPad->GetUxmax(),
@@ -130,6 +151,7 @@ class DQMHistogramBase
                                                              RD53FWconstants::CDR2Freq(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins())),
                                                              510,
                                                              "-"));
+                            }
 
                             axes.back()->SetTitle(additionalAxisTitle);
                             axes.back()->SetTitleOffset(1.2);
