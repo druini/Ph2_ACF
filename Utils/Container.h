@@ -101,10 +101,22 @@ class Container
   protected:
     virtual T* addObject(uint16_t objectId, T* object)
     {
-        object->setIndex(this->size());
-        std::vector<T*>::push_back(object);
-        Container::idObjectMap_[objectId] = this->back();
-        return this->back();
+        try
+        {
+            this->getObject(objectId);
+        }
+        catch(std::exception& ex)
+        {
+            object->setIndex(this->size());
+            std::vector<T*>::push_back(object);
+            Container::idObjectMap_[objectId] = this->back();
+            return this->back();
+        }
+        delete object;
+        object         = nullptr;
+        std::string ex = std::string(__PRETTY_FUNCTION__) + " : Object Id " + std::to_string(objectId) + " already present";
+        throw Exception(ex.c_str());
+        return object;
     }
     std::map<uint16_t, T*> idObjectMap_;
 };

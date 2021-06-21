@@ -62,6 +62,7 @@ template <typename T, typename SC, typename SM, typename SO, typename SB, typena
 void copyAndInitStructure(const DetectorContainer& original, DetectorDataContainer& copy)
 {
     copy.cleanDataStored();
+    copy.reset();
     copy.initialize<SD, SB>();
     for(const auto board: original)
     {
@@ -137,6 +138,7 @@ template <typename T, typename SC, typename SM, typename SO, typename SB, typena
 void copyAndInitStructure(const DetectorContainer& original, DetectorDataContainer& copy, T& channel, SC& chipSummay, SM& hybridSummary, SO& opticalGroupSummary, SB& boardSummary, SD& detectorSummary)
 {
     static_cast<DetectorDataContainer&>(copy).cleanDataStored();
+    static_cast<DetectorDataContainer&>(copy).reset();
     static_cast<DetectorDataContainer&>(copy).initialize<SD, SB>(detectorSummary);
     for(const BoardContainer* board: original)
     {

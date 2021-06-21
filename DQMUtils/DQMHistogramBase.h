@@ -92,7 +92,7 @@ class DQMHistogramBase
     }
 
     template <typename Hist>
-    void draw(DetectorDataContainer& HistDataContainer, const char* opt = "", bool electronAxis = false, const char* electronAxisTitle = "", bool isNoise = false)
+    void draw(DetectorDataContainer& HistDataContainer, const char* opt = "", const std::string additionalAxisType = "", const char* additionalAxisTitle = "", bool isNoise = false)
     {
         for(auto cBoard: HistDataContainer)
             for(auto cOpticalGroup: *cBoard)
@@ -107,20 +107,31 @@ class DQMHistogramBase
                         canvas->Modified();
                         canvas->Update();
 
-                        if(electronAxis == true)
+                        if(additionalAxisType != "")
                         {
                             TPad* myPad = static_cast<TPad*>(canvas->GetPad(0));
                             myPad->SetTopMargin(0.16);
 
-                            axes.emplace_back(new TGaxis(myPad->GetUxmin(),
-                                                         myPad->GetUymax(),
-                                                         myPad->GetUxmax(),
-                                                         myPad->GetUymax(),
-                                                         RD53chargeConverter::VCal2Charge(hist->GetXaxis()->GetBinLowEdge(1), isNoise),
-                                                         RD53chargeConverter::VCal2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), isNoise),
-                                                         510,
-                                                         "-"));
-                            axes.back()->SetTitle(electronAxisTitle);
+                            if(additionalAxisType == "electron")
+                                axes.emplace_back(new TGaxis(myPad->GetUxmin(),
+                                                             myPad->GetUymax(),
+                                                             myPad->GetUxmax(),
+                                                             myPad->GetUymax(),
+                                                             RD53chargeConverter::VCal2Charge(hist->GetXaxis()->GetBinLowEdge(1), isNoise),
+                                                             RD53chargeConverter::VCal2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), isNoise),
+                                                             510,
+                                                             "-"));
+                            else if(additionalAxisType == "frequency")
+                                axes.emplace_back(new TGaxis(myPad->GetUxmin(),
+                                                             myPad->GetUymax(),
+                                                             myPad->GetUxmax(),
+                                                             myPad->GetUymax(),
+                                                             RD53FWconstants::CDR2Freq(hist->GetXaxis()->GetBinLowEdge(1)),
+                                                             RD53FWconstants::CDR2Freq(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins())),
+                                                             510,
+                                                             "-"));
+
+                            axes.back()->SetTitle(additionalAxisTitle);
                             axes.back()->SetTitleOffset(1.2);
                             axes.back()->SetTitleSize(0.035);
                             axes.back()->SetTitleFont(40);

@@ -124,7 +124,7 @@ void GenericDacDacScanHistograms::fillGenericDacDacScan(const DetectorDataContai
 
 void GenericDacDacScanHistograms::process()
 {
-    draw<TH2F>(Occupancy2D, "gcolz");
+    draw<TH2F>(Occupancy2D, "gcolz", "frequency", "Frequency (MHz)");
     draw<TH1F>(GenericDac1Scan);
     draw<TH1F>(GenericDac2Scan);
 }

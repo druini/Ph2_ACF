@@ -16,6 +16,7 @@
 #include "../Utils/Container.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/easylogging++.h"
+#include "../Utils/ConsoleColor.h"
 #include <cxxabi.h>
 #include <iostream>
 #include <map>
@@ -497,6 +498,7 @@ class OpticalGroupDataContainer : public DataContainer<HybridDataContainer>
         {
             return DataContainer<HybridDataContainer>::addObject(id, new HybridDataContainer(id));
         }
+        LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
         return DataContainer<HybridDataContainer>::getObject(id);
     }
 
@@ -525,6 +527,7 @@ class BoardDataContainer : public DataContainer<OpticalGroupDataContainer>
         {
             return DataContainer<OpticalGroupDataContainer>::addObject(id, new OpticalGroupDataContainer(id));
         }
+        LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
         return DataContainer<OpticalGroupDataContainer>::getObject(id);
     }
 
@@ -554,6 +557,7 @@ class DetectorDataContainer : public DataContainer<BoardDataContainer>
         {
             return DataContainer<BoardDataContainer>::addObject(id, new BoardDataContainer(id));
         }
+        LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
         return DataContainer<BoardDataContainer>::getObject(id);
     }
 

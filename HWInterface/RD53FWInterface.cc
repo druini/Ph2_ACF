@@ -920,10 +920,9 @@ void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
                                {"user.ctrl_regs.ext_tlu_reg2.dio5_ch5_thr", (uint32_t)cfg->ch5_thr},
                                {"user.ctrl_regs.ext_tlu_reg2.tlu_en", (uint32_t)cfg->tlu_en},
                                {"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)cfg->tlu_handshake_mode},
-                               {"user.ctrl_regs.ext_tlu_reg2.ext_clk_en", (uint32_t)cfg->ext_clk_en},
+                               {"user.ctrl_regs.ext_tlu_reg2.ext_clk_en", (uint32_t)cfg->ext_clk_en}});
 
-                               {"user.ctrl_regs.ext_tlu_reg2.dio5_load_config", 1},
-                               {"user.ctrl_regs.ext_tlu_reg2.dio5_load_config", 0}});
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
 }
 
 // ###################################
@@ -1059,11 +1058,6 @@ void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const u
         RD53FWInterface::ResetBoard();
         RD53FWInterface::ConfigureBoard(pBoard);
         static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
-
-        // @TMP@
-        RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 0);
-        LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "[RD53FWInterface::WriteArbitraryRegister] External CMD clock: " << BOLDYELLOW
-                  << RegManager::ReadReg("user.stat_regs.cdr_freq_mon") / 1000. << " MHz" << std::setprecision(-1) << RESET;
     }
 }
 
@@ -1362,10 +1356,8 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     // Set PRBS frames to run
     uint32_t lowFrames, highFrames;
     std::tie(highFrames, lowFrames) = bits::unpack<32, 32>(static_cast<long long>(frames2run));
-    WriteStackReg({{"user.ctrl_regs.prbs_frames_to_run_low", lowFrames},
-                   {"user.ctrl_regs.prbs_frames_to_run_high", highFrames},
-                   {"user.ctrl_regs.PRBS_checker.load_config", 1},
-                   {"user.ctrl_regs.PRBS_checker.load_config", 0}});
+    WriteStackReg({{"user.ctrl_regs.prbs_frames_to_run_low", lowFrames}, {"user.ctrl_regs.prbs_frames_to_run_high", highFrames}});
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.PRBS_checker.load_config");
 
     // #########
     // # Start #

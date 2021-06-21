@@ -244,15 +244,15 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
 
 void GainHistograms::process()
 {
-    draw<TH2F>(Occupancy2D, "gcolz", true, "Charge (electrons)");
+    draw<TH2F>(Occupancy2D, "gcolz", "electron", "Charge (electrons)");
     draw<TH3F>(Occupancy3D, "gcolz");
     draw<TH2F>(ErrorReadOut2D, "gcolz");
     draw<TH2F>(ErrorFit2D, "gcolz");
 
     draw<TH1F>(Intercept1D);
-    draw<TH1F>(Slope1D, "", true, "Slope (ToT/electrons)");
+    draw<TH1F>(Slope1D, "", "electron", "Slope (ToT/electrons)");
     draw<TH1F>(InterceptLowQ1D);
-    draw<TH1F>(SlopeLowQ1D, "", true, "Slope for low charge range (ToT/electrons)");
+    draw<TH1F>(SlopeLowQ1D, "", "electron", "Slope for low charge range (ToT/electrons)");
     draw<TH1F>(Chi2DoF1D);
 
     draw<TH2F>(Intercept2D, "gcolz");
