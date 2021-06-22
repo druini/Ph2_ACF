@@ -1200,7 +1200,7 @@ void RD53FWInterface::ReadClockGenerator()
         uint32_t          readback = RegManager::ReadReg("system.spi.rx_data");
         std::stringstream myString("");
         myString << std::right << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << readback << std::dec;
-        LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << std::dec << RESET;
     }
 }
 

@@ -127,16 +127,16 @@ class DQMHistogramBase
                                                              myPad->GetUymin(),
                                                              myPad->GetUxmax(),
                                                              myPad->GetUymax(),
-                                                             RD53FWconstants::VDDD2Volt(hist->GetYaxis()->GetBinLowEdge(1)),
-                                                             RD53FWconstants::VDDD2Volt(hist->GetYaxis()->GetBinLowEdge(hist->GetYaxis()->GetNbins())),
+                                                             RD53FWconstants::CDR2Freq(hist->GetYaxis()->GetBinLowEdge(1)),
+                                                             RD53FWconstants::CDR2Freq(hist->GetYaxis()->GetBinLowEdge(hist->GetYaxis()->GetNbins())),
                                                              510,
-                                                             "-"));
+                                                             "+L"));
 
-                                axes.back()->SetTitle("VDDD (V)");
-                                axes.back()->SetTitleOffset(1.2);
+                                axes.back()->SetTitle("Frequency (MHz)");
+                                axes.back()->SetTitleOffset(1.4);
                                 axes.back()->SetTitleSize(0.035);
                                 axes.back()->SetTitleFont(40);
-                                axes.back()->SetLabelOffset(0.001);
+                                axes.back()->SetLabelOffset(0.01);
                                 axes.back()->SetLabelSize(0.035);
                                 axes.back()->SetLabelFont(42);
                                 axes.back()->SetLabelColor(kRed);
@@ -147,8 +147,8 @@ class DQMHistogramBase
                                                              myPad->GetUymax(),
                                                              myPad->GetUxmax(),
                                                              myPad->GetUymax(),
-                                                             RD53FWconstants::CDR2Freq(hist->GetXaxis()->GetBinLowEdge(1)),
-                                                             RD53FWconstants::CDR2Freq(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins())),
+                                                             RD53FWconstants::VDDD2Volt(hist->GetXaxis()->GetBinLowEdge(1)),
+                                                             RD53FWconstants::VDDD2Volt(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins())),
                                                              510,
                                                              "-"));
                             }
