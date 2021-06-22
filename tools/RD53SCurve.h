@@ -32,6 +32,7 @@ class SCurve : public Tool
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
 #ifdef __USE_ROOT__
+        this->WriteRootFile();
         this->CloseResultFile();
 #endif
     }

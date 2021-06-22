@@ -49,7 +49,7 @@
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
 #define ARBITRARYDELAY 2 // [seconds]
-#define TESTSUBDETECTORY false
+#define TESTSUBDETECTOR false
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -141,9 +141,9 @@ int main(int argc, char** argv)
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
 
-    cmd.defineOption("capture", "Capture communication with board (extension .raw)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("capture", "Capture communication with board (extension .bin)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption("replay", "Replay previously captured communication (extension .raw)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("replay", "Replay previously captured communication (extension .bin)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("runtime", "Set running time for physics mode", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("runtime", "t");
@@ -392,7 +392,7 @@ int main(int argc, char** argv)
             bool doTwice   = false;
             do
             {
-                if(TESTSUBDETECTORY == true)
+                if(TESTSUBDETECTOR == true)
                 {
                     if(pa.fDetectorContainer->size() != 1)
                     {

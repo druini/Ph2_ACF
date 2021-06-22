@@ -25,6 +25,7 @@ class ClockDelay : public PixelAlive
     ~ClockDelay()
     {
 #ifdef __USE_ROOT__
+        this->WriteRootFile();
         this->CloseResultFile();
 #endif
     }

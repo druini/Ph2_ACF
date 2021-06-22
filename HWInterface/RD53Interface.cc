@@ -153,6 +153,12 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
                               (RD53Shared::setBits(cRegItem.second.fBitSize) << (pRD53RegMap["CML_CONFIG_EN_LANE"].fBitSize + pRD53RegMap["CML_CONFIG_SER_EN_TAP"].fBitSize))));
                     regName = "CML_CONFIG";
                 }
+                else if(cRegItem.first == "CDR_CONFIG")
+                {
+                    RD53Interface::sendCommand(static_cast<RD53*>(pChip), RD53Cmd::ECR());
+                    RD53Interface::sendCommand(static_cast<RD53*>(pChip), RD53Cmd::ECR());
+                    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+                }
 
                 RD53Interface::WriteChipReg(pChip, regName, value, pVerifLoop);
             }

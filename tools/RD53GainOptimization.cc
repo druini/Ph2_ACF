@@ -169,7 +169,6 @@ void GainOptimization::draw()
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     GainOptimization::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -297,11 +296,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                             for(auto col = 0u; col < RD53::nCols; col++)
                                 if(cChip->getChannel<GainFit>(row, col).fChi2 > 0)
                                 {
-                                    float ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fIntercept,
-                                                                            cChip->getChannel<GainFit>(row, col).fSlope,
-                                                                            cChip->getChannel<GainFit>(row, col).fQuadratic,
-                                                                            cChip->getChannel<GainFit>(row, col).fLog},
-                                                                           target);
+                                    float ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fIntercept, cChip->getChannel<GainFit>(row, col).fSlope}, target);
                                     avg += ToTatTarget;
                                     stdDev += ToTatTarget * ToTatTarget;
                                     cnt++;

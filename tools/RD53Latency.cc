@@ -154,7 +154,6 @@ void Latency::draw(bool saveData)
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Latency::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif

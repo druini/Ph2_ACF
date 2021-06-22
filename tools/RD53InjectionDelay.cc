@@ -222,7 +222,6 @@ void InjectionDelay::draw()
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     InjectionDelay::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif

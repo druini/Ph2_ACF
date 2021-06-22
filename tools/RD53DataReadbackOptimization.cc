@@ -174,7 +174,6 @@ void DataReadbackOptimization::draw(bool saveData)
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     DataReadbackOptimization::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif

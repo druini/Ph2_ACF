@@ -25,6 +25,7 @@ class InjectionDelay : public PixelAlive
     ~InjectionDelay()
     {
 #ifdef __USE_ROOT__
+        this->WriteRootFile();
         this->CloseResultFile();
 #endif
     }

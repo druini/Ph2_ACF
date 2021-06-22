@@ -176,7 +176,6 @@ void Physics::draw()
 
     Physics::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif

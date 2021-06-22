@@ -28,6 +28,7 @@ class VoltageTuning : public Tool
     ~VoltageTuning()
     {
 #ifdef __USE_ROOT__
+        this->WriteRootFile();
         this->CloseResultFile();
 #endif
     }

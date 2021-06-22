@@ -13,6 +13,8 @@ using namespace Ph2_HwDescription;
 
 void GenericDacDacScanHistograms::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
+    const std::vector<int> CDRfreq = {140, 145, 150, 155, 160, 165, 170, 176, 180}; // @CONST@
+
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
     // #######################
@@ -80,8 +82,12 @@ void GenericDacDacScanHistograms::fillOccupancy(const DetectorDataContainer& Occ
                 {
                     if(cChip->getSummaryContainer<GenericDataArray<GenericDacDacScanSize>>() == nullptr) continue;
 
-                    auto* Occupancy2DHist =
-                        Occupancy2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* Occupancy2DHist = Occupancy2D.getObject(cBoard->getId())
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getObject(cChip->getId())
+                                                ->getSummary<CanvasContainer<TH1F>>()
+                                                .fTheHistogram;
 
                     for(auto i = 0; i < Occupancy2DHist->GetNbinsX(); i++)
                         for(auto j = 0; j < Occupancy2DHist->GetNbinsY(); j++)
@@ -98,10 +104,18 @@ void GenericDacDacScanHistograms::fillGenericDacDacScan(const DetectorDataContai
                 {
                     if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-                    auto* GenericDac1ScanHist =
-                        GenericDac1Scan.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-                    auto* GenericDac2ScanHist =
-                        GenericDac2Scan.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* GenericDac1ScanHist = GenericDac1Scan.getObject(cBoard->getId())
+                                                    ->getObject(cOpticalGroup->getId())
+                                                    ->getObject(cHybrid->getId())
+                                                    ->getObject(cChip->getId())
+                                                    ->getSummary<CanvasContainer<TH1F>>()
+                                                    .fTheHistogram;
+                    auto* GenericDac2ScanHist = GenericDac2Scan.getObject(cBoard->getId())
+                                                    ->getObject(cOpticalGroup->getId())
+                                                    ->getObject(cHybrid->getId())
+                                                    ->getObject(cChip->getId())
+                                                    ->getSummary<CanvasContainer<TH1F>>()
+                                                    .fTheHistogram;
 
                     GenericDac1ScanHist->Fill(cChip->getSummary<std::pair<uint16_t, uint16_t>>().first);
                     GenericDac2ScanHist->Fill(cChip->getSummary<std::pair<uint16_t, uint16_t>>().second);
@@ -110,7 +124,7 @@ void GenericDacDacScanHistograms::fillGenericDacDacScan(const DetectorDataContai
 
 void GenericDacDacScanHistograms::process()
 {
-    draw<TH2F>(Occupancy2D, "gcolz");
+    draw<TH2F>(Occupancy2D, "gcolz", "frequency", "Frequency (MHz)");
     draw<TH1F>(GenericDac1Scan);
     draw<TH1F>(GenericDac2Scan);
 }

@@ -66,8 +66,12 @@ void ThrEqualizationHistograms::fillOccupancy(const DetectorDataContainer& Occup
                 {
                     if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
 
-                    auto* hThrEqualization =
-                        ThrEqualization.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* hThrEqualization = ThrEqualization.getObject(cBoard->getId())
+                                                 ->getObject(cOpticalGroup->getId())
+                                                 ->getObject(cHybrid->getId())
+                                                 ->getObject(cChip->getId())
+                                                 ->getSummary<CanvasContainer<TH1F>>()
+                                                 .fTheHistogram;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
@@ -88,7 +92,8 @@ void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContai
                 {
                     if(cChip->getChannelContainer<uint16_t>() == nullptr) continue;
 
-                    auto* hTDAC = TDAC.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* hTDAC =
+                        TDAC.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)

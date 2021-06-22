@@ -166,16 +166,16 @@ void PixelAlive::run()
     PixelAlive::chipErrorReport();
 }
 
-void PixelAlive::draw(bool saveData)
+void PixelAlive::draw(bool doSaveData)
 {
-    if(saveData == true) PixelAlive::saveChipRegisters(theCurrentRun);
+    if(doSaveData == true) PixelAlive::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
+    if((doSaveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
         this->InitResultFile(fileRes);
         LOG(INFO) << BOLDBLUE << "\t--> PixelAlive saving histograms..." << RESET;
@@ -184,7 +184,7 @@ void PixelAlive::draw(bool saveData)
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     PixelAlive::fillHisto();
     histos->process();
-    if(saveData == true) this->WriteRootFile();
+    saveData = doSaveData;
 
     if(doDisplay == true) myApp->Run(true);
 #endif
