@@ -1026,10 +1026,10 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
 
             // In the case of IT propagate LpGBT mapping the front-end chip
             uint8_t cChipId = cChild.attribute("Id").as_int();
-            static_cast<RD53*>(cHybrid->at(cChipId))->setRxGroup(cRxGroups[0]);
-            static_cast<RD53*>(cHybrid->at(cChipId))->setRxChannel(cRxChannels[0]);
-            static_cast<RD53*>(cHybrid->at(cChipId))->setTxGroup(cTxGroups[0]);
-            static_cast<RD53*>(cHybrid->at(cChipId))->setTxChannel(cTxChannels[0]);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxGroup(cRxGroups[0]);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxChannel(cRxChannels[0]);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxGroup(cTxGroups[0]);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannels[0]);
         }
     }
 }
