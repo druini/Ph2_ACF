@@ -15,10 +15,10 @@
 #include "../Utils/ContainerStream.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53Shared.h"
-#include "../RootUtils/WrapGraphAsymmErrors.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
+#include <TGraphAsymmErrors.h>
 
 class DataTransmissionTestGraphs : public DQMHistogramBase
 {

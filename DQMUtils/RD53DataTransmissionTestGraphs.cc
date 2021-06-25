@@ -19,20 +19,20 @@ void DataTransmissionTestGraphs::book(TFile* theOutputFile, const DetectorContai
     // #######################
     // # Retrieve parameters #
     // #######################
-    BERtarget      = this->findValueInSettings(settingsMap, "BERtarget");
-    given_time     = this->findValueInSettings(settingsMap, "byTime");
-    frames_or_time = this->findValueInSettings(settingsMap, "framesORtime");
+    BERtarget      = this->findValueInSettings<double>(settingsMap, "BERtarget");
+    given_time     = this->findValueInSettings<double>(settingsMap, "byTime");
+    frames_or_time = this->findValueInSettings<double>(settingsMap, "framesORtime");
 
-    auto hTAP0scan = CanvasContainer<WrapGraphAsymmErrors>(11);
-    bookImplementer(theOutputFile, theDetectorStructure, TAP0scan, hTAP0scan, "TAP0", "Bit Error Rate");
+    auto gTAP0scan = CanvasContainer<TGraphAsymmErrors>(11);
+    bookImplementer(theOutputFile, theDetectorStructure, TAP0scan, gTAP0scan, "TAP0", "Bit Error Rate");
     auto hTAP0tgt  = CanvasContainer<TH1F>("TAP0tgt", "TAP0 at target BER", 1024, 0-0.5, 1024-0.5);
     bookImplementer(theOutputFile, theDetectorStructure, TAP0tgt, hTAP0tgt, "TAP0 at target BER", "Value");
 }
 
 bool DataTransmissionTestGraphs::fill(std::vector<char>& dataBuffer)
 {
-    ChipContainerStream<EmptyContainer, std::array<std::tuple<uint16_t, double, double, double>, 11>> theTAP0scanStreamer("TAP0scan");
-    ChipContainerStream<EmptyContainer, uint16_t>                                                     theTAP0tgtStreamer("TAP0tgteshold");
+    ChipContainerStream<EmptyContainer, std::array<std::tuple<uint16_t, double, double, double>, 11>> theTAP0scanStreamer("DataTransmissionTestTAP0scan");
+    ChipContainerStream<EmptyContainer, uint16_t>                                                     theTAP0tgtStreamer("DataTransmissionTestTAP0tgteshold");
 
     if(theTAP0scanStreamer.attachBuffer(&dataBuffer))
     {
@@ -60,7 +60,7 @@ void DataTransmissionTestGraphs::fillTAP0scan(const DetectorDataContainer& TAP0s
                 for(const auto cChip: *cHybrid)
                 {
                     if(cChip->getSummaryContainer<std::array<std::tuple<uint16_t, double, double, double>, 11>>() == nullptr) continue;
-                    auto *TAP0scanGraph = TAP0scan.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<WrapGraphAsymmErrors>>().fTheHistogram;
+                    auto *TAP0scanGraph = TAP0scan.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TGraphAsymmErrors>>().fTheHistogram;
 
                     for(auto i = 0u; i < 11u; i++) // set bin errors manually
                     {
@@ -72,7 +72,6 @@ void DataTransmissionTestGraphs::fillTAP0scan(const DetectorDataContainer& TAP0s
 		    TAP0scanGraph->SetMarkerStyle(8);
                 }
     }
-
 }
 
 void DataTransmissionTestGraphs::fillTAP0tgt(const DetectorDataContainer& TAP0tgtContainer)
@@ -93,6 +92,6 @@ void DataTransmissionTestGraphs::fillTAP0tgt(const DetectorDataContainer& TAP0tg
 
 void DataTransmissionTestGraphs::process()
 {
-    draw<WrapGraphAsymmErrors>(TAP0scan, "APZ0");
+    draw<TGraphAsymmErrors>(TAP0scan, "APZ0");
     draw<TH1F>(TAP0tgt, "P*");
 }
