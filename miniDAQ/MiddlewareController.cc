@@ -19,6 +19,7 @@
 #include "../tools/RD53ThrAdjustment.h"
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
+#include "../tools/RD53DataTransmissionTest.h"
 #include "../tools/Tool.h"
 #include "MiddlewareController.h"
 //#include "../tools/SSAPhysics.h"
@@ -118,6 +119,8 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
             theSystemController_ = new CombinedCalibration<ClockDelay>;
         else if(getVariableValue("Calibration", buffer) == "physics")
             theSystemController_ = new Physics;
+        else if(getVariableValue("Calibration", buffer) == "datatrtest")
+            theSystemController_ = new CombinedCalibration<DataTransmissionTest>;
 
         else
         {
