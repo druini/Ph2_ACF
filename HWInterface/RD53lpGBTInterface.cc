@@ -269,8 +269,9 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
             }
 
             lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
-            static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // @TMP@
         }
+
+    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // @TMP@
 
     return allGood;
 }
