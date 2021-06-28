@@ -212,8 +212,12 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
 {
     this->setBoard(pBoard->getId());
 
-    std::pair<std::string, uint16_t> nameAndValue(RD53Interface::SplitSpecialRegisters(regName, pBoard->at(0)->at(0)->at(0)->getRegItem(regName), pBoard->at(0)->at(0)->at(0)->getRegMap()));
+    ChipRegItem Reg = pBoard->at(0)->at(0)->at(0)->getRegItem(regName);
+    Reg.fValue      = data;
+
+    std::pair<std::string, uint16_t> nameAndValue(RD53Interface::SplitSpecialRegisters(regName, Reg, pBoard->at(0)->at(0)->at(0)->getRegMap()));
     const uint16_t                   address = pBoard->at(0)->at(0)->at(0)->getRegItem(nameAndValue.first).fAddress;
+
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, address, nameAndValue.second).getFrames(), -1);
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
@@ -287,7 +291,7 @@ std::pair<std::string, uint16_t> RD53Interface::SplitSpecialRegisters(std::strin
             (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) - (RD53Shared::setBits(Reg.fBitSize) << pRD53RegMap["MONITOR_CONFIG_ADC"].fBitSize)));
         regName = "MONITOR_CONFIG";
     }
-    if(regName == "VOLTAGE_TRIM_DIG")
+    else if(regName == "VOLTAGE_TRIM_DIG")
     {
         value   = Reg.fValue | (pRD53RegMap["VOLTAGE_TRIM"].fValue & (RD53Shared::setBits(pRD53RegMap["VOLTAGE_TRIM"].fBitSize) - RD53Shared::setBits(Reg.fBitSize)));
         regName = "VOLTAGE_TRIM";
