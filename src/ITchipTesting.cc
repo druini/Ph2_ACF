@@ -239,7 +239,7 @@ int main(int argc, char** argv)
         }
         else if(whichCalib == "adcscan")
         {
-#ifdef __POWERSUPPLY__
+// #ifdef __POWERSUPPLY__
             // ##################
             // # Run ADCScan #
             // ##################
@@ -250,14 +250,14 @@ int main(int argc, char** argv)
             adc.Inherit(&mySysCntr);
             adc.run(configFile);
             adc.draw();
-#else
-            LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
-            exit(EXIT_FAILURE);
-#endif	
+// #else
+//             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
+//             exit(EXIT_FAILURE);
+// #endif	
         }
         else if(whichCalib == "dacscan")
         {
-#ifdef __POWERSUPPLY__
+// #ifdef __POWERSUPPLY__
             // ##################
             // # Run DACScan #
             // ##################
@@ -268,14 +268,14 @@ int main(int argc, char** argv)
             dac.Inherit(&mySysCntr);
             dac.run(configFile);
             dac.draw();
-#else
-            LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
-            exit(EXIT_FAILURE);
-#endif	
+// #else
+//             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
+//             exit(EXIT_FAILURE);
+// #endif	
         }
         else if(whichCalib == "tempsens")
         {
-#ifdef __POWERSUPPLY__
+// #ifdef __POWERSUPPLY__
             // ##################
             // # Run TempSensor #
             // ##################
@@ -286,10 +286,10 @@ int main(int argc, char** argv)
             tsn.Inherit(&mySysCntr);
             tsn.run(configFile);
             tsn.draw();
-#else
-            LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
-            exit(EXIT_FAILURE);
-#endif	
+// #else
+//             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
+//             exit(EXIT_FAILURE);
+// #endif	
         }
         else if((program == false) && (whichCalib != ""))
         {

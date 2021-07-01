@@ -11,31 +11,37 @@
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
+using namespace Ph2_ITchipTesting;
 
 void TempSensor::run(std::string configFile)
 {
-#ifdef __POWERSUPPLY__
+// #ifdef __POWERSUPPLY__
 
-    pugi::xml_document docSettings;
-    std::string cPowerSupply = "TestKeithley";
+//     pugi::xml_document docSettings;
+//     std::string cPowerSupply = "TestKeithley";
 
-    DeviceHandler ps_deviceHandler;
-    ps_deviceHandler.readSettings(configFile, docSettings);
+//     DeviceHandler ps_deviceHandler;
+//     ps_deviceHandler.readSettings(configFile, docSettings);
 
-    PowerSupply* ps = ps_deviceHandler.getPowerSupply(cPowerSupply);
-    // PowerSupplyChannel* dPowerSupply = ps->getChannel("Front");
+//     PowerSupply* ps = ps_deviceHandler.getPowerSupply(cPowerSupply);
+//     // PowerSupplyChannel* dPowerSupply = ps->getChannel("Front");
 
-    KeithleyChannel* dKeithley2410 = static_cast<KeithleyChannel*>(ps->getChannel("Front"));
+//     KeithleyChannel* dKeithley2410 = static_cast<KeithleyChannel*>(ps->getChannel("Front"));
 
-    //Configure Keithley for voltage measurements
-    dKeithley2410->turnOff();
-    dKeithley2410->setCurrentMode();
-    // dKeithley2410->setCurrentRange(1e-6); // is private..
-    dKeithley2410->setParameter("Isrc_range", (float)1e-6);
-    dKeithley2410->setCurrent(0.0);
-    dKeithley2410->setVoltageCompliance(2.0);
+//     //Configure Keithley for voltage measurements
+//     dKeithley2410->turnOff();
+//     dKeithley2410->setCurrentMode();
+//     // dKeithley2410->setCurrentRange(1e-6); // is private..
+//     dKeithley2410->setParameter("Isrc_range", (float)1e-6);
+//     dKeithley2410->setCurrent(0.0);
+//     dKeithley2410->setVoltageCompliance(2.0);
 
-    dKeithley2410->turnOn();
+//     dKeithley2410->turnOn();
+
+	ITchipTestingInterface chipTestingInterface(fPowerSupplyClient);
+
+	chipTestingInterface.setupKeithley2410ChannelSense("TestKeithley", "Front", VOLTAGESENSE, 2.0);
+
     // #########################
     // # Mark enabled channels #
     // #########################
@@ -118,7 +124,7 @@ void TempSensor::run(std::string configFile)
 										sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 0, true, sensorDEM, 0);
 										RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_0", sensorConfigData);
 										RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_1", sensorConfigData);
-										valueHigh += dKeithley2410->getOutputVoltage();
+										valueHigh += chipTestingInterface.getVoltage("TestKeithley", "Front"); //dKeithley2410->getOutputVoltage();
 									}
 									valueHigh = valueHigh/3;
 									
@@ -128,7 +134,7 @@ void TempSensor::run(std::string configFile)
 										sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 1, true, sensorDEM, 1);
 										RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_0", sensorConfigData);
 										RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_1", sensorConfigData);
-										valueLow += dKeithley2410->getOutputVoltage();
+										valueLow += chipTestingInterface.getVoltage("TestKeithley", "Front"); //dKeithley2410->getOutputVoltage();
 									}
 									valueLow = valueLow/3;
 									
@@ -151,7 +157,7 @@ void TempSensor::run(std::string configFile)
 								sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 0, true, sensorDEM, 0);
 								RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_0", sensorConfigData);
 								RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_1", sensorConfigData);
-								valueHigh += dKeithley2410->getOutputVoltage();
+								valueHigh += chipTestingInterface.getVoltage("TestKeithley", "Front"); //dKeithley2410->getOutputVoltage();
 							}
 							valueHigh = valueHigh/3;
 							
@@ -161,7 +167,7 @@ void TempSensor::run(std::string configFile)
 								sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 1, true, sensorDEM, 1);
 								RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_0", sensorConfigData);
 								RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_1", sensorConfigData);
-								valueLow += dKeithley2410->getOutputVoltage();
+								valueLow += chipTestingInterface.getVoltage("TestKeithley", "Front"); //dKeithley2410->getOutputVoltage();
 							}
 							valueLow = valueLow/3;
 							
@@ -171,7 +177,7 @@ void TempSensor::run(std::string configFile)
 					}
 				}
 			}
-#endif
+// #endif
 }
 
 void TempSensor::draw()

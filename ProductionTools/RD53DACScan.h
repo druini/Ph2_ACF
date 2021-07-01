@@ -11,13 +11,14 @@
 #define RD53DACScan_H
 
 #include "../tools/Tool.h"
+#include "ITchipTestingInterface.h"
 
-#ifdef __POWERSUPPLY__
-#include "DeviceHandler.h"
-#include "PowerSupply.h"
-#include "PowerSupplyChannel.h"
-#include "Keithley.h"
-#endif
+// #ifdef __POWERSUPPLY__
+// #include "DeviceHandler.h"
+// #include "PowerSupply.h"
+// #include "PowerSupplyChannel.h"
+// #include "Keithley.h"
+// #endif
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53DACScanHistograms.h"

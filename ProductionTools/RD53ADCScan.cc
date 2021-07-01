@@ -11,31 +11,36 @@
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
+using namespace Ph2_ITchipTesting;
 
 void ADCScan::run(std::string configFile)
 {
-#ifdef __POWERSUPPLY__
+// #ifdef __POWERSUPPLY__
 
-    pugi::xml_document docSettings;
-    std::string cPowerSupply = "TestKeithley";
+//     pugi::xml_document docSettings;
+//     std::string cPowerSupply = "TestKeithley";
 
-    DeviceHandler ps_deviceHandler;
-    ps_deviceHandler.readSettings(configFile, docSettings);
+//     DeviceHandler ps_deviceHandler;
+//     ps_deviceHandler.readSettings(configFile, docSettings);
 
-    PowerSupply* ps = ps_deviceHandler.getPowerSupply(cPowerSupply);
-    // PowerSupplyChannel* dPowerSupply = ps->getChannel("Front");
+//     PowerSupply* ps = ps_deviceHandler.getPowerSupply(cPowerSupply);
+//     // PowerSupplyChannel* dPowerSupply = ps->getChannel("Front");
 
-    KeithleyChannel* dKeithley2410 = static_cast<KeithleyChannel*>(ps->getChannel("Front"));
+//     KeithleyChannel* dKeithley2410 = static_cast<KeithleyChannel*>(ps->getChannel("Front"));
 
-    //Configure Keithley for voltage measurements
-    dKeithley2410->turnOff();
-    dKeithley2410->setCurrentMode();
-    // dKeithley2410->setCurrentRange(1e-6); // is private..
-    dKeithley2410->setParameter("Isrc_range", (float)1e-6);
-    dKeithley2410->setCurrent(0.0);
-    dKeithley2410->setVoltageCompliance(2.0);
+//     //Configure Keithley for voltage measurements
+//     dKeithley2410->turnOff();
+//     dKeithley2410->setCurrentMode();
+//     // dKeithley2410->setCurrentRange(1e-6); // is private..
+//     dKeithley2410->setParameter("Isrc_range", (float)1e-6);
+//     dKeithley2410->setCurrent(0.0);
+//     dKeithley2410->setVoltageCompliance(2.0);
 
-    dKeithley2410->turnOn();
+//     dKeithley2410->turnOn();
+
+	ITchipTestingInterface chipTestingInterface(fPowerSupplyClient);
+
+	chipTestingInterface.setupKeithley2410ChannelSense("TestKeithley", "Front", VOLTAGESENSE, 2.0);
 	
     // #########################
     // # Mark enabled channels #
@@ -58,9 +63,11 @@ void ADCScan::run(std::string configFile)
 								INLcode[variable] = new double[5000];
 							}
 							static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteChipReg(cChip,writeVar[variable],input);
-							ADCcode[variable][input] = RD53ChipInterface->convertVorI2ADC(cChip, RD53ChipInterface->ReadChipMonitor(cChip,readVar[variable]));
+							ADCcode[variable][input]  = RD53ChipInterface->ReadChipADC(cChip, readVar[variable]);
+							//RD53ChipInterface->convertVorI2ADC(cChip, RD53ChipInterface->ReadChipMonitor(cChip,readVar[variable]));
 							
-							VMUXvolt[variable][input]=dKeithley2410->getOutputVoltage();
+							VMUXvolt[variable][input] = chipTestingInterface.getVoltage("TestKeithley", "Front");
+							//dKeithley2410->getOutputVoltage();
 							//LOG(INFO) << BOLDBLUE << "VMUXvolt[input]        = " << BOLDYELLOW <<  VMUXvolt[variable][input] << " " << RESET;
 							
 							if(input>1){
@@ -82,7 +89,7 @@ void ADCScan::run(std::string configFile)
 						}
 					}
 				}
-#endif
+// #endif
 }
 
 void ADCScan::draw(bool saveData)
