@@ -14,9 +14,10 @@
 #include "../Utils/argvparser.h"
 
 #include "../tools/RD53PixelAlive.h"
-// #include "../tools/RD53ADCHistogram.h"
-// #include "../tools/RD53RingOscillator.h"
-// #include "../tools/RD53TempSensor.h"
+
+#include "../ProductionTools/RD53ADCHistogram.h"
+#include "../ProductionTools/RD53RingOscillator.h"
+// #include "../ProductionTools/RD53TempSensor.h"
 
 #include <chrono>
 #include <thread>
@@ -189,32 +190,32 @@ int main(int argc, char** argv)
             pa.analyze();
             pa.draw();
         }
-        // else if(whichCalib == "adchist")
-        // {
-        //     // ##################
-        //     // # Run ADCHistogram #
-        //     // ##################
-        //     LOG(INFO) << BOLDMAGENTA << "@@@ Performing ADCHistogram @@@" << RESET;
+        else if(whichCalib == "adchist")
+        {
+            // ##################
+            // # Run ADCHistogram #
+            // ##################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing ADCHistogram @@@" << RESET;
 
-        //     std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ADCHistogram");
-        //     ADCHistogram      adch;
-        //     adch.Inherit(&mySysCntr);
-        //     adch.run();
-        //     adch.draw();
-        // }
-        // else if(whichCalib == "ringosc")
-        // {
-        //     // ##################
-        //     // # Run RingOscillator #
-        //     // ##################
-        //     LOG(INFO) << BOLDMAGENTA << "@@@ Performing RingOscillator @@@" << RESET;
+            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ADCHistogram");
+            ADCHistogram      adch;
+            adch.Inherit(&mySysCntr);
+            adch.run();
+            adch.draw();
+        }
+        else if(whichCalib == "ringosc")
+        {
+            // ##################
+            // # Run RingOscillator #
+            // ##################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing RingOscillator @@@" << RESET;
 
-        //     std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_RingOscillator");
-        //     RingOscillator      ros;
-        //     ros.Inherit(&mySysCntr);
-        //     ros.run();
-        //     ros.draw();
-        // }
+            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_RingOscillator");
+            RingOscillator      ros;
+            ros.Inherit(&mySysCntr);
+            ros.run();
+            ros.draw();
+        }
         else if(whichCalib == "adcps")
         {
 // #ifdef __POWERSUPPLY__
