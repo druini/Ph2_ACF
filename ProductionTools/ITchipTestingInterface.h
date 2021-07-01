@@ -38,6 +38,8 @@ class ITchipTestingInterface
     bool setupKeithley2410ChannelSense(std::string psName, std::string chName, uint16_t mode, float senseCompliance, bool turnOn=true);
     bool setupKeithley2410ChannelSource(std::string psName, std::string chName, uint16_t mode, float sourceValue, float senseCompliance, bool turnOn=true);
     
+    bool setVoltageK2410(std::string psName, std::string chName, float voltage);
+
     bool setVoltage(std::string psName, std::string chName, float voltage);
     float getVoltage(std::string psName, std::string chName);
 

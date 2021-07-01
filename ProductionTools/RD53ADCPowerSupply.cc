@@ -80,11 +80,12 @@ void ADCPowerSupply::run(std::string configFile)
 // 							dKeithley2410->setVoltage(input);
 // 							VMUXvolt[int(input/step)] = dKeithley2410->getOutputVoltage();
 // #endif
-							chipTestingInterface.setVoltage("TestKeithley", "Front", input);
+							chipTestingInterface.setVoltageK2410("TestKeithley", "Front", input);
 							std::this_thread::sleep_for(std::chrono::milliseconds(100));
 							VMUXvolt[int(input/step)] = chipTestingInterface.getVoltage("TestKeithley", "Front");
 
-							ADCcode[int(input/step)] = 0; //@TEMP RD53ChipInterface->convertVorI2ADC(cChip, RD53ChipInterface->ReadChipMonitor(cChip,"IMUXoutput"));
+							ADCcode[int(input/step)] = RD53ChipInterface->ReadChipADC(cChip, "IMUXoutput");
+							//RD53ChipInterface->convertVorI2ADC(cChip, RD53ChipInterface->ReadChipMonitor(cChip,"IMUXoutput"));
 							
 							if(int(input/step)>5){
 								if(ADCcode[int(input/step)]!=ADCcode[int(input/step)-5] && fitStart==0){

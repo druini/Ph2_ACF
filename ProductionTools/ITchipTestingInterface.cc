@@ -121,6 +121,14 @@ bool ITchipTestingInterface::setVoltage(std::string psName, std::string chName, 
     return true;
 }
 
+bool ITchipTestingInterface::setVoltageK2410(std::string psName, std::string chName, float voltage)
+{
+    std::string msg = "K2410:SetVoltage,PowerSupplyId:" + psName + ",ChannelId:" + chName +
+                        ",Voltage:" + std::to_string(voltage);
+    fPowerSupplyClient->sendAndReceivePacket(msg);
+    return true;
+}
+
 float ITchipTestingInterface::getVoltage(std::string psName, std::string chName)
 {
     std::string msg = "GetVoltage,PowerSupplyId:" + psName + ",ChannelId:" + chName;
