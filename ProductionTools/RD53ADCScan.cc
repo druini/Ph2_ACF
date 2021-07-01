@@ -38,9 +38,9 @@ void ADCScan::run(std::string configFile)
 
 //     dKeithley2410->turnOn();
 
-	ITchipTestingInterface chipTestingInterface(fPowerSupplyClient);
+	ITpowerSupplyChannelInterface dKeithley2410(fPowerSupplyClient, "TestKeithley", "Front");
 
-	chipTestingInterface.setupKeithley2410ChannelSense("TestKeithley", "Front", VOLTAGESENSE, 2.0);
+	dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
 	
     // #########################
     // # Mark enabled channels #
@@ -66,7 +66,7 @@ void ADCScan::run(std::string configFile)
 							ADCcode[variable][input]  = RD53ChipInterface->ReadChipADC(cChip, readVar[variable]);
 							//RD53ChipInterface->convertVorI2ADC(cChip, RD53ChipInterface->ReadChipMonitor(cChip,readVar[variable]));
 							
-							VMUXvolt[variable][input] = chipTestingInterface.getVoltage("TestKeithley", "Front");
+							VMUXvolt[variable][input] = dKeithley2410.getVoltage();
 							//dKeithley2410->getOutputVoltage();
 							//LOG(INFO) << BOLDBLUE << "VMUXvolt[input]        = " << BOLDYELLOW <<  VMUXvolt[variable][input] << " " << RESET;
 							

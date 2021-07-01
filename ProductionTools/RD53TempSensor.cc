@@ -38,9 +38,9 @@ void TempSensor::run(std::string configFile)
 
 //     dKeithley2410->turnOn();
 
-	ITchipTestingInterface chipTestingInterface(fPowerSupplyClient);
+	ITpowerSupplyChannelInterface dKeithley2410(fPowerSupplyClient, "TestKeithley", "Front");
 
-	chipTestingInterface.setupKeithley2410ChannelSense("TestKeithley", "Front", VOLTAGESENSE, 2.0);
+	dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
 
     // #########################
     // # Mark enabled channels #
@@ -124,7 +124,7 @@ void TempSensor::run(std::string configFile)
 										sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 0, true, sensorDEM, 0);
 										RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_0", sensorConfigData);
 										RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_1", sensorConfigData);
-										valueHigh += chipTestingInterface.getVoltage("TestKeithley", "Front"); //dKeithley2410->getOutputVoltage();
+										valueHigh += dKeithley2410.getVoltage(); //dKeithley2410->getOutputVoltage();
 									}
 									valueHigh = valueHigh/3;
 									
@@ -134,7 +134,7 @@ void TempSensor::run(std::string configFile)
 										sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 1, true, sensorDEM, 1);
 										RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_0", sensorConfigData);
 										RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_1", sensorConfigData);
-										valueLow += chipTestingInterface.getVoltage("TestKeithley", "Front"); //dKeithley2410->getOutputVoltage();
+										valueLow += dKeithley2410.getVoltage(); //dKeithley2410->getOutputVoltage();
 									}
 									valueLow = valueLow/3;
 									
@@ -157,7 +157,7 @@ void TempSensor::run(std::string configFile)
 								sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 0, true, sensorDEM, 0);
 								RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_0", sensorConfigData);
 								RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_1", sensorConfigData);
-								valueHigh += chipTestingInterface.getVoltage("TestKeithley", "Front"); //dKeithley2410->getOutputVoltage();
+								valueHigh += dKeithley2410.getVoltage(); //dKeithley2410->getOutputVoltage();
 							}
 							valueHigh = valueHigh/3;
 							
@@ -167,7 +167,7 @@ void TempSensor::run(std::string configFile)
 								sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 1, true, sensorDEM, 1);
 								RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_0", sensorConfigData);
 								RD53ChipInterface->WriteChipReg(cChip, "SENSOR_CONFIG_1", sensorConfigData);
-								valueLow += chipTestingInterface.getVoltage("TestKeithley", "Front"); //dKeithley2410->getOutputVoltage();
+								valueLow += dKeithley2410.getVoltage(); //dKeithley2410->getOutputVoltage();
 							}
 							valueLow = valueLow/3;
 							

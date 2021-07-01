@@ -38,9 +38,9 @@ void DACScan::run(std::string configFile)
 
 //     dKeithley2410->turnOn();
 
-	ITchipTestingInterface chipTestingInterface(fPowerSupplyClient);
+	ITpowerSupplyChannelInterface dKeithley2410(fPowerSupplyClient, "TestKeithley", "Front");
 
-	chipTestingInterface.setupKeithley2410ChannelSense("TestKeithley", "Front", VOLTAGESENSE, 2.0);
+	dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
 	
     // #########################
     // # Mark enabled channels #
@@ -67,7 +67,7 @@ void DACScan::run(std::string configFile)
 							//Change voltage being read
 							RD53ChipInterface->ReadChipMonitor(cChip,readVar[variable]);
 							
-							VMUXvolt[variable][input]=chipTestingInterface.getVoltage("TestKeithley", "Front"); //dKeithley2410->getOutputVoltage();
+							VMUXvolt[variable][input]=dKeithley2410.getVoltage(); //dKeithley2410->getOutputVoltage();
 							LOG(INFO) << BOLDBLUE << "VMUXvolt[input]        = " << BOLDYELLOW <<  VMUXvolt[variable][input] << " " << RESET;
 							
 							if(input>1){

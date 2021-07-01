@@ -47,9 +47,9 @@ void ADCPowerSupply::run(std::string configFile)
 //     dKeithley2410->turnOn();
 // #endif
 
-	ITchipTestingInterface chipTestingInterface(fPowerSupplyClient);
+	ITpowerSupplyChannelInterface dKeithley2410(fPowerSupplyClient, "TestKeithley", "Front");
 
-	chipTestingInterface.setupKeithley2410ChannelSource("TestKeithley", "Front", VOLTAGESOURCE, 0.0, (float)1e-3);
+	dKeithley2410.setupKeithley2410ChannelSource(VOLTAGESOURCE, 0.0, (float)1e-3);
 	// ITchipTestingInterface::setupKeithley2410ChannelSense("TestKeithley", "Front", VOLTAGESENSE, 1.0);
 
 
@@ -80,9 +80,9 @@ void ADCPowerSupply::run(std::string configFile)
 // 							dKeithley2410->setVoltage(input);
 // 							VMUXvolt[int(input/step)] = dKeithley2410->getOutputVoltage();
 // #endif
-							chipTestingInterface.setVoltageK2410("TestKeithley", "Front", input);
+							dKeithley2410.setVoltageK2410(input);
 							std::this_thread::sleep_for(std::chrono::milliseconds(100));
-							VMUXvolt[int(input/step)] = chipTestingInterface.getVoltage("TestKeithley", "Front");
+							VMUXvolt[int(input/step)] = dKeithley2410.getVoltage();
 
 							ADCcode[int(input/step)] = RD53ChipInterface->ReadChipADC(cChip, "IMUXoutput");
 							//RD53ChipInterface->convertVorI2ADC(cChip, RD53ChipInterface->ReadChipMonitor(cChip,"IMUXoutput"));
@@ -106,7 +106,7 @@ void ADCPowerSupply::run(std::string configFile)
 // #ifdef __POWERSUPPLY__
 // 	dKeithley2410->setVoltage(0.0);
 // #endif
-	chipTestingInterface.setVoltage("TestKeithley", "Front", 0.0);
+	dKeithley2410.setVoltage(0.0);
 }
 
 

@@ -25,25 +25,27 @@ using namespace Ph2_ITchipTesting;
 //     KeithleyChannel* dKeithley2410 = static_cast<KeithleyChannel*>(ps->getChannel("Front"));
 // }
 
-ITchipTestingInterface::ITchipTestingInterface(TCPClient* thePowerSupplyClient) 
+ITpowerSupplyChannelInterface::ITpowerSupplyChannelInterface(TCPClient* thePowerSupplyClient, std::string powerSupplyName, std::string channelID) 
 {
-    fPowerSupplyClient = thePowerSupplyClient;
+    this->fPowerSupplyClient = thePowerSupplyClient;
+    this->powerSupplyName    = powerSupplyName;
+    this->channelID          = channelID;
 
     if(fPowerSupplyClient == nullptr)
         LOG(ERROR) << BOLDRED << "Error parsed power supply TCP client is a nullpointer!" << RESET;
 }
 
-bool ITchipTestingInterface::setupKeithley2410ChannelSense(std::string psName, std::string chName, uint16_t mode, float senseCompliance, bool turnOn) // turnOn=true
+bool ITpowerSupplyChannelInterface::setupKeithley2410ChannelSense(uint16_t mode, float senseCompliance, bool turnOn) // turnOn=true
 {
     // if(fPowerSupplyClient == nullptr)
     
-    this->turnOff(psName, chName);
+    turnOff();
 
     std::string msg;
     switch(mode)
     {
         case CURRENTSENSE:
-            msg = "K2410:setupVsense,PowerSupplyId:" + psName + ",ChannelId:" + chName + "," +
+            msg = "K2410:setupVsense,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID + "," +
                                   "CurrCompl:" + std::to_string(senseCompliance);
             fPowerSupplyClient->sendAndReceivePacket(msg);
 
@@ -53,7 +55,7 @@ bool ITchipTestingInterface::setupKeithley2410ChannelSense(std::string psName, s
             break;
 
         case VOLTAGESENSE:
-            msg = "K2410:setupIsense,PowerSupplyId:" + psName + ",ChannelId:" + chName + "," +
+            msg = "K2410:setupIsense,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID + "," +
                                   "VoltCompl:" + std::to_string(senseCompliance);
             fPowerSupplyClient->sendAndReceivePacket(msg);
 
@@ -68,20 +70,20 @@ bool ITchipTestingInterface::setupKeithley2410ChannelSense(std::string psName, s
     }
 
     if(turnOn)
-        this->turnOn(psName, chName);
+        this->turnOn();
 
     return true;
 }
 
-bool ITchipTestingInterface::setupKeithley2410ChannelSource(std::string psName, std::string chName, uint16_t mode, float sourceValue, float senseCompliance, bool turnOn) // turnOn=true
+bool ITpowerSupplyChannelInterface::setupKeithley2410ChannelSource(uint16_t mode, float sourceValue, float senseCompliance, bool turnOn) // turnOn=true
 {
-    this->turnOff(psName, chName);
+    turnOff();
 
     std::string msg;
     switch(mode)
     {
         case CURRENTSOURCE:
-            msg = "K2410:setupIsource,PowerSupplyId:" + psName + ",ChannelId:" + chName +
+            msg = "K2410:setupIsource,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID +
                                   ",Current:" + std::to_string(sourceValue) + 
                                   ",VoltCompl:" + std::to_string(senseCompliance);
             fPowerSupplyClient->sendAndReceivePacket(msg);
@@ -93,7 +95,7 @@ bool ITchipTestingInterface::setupKeithley2410ChannelSource(std::string psName, 
 
         case VOLTAGESOURCE:
 
-            msg = "K2410:setupVsource,PowerSupplyId:" + psName + ",ChannelId:" + chName +
+            msg = "K2410:setupVsource,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID +
                                   ",Voltage:" + std::to_string(sourceValue) + 
                                   ",CurrCompl:" + std::to_string(senseCompliance);
             fPowerSupplyClient->sendAndReceivePacket(msg);
@@ -108,42 +110,42 @@ bool ITchipTestingInterface::setupKeithley2410ChannelSource(std::string psName, 
     }
 
     if(turnOn)
-        this->turnOn(psName, chName);
+        this->turnOn();
 
     return true;
 }
 
-bool ITchipTestingInterface::setVoltage(std::string psName, std::string chName, float voltage)
+bool ITpowerSupplyChannelInterface::setVoltage(float voltage)
 {
-    std::string msg = "SetVoltage,PowerSupplyId:" + psName + ",ChannelId:" + chName +
+    std::string msg = "SetVoltage,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID +
                         ",Voltage:" + std::to_string(voltage);
     fPowerSupplyClient->sendAndReceivePacket(msg);
     return true;
 }
 
-bool ITchipTestingInterface::setVoltageK2410(std::string psName, std::string chName, float voltage)
+bool ITpowerSupplyChannelInterface::setVoltageK2410(float voltage)
 {
-    std::string msg = "K2410:SetVoltage,PowerSupplyId:" + psName + ",ChannelId:" + chName +
+    std::string msg = "K2410:SetVoltage,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID +
                         ",Voltage:" + std::to_string(voltage);
     fPowerSupplyClient->sendAndReceivePacket(msg);
     return true;
 }
 
-float ITchipTestingInterface::getVoltage(std::string psName, std::string chName)
+float ITpowerSupplyChannelInterface::getVoltage()
 {
-    std::string msg = "GetVoltage,PowerSupplyId:" + psName + ",ChannelId:" + chName;
+    std::string msg = "GetVoltage,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID;
     return std::stof(fPowerSupplyClient->sendAndReceivePacket(msg));
 }
 
-void ITchipTestingInterface::turnOn(std::string psName, std::string chName)
+void ITpowerSupplyChannelInterface::turnOn()
 {
-    std::string msg = "TurnOn,PowerSupplyId:" + psName + ",ChannelId:" + chName;
+    std::string msg = "TurnOn,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID;
     fPowerSupplyClient->sendAndReceivePacket(msg);
 }
 
-void ITchipTestingInterface::turnOff(std::string psName, std::string chName)
+void ITpowerSupplyChannelInterface::turnOff()
 {
     // fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
-    std::string msg = "TurnOff,PowerSupplyId:" + psName + ",ChannelId:" + chName;
+    std::string msg = "TurnOff,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID;
     fPowerSupplyClient->sendAndReceivePacket(msg);
 }

@@ -25,26 +25,28 @@ namespace Ph2_ITchipTesting
 #define VOLTAGESENSE  2
 #define VOLTAGESOURCE 3
 
-class ITchipTestingInterface
+class ITpowerSupplyChannelInterface
 {
   private:
     TCPClient* fPowerSupplyClient;
+    std::string powerSupplyName;
+    std::string channelID;
 
   public: 
-    ITchipTestingInterface(TCPClient* thePowerSupplyClient); 
+    ITpowerSupplyChannelInterface(TCPClient* thePowerSupplyClient, std::string powerSupplyName, std::string channelID); 
 
     void setPowerSupplyClient(TCPClient* thePowerSupplyClient) { fPowerSupplyClient = thePowerSupplyClient; };
 
-    bool setupKeithley2410ChannelSense(std::string psName, std::string chName, uint16_t mode, float senseCompliance, bool turnOn=true);
-    bool setupKeithley2410ChannelSource(std::string psName, std::string chName, uint16_t mode, float sourceValue, float senseCompliance, bool turnOn=true);
+    bool setupKeithley2410ChannelSense (uint16_t mode, float senseCompliance, bool turnOn=true);
+    bool setupKeithley2410ChannelSource(uint16_t mode, float sourceValue, float senseCompliance, bool turnOn=true);
     
-    bool setVoltageK2410(std::string psName, std::string chName, float voltage);
+    bool setVoltageK2410(float voltage);
 
-    bool setVoltage(std::string psName, std::string chName, float voltage);
-    float getVoltage(std::string psName, std::string chName);
+    bool setVoltage(float voltage);
+    float getVoltage();
 
-    void turnOff(std::string psName, std::string chName);
-    void turnOn(std::string psName, std::string chName);
+    void turnOff();
+    void turnOn();
 
 };
 
