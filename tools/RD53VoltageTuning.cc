@@ -96,8 +96,8 @@ void VoltageTuning::run()
     float     targetDig_ = targetDig;
     float     targetAna_ = targetAna;
 
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theAnaContainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theDigContainer);
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theAnaContainer);
 
     auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
@@ -246,7 +246,12 @@ void VoltageTuning::run()
         // ##################
         // # Reset sequence #
         // ##################
-        for(const auto cBoard: *fDetectorContainer) RD53ChipInterface->InitRD53Downlink(cBoard);
+        for(const auto cBoard: *fDetectorContainer)
+        {
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetBoard();
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ConfigureBoard(cBoard);
+            RD53ChipInterface->InitRD53Downlink(cBoard);
+        }
     }
 
     if(doRepeat == true) LOG(ERROR) << BOLDRED << "The calibration was not able to run successfully on all chips" << RESET;

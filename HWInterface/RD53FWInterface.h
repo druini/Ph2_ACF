@@ -77,6 +77,7 @@ class RD53FWInterface : public BeBoardFWInterface
                                     const Ph2_HwDescription::BeBoard* pBoard                = nullptr,
                                     ReadoutChipInterface*             pReadoutChipInterface = nullptr,
                                     const bool                        doReset               = false);
+    void     ResetBoard();
     uint32_t ReadArbitraryRegister(const std::string& regName);
 
     // ####################################
@@ -208,7 +209,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void                  PrintFWstatus();
     void                  TurnOffFMC();
     void                  TurnOnFMC();
-    void                  ResetBoard();
     void                  ResetFastCmdBlk();
     void                  ResetSlowCmdBlk();
     void                  ResetReadoutBlk();
