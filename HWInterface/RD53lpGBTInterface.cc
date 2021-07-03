@@ -54,15 +54,18 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     }
     LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[PUSMStatus] << RESET;
 
-    // ###############################
-    // # Configure Up and Down links #
-    // ###############################
+    // ######################
+    // # Configure Up links #
+    // ######################
     RD53lpGBTInterface::ConfigureRxGroups(
         pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
-    RD53lpGBTInterface::ConfigureRxChannels(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), 1, 1, 1, 0, 12);
+    RD53lpGBTInterface::ConfigureRxChannels(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), 1, 1, 1, static_cast<lpGBT*>(pChip)->getRxHSLPolarity(), 12);
 
+    // ########################
+    // # Configure Down links #
+    // ########################
     RD53lpGBTInterface::ConfigureTxGroups(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), fTxDataRateMap[static_cast<lpGBT*>(pChip)->getTxDataRate()]);
-    RD53lpGBTInterface::ConfigureTxChannels(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), 3, 3, 0, 0, 1);
+    RD53lpGBTInterface::ConfigureTxChannels(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), 3, 3, 0, 0, static_cast<lpGBT*>(pChip)->getTxHSLPolarity());
 
     // ####################################################
     // # Programming registers as from configuration file #
