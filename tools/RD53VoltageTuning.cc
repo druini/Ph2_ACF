@@ -101,6 +101,10 @@ void VoltageTuning::run()
 
     auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
+    auto chipSubset = [](const ChipContainer* theChip) { return theChip->isEnabled(); };
+    fDetectorContainer->setReadoutChipQueryFunction(chipSubset);
+    fDetectorContainer->setEnabledAll(true);
+
     for(auto nAttempt = 0; nAttempt < RD53Shared::MAXATTEMPTS; nAttempt++)
     {
         doRepeat = false;
@@ -256,6 +260,7 @@ void VoltageTuning::run()
 
     if(doRepeat == true) LOG(ERROR) << BOLDRED << "The calibration was not able to run successfully on all chips" << RESET;
 
+    fDetectorContainer->resetReadoutChipQueryFunction();
     fDetectorContainer->setEnabledAll(true);
 }
 
