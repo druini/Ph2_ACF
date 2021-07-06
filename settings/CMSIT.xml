@@ -202,8 +202,8 @@
 
     <Setting name="VDDDTrimTarget">    1.30 </Setting>
     <Setting name="VDDATrimTarget">    1.20 </Setting>
-    <Setting name="VDDDTrimTolerance"> 0.01 </Setting>
-    <Setting name="VDDATrimTolerance"> 0.01 </Setting>
+    <Setting name="VDDDTrimTolerance"> 0.02 </Setting>
+    <Setting name="VDDATrimTolerance"> 0.02 </Setting>
 
     <Setting name="nTRIGxEvent">         10 </Setting>
     <Setting name="INJtype">              1 </Setting>
