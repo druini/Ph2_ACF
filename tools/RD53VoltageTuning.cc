@@ -92,7 +92,8 @@ void VoltageTuning::run()
 {
     const int conversionFactor = 2; // @CONST@
     const int NSIGMA           = 3; // @CONST@
-    bool      doRepeat;
+    bool      doRepeatDig;
+    bool      doRepeatAna;
     float     targetDig_ = targetDig;
     float     targetAna_ = targetAna;
 
@@ -107,7 +108,8 @@ void VoltageTuning::run()
 
     for(auto nAttempt = 0; nAttempt < RD53Shared::MAXATTEMPTS; nAttempt++)
     {
-        doRepeat = false;
+        doRepeatDig = false;
+        doRepeatAna = false;
 
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
@@ -121,7 +123,7 @@ void VoltageTuning::run()
                         // ##############
 
                         LOG(INFO) << GREEN << "VDDD tuning for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << +cChip->getId() << std::setprecision(2) << RESET << GREEN << "] starts with target value = " << BOLDYELLOW << targetDig_ << RESET << GREEN
+                                  << +cChip->getId() << std::setprecision(3) << RESET << GREEN << "] starts with target value = " << BOLDYELLOW << targetDig_ << RESET << GREEN
                                   << " and tolerance = " << BOLDYELLOW << toleranceDig << RESET;
 
                         std::vector<float> trimVoltageDig;
@@ -154,12 +156,12 @@ void VoltageTuning::run()
                         int minDigIndex    = std::min_element(trimVoltageDig.begin(), trimVoltageDig.end()) - trimVoltageDig.begin();
                         int vdddNewSetting = trimVoltageDigIndex[minDigIndex];
 
-                        LOG(INFO) << GREEN << "VDDD best setting: " << BOLDYELLOW << vdddNewSetting << std::setprecision(2) << RESET << GREEN << ", difference with respect to target = " << BOLDYELLOW
+                        LOG(INFO) << GREEN << "VDDD best setting: " << BOLDYELLOW << vdddNewSetting << std::setprecision(3) << RESET << GREEN << ", difference with respect to target = " << BOLDYELLOW
                                   << trimVoltageDig[minDigIndex] << RESET << GREEN << " V" << RESET;
 
-                        if(it == scanrangeDig.size())
+                        if(trimVoltageDig[minDigIndex] > toleranceDig)
                         {
-                            doRepeat = true;
+                            doRepeatDig = true;
                             LOG(WARNING) << GREEN << "Optimal value not found: " << BOLDYELLOW << "RETRY" << RESET;
                             break;
                         }
@@ -171,7 +173,7 @@ void VoltageTuning::run()
                         // ##############
 
                         LOG(INFO) << GREEN << "VDDA tuning for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << +cChip->getId() << std::setprecision(2) << RESET << GREEN << "] starts with target value = " << BOLDYELLOW << targetAna_ << RESET << GREEN
+                                  << +cChip->getId() << std::setprecision(3) << RESET << GREEN << "] starts with target value = " << BOLDYELLOW << targetAna_ << RESET << GREEN
                                   << " and tolerance = " << BOLDYELLOW << toleranceAna << RESET << GREEN << " and with VDDD = " << BOLDYELLOW << vdddNewSetting << RESET;
 
                         std::vector<float> trimVoltageAna;
@@ -204,12 +206,12 @@ void VoltageTuning::run()
                         int minAnaIndex    = std::min_element(trimVoltageAna.begin(), trimVoltageAna.end()) - trimVoltageAna.begin();
                         int vddaNewSetting = trimVoltageAnaIndex[minAnaIndex];
 
-                        LOG(INFO) << GREEN << "VDDA best setting: " << BOLDYELLOW << vddaNewSetting << std::setprecision(2) << RESET << GREEN << ", difference with respect to target = " << BOLDYELLOW
+                        LOG(INFO) << GREEN << "VDDA best setting: " << BOLDYELLOW << vddaNewSetting << std::setprecision(3) << RESET << GREEN << ", difference with respect to target = " << BOLDYELLOW
                                   << trimVoltageAna[minAnaIndex] << RESET << GREEN << " V" << RESET;
 
-                        if(it == scanrangeAna.size())
+                        if(trimVoltageAna[minAnaIndex] > toleranceAna)
                         {
-                            doRepeat = true;
+                            doRepeatAna = true;
                             LOG(WARNING) << GREEN << "Optimal value not found: " << BOLDYELLOW << "RETRY" << RESET;
                             break;
                         }
@@ -228,14 +230,14 @@ void VoltageTuning::run()
                         auto finalVDDA = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_ana_ShuLDO") * conversionFactor;
 
                         LOG(INFO) << CYAN << "Final voltage readings after tuning" << RESET;
-                        LOG(INFO) << BOLDBLUE << "\t--> Final VDDD reading = " << std::setprecision(2) << BOLDYELLOW << finalVDDD << BOLDYELLOW << " V" << RESET;
-                        LOG(INFO) << BOLDBLUE << "\t--> Final VDDA reading = " << std::setprecision(2) << BOLDYELLOW << finalVDDA << BOLDYELLOW << " V" << RESET;
+                        LOG(INFO) << BOLDBLUE << "\t--> Final VDDD reading = " << std::setprecision(3) << BOLDYELLOW << finalVDDD << BOLDYELLOW << " V" << RESET;
+                        LOG(INFO) << BOLDBLUE << "\t--> Final VDDA reading = " << std::setprecision(3) << BOLDYELLOW << finalVDDA << BOLDYELLOW << " V" << RESET;
 
                         theDigContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = vdddNewSetting;
                         theAnaContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = vddaNewSetting;
                     }
 
-        if(doRepeat == false)
+        if((doRepeatDig == false) && (doRepeatAna == false))
         {
             if((targetDig_ != targetDig) || (targetAna_ != targetAna))
                 LOG(WARNING) << GREEN << "The original target values could not be achieved --> they were lowered by an automatic procedure" << RESET;
@@ -243,8 +245,8 @@ void VoltageTuning::run()
         }
         else
         {
-            targetDig_ -= toleranceDig * NSIGMA;
-            targetAna_ -= toleranceAna * NSIGMA;
+            if(doRepeatDig == true) targetDig_ -= toleranceDig * NSIGMA;
+            if(doRepeatAna == true) targetAna_ -= toleranceAna * NSIGMA;
         }
 
         // ##################
@@ -258,7 +260,7 @@ void VoltageTuning::run()
         }
     }
 
-    if(doRepeat == true) LOG(ERROR) << BOLDRED << "The calibration was not able to run successfully on all chips" << RESET;
+    if((doRepeatDig == true) || (doRepeatAna == true)) LOG(ERROR) << BOLDRED << "The calibration was not able to run successfully on all chips" << RESET;
 
     fDetectorContainer->resetReadoutChipQueryFunction();
     fDetectorContainer->setEnabledAll(true);
