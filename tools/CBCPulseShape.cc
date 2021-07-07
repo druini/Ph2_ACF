@@ -26,6 +26,8 @@ void CBCPulseShape::Initialise(void)
     fDelayStep      = findValueInSettings<double>("PulseShapeDelayStep", 1);
     fPulseAmplitude = findValueInSettings<double>("PulseShapePulseAmplitude", 150);
     fChannelGroup   = findValueInSettings<double>("PulseShapeChannelGroup", -1);
+    
+    fLimit = 0.02; //larger tollerance for SCurve limits
 
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
