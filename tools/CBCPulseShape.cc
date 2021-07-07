@@ -27,7 +27,7 @@ void CBCPulseShape::Initialise(void)
     fPulseAmplitude = findValueInSettings<double>("PulseShapePulseAmplitude", 150);
     fChannelGroup   = findValueInSettings<double>("PulseShapeChannelGroup", -1);
     
-    fLimit = 0.02; //larger tollerance for SCurve limits
+    fLimit = 0.05; //larger tollerance for SCurve limits
 
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
@@ -71,9 +71,11 @@ void CBCPulseShape::runCBCPulseShape(void)
         uint16_t latencyDAC = fInitialLatency - delay / 25;
         LOG(INFO) << BOLDBLUE << "Scanning VcThr for delay = " << +delayDAC << " and latency = " << +latencyDAC << RESET;
         // setSameDac("TestPulseDel&ChanGroup", reverseBits(delayDAC));
+        // std::cout << "Latency " << +fReadoutChipInterface->ReadChipReg(fDetectorContainer->at(0)->at(0)->at(0)->at(0), "TriggerLatency1") << std::endl;
         setSameDac("TestPulseDelay", delayDAC);
         setSameDac("TriggerLatency", latencyDAC);
-
+        // std::cout << "Latency " << +fReadoutChipInterface->ReadChipReg(fDetectorContainer->at(0)->at(0)->at(0)->at(0), "TriggerLatency1") << std::endl;
+        // findPedestal();
         measureSCurves(findPedestal());
         extractPedeNoise();
 
