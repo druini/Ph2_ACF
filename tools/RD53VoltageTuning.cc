@@ -91,7 +91,7 @@ void VoltageTuning::initializeFiles(const std::string fileRes_, int currentRun)
 void VoltageTuning::run()
 {
     const int conversionFactor = 2; // @CONST@
-    const int NSIGMA           = 3; // @CONST@
+    const int NSIGMA           = 2; // @CONST@
     bool      doRepeatDig;
     bool      doRepeatAna;
     float     targetDig_ = targetDig;
