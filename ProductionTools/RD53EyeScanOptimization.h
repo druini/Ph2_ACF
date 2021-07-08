@@ -10,11 +10,13 @@
 #ifndef RD53EyeScanOptimization_H
 #define RD53EyeScanOptimization_H
 
+#include "../Utils/GenericDataArray.h"
+#include <array>
 #include "RD53EyeDiag.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
-#include "../DQMUtils/RD53DataReadbackOptimizationHistograms.h"
+#include "../DQMUtils/RD53EyeScanOptimizationHistograms.h"
 #include "TH2F.h"
 #endif
 
@@ -37,8 +39,9 @@ class EyeScanOptimization : public EyeDiag
     void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
-    std::unordered_map<std::string,TH1*> histos;
+    EyeScanOptimizationHistograms* histos;
 #endif
+
 
   private:
     size_t rowStart;
@@ -63,10 +66,11 @@ class EyeScanOptimization : public EyeDiag
     DetectorDataContainer theTAP1Container;
     DetectorDataContainer theTAP2scanContainer;
     DetectorDataContainer theTAP2Container;
+    DetectorDataContainer the3DContainer;
 
     void fillHisto();
     void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
-    void scanDac2D(const std::string& regName1, const std::string& regName2, const std::vector<uint16_t>& dacList1, const std::vector<uint16_t>& dacList2, uint32_t nEvents, DetectorDataContainer* theContainer, std::string suffix);
+    void scanDac3D(const std::string& regName1, const std::string& regName2,const std::string& regName3, const std::vector<uint16_t>& dacList1, const std::vector<uint16_t>& dacList2, const std::vector<uint16_t>& dacList3, uint32_t nEvents, DetectorDataContainer* theContainer);
     void chipErrorReport() const;
 
   protected:

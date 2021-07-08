@@ -11,7 +11,7 @@
 #define RD53EyeDiag_H
 
 #include "../Utils/Container.h"
-#include "Tool.h"
+#include "../tools/Tool.h"
 #include <unordered_map>
 #include <boost/algorithm/string.hpp>                                                                                                                                    
 
@@ -56,7 +56,7 @@ class EyeDiag : public Tool
     int         theCurrentRun;
     bool        doDisplay;
     std::vector<std::string> observables={"EHEight", "EWIDth","JITTer RMS","QFACtor","CROSsing"};
-    std::unordered_map<std::string, std::array<float,7>> fResult;
+
 
 
     

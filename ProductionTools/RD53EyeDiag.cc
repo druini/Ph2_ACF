@@ -68,10 +68,10 @@ void EyeDiag::Running()
 
 void EyeDiag::sendData()
 {
-  for (auto & obs : observables){
-    histos[obs]->SetBinContent(1, fResult[obs].at(0));
-    histos[obs]->SetBinError(1, fResult[obs].at(5));
-  }
+  // for (auto & obs : observables){
+  //   histos[obs]->SetBinContent(1, fResult[obs].at(0));
+  //   histos[obs]->SetBinError(1, fResult[obs].at(5));
+  // }
 
 }
 
@@ -128,7 +128,7 @@ void EyeDiag::run(std::string runName)
   };
   
   
-  ContainerFactory::copyAndInitChip<double>(*fDetectorContainer, theEyeDiagContainer);
+  ContainerFactory::copyAndInitChip<std::unordered_map<std::string, std::array<float,7>>>(*fDetectorContainer, theEyeDiagContainer);
   
   for(const auto cBoard: *fDetectorContainer){
     
@@ -136,6 +136,7 @@ void EyeDiag::run(std::string runName)
     for(const auto cOpticalGroup: *cBoard)
       for(const auto cHybrid: *cOpticalGroup)
 	  for(const auto cChip: *cHybrid){
+	    std::unordered_map<std::string, std::array<float,7>> value;
 	    fReadoutChipInterface->StartPRBSpattern(cChip);
 	    std::string results=fPowerSupplyClient->sendAndReceivePacket( "Scope:main:acquireEOM=" + runName );
 
@@ -153,7 +154,17 @@ void EyeDiag::run(std::string runName)
 		  throw std::runtime_error(error.str());
 		}
 		else{
-		  fResult[kMeasurementMap[measurements.at(i)]]=obs_result;
+		  value[kMeasurementMap[measurements.at(i)]]=obs_result;
+		}
+	      }
+	      theEyeDiagContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::unordered_map<std::string, std::array<float,7>>>() = value;
+	      for (auto & obs : observables){
+		if (value[obs].at(1)!=0 && value[obs].at(1)!=1){
+		  LOG(WARNING) << BOLDBLUE << "EyeMonitor did not converge. Error status " << value[obs].at(1) << std::endl;
+		  continue;
+		}
+		if (value[obs].at(1)==1){
+		  LOG(WARNING) << BOLDBLUE << "EyeMonitor result for observable " <<  obs << " not reliable. Error status " << value[obs].at(1) << std::endl;
 		}
 	      }
 	      
