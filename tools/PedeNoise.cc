@@ -527,6 +527,16 @@ void PedeNoise::extractPedeNoise()
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise - (chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold *
                                                                                                                                             chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold));
+                        if(isnan(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise) || isinf(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise))
+                        {
+                            LOG(WARNING) << BOLDYELLOW << "Problem in deriving noise for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId() << " ReadoutChip " << chip->getId() << " Channel " << iChannel << ", forcing it to 0." << RESET;
+                            chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = 0.;
+                        }
+                        if(isnan(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold) || isinf(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold))
+                        {
+                            LOG(WARNING) << BOLDYELLOW << "Problem in deriving threshold for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId() << " ReadoutChip " << chip->getId() << " Channel " << iChannel << ", forcing it to 0." << RESET;
+                            chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold = 0.;
+                        }
                         chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError = 1;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoiseError     = 1;
                     }

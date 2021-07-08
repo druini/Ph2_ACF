@@ -65,6 +65,7 @@ class PedeNoise : public Tool
     float    fLimit        {0.005};
 
     DetectorDataContainer* fThresholdAndNoiseContainer;
+    std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
 
   private:
     // to hold the original register values
@@ -86,7 +87,6 @@ class PedeNoise : public Tool
 
     // helpers for SCurve measurement
 
-    std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
 
 #ifdef __USE_ROOT__
