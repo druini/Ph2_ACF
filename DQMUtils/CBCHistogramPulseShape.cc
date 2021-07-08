@@ -43,8 +43,8 @@ void CBCHistogramPulseShape::book(TFile* theOutputFile, const DetectorContainer&
     fPlotPulseShapeSCurves = findValueInSettings<double>(pSettingsMap, "PlotPulseShapeSCurves", 0);
 
     uint32_t numberOfChannels = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
-    int delayNbins       = (fFinalDelay - fInitialDelay) / fDelayStep + 1;
-    fEffectiveFinalDelay = (delayNbins - 1) * fDelayStep + fInitialDelay;
+    int      delayNbins       = (fFinalDelay - fInitialDelay) / fDelayStep + 1;
+    fEffectiveFinalDelay      = (delayNbins - 1) * fDelayStep + fInitialDelay;
 
     float delayHistogramMin = fInitialDelay - fDelayStep / 2.;
     float delayHistogramMax = fEffectiveFinalDelay + fDelayStep / 2.;
@@ -62,11 +62,11 @@ void CBCHistogramPulseShape::book(TFile* theOutputFile, const DetectorContainer&
     {
         for(uint16_t delay = fInitialDelay; delay <= fFinalDelay; delay += fDelayStep)
         {
-            uint16_t delayDAC   = 25 - (delay%25);
-            uint16_t latencyDAC = fInitialLatency - (delay/25);
+            uint16_t delayDAC   = 25 - (delay % 25);
+            uint16_t latencyDAC = fInitialLatency - (delay / 25);
             if(delayDAC == 25)
             {
-                delayDAC = 0;
+                delayDAC   = 0;
                 latencyDAC = latencyDAC + 1;
             }
 
@@ -80,8 +80,6 @@ void CBCHistogramPulseShape::book(TFile* theOutputFile, const DetectorContainer&
             RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorSCurveHistogramMap[std::make_tuple(latencyDAC, delayDAC)], theTH2FSCurve);
         }
     }
-
-    
 }
 
 //========================================================================================================================
@@ -91,7 +89,7 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
     // float binCenterValue = (delay % 25) + (ceil((fFinalDelay-delay) / 25.) -1 ) * 25;
     // float binCenterValue = ceil(fFinalDelay / 25.) * 25 - (delay / 25) * 25. - (25. - delay % 25);
     float binCenterValue = delay;
-    std::cout<<binCenterValue<<std::endl;
+    std::cout << binCenterValue << std::endl;
     // std::cout<<delay << " - " <<  binCenterValue <<  std::endl;
 
     for(auto board: theThresholdAndNoiseContainer) // for on boards - begin
@@ -142,8 +140,13 @@ void CBCHistogramPulseShape::fillSCurvePlots(uint16_t vcthr, uint16_t latency, u
             {
                 for(auto chip: *hybrid)
                 {
-                    TH2F* chipSCurve =
-                        fDetectorSCurveHistogramMap.at(std::make_tuple(latency, delay)).at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* chipSCurve = fDetectorSCurveHistogramMap.at(std::make_tuple(latency, delay))
+                                           .at(board->getIndex())
+                                           ->at(opticalGroup->getIndex())
+                                           ->at(hybrid->getIndex())
+                                           ->at(chip->getIndex())
+                                           ->getSummary<HistContainer<TH2F>>()
+                                           .fTheHistogram;
 
                     if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
                     uint16_t channelNumber = 0;
@@ -152,7 +155,7 @@ void CBCHistogramPulseShape::fillSCurvePlots(uint16_t vcthr, uint16_t latency, u
                         float tmpOccupancy      = channel.fOccupancy;
                         float tmpOccupancyError = channel.fOccupancyError;
                         chipSCurve->SetBinContent(channelNumber + 1, vcthr + 1, tmpOccupancy);
-                        chipSCurve->SetBinError  (channelNumber + 1, vcthr + 1, tmpOccupancyError);
+                        chipSCurve->SetBinError(channelNumber + 1, vcthr + 1, tmpOccupancyError);
                         ++channelNumber;
                     }
                 }
@@ -214,8 +217,7 @@ bool CBCHistogramPulseShape::fill(std::vector<char>& dataBuffer)
 
     // I'm expecting to receive a data stream from an uint32_t contained from calibration "CalibrationExample"
     ChipContainerStream<ThresholdAndNoise, ThresholdAndNoise, uint16_t> thePulseShapeStreamer("CBCPulseShape");
-    ChannelContainerStream<Occupancy, uint16_t, uint16_t, uint16_t>     theSCurve ("CBCPulseShapeSCurve");
-
+    ChannelContainerStream<Occupancy, uint16_t, uint16_t, uint16_t>     theSCurve("CBCPulseShapeSCurve");
 
     // Try to see if the char buffer matched what I'm expection (container of uint32_t from CalibrationExample
     // procedure)

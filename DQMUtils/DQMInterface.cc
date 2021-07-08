@@ -11,6 +11,7 @@
 #include "DQMHistogramPedestalEqualization.h"
 #include "DQMInterface.h"
 #include "RD53ClockDelayHistograms.h"
+#include "RD53DataTransmissionTestGraphs.h"
 #include "RD53GainHistograms.h"
 #include "RD53GainOptimizationHistograms.h"
 #include "RD53InjectionDelayHistograms.h"
@@ -20,7 +21,6 @@
 #include "RD53SCurveHistograms.h"
 #include "RD53ThrEqualizationHistograms.h"
 #include "RD53ThresholdHistograms.h"
-#include "RD53DataTransmissionTestGraphs.h"
 #include "SSAPhysicsHistograms.h"
 
 #include "TFile.h"

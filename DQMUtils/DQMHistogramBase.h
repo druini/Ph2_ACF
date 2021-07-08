@@ -43,7 +43,7 @@ struct sfinae_true_DQMHistogramBase : std::true_type
 };
 
 template <typename T>
-static auto test_SetZTitle(int ) -> sfinae_true_DQMHistogramBase<decltype(std::declval<T>().SetZTitle(""))>;
+static auto test_SetZTitle(int) -> sfinae_true_DQMHistogramBase<decltype(std::declval<T>().SetZTitle(""))>;
 template <typename>
 static auto test_SetZTitle(long) -> std::false_type;
 } // namespace user_detail
@@ -58,10 +58,7 @@ struct has_SetZTitle : decltype(user_detail::test_SetZTitle<T>(0))
 template <typename T, bool hasSetZTitle = false>
 struct CallSetZTitle
 {
-    void operator()(T* thePlot, const char* theTitle)
-    {
-        return;
-    }
+    void operator()(T* thePlot, const char* theTitle) { return; }
 };
 
 // Functor for SetZTitle - case when SetZTitle is defined
@@ -193,13 +190,12 @@ class DQMHistogramBase
                     }
     }
 
-    template<typename T>
+    template <typename T>
     T findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, T defaultValue = T()) const
     {
         auto setting = settingsMap.find(name);
         return (setting != std::end(settingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);
     }
-
 };
 
 #endif

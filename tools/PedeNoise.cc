@@ -62,11 +62,11 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
     fPulseAmplitude              = findValueInSettings<double>("PedeNoisePulseAmplitude", 0);
     fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
-    fUseFixRange                 = findValueInSettings<double>("PedeNoiseUseFixRange" ,    0);
-    fMinThreshold                = findValueInSettings<double>("PedeNoiseMinThreshold",    0);
+    fUseFixRange                 = findValueInSettings<double>("PedeNoiseUseFixRange", 0);
+    fMinThreshold                = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
     fMaxThreshold                = findValueInSettings<double>("PedeNoiseMaxThreshold", 1023);
 
-    fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
+    fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
 
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
@@ -182,10 +182,7 @@ void PedeNoise::sweepSCurves()
         this->enableTestPulse(false);
         forceAllChannels = true;
     }
-    if(!fUseFixRange)
-    {
-        cStartValue = this->findPedestal(forceAllChannels);
-    }
+    if(!fUseFixRange) { cStartValue = this->findPedestal(forceAllChannels); }
     else
     {
         cStartValue = (fMaxThreshold + fMinThreshold) / 2.;
@@ -412,15 +409,15 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
 #endif
 
             LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. "
-                    << "Incrementing limit found counter "
-                    << " -- current value is " << +cLimitCounter << RESET;
+                      << "Incrementing limit found counter "
+                      << " -- current value is " << +cLimitCounter << RESET;
             if(!fUseFixRange)
             {
                 auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
                 if(cDistanceFromTarget <= fLimit)
                 {
                     LOG(DEBUG) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
-                            << " -- current value is " << +cLimitCounter << RESET;
+                               << " -- current value is " << +cLimitCounter << RESET;
                     cLimitCounter++;
                 }
 
@@ -431,8 +428,8 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             }
             else
             {
-                if(cSign  == -1 && cValue == fMinThreshold) cLimitFound = true;
-                if(cSign  ==  1 && cValue == fMaxThreshold) cLimitFound = true;
+                if(cSign == -1 && cValue == fMinThreshold) cLimitFound = true;
+                if(cSign == 1 && cValue == fMaxThreshold) cLimitFound = true;
                 cValue += cSign;
             }
 
@@ -529,12 +526,14 @@ void PedeNoise::extractPedeNoise()
                                                                                                                                             chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold));
                         if(isnan(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise) || isinf(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise))
                         {
-                            LOG(WARNING) << BOLDYELLOW << "Problem in deriving noise for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId() << " ReadoutChip " << chip->getId() << " Channel " << iChannel << ", forcing it to 0." << RESET;
+                            LOG(WARNING) << BOLDYELLOW << "Problem in deriving noise for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId()
+                                         << " ReadoutChip " << chip->getId() << " Channel " << iChannel << ", forcing it to 0." << RESET;
                             chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = 0.;
                         }
                         if(isnan(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold) || isinf(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold))
                         {
-                            LOG(WARNING) << BOLDYELLOW << "Problem in deriving threshold for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId() << " ReadoutChip " << chip->getId() << " Channel " << iChannel << ", forcing it to 0." << RESET;
+                            LOG(WARNING) << BOLDYELLOW << "Problem in deriving threshold for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId()
+                                         << " ReadoutChip " << chip->getId() << " Channel " << iChannel << ", forcing it to 0." << RESET;
                             chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold = 0.;
                         }
                         chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError = 1;

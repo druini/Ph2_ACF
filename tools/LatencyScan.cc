@@ -87,11 +87,11 @@ void LatencyScan::ScanLatency()
     LOG(INFO) << "Scanning Latency ... ";
     uint32_t cIterationCount = 0;
 
-    //Fabio - clean BEGIN
+    // Fabio - clean BEGIN
     setFWTestPulse();
     enableTestPulse(true);
     setSameDac("TestPulsePotNodeSel", 150);
-    //Fabio - clean END
+    // Fabio - clean END
 
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
 

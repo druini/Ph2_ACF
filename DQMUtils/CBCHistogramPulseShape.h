@@ -66,18 +66,18 @@ class CBCHistogramPulseShape : public DQMHistogramBase
     void fillSCurvePlots(uint16_t vcthr, uint16_t latency, uint16_t delay, DetectorDataContainer& fSCurveOccupancy);
 
   private:
-    DetectorDataContainer fDetectorChannelPulseShapeHistograms;
-    DetectorDataContainer fDetectorChipPulseShapeHistograms;
-    DetectorDataContainer fDetectorData;
-    std::map<std::tuple<uint16_t,uint16_t>, DetectorDataContainer> fDetectorSCurveHistogramMap;
-    float                 fInitialVcth{0};
-    float                 fInitialLatency{0};
-    float                 fFinalVcth{0};
-    float                 fVcthStep{0};
-    float                 fInitialDelay{0};
-    float                 fFinalDelay{0};
-    float                 fDelayStep{0};
-    float                 fEffectiveFinalDelay{0};
-    bool                  fPlotPulseShapeSCurves{false};
+    DetectorDataContainer                                           fDetectorChannelPulseShapeHistograms;
+    DetectorDataContainer                                           fDetectorChipPulseShapeHistograms;
+    DetectorDataContainer                                           fDetectorData;
+    std::map<std::tuple<uint16_t, uint16_t>, DetectorDataContainer> fDetectorSCurveHistogramMap;
+    float                                                           fInitialVcth{0};
+    float                                                           fInitialLatency{0};
+    float                                                           fFinalVcth{0};
+    float                                                           fVcthStep{0};
+    float                                                           fInitialDelay{0};
+    float                                                           fFinalDelay{0};
+    float                                                           fDelayStep{0};
+    float                                                           fEffectiveFinalDelay{0};
+    bool                                                            fPlotPulseShapeSCurves{false};
 };
 #endif

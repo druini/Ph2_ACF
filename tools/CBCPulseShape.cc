@@ -27,8 +27,8 @@ void CBCPulseShape::Initialise(void)
     fPulseAmplitude        = findValueInSettings<double>("PulseShapePulseAmplitude", 150);
     fChannelGroup          = findValueInSettings<double>("PulseShapeChannelGroup", -1);
     fPlotPulseShapeSCurves = findValueInSettings<double>("PlotPulseShapeSCurves", 0);
-    
-    fLimit = 0.02; //larger tollerance for SCurve limits
+
+    fLimit = 0.02; // larger tollerance for SCurve limits
 
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
@@ -58,36 +58,33 @@ void CBCPulseShape::runCBCPulseShape(void)
     disableStubLogic();
 
     setSameDac("TestPulsePotNodeSel", fPulseAmplitude);
-    setSameDac("TriggerLatency"     , fInitialLatency);
+    setSameDac("TriggerLatency", fInitialLatency);
 
     // setSameGlobalDac("TestPulsePotNodeSel",  pTPAmplitude);
     LOG(INFO) << BLUE << "Enabled test pulse. " << RESET;
 
     for(uint16_t delay = fInitialDelay; delay <= fFinalDelay; delay += fDelayStep)
     {
-        uint16_t delayDAC   = 25 - (delay%25);
-        uint16_t latencyDAC = fInitialLatency - (delay/25);
+        uint16_t delayDAC   = 25 - (delay % 25);
+        uint16_t latencyDAC = fInitialLatency - (delay / 25);
         if(delayDAC == 25)
         {
-            delayDAC = 0;
+            delayDAC   = 0;
             latencyDAC = latencyDAC + 1;
         }
         LOG(INFO) << BOLDBLUE << "Scanning VcThr for delay = " << +delayDAC << " and latency = " << +latencyDAC << RESET;
-        
+
         setSameDac("TestPulseDelay", delayDAC);
         setSameDac("TriggerLatency", latencyDAC);
-        
+
         measureSCurves(findPedestal());
         extractPedeNoise();
 
 #ifdef __USE_ROOT__
-        LOG(INFO) << BOLDGREEN << "Plotting delay for "<< +delay << RESET;
+        LOG(INFO) << BOLDGREEN << "Plotting delay for " << +delay << RESET;
         fCBCHistogramPulseShape.fillCBCPulseShapePlots(delay, *fThresholdAndNoiseContainer);
-        if(fPlotPulseShapeSCurves) 
-        for(auto & scurveOccupancy : fSCurveOccupancyMap)
-        {
-            fCBCHistogramPulseShape.fillSCurvePlots(scurveOccupancy.first, latencyDAC, delayDAC, *scurveOccupancy.second);
-        }
+        if(fPlotPulseShapeSCurves)
+            for(auto& scurveOccupancy: fSCurveOccupancyMap) { fCBCHistogramPulseShape.fillSCurvePlots(scurveOccupancy.first, latencyDAC, delayDAC, *scurveOccupancy.second); }
 #else
         if(fStreamerEnabled)
         {
@@ -95,8 +92,8 @@ void CBCPulseShape::runCBCPulseShape(void)
             theThresholdAndNoiseStream.setHeaderElement<0>(delay);
 
             for(auto board: *fThresholdAndNoiseContainer) { theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer); }
-            
-            for(auto & scurveOccupancy : fSCurveOccupancyMap)
+
+            for(auto& scurveOccupancy: fSCurveOccupancyMap)
             {
                 auto theScurveOccupancyStream = prepareChannelContainerStreamer<Occupancy, uint16_t, uint16_t, uint16_t>("SCurve");
                 theScurveOccupancyStream.setHeaderElement<0>(scurveOccupancy.first);
