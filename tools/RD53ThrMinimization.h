@@ -25,6 +25,7 @@ class ThrMinimization : public PixelAlive
     ~ThrMinimization()
     {
 #ifdef __USE_ROOT__
+        this->WriteRootFile();
         this->CloseResultFile();
 #endif
     }

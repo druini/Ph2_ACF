@@ -19,7 +19,7 @@ void PixelAliveHistograms::book(TFile* theOutputFile, const DetectorContainer& t
     // #######################
     // # Retrieve parameters #
     // #######################
-    nEvents                = this->findValueInSettings(settingsMap, "nEvents");
+    nEvents                = this->findValueInSettings<double>(settingsMap, "nEvents");
     const size_t ToTsize   = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;

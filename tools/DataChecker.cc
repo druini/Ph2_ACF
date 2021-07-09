@@ -456,8 +456,8 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
 }
 void DataChecker::AsyncTest()
 {
-    uint8_t           cSweepThreshold = this->findValueInSettings("AsyncSweepTh");
-    uint8_t           cThreshold      = this->findValueInSettings("cThreshold");
+    uint8_t           cSweepThreshold = this->findValueInSettings<double>("AsyncSweepTh");
+    uint8_t           cThreshold      = this->findValueInSettings<double>("cThreshold");
     uint8_t           cThresholdStart = (cSweepThreshold == 0) ? cThreshold : 0;
     uint8_t           cThresholdStop  = (cSweepThreshold == 0) ? cThreshold + 5 : 200;
     std::stringstream outp;
@@ -474,7 +474,7 @@ void DataChecker::AsyncTest()
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1);
                         fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
-                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", this->findValueInSettings("AsyncCalDac"));
+                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", this->findValueInSettings<double>("AsyncCalDac"));
                     }
                 }
             }
@@ -482,7 +482,7 @@ void DataChecker::AsyncTest()
             // read counters
             BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
             LOG(INFO) << BOLDRED << "Reading counters .. " << RESET;
-            this->ReadNEvents(theBoard, this->findValueInSettings("Nevents"));
+            this->ReadNEvents(theBoard, this->findValueInSettings<double>("Nevents"));
             const std::vector<Event*>& cEvents = this->GetEvents();
             for(auto cOpticalGroup: *cBoard)
             {
@@ -616,7 +616,7 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
 }
 void DataChecker::CollectEvents()
 {
-    uint32_t cNevents    = this->findValueInSettings("Nevents");
+    uint32_t cNevents    = this->findValueInSettings<double>("Nevents");
     uint32_t cMaxNevents = 65535;
     for(auto cBoard: *fDetectorContainer)
     {
@@ -1741,11 +1741,11 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
     std::string  cDAQFileName    = "StubCheck.daq";
     FileHandler* cDAQFileHandler = new FileHandler(cDAQFileName, 'w');
 
-    uint8_t cSweepPackageDelay = this->findValueInSettings("SweepPackageDelay");
-    uint8_t cSweepStubDelay    = this->findValueInSettings("SweepStubDelay");
+    uint8_t cSweepPackageDelay = this->findValueInSettings<double>("SweepPackageDelay");
+    uint8_t cSweepStubDelay    = this->findValueInSettings<double>("SweepStubDelay");
 
-    uint8_t cFirmwareTPdelay      = this->findValueInSettings("StubFWTestPulseDelay");
-    uint8_t cFirmwareTriggerDelay = this->findValueInSettings("StubFWTriggerDelay");
+    uint8_t cFirmwareTPdelay      = this->findValueInSettings<double>("StubFWTestPulseDelay");
+    uint8_t cFirmwareTriggerDelay = this->findValueInSettings<double>("StubFWTriggerDelay");
 
     // set-up for TP
     fAllChan                     = true;
@@ -1761,7 +1761,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
 
     // set threshold
     uint8_t  cTestPulseAmplitude = 0xFF - 100;
-    uint16_t cThreshold          = this->findValueInSettings("StubThreshold");
+    uint16_t cThreshold          = this->findValueInSettings<double>("StubThreshold");
     uint8_t  cTPgroup            = 0;
     // enable TP and set TP amplitude
     fTestPulse = true;
@@ -1826,7 +1826,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
             }
         }
 
-        for(int cAttempt = 0; cAttempt < this->findValueInSettings("StubAttempts"); cAttempt++)
+        for(int cAttempt = 0; cAttempt < this->findValueInSettings<double>("StubAttempts"); cAttempt++)
         {
             LOG(INFO) << BOLDMAGENTA << "Attempt#" << +cAttempt << RESET;
             auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
@@ -1900,8 +1900,8 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
 
 void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
 {
-    uint8_t cSweepPackageDelay = this->findValueInSettings("SweepPackageDelay");
-    uint8_t cSweepStubDelay    = this->findValueInSettings("SweepStubDelay");
+    uint8_t cSweepPackageDelay = this->findValueInSettings<double>("SweepPackageDelay");
+    uint8_t cSweepStubDelay    = this->findValueInSettings<double>("SweepStubDelay");
     bool    cWithCIC           = false;
     for(auto cBoard: *fDetectorContainer)
     {

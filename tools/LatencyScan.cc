@@ -11,10 +11,10 @@ LatencyScan::~LatencyScan() {}
 
 void LatencyScan::Initialize()
 {
-    fStartLatency = findValueInSettings("StartLatency", 1);
-    fLatencyRange = findValueInSettings("LatencyRange", 1);
-    fHoleMode     = findValueInSettings("HoleMode", 1);
-    fNevents      = findValueInSettings("Nevents", 10);
+    fStartLatency = findValueInSettings<double>("StartLatency", 1);
+    fLatencyRange = findValueInSettings<double>("LatencyRange", 1);
+    fHoleMode     = findValueInSettings<double>("HoleMode", 1);
+    fNevents      = findValueInSettings<double>("Nevents", 10);
 
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -87,10 +87,11 @@ void LatencyScan::ScanLatency()
     LOG(INFO) << "Scanning Latency ... ";
     uint32_t cIterationCount = 0;
 
-    // //Fabio - clean BEGIN
-    // setFWTestPulse();
-    // setSystemTestPulse(200, 0, true, false);
-    // //Fabio - clean END
+    // Fabio - clean BEGIN
+    setFWTestPulse();
+    enableTestPulse(true);
+    setSameDac("TestPulsePotNodeSel", 150);
+    // Fabio - clean END
 
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
 
@@ -219,7 +220,7 @@ void LatencyScan::StubLatencyScan()
             // here set the stub latency
 
             for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
-            this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
+            this->ReadNEvents(cBeBoard, this->findValueInSettings<double>("Nevents"));
             const std::vector<Event*>& cEvents = this->GetEvents();
             // Loop over Events from this Acquisition
             for(auto& cEvent: cEvents)
@@ -547,7 +548,7 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
             // Take Data for all Hybrids
             // here set the stub latency
             for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
-            this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
+            this->ReadNEvents(cBeBoard, this->findValueInSettings<double>("Nevents"));
             const std::vector<Event*>& cEvents = this->GetEvents();
             // Loop over Events from this Acquisition
             for(auto& cEvent: cEvents)

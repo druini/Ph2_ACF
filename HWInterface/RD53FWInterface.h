@@ -30,6 +30,8 @@ const uint8_t NLANE_HYBRID       = 4;    // Number of lanes per hybrid
 const uint8_t HEADEAR_WRTCMD     = 0xFF; // Header of chip write command sequence
 const uint8_t NBIT_FWVER         = 16;   // Number of bits for the firmware version
 const uint8_t IPBUS_FASTDURATION = 1;    // Duration of a fast command in terms of 40 MHz clk cycles
+
+constexpr float CDR2Freq(float val) { return (140 + val * 5); }
 } // namespace RD53FWconstants
 
 namespace Ph2_HwInterface
@@ -68,8 +70,13 @@ class RD53FWInterface : public BeBoardFWInterface
     void PrintFrequencyLVDS();
     void PrintErrorsLVDS();
 
-    void SelectBERcheckBitORFrame(const uint8_t bitORframe);
-    void WriteArbitraryRegister(const std::string& regName, const uint32_t value);
+    void     SelectBERcheckBitORFrame(const uint8_t bitORframe);
+    void     WriteArbitraryRegister(const std::string&                regName,
+                                    const uint32_t                    value,
+                                    const Ph2_HwDescription::BeBoard* pBoard                = nullptr,
+                                    ReadoutChipInterface*             pReadoutChipInterface = nullptr,
+                                    const bool                        doReset               = false);
+    uint32_t ReadArbitraryRegister(const std::string& regName);
 
     // ####################################
     // # Check AURORA lock on data stream #

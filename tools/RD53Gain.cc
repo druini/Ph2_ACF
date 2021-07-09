@@ -20,21 +20,21 @@ void Gain::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nEvents        = this->findValueInSettings("nEvents");
-    startValue     = this->findValueInSettings("VCalHstart");
-    stopValue      = this->findValueInSettings("VCalHstop");
-    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings("TargetCharge"));
-    nSteps         = this->findValueInSettings("VCalHnsteps");
-    offset         = this->findValueInSettings("VCalMED");
-    nHITxCol       = this->findValueInSettings("nHITxCol");
-    doFast         = this->findValueInSettings("DoFast");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    nEvents        = this->findValueInSettings<double>("nEvents");
+    startValue     = this->findValueInSettings<double>("VCalHstart");
+    stopValue      = this->findValueInSettings<double>("VCalHstop");
+    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
+    nSteps         = this->findValueInSettings<double>("VCalHnsteps");
+    offset         = this->findValueInSettings<double>("VCalMED");
+    nHITxCol       = this->findValueInSettings<double>("nHITxCol");
+    doFast         = this->findValueInSettings<double>("DoFast");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     // ########################
     // # Custom channel group #
@@ -192,16 +192,16 @@ void Gain::run()
     Gain::chipErrorReport();
 }
 
-void Gain::draw(bool saveData)
+void Gain::draw(bool doSaveData)
 {
-    if(saveData == true) Gain::saveChipRegisters(theCurrentRun);
+    if(doSaveData == true) Gain::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
+    if((doSaveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
         this->InitResultFile(fileRes);
         LOG(INFO) << BOLDBLUE << "\t--> Gain saving histograms..." << RESET;
@@ -210,7 +210,7 @@ void Gain::draw(bool saveData)
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Gain::fillHisto();
     histos->process();
-    if(saveData == true) this->WriteRootFile();
+    saveData = doSaveData;
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -266,7 +266,7 @@ void Gain::draw(bool saveData)
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze()
 {
-    float slope, slopeErr, intercept, interceptErr, lowQslope, lowQslopeErr, chi2, DoF;
+    float slope, slopeErr, intercept, interceptErr, lowQslope, lowQslopeErr, lowQintercept, lowQinterceptErr, chi2, DoF;
 
     std::vector<float> par(NGAINPAR, 0);
     std::vector<float> parErr(NGAINPAR, 0);
@@ -319,20 +319,17 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                 // # Run regression #
                                 // ##################
                                 Gain::computeStats(x, y, e, o, par, parErr, chi2, DoF);
-                                intercept    = par[0];
-                                interceptErr = parErr[0];
-                                slope        = par[1];
-                                slopeErr     = parErr[1];
-                                lowQslope    = par[2];
-                                lowQslopeErr = parErr[2];
+                                intercept        = par[0];
+                                interceptErr     = parErr[0];
+                                slope            = par[1];
+                                slopeErr         = parErr[1];
+                                lowQintercept    = par[2];
+                                lowQinterceptErr = parErr[2];
+                                lowQslope        = par[3];
+                                lowQslopeErr     = parErr[3];
 
                                 if(chi2 != 0)
                                 {
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlope =
-                                        slope;
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeError =
-                                        slopeErr;
-
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fIntercept =
                                         intercept;
                                     theGainContainer->at(cBoard->getIndex())
@@ -341,6 +338,24 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                         ->at(cChip->getIndex())
                                         ->getChannel<GainFit>(row, col)
                                         .fInterceptError = interceptErr;
+
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlope =
+                                        slope;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeError =
+                                        slopeErr;
+
+                                    theGainContainer->at(cBoard->getIndex())
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<GainFit>(row, col)
+                                        .fInterceptLowQ = lowQintercept;
+                                    theGainContainer->at(cBoard->getIndex())
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<GainFit>(row, col)
+                                        .fInterceptLowQError = lowQinterceptErr;
 
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeLowQ =
                                         lowQslope;
@@ -409,7 +424,7 @@ void Gain::computeStats(const std::vector<float>& x,
 // # Model: y = f(x) = [0] + [1]*x + [2]*x^2 + [3]*ln(x) #
 // #######################################################
 {
-    int nPar  = NGAINPAR - 1; // @TMP@
+    int nPar  = NGAINPAR - 2; // @TMP@
     int nData = 0;
 
     for(auto i = 0u; i < x.size(); i++)
@@ -474,7 +489,7 @@ void Gain::computeStats(const std::vector<float>& x,
             chi2 = ublas::inner_prod(num, tmpNum);
         }
 
-        if((chi2 == 0) || ((nPar == 4) && (par[3] - parErr[3] < 0)))
+        if((chi2 == 0) || ((nPar == 4) && (par[3] - parErr[3] < 0))) // @TMP@
             nPar--;
         else
             break;
@@ -484,8 +499,13 @@ void Gain::computeStats(const std::vector<float>& x,
     // #############################################
     // # Extract best estimate of low-charge range # // @TMP@
     // #############################################
-    auto it = std::find(o.begin(), o.end(), 1.) - o.begin();
-    if((it != static_cast<int>(o.size())) && (x[it] != 0)) par[NGAINPAR - 1] = y[it] / x[it];
+    auto itHi = std::find_if(o.begin(), o.end(), [&](double val) { return val == 1.0; }) - o.begin();
+    auto itLo = std::find_if(o.begin(), o.end(), [&](double val) { return val >= 0.1; }) - o.begin();
+    if((itHi != itLo) && (itHi != static_cast<int>(o.size())) && (itLo != static_cast<int>(o.size())) && ((x[itHi] - x[itLo]) != 0))
+    {
+        par[NGAINPAR - 1] = (y[itHi] - y[itLo]) / (x[itHi] - x[itLo]);
+        par[NGAINPAR - 2] = y[itHi] - par[NGAINPAR - 1] * x[itHi];
+    }
 }
 
 void Gain::chipErrorReport() const

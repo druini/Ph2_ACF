@@ -17,10 +17,10 @@ void BERtest::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    chain2test     = this->findValueInSettings("chain2Test");
-    given_time     = this->findValueInSettings("byTime");
-    frames_or_time = this->findValueInSettings("framesORtime");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
+    chain2test     = this->findValueInSettings<double>("chain2Test");
+    given_time     = this->findValueInSettings<double>("byTime");
+    frames_or_time = this->findValueInSettings<double>("framesORtime");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
 
     // ##########################################################################################
     // # Select BER counter meaning: number of frames with errors or number of bits with errors #
@@ -155,7 +155,6 @@ void BERtest::draw()
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     BERtest::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif

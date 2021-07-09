@@ -24,16 +24,16 @@ void GenericDacDacScan::ConfigureCalibration()
     // # Retrieve parameters #
     // #######################
     regNameDAC1    = this->findValueInSettings<std::string>("RegNameDAC1");
-    startValueDAC1 = this->findValueInSettings("StartValueDAC1");
-    stopValueDAC1  = this->findValueInSettings("StopValueDAC1");
-    stepDAC1       = this->findValueInSettings("StepDAC1");
+    startValueDAC1 = this->findValueInSettings<double>("StartValueDAC1");
+    stopValueDAC1  = this->findValueInSettings<double>("StopValueDAC1");
+    stepDAC1       = this->findValueInSettings<double>("StepDAC1");
     regNameDAC2    = this->findValueInSettings<std::string>("RegNameDAC2");
-    startValueDAC2 = this->findValueInSettings("StartValueDAC2");
-    stopValueDAC2  = this->findValueInSettings("StopValueDAC2");
-    stepDAC2       = this->findValueInSettings("StepDAC2");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    startValueDAC2 = this->findValueInSettings<double>("StartValueDAC2");
+    stopValueDAC2  = this->findValueInSettings<double>("StopValueDAC2");
+    stepDAC2       = this->findValueInSettings<double>("StepDAC2");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     // ##############################
     // # Initialize dac scan values #
@@ -160,7 +160,6 @@ void GenericDacDacScan::draw()
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     GenericDacDacScan::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -235,7 +234,9 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
         if(isDAC1ChipReg == true)
             for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
         else
-            for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC1, dac1List[i]);
+            for(const auto cBoard: *fDetectorContainer)
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
+                    ->WriteArbitraryRegister(regNameDAC1, dac1List[i], cBoard, this->fReadoutChipInterface, (regNameDAC2.find("cdr") != std::string::npos ? true : false));
 
         for(auto j = 0u; j < dac2List.size(); j++)
         {
@@ -246,7 +247,9 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
             if(isDAC2ChipReg == true)
                 for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC2, dac2List[j]);
             else
-                for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteArbitraryRegister(regNameDAC2, dac2List[j]);
+                for(const auto cBoard: *fDetectorContainer)
+                    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
+                        ->WriteArbitraryRegister(regNameDAC2, dac2List[i], cBoard, this->fReadoutChipInterface, (regNameDAC2.find("cdr") != std::string::npos ? true : false));
 
             // ################
             // # Run analysis #

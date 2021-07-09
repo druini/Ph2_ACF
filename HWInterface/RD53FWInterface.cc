@@ -8,6 +8,7 @@
 */
 
 #include "RD53FWInterface.h"
+#include "RD53Interface.h"
 
 using namespace Ph2_HwDescription;
 
@@ -173,16 +174,18 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ###########################
     uint32_t inputClk = RegManager::ReadReg("user.stat_regs.clkin_rate");
     uint32_t gtxClk   = RegManager::ReadReg("user.stat_regs.gtx_refclk_rate");
-    LOG(INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz" << RESET;
-    LOG(INFO) << GREEN << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz" << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz"
+              << std::setprecision(-1) << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz"
+              << std::setprecision(-1) << RESET;
 
     // @TMP@
     RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 0);
-    uint32_t extCMDclk = RegManager::ReadReg("user.ctrl_regs.ctrl_cdr.cdr_freq_mon");
+    uint32_t extCMDclk = RegManager::ReadReg("user.stat_regs.cdr_freq_mon");
     RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 1);
-    uint32_t extSERclk = RegManager::ReadReg("user.ctrl_regs.ctrl_cdr.cdr_freq_mon");
-    LOG(INFO) << GREEN << "External CMD clock frequency: " << BOLDYELLOW << extCMDclk / 1000. << " MHz" << RESET;
-    LOG(INFO) << GREEN << "External Serializer clock frequency: " << BOLDYELLOW << extSERclk / 1000. << " MHz" << RESET;
+    uint32_t extSERclk = RegManager::ReadReg("user.stat_regs.cdr_freq_mon");
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "External CMD clock frequency: " << BOLDYELLOW << extCMDclk / 1000. << " MHz" << std::setprecision(-1) << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "External Serializer clock frequency: " << BOLDYELLOW << extSERclk / 1000. << " MHz" << std::setprecision(-1) << RESET;
 }
 
 void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
@@ -917,10 +920,9 @@ void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
                                {"user.ctrl_regs.ext_tlu_reg2.dio5_ch5_thr", (uint32_t)cfg->ch5_thr},
                                {"user.ctrl_regs.ext_tlu_reg2.tlu_en", (uint32_t)cfg->tlu_en},
                                {"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)cfg->tlu_handshake_mode},
-                               {"user.ctrl_regs.ext_tlu_reg2.ext_clk_en", (uint32_t)cfg->ext_clk_en},
+                               {"user.ctrl_regs.ext_tlu_reg2.ext_clk_en", (uint32_t)cfg->ext_clk_en}});
 
-                               {"user.ctrl_regs.ext_tlu_reg2.dio5_load_config", 1},
-                               {"user.ctrl_regs.ext_tlu_reg2.dio5_load_config", 0}});
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
 }
 
 // ###################################
@@ -1018,7 +1020,7 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const 
 void RD53FWInterface::PrintFrequencyLVDS()
 {
     uint32_t LVDS = RegManager::ReadReg("user.stat_regs.gp_lvds_freq_mon");
-    LOG(INFO) << GREEN << "LVDS frequency: " << BOLDYELLOW << LVDS / 1000. << " MHz" << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "LVDS frequency: " << BOLDYELLOW << LVDS / 1000. << " MHz" << std::setprecision(-1) << RESET;
 }
 
 void RD53FWInterface::PrintErrorsLVDS()
@@ -1045,12 +1047,21 @@ void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { Reg
 
 void RD53FWInterface::SelectBERcheckBitORFrame(const uint8_t bitORframe) { RegManager::WriteReg("user.ctrl_regs.PRBS_checker.error_cntr_sel", bitORframe); }
 
-void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const uint32_t value)
+void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const uint32_t value, const BeBoard* pBoard, ReadoutChipInterface* pReadoutChipInterface, const bool doReset)
 {
     RegManager::WriteReg(regName, value);
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
+
+    if(doReset == true)
+    {
+        RD53FWInterface::ResetBoard();
+        RD53FWInterface::ConfigureBoard(pBoard);
+        static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
+    }
 }
+
+uint32_t RD53FWInterface::ReadArbitraryRegister(const std::string& regName) { return RegManager::ReadReg(regName); }
 
 // ###########################################
 // # Member functions to handle the firmware #
@@ -1345,10 +1356,8 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     // Set PRBS frames to run
     uint32_t lowFrames, highFrames;
     std::tie(highFrames, lowFrames) = bits::unpack<32, 32>(static_cast<long long>(frames2run));
-    WriteStackReg({{"user.ctrl_regs.prbs_frames_to_run_low", lowFrames},
-                   {"user.ctrl_regs.prbs_frames_to_run_high", highFrames},
-                   {"user.ctrl_regs.PRBS_checker.load_config", 1},
-                   {"user.ctrl_regs.PRBS_checker.load_config", 0}});
+    WriteStackReg({{"user.ctrl_regs.prbs_frames_to_run_low", lowFrames}, {"user.ctrl_regs.prbs_frames_to_run_high", highFrames}});
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.PRBS_checker.load_config");
 
     // #########
     // # Start #

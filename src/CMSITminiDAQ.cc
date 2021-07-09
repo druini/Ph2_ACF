@@ -18,6 +18,7 @@
 #include "../tools/RD53DataReadbackOptimization.h"
 #include "../ProductionTools/RD53EyeScanOptimization.h"
 #include "../ProductionTools/RD53EyeDiag.h"
+#include "../tools/RD53DataTransmissionTest.h"
 #include "../tools/RD53Gain.h"
 #include "../tools/RD53GainOptimization.h"
 #include "../tools/RD53GenericDacDacScan.h"
@@ -125,7 +126,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning, gendacdac]",
+                     "injdelay clkdelay datarbopt datatrtest physics eudaq bertest voltagetuning, gendacdac]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -375,7 +376,7 @@ int main(int argc, char** argv)
             dro.run();
             dro.draw();
         }
-	        else if(whichCalib == "eyescan")
+	else if(whichCalib == "eyescan")
         {
 #ifdef __USE_ROOT__
             // ##################################
@@ -425,6 +426,20 @@ int main(int argc, char** argv)
 #endif
         }
 
+        else if(whichCalib == "datatrtest")
+        {
+            // ##############################
+            // # Run Data Transmission Test #
+            // ##############################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Data Transmission Test @@@" << RESET;
+
+            std::string          fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_DataTransmissionTest");
+            DataTransmissionTest dtt;
+            dtt.Inherit(&mySysCntr);
+            dtt.localConfigure(fileName, runNumber);
+            dtt.run();
+            dtt.draw();
+        }
         else if(whichCalib == "pixelalive")
         {
             // ##################
