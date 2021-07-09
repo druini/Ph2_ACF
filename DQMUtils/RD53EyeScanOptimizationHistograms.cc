@@ -18,12 +18,12 @@ void EyeScanOptimizationHistograms::book(TFile* theOutputFile, const DetectorCon
     // #######################
     // # Retrieve parameters #
     // #######################
-    startValueTAP0 = this->findValueInSettings(settingsMap, "TAP0Start");
-    stopValueTAP0  = this->findValueInSettings(settingsMap, "TAP0Stop");
-    startValueTAP1 = this->findValueInSettings(settingsMap, "TAP1Start");
-    stopValueTAP1  = this->findValueInSettings(settingsMap, "TAP1Stop");
-    startValueTAP2 = this->findValueInSettings(settingsMap, "TAP2Start");
-    stopValueTAP2  = this->findValueInSettings(settingsMap, "TAP2Stop");
+    startValueTAP0 = this->findValueInSettings<double>(settingsMap, "TAP0Start");
+    stopValueTAP0  = this->findValueInSettings<double>(settingsMap, "TAP0Stop");
+    startValueTAP1 = this->findValueInSettings<double>(settingsMap, "TAP1Start");
+    stopValueTAP1  = this->findValueInSettings<double>(settingsMap, "TAP1Stop");
+    startValueTAP2 = this->findValueInSettings<double>(settingsMap, "TAP2Start");
+    stopValueTAP2  = this->findValueInSettings<double>(settingsMap, "TAP2Stop");
 
     std::vector<uint16_t> dacListTAP0;
     size_t nStepsTAP0 = (stopValueTAP0 - startValueTAP0 + 1 >= RD53Shared::MAXSTEPS ? RD53Shared::MAXSTEPS : stopValueTAP0 - startValueTAP0 + 1);
