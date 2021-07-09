@@ -16,7 +16,7 @@
 #include "../tools/RD53BERtest.h"
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53DataReadbackOptimization.h"
-#include "../ProductionTools/EyeScanOptimization.h"
+#include "../ProductionTools/RD53EyeScanOptimization.h"
 #include "../ProductionTools/RD53EyeDiag.h"
 #include "../tools/RD53Gain.h"
 #include "../tools/RD53GainOptimization.h"
@@ -377,6 +377,7 @@ int main(int argc, char** argv)
         }
 	        else if(whichCalib == "eyescan")
         {
+#ifdef __USE_ROOT__
             // ##################################
             // # Run Eye Scan optimization      #
             // ##################################
@@ -388,9 +389,11 @@ int main(int argc, char** argv)
             eso.localConfigure(fileName, runNumber);
             eso.Running();
             eso.draw();
+#endif
         }
         else if(whichCalib == "eyescan2d")
         {
+#ifdef __USE_ROOT__
             // ##################################
             // # Run Eye Scan optimization      #
             // ##################################
@@ -402,10 +405,12 @@ int main(int argc, char** argv)
             eso.localConfigure(fileName, runNumber, true);
             eso.Running();
             eso.draw();
+#endif
         }
 
         else if(whichCalib == "eyediag")
         {
+#ifdef __USE_ROOT__
             // ##################################
             // # Run Eye Scan optimization      #
             // ##################################
@@ -417,6 +422,7 @@ int main(int argc, char** argv)
             ed.localConfigure(fileName, runNumber);
 	    ed.Running();
             ed.draw();
+#endif
         }
 
         else if(whichCalib == "pixelalive")

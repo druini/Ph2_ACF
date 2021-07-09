@@ -31,10 +31,10 @@ void EyeDiag::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    chain2test     = this->findValueInSettings("chain2Test");
-    given_time     = this->findValueInSettings("byTime");
-    frames_or_time = this->findValueInSettings("framesORtime");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
+    chain2test     = this->findValueInSettings<double>("chain2Test");
+    given_time     = this->findValueInSettings<double>("byTime");
+    frames_or_time = this->findValueInSettings<double>("framesORtime");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
 
     if(fPowerSupplyClient == nullptr)
       {
@@ -125,6 +125,13 @@ void EyeDiag::run(std::string runName)
     {"Eye height(cg)" ,"EHEight"   },
     {"Eye width(cg)"  ,"EWIDth"    },
     {"Eye jit p-p(cg)","JITTer PP" },
+    {"rossing %(cg)" ,"CROSsing"  },
+    {"-factor(cg)"   ,"QFACtor"   },
+    {"ye jit RMS(cg)","JITTer RMS"},
+    {"ye height(cg)" ,"EHEight"   },
+    {"ye width(cg)"  ,"EWIDth"    },
+    {"ye jit p-p(cg)","JITTer PP" },
+
   };
   
   

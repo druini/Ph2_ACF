@@ -22,20 +22,20 @@ void EyeScanOptimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nEvents        = this->findValueInSettings("nEvents");
-    startValueTAP0 = this->findValueInSettings("TAP0Start");
-    stopValueTAP0  = this->findValueInSettings("TAP0Stop");
-    startValueTAP1 = this->findValueInSettings("TAP1Start");
-    stopValueTAP1  = this->findValueInSettings("TAP1Stop");
-    startValueTAP2 = this->findValueInSettings("TAP2Start");
-    stopValueTAP2  = this->findValueInSettings("TAP2Stop");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    nEvents        = this->findValueInSettings<double>("nEvents");
+    startValueTAP0 = this->findValueInSettings<double>("TAP0Start");
+    stopValueTAP0  = this->findValueInSettings<double>("TAP0Stop");
+    startValueTAP1 = this->findValueInSettings<double>("TAP1Start");
+    stopValueTAP1  = this->findValueInSettings<double>("TAP1Stop");
+    startValueTAP2 = this->findValueInSettings<double>("TAP2Start");
+    stopValueTAP2  = this->findValueInSettings<double>("TAP2Stop");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     // ##############################
     // # Initialize dac scan values #
