@@ -381,7 +381,7 @@ int main(int argc, char** argv)
             // ##############################
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing Data Transmission Test @@@" << RESET;
 
-            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_DataTransmissionTest");
+            std::string          fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_DataTransmissionTest");
             DataTransmissionTest dtt;
             dtt.Inherit(&mySysCntr);
             dtt.localConfigure(fileName, runNumber);
