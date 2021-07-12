@@ -152,17 +152,21 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const 
     const std::vector<uint8_t> pGroups   = static_cast<lpGBT*>(pChip)->getRxGroups();
     const std::vector<uint8_t> pChannels = static_cast<lpGBT*>(pChip)->getRxChannels();
 
+    // @TMP@
+    if(static_cast<lpGBT*>(pChip)->getPhaseRxAligned() == true)
+    {
+        LOG(INFO) << BOLDBLUE << "\t--> The phase for this LpGBT chip was already aligned (maybe from configuration file)" << RESET;
+        return;
+    }
+
     // Configure Rx Phase Shifter
     uint16_t cDelay = 0x0;
     uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
     lpGBTInterface::ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
 
+    static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
     for(const auto cHybrid: *pOpticalGroup)
-        for(const auto cChip: *cHybrid)
-        {
-            static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
-            static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
-        }
+        for(const auto cChip: *cHybrid) { static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip); }
 
     lpGBTInterface::PhaseTrainRx(pChip, pGroups, true);
 
@@ -209,7 +213,7 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
     // @TMP@
     if(static_cast<lpGBT*>(pChip)->getPhaseRxAligned() == true)
     {
-        LOG(INFO) << BOLDBLUE << "\t--> The phase for this chip was already aligned (maybe from configuration file)" << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> The phase for this LpGBT chip was already aligned (maybe from configuration file)" << RESET;
         return true;
     }
 
