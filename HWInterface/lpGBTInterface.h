@@ -41,15 +41,7 @@ class lpGBTInterface : public ChipInterface
     void StopPRBSpattern(Ph2_HwDescription::Chip* pChip);
 
     virtual void
-                 PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface){};
-    virtual bool ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
-                                      const Ph2_HwDescription::BeBoard*      pBoard,
-                                      const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
-                                      Ph2_HwInterface::BeBoardFWInterface*   pBeBoardFWInterface,
-                                      ReadoutChipInterface*                  pReadoutChipInterface)
-    {
-        return true;
-    };
+    PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface){};
 
     // #######################################
     // # LpGBT block configuration functions #
@@ -143,6 +135,7 @@ class lpGBTInterface : public ChipInterface
     // ####################################
     void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain);
     void InternalPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    void ResetRxDll(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
 
     // ################################
     // # LpGBT block status functions #

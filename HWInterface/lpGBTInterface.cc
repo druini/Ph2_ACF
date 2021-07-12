@@ -235,14 +235,12 @@ void lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGrou
         else if(cGroup == 2 || cGroup == 3)
             cTrainRxReg = "EPRXTrain32";
         else if(cGroup == 4 || cGroup == 5)
-            cTrainRxReg = "EPRXTrain32";
+            cTrainRxReg = "EPRXTrain54";
         else if(cGroup == 6)
-            cTrainRxReg = "EPRXTrain32";
+            cTrainRxReg = "EPRXTrainEc6";
 
-        if(pTrain == true)
-            WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
-        else
-            WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
+        WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
+        WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
     }
 }
 
@@ -290,6 +288,17 @@ void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t
 
     // Set back Rx source to normal data
     lpGBTInterface::ConfigureRxSource(pChip, pGroups, lpGBTconstants::PATTERN_NORMAL);
+}
+
+void lpGBTInterface::ResetRxDll(Chip* pChip, const std::vector<uint8_t>& pGroups)
+{
+    std::string cRegName = "RST1";
+    uint8_t     cValue   = 0x00;
+
+    for(auto cGroup: pGroups) { cValue = cValue | (1 << cGroup); }
+    this->WriteChipReg(pChip, "RST1", cValue);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    this->WriteChipReg(pChip, "RST1", 0x00);
 }
 
 // ################################
