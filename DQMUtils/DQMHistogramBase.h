@@ -34,6 +34,44 @@ class DetectorContainer;
  * \class DQMHistogramBase
  * \brief Base class for monitoring histograms
  */
+
+namespace user_detail
+{
+template <typename>
+struct sfinae_true_DQMHistogramBase : std::true_type
+{
+};
+
+template <typename T>
+static auto test_SetZTitle(int) -> sfinae_true_DQMHistogramBase<decltype(std::declval<T>().SetZTitle(""))>;
+template <typename>
+static auto test_SetZTitle(long) -> std::false_type;
+} // namespace user_detail
+
+// SFINAE: check if object T has SetZTitle
+template <typename T>
+struct has_SetZTitle : decltype(user_detail::test_SetZTitle<T>(0))
+{
+};
+
+// Functor for SetZTitle - default case
+template <typename T, bool hasSetZTitle = false>
+struct CallSetZTitle
+{
+    void operator()(T* thePlot, const char* theTitle) { return; }
+};
+
+// Functor for SetZTitle - case when SetZTitle is defined
+template <typename T>
+struct CallSetZTitle<T, true>
+{
+    void operator()(T* thePlot, const char* theTitle)
+    {
+        thePlot.SetZTitle(theTitle);
+        return;
+    }
+};
+
 class DQMHistogramBase
 {
   public:
@@ -84,9 +122,13 @@ class DQMHistogramBase
                          const char*                  YTitle = nullptr,
                          const char*                  ZTitle = nullptr)
     {
-        if(XTitle != nullptr) histContainer.fTheHistogram->SetXTitle(XTitle);
-        if(YTitle != nullptr) histContainer.fTheHistogram->SetYTitle(YTitle);
-        if(ZTitle != nullptr) histContainer.fTheHistogram->SetZTitle(ZTitle);
+        if(XTitle != nullptr) histContainer.fTheHistogram->GetXaxis()->SetTitle(XTitle);
+        if(YTitle != nullptr) histContainer.fTheHistogram->GetYaxis()->SetTitle(YTitle);
+        if(ZTitle != nullptr)
+        {
+            CallSetZTitle<Hist, has_SetDirectory<Hist>::value> setZTitleFunctor;
+            setZTitleFunctor(histContainer.fTheHistogram, ZTitle);
+        }
 
         RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, histContainer);
     }
