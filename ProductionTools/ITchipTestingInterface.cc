@@ -45,7 +45,7 @@ bool ITpowerSupplyChannelInterface::setupKeithley2410ChannelSense(uint16_t mode,
     switch(mode)
     {
         case CURRENTSENSE:
-            msg = "K2410:setupVsense,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID + "," +
+            msg = "K2410:setupIsense,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID + "," +
                                   "CurrCompl:" + std::to_string(senseCompliance);
             fPowerSupplyClient->sendAndReceivePacket(msg);
 
@@ -55,7 +55,7 @@ bool ITpowerSupplyChannelInterface::setupKeithley2410ChannelSense(uint16_t mode,
             break;
 
         case VOLTAGESENSE:
-            msg = "K2410:setupIsense,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID + "," +
+            msg = "K2410:setupVsense,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID + "," +
                                   "VoltCompl:" + std::to_string(senseCompliance);
             fPowerSupplyClient->sendAndReceivePacket(msg);
 
