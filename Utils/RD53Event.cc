@@ -547,16 +547,17 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     TFile theFile(fileName.c_str(), "RECREATE");
     TTree theTree("theTree", "Ntuple with event data");
 
-    uint32_t event, FW_block_size, FW_tlu_trigger_id, FW_data_format_ver, FW_tdc, FW_l1a_counter, FW_bx_counter;
-    theTree.Branch("event", &event, "event/I");
-    theTree.Branch("FW_block_size", &FW_block_size, "FW_block_size/I");
-    theTree.Branch("FW_tlu_trigger_id", &FW_tlu_trigger_id, "FW_tlu_trigger_id/I");
-    theTree.Branch("FW_data_format_ver", &FW_data_format_ver, "FW_data_format_ver/I");
-    theTree.Branch("FW_tdc", &FW_tdc, "FW_tdc/I");
-    theTree.Branch("FW_l1a_counter", &FW_l1a_counter, "FW_l1a_counter/I");
-    theTree.Branch("FW_bx_counter", &FW_bx_counter, "FW_bx_counter/I");
+    uint32_t event, FW_block_size, FW_tlu_trigger_id, FW_data_format_ver, FW_tdc, FW_l1a_counter, FW_bx_counter, FW_nframes;
+    theTree.Branch("event", &event, "event/i");
+    theTree.Branch("FW_block_size", &FW_block_size, "FW_block_size/i");
+    theTree.Branch("FW_tlu_trigger_id", &FW_tlu_trigger_id, "FW_tlu_trigger_id/i");
+    theTree.Branch("FW_data_format_ver", &FW_data_format_ver, "FW_data_format_ver/i");
+    theTree.Branch("FW_tdc", &FW_tdc, "FW_tdc/i");
+    theTree.Branch("FW_l1a_counter", &FW_l1a_counter, "FW_l1a_counter/i");
+    theTree.Branch("FW_bx_counter", &FW_bx_counter, "FW_bx_counter/i");
+    theTree.Branch("FW_nframes", &FW_nframes, "FW_nframes/i");
 
-    std::vector<uint64_t> FW_frame_event_error_code;
+    std::vector<uint32_t> FW_frame_event_error_code;
     std::vector<uint32_t> FW_frame_event_hybrid_id;
     std::vector<uint32_t> FW_frame_event_chip_lane;
     std::vector<uint32_t> FW_frame_event_l1a_data_size;
@@ -580,12 +581,12 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     theTree.Branch("RD53_frame_event_bc_id", &RD53_frame_event_bc_id);
     theTree.Branch("RD53_frame_event_nhits", &RD53_frame_event_nhits);
 
-    std::vector<int> RD53_hit_col;
-    std::vector<int> RD53_hit_row;
-    std::vector<int> RD53_hit_tot;
+    std::vector<uint8_t> RD53_hit_row;
+    std::vector<uint8_t> RD53_hit_col;
+    std::vector<uint8_t> RD53_hit_tot;
 
-    theTree.Branch("RD53_hit_col", &RD53_hit_col);
     theTree.Branch("RD53_hit_row", &RD53_hit_row);
+    theTree.Branch("RD53_hit_col", &RD53_hit_col);
     theTree.Branch("RD53_hit_tot", &RD53_hit_tot);
 
     for(auto i = 0u; i < events.size(); i++)
@@ -599,6 +600,7 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
         FW_tdc             = evt.tdc;
         FW_l1a_counter     = evt.l1a_counter;
         FW_bx_counter      = evt.bx_counter;
+        FW_nframes         = evt.chip_frames_events.size();
 
         FW_frame_event_error_code.clear();
         FW_frame_event_hybrid_id.clear();
@@ -611,6 +613,10 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
         RD53_frame_event_trigger_tag.clear();
         RD53_frame_event_bc_id.clear();
         RD53_frame_event_nhits.clear();
+
+        RD53_hit_row.clear();
+        RD53_hit_col.clear();
+        RD53_hit_tot.clear();
 
         for(auto& frame_event: evt.chip_frames_events)
         {
@@ -625,10 +631,6 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
             RD53_frame_event_trigger_tag.push_back(frame_event.second.trigger_tag);
             RD53_frame_event_bc_id.push_back(frame_event.second.bc_id);
             RD53_frame_event_nhits.push_back(frame_event.second.hit_data.size());
-
-            RD53_hit_row.clear();
-            RD53_hit_col.clear();
-            RD53_hit_tot.clear();
 
             for(const auto& hit: frame_event.second.hit_data)
             {
