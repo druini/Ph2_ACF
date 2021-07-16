@@ -1406,7 +1406,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
     LOG(INFO) << GREEN << "Final counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s)" << RESET;
-    LOG(INFO) << GREEN << "Final Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << nErrors / frames2run * 100 << RESET << GREEN << "%)"
+    LOG(INFO) << GREEN << "Final Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << std::fixed << std::setprecision(3) << nErrors / frames2run * 100 << RESET << GREEN << "%)"
               << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
