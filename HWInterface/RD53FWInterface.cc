@@ -1380,7 +1380,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
             return -1;
         }
         frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
-        nErrors += RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
+        nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
 
         double percent_done = frameCounter / frames2run * 100.;
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << percent_done << RESET << GREEN << "% done)" << RESET;
@@ -1402,7 +1402,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
     cntr_hi      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
     frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
-    nErrors += RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
+    nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
     LOG(INFO) << GREEN << "Final counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s)" << RESET;
