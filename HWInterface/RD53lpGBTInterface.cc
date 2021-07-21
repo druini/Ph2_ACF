@@ -120,7 +120,7 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
     bool status;
     do
     {
-        status = fBoardFW->WriteOptoLinkRegister(pChip->getId(), pAddress, pValue, pVerifLoop);
+        status = fBoardFW->WriteOptoLinkRegister(pChip->getId(), static_cast<lpGBT*>(pChip)->getChipAddress(), pAddress, pValue, pVerifLoop);
         nAttempts++;
     } while((pVerifLoop == true) && (status == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
 
@@ -132,7 +132,7 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
 uint16_t RD53lpGBTInterface::ReadReg(Chip* pChip, uint16_t pAddress)
 {
     this->setBoard(pChip->getBeBoardId());
-    return fBoardFW->ReadOptoLinkRegister(pChip->getId(), pAddress);
+    return fBoardFW->ReadOptoLinkRegister(pChip->getId(), static_cast<lpGBT*>(pChip)->getChipAddress(), pAddress);
 }
 
 bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerifLoop)
