@@ -98,7 +98,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
         if(fUseCPB)
             return fBoardFW->WriteLpGBTRegister(pAddress, pValue, pVerifLoop);
         else
-            return fBoardFW->WriteOptoLinkRegister(pChip->getId(), pAddress, pValue, pVerifLoop);
+            return fBoardFW->WriteOptoLinkRegister(pChip->getId(), static_cast<lpGBT*>(pChip)->getChipAddress(), pAddress, pValue, pVerifLoop);
     }
     else
     {
@@ -136,7 +136,7 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
         if(fUseCPB)
             return fBoardFW->ReadLpGBTRegister(pAddress);
         else
-            return fBoardFW->ReadOptoLinkRegister(pChip->getId(), pAddress);
+            return fBoardFW->ReadOptoLinkRegister(pChip->getId(), static_cast<lpGBT*>(pChip)->getChipAddress(), pAddress);
     }
     else
     {
