@@ -807,11 +807,10 @@ void lpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     WriteChipReg(pChip, cI2CCmdReg, 0x00);
 }
 
-bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes)
+  bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq)
 {
     // Write Data to Slave Address using I2C Master
-    uint8_t cFreq = 3; // 1 MHz
-    lpGBTInterface::ConfigureI2C(pChip, pMaster, cFreq, (pNBytes > 1) ? pNBytes : 0, 0);
+    lpGBTInterface::ConfigureI2C(pChip, pMaster, pFreq, (pNBytes > 1) ? pNBytes : 0, 0);
 
     // Prepare Address Register
     // Write Slave Address
@@ -851,18 +850,17 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
 
     if(cIter == RD53Shared::MAXATTEMPTS)
     {
-        LOG(INFO) << BOLDRED << "I2C Write Transaction FAILED" << RESET;
-        throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
+        LOG(INFO) << BOLDRED << "I2C Write transaction FAILED" << RESET;
+        throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C write transaction FAILED"));
     }
 
     return true;
 }
 
-uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes)
+uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq)
 {
     // Read Data from Slave Address using I2C Master
-    uint8_t cFreq = 3; // 1 MHz
-    lpGBTInterface::ConfigureI2C(pChip, pMaster, cFreq, pNBytes, 0);
+    lpGBTInterface::ConfigureI2C(pChip, pMaster, pFreq, pNBytes, 0);
     // Prepare Address Register
     std::string cI2CAddressReg = "I2CM" + std::to_string(pMaster) + "Address";
     // Write Slave Address
@@ -902,7 +900,7 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
         for(uint8_t cByte = 0; cByte < pNBytes; cByte++)
         {
             std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "Read" + std::to_string(15 - cByte);
-            cReadData |= ((uint32_t)ReadChipReg(pChip, cI2CDataReg) << cByte);
+            cReadData |= ((uint32_t)ReadChipReg(pChip, cI2CDataReg) << 8 * cByte);
         }
         return cReadData;
     }
