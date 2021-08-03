@@ -21,17 +21,17 @@ namespace Ph2_HwInterface
 {
 bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
-#ifdef __TCUSB__
+/* #ifdef __TCUSB__
 #ifdef __SEH_USB__
 #ifdef __TCP_SERVER__
-    fTestcardClient->sendAndReceivePacket("TurnOn");
+    //fTestcardClient->sendAndReceivePacket("TurnOn");
 #else
     fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
 #endif
     LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 #endif
-#endif
+#endif */
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
     SetConfigMode(pChip, fUseOpticalLink, fUseCPB);
@@ -114,7 +114,8 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
         // use 2S_SEH test card USB interface
         // fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
 #ifdef __TCP_SERVER__
-        fTestcardClient->sendAndReceivePacket("write_i2c,address:" + std::to_string(pAddress) + ",value:" + static_cast<char>(pValue));
+        throw std::runtime_error(std::string("lpGBT slave I2C not avilable in TCP mode!"));
+        //fTestcardClient->sendAndReceivePacket("write_i2c,address:" + std::to_string(pAddress) + ",value:" + static_cast<char>(pValue));
 #else
         fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
@@ -135,8 +136,9 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
                 // Dont really see the point here. Write_i2c does not return a read back???
                 // cReadBack = fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
 #ifdef __TCP_SERVER__
-                std::string buffer = fTestcardClient->sendAndReceivePacket("read_i2c,address:" + std::to_string(pAddress) + ",");
-                cReadBack          = std::stoi(this->getVariableValue("value", buffer));
+                throw std::runtime_error(std::string("lpGBT slave I2C not avilable in TCP mode!"));
+                //std::string buffer = fTestcardClient->sendAndReceivePacket("read_i2c,address:" + std::to_string(pAddress) + ",");
+                //cReadBack          = std::stoi(this->getVariableValue("value", buffer));
 #else
                 cReadBack = fTC_USB->read_i2c(pAddress);
 #endif
@@ -164,8 +166,9 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
 #ifdef __TCUSB__
         // return fTC_2SSEH.read_i2c(pAddress);
 #ifdef __TCP_SERVER__
-        std::string buffer = fTestcardClient->sendAndReceivePacket("read_i2c,address:" + std::to_string(pAddress) + ",");
-        return std::stoi(this->getVariableValue("value", buffer));
+        throw std::runtime_error(std::string("lpGBT slave I2C not avilable in TCP mode!"));
+        //std::string buffer = fTestcardClient->sendAndReceivePacket("read_i2c,address:" + std::to_string(pAddress) + ",");
+        //return std::stoi(this->getVariableValue("value", buffer));
 #else
         return fTC_USB->read_i2c(pAddress);
 #endif
