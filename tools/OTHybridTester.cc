@@ -4,7 +4,9 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
+
 #ifdef __USE_ROOT__
+
 OTHybridTester::OTHybridTester() : Tool() {}
 
 OTHybridTester::~OTHybridTester()
@@ -504,7 +506,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
         {
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             // Configure Temperature sensor
-            clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
+            // clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
             do
             {
                 cADCValueVect.clear();
@@ -698,7 +700,7 @@ bool OTHybridTester::LpGBTTestVTRx()
                 { LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cResult << " ." << RESET; }
                 else
                 {
-                    LOG(INFO) << BOLDRED << "Error in VTRx+ register " << cMapIterator->first << " ." << RESET;
+                    LOG(INFO) << BOLDRED << "Error in VTRx+ register " << +(cMapIterator->first) << " ." << RESET;
                 }
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));

@@ -58,6 +58,9 @@ void SystemController::Inherit(const SystemController* pController)
 
 void SystemController::Destroy()
 {
+    for(const auto cBoard: *fDetectorContainer)
+        if(cBoard->getBoardType() == BoardType::RD53) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintErrorsLVDS(); // @TMP@
+
     this->closeFileHandler();
 
     LOG(INFO) << BOLDRED << ">>> Destroying interfaces <<<" << RESET;
@@ -140,7 +143,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
-        std::cerr << "Cannot connect to the Power Supply Server" << '\n';
         delete fPowerSupplyClient;
         fPowerSupplyClient = nullptr;
     }
@@ -348,15 +350,18 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     // Configure readout-chips [CBCs, MPAs, SSAs]
                     for(auto cReadoutChip: *cHybrid)
                     {
-                        ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
-                        if(!bIgnoreI2c)
+                        if(cReadoutChip != nullptr)
                         {
-                            LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
-                            fReadoutChipInterface->ConfigureChip(theReadoutChip);
+                            ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
+                            if(!bIgnoreI2c)
+                            {
+                                LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
+                                fReadoutChipInterface->ConfigureChip(theReadoutChip);
+                            }
+                            // if SSA + ASYNC
+                            // make sure ROCs are configured for that
+                            if(theReadoutChip->getFrontEndType() == FrontEndType::SSA) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync); }
                         }
-                        // if SSA + ASYNC
-                        // make sure ROCs are configured for that
-                        if(theReadoutChip->getFrontEndType() == FrontEndType::SSA) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync); }
                     }
                 }
             }
@@ -373,13 +378,13 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ###################
             // # Configuring FSM #
             // ###################
-            size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
-            size_t injType     = SystemController::findValueInSettings("INJtype");
-            size_t injLatency  = SystemController::findValueInSettings("InjLatency");
-            size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
-            size_t colStart    = SystemController::findValueInSettings("COLstart");
-            bool   resetMask   = SystemController::findValueInSettings("ResetMask");
-            bool   resetTDAC   = SystemController::findValueInSettings("ResetTDAC");
+            size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent");
+            size_t injType     = SystemController::findValueInSettings<double>("INJtype");
+            size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency");
+            size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays");
+            size_t colStart    = SystemController::findValueInSettings<double>("COLstart");
+            bool   resetMask   = SystemController::findValueInSettings<double>("ResetMask");
+            bool   resetTDAC   = SystemController::findValueInSettings<double>("ResetTDAC");
             LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
             LOG(INFO) << CYAN << "================== Done ==================" << RESET;
@@ -392,32 +397,34 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ########################
             // # Configure LpGBT chip #
             // ########################
-            for(auto cOpticalGroup: *cBoard)
-                if(cOpticalGroup->flpGBT != nullptr)
-                {
-                    LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
-
-                    if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
-                    {
-                        static_cast<RD53lpGBTInterface*>(flpGBTInterface)
-                            ->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, cBoard, cOpticalGroup, this->fBeBoardFWMap[cBoard->getId()], fReadoutChipInterface);
-                        LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
-                    }
-                    else
-                        LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
-                }
-
-            // #######################
-            // # Status optical link #
-            // #######################
-            uint32_t txStatus, rxStatus, mgtStatus;
-            LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(txStatus, rxStatus, mgtStatus);
-
+            bool         LpGBTRxPhaseAllGood = true;
+            unsigned int nAttempts           = 0;
             do
             {
+                for(auto cOpticalGroup: *cBoard)
+                    if(cOpticalGroup->flpGBT != nullptr)
+                    {
+                        LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
+
+                        if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
+                        {
+                            LpGBTRxPhaseAllGood = flpGBTInterface->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, cBoard, cOpticalGroup, this->fBeBoardFWMap[cBoard->getId()], fReadoutChipInterface);
+                            nAttempts++;
+                            LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
+                        }
+                        else
+                            LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
+                    }
+
+                // #######################
+                // # Status optical link #
+                // #######################
+                uint32_t txStatus, rxStatus, mgtStatus;
+                LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(txStatus, rxStatus, mgtStatus);
+
                 // ######################################################
-                // # Configure down and up links to/from frontend chips #
+                // # Configure down and up-links to/from frontend chips #
                 // ######################################################
                 LOG(INFO) << CYAN << "=== Configuring frontend chip communication ===" << RESET;
                 static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Downlink(cBoard);
@@ -436,7 +443,9 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 // ####################################
                 // # Check AURORA lock on data stream #
                 // ####################################
-            } while(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard) == false);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard);
+
+            } while((LpGBTRxPhaseAllGood == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
 
             // ############################
             // # Configure frontend chips #
@@ -455,11 +464,14 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         static_cast<RD53*>(cChip)->copyMaskToDefault();
                         static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
                         LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
-                        // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
+                        // static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0); @TMP@
                     }
                 }
             }
+
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
+
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintFrequencyLVDS(); // @TMP@
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
             RD53Event::ForkDecodingThreads();
@@ -634,12 +646,6 @@ void SystemController::ReadASEvent(BeBoard* pBoard, uint32_t pNMsec, uint32_t pu
     this->DecodeData(pBoard, cData, 1, fBeBoardInterface->getBoardType(pBoard));
 }
 
-double SystemController::findValueInSettings(const std::string name, double defaultValue) const
-{
-    auto setting = fSettingsMap.find(name);
-    return (setting != std::end(fSettingsMap) ? setting->second : defaultValue);
-}
-
 // #################
 // # Data decoding #
 // #################
@@ -733,4 +739,5 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         } // end zero check
     }
 }
+
 } // namespace Ph2_System

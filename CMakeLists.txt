@@ -197,6 +197,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     MESSAGE(STATUS " ")
     if(CompileForHerd OR NoDataShipping)
         add_subdirectory(tools)
+        add_subdirectory(ProductionTools)
         add_subdirectory(HWDescription)
         add_subdirectory(HWInterface)
         add_subdirectory(System)
@@ -261,7 +262,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
-    # ZeroMQ 
+    # ZeroMQ
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)
@@ -288,6 +289,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     endif()
 
     add_subdirectory(tools)
+    add_subdirectory(ProductionTools)
     add_subdirectory(DQMUtils)
     add_subdirectory(Utils)
     add_subdirectory(RootUtils)

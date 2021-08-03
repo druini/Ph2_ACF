@@ -3,20 +3,10 @@
 ##########
 # CACTUS #
 ##########
-#export CACTUSBIN=/opt/cactus/bin
-#export CACTUSLIB=/opt/cactus/lib
-#export CACTUSINCLUDE=/opt/cactus/include
-#export CACTUSROOT=/opt/cactus/
-export CACTUSROOT=/opt/cactus_from_source/uhal/
-
-export CACTUSINCLUDE=$CACTUSROOT/uhal/include/
-export CACTUSLIB=$CACTUSROOT/uhal/lib
-
-export CACTUSLOGINCLUDE=$CACTUSROOT/log/include/
-export CACTUSLOGLIB=$CACTUSROOT/log/lib/
-
-export CACTUSGRAMMARINCLUDE=$CACTUSROOT/grammars/include/
-export CACTUSGRAMMARLIB=$CACTUSROOT/grammars/lib/
+export CACTUSBIN=/opt/cactus/bin
+export CACTUSLIB=/opt/cactus/lib
+export CACTUSINCLUDE=/opt/cactus/include
+export CACTUSROOT=/opt/cactus/
 
 #########
 # BOOST #
@@ -127,13 +117,13 @@ export CompileForShep=false
 export CompileWithEUDAQ=false
 
 # Compile with TC_USB library
-export CompileWithTCUSB=true
+export CompileWithTCUSB=false
 export UseTCUSBforROH=false
 export UseTCUSBTcpServer=false
 
 # Clang-format command
 if command -v clang-format &> /dev/null; then
-  clang_command="clang-format" 
+  clang_command="clang-format"
 else
   clang_command="/opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format"
 fi
