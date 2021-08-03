@@ -20,17 +20,6 @@ namespace Ph2_HwInterface
 {
 bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
-    /* #ifdef __TCUSB__
-    #ifdef __SEH_USB__
-    #ifdef __TCP_SERVER__
-        //fTestcardClient->sendAndReceivePacket("TurnOn");
-    #else
-        fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
-    #endif
-        LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    #endif
-    #endif */
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
     SetConfigMode(pChip, fUseOpticalLink, fUseCPB);
@@ -111,10 +100,8 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
         // use PS-ROH test card USB interface
 #ifdef __TCUSB__
         // use 2S_SEH test card USB interface
-        // fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
 #ifdef __TCP_SERVER__
         throw std::runtime_error(std::string("lpGBT slave I2C not avilable in TCP mode!"));
-        // fTestcardClient->sendAndReceivePacket("write_i2c,address:" + std::to_string(pAddress) + ",value:" + static_cast<char>(pValue));
 #else
         fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
@@ -136,8 +123,6 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
                 // cReadBack = fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
 #ifdef __TCP_SERVER__
                 throw std::runtime_error(std::string("lpGBT slave I2C not avilable in TCP mode!"));
-                // std::string buffer = fTestcardClient->sendAndReceivePacket("read_i2c,address:" + std::to_string(pAddress) + ",");
-                // cReadBack          = std::stoi(this->getVariableValue("value", buffer));
 #else
                 cReadBack = fTC_USB->read_i2c(pAddress);
 #endif
@@ -163,11 +148,8 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
     {
 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-        // return fTC_2SSEH.read_i2c(pAddress);
 #ifdef __TCP_SERVER__
         throw std::runtime_error(std::string("lpGBT slave I2C not avilable in TCP mode!"));
-        // std::string buffer = fTestcardClient->sendAndReceivePacket("read_i2c,address:" + std::to_string(pAddress) + ",");
-        // return std::stoi(this->getVariableValue("value", buffer));
 #else
         return fTC_USB->read_i2c(pAddress);
 #endif
@@ -277,8 +259,9 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
             if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
-
+#ifdef __TCUSB__
     ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+#endif
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Resets are high
