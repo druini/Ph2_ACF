@@ -137,7 +137,9 @@ class SEHTester : public OTHybridTester
     std::map<std::string, TC_2SSEH::loadMeasurement> f2SSEHLoadMeasurements = {{"U_P1V2_R", TC_2SSEH::loadMeasurement::U_P1V2_R},
                                                                                {"I_P1V2_R", TC_2SSEH::loadMeasurement::I_P1V2_R},
                                                                                {"U_P1V2_L", TC_2SSEH::loadMeasurement::U_P1V2_L},
-                                                                               {"I_P1V2_L", TC_2SSEH::loadMeasurement::I_P1V2_L}};
+                                                                               {"I_P1V2_L", TC_2SSEH::loadMeasurement::I_P1V2_L},
+                                                                               {"P2V5_VTRx_MON", TC_2SSEH::loadMeasurement::P2V5_VTRx_MON}
+                                                                               };
 
     std::map<std::string, TC_2SSEH::temperatureMeasurement> f2SSEHTemperatureMeasurements = {{"Temp1", TC_2SSEH::temperatureMeasurement::Temp1},
                                                                                              {"Temp2", TC_2SSEH::temperatureMeasurement::Temp2},

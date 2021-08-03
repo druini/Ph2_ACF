@@ -473,6 +473,7 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
             fTC_USB->read_load(fTC_USB->U_P1V2_R, U_P1V2_R);
             fTC_USB->read_load(fTC_USB->U_P1V2_L, U_P1V2_L);
             fTC_USB->read_supply(fTC_USB->U_SEH, U_SEH);
+            fTC_USB->read_load(fTC_USB->P2V5_VTRx_MON, U_P2V5);
 
             // The input binning is performed in DAC values, the result is binned in the measured current
             cIoutValVect.push_back(I_P1V2_R + I_P1V2_L);
