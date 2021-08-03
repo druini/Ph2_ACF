@@ -185,15 +185,8 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     float cUMon  = 0;
     float cVHVJ7 = 0;
     float cVHVJ8 = 0;
-#ifdef __TCP_SERVER__
-    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:0,");
-#else
-    fTC_USB->set_HV(false, true, true, 0);
-#endif
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-#ifdef __TCP_SERVER__
-    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:" + std::to_string(pBiasVoltage) + ",");
-#else
+
+    /* fTC_USB->set_HV(false, true, true, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fTC_USB->set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
 #endif
@@ -205,8 +198,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 #else
     fTC_USB->read_hvmon(fTC_USB->Mon, cUMon);
     fTC_USB->read_hvmon(fTC_USB->VHVJ7, cVHVJ7);
-    fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8);
-#endif
+    fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8); */
     //----------------------------------------------------
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:0,");
@@ -299,7 +291,8 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 #else
     fTC_USB->set_HV(false, false, false, 0);
 #endif
-std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    fillSummaryTree("BiasDone", 1);
 #endif
 #endif
 #endif
@@ -429,6 +422,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 #else
     fTC_USB->set_HV(false, false, false, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    fillSummaryTree("LeakDone", 1);
 #endif
 #endif
 #endif
@@ -536,6 +530,7 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
             U_P1V2_R = this->getMeasurement("read_load:U_P1V2_R");
             U_P1V2_L = this->getMeasurement("read_load:U_P1V2_L");
             U_SEH    = this->getMeasurement("read_supply:U_SEH");
+            U_P2V5   = this->getMeasurement("read_load:P2V5_VTRx_MON");
 #else
             fTC_USB->read_load(fTC_USB->I_P1V2_R, I_P1V2_R);
             fTC_USB->read_load(fTC_USB->I_P1V2_L, I_P1V2_L);
@@ -543,6 +538,7 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
             fTC_USB->read_load(fTC_USB->U_P1V2_R, U_P1V2_R);
             fTC_USB->read_load(fTC_USB->U_P1V2_L, U_P1V2_L);
             fTC_USB->read_supply(fTC_USB->U_SEH, U_SEH);
+            fTC_USB->read_load(fTC_USB->P2V5_VTRx_MON, U_P2V5);
 #endif
             // The input binning is performed in DAC values, the result is binned in the measured current
             cIoutValVect.push_back(I_P1V2_R + I_P1V2_L);
@@ -632,6 +628,8 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     cIouttoIinMultiGraph->GetYaxis()->SetTitle("Iin [A]");
     cIouttoIinCanvas->BuildLegend();
     cIouttoIinCanvas->Write();
+
+    fillSummaryTree("EfficencyDone", 1);
 #endif
 #endif
 #endif
@@ -848,7 +846,7 @@ void SEHTester::DCDCOutputEvaluation()
     {
         cDCDCOutputTree->Branch(cDCDCMapIterator->first.c_str(), &cDCDCValueVect);
         auto cHistogramm = new TH1F(cDCDCMapIterator->first.c_str(), cDCDCMapIterator->first.c_str(), 30, 0, 3);
-        cHistogramm->SetFillColor(cIt+1);
+        cHistogramm->SetFillColor(cIt + 1);
         cHistogramm->SetMarkerStyle(cIt + 21);
         cHistogramm->SetMarkerColor(cIt + 1);
         cDCDCValueVect.clear();
@@ -859,7 +857,7 @@ void SEHTester::DCDCOutputEvaluation()
 #else
             fTC_USB->read_load(cDCDCMapIterator->second, cDCDCValue);
 #endif
-            //cDCDCValue += gRandom->Rndm();
+            // cDCDCValue += gRandom->Rndm();
             cDCDCValueVect.push_back(cDCDCValue);
             cHistogramm->Fill(cDCDCValue);
             std::this_thread::sleep_for(std::chrono::milliseconds(1200));

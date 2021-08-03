@@ -129,7 +129,7 @@ export CompileWithEUDAQ=false
 # Compile with TC_USB library
 export CompileWithTCUSB=true
 export UseTCUSBforROH=false
-export UseTCUSBTcpServer=true
+export UseTCUSBTcpServer=false
 
 # Clang-format command
 if command -v clang-format &> /dev/null; then

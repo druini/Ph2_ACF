@@ -204,8 +204,8 @@ class D19clpGBTInterface : public lpGBTInterface
 #elif __SEH_USB__
 #ifdef __TCP_SERVER__
 #else
-    void                                              SetTCUSBHandler(TC_2SSEH* pTC_2SSEH) { fTC_USB = pTC_2SSEH; }
-    TC_2SSEH*                                         GetTCUSBHandler() { return fTC_USB; }
+    void      SetTCUSBHandler(TC_2SSEH* pTC_2SSEH) { fTC_USB = pTC_2SSEH; }
+    TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
 #endif
 #endif
 
@@ -234,9 +234,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // mpa read/write
     bool     mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false);
     uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
-#ifdef __TCP_SERVER__
-    //TCPClient* fTestcardClient = fBoardFW->getTestcardClient();
-#endif
+    void     ContinuousPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
 
   private:
     std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},
@@ -299,7 +297,7 @@ class D19clpGBTInterface : public lpGBTInterface
 #elif __SEH_USB__
 #ifdef __TCP_SERVER__
 #else
-        
+
     TC_2SSEH*                                         fTC_USB;
     std::map<std::string, TC_2SSEH::resetMeasurement> fSehResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
                                                                         {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},

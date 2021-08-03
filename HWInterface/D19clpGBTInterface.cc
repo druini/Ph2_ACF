@@ -21,17 +21,17 @@ namespace Ph2_HwInterface
 {
 bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
-/* #ifdef __TCUSB__
-#ifdef __SEH_USB__
-#ifdef __TCP_SERVER__
-    //fTestcardClient->sendAndReceivePacket("TurnOn");
-#else
-    fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
-#endif
-    LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-#endif
-#endif */
+    /* #ifdef __TCUSB__
+    #ifdef __SEH_USB__
+    #ifdef __TCP_SERVER__
+        //fTestcardClient->sendAndReceivePacket("TurnOn");
+    #else
+        fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
+    #endif
+        LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    #endif
+    #endif */
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
     SetConfigMode(pChip, fUseOpticalLink, fUseCPB);
@@ -115,7 +115,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
         // fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
 #ifdef __TCP_SERVER__
         throw std::runtime_error(std::string("lpGBT slave I2C not avilable in TCP mode!"));
-        //fTestcardClient->sendAndReceivePacket("write_i2c,address:" + std::to_string(pAddress) + ",value:" + static_cast<char>(pValue));
+        // fTestcardClient->sendAndReceivePacket("write_i2c,address:" + std::to_string(pAddress) + ",value:" + static_cast<char>(pValue));
 #else
         fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
@@ -137,8 +137,8 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
                 // cReadBack = fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
 #ifdef __TCP_SERVER__
                 throw std::runtime_error(std::string("lpGBT slave I2C not avilable in TCP mode!"));
-                //std::string buffer = fTestcardClient->sendAndReceivePacket("read_i2c,address:" + std::to_string(pAddress) + ",");
-                //cReadBack          = std::stoi(this->getVariableValue("value", buffer));
+                // std::string buffer = fTestcardClient->sendAndReceivePacket("read_i2c,address:" + std::to_string(pAddress) + ",");
+                // cReadBack          = std::stoi(this->getVariableValue("value", buffer));
 #else
                 cReadBack = fTC_USB->read_i2c(pAddress);
 #endif
@@ -167,8 +167,8 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
         // return fTC_2SSEH.read_i2c(pAddress);
 #ifdef __TCP_SERVER__
         throw std::runtime_error(std::string("lpGBT slave I2C not avilable in TCP mode!"));
-        //std::string buffer = fTestcardClient->sendAndReceivePacket("read_i2c,address:" + std::to_string(pAddress) + ",");
-        //return std::stoi(this->getVariableValue("value", buffer));
+        // std::string buffer = fTestcardClient->sendAndReceivePacket("read_i2c,address:" + std::to_string(pAddress) + ",");
+        // return std::stoi(this->getVariableValue("value", buffer));
 #else
         return fTC_USB->read_i2c(pAddress);
 #endif
@@ -195,7 +195,7 @@ void D19clpGBTInterface::ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const
     {
         // Enable Rx Groups Channels and set Data Rate and Phase Tracking mode
         uint8_t cValueEnableRx = 0;
-        for(const auto cChannel: pChannels) cValueEnableRx += (1 << cChannel);
+        for(const auto cChannel: pChannels) cValueEnableRx |= (1 << cChannel);
         std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
         WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
     }
@@ -421,6 +421,13 @@ void D19clpGBTInterface::PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std:
         else
             WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
     }
+}
+
+void D19clpGBTInterface::ContinuousPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
+{
+    // Configure Rx Phase Shifter
+
+    D19clpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, 2);
 }
 
 void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
@@ -1056,7 +1063,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     // uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying 2S-SEH 5G lpGBT configuration" << RESET;
     // Configure High Speed Link Tx Rx Polarity
-    /* ConfigureHighSpeedPolarity(pChip, 1, 0);
+    ConfigureHighSpeedPolarity(pChip, 1, 0);
 
     // Clocks
     std::vector<uint8_t> cClocks  = {1, 11}; // Reduced number of clocks and only 320 MHz
@@ -1098,12 +1105,13 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
             if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
-    PhaseAlignRx(pChip, cRxGroups, cRxChannels);
+
+    ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Resets are high
     ConfigureGPIODirection(pChip, {0, 3, 6, 8}, 1);
-    ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);*/
+    ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);
 }
 std::string D19clpGBTInterface::getVariableValue(std::string variable, std::string buffer)
 {
