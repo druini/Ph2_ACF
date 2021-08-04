@@ -21,7 +21,7 @@ void SEHMonitor::runInputCurrentMonitor()
         for(const auto& opticalGroup: *board)
         {
             // D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(theSystCntr.flpGBTInterface);
-            if(false) { int cADCValue = static_cast<D19clpGBTInterface*>(theSystCntr.flpGBTInterface)->ReadADC(opticalGroup->flpGBT, "ADC5"); }
+            if(false) { static_cast<D19clpGBTInterface*>(theSystCntr.flpGBTInterface)->ReadADC(opticalGroup->flpGBT, "ADC5"); }
             LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement" << RESET;
         }
 
