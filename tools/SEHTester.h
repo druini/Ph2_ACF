@@ -72,9 +72,11 @@ class SEHTester : public OTHybridTester
     void FastCommandScope();
     bool FastCommandChecker(uint8_t pPattern);
     void TestCardVoltages();
-    void TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep);
+    void TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep);
     void TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime);
     void TestBiasVoltage(uint16_t pBiasVoltage);
+    void ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTime, std::string powerSupplyId, std::string channelId);
+    void ExternalTestBiasVoltage(std::string powerSupplyId, std::string channelId);
     int  exampleFit();
     void readTestParameters(std::string file);
     void DCDCOutputEvaluation();
@@ -92,6 +94,7 @@ class SEHTester : public OTHybridTester
     void        ClearBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string& sBRAMToReset = "ref");
     void        ReadCheckAddrBRAM(Ph2_HwDescription::BeBoard* pBoard, int iCheckBRAMAddr = 0);
     void        ReadRefAddrBRAM(Ph2_HwDescription::BeBoard* pBoard, int iRefBRAMAddr = 0);
+    float       PowerSupplyGetMeasurement(std::string name);
     float       getMeasurement(std::string name);
     std::string getVariableValue(std::string variable, std::string buffer);
     void        CheckHybridInputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);

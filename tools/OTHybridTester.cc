@@ -360,6 +360,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             auto cDACtoADCMultiGraph = new TMultiGraph();
             cDACtoADCMultiGraph->SetName("mgDACtoADC");
             cDACtoADCMultiGraph->SetTitle("lpGBT - DAC to ADC conversion");
+            auto dieLegende = new TLegend(0.1, 0.7, 0.48, 0.9);
 
             LOG(INFO) << BOLDMAGENTA << "Testing ADC channels" << RESET;
 
@@ -407,18 +408,18 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 cfitDataVect[1] = cADCValVect;
                 cReg_Class.fit(cDACValVect, cADCValVect);
                 cDACtoADCGraph->Fit("pol1");
+                cDACtoADCGraph->GetFunction("pol1")->SetLineColor(cADCId + 2);
 
-                TF1* cFit = (TF1*)cDACtoADCGraph->GetListOfFunctions()->FindObject("pol1");
+                // TF1* cFit = (TF1*)cDACtoADCGraph->GetListOfFunctions()->FindObject("pol1");
+                TF1* cFit = cDACtoADCGraph->GetFunction("pol1");
+                dieLegende->AddEntry(cDACtoADCGraph);
+                dieLegende->AddEntry(cFit, Form("Fit ADC%i", cADCId), "lpf");
                 // LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
                 // LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0 << "  Parameter 2   " << cReg_Class.b_1 << RESET;
                 LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0 << " +/- " << cReg_Class.b_0_error << "  Parameter 2   " << cReg_Class.b_1
                           << " +/- " << cReg_Class.b_1_error << RESET;
                 LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << " +/- " << cFit->GetParError(0) << "  Parameter 2   " << cFit->GetParameter(1)
                           << " +/- " << cFit->GetParError(1) << " Chi^2 " << cFit->GetChisquare() << " NDF " << cFit->GetNDF() << RESET;
-                LOG(INFO) << BOLDBLUE << "DAC value = "
-                          << ""
-                          << " --- ADC value = "
-                          << "" << RESET;
                 cTrim = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "VREFCNTR");
                 LOG(INFO) << BOLDBLUE << "Trim value " << cTrim << RESET;
                 // ---Information also included in ROOT file of the fit
@@ -435,8 +436,11 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             cDACtoADCMultiGraph->Draw("AL");
             cDACtoADCMultiGraph->GetXaxis()->SetTitle("DAC");
             cDACtoADCMultiGraph->GetYaxis()->SetTitle("ADC");
-            cDACtoADCCanvas->BuildLegend(0, .2, .8, .9);
-            cDACtoADCMultiGraph->Write();
+            dieLegende->Draw();
+            // TLegend* dieLegende= cDACtoADCCanvas->BuildLegend();
+            // dieLegende->AddEntry("pol1","Fit x","lpf");
+            cDACtoADCCanvas->Write();
+            // cDACtoADCMultiGraph->Write();
         }
     }
 #endif
@@ -455,7 +459,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     std::string                         cADCNameString;
     std::vector<int>                    cADCValueVect;
 
-    auto cFixedADCsTree = new TTree("FixedADCs", "lpGBT ADCs not tied to AMUX");
+    auto cFixedADCsTree = new TTree("tFixedADCs", "lpGBT ADCs not tied to AMUX");
     cFixedADCsTree->Branch("Id", &cADCNameString);
     cFixedADCsTree->Branch("AdcValue", &cADCValueVect);
     gStyle->SetOptStat(0);
@@ -486,7 +490,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cADCNametoPinMapping = &fPSROHADCInputMap;
 #endif
 
-    auto cADCHistogram = new TH2I("cADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
+    auto cADCHistogram = new TH2I("hADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
 
     auto  cADCsMapIterator = cADCsMap.begin();
@@ -544,7 +548,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
             } while(cADCsMapIterator != cADCsMap.end());
         }
     }
-    auto cADCCanvas = new TCanvas("tFixedADCs", "lpGBT ADCs not tied to AMUX", 1600, 900);
+    auto cADCCanvas = new TCanvas("cFixedADCs", "lpGBT ADCs not tied to AMUX", 1600, 900);
     cADCCanvas->SetRightMargin(0.2);
     cADCHistogram->GetXaxis()->SetTitle("ADC channel");
     cADCHistogram->GetYaxis()->SetTitle("ADC count");

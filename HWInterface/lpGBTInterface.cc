@@ -850,6 +850,7 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
         LOG(INFO) << BOLDRED << "I2C Write Transaction FAILED" << RESET;
 #ifdef __TCUSB__
         // In the test system a run time error is undesired
+        return false;
 #else
         throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
 #endif

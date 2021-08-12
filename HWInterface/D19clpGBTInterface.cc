@@ -101,7 +101,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
 #ifdef __TCUSB__
         // use 2S_SEH test card USB interface
 #ifdef __TCP_SERVER__
-        throw std::runtime_error(std::string("lpGBT slave I2C not avilable in TCP mode!"));
+        throw std::runtime_error(std::string("lpGBT slave I2C not available in TCP mode!"));
 #else
         fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
@@ -122,7 +122,7 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
                 // Dont really see the point here. Write_i2c does not return a read back???
                 // cReadBack = fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
 #ifdef __TCP_SERVER__
-                throw std::runtime_error(std::string("lpGBT slave I2C not avilable in TCP mode!"));
+                throw std::runtime_error(std::string("lpGBT slave I2C not available in TCP mode!"));
 #else
                 cReadBack = fTC_USB->read_i2c(pAddress);
 #endif
