@@ -195,7 +195,9 @@ For more information on the firmware, please check the doc directory of https://
 
 ### Gitlab CI setup for Developers (required to submit merge requests!!!)
 
-1. Add predefined variables
+1. Make sure you are subscribed to the cms-tracker-phase2-DAQ e-group
+
+2. Add predefined variables
 
     i. from your fork go to `Ph2_ACF > settings > CI/CD`
 
@@ -211,7 +213,7 @@ For more information on the firmware, please check the doc directory of https://
         - add key: USER_PASS and value: <your CERN password encoded to base64>
           e.g encode "thisword": printf "thisword" | base64
 
-2. Enable shared Runners (if not enabled)
+3. Enable shared Runners (if not enabled)
 
     i. from `settings > CI/CD` expand the `Runners` section
 

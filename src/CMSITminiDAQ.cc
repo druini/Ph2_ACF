@@ -32,15 +32,13 @@
 
 #include <chrono>
 #include <thread>
+#include <sys/wait.h>
 
 #include "TApplication.h"
-// #include "TROOT.h"
 
 #ifdef __EUDAQ__
 #include "../tools/RD53eudaqProducer.h"
 #endif
-
-#include <sys/wait.h>
 
 // ##################
 // # Default values #
