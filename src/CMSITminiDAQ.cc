@@ -139,7 +139,7 @@ int main(int argc, char** argv)
     cmd.defineOption("sup", "Run in producer(Middleware) - consumer(DQM) mode", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("sup", "s");
 
-    cmd.defineOption("eudaqRunCtr", "EUDAQ-IT run control address [e.g. tcp://localhost:44000]", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("eudaqRunCtr", "EUDAQ-IT run control address (e.g. tcp://localhost:44000)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
@@ -148,7 +148,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("replay", "Replay previously captured communication (extension .bin)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption("runtime", "Set running time for physics mode", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("runtime", "Set running time for physics mode (in seconds)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("runtime", "t");
 
     int result = cmd.parse(argc, argv);
