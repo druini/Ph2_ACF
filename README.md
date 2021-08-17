@@ -24,6 +24,11 @@ Alternatively, instead of the `dd` command above, to only copy the needed bytes 
 imageName=sdgoldenimage.img
 dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --block-size=1 $imageName | awk '{print $1}')
 ```
+
+If you installed the command `pv` (`sudo yum install -y pv`), then the best way is the following (replacing `/dev/mmcblk0` with your target device):
+```bash
+pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
+```
 <hr>
 
 
