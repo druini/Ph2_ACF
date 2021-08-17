@@ -28,9 +28,7 @@
 #include <chrono>
 #include <thread>
 
-#ifdef __USE_ROOT__
 #include "TApplication.h"
-#endif
 
 #ifdef __EUDAQ__
 #include "../tools/RD53eudaqProducer.h"
@@ -79,6 +77,10 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
         LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN
                   << " events" << RESET;
     }
+
+    std::string fileName(binaryFile);
+    RD53Event::MakeNtuple(fileName.replace(fileName.find(".raw"), 4, ".root"), decodedEvents);
+    LOG(INFO) << GREEN << "Saving raw data into ROOT ntuple: " << BOLDYELLOW << fileName << RESET;
 
     mySysCntr.closeFileHandler();
 }
