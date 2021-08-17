@@ -245,7 +245,20 @@
     <Setting name="chain2Test">           0 </Setting>
     <Setting name="byTime">               1 </Setting>
     <Setting name="framesORtime">        10 </Setting>
+    
+    <Setting name="TargetBER">         1e-5 </Setting>
 
+    <Setting name="TargetBER">         1e-5 </Setting>
+    
+    <Setting name="RegNameDAC1">  VCAL_HIGH </Setting>
+    <Setting name="StartValueDAC1">     250 </Setting>
+    <Setting name="StopValueDAC1">      600 </Setting>
+    <Setting name="StepDAC1">            50 </Setting>
+    <Setting name="RegNameDAC2"> user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse </Setting>
+    <Setting name="StartValueDAC2">      28 </Setting>
+    <Setting name="StopValueDAC2">       50 </Setting>
+    <Setting name="StepDAC2">             1 </Setting>
+    
     <Setting name="DoFast">               0 </Setting>
     <Setting name="DisplayHisto">         0 </Setting>
     <Setting name="UpdateChipCfg">        1 </Setting>

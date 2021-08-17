@@ -250,10 +250,10 @@ void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t
 {
     const uint8_t cChipRate = lpGBTInterface::GetChipRate(pChip);
 
-    // Set data source for channels 0,2 to PRBS
+    // Set data source to PRBS
     lpGBTInterface::ConfigureRxSource(pChip, pGroups, lpGBTconstants::PATTERN_PRBS);
 
-    // Turn ON PRBS for channels 0,2
+    // Turn ON PRBS
     lpGBTInterface::ConfigureRxPRBS(pChip, pGroups, pChannels, true);
 
     // Configure Rx Phase Shifter
@@ -272,7 +272,7 @@ void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t
         } while(lpGBTInterface::IsRxLocked(pChip, cGroup, pChannels) == false);
         LOG(INFO) << BOLDBLUE << "\t--> Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " LOCKED" << RESET;
 
-        // Set new phase to channels 0,2
+        // Set new phase
         for(const auto& cChannel: pChannels)
         {
             uint8_t cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
@@ -282,13 +282,13 @@ void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t
     }
     lpGBTInterface::PhaseTrainRx(pChip, pGroups, false);
 
-    // Set back Rx groups to Fixed Phase tracking mode
-    lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 3, 0);
+    // Set back Rx groups to fixed phase
+    lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
 
-    // Turn off PRBS for channels 0,2
+    // Turn off PRBS
     lpGBTInterface::ConfigureRxPRBS(pChip, pGroups, pChannels, false);
 
-    // Set back Rx source to Normal data
+    // Set back Rx source to normal data
     lpGBTInterface::ConfigureRxSource(pChip, pGroups, lpGBTconstants::PATTERN_NORMAL);
 }
 
@@ -508,7 +508,7 @@ void lpGBTInterface::ConfigureCurrentDAC(Chip* pChip, const std::vector<std::str
     uint8_t cDACConfigH = ReadChipReg(pChip, "DACConfigH");
     WriteChipReg(pChip, "DACConfigH", cDACConfigH | 0x40);
 
-    // Sets output current for the current DAC. Current = CURDACSelect * XX uA.
+    // Sets output current for the current DAC. Current = CURDACSelect * XX uA
     WriteChipReg(pChip, "CURDACValue", pCurrentDACOutput);
 
     // Setting Nth bit in this register attaches current DAC to ADCN pin. Current source can be attached to any number of channels
@@ -689,13 +689,17 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << std::fixed << std::setprecision(0) << RESET;
-    int idx = 1;
+    int      idx = 1;
+    uint64_t nErrors;
     while(lpGBTInterface::IsBERTDone(pChip) == false)
     {
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
 
+        nErrors = lpGBTInterface::GetBERTErrors(pChip);
+
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s" << RESET;
-        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << lpGBTInterface::GetBERTErrors(pChip) / nBitInClkPeriod << RESET << GREEN << " frames with error(s)" << RESET;
+        LOG(INFO) << GREEN << "Current counter: " << BOLDYELLOW << nErrors / nBitInClkPeriod << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors << RESET << GREEN
+                  << " bits with errors" << RESET;
         idx++;
     }
     LOG(INFO) << BOLDGREEN << "========= Finished =========" << RESET;
@@ -709,14 +713,16 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // ########
     // # Stop #
     // ########
-    auto nErrors = lpGBTInterface::GetBERTErrors(pChip) / nBitInClkPeriod;
+    nErrors = lpGBTInterface::GetBERTErrors(pChip);
     lpGBTInterface::StartBERT(pChip, false); // Stop
 
     // Read PRBS frame counter
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frames2run << RESET;
-    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s), i.e. BER = " << BOLDYELLOW << nErrors * nBitInClkPeriod / frames2run << RESET
-              << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / frames2run * 100 << RESET << GREEN << "%)" << RESET;
+    LOG(INFO) << GREEN << "Final counter: " << BOLDYELLOW << nErrors / nBitInClkPeriod << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors << RESET << GREEN
+              << " bits with errors" << RESET;
+    LOG(INFO) << GREEN << "Final BER: " << BOLDYELLOW << nErrors / frames2run << RESET << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / nBitInClkPeriod / frames2run * 100 << RESET << GREEN << "%)"
+              << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
     return nErrors / frames2run;

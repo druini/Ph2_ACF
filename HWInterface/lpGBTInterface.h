@@ -26,6 +26,7 @@ const uint8_t PATTERN_PRBS      = 0x1;  // Start PRBS pattern
 const uint8_t PATTERN_NORMAL    = 0x0;  // Start normal-mode pattern
 const uint8_t fictitiousGroup   = 6;    // Fictitious group used when no need to speficy frontend chip
 const uint8_t fictitiousChannel = 0;    // Fictitious channel used when no need to speficy frontend chip
+const uint8_t rxPhaseTracking   = 2;    // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
 } // namespace lpGBTconstants
 
 namespace Ph2_HwInterface
@@ -39,6 +40,8 @@ class lpGBTInterface : public ChipInterface
     void StartPRBSpattern(Ph2_HwDescription::Chip* pChip);
     void StopPRBSpattern(Ph2_HwDescription::Chip* pChip);
 
+    virtual void
+                 PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface){};
     virtual bool ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
                                       const Ph2_HwDescription::BeBoard*      pBoard,
                                       const Ph2_HwDescription::OpticalGroup* pOpticalGroup,

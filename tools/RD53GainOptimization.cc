@@ -25,20 +25,20 @@ void GainOptimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nEvents        = this->findValueInSettings("nEvents");
-    startValue     = this->findValueInSettings("VCalHstart");
-    stopValue      = this->findValueInSettings("VCalHstop");
-    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings("TargetCharge"));
-    KrumCurrStart  = this->findValueInSettings("KrumCurrStart");
-    KrumCurrStop   = this->findValueInSettings("KrumCurrStop");
-    doFast         = this->findValueInSettings("DoFast");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    nEvents        = this->findValueInSettings<double>("nEvents");
+    startValue     = this->findValueInSettings<double>("VCalHstart");
+    stopValue      = this->findValueInSettings<double>("VCalHstop");
+    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
+    KrumCurrStart  = this->findValueInSettings<double>("KrumCurrStart");
+    KrumCurrStop   = this->findValueInSettings<double>("KrumCurrStop");
+    doFast         = this->findValueInSettings<double>("DoFast");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     frontEnd = RD53::getMajorityFE(colStart, colStop);
     colStart = std::max(colStart, frontEnd->colStart);
@@ -169,7 +169,6 @@ void GainOptimization::draw()
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     GainOptimization::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -297,11 +296,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                             for(auto col = 0u; col < RD53::nCols; col++)
                                 if(cChip->getChannel<GainFit>(row, col).fChi2 > 0)
                                 {
-                                    float ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fIntercept,
-                                                                            cChip->getChannel<GainFit>(row, col).fSlope,
-                                                                            cChip->getChannel<GainFit>(row, col).fQuadratic,
-                                                                            cChip->getChannel<GainFit>(row, col).fLog},
-                                                                           target);
+                                    float ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fIntercept, cChip->getChannel<GainFit>(row, col).fSlope}, target);
                                     avg += ToTatTarget;
                                     stdDev += ToTatTarget * ToTatTarget;
                                     cnt++;

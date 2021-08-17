@@ -27,12 +27,10 @@ void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWM
 
 void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile)
 {
-    if(pIsFile && pFilename.find(".xml") != std::string::npos)
-        parseSettingsxml(pFilename, pSettingsMap, os, pIsFile);
-    else if(!pIsFile)
+    if((pIsFile && pFilename.find(".xml") != std::string::npos) || (!pIsFile))
         parseSettingsxml(pFilename, pSettingsMap, os, pIsFile);
     else
-        LOG(ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xm" << RESET;
+        LOG(ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xml" << RESET;
 }
 
 void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
@@ -987,9 +985,22 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
 
         for(pugi::xml_node nSetting = nSettings.child("Setting"); nSetting; nSetting = nSetting.next_sibling())
         {
-            pSettingsMap[nSetting.attribute("name").value()] = convertAnyDouble(nSetting.first_child().value());
-            os << BOLDRED << "Setting" << RESET << " -- " << BOLDCYAN << nSetting.attribute("name").value() << RESET << ":" << BOLDYELLOW << convertAnyDouble(nSetting.first_child().value()) << RESET
-               << std::endl;
+            if((strcmp(nSetting.attribute("name").value(), "RegNameDAC1") == 0) || (strcmp(nSetting.attribute("name").value(), "RegNameDAC2") == 0))
+            {
+                std::string value(nSetting.first_child().value());
+                value.erase(std::remove(value.begin(), value.end(), ' '), value.end());
+                pSettingsMap[nSetting.attribute("name").value()] = value;
+
+                os << BOLDRED << "Setting" << RESET << " -- " << BOLDCYAN << nSetting.attribute("name").value() << RESET << ":" << BOLDYELLOW
+                   << boost::any_cast<std::string>(pSettingsMap[nSetting.attribute("name").value()]) << RESET << std::endl;
+            }
+            else
+            {
+                pSettingsMap[nSetting.attribute("name").value()] = convertAnyDouble(nSetting.first_child().value());
+
+                os << BOLDRED << "Setting" << RESET << " -- " << BOLDCYAN << nSetting.attribute("name").value() << RESET << ":" << BOLDYELLOW
+                   << boost::any_cast<double>(pSettingsMap[nSetting.attribute("name").value()]) << RESET << std::endl;
+            }
         }
     }
 }
@@ -1038,12 +1049,18 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
     else
         cFileName = expandEnvironmentVariables(theChipNode.attribute("configfile").value());
 
-    os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << theChipNode.attribute("Id").value() << BOLDBLUE << ", Lane: " << BOLDYELLOW
-       << theChipNode.attribute("Lane").value() << BOLDBLUE << ", File: " << BOLDYELLOW << cFileName << RESET << std::endl;
+    uint32_t chipId     = theChipNode.attribute("Id").as_int();
+    uint32_t chipLane   = theChipNode.attribute("Lane").as_int();
+    uint8_t  cRxGroup   = theChipNode.attribute("RxGroups").as_int();
+    uint8_t  cRxChannel = theChipNode.attribute("RxChannels").as_int();
+    uint8_t  cTxGroup   = theChipNode.attribute("TxGroups").as_int();
+    uint8_t  cTxChannel = theChipNode.attribute("TxChannels").as_int();
 
-    uint32_t     chipId   = theChipNode.attribute("Id").as_int();
-    uint32_t     chipLane = theChipNode.attribute("Lane").as_int();
-    ReadoutChip* theChip  = cHybrid->addChipContainer(chipId, new RD53(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), chipId, chipLane, cFileName));
+    os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << chipId << BOLDBLUE << ", Lane: " << BOLDYELLOW << chipLane << BOLDBLUE << ", File: " << BOLDYELLOW
+       << cFileName << BOLDBLUE << ", RxGroup: " << BOLDYELLOW << +cRxGroup << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup
+       << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << RESET << std::endl;
+
+    ReadoutChip* theChip = cHybrid->addChipContainer(chipId, new RD53(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), chipId, chipLane, cFileName));
     theChip->setNumberOfChannels(RD53::nRows, RD53::nCols);
 
     this->parseRD53Settings(theChipNode, theChip, os);
