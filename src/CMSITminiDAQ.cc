@@ -31,8 +31,8 @@
 #include "../tools/RD53VoltageTuning.h"
 
 #include <chrono>
-#include <thread>
 #include <sys/wait.h>
+#include <thread>
 
 #include "TApplication.h"
 
