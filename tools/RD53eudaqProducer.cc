@@ -79,7 +79,7 @@ void RD53eudaqProducer::DoStopRun()
 
 void RD53eudaqProducer::DoTerminate() { RD53eudaqProducer::DoStopRun(); }
 
-void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>& RD53EvtList)
+void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<RD53Event>& RD53EvtList)
 {
     std::time_t timeStamp = std::time(nullptr);
 

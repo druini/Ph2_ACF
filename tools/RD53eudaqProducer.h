@@ -19,7 +19,7 @@ class RD53eudaqProducer : public eudaq::Producer
     {
       public:
         RD53eudaqEvtConverter(RD53eudaqProducer* eudaqProducer) : eudaqProducer(eudaqProducer) {}
-        void operator()(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>& RD53EvtList);
+        void operator()(const std::vector<RD53Event>& RD53EvtList);
 
       private:
         RD53eudaqProducer* eudaqProducer;
