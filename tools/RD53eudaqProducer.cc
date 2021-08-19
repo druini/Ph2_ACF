@@ -9,6 +9,8 @@
 
 #include "RD53eudaqProducer.h"
 
+using namespace Ph2_HwDescription;
+
 RD53eudaqProducer::RD53eudaqProducer(Ph2_System::SystemController& RD53SysCntr, const std::string configFile, const std::string producerName, const std::string runControl)
     : eudaq::Producer(producerName, runControl), configFile(configFile)
 {
@@ -99,10 +101,10 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             for(auto i = 0u; i < evt.chip_frames_events.size(); i++)
             {
                 std::vector<uint8_t> eudaq_hits;
-                eudaq_hits.push_back((RD53::nRows >> 0) & 0xFF);
-                eudaq_hits.push_back((RD53::nRows >> 8) & 0xFF);
-                eudaq_hits.push_back((RD53::nCols >> 0) & 0xFF);
-                eudaq_hits.push_back((RD53::nCols >> 8) & 0xFF);
+                eudaq_hits.push_back((Ph2_HwDescription::RD53::nRows >> 0) & 0xFF);
+                eudaq_hits.push_back((Ph2_HwDescription::RD53::nRows >> 8) & 0xFF);
+                eudaq_hits.push_back((Ph2_HwDescription::RD53::nCols >> 0) & 0xFF);
+                eudaq_hits.push_back((Ph2_HwDescription::RD53::nCols >> 8) & 0xFF);
                 eudaq_hits.push_back((evt.chip_frames_events[i].second.hit_data.size() >> 0) & 0xFF);
                 eudaq_hits.push_back((evt.chip_frames.events[i].second.hit_data.size() >> 8) & 0xFF);
                 for(const auto& hit: evt.chip_frames_events[i].second.hit_data)
