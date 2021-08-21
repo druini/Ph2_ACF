@@ -12,6 +12,13 @@
 
 #include "RD53Physics.h"
 #include "eudaq/Producer.hh"
+#include "eudaq/RawDataEvent.hh"
+
+namespace EUDAQ
+{
+const std::string EVENT = "CMSIT";
+const int         WAIT  = 5000; // [ms]
+} // namespace EUDAQ
 
 class RD53eudaqProducer : public eudaq::Producer
 {
@@ -19,7 +26,7 @@ class RD53eudaqProducer : public eudaq::Producer
     {
       public:
         RD53eudaqEvtConverter(RD53eudaqProducer* eudaqProducer) : eudaqProducer(eudaqProducer) {}
-        void operator()(const std::vector<RD53Event>& RD53EvtList);
+        void operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList);
 
       private:
         RD53eudaqProducer* eudaqProducer;
@@ -28,25 +35,23 @@ class RD53eudaqProducer : public eudaq::Producer
   public:
     RD53eudaqProducer(Ph2_System::SystemController& RD53SysCntr, const std::string configFile, const std::string producerName, const std::string runControl);
 
-    void DoReset() override;
-    void DoInitialise() override;
-    void DoConfigure() override;
-    void DoStartRun() override;
-    void DoStopRun() override;
-    void DoTerminate() override;
+    void OnReset() override;
+    void OnInitialise(const eudaq::Configuration& param) override;
+    void OnConfigure(const eudaq::Configuration& param) override;
+    void OnStartRun(unsigned runNumber) override;
+    void OnStopRun() override;
+    void OnTerminate() override;
+
+    void MainLoop();
+    void MySendEvent(eudaq::Event& theEvent);
+
+    int theRunNumber;
+    int evCounter;
 
   private:
+    bool        exit;
     std::string configFile;
     Physics     RD53sysCntrPhys;
 };
-
-// ##################################
-// # Call to EUDAQ producer factory #
-// ##################################
-namespace
-{
-__attribute__((unused)) auto dummy =
-    eudaq::Factory<eudaq::Producer>::Register<RD53eudaqProducer, Ph2_System::SystemController&, const std::string, const std::string, const std::string>(eudaq::cstr2hash("RD53eudaqProducer"));
-}
 
 #endif

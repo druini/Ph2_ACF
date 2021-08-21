@@ -664,18 +664,7 @@ int main(int argc, char** argv)
             gROOT->SetBatch(true);
 
             RD53eudaqProducer theEUDAQproducer(mySysCntr, configFile, "RD53eudaqProducer", eudaqRunCtr);
-            try
-            {
-                LOG(INFO) << GREEN << "Connecting to EUDAQ run control" << RESET;
-                theEUDAQproducer.Connect();
-            }
-            catch(...)
-            {
-                LOG(ERROR) << BOLDRED << "Can not connect to EUDAQ run control at " << eudaqRunCtr << RESET;
-                exit(EXIT_FAILURE);
-            }
-            LOG(INFO) << BOLDBLUE << "\t--> Connected" << RESET;
-            while(theEUDAQproducer.IsConnected() == true) std::this_thread::sleep_for(std::chrono::seconds(1));
+            theEUDAQproducer.MainLoop();
             exit(EXIT_SUCCESS);
 #else
             LOG(WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
