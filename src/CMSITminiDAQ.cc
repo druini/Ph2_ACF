@@ -319,8 +319,8 @@ int main(int argc, char** argv)
             // ######################################
 
             std::stringstream outp;
-            mySysCntr.InitializeHw(configFile, outp, true, false);
             mySysCntr.InitializeSettings(configFile, outp);
+            mySysCntr.InitializeHw(configFile, outp, true, false);
             if(reset == true)
             {
                 if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
@@ -665,9 +665,7 @@ int main(int argc, char** argv)
 
             RD53eudaqProducer theEUDAQproducer(mySysCntr, configFile, "RD53eudaqProducer", eudaqRunCtr);
             theEUDAQproducer.MainLoop();
-            mySysCntr.Destroy();
-
-            exit(EXIT_SUCCESS);
+            runNumber = theEUDAQproducer.theRunNumber;
 #else
             LOG(WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
             exit(EXIT_FAILURE);
