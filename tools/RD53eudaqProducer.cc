@@ -14,7 +14,7 @@ RD53eudaqProducer::RD53eudaqProducer(Ph2_System::SystemController& RD53SysCntr, 
 {
     try
     {
-        exit = false;
+        doExit = false;
         RD53sysCntrPhys.Inherit(&RD53SysCntr);
         RD53sysCntrPhys.setGenericEvtConverter(RD53eudaqProducer::RD53eudaqEvtConverter(this));
 
@@ -74,7 +74,6 @@ void RD53eudaqProducer::OnStartRun(unsigned runNumber)
 {
     try
     {
-        std::cout << "AAAA " << __LINE__ << std::endl;
         theRunNumber = runNumber;
         evCounter    = 0;
 
@@ -91,7 +90,7 @@ void RD53eudaqProducer::OnStartRun(unsigned runNumber)
         // std::string fileName(eudaqConf->Get("Results", "Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics"));
         std::string fileName("Run" + RD53Shared::fromInt2Str(theRunNumber) + "_Physics");
         RD53sysCntrPhys.initializeFiles(fileName);
-        RD53sysCntrPhys.Running();
+        RD53sysCntrPhys.Start(theRunNumber);
 
         this->SetConnectionState(eudaq::ConnectionState::STATE_RUNNING, "RD53eudaqProducer::Running");
     }
@@ -131,16 +130,16 @@ void RD53eudaqProducer::OnStopRun()
 
 void RD53eudaqProducer::OnTerminate()
 {
-    exit = true;
-    RD53eudaqProducer::OnStopRun();
+    std::unique_lock<std::mutex> theGuard(theMtx);
+    doExit = true;
+    theGuard.unlock();
+    wakeUp.notify_one();
 }
 
 void RD53eudaqProducer::MainLoop()
 {
-    do
-    {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    } while(exit == false);
+    std::unique_lock<std::mutex> theGuard(theMtx);
+    wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
 void RD53eudaqProducer::MySendEvent(eudaq::Event& theEvent)

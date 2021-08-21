@@ -16,8 +16,8 @@
 
 namespace EUDAQ
 {
-const std::string EVENT = "CMSIT";
-const int         WAIT  = 5000; // [ms]
+const std::string EVENT = "bdaq53a"; // CMSIT or bdaq53a
+const int         WAIT  = 5000;      // [ms]
 } // namespace EUDAQ
 
 class RD53eudaqProducer : public eudaq::Producer
@@ -49,9 +49,11 @@ class RD53eudaqProducer : public eudaq::Producer
     int evCounter;
 
   private:
-    bool        exit;
-    std::string configFile;
-    Physics     RD53sysCntrPhys;
+    std::condition_variable wakeUp;
+    std::mutex              theMtx;
+    bool                    doExit;
+    std::string             configFile;
+    Physics                 RD53sysCntrPhys;
 };
 
 #endif

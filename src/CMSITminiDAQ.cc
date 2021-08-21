@@ -665,6 +665,8 @@ int main(int argc, char** argv)
 
             RD53eudaqProducer theEUDAQproducer(mySysCntr, configFile, "RD53eudaqProducer", eudaqRunCtr);
             theEUDAQproducer.MainLoop();
+            mySysCntr.Destroy();
+
             exit(EXIT_SUCCESS);
 #else
             LOG(WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
