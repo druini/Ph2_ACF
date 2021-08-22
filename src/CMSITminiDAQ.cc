@@ -636,11 +636,11 @@ int main(int argc, char** argv)
             // ###############
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing Phsyics data taking @@@" << RESET;
 
-            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
-            Physics     ph;
+            Physics ph;
             ph.Inherit(&mySysCntr);
             if(binaryFile == "")
             {
+                std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
                 ph.localConfigure(fileName, -1);
                 ph.Start(runNumber);
                 std::this_thread::sleep_for(std::chrono::seconds(runtime));
@@ -648,6 +648,10 @@ int main(int argc, char** argv)
             }
             else
             {
+                std::string fileName(binaryFile);
+                fileName.erase(0, fileName.find_last_of("/\\"));
+                fileName  = fileName.erase(fileName.find(".raw") - 8, 12) + "fromBin";
+                runNumber = atof(fileName.substr(fileName.find("Run") + 3, 6).c_str());
                 ph.localConfigure(fileName, runNumber);
                 ph.analyze(true);
                 ph.draw();
