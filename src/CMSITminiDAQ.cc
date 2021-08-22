@@ -641,6 +641,7 @@ int main(int argc, char** argv)
             if(binaryFile == "")
             {
                 std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
+
                 ph.localConfigure(fileName, -1);
                 ph.Start(runNumber);
                 std::this_thread::sleep_for(std::chrono::seconds(runtime));
@@ -652,6 +653,8 @@ int main(int argc, char** argv)
                 fileName.erase(0, fileName.find_last_of("/\\"));
                 fileName  = fileName.erase(fileName.find(".raw") - 8, 12) + "fromBin";
                 runNumber = atof(fileName.substr(fileName.find("Run") + 3, 6).c_str());
+                mySysCntr.setValueInSettings("SaveBinaryData", false);
+
                 ph.localConfigure(fileName, runNumber);
                 ph.analyze(true);
                 ph.draw();
