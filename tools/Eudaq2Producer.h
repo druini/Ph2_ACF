@@ -12,6 +12,10 @@
  *
  */
 
+////////////////////////////////////////////
+// Mauro: needs update to new EUDAQ (9/2021)
+////////////////////////////////////////////
+
 #ifndef Eudaq2Producer_h__
 #define Eudaq2Producer_h__
 

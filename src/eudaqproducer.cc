@@ -8,6 +8,10 @@ using namespace Ph2_System;
 using namespace CommandLineProcessing;
 INITIALIZE_EASYLOGGINGPP
 
+////////////////////////////////////////////
+// Mauro: needs update to new EUDAQ (9/2021)
+////////////////////////////////////////////
+
 int main(int argc, char** argv)
 {
     // configure the logger

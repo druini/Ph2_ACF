@@ -13,6 +13,10 @@
  *
 */
 
+////////////////////////////////////////////
+// Mauro: needs update to new EUDAQ (9/2021)
+////////////////////////////////////////////
+
 #include "CBCChannelGroupHandler.h"
 #include "Channel.h"
 #include "CicFEAlignment.h"
