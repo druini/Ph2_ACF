@@ -27,14 +27,6 @@ void RD53FWInterface::setFileHandler(FileHandler* pHandler)
         LOG(ERROR) << BOLDRED << "NULL FileHandler" << RESET;
 }
 
-uint32_t RD53FWInterface::getBoardInfo()
-{
-    uint32_t cVersionMajor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_major");
-    uint32_t cVersionMinor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
-    uint32_t cVersionWord  = ((cVersionMajor << RD53FWconstants::NBIT_FWVER) | cVersionMinor);
-    return cVersionWord;
-}
-
 void RD53FWInterface::ResetSequence(const std::string& refClockRate)
 {
     LOG(INFO) << BOLDMAGENTA << "Resetting the backend board... it may take a while" << RESET;
@@ -68,6 +60,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ########################
     uint32_t cVersionMajor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_major");
     uint32_t cVersionMinor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
+    this->FWinfo           = ((cVersionMajor << RD53FWconstants::NBIT_FWVER) | cVersionMinor);
 
     uint32_t cFWyear    = RegManager::ReadReg("user.stat_regs.fw_date.year");
     uint32_t cFWmonth   = RegManager::ReadReg("user.stat_regs.fw_date.month");

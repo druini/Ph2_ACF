@@ -47,7 +47,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // # Override member functions #
     // #############################
     void      setFileHandler(FileHandler* pHandler) override;
-    uint32_t  getBoardInfo() override;
+    uint32_t  getBoardInfo() override { return FWinfo; }
     BoardType getBoardType() const override { return BoardType::RD53; }
 
     void ResetSequence(const std::string& refClockRate);
@@ -229,6 +229,7 @@ class RD53FWInterface : public BeBoardFWInterface
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
     bool               singleChip;
+    uint32_t           FWinfo;
     uint16_t           enabledHybrids;
 };
 

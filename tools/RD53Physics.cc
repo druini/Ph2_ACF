@@ -127,7 +127,7 @@ void Physics::localConfigure(const std::string fileRes_, int currentRun)
     }
 
     Physics::ConfigureCalibration();
-    Physics::initializeFiles(fileRes_, -1);
+    Physics::initializeFiles(fileRes_, currentRun);
 }
 
 void Physics::initializeFiles(const std::string fileRes_, int currentRun)
