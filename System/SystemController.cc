@@ -55,7 +55,16 @@ void SystemController::Inherit(const SystemController* pController)
 void SystemController::Destroy()
 {
     for(const auto cBoard: *fDetectorContainer)
-        if(cBoard->getBoardType() == BoardType::RD53) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintErrorsLVDS(); // @TMP@
+        if(cBoard->getBoardType() == BoardType::RD53)
+        {
+            try
+            {
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintErrorsLVDS(); // @TMP@
+            }
+            catch(...)
+            {
+            }
+        }
 
     this->closeFileHandler();
 
