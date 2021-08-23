@@ -166,27 +166,26 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
         {
             eudaq::RawDataEvent eudaqEvent(EUDAQ::EVENT, eudaqProducer->theRunNumber, eudaqProducer->evCounter);
 
-	    CMSITEventData::EventData theEvent{std::time(nullptr), evt.l1a_counter, evt.tdc, evt.bx_counter, evt.tlu_trigger_id, {}};
+            CMSITEventData::EventData theEvent{std::time(nullptr), evt.l1a_counter, evt.tdc, evt.bx_counter, evt.tlu_trigger_id, {}};
 
-            for(const auto& frame : evt.chip_frames_events)
+            for(const auto& frame: evt.chip_frames_events)
             {
-	      theEvent.chipData.push_back({frame.first.chip_id, frame.first.chip_lane, {}});
+                theEvent.chipData.push_back({frame.first.chip_id, frame.first.chip_lane, {}});
 
-                for(const auto& hit: frame.second.hit_data)
-		  theEvent.chipData.back().hits.push_back({hit.row, hit.col, hit.tot});
+                for(const auto& hit: frame.second.hit_data) theEvent.chipData.back().hits.push_back({hit.row, hit.col, hit.tot});
             }
 
-	    // #################
-	    // # Serialization #
-	    // #################
-	    std::ostringstream theSerialized;
-	    boost::archive::binary_oarchive theArchive(theSerialized);
-	    theArchive << theEvent;
-	    const std::string& theStream = theSerialized.str();
-	      
-	    eudaqEvent.AddBlock(eudaqProducer->evCounter, theStream.c_str(), theStream.size());
+            // #################
+            // # Serialization #
+            // #################
+            std::ostringstream              theSerialized;
+            boost::archive::binary_oarchive theArchive(theSerialized);
+            theArchive << theEvent;
+            const std::string& theStream = theSerialized.str();
+
+            eudaqEvent.AddBlock(eudaqProducer->evCounter, theStream.c_str(), theStream.size());
             eudaqProducer->MySendEvent(eudaqEvent);
 
-	    eudaqProducer->evCounter += 1;
+            eudaqProducer->evCounter += 1;
         }
 }
