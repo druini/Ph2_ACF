@@ -12,15 +12,13 @@
 
 #include "../Utils/Container.h"
 #include "../tools/Tool.h"
+#include <boost/algorithm/string.hpp>
 #include <unordered_map>
-#include <boost/algorithm/string.hpp>                                                                                                                                    
 
 #ifdef __USE_ROOT__
-#include "TApplication.h"
 #include "../DQMUtils/RD53DataReadbackOptimizationHistograms.h"
+#include "TApplication.h"
 #endif
-
-
 
 // ##################
 // # BER test suite #
@@ -28,7 +26,7 @@
 class EyeDiag : public Tool
 {
   public:
-  ~EyeDiag() override;
+    ~EyeDiag() override;
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
@@ -36,30 +34,26 @@ class EyeDiag : public Tool
 
     void localConfigure(const std::string fileRes_, int currentRun);
     void initializeFiles(const std::string fileRes_, int currentRun);
-    void run(std::string runName="");
+    void run(std::string runName = "");
     void draw();
 
 #ifdef __USE_ROOT__
-    std::unordered_map<std::string,TH1*> histos;
+    std::unordered_map<std::string, TH1*> histos;
 #endif
 
   private:
     size_t chain2test;
     bool   given_time;
     double frames_or_time;
-    void fillHisto();
+    void   fillHisto();
 
   protected:
     DetectorDataContainer theEyeDiagContainer;
 
-    std::string fileRes;
-    int         theCurrentRun;
-    bool        doDisplay;
-    std::vector<std::string> observables={"EHEight", "EWIDth","JITTer RMS","QFACtor","CROSsing"};
-
-
-
-    
+    std::string              fileRes;
+    int                      theCurrentRun;
+    bool                     doDisplay;
+    std::vector<std::string> observables = {"EHEight", "EWIDth", "JITTer RMS", "QFACtor", "CROSsing"};
 };
 
 #endif

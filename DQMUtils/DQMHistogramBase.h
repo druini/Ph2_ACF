@@ -67,7 +67,7 @@ struct CallSetZTitle<T, true>
 {
     void operator()(T* thePlot, const char* theTitle)
     {
-        thePlot.SetZTitle(theTitle);
+        thePlot->SetZTitle(theTitle);
         return;
     }
 };

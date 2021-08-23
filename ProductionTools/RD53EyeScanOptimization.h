@@ -11,12 +11,12 @@
 #define RD53EyeScanOptimization_H
 
 #include "../Utils/GenericDataArray.h"
-#include <array>
 #include "RD53EyeDiag.h"
+#include <array>
 
 #ifdef __USE_ROOT__
-#include "TApplication.h"
 #include "../DQMUtils/RD53EyeScanOptimizationHistograms.h"
+#include "TApplication.h"
 #include "TH2F.h"
 #endif
 
@@ -31,7 +31,7 @@ class EyeScanOptimization : public EyeDiag
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string fileRes_, int currentRun, bool is2D=false);
+    void localConfigure(const std::string fileRes_, int currentRun, bool is2D = false);
     void initializeFiles(const std::string fileRes_, int currentRun);
     void run();
     void run2d();
@@ -41,7 +41,6 @@ class EyeScanOptimization : public EyeDiag
 #ifdef __USE_ROOT__
     EyeScanOptimizationHistograms* histos;
 #endif
-
 
   private:
     size_t rowStart;
@@ -70,7 +69,14 @@ class EyeScanOptimization : public EyeDiag
 
     void fillHisto();
     void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
-    void scanDac3D(const std::string& regName1, const std::string& regName2,const std::string& regName3, const std::vector<uint16_t>& dacList1, const std::vector<uint16_t>& dacList2, const std::vector<uint16_t>& dacList3, uint32_t nEvents, DetectorDataContainer* theContainer);
+    void scanDac3D(const std::string&           regName1,
+                   const std::string&           regName2,
+                   const std::string&           regName3,
+                   const std::vector<uint16_t>& dacList1,
+                   const std::vector<uint16_t>& dacList2,
+                   const std::vector<uint16_t>& dacList3,
+                   uint32_t                     nEvents,
+                   DetectorDataContainer*       theContainer);
     void chipErrorReport() const;
 
   protected:

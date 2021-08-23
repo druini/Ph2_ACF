@@ -14,7 +14,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-RD53FWInterface::RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), fpgaConfig(nullptr), ddr3Offset(0) {}
+RD53FWInterface::RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), fpgaConfig(nullptr), ddr3Offset(0), FWinfo(0) {}
 
 void RD53FWInterface::setFileHandler(FileHandler* pHandler)
 {
@@ -25,14 +25,6 @@ void RD53FWInterface::setFileHandler(FileHandler* pHandler)
     }
     else
         LOG(ERROR) << BOLDRED << "NULL FileHandler" << RESET;
-}
-
-uint32_t RD53FWInterface::getBoardInfo()
-{
-    uint32_t cVersionMajor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_major");
-    uint32_t cVersionMinor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
-    uint32_t cVersionWord  = ((cVersionMajor << RD53FWconstants::NBIT_FWVER) | cVersionMinor);
-    return cVersionWord;
 }
 
 void RD53FWInterface::ResetSequence(const std::string& refClockRate)
@@ -68,6 +60,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ########################
     uint32_t cVersionMajor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_major");
     uint32_t cVersionMinor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
+    this->FWinfo           = ((cVersionMajor << RD53FWconstants::NBIT_FWVER) | cVersionMinor);
 
     uint32_t cFWyear    = RegManager::ReadReg("user.stat_regs.fw_date.year");
     uint32_t cFWmonth   = RegManager::ReadReg("user.stat_regs.fw_date.month");
@@ -118,13 +111,15 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second);
                 if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::External)
                 {
+                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be External" << RESET;
                     cfgDIO5.enable    = true;
                     cfgDIO5.ch_out_en = 0x0;
                 }
                 else if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::TLU)
                 {
+                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be TLU" << RESET;
                     cfgDIO5.enable             = true;
-                    cfgDIO5.ch_out_en          = 0x04;
+                    cfgDIO5.ch_out_en          = 0x05;
                     cfgDIO5.tlu_en             = true;
                     cfgDIO5.tlu_handshake_mode = 0x02;
                 }
