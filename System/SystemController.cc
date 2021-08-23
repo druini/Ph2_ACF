@@ -142,11 +142,17 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
 
+    LOG(INFO) << BOLDYELLOW << "Trying to connect to the Power Supply Server..." << RESET;
     fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
+        LOG(INFO) << BOLDYELLOW << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
         delete fPowerSupplyClient;
         fPowerSupplyClient = nullptr;
+    }
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
     }
     for(const auto board: *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
 
