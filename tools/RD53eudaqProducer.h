@@ -11,13 +11,17 @@
 #define RD53eudaqProducer_H
 
 #include "RD53Physics.h"
+#include "eudaq/CMSITEventData.hh"
 #include "eudaq/Producer.hh"
 #include "eudaq/RawDataEvent.hh"
 
+#include "boost/archive/binary_oarchive.hpp"
+#include "boost/serialization/vector.hpp"
+
 namespace EUDAQ
 {
-const std::string EVENT = "bdaq53a"; // CMSIT or bdaq53a
-const int         WAIT  = 5000;      // [ms]
+const std::string EVENT = "CMSIT";
+const int         WAIT  = 5000; // [ms]
 } // namespace EUDAQ
 
 class RD53eudaqProducer : public eudaq::Producer

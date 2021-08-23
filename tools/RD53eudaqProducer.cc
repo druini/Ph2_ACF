@@ -164,49 +164,29 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
     if(RD53EvtList.size() != 0)
         for(const auto& evt: RD53EvtList)
         {
-            eudaq::RawDataEvent eudaqEvent(EUDAQ::EVENT, eudaqProducer->theRunNumber, eudaqProducer->evCounter++);
+            eudaq::RawDataEvent eudaqEvent(EUDAQ::EVENT, eudaqProducer->theRunNumber, eudaqProducer->evCounter);
 
-            eudaqEvent.SetTag("TIMESTAMP", std::time(nullptr));
-            eudaqEvent.SetTag("L1A_COUNTER", evt.l1a_counter);
-            eudaqEvent.SetTag("TDC", evt.tdc);
-            eudaqEvent.SetTag("BX_COUNTER", evt.bx_counter);
-            eudaqEvent.SetTag("TLU_TRIGGER_ID", evt.tlu_trigger_id);
+	    CMSITEventData::EventData theEvent{std::time(nullptr), evt.l1a_counter, evt.tdc, evt.bx_counter, evt.tlu_trigger_id, {}};
 
-            for(auto i = 0u; i < evt.chip_frames_events.size(); i++)
+            for(const auto& frame : evt.chip_frames_events)
             {
-                std::vector<uint8_t> eudaq_hits;
+	      theEvent.chipData.push_back({frame.first.chip_id, frame.first.chip_lane, {}});
 
-                eudaq_hits.push_back((Ph2_HwDescription::RD53::nRows >> 0) & 0xFF);
-                eudaq_hits.push_back((Ph2_HwDescription::RD53::nRows >> 8) & 0xFF);
-                eudaq_hits.push_back((Ph2_HwDescription::RD53::nCols >> 0) & 0xFF);
-                eudaq_hits.push_back((Ph2_HwDescription::RD53::nCols >> 8) & 0xFF);
-                eudaq_hits.push_back((evt.chip_frames_events[i].second.hit_data.size() >> 0) & 0xFF);
-                eudaq_hits.push_back((evt.chip_frames_events[i].second.hit_data.size() >> 8) & 0xFF);
-
-                for(const auto& hit: evt.chip_frames_events[i].second.hit_data)
-                {
-                    // #######
-                    // # ROW #
-                    // #######
-                    eudaq_hits.push_back((hit.row >> 0) & 0xFF);
-                    eudaq_hits.push_back((hit.row >> 8) & 0xFF);
-                    // #######
-                    // # COL #
-                    // #######
-                    eudaq_hits.push_back((hit.col >> 0) & 0xFF);
-                    eudaq_hits.push_back((hit.col >> 8) & 0xFF);
-                    // #######
-                    // # TOT #
-                    // #######
-                    eudaq_hits.push_back(hit.tot);
-                    eudaq_hits.push_back(0);
-                }
-                // ###########
-                // # Chip ID #
-                // ###########
-                eudaqEvent.AddBlock(evt.chip_frames_events[i].first.chip_id, eudaq_hits);
+                for(const auto& hit: frame.second.hit_data)
+		  theEvent.chipData.back().hits.push_back({hit.row, hit.col, hit.tot});
             }
 
+	    // #################
+	    // # Serialization #
+	    // #################
+	    std::ostringstream theSerialized;
+	    boost::archive::binary_oarchive theArchive(theSerialized);
+	    theArchive << theEvent;
+	    const std::string& theStream = theSerialized.str();
+	      
+	    eudaqEvent.AddBlock(eudaqProducer->evCounter, theStream.c_str(), theStream.size());
             eudaqProducer->MySendEvent(eudaqEvent);
+
+	    eudaqProducer->evCounter += 1;
         }
 }

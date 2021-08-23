@@ -243,7 +243,7 @@ class SystemController
         auto setting = fSettingsMap.find(name);
         if(setting != std::end(fSettingsMap))
         {
-            setting->second = boost::any_cast<T>(val);
+            fSettingsMap[name] = val;
             return true;
         }
         return false;
