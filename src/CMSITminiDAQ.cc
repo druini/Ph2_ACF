@@ -31,8 +31,8 @@
 #include "../tools/RD53VoltageTuning.h"
 
 #include <chrono>
-#include <thread>
 #include <sys/wait.h>
+#include <thread>
 
 #include "TApplication.h"
 
@@ -139,7 +139,7 @@ int main(int argc, char** argv)
     cmd.defineOption("sup", "Run in producer(Middleware) - consumer(DQM) mode", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("sup", "s");
 
-    cmd.defineOption("eudaqRunCtr", "EUDAQ-IT run control address [e.g. tcp://localhost:44000]", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("eudaqRunCtr", "EUDAQ-IT run control address (e.g. tcp://localhost:44000)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
@@ -148,7 +148,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("replay", "Replay previously captured communication (extension .bin)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption("runtime", "Set running time for physics mode", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("runtime", "Set running time for physics mode (in seconds)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("runtime", "t");
 
     int result = cmd.parse(argc, argv);
@@ -319,8 +319,8 @@ int main(int argc, char** argv)
             // ######################################
 
             std::stringstream outp;
-            mySysCntr.InitializeHw(configFile, outp, true, false);
             mySysCntr.InitializeSettings(configFile, outp);
+            mySysCntr.InitializeHw(configFile, outp, true, false);
             if(reset == true)
             {
                 if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
@@ -636,11 +636,12 @@ int main(int argc, char** argv)
             // ###############
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing Phsyics data taking @@@" << RESET;
 
-            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
-            Physics     ph;
+            Physics ph;
             ph.Inherit(&mySysCntr);
             if(binaryFile == "")
             {
+                std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
+
                 ph.localConfigure(fileName, -1);
                 ph.Start(runNumber);
                 std::this_thread::sleep_for(std::chrono::seconds(runtime));
@@ -648,6 +649,12 @@ int main(int argc, char** argv)
             }
             else
             {
+                std::string fileName(binaryFile);
+                fileName.erase(0, fileName.find_last_of("/\\"));
+                fileName  = fileName.erase(fileName.find(".raw") - 8, 12) + "fromBin";
+                runNumber = atof(fileName.substr(fileName.find("Run") + 3, 6).c_str());
+                ph.setValueInSettings<double>("SaveBinaryData", false);
+
                 ph.localConfigure(fileName, runNumber);
                 ph.analyze(true);
                 ph.draw();
@@ -664,19 +671,8 @@ int main(int argc, char** argv)
             gROOT->SetBatch(true);
 
             RD53eudaqProducer theEUDAQproducer(mySysCntr, configFile, "RD53eudaqProducer", eudaqRunCtr);
-            try
-            {
-                LOG(INFO) << GREEN << "Connecting to EUDAQ run control" << RESET;
-                theEUDAQproducer.Connect();
-            }
-            catch(...)
-            {
-                LOG(ERROR) << BOLDRED << "Can not connect to EUDAQ run control at " << eudaqRunCtr << RESET;
-                exit(EXIT_FAILURE);
-            }
-            LOG(INFO) << BOLDBLUE << "\t--> Connected" << RESET;
-            while(theEUDAQproducer.IsConnected() == true) std::this_thread::sleep_for(std::chrono::seconds(1));
-            exit(EXIT_SUCCESS);
+            theEUDAQproducer.MainLoop();
+            runNumber = theEUDAQproducer.theRunNumber;
 #else
             LOG(WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
             exit(EXIT_FAILURE);

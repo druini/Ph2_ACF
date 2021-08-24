@@ -47,7 +47,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // # Override member functions #
     // #############################
     void      setFileHandler(FileHandler* pHandler) override;
-    uint32_t  getBoardInfo() override;
+    uint32_t  getBoardInfo() override { return FWinfo; }
     BoardType getBoardType() const override { return BoardType::RD53; }
 
     void ResetSequence(const std::string& refClockRate);
@@ -162,7 +162,7 @@ class RD53FWInterface : public BeBoardFWInterface
     {
         bool     enable             = false;
         bool     ext_clk_en         = false;
-        uint32_t ch_out_en          = 0; // chn-1 = TLU clk input, chn-2 = ext. trigger, chn-3 = TLU busy, chn-4 = TLU reset, chn-5 = ext. clk
+        uint32_t ch_out_en          = 0; // chn-1 = clk. to TLU, chn-2 = ext. trigger, chn-3 = busy to TLU, chn-4 = TLU reset, chn-5 = ext. clk
         uint32_t fiftyohm_en        = 0;
         uint32_t ch1_thr            = 0x80; // [(thr/256*(5-1)V + 1V) * 3.3V/5V]
         uint32_t ch2_thr            = 0x80;
@@ -170,7 +170,7 @@ class RD53FWInterface : public BeBoardFWInterface
         uint32_t ch4_thr            = 0x80;
         uint32_t ch5_thr            = 0x80;
         bool     tlu_en             = false;
-        uint32_t tlu_handshake_mode = 0; // 0 = no handshake, 1 = simple handshake, 2 = data handshake
+        uint32_t tlu_handshake_mode = 0; // 0 = simple handshake, 2 = data handshake
     };
 
     FastCommandsConfig* getLocalCfgFastCmd() { return &localCfgFastCmd; }
@@ -229,6 +229,7 @@ class RD53FWInterface : public BeBoardFWInterface
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
     bool               singleChip;
+    uint32_t           FWinfo;
     uint16_t           enabledHybrids;
 };
 

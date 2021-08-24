@@ -13,26 +13,13 @@
 #include "../Utils/RD53Shared.h"
 #include "../Utils/argvparser.h"
 
-#include "../tools/RD53ClockDelay.h"
-#include "../tools/RD53Gain.h"
-#include "../tools/RD53GainOptimization.h"
-#include "../tools/RD53InjectionDelay.h"
-#include "../tools/RD53Latency.h"
 #include "../tools/RD53Physics.h"
 #include "../tools/RD53PixelAlive.h"
-#include "../tools/RD53SCurve.h"
-#include "../tools/RD53ThrAdjustment.h"
-#include "../tools/RD53ThrEqualization.h"
-#include "../tools/RD53ThrMinimization.h"
 
 #include <chrono>
 #include <thread>
 
 #include "TApplication.h"
-
-#ifdef __EUDAQ__
-#include "../tools/RD53eudaqProducer.h"
-#endif
 
 // ##################
 // # Default values #

@@ -36,20 +36,18 @@ class EyeScanOptimizationHistograms : public DQMHistogramBase
   private:
     DetectorDataContainer DetectorData;
 
-    std::unordered_map<std::string,DetectorDataContainer*> TAP0scan;
-    std::unordered_map<std::string,DetectorDataContainer*> TAP1scan;
-    std::unordered_map<std::string,DetectorDataContainer*> TAP2scan;
-    std::unordered_map<std::string,DetectorDataContainer*> ThreeDscan;
+    std::unordered_map<std::string, DetectorDataContainer*> TAP0scan;
+    std::unordered_map<std::string, DetectorDataContainer*> TAP1scan;
+    std::unordered_map<std::string, DetectorDataContainer*> TAP2scan;
+    std::unordered_map<std::string, DetectorDataContainer*> ThreeDscan;
 
-    size_t startValueTAP0;
-    size_t stopValueTAP0;
-    size_t startValueTAP1;
-    size_t stopValueTAP1;
-    size_t startValueTAP2;
-    size_t stopValueTAP2;
-    std::vector<std::string> observables={"EHEight", "EWIDth","JITTer RMS","QFACtor","CROSsing"};
-
-
+    size_t                   startValueTAP0;
+    size_t                   stopValueTAP0;
+    size_t                   startValueTAP1;
+    size_t                   stopValueTAP1;
+    size_t                   startValueTAP2;
+    size_t                   stopValueTAP2;
+    std::vector<std::string> observables = {"EHEight", "EWIDth", "JITTer RMS", "QFACtor", "CROSsing"};
 };
 
 #endif

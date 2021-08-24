@@ -133,7 +133,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Ph2_TCUSB [USB control of hybrids]
     if ($ENV{CompileWithTCUSB})
-      find_package(PH2_TCUSB)  
+      find_package(PH2_TCUSB)
       if(PH2_TCUSB_FOUND)
         if($ENV{UseTCUSBforROH})
             message(STATUS "    Building the ROH TestCards USB components")
@@ -148,8 +148,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # EUDAQ
     if ($ENV{CompileWithEUDAQ})
         set(USE_EUDAQ ON)
-        include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
-        set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
+        include_directories($ENV{EUDAQDIR}/include)
+        set(EUDAQ_LIB -L$ENV{EUDAQLIB} EUDAQ)
         message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
     else($ENV{CompileWithEUDAQ})
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
@@ -166,7 +166,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # Boost
     set(BOOST_INCLUDE_DIRS "$ENV{BOOST_INCLUDE}")
     set(BOOST_LIBRARY_DIRS "$ENV{BOOST_LIB}")
-    find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
+    find_package(Boost 1.53 REQUIRED system filesystem thread program_options serialization)
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 

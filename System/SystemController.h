@@ -237,6 +237,18 @@ class SystemController
         return (setting != std::end(fSettingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);
     }
 
+    template <typename T>
+    bool setValueInSettings(const std::string name, T val)
+    {
+        auto setting = fSettingsMap.find(name);
+        if(setting != std::end(fSettingsMap))
+        {
+            fSettingsMap[name] = val;
+            return true;
+        }
+        return false;
+    }
+
   private:
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
