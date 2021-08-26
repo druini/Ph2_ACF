@@ -36,7 +36,7 @@ class DataTransmissionTest : public BERtest
     void analyze(const DetectorDataContainer& theTAP0scanContainer, DetectorDataContainer& theTAP0tgtContainer);
 
 #ifdef __USE_ROOT__
-//    DataTransmissionTestHistograms* histos;
+    //    DataTransmissionTestHistograms* histos;
     DataTransmissionTestGraphs* histos;
 #endif
 

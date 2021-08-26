@@ -17,8 +17,8 @@
 #include "../Utils/RD53Shared.h"
 #include "DQMHistogramBase.h"
 
-#include <TH1F.h>
 #include <TGraphAsymmErrors.h>
+#include <TH1F.h>
 
 class DataTransmissionTestGraphs : public DQMHistogramBase
 {

@@ -55,7 +55,16 @@ void SystemController::Inherit(const SystemController* pController)
 void SystemController::Destroy()
 {
     for(const auto cBoard: *fDetectorContainer)
-        if(cBoard->getBoardType() == BoardType::RD53) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintErrorsLVDS(); // @TMP@
+        if(cBoard->getBoardType() == BoardType::RD53)
+        {
+            try
+            {
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintErrorsLVDS(); // @TMP@
+            }
+            catch(...)
+            {
+            }
+        }
 
     this->closeFileHandler();
 
@@ -133,11 +142,17 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
 
+    LOG(INFO) << BOLDYELLOW << "Trying to connect to the Power Supply Server..." << RESET;
     fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
+        LOG(INFO) << BOLDYELLOW << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
         delete fPowerSupplyClient;
         fPowerSupplyClient = nullptr;
+    }
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
     }
     for(const auto board: *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
 
@@ -378,55 +393,48 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ########################
             // # Configure LpGBT chip #
             // ########################
-            bool         LpGBTRxPhaseAllGood = true;
-            unsigned int nAttempts           = 0;
-            do
-            {
-                for(auto cOpticalGroup: *cBoard)
-                    if(cOpticalGroup->flpGBT != nullptr)
+            for(auto cOpticalGroup: *cBoard)
+                if(cOpticalGroup->flpGBT != nullptr)
+                {
+                    LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
+
+                    if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
                     {
-                        LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
-
-                        if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
-                        {
-                            LpGBTRxPhaseAllGood = flpGBTInterface->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, cBoard, cOpticalGroup, this->fBeBoardFWMap[cBoard->getId()], fReadoutChipInterface);
-                            nAttempts++;
-                            LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
-                        }
-                        else
-                            LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
+                        flpGBTInterface->PhaseAlignRx(cOpticalGroup->flpGBT, cBoard, cOpticalGroup, fReadoutChipInterface);
+                        LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
                     }
+                    else
+                        LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
+                }
 
-                // #######################
-                // # Status optical link #
-                // #######################
-                uint32_t txStatus, rxStatus, mgtStatus;
-                LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(txStatus, rxStatus, mgtStatus);
+            // #######################
+            // # Status optical link #
+            // #######################
+            uint32_t txStatus, rxStatus, mgtStatus;
+            LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->StatusOptoLink(txStatus, rxStatus, mgtStatus);
 
-                // ######################################################
-                // # Configure down and up-links to/from frontend chips #
-                // ######################################################
-                LOG(INFO) << CYAN << "=== Configuring frontend chip communication ===" << RESET;
-                static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Downlink(cBoard);
-                for(auto cOpticalGroup: *cBoard)
-                    for(auto cHybrid: *cOpticalGroup)
+            // ######################################################
+            // # Configure down and up-links to/from frontend chips #
+            // ######################################################
+            LOG(INFO) << CYAN << "=== Configuring frontend chip communication ===" << RESET;
+            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Downlink(cBoard);
+            for(auto cOpticalGroup: *cBoard)
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    LOG(INFO) << GREEN << "Initializing chip communication of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
+                    for(const auto cChip: *cHybrid)
                     {
-                        LOG(INFO) << GREEN << "Initializing chip communication of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
-                        for(const auto cChip: *cHybrid)
-                        {
-                            LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
-                            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
-                        }
+                        LOG(INFO) << GREEN << "Initializing communication to/from RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
+                        static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
                     }
-                LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
+                }
+            LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
 
-                // ####################################
-                // # Check AURORA lock on data stream #
-                // ####################################
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard);
-
-            } while((LpGBTRxPhaseAllGood == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
+            // ####################################
+            // # Check AURORA lock on data stream #
+            // ####################################
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->CheckChipCommunication(cBoard);
 
             // ############################
             // # Configure frontend chips #

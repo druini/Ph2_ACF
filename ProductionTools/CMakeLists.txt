@@ -13,9 +13,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
+    include_directories(${PROJECT_SOURCE_DIR}/tools)
+    include_directories(${PROJECT_SOURCE_DIR}/ProductionTools)
     include_directories(${PROJECT_SOURCE_DIR}/DQMUtils)
     include_directories(${PROJECT_SOURCE_DIR}/System)
-    include_directories(${PROJECT_SOURCE_DIR}/tools)
     include_directories(${PROJECT_SOURCE_DIR})
 
     # Library dirs
@@ -60,6 +61,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
     endif()
 
+    # Power supplt
+    if(${PH2_POWERSUPPLY_FOUND})
+      include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
+      link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
+      set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
+    endif()
+
     # Check for TestCard USBDriver
     if(${PH2_TCUSB_FOUND})
         include_directories(${PH2_TCUSB_INCLUDE_DIRS})
@@ -74,26 +83,25 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(${PH2_TCUSB_FOUND})
 
     #last but not least, find root and link against it
-    if(NoDataShipping)
-        if(${ROOT_FOUND})
-            include_directories(${ROOT_INCLUDE_DIRS})
-            set(LIBS ${LIBS} ${ROOT_LIBRARIES})
-            if(NoDataShipping)
-                set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
-            endif()
+    if(${ROOT_FOUND})
+        include_directories(${ROOT_INCLUDE_DIRS})
+        set(LIBS ${LIBS} ${ROOT_LIBRARIES})
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
 
-            #check for THttpServer
-            if(${ROOT_HAS_HTTP})
-                set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
-                set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
-            endif()
+        #check for THttpServer
+        if(${ROOT_HAS_HTTP})
+            set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
         endif()
     endif()
+    
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_DQMUtils Ph2_Tools NetworkUtils)
 
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
-    if(NoDataShipping)
-        set(LIBS ${LIBS} Ph2_DQMUtils)
-    endif()
+    # Build eudaq producer
+    if (USE_EUDAQ)
+        set(LIBS ${LIBS} ${EUDAQ_LIB})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{EuDaqFlag}")
+    endif(USE_EUDAQ)
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/ProductionTools *.cc)
 
