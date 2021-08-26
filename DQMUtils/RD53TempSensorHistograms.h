@@ -15,20 +15,20 @@
 #include "../Utils/GenericDataArray.h"
 #include "DQMHistogramBase.h"
 
-#include "TGraph.h"
 #include "TFitResult.h"
+#include "TGraph.h"
 #include <TStyle.h>
 #include <fstream>
 
-#include "TH1.h"
 #include "TF1.h"
+#include "TH1.h"
 #include "TMultiGraph.h"
 
 class TempSensorHistograms : public DQMHistogramBase
 {
   public:
     void fillTC(double time[100], double temperature[5][100], double idealityFactor[4], double calibNTCtemp[4][2], double calibSenstemp[4][2], double power[2]);
-	
+
   private:
     DetectorDataContainer DetectorData;
 };

@@ -36,32 +36,31 @@
 class TempSensor : public Tool
 {
   public:
-    void   run(std::string configFile);
-    void   draw();
-	
-	#ifdef __USE_ROOT__
-	TempSensorHistograms* histos;
-	#endif
-	
-  private:	
-	double time[100];
-	double temperature[5][100] = {{ 0 }};
-	double idealityFactor[4];
-	const float   T0C            = 273.15;         // [Kelvin]
-	const float   kb             = 1.38064852e-23; // [J/K]
-	const float   e              = 1.6021766208e-19;
-	const float   R              = 15;   // By circuit design
-	double valueLow;
-	double valueHigh;
-	double power[2] = { 0.24,0.72 }; //In direct powering 
+    void run(std::string configFile);
+    void draw();
 
-	
-	//Calibration variables
-	double calibDV[4][2];
-	double calibNTCtemp[4][2];
-	double calibSenstemp[4][2];
-	
-	uint16_t sensorConfigData;
+#ifdef __USE_ROOT__
+    TempSensorHistograms* histos;
+#endif
+
+  private:
+    double      time[100];
+    double      temperature[5][100] = {{0}};
+    double      idealityFactor[4];
+    const float T0C = 273.15;         // [Kelvin]
+    const float kb  = 1.38064852e-23; // [J/K]
+    const float e   = 1.6021766208e-19;
+    const float R   = 15; // By circuit design
+    double      valueLow;
+    double      valueHigh;
+    double      power[2] = {0.24, 0.72}; // In direct powering
+
+    // Calibration variables
+    double calibDV[4][2];
+    double calibNTCtemp[4][2];
+    double calibSenstemp[4][2];
+
+    uint16_t sensorConfigData;
 };
 
 #endif

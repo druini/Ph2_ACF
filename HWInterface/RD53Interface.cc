@@ -601,7 +601,7 @@ void RD53Interface::SendHybridCommandsPack(const BeBoard* pBoard, const std::vec
 
 uint32_t RD53Interface::getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage)
 {
-    uint32_t    voltageObservable(0), currentObservable(0);
+    uint32_t voltageObservable(0), currentObservable(0);
 
     const std::unordered_map<std::string, uint32_t> currentMultiplexer = {
         {"Iref", 0x00},          {"IBIASP1_SYNC", 0x01}, {"IBIASP2_SYNC", 0x02},  {"IBIAS_DISC_SYNC", 0x03}, {"IBIAS_SF_SYNC", 0x04},  {"ICTRL_SYNCT_SYNC", 0x05}, {"IBIAS_KRUM_SYNC", 0x06},
@@ -626,20 +626,17 @@ uint32_t RD53Interface::getADCobservable(const std::string& observableName, bool
         }
         else
             voltageObservable = search->second;
-        if(isCurrentNotVoltage != nullptr)
-            *isCurrentNotVoltage = false;
+        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = false;
     }
     else
     {
-        currentObservable   = search->second;
-        voltageObservable   = voltageMultiplexer.find("IMUXoutput")->second;
-        if(isCurrentNotVoltage != nullptr)
-            *isCurrentNotVoltage = true;
+        currentObservable = search->second;
+        voltageObservable = voltageMultiplexer.find("IMUXoutput")->second;
+        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = true;
     }
 
     return bits::pack<1, 6, 7>(true, currentObservable, voltageObservable);
 }
-
 
 float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& observableName)
 {

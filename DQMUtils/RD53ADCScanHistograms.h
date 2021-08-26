@@ -15,15 +15,15 @@
 #include "../Utils/GenericDataArray.h"
 #include "DQMHistogramBase.h"
 
+#include "TApplication.h"
 #include "TGraph.h"
 #include <TStyle.h>
-#include "TApplication.h"
 
 class ADCScanHistograms : public DQMHistogramBase
 {
   public:
     void fillADC(DetectorContainer& DataContainer, double* fitStart, double* fitEnd, double** VMUXvolt, double** ADCcode, double** DNLcode, double** INLcode, std::string* writeVar);
-	
+
   private:
     DetectorDataContainer DetectorData;
 };

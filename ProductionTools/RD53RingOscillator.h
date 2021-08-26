@@ -15,7 +15,6 @@
 #include <chrono>
 #include <cmath>
 
-
 #include "BeBoardFWInterface.h"
 #include "RD53FWInterface.h"
 #include "ReadoutChipInterface.h"
@@ -38,24 +37,24 @@ class RD53InterfaceRing : public ReadoutChipInterface
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getHybridId());
     }
 };
-}
+} // namespace Ph2_HwInterface
 class RingOscillator : public Tool
 {
   public:
-    void   run();
-    void   draw();
-	
-	#ifdef __USE_ROOT__
-	RingOscillatorHistograms* histos;
-	#endif
-	
-  private:	
-	double gloPulse[11];
-	double oscCounts[8][11];
-	double oscFrequency[8][11];
-	double trimOscCounts[8][16];
-	double trimOscFrequency[8][16];
-	double trimVoltage[16];
+    void run();
+    void draw();
+
+#ifdef __USE_ROOT__
+    RingOscillatorHistograms* histos;
+#endif
+
+  private:
+    double gloPulse[11];
+    double oscCounts[8][11];
+    double oscFrequency[8][11];
+    double trimOscCounts[8][16];
+    double trimOscFrequency[8][16];
+    double trimVoltage[16];
 };
 
 #endif

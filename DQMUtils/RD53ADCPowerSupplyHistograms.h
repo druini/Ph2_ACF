@@ -15,8 +15,8 @@
 #include "../Utils/GenericDataArray.h"
 #include "DQMHistogramBase.h"
 
-#include "TGraph.h"
 #include "TFitResult.h"
+#include "TGraph.h"
 #include <TStyle.h>
 #include <fstream>
 
@@ -24,7 +24,7 @@ class ADCPowerSupplyHistograms : public DQMHistogramBase
 {
   public:
     void fillPS(DetectorContainer& DataContainer, double fitStart, double fitEnd, double* VMUXvolt, double* ADCcode);
-	
+
   private:
     DetectorDataContainer DetectorData;
 };

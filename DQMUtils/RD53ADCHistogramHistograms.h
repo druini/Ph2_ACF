@@ -15,24 +15,24 @@
 #include "../Utils/GenericDataArray.h"
 #include "DQMHistogramBase.h"
 
-#include "TGraph.h"
 #include "TFitResult.h"
+#include "TGraph.h"
 #include <TStyle.h>
 #include <fstream>
 
-#include "TH1.h"
 #include "TGraph.h"
+#include "TH1.h"
 #include <TStyle.h>
 
 class ADCHistogramHistograms : public DQMHistogramBase
 {
   public:
     void fillHH(std::vector<double> ADCcode, int max_counts);
-	
-	double* codes = new double[4094]();
-	double* DNLvalue = new double[4094]();
-	double* INLvalue = new double[4094]();
-	
+
+    double* codes    = new double[4094]();
+    double* DNLvalue = new double[4094]();
+    double* INLvalue = new double[4094]();
+
   private:
     DetectorDataContainer DetectorData;
 };

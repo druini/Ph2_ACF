@@ -19,10 +19,10 @@
 #include "../ProductionTools/RD53RingOscillator.h"
 
 // #ifdef __POWERSUPPLY__
-#include "../ProductionTools/RD53TempSensor.h"
 #include "../ProductionTools/RD53ADCPowerSupply.h"
 #include "../ProductionTools/RD53ADCScan.h"
 #include "../ProductionTools/RD53DACScan.h"
+#include "../ProductionTools/RD53TempSensor.h"
 // #endif
 
 #include <chrono>
@@ -33,7 +33,6 @@
 #endif
 
 #include <sys/wait.h>
-
 
 // ##################
 // # Default values #
@@ -64,9 +63,7 @@ int main(int argc, char** argv)
     cmd.defineOption("file", "Hardware description file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("file", "f");
 
-    cmd.defineOption("calib",
-                     "Which calibration to run [pixelalive adchist adcps adcscan dacscan ringosc tempsens]",
-                     CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("calib", "Which calibration to run [pixelalive adchist adcps adcscan dacscan ringosc tempsens]", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
     // cmd.defineOption("binary", "Binary file to decode", CommandLineProcessing::ArgvParser::OptionRequiresValue);
@@ -110,9 +107,9 @@ int main(int argc, char** argv)
     std::string configFile = cmd.foundOption("file") == true ? cmd.optionValue("file") : "";
     std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "";
     // std::string binaryFile = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
-    bool        program    = cmd.foundOption("prog") == true ? true : false;
+    bool program = cmd.foundOption("prog") == true ? true : false;
     // bool        supervisor = cmd.foundOption("sup") == true ? true : false;
-    bool        reset      = cmd.foundOption("reset") == true ? true : false;
+    bool reset = cmd.foundOption("reset") == true ? true : false;
     if(cmd.foundOption("capture") == true)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
     else if(cmd.foundOption("replay") == true)
@@ -130,12 +127,10 @@ int main(int argc, char** argv)
     el::Loggers::reconfigureAllLoggers(conf);
     // el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Filename, fileName);
 
-    
     // #################################
     // # Configure power supply maybe? #
     // #################################
-    
-    
+
     {
         SystemController mySysCntr;
 
@@ -156,7 +151,7 @@ int main(int argc, char** argv)
                     static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
                 exit(EXIT_SUCCESS);
             }
-            
+
             LOG(WARNING) << BOLDBLUE << "Reset not implemented" << RESET;
             exit(EXIT_FAILURE);
         }
@@ -198,8 +193,8 @@ int main(int argc, char** argv)
             // ##################
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing ADCHistogram @@@" << RESET;
 
-            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ADCHistogram");
-            ADCHistogram      adch;
+            std::string  fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ADCHistogram");
+            ADCHistogram adch;
             adch.Inherit(&mySysCntr);
             adch.run();
             adch.draw();
@@ -211,15 +206,15 @@ int main(int argc, char** argv)
             // ##################
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing RingOscillator @@@" << RESET;
 
-            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_RingOscillator");
-            RingOscillator      ros;
+            std::string    fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_RingOscillator");
+            RingOscillator ros;
             ros.Inherit(&mySysCntr);
             ros.run();
             ros.draw();
         }
         else if(whichCalib == "adcps")
         {
-// #ifdef __POWERSUPPLY__
+            // #ifdef __POWERSUPPLY__
             // #######################
             // # ADC Power supply tests  #
             // #######################
@@ -232,64 +227,64 @@ int main(int argc, char** argv)
             aps.run(configFile);
             // ps.analyze();
             aps.draw();
-// #else
-//             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
-//             exit(EXIT_FAILURE);
-// #endif	
+            // #else
+            //             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
+            //             exit(EXIT_FAILURE);
+            // #endif
         }
         else if(whichCalib == "adcscan")
         {
-// #ifdef __POWERSUPPLY__
+            // #ifdef __POWERSUPPLY__
             // ##################
             // # Run ADCScan #
             // ##################
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing ADCScan @@@" << RESET;
 
             std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ADCScan");
-            ADCScan      adc;
+            ADCScan     adc;
             adc.Inherit(&mySysCntr);
             adc.run(configFile);
             adc.draw();
-// #else
-//             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
-//             exit(EXIT_FAILURE);
-// #endif	
+            // #else
+            //             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
+            //             exit(EXIT_FAILURE);
+            // #endif
         }
         else if(whichCalib == "dacscan")
         {
-// #ifdef __POWERSUPPLY__
+            // #ifdef __POWERSUPPLY__
             // ##################
             // # Run DACScan #
             // ##################
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing DACScan @@@" << RESET;
 
             std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_DACScan");
-            DACScan      dac;
+            DACScan     dac;
             dac.Inherit(&mySysCntr);
             dac.run(configFile);
             dac.draw();
-// #else
-//             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
-//             exit(EXIT_FAILURE);
-// #endif	
+            // #else
+            //             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
+            //             exit(EXIT_FAILURE);
+            // #endif
         }
         else if(whichCalib == "tempsens")
         {
-// #ifdef __POWERSUPPLY__
+            // #ifdef __POWERSUPPLY__
             // ##################
             // # Run TempSensor #
             // ##################
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing TempSensor @@@" << RESET;
 
             std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_TempSensor");
-            TempSensor      tsn;
+            TempSensor  tsn;
             tsn.Inherit(&mySysCntr);
             tsn.run(configFile);
             tsn.draw();
-// #else
-//             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
-//             exit(EXIT_FAILURE);
-// #endif	
+            // #else
+            //             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
+            //             exit(EXIT_FAILURE);
+            // #endif
         }
         else if((program == false) && (whichCalib != ""))
         {

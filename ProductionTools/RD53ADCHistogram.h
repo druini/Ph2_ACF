@@ -16,25 +16,23 @@
 #include "../DQMUtils/RD53ADCHistogramHistograms.h"
 #endif
 
-
 // #########################
 // # ADCHistogram test suite #
 // #########################
 class ADCHistogram : public Tool
 {
   public:
-    void   run();
-    void   draw();
+    void run();
+    void draw();
 
-	
-	#ifdef __USE_ROOT__
-	ADCHistogramHistograms* histos;
-	#endif
+#ifdef __USE_ROOT__
+    ADCHistogramHistograms* histos;
+#endif
 
   private:
-	std::vector<double> ADCcode;
-	
-	int max_counts = 10000000;
+    std::vector<double> ADCcode;
+
+    int max_counts = 10000000;
 };
 
 #endif
