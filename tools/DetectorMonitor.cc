@@ -4,7 +4,7 @@ DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController& theSystCntr
     : theSystCntr(theSystCntr), fDetectorMonitorConfig(theDetectorMonitorConfig)
 {
     fKeepRunning = true;
-    startMonitor = true;
+    startMonitor = false;
 }
 
 DetectorMonitor::~DetectorMonitor()
