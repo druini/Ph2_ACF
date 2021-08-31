@@ -14,6 +14,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
     include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR}/tools)
+    include_directories(${PROJECT_SOURCE_DIR}/ProductionTools)
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
