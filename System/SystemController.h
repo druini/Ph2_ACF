@@ -83,7 +83,9 @@ class SystemController
     TCPPublishServer*  fNetworkStreamer;
     DetectorMonitor*   fDetectorMonitor;
     TCPClient*         fPowerSupplyClient{nullptr};
-
+#ifdef __TCP_SERVER__
+    TCPClient* fTestcardClient{nullptr};
+#endif
     /*!
      * \brief Constructor of the SystemController class
      */

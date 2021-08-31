@@ -11,6 +11,7 @@
 #include "../tools/CBCMonitor.h"
 #include "../tools/DetectorMonitor.h"
 #include "../tools/RD53Monitor.h"
+#include "../tools/SEHMonitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -50,6 +51,9 @@ void SystemController::Inherit(const SystemController* pController)
     fDetectorContainer    = pController->fDetectorContainer;
     fCicInterface         = pController->fCicInterface;
     fPowerSupplyClient    = pController->fPowerSupplyClient;
+#ifdef __TCP_SERVER__
+    fTestcardClient = pController->fTestcardClient;
+#endif
 }
 
 void SystemController::Destroy()
@@ -96,7 +100,10 @@ void SystemController::Destroy()
 
     delete fPowerSupplyClient;
     fPowerSupplyClient = nullptr;
-
+#ifdef __TCP_SERVER__
+    delete fTestcardClient;
+    fTestcardClient = nullptr;
+#endif
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
 
@@ -155,6 +162,16 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
     }
     for(const auto board: *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
+#ifdef __TCP_SERVER__
+    fTestcardClient = new TCPClient("127.0.0.1", 8000);
+    if(!fTestcardClient->connect(1))
+    {
+        std::cerr << "Cannot connect to the Testcard Server" << '\n';
+        delete fTestcardClient;
+        fTestcardClient = nullptr;
+    }
+    for(const auto board: *fDetectorContainer) fBeBoardInterface->setTestcardClient(board, fTestcardClient);
+#endif
 
     if(fDetectorContainer->size() > 0)
     {
@@ -224,6 +241,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             fDetectorMonitor = new CBCMonitor(*this, theDetectorMonitorConfig);
         else if(monitoringType == "RD53")
             fDetectorMonitor = new RD53Monitor(*this, theDetectorMonitorConfig);
+        else if(monitoringType == "2SSEH")
+            fDetectorMonitor = new SEHMonitor(*this, theDetectorMonitorConfig);
         else
         {
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
