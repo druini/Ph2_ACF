@@ -33,16 +33,14 @@
 #include "../tools/RD53VoltageTuning.h"
 
 #include <chrono>
+#include <sys/wait.h>
 #include <thread>
 
 #include "TApplication.h"
-#include "TROOT.h"
 
 #ifdef __EUDAQ__
 #include "../tools/RD53eudaqProducer.h"
 #endif
-
-#include <sys/wait.h>
 
 // ##################
 // # Default values #
@@ -107,6 +105,10 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
                   << " events" << RESET;
     }
 
+    std::string fileName(binaryFile);
+    RD53Event::MakeNtuple(fileName.replace(fileName.find(".raw"), 4, ".root"), decodedEvents);
+    LOG(INFO) << GREEN << "Saving raw data into ROOT ntuple: " << BOLDYELLOW << fileName << RESET;
+
     mySysCntr.closeFileHandler();
 }
 
@@ -139,7 +141,7 @@ int main(int argc, char** argv)
     cmd.defineOption("sup", "Run in producer(Middleware) - consumer(DQM) mode", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("sup", "s");
 
-    cmd.defineOption("eudaqRunCtr", "EUDAQ-IT run control address [e.g. tcp://localhost:44000]", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("eudaqRunCtr", "EUDAQ-IT run control address (e.g. tcp://localhost:44000)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
@@ -148,7 +150,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("replay", "Replay previously captured communication (extension .bin)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption("runtime", "Set running time for physics mode", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("runtime", "Set running time for physics mode (in seconds)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("runtime", "t");
 
     int result = cmd.parse(argc, argv);
@@ -319,8 +321,8 @@ int main(int argc, char** argv)
             // ######################################
 
             std::stringstream outp;
-            mySysCntr.InitializeHw(configFile, outp, true, false);
             mySysCntr.InitializeSettings(configFile, outp);
+            mySysCntr.InitializeHw(configFile, outp, true, false);
             if(reset == true)
             {
                 if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
@@ -376,56 +378,6 @@ int main(int argc, char** argv)
             dro.run();
             dro.draw();
         }
-        else if(whichCalib == "eyescan")
-        {
-#ifdef __USE_ROOT__
-            // ##################################
-            // # Run Eye Scan optimization      #
-            // ##################################
-            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Eye Scan Optimization Optimization @@@" << RESET;
-
-            std::string         fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_EyeDiagramScan");
-            EyeScanOptimization eso;
-            eso.Inherit(&mySysCntr);
-            eso.localConfigure(fileName, runNumber);
-            eso.Running();
-            eso.draw();
-#endif
-        }
-        else if(whichCalib == "eyescan2d")
-        {
-#ifdef __USE_ROOT__
-            // ##################################
-            // # Run Eye Scan optimization      #
-            // ##################################
-            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Eye Scan Optimization Optimization in 2D @@@" << RESET;
-
-            std::string         fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_EyeDiagramScan");
-            EyeScanOptimization eso;
-            eso.Inherit(&mySysCntr);
-            eso.localConfigure(fileName, runNumber, true);
-            eso.Running();
-            eso.draw();
-#endif
-        }
-
-        else if(whichCalib == "eyediag")
-        {
-#ifdef __USE_ROOT__
-            // ##################################
-            // # Run Eye Scan optimization      #
-            // ##################################
-            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Eye Diagram @@@" << RESET;
-
-            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_EyeDiagram");
-            EyeDiag     ed;
-            ed.Inherit(&mySysCntr);
-            ed.localConfigure(fileName, runNumber);
-            ed.Running();
-            ed.draw();
-#endif
-        }
-
         else if(whichCalib == "datatrtest")
         {
             // ##############################
@@ -686,11 +638,12 @@ int main(int argc, char** argv)
             // ###############
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing Phsyics data taking @@@" << RESET;
 
-            std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
-            Physics     ph;
+            Physics ph;
             ph.Inherit(&mySysCntr);
             if(binaryFile == "")
             {
+                std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
+
                 ph.localConfigure(fileName, -1);
                 ph.Start(runNumber);
                 std::this_thread::sleep_for(std::chrono::seconds(runtime));
@@ -698,6 +651,12 @@ int main(int argc, char** argv)
             }
             else
             {
+                std::string fileName(binaryFile);
+                fileName.erase(0, fileName.find_last_of("/\\"));
+                fileName  = fileName.erase(fileName.find(".raw") - 8, 12) + "fromBin";
+                runNumber = atof(fileName.substr(fileName.find("Run") + 3, 6).c_str());
+                ph.setValueInSettings<double>("SaveBinaryData", false);
+
                 ph.localConfigure(fileName, runNumber);
                 ph.analyze(true);
                 ph.draw();
@@ -714,19 +673,8 @@ int main(int argc, char** argv)
             gROOT->SetBatch(true);
 
             RD53eudaqProducer theEUDAQproducer(mySysCntr, configFile, "RD53eudaqProducer", eudaqRunCtr);
-            try
-            {
-                LOG(INFO) << GREEN << "Connecting to EUDAQ run control" << RESET;
-                theEUDAQproducer.Connect();
-            }
-            catch(...)
-            {
-                LOG(ERROR) << BOLDRED << "Can not connect to EUDAQ run control at " << eudaqRunCtr << RESET;
-                exit(EXIT_FAILURE);
-            }
-            LOG(INFO) << BOLDBLUE << "\t--> Connected" << RESET;
-            while(theEUDAQproducer.IsConnected() == true) std::this_thread::sleep_for(std::chrono::seconds(1));
-            exit(EXIT_SUCCESS);
+            theEUDAQproducer.MainLoop();
+            runNumber = theEUDAQproducer.theRunNumber;
 #else
             LOG(WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
             exit(EXIT_FAILURE);

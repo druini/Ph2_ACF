@@ -697,8 +697,8 @@ bool OTHybridTester::LpGBTTestVTRx()
             auto cMapIterator = fVTRxplusDefaultRegisters.begin();
             do
             {
-                cRecent  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1);
-                cResult  = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1);
+                cRecent  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1, 2);
+                cResult  = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1, 2);
                 cSuccess = cSuccess && cRecent && (cResult == cMapIterator->second);
                 if(cRecent && (cResult == cMapIterator->second))
                 { LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cResult << " ." << RESET; }
