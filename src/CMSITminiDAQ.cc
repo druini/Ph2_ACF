@@ -13,8 +13,6 @@
 #include "../Utils/RD53Shared.h"
 #include "../Utils/argvparser.h"
 
-#include "../ProductionTools/RD53EyeDiag.h"
-#include "../ProductionTools/RD53EyeScanOptimization.h"
 #include "../tools/RD53BERtest.h"
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53DataReadbackOptimization.h"
