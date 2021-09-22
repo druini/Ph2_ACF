@@ -235,7 +235,7 @@ class BeBoardInterface
 
         pReadoutChipInterface->ReadHybridVoltage(pChip);
         pReadoutChipInterface->ReadHybridTemperature(pChip);
-        static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, args);
+        static_cast<Ph2_HwInterface::RD53InterfaceBase*>(pReadoutChipInterface)->ReadChipMonitor(pChip, args);
     }
 
     /*!

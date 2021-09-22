@@ -13,7 +13,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-RD53Interface::RD53Interface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap) {}
+RD53Interface::RD53Interface(const BeBoardFWMap& pBoardMap) : RD53InterfaceBase(pBoardMap) {}
 
 int RD53Interface::CheckChipID(Chip* pChip, const int chipIDfromDB)
 {

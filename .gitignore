@@ -22,5 +22,5 @@ settings/connections_186.xml
 .ycm_extra_conf.pyc
 consoledump.log
 src/test.cc
-build/
+build*
 rundir*

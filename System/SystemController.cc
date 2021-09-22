@@ -76,7 +76,7 @@ void SystemController::Destroy()
 
     RD53Event::JoinDecodingThreads();
 
-    delete fDetectorMonitor;
+    if (fDetectorMonitor) delete fDetectorMonitor;
     fDetectorMonitor = nullptr;
     delete fBeBoardInterface;
     fBeBoardInterface = nullptr;
@@ -226,7 +226,11 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         else
         {
             flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
-            fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
+
+            if (cFirstBoard->getFrontEndType() == FrontEndType::RD53B)
+                fReadoutChipInterface = new RD53BInterface(fBeBoardFWMap);
+            else
+                fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
         }
     }
 
@@ -393,13 +397,13 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ###################
             // # Configuring FSM #
             // ###################
-            size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent");
-            size_t injType     = SystemController::findValueInSettings<double>("INJtype");
-            size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency");
-            size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays");
-            size_t colStart    = SystemController::findValueInSettings<double>("COLstart");
-            bool   resetMask   = SystemController::findValueInSettings<double>("ResetMask");
-            bool   resetTDAC   = SystemController::findValueInSettings<double>("ResetTDAC");
+            size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent", 10);
+            size_t injType     = SystemController::findValueInSettings<double>("INJtype", 1);
+            size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency", 32);
+            size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays", 280);
+            size_t colStart    = SystemController::findValueInSettings<double>("COLstart", 0);
+            bool   resetMask   = SystemController::findValueInSettings<double>("ResetMask", 0);
+            bool   resetTDAC   = SystemController::findValueInSettings<double>("ResetTDAC", 0);
             LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->SetAndConfigureFastCommands(cBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
             LOG(INFO) << CYAN << "================== Done ==================" << RESET;
@@ -437,7 +441,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // # Configure down and up-links to/from frontend chips #
             // ######################################################
             LOG(INFO) << CYAN << "=== Configuring frontend chip communication ===" << RESET;
-            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Downlink(cBoard);
+            static_cast<RD53InterfaceBase*>(fReadoutChipInterface)->InitRD53Downlink(cBoard);
             for(auto cOpticalGroup: *cBoard)
                 for(auto cHybrid: *cOpticalGroup)
                 {
@@ -445,7 +449,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     for(const auto cChip: *cHybrid)
                     {
                         LOG(INFO) << GREEN << "Initializing communication to/from RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
-                        static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
+                        static_cast<RD53InterfaceBase*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
                     }
                 }
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
@@ -469,8 +473,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
                         if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
                         if(resetTDAC == true) static_cast<RD53*>(cChip)->resetTDAC();
-                        static_cast<RD53*>(cChip)->copyMaskToDefault();
-                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
+                        static_cast<RD53Base*>(cChip)->copyMaskToDefault();
+                        static_cast<RD53InterfaceBase*>(fReadoutChipInterface)->ConfigureChip(cChip);
                         LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
                         // static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0); @TMP@
                     }

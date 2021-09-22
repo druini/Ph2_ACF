@@ -150,7 +150,8 @@ enum class FrontEndType
     SSA,
     RD53,
     CIC,
-    CIC2
+    CIC2,
+    RD53B
 };
 enum class SLinkDebugMode
 {

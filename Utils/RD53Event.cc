@@ -348,8 +348,12 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
             eventStatus |= events.back().eventStatus;
         else
         {
-            for(auto j = 0u; j < events.back().chip_frames_events.size(); j++)
-                if(events.back().l1a_counter % maxL1Counter != events.back().chip_frames_events[j].second.trigger_id) eventStatus |= RD53FWEvtEncoder::L1A;
+            for(auto j = 0u; j < events.back().chip_frames_events.size(); j++) {
+                if(events.back().l1a_counter % maxL1Counter != events.back().chip_frames_events[j].second.trigger_id) {
+                    eventStatus |= RD53FWEvtEncoder::L1A;
+                    std::cout << "FW counter: " << events.back().l1a_counter << ", chip counter: " <<events.back().chip_frames_events[j].second.trigger_id <<  std::endl;
+                }
+            }
         }
     }
 }

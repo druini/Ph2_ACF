@@ -13,7 +13,7 @@
 #include "../HWDescription/ChipRegItem.h"
 #include "BeBoardFWInterface.h"
 #include "RD53FWInterface.h"
-#include "ReadoutChipInterface.h"
+#include "RD53InterfaceBase.h"
 
 // #############
 // # CONSTANTS #
@@ -22,7 +22,7 @@
 
 namespace Ph2_HwInterface
 {
-class RD53Interface : public ReadoutChipInterface
+class RD53Interface : public RD53InterfaceBase
 {
   public:
     RD53Interface(const BeBoardFWMap& pBoardMap);
@@ -81,10 +81,6 @@ class RD53Interface : public ReadoutChipInterface
     // # Dedicated to minitoring #
     // ###########################
   public:
-    void ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args)
-    {
-        for(const auto& arg: args) ReadChipMonitor(pChip, arg);
-    }
     float    ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
     float    ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip);
     float    ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip);

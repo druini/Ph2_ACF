@@ -4,6 +4,7 @@
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/RD53.h"
+#include "../HWDescription/RD53B.h"
 #include "../HWDescription/lpGBT.h"
 #include "../Utils/Utilities.h"
 
@@ -587,7 +588,13 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     int         cChipId   = cChild.attribute("Id").as_int();
                     std::string cFileName = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute("configfile").value()));
 
-                    if(cName.find("RD53") != std::string::npos)
+                    if(cName.find("RD53B") != std::string::npos)
+                    {
+                        pBoard->setFrontEndType(FrontEndType::RD53B);
+                        this->parseRD53B(cChild, cHybrid, cConfigFileDirectory, os);
+                        if(cNextName.empty() || cNextName != cName) this->parseGlobalRD53BSettings(pHybridNode, cHybrid, os);
+                    }
+                    else if(cName.find("RD53") != std::string::npos)
                     {
                         pBoard->setFrontEndType(FrontEndType::RD53);
                         this->parseRD53(cChild, cHybrid, cConfigFileDirectory, os);
@@ -1068,6 +1075,37 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
     this->parseRD53Settings(theChipNode, theChip, os);
 }
 
+
+void FileParser::parseRD53B(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os)
+{
+    std::string cFileName;
+
+    if(cFilePrefix.empty() == false)
+    {
+        if(cFilePrefix.at(cFilePrefix.length() - 1) != '/') cFilePrefix.append("/");
+        cFileName = cFilePrefix + expandEnvironmentVariables(theChipNode.attribute("configfile").value());
+    }
+    else
+        cFileName = expandEnvironmentVariables(theChipNode.attribute("configfile").value());
+
+    uint32_t chipId     = theChipNode.attribute("Id").as_int();
+    uint32_t chipLane   = theChipNode.attribute("Lane").as_int();
+    uint8_t  cRxGroup   = theChipNode.attribute("RxGroups").as_int();
+    uint8_t  cRxChannel = theChipNode.attribute("RxChannels").as_int();
+    uint8_t  cTxGroup   = theChipNode.attribute("TxGroups").as_int();
+    uint8_t  cTxChannel = theChipNode.attribute("TxChannels").as_int();
+
+    os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << chipId << BOLDBLUE << ", Lane: " << BOLDYELLOW << chipLane << BOLDBLUE << ", File: " << BOLDYELLOW
+       << cFileName << BOLDBLUE << ", RxGroup: " << BOLDYELLOW << +cRxGroup << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup
+       << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << RESET << std::endl;
+
+    ReadoutChip* theChip = cHybrid->addChipContainer(chipId, new RD53B(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), chipId, chipLane, cFileName));
+    theChip->setNumberOfChannels(RD53B::nRows, RD53B::nCols);
+
+    this->parseRD53BSettings(theChipNode, theChip, os);
+}
+
+
 void FileParser::parseGlobalRD53Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os)
 {
     pugi::xml_node cGlobalChipSettings = pHybridNode.child("Global");
@@ -1086,6 +1124,27 @@ void FileParser::parseGlobalRD53Settings(pugi::xml_node pHybridNode, Hybrid* pHy
     }
 }
 
+
+void FileParser::parseGlobalRD53BSettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os)
+{
+    pugi::xml_node cGlobalChipSettings = pHybridNode.child("Global");
+    if(cGlobalChipSettings != nullptr)
+    {
+        os << BOLDCYAN << "|\t|\t|----Global RD53 Settings:" << RESET << std::endl;
+
+        for(const pugi::xml_attribute& attr: cGlobalChipSettings.attributes())
+        {
+            std::string regname  = attr.name();
+            uint16_t    regvalue = convertAnyInt(attr.value());
+            os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
+
+            for(auto theChip: *pHybrid) // static_cast<ReadoutChip*>(theChip)->setReg(regname, regvalue, true);
+                static_cast<RD53B*>(theChip)->setRegValue(regname, regvalue);
+        }
+    }
+}
+
+
 void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theChip, std::ostream& os)
 {
     pugi::xml_node cLocalChipSettings = theChipNode.child("Settings");
@@ -1102,6 +1161,25 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
         }
     }
 }
+
+
+void FileParser::parseRD53BSettings(pugi::xml_node theChipNode, ReadoutChip* theChip, std::ostream& os)
+{
+    pugi::xml_node cLocalChipSettings = theChipNode.child("Settings");
+    if(cLocalChipSettings != nullptr)
+    {
+        os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53" << RESET << std::endl;
+
+        for(const pugi::xml_attribute& attr: cLocalChipSettings.attributes())
+        {
+            uint16_t    regvalue = convertAnyInt(attr.value());
+            static_cast<RD53B*>(theChip)->setRegValue(attr.name(), regvalue);
+            // theChip->setReg(attr.name(), regvalue, true);
+            os << GREEN << "|\t|\t|\t|----" << attr.name() << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
+        }
+    }
+}
+
 // ########################
 
 std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile)

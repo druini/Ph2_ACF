@@ -38,11 +38,11 @@ D19cFpgaConfig::D19cFpgaConfig(BeBoardFWInterface* pbbi) : FpgaConfig(pbbi), lNo
     // Quick fix for IT - OT incompatibilities
     try
     {
-        lNode = new fc7::MmcPipeInterface(dynamic_cast<const fc7::MmcPipeInterface&>(fwManager->getUhalNode("system.buf_cta")));
+        lNode = new fc7::MmcPipeInterface(fwManager->getUhalNode("system.buf_cta"));
     }
     catch(const std::exception& lExc)
     {
-        lNode = new fc7::MmcPipeInterface(dynamic_cast<const fc7::MmcPipeInterface&>(fwManager->getUhalNode("buf_cta")));
+        lNode = new fc7::MmcPipeInterface(fwManager->getUhalNode("buf_cta"));
     }
 }
 

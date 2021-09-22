@@ -106,6 +106,11 @@ class RD53FWInterface : public BeBoardFWInterface
         Undefined = 0
     };
 
+    enum class FEType {
+        RD53B = 0,
+        RD53A
+    };
+
     // @TMP@
     enum class AutozeroSource : uint32_t
     {
@@ -225,10 +230,18 @@ class RD53FWInterface : public BeBoardFWInterface
     void InitializeClockGenerator(const std::string& refClockRate = "160", bool doStoreInEEPROM = false);
     void ReadClockGenerator();
 
+    uint16_t getChipLane(Ph2_HwDescription::Chip* pChip) const {
+      uint32_t chipLane = pChip->getHybridId();
+      if (this->singleChip != true) 
+        chipLane = RD53FWconstants::NLANE_HYBRID * chipLane + static_cast<Ph2_HwDescription::RD53Base*>(pChip)->getChipLane();
+      return chipLane;
+    }
+
     FastCommandsConfig localCfgFastCmd;
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
     bool               singleChip;
+    FEType             feType = FEType::RD53A;
     uint32_t           FWinfo;
     uint16_t           enabledHybrids;
 };

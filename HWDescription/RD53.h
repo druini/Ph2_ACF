@@ -14,7 +14,7 @@
 #include "../Utils/RD53Shared.h"
 #include "../Utils/bit_packing.h"
 #include "../Utils/easylogging++.h"
-#include "ReadoutChip.h"
+#include "RD53Base.h"
 
 #include <iomanip>
 
@@ -113,7 +113,7 @@ struct perColumnPixelData
     std::array<uint8_t, NROWS> TDAC;
 };
 
-class RD53 : public ReadoutChip
+class RD53 : public RD53Base
 {
   public:
     static constexpr size_t nRows = NROWS;
@@ -162,7 +162,6 @@ class RD53 : public ReadoutChip
     void    setTDAC(unsigned int row, unsigned int col, uint8_t TDAC);
     void    resetTDAC();
     uint8_t getTDAC(unsigned int row, unsigned int col);
-    uint8_t getChipLane() const { return myChipLane; }
 
     struct HitData
     {
@@ -226,7 +225,6 @@ class RD53 : public ReadoutChip
     std::vector<perColumnPixelData> fPixelsMask;
     std::vector<perColumnPixelData> fPixelsMaskDefault;
     std::string                     configFileName;
-    uint8_t                         myChipLane;
 };
 } // namespace Ph2_HwDescription
 
