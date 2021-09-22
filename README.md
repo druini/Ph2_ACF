@@ -8,6 +8,8 @@ To reset the system run: `RD53BminiDAQ -r RD53B.xml`
 
 To configure the system and read all registers run: `RD53BminiDAQ RD53B.xml`
 
+Compatible firmware images can be found here: https://cernbox.cern.ch/index.php/s/MSHAo1FdMaml0m8
+
 
 # CMS Ph2 ACF (Acquisition & Control Framework)
 
