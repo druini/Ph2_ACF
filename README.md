@@ -1,3 +1,14 @@
+# RD53B Version
+
+There is currently a single executable (`RD53BminiDAQ`) which simply configures the system, reads all the registers of each chip and prints their values.
+
+There is an example configuration file (`RD53B.xml`) in `settings`.
+
+To reset the system run: `RD53BminiDAQ -r RD53B.xml`
+
+To configure the system and read all registers run: `RD53BminiDAQ RD53B.xml`
+
+
 # CMS Ph2 ACF (Acquisition & Control Framework)
 
 
