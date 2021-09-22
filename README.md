@@ -1,5 +1,7 @@
 # RD53B Version
 
+This version requires the `devtoolset-10` package: `sudo yum install devtoolset-10`
+
 There is currently a single executable (`RD53BminiDAQ`) which simply configures the system, reads all the registers of each chip and prints their values.
 
 There is an example configuration file (`RD53B.xml`) in `settings`.

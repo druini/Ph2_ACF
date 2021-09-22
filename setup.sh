@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# enable GCC 10
+source scl_source enable devtoolset-10
+
 ##########
 # CACTUS #
 ##########
