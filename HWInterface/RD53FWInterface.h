@@ -107,8 +107,9 @@ class RD53FWInterface : public BeBoardFWInterface
     };
 
     enum class FEType {
-        RD53B = 0,
-        RD53A
+        RD53A = 1,
+        RD53B = 2,
+        Unspecified = 0
     };
 
     // @TMP@
