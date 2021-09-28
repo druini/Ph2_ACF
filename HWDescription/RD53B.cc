@@ -16,8 +16,12 @@ namespace Ph2_HwDescription
 {
 
 
-const decltype(RD53BReg::Registers)& RD53B::Registers = RD53BReg::GetRegisters();
-const decltype(RD53BReg::RegisterIndexMap)& RD53B::RegisterIndexMap = RD53BReg::GetRegisterIndexMap();
+const decltype(RD53BReg::GetRegisters()) RD53B::Registers = RD53BReg::GetRegisters();
+const decltype(RD53BReg::GetRegisterIndexMap()) RD53B::RegisterIndexMap = RD53BReg::GetRegisterIndexMap();
+
+const decltype(RD53BConstants::GetGlobalPulseRoutes()) RD53B::GlobalPulseRoutes = RD53BConstants::GetGlobalPulseRoutes();
+const decltype(RD53BConstants::GetIMUX()) RD53B::IMUX = RD53BConstants::GetIMUX();
+const decltype(RD53BConstants::GetVMUX()) RD53B::VMUX = RD53BConstants::GetVMUX();
 
 template <>
 uint8_t RD53B::ChipIdFor<Chip>(const Chip* chip) { return chip->getId(); }

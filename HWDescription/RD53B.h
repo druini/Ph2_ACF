@@ -37,12 +37,12 @@ class RD53B : public RD53Base
 
     using Register = RD53BReg::Register;
 
-    static const decltype(RD53BReg::Registers)& Registers;
-    static const decltype(RD53BReg::RegisterIndexMap)& RegisterIndexMap;
+    static const decltype(RD53BReg::GetRegisters()) Registers;
+    static const decltype(RD53BReg::GetRegisterIndexMap()) RegisterIndexMap;
 
-    static constexpr auto& GlobalPulseRoutes = RD53BConstants::GlobalPulseRoutes;
-    static constexpr auto& IMUX = RD53BConstants::IMUX;
-    static constexpr auto& VMUX = RD53BConstants::VMUX;
+    static const decltype(RD53BConstants::GetGlobalPulseRoutes()) GlobalPulseRoutes;
+    static const decltype(RD53BConstants::GetIMUX()) IMUX;
+    static const decltype(RD53BConstants::GetVMUX()) VMUX;
 
 
     static size_t getRegIndex(size_t index) {
@@ -53,9 +53,6 @@ class RD53B : public RD53Base
         return &reg - &Registers[0];
     }
 
-    // static size_t getRegIndex(const char* name) {
-    //     return RegisterIndexMap().at(name);
-    // }
 
     static size_t getRegIndex(const std::string& name) {
         return RegisterIndexMap.at(name);
@@ -79,23 +76,10 @@ class RD53B : public RD53Base
 
 
     // get/set register values
-
     template <class Key>
     uint16_t getRegValue(Key&& key) const {
         return registerValues[getRegIndex(std::forward<Key>(key))];
     }
-
-    // uint16_t getRegValue(Reg reg) const {
-    //     return registerValues[int(reg)];
-    // }
-    
-    // uint16_t getRegValue(const char* name) const {
-    //     return registerValues[RegisterIndexMap.at(name)];
-    // }
-
-    // uint16_t getRegValue(const std::string& name) const {
-    //     return registerValues[RegisterIndexMap.at(name.c_str())];
-    // }
 
     template <class Key>
     void setRegValue(Key&& key, uint16_t value) {
@@ -110,27 +94,8 @@ class RD53B : public RD53Base
         }
     }
 
-    // void setRegValue(const Register& reg, uint16_t value) {
-    //     registerValues[&reg - &Registers[0]] = value;
-    // }
-
-    // void setRegValue(Reg reg, uint16_t value) {
-    //     registerValues[int(reg)] = value;
-    // }
-    
-    // void setRegValue(const char* name, uint16_t value) {
-    //     registerValuesRegisterIndexMap.at(name)] = value;
-    // }
-
-    // void setRegValue(const std::string& name, uint16_t value) {
-    //     registerValues[RegisterIndexMap.at(name.c_str())] = value;
-    // }
-
-
 
     // get/set register fields
-
-    
     template <class Key>
     uint16_t getRegField(Key&& key, size_t field_index) const {
         auto& reg = Reg(std::forward<Key>(key));
@@ -138,22 +103,6 @@ class RD53B : public RD53Base
         uint16_t mask = (1 << reg.fieldSizes[field_index]) - 1;
         return (registerValues[getRegIndex(reg)] >> offset) & mask;
     }
-
-    // uint16_t getRegField(const Register& reg, size_t field_index) const {
-    //     return getRegField(int(reg));
-    // }
-
-    // uint16_t getRegField(Reg reg, size_t field_index) const {
-    //     return getRegField(int(reg));
-    // }
-    
-    // uint16_t getRegField(const char* reg_name, size_t field_index) const {
-    //     return getRegField(RegisterIndexMap.at(name));
-    // }
-
-    // uint16_t getRegField(const std::string& reg_name, size_t field_index) const {
-    //     return getRegField(RegisterIndexMap.at(name.c_str()));
-    // }
 
     template <class Key>
     uint16_t setRegField(Key&& key, size_t field_index, uint16_t value) {
@@ -167,17 +116,6 @@ class RD53B : public RD53Base
         return regValue;
     }
 
-    // void setRegField(Reg reg, size_t field_index, uint16_t value) {
-    //     setRegField(int(reg), field_index, value));
-    // }
-    
-    // void setRegField(const char* reg_name, size_t field_index, uint16_t value) {
-    //     setRegField(RegisterIndexMap.at(name), field_index, value));
-    // }
-
-    // void setRegField(const std::string& reg_name, size_t field_index, uint16_t value) {
-    //     setRegField(RegisterIndexMap.at(name.c_str()), field_index, value));
-    // }
 
     uint16_t getCurrentRow() const { return currentRow; }
 
