@@ -26,13 +26,17 @@
 namespace Ph2_HwInterface
 {
 
+template <class Flavor>
 class RD53BInterface : public RD53InterfaceBase
 {
     using Chip = Ph2_HwDescription::Chip;
     using ReadoutChip = Ph2_HwDescription::ReadoutChip;
     using BeBoard = Ph2_HwDescription::BeBoard;
     using Hybrid = Ph2_HwDescription::Hybrid;
-    using RD53B = Ph2_HwDescription::RD53B;
+    using RD53B = Ph2_HwDescription::RD53B<Flavor>;
+
+    using Reg = typename Flavor::Reg;
+    using Register = typename RD53B::Register;
 
 public:
     RD53BInterface(const BeBoardFWMap& pBoardMap);
@@ -50,11 +54,11 @@ public:
     bool     MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerifLoop = true) override { return true; }
     bool     maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override  { return true; }
 
-    void WriteReg(Chip* chip, const RD53B::Register& reg, uint16_t value);
-    void WriteReg(const Hybrid* chip, const RD53B::Register& reg, uint16_t value);
-    void WriteReg(const BeBoard* board, const RD53B::Register& reg, uint16_t value);
+    void WriteReg(Chip* chip, const Register& reg, uint16_t value);
+    void WriteReg(const Hybrid* chip, const Register& reg, uint16_t value);
+    void WriteReg(const BeBoard* board, const Register& reg, uint16_t value);
 
-    void WriteRegField(RD53B* chip, const RD53B::Register& reg, size_t field, uint16_t value) {
+    void WriteRegField(RD53B* chip, const Register& reg, size_t field, uint16_t value) {
         uint16_t newValue = chip->setRegField(reg, field, value);
         WriteReg(chip, reg, newValue);
     }

@@ -112,6 +112,11 @@ class RD53FWInterface : public BeBoardFWInterface
         Unspecified = 0
     };
 
+    enum class UplinkDataRate {
+      x1280 = 0,
+      x640 = 1
+    };
+
     // @TMP@
     enum class AutozeroSource : uint32_t
     {
@@ -211,6 +216,8 @@ class RD53FWInterface : public BeBoardFWInterface
     float calcTemperature(uint32_t sensor1, uint32_t sensor2, int beta = 3435);
     float calcVoltage(uint32_t senseVDD, uint32_t senseGND);
 
+    UplinkDataRate getUplinkDataRate() { return uplinkDataRate; }
+
   private:
     void                  PrintFWstatus();
     void                  TurnOffFMC();
@@ -243,6 +250,7 @@ class RD53FWInterface : public BeBoardFWInterface
     size_t             ddr3Offset;
     bool               singleChip;
     FEType             feType = FEType::RD53A;
+    UplinkDataRate     uplinkDataRate = UplinkDataRate::x1280;
     uint32_t           FWinfo;
     uint16_t           enabledHybrids;
 };

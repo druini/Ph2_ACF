@@ -1,5 +1,5 @@
-#ifndef RD53BREGISTERS_H
-#define RD53BREGISTERS_H
+#ifndef CROCREGISTERS_H
+#define CROCREGISTERS_H
 
 #include <numeric>
 #include <string>
@@ -12,12 +12,9 @@
 namespace Ph2_HwDescription
 {
 
-template <class T, size_t N>
-inline constexpr size_t size(const T (&arr) [N]) { return N; }
+struct CROCReg {
 
-struct RD53BReg {
-
-    static constexpr size_t nRegs = 138;
+    static constexpr size_t nRegs = 151;
 
     using Register = RD53Register;
 
@@ -82,85 +79,98 @@ struct RD53BReg {
             {"VCAL_MED", 56, {12}, {300}},
             {"MEAS_CAP", 57, {1, 1, 1}, {0, 0, 0}},
             {"CdrConf", 58, {1, 1, 3}, {0, 0, 0}},
-            {"ChSyncConf", 59, {5}, {16}},
-            {"GlobalPulseConf", 60, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-            {"GlobalPulseWidth", 61, {8}, {1}},
-            {"ServiceDataConf", 62, {1, 8}, {0, 50}},
-            {"ToTConfig", 63, {1, 1, 1, 1, 9}, {0, 0, 0, 0, 500}},
-            {"PrecisionToTEnable_3", 64, {1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0}},
-            {"PrecisionToTEnable_2", 65, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-            {"PrecisionToTEnable_1", 66, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-            {"PrecisionToTEnable_0", 67, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-            {"DataMerging", 68, {4, 1, 1, 1, 4, 1}, {0, 1, 1, 0, 0, 0}},
-            {"DataMergingMux", 69, {2, 2, 2, 2, 2, 2, 2, 2}, {3, 2, 1, 0, 3, 2, 1, 0}},
-            {"EnCoreColumnCalibration_3", 70, {1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1}},
-            {"EnCoreColumnCalibration_2", 71, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}},
-            {"EnCoreColumnCalibration_1", 72, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}},
-            {"EnCoreColumnCalibration_0", 73, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}},
-            {"DataConcentratorConf", 74, {1, 1, 1, 8}, {0, 0, 1, 16}},
-            {"CoreColEncoderConf", 75, {1, 1, 1, 4, 1, 3}, {0, 0, 0, 0, 0, 0}},
-            {"EvenMask", 76, {16}, {0}},
-            {"OddMask", 77, {16}, {0}},
-            {"EfusesConfig", 78, {16}, {0}},
-            {"EfusesWriteData1", 79, {16}, {0}},
-            {"EfusesWriteData0", 80, {16}, {0}},
-            {"AuroraConfig", 81, {1, 4, 6, 2}, {0, 1, 25, 3}},
-            {"AURORA_CB_CONFIG1", 82, {8}, {255}},
-            {"AURORA_CB_CONFIG0", 83, {12, 4}, {4095, 0}},
-            {"AURORA_INIT_WAIT", 84, {11}, {32}},
-            {"OUTPUT_PAD_CONFIG", 85, {4, 1, 1, 4, 3}, {5, 1, 0, 15, 7}},
-            {"GP_CMOS_ROUTE", 86, {6}, {34}},
-            {"GP_LVDS_ROUTE_1", 87, {6, 6}, {35, 33}},
-            {"GP_LVDS_ROUTE_0", 88, {6, 6}, {1, 0}},
-            {"DAC_CP_CDR", 89, {10}, {40}},
-            {"DAC_CP_FD_CDR", 90, {10}, {400}},
-            {"DAC_CP_BUFF_CDR", 91, {10}, {200}},
-            {"DAC_VCO_CDR", 92, {10}, {1023}},
-            {"DAC_VCOBUFF_CDR", 93, {10}, {500}},
-            {"SER_SEL_OUT", 94, {2, 2, 2, 2}, {1, 1, 1, 1}},
-            {"CML_CONFIG", 95, {2, 2, 4}, {0, 0, 1}},
-            {"DAC_CML_BIAS_2", 96, {10}, {0}},
-            {"DAC_CML_BIAS_1", 97, {10}, {0}},
-            {"DAC_CML_BIAS_0", 98, {10}, {500}},
-            {"MonitorConfig", 99, {1, 6, 6}, {0, 63, 63}},
-            {"ErrWngMask", 100, {1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0}},
-            {"MON_SENS_SLDO", 101, {1, 4, 1, 1, 4, 1}, {0, 0, 0, 0, 0, 0}},
-            {"MON_SENS_ACB", 102, {1, 4, 1}, {0, 0, 0}},
-            {"MON_ADC", 103, {1, 1, 1, 6}, {0, 0, 1, 0}},
-            {"DAC_NTC", 104, {10}, {100}},
-            {"HITOR_MASK_3", 105, {1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0}},
-            {"HITOR_MASK_2", 106, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-            {"HITOR_MASK_1", 107, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-            {"HITOR_MASK_0", 108, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-            {"AutoRead0", 109, {9}, {137}},
-            {"AutoRead1", 110, {9}, {133}},
-            {"AutoRead2", 111, {9}, {121}},
-            {"AutoRead3", 112, {9}, {122}},
-            {"AutoRead4", 113, {9}, {124}},
-            {"AutoRead5", 114, {9}, {127}},
-            {"AutoRead6", 115, {9}, {126}},
-            {"AutoRead7", 116, {9}, {125}},
-            {"RingOscConfig", 117, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}},
-            {"RingOscRoute", 118, {3, 6}, {0, 0}},
-            {"RING_OSC_A_OUT", 119, {16}, {0}, true},
-            {"RING_OSC_B_OUT", 120, {16}, {0}, true},
-            {"BCIDCnt", 121, {16}, {0}, true},
-            {"TrigCnt", 122, {16}, {0}, true},
-            {"ReadTrigCnt", 123, {16}, {0}, true},
-            {"LockLossCnt", 124, {16}, {0}, true},
-            {"BitFlipWngCnt", 125, {16}, {0}, true},
-            {"BitFlipErrCnt", 126, {16}, {0}, true},
-            {"CmdErrCnt", 127, {16}, {0}, true},
-            {"RdWrFifoErrorCount", 128, {16}, {0}, true},
-            {"AI_REGION_ROW", 129, {9}, {0}, true},
-            {"HitOr_3_Cnt", 130, {16}, {0}, true},
-            {"HitOr_2_Cnt", 131, {16}, {0}, true},
-            {"HitOr_1_Cnt", 132, {16}, {0}, true},
-            {"HitOr_0_Cnt", 133, {16}, {0}, true},
-            {"SkippedTriggerCnt", 134, {16}, {0}, true},
-            {"EfusesReadData1", 135, {16}, {0}, true},
-            {"EfusesReadData0", 136, {16}, {0}, true},
-            {"MonitoringDataADC", 137, {12}, {0}, true}
+            {"CkEnConf", 59, {3, 3, 3, 3}, {7, 7, 7, 7}},
+            {"ChSyncConf", 60, {5}, {16}},
+            {"GlobalPulseConf", 61, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+            {"GlobalPulseWidth", 62, {8}, {1}},
+            {"ServiceDataConf", 63, {1, 8}, {0, 50}},
+            {"ToTConfig", 64, {1, 1, 1, 1, 9}, {0, 0, 0, 0, 500}},
+            {"PrecisionToTEnable_3", 65, {1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0}},
+            {"PrecisionToTEnable_2", 66, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+            {"PrecisionToTEnable_1", 67, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+            {"PrecisionToTEnable_0", 68, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+            {"DataMerging", 69, {4, 1, 1, 1, 4, 1}, {0, 1, 1, 0, 0, 0}},
+            {"DataMergingMux", 70, {2, 2, 2, 2, 2, 2, 2, 2}, {3, 2, 1, 0, 3, 2, 1, 0}},
+            {"EnCoreColumnCalibration_3", 71, {1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1}},
+            {"EnCoreColumnCalibration_2", 72, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}},
+            {"EnCoreColumnCalibration_1", 73, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}},
+            {"EnCoreColumnCalibration_0", 74, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}},
+            {"DataConcentratorConf", 75, {1, 1, 1, 8}, {0, 0, 1, 16}},
+            {"CoreColEncoderConf", 76, {1, 1, 1, 4, 1, 3}, {0, 0, 0, 0, 0, 0}},
+            {"EnHitsRemoval_3", 77, {16}, {0}},
+            {"EnHitsRemoval_2", 78, {16}, {0}},
+            {"EnHitsRemoval_1", 79, {16}, {0}},
+            {"EnHitsRemoval_0", 80, {6}, {0}},
+            {"EnIsolHitsRemoval_3", 81, {16}, {0}},
+            {"EnIsolHitsRemoval_2", 82, {16}, {0}},
+            {"EnIsolHitsRemoval_1", 83, {16}, {0}},
+            {"EnIsolHitsRemoval_0", 84, {6}, {0}},
+            {"EvenMask", 85, {16}, {0}},
+            {"OddMask", 86, {16}, {0}},
+            {"EfusesConfig", 87, {16}, {0}},
+            {"EfusesWriteData1", 88, {16}, {0}},
+            {"EfusesWriteData0", 89, {16}, {0}},
+            {"AuroraConfig", 90, {1, 4, 6, 2}, {0, 1, 25, 3}},
+            {"AURORA_CB_CONFIG1", 91, {8}, {255}},
+            {"AURORA_CB_CONFIG0", 92, {12, 4}, {4095, 0}},
+            {"AURORA_INIT_WAIT", 93, {11}, {32}},
+            {"AURORA_AltOutput_1", 94, {4}, {0}},
+            {"AURORA_AltOutput_0", 95, {11}, {0}},
+            {"OUTPUT_PAD_CONFIG", 96, {4, 1, 1, 4, 3}, {5, 1, 0, 15, 7}},
+            {"GP_CMOS_ROUTE", 97, {6}, {34}},
+            {"GP_LVDS_ROUTE_1", 98, {6, 6}, {35, 33}},
+            {"GP_LVDS_ROUTE_0", 99, {6, 6}, {1, 0}},
+            {"DAC_CP_CDR", 100, {10}, {40}},
+            {"DAC_CP_FD_CDR", 101, {10}, {400}},
+            {"DAC_CP_BUFF_CDR", 102, {10}, {200}},
+            {"DAC_VCO_CDR", 103, {10}, {1023}},
+            {"DAC_VCOBUFF_CDR", 104, {10}, {500}},
+            {"SER_SEL_OUT", 105, {2, 2, 2, 2}, {1, 1, 1, 1}},
+            {"CML_CONFIG", 106, {2, 2, 4}, {0, 0, 1}},
+            {"DAC_CML_BIAS_2", 107, {10}, {0}},
+            {"DAC_CML_BIAS_1", 108, {10}, {0}},
+            {"DAC_CML_BIAS_0", 109, {10}, {500}},
+            {"MonitorConfig", 110, {1, 6, 6}, {0, 63, 63}},
+            {"ErrWngMask", 111, {1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0}},
+            {"MON_SENS_SLDO", 112, {1, 4, 1, 1, 4, 1}, {0, 0, 0, 0, 0, 0}},
+            {"MON_SENS_ACB", 113, {1, 4, 1}, {0, 0, 0}},
+            {"MON_ADC", 114, {1, 1, 1, 6}, {0, 0, 1, 0}},
+            {"DAC_NTC", 115, {10}, {100}},
+            {"HITOR_MASK_3", 116, {1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0}},
+            {"HITOR_MASK_2", 117, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+            {"HITOR_MASK_1", 118, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+            {"HITOR_MASK_0", 119, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+            {"AutoRead0", 120, {9}, {137}},
+            {"AutoRead1", 121, {9}, {133}},
+            {"AutoRead2", 122, {9}, {121}},
+            {"AutoRead3", 123, {9}, {122}},
+            {"AutoRead4", 124, {9}, {124}},
+            {"AutoRead5", 125, {9}, {127}},
+            {"AutoRead6", 126, {9}, {126}},
+            {"AutoRead7", 127, {9}, {125}},
+            {"RingOscConfig", 128, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}},
+            {"RingOscRoute", 129, {3, 6}, {0, 0}},
+            {"RING_OSC_A_OUT", 130, {16}, {0}, true},
+            {"RING_OSC_B_OUT", 131, {16}, {0}, true},
+            {"BCIDCnt", 132, {16}, {0}, true},
+            {"TrigCnt", 133, {16}, {0}, true},
+            {"ReadTrigCnt", 134, {16}, {0}, true},
+            {"LockLossCnt", 135, {16}, {0}, true},
+            {"BitFlipWngCnt", 136, {16}, {0}, true},
+            {"BitFlipErrCnt", 137, {16}, {0}, true},
+            {"CmdErrCnt", 138, {16}, {0}, true},
+            {"RdWrFifoErrorCount", 139, {16}, {0}, true},
+            {"AI_REGION_ROW", 140, {9}, {0}, true},
+            {"HitOr_3_Cnt", 141, {16}, {0}, true},
+            {"HitOr_2_Cnt", 142, {16}, {0}, true},
+            {"HitOr_1_Cnt", 143, {16}, {0}, true},
+            {"HitOr_0_Cnt", 144, {16}, {0}, true},
+            {"Pixel_SEU_Cnt", 145, {16}, {0}, true},
+            {"GlobalConfig_SEU_Cnt", 146, {16}, {0}, true},
+            {"SkippedTriggerCnt", 147, {16}, {0}, true},
+            {"EfusesReadData1", 148, {16}, {0}, true},
+            {"EfusesReadData0", 149, {16}, {0}, true},
+            {"MonitoringDataADC", 150, {12}, {0}, true}
         }};
         return registers;
     }
@@ -240,6 +250,7 @@ struct RD53BReg {
     static const Register& VCAL_MED;
     static const Register& MEAS_CAP;
     static const Register& CdrConf;
+    static const Register& CkEnConf;
     static const Register& ChSyncConf;
     static const Register& GlobalPulseConf;
     static const Register& GlobalPulseWidth;
@@ -257,6 +268,14 @@ struct RD53BReg {
     static const Register& EnCoreColumnCalibration_0;
     static const Register& DataConcentratorConf;
     static const Register& CoreColEncoderConf;
+    static const Register& EnHitsRemoval_3;
+    static const Register& EnHitsRemoval_2;
+    static const Register& EnHitsRemoval_1;
+    static const Register& EnHitsRemoval_0;
+    static const Register& EnIsolHitsRemoval_3;
+    static const Register& EnIsolHitsRemoval_2;
+    static const Register& EnIsolHitsRemoval_1;
+    static const Register& EnIsolHitsRemoval_0;
     static const Register& EvenMask;
     static const Register& OddMask;
     static const Register& EfusesConfig;
@@ -266,6 +285,8 @@ struct RD53BReg {
     static const Register& AURORA_CB_CONFIG1;
     static const Register& AURORA_CB_CONFIG0;
     static const Register& AURORA_INIT_WAIT;
+    static const Register& AURORA_AltOutput_1;
+    static const Register& AURORA_AltOutput_0;
     static const Register& OUTPUT_PAD_CONFIG;
     static const Register& GP_CMOS_ROUTE;
     static const Register& GP_LVDS_ROUTE_1;
@@ -315,6 +336,8 @@ struct RD53BReg {
     static const Register& HitOr_2_Cnt;
     static const Register& HitOr_1_Cnt;
     static const Register& HitOr_0_Cnt;
+    static const Register& Pixel_SEU_Cnt;
+    static const Register& GlobalConfig_SEU_Cnt;
     static const Register& SkippedTriggerCnt;
     static const Register& EfusesReadData1;
     static const Register& EfusesReadData0;

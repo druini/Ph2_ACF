@@ -14,9 +14,11 @@ using namespace Ph2_HwDescription;
 namespace Ph2_HwInterface
 {
 
-RD53BInterface::RD53BInterface(const BeBoardFWMap& pBoardMap) : RD53InterfaceBase(pBoardMap) {}
+template <class Flavor>
+RD53BInterface<Flavor>::RD53BInterface(const BeBoardFWMap& pBoardMap) : RD53InterfaceBase(pBoardMap) {}
 
-bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+template <class Flavor>
+bool RD53BInterface<Flavor>::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
     setup(pChip);
 
@@ -27,68 +29,70 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
             WriteReg(chip, reg, chip->getRegValue(reg));
     }
     
-    WriteReg(chip, RD53BReg::PIX_DEFAULT_CONFIG, 0x9CE2);
-    WriteReg(chip, RD53BReg::PIX_DEFAULT_CONFIG_B, 0x631D);
-    WriteRegField(chip, RD53BReg::TriggerConfig, 0, 0); // trigger mode
-    WriteRegField(chip, RD53BReg::DataConcentratorConf, 3, 1); // events / stream
-
-    LOG(INFO) << "VCAL_HIGH = " << ReadChipReg(chip, "VCAL_HIGH") << std::endl;
+    WriteReg(chip, Reg::PIX_DEFAULT_CONFIG, 0x9CE2);
+    WriteReg(chip, Reg::PIX_DEFAULT_CONFIG_B, 0x631D);
+    WriteRegField(chip, Reg::TriggerConfig, 0, 0); // trigger mode
+    WriteRegField(chip, Reg::DataConcentratorConf, 3, 1); // events / stream
 
     return true;
 }
 
-void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
+template <class Flavor>
+void RD53BInterface<Flavor>::InitRD53Downlink(const BeBoard* pBoard)
 {
-    setup(pBoard);
+    auto& fwInterface = setup(pBoard);
 
     LOG(INFO) << GREEN << "Down-link phase initialization..." << RESET;
 
-    WriteReg(pBoard, RD53BReg::GCR_DEFAULT_CONFIG, 0xac75);
-    WriteReg(pBoard, RD53BReg::GCR_DEFAULT_CONFIG_B, 0x538a);
-    WriteReg(pBoard, RD53BReg::CmdErrCnt, 0);
+    WriteReg(pBoard, Reg::GCR_DEFAULT_CONFIG, 0xac75);
+    WriteReg(pBoard, Reg::GCR_DEFAULT_CONFIG_B, 0x538a);
+    WriteReg(pBoard, Reg::CmdErrCnt, 0);
+    WriteReg(pBoard, Reg::CdrConf, fwInterface.getUplinkDataRate() == RD53FWInterface::UplinkDataRate::x1280 ? 0 : 1);
     SendGlobalPulse(pBoard, {"ResetChannelSynchronizer", "ResetCommandDecoder", "ResetGlobalConfiguration"}, 0xff);
-    WriteReg(pBoard, RD53BReg::RingOscConfig, 0x7fff);
-    WriteReg(pBoard, RD53BReg::RingOscConfig, 0x5eff);
+    WriteReg(pBoard, Reg::RingOscConfig, 0x7fff);
+    WriteReg(pBoard, Reg::RingOscConfig, 0x5eff);
     SendGlobalPulse(pBoard, {"ResetEfuses"}, 0xff);
 
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
 
-void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
+template <class Flavor>
+void RD53BInterface<Flavor>::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
 {
-    
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
 
-    WriteReg(pChip, RD53BReg::SER_SEL_OUT, 0x0055);
-    WriteReg(pChip, RD53BReg::CML_CONFIG, 0x0001);
-    WriteReg(pChip, RD53BReg::AuroraConfig, 0x0167);
-    WriteReg(pChip, RD53BReg::ServiceDataConf, (1 << 8) | 50);
-    WriteReg(pChip, RD53BReg::AURORA_CB_CONFIG0, 0x0FF1);
-    WriteReg(pChip, RD53BReg::AURORA_CB_CONFIG0, 0x0000);
-    SendGlobalPulse(pChip, {"ResetSerializers", "ResetAurora"}, 0xff);
-    BitVector<uint16_t> bits;
-    auto cmdValue = RD53BCmd::Clear.Create({pChip->getId()});
-    RD53BCmd::Clear.serialize(cmdValue, bits);
-    RD53BCmd::Clear.serialize(cmdValue, bits);
-    SendCommandStream(pChip, bits);
-    // SendCommand(pChip, RD53BCmd::Clear);
-    // SendCommand(pChip, RD53BCmd::Clear);
+    WriteReg(pChip, Reg::SER_SEL_OUT, 0x0055);
+    WriteReg(pChip, Reg::CML_CONFIG, 0x0001);
+    WriteReg(pChip, Reg::AuroraConfig, 0x0167);
+    WriteReg(pChip, Reg::ServiceDataConf, (1 << 8) | 50);
+    WriteReg(pChip, Reg::AURORA_CB_CONFIG0, 0x0FF1);
+    WriteReg(pChip, Reg::AURORA_CB_CONFIG0, 0x0000);
+    // SendGlobalPulse(pChip, {"ResetSerializers", "ResetAurora"}, 0xff);
+    // BitVector<uint16_t> bits;
+    // auto cmdValue = RD53BCmd::Clear.Create({pChip->getId()});
+    // RD53BCmd::Clear.serialize(cmdValue, bits);
+    // RD53BCmd::Clear.serialize(cmdValue, bits);
+    // SendCommandStream(pChip, bits);
+    SendCommand(pChip, RD53BCmd::Clear);
+    SendCommand(pChip, RD53BCmd::Clear);
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
-bool RD53BInterface::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerifLoop)
+
+template <class Flavor>
+bool RD53BInterface<Flavor>::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerifLoop)
 {
     setup(pChip);
 
     auto* chip = static_cast<RD53B*>(pChip);
-    auto& reg = RD53B::Reg(regName);
+    auto& reg = RD53B::getRegister(regName);
 
     WriteReg(chip, reg, data);
 
-    if((reg == RD53BReg::VCAL_HIGH) || (reg == RD53BReg::VCAL_MED)) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
+    if((reg == Reg::VCAL_HIGH) || (reg == Reg::VCAL_MED)) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
 
-    if(pVerifLoop == true && (reg != RD53BReg::PIX_PORTAL || chip->getRegField(RD53BReg::PIX_MODE, 2) == 0))
+    if(pVerifLoop == true && (reg != Reg::PIX_PORTAL || chip->getRegField(Reg::PIX_MODE, 2) == 0))
     {
         uint16_t value = ReadChipReg(pChip, regName);
 
@@ -101,26 +105,27 @@ bool RD53BInterface::WriteChipReg(Chip* pChip, const std::string& regName, const
     return true;
 }
 
-
-void RD53BInterface::WriteReg(Chip* pChip, const RD53B::Register& reg, const uint16_t value)
+template <class Flavor>
+void RD53BInterface<Flavor>::WriteReg(Chip* pChip, const Register& reg, const uint16_t value)
 {
     SendCommand(pChip, RD53BCmd::WrReg, reg.address, value);
     static_cast<RD53B*>(pChip)->setRegValue(reg, value);
 
-    if((reg == RD53BReg::VCAL_HIGH) || (reg == RD53BReg::VCAL_MED)) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
+    if((reg == Reg::VCAL_HIGH) || (reg == Reg::VCAL_MED)) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
 }
 
-
-void RD53BInterface::WriteReg(const Hybrid* hybrid, const RD53B::Register& reg, const uint16_t value) {
+template <class Flavor>
+void RD53BInterface<Flavor>::WriteReg(const Hybrid* hybrid, const Register& reg, const uint16_t value) {
     SendCommand(hybrid, RD53BCmd::WrReg, reg.address, value);
     
     for (auto* chip : *hybrid)
         static_cast<RD53B*>(chip)->setRegValue(reg, value);
 
-    if((reg == RD53BReg::VCAL_HIGH) || (reg == RD53BReg::VCAL_MED)) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
+    if((reg == Reg::VCAL_HIGH) || (reg == Reg::VCAL_MED)) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
 }
 
-void RD53BInterface::WriteReg(const BeBoard* pBoard, const RD53B::Register& reg, const uint16_t data)
+template <class Flavor>
+void RD53BInterface<Flavor>::WriteReg(const BeBoard* pBoard, const Register& reg, const uint16_t data)
 {
     setup(pBoard);
 
@@ -131,15 +136,17 @@ void RD53BInterface::WriteReg(const BeBoard* pBoard, const RD53B::Register& reg,
     }
 }
 
-void RD53BInterface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std::string& regName, const uint16_t data)
+template <class Flavor>
+void RD53BInterface<Flavor>::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std::string& regName, const uint16_t data)
 {
-    WriteReg(pBoard, RD53B::Reg(regName), data);
+    WriteReg(pBoard, RD53B::getRegister(regName), data);
 }
 
-uint16_t RD53BInterface::ReadChipReg(Chip* pChip, const std::string& regName)
+template <class Flavor>
+uint16_t RD53BInterface<Flavor>::ReadChipReg(Chip* pChip, const std::string& regName)
 {
     auto& boardFW = setup(pChip);
-    auto& reg = RD53B::Reg(regName);
+    auto& reg = RD53B::getRegister(regName);
     auto* chip = static_cast<RD53B*>(pChip);
 
     const int nAttempts = 2; // @CONST@
@@ -147,7 +154,7 @@ uint16_t RD53BInterface::ReadChipReg(Chip* pChip, const std::string& regName)
     {
         SendCommand(chip, RD53BCmd::RdReg, reg.address);
 
-        uint16_t address = reg == RD53BReg::PIX_PORTAL ? bits::pack<1, 9>(1, chip->getCurrentRow()) : reg.address;
+        uint16_t address = reg == Reg::PIX_PORTAL ? bits::pack<1, 9>(1, chip->getCurrentRow()) : reg.address;
 
         auto regReadback = boardFW.ReadChipRegisters(chip);
 
@@ -171,36 +178,39 @@ uint16_t RD53BInterface::ReadChipReg(Chip* pChip, const std::string& regName)
     return 0;
 }
 
-
-
-void RD53BInterface::ChipErrorReport(ReadoutChip* pChip)
+template <class Flavor>
+void RD53BInterface<Flavor>::ChipErrorReport(ReadoutChip* pChip)
 {
-    LOG(INFO) << BOLDBLUE << "LockLossCnt        = " << BOLDYELLOW << RD53BInterface::ReadChipReg(pChip, "LockLossCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "BitFlipWngCnt      = " << BOLDYELLOW << RD53BInterface::ReadChipReg(pChip, "BitFlipWngCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "BitFlipErrCnt      = " << BOLDYELLOW << RD53BInterface::ReadChipReg(pChip, "BitFlipErrCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "CmdErrCnt          = " << BOLDYELLOW << RD53BInterface::ReadChipReg(pChip, "CmdErrCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "RdWrFifoErrorCount = " << BOLDYELLOW << RD53BInterface::ReadChipReg(pChip, "RdWrFifoErrorCount") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "SkippedTriggerCnt  = " << BOLDYELLOW << RD53BInterface::ReadChipReg(pChip, "SkippedTriggerCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "HitOr_0_Cnt        = " << BOLDYELLOW << RD53BInterface::ReadChipReg(pChip, "HitOr_0_Cnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "HitOr_1_Cnt        = " << BOLDYELLOW << RD53BInterface::ReadChipReg(pChip, "HitOr_1_Cnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "HitOr_2_Cnt        = " << BOLDYELLOW << RD53BInterface::ReadChipReg(pChip, "HitOr_2_Cnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "HitOr_3_Cnt        = " << BOLDYELLOW << RD53BInterface::ReadChipReg(pChip, "HitOr_3_Cnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "BCIDCnt            = " << BOLDYELLOW << RD53BInterface::ReadChipReg(pChip, "BCIDCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "TrigCnt            = " << BOLDYELLOW << RD53BInterface::ReadChipReg(pChip, "TrigCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "ReadTrigCnt        = " << BOLDYELLOW << RD53BInterface::ReadChipReg(pChip, "ReadTrigCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "LockLossCnt        = " << BOLDYELLOW << ReadChipReg(pChip, "LockLossCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "BitFlipWngCnt      = " << BOLDYELLOW << ReadChipReg(pChip, "BitFlipWngCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "BitFlipErrCnt      = " << BOLDYELLOW << ReadChipReg(pChip, "BitFlipErrCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "CmdErrCnt          = " << BOLDYELLOW << ReadChipReg(pChip, "CmdErrCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "RdWrFifoErrorCount = " << BOLDYELLOW << ReadChipReg(pChip, "RdWrFifoErrorCount") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "SkippedTriggerCnt  = " << BOLDYELLOW << ReadChipReg(pChip, "SkippedTriggerCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "HitOr_0_Cnt        = " << BOLDYELLOW << ReadChipReg(pChip, "HitOr_0_Cnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "HitOr_1_Cnt        = " << BOLDYELLOW << ReadChipReg(pChip, "HitOr_1_Cnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "HitOr_2_Cnt        = " << BOLDYELLOW << ReadChipReg(pChip, "HitOr_2_Cnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "HitOr_3_Cnt        = " << BOLDYELLOW << ReadChipReg(pChip, "HitOr_3_Cnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "BCIDCnt            = " << BOLDYELLOW << ReadChipReg(pChip, "BCIDCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "TrigCnt            = " << BOLDYELLOW << ReadChipReg(pChip, "TrigCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "ReadTrigCnt        = " << BOLDYELLOW << ReadChipReg(pChip, "ReadTrigCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
 }
 
-
-float RD53BInterface::ReadHybridTemperature(ReadoutChip* pChip)
+template <class Flavor>
+float RD53BInterface<Flavor>::ReadHybridTemperature(ReadoutChip* pChip)
 {
     auto& boardFW = setup(pChip);
     return boardFW.ReadHybridTemperature(pChip->getHybridId());
 }
 
-float RD53BInterface::ReadHybridVoltage(ReadoutChip* pChip)
+template <class Flavor>
+float RD53BInterface<Flavor>::ReadHybridVoltage(ReadoutChip* pChip)
 {
     auto& boardFW = setup(pChip);
     return boardFW.ReadHybridVoltage(pChip->getHybridId());
 }
+
+template class RD53BInterface<RD53BFlavor::ATLAS>;
+template class RD53BInterface<RD53BFlavor::CMS>;
 
 } // namespace Ph2_HwInterface

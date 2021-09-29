@@ -228,7 +228,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
 
             if (cFirstBoard->getFrontEndType() == FrontEndType::RD53B)
-                fReadoutChipInterface = new RD53BInterface(fBeBoardFWMap);
+                fReadoutChipInterface = new RD53BInterface<RD53BFlavor::ATLAS>(fBeBoardFWMap);
+            else if (cFirstBoard->getFrontEndType() == FrontEndType::CROC)
+                fReadoutChipInterface = new RD53BInterface<RD53BFlavor::CMS>(fBeBoardFWMap);
             else
                 fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
         }

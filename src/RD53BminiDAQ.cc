@@ -65,7 +65,8 @@ int main(int argc, char** argv) {
     auto& chipInterface = *system.fReadoutChipInterface;
 
     for_each_chip(system, [&] (auto devices) {
-        for (const auto& reg : RD53B::Registers) {
+        const auto& registers = devices.chip->getFrontEndType() == FrontEndType::RD53B ? RD53BReg::Registers : CROCReg::Registers;
+        for (const auto& reg : registers) {
             uint16_t value = chipInterface.ReadChipReg(devices.chip, reg.name);
             std::stringstream ss;
             ss << reg.name << " = " << value;

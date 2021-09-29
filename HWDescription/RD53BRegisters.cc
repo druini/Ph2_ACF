@@ -2,7 +2,7 @@
 
 using namespace Ph2_HwDescription;
 
-const std::array<const RD53BReg::Register, RD53BReg::nRegs>& RD53BReg::Registers = RD53BReg::GetRegisters();
+const std::vector<RD53BReg::Register>& RD53BReg::Registers = RD53BReg::GetRegisters();
 const std::unordered_map<std::string, uint16_t>& RD53BReg::RegisterIndexMap = RD53BReg::GetRegisterIndexMap();
 
 const RD53BReg::Register& RD53BReg::PIX_PORTAL = RD53BReg::Registers[0];

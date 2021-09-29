@@ -20,14 +20,14 @@
       <Hybrid Id="0" Status="1">
         <RD53_Files path="${PWD}/" />
 
-        <RD53B Id="15" Lane="0" configfile="RD53B.toml" RxGroups="6" RxChannels="0" TxGroups="3" TxChannels="0">
+        <CROC Id="15" Lane="0" configfile="RD53B.toml" RxGroups="6" RxChannels="0" TxGroups="3" TxChannels="0">
           <!-- Overwrite .toml configuration file settings -->
           <Settings
               DAC_VFF_DIFF           =  "100"
               VCAL_HIGH              =  "500"
               VCAL_MED               =  "300"
               />
-        </RD53B>
+        </CROC>
 
         <Global
             VCAL_HIGH              =  "600"

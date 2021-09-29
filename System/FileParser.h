@@ -104,8 +104,13 @@ class FileParser
     void parseRD53Settings(pugi::xml_node pRd53Node, Ph2_HwDescription::ReadoutChip* pRD53, std::ostream& os);
     void parseGlobalRD53Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     
+    template <class Flavor>
     void parseRD53B(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
+
+    template <class Flavor>
     void parseRD53BSettings(pugi::xml_node pRd53Node, Ph2_HwDescription::ReadoutChip* pRD53, std::ostream& os);
+    
+    template <class Flavor>
     void parseGlobalRD53BSettings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     
     // ########################

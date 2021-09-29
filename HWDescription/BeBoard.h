@@ -149,8 +149,6 @@ class BeBoard : public BoardContainer
 
     bool getSparsification() const { return fSparsifed; }
 
-    int dummyValue_ = 1989;
-
   protected:
     BoardType    fBoardType;
     EventType    fEventType;

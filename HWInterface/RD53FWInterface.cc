@@ -86,6 +86,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     if (feType == FEType::RD53B)
         WriteReg("user.ctrl_regs.reset_reg.enable_sync_word", 1);
 
+    SendBoardCommand("user.ctrl_regs.gtx_drp.set_aurora_speed");
 
     RD53FWInterface::ChipReset();
     RD53FWInterface::ChipReSync();
@@ -130,6 +131,12 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 }
             }
         }
+
+    // Configure aurora speed
+    uplinkDataRate = static_cast<UplinkDataRate>(pBoard->getBeBoardRegMap()["user.ctrl_regs.gtx_drp.aurora_speed"]);
+    WriteReg("user.ctrl_regs.gtx_drp.aurora_speed", static_cast<uint32_t>(uplinkDataRate));
+    LOG(INFO) << BOLDBLUE << "\t--> Uplink data rate: " << BOLDYELLOW << (uplinkDataRate == UplinkDataRate::x1280 ? "1280 Mbps" : "640 Mbps") << RESET;
+    SendBoardCommand("user.ctrl_regs.gtx_drp.set_aurora_speed");
 
     // ##################
     // # Configure DIO5 #

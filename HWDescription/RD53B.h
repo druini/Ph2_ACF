@@ -16,7 +16,9 @@
 #include "RD53Base.h"
 
 #include "RD53BConstants.h"
+
 #include "RD53BRegisters.h"
+#include "CROCRegisters.h"
 
 #include <iomanip>
 
@@ -24,26 +26,50 @@
 namespace Ph2_HwDescription
 {
 
-class RD53B : public RD53Base
-{
-  public:
+namespace RD53BFlavor {
+
+struct ATLAS { 
     static constexpr size_t nRows = 384;
     static constexpr size_t nCols = 400;
 
+    using Reg = RD53BReg;
+
+    static constexpr FrontEndType feType = FrontEndType::RD53B; 
+};
+
+struct CMS {
+    static constexpr size_t nRows = 336;
+    static constexpr size_t nCols = 432;
+
+    using Reg = CROCReg;
+
+    static constexpr FrontEndType feType = FrontEndType::CROC;
+};
+
+}
+
+template <class Flavor>
+class RD53B : public RD53Base
+{
+  public:
+    static constexpr size_t nRows = Flavor::nRows;
+    static constexpr size_t nCols = Flavor::nCols;
+
     static constexpr uint8_t BroadcastId = 0b11111;
 
-    template <class T>
-    static uint8_t ChipIdFor(const T* device) { return BroadcastId; }
+    using Reg = typename Flavor::Reg;
+    using Register = typename Reg::Register;
 
-    using Register = RD53BReg::Register;
-
-    static const decltype(RD53BReg::GetRegisters()) Registers;
-    static const decltype(RD53BReg::GetRegisterIndexMap()) RegisterIndexMap;
+    static const decltype(Reg::GetRegisters()) Registers;
+    static const decltype(Reg::GetRegisterIndexMap()) RegisterIndexMap;
 
     static const decltype(RD53BConstants::GetGlobalPulseRoutes()) GlobalPulseRoutes;
     static const decltype(RD53BConstants::GetIMUX()) IMUX;
     static const decltype(RD53BConstants::GetVMUX()) VMUX;
 
+
+    template <class T>
+    static uint8_t ChipIdFor(const T* device) { return BroadcastId; }
 
     static size_t getRegIndex(size_t index) {
         return index;
@@ -60,7 +86,7 @@ class RD53B : public RD53Base
 
 
     template <class Key>
-    static const Register& Reg(Key&& key) {
+    static const Register& getRegister(Key&& key) {
         return Registers[getRegIndex(std::forward<Key>(key))];
     }
 
@@ -83,7 +109,7 @@ class RD53B : public RD53Base
 
     template <class Key>
     void setRegValue(Key&& key, uint16_t value) {
-        auto& reg = Reg(std::forward<Key>(key));
+        auto& reg = getRegister(std::forward<Key>(key));
         registerValues[getRegIndex(reg)] = value;
         if (reg == RD53BReg::PIX_PORTAL) {
             if (getRegField(RD53BReg::PIX_MODE, 2))
@@ -98,7 +124,7 @@ class RD53B : public RD53Base
     // get/set register fields
     template <class Key>
     uint16_t getRegField(Key&& key, size_t field_index) const {
-        auto& reg = Reg(std::forward<Key>(key));
+        auto& reg = getRegister(std::forward<Key>(key));
         int offset = std::accumulate(reg.fieldSizes.begin(), reg.fieldSizes.begin() + field_index, 0);
         uint16_t mask = (1 << reg.fieldSizes[field_index]) - 1;
         return (registerValues[getRegIndex(reg)] >> offset) & mask;
@@ -120,7 +146,7 @@ class RD53B : public RD53Base
     uint16_t getCurrentRow() const { return currentRow; }
 
   private:
-    std::array<uint16_t, RD53BReg::nRegs> registerValues;
+    std::array<uint16_t, Reg::nRegs> registerValues;
     std::string configFileName;
     uint16_t currentRow = 0;
 };
