@@ -147,7 +147,7 @@ uint16_t RD53BInterface::ReadChipReg(Chip* pChip, const std::string& regName)
     {
         SendCommand(chip, RD53BCmd::RdReg, reg.address);
 
-        uint16_t address = reg == RD53BReg::PIX_PORTAL ? chip->getCurrentRow() : reg.address;
+        uint16_t address = reg == RD53BReg::PIX_PORTAL ? bits::pack<1, 9>(1, chip->getCurrentRow()) : reg.address;
 
         auto regReadback = boardFW.ReadChipRegisters(chip);
 
@@ -157,7 +157,7 @@ uint16_t RD53BInterface::ReadChipReg(Chip* pChip, const std::string& regName)
 
         if (it == regReadback.end())
         {
-            LOG(WARNING) << BLUE << "Register readback error, attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW << nAttempts << RESET;
+            LOG(WARNING) << BLUE << "Register readback (" << regName << ") error, attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW << nAttempts << RESET;
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         }
         else {
@@ -166,7 +166,7 @@ uint16_t RD53BInterface::ReadChipReg(Chip* pChip, const std::string& regName)
         }
     }
 
-    LOG(ERROR) << BOLDRED << "Invalid register readback after " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
+    LOG(ERROR) << BOLDRED << "Invalid register readback (" << regName << ") after " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
 
     return 0;
 }
