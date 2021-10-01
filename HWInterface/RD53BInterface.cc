@@ -24,10 +24,14 @@ bool RD53BInterface<Flavor>::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_
 
     auto* chip = static_cast<RD53B*>(pChip);
 
+    std::vector<std::pair<const Register&, uint16_t>> regValuePairs;
+
     for (const auto& reg : RD53B::Registers) {
-        if (!reg.readOnly && chip->getRegValue(reg) != reg.defaultValue)
-            WriteReg(chip, reg, chip->getRegValue(reg));
+        if (!reg.readOnly)
+            regValuePairs.emplace_back(reg, chip->getRegValue(reg));
     }
+
+    WriteRegs(pChip, regValuePairs);
     
     WriteReg(chip, Reg::PIX_DEFAULT_CONFIG, 0x9CE2);
     WriteReg(chip, Reg::PIX_DEFAULT_CONFIG_B, 0x631D);

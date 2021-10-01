@@ -58,6 +58,22 @@ public:
     void WriteReg(const Hybrid* chip, const Register& reg, uint16_t value);
     void WriteReg(const BeBoard* board, const Register& reg, uint16_t value);
 
+    template <class Device>
+    void WriteRegs(Device* device, std::vector<std::pair<const Register&, uint16_t>> regValuePairs) {
+        using namespace BitSerialization;
+        BitVector<uint16_t> bits;
+        auto cmd = RD53BCmd::WrReg.Create();
+        cmd["fields"_s]["chip_id"_s] = RD53B::ChipIdFor(device);
+
+        for (const auto& regValuePair : regValuePairs) {
+            cmd["fields"_s]["address"_s] = regValuePair.first.address;
+            cmd["fields"_s]["data"_s] = regValuePair.second;
+            RD53BCmd::WrReg.serialize(cmd, bits);
+        }
+
+        SendCommandStream(device, bits);
+    }
+
     void WriteRegField(RD53B* chip, const Register& reg, size_t field, uint16_t value) {
         uint16_t newValue = chip->setRegField(reg, field, value);
         WriteReg(chip, reg, newValue);
@@ -108,9 +124,10 @@ public:
 
     template <class CmdType>
     void SendCommand(const BeBoard* pBoard, const CmdType& cmdType, BitSerialization::value_type_t<CmdType>& cmdValue) {
-        for (const auto* opticalGroup : *pBoard)
-            for (const auto* hybrid : *opticalGroup)
-                SendCommandStream(hybrid->getHybridId(), SerializeCommand(cmdType, cmdValue));
+        SendCommandStream(pBoard, SerializeCommand(cmdType, cmdValue));
+        // for (const auto* opticalGroup : *pBoard)
+        //     for (const auto* hybrid : *opticalGroup)
+        //         SendCommandStream(hybrid->getHybridId(), SerializeCommand(cmdType, cmdValue));
     }
 
     template <class CmdType, class FirstArg, class... Args, typename std::enable_if_t<!RD53BCmd::isBroadcast<CmdType>, int> = 0>
@@ -135,8 +152,15 @@ public:
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream.blocks(), hybridId);
     }
 
-    void SendCommandStream(ReadoutChip* pChip, const BitVector<uint16_t>& cmdStream) {
-        SendCommandStream(pChip->getHybridId(), cmdStream);
+    template <class Device, typename std::enable_if_t<std::is_base_of<Ph2_HwDescription::FrontEndDescription, Device>::value, int> = 0>
+    void SendCommandStream(const Device* device, const BitVector<uint16_t>& cmdStream) {
+        SendCommandStream(device->getHybridId(), cmdStream);
+    }
+
+    void SendCommandStream(const BeBoard* pBoard, const BitVector<uint16_t>& cmdStream) {
+        for (const auto* opticalGroup : *pBoard)
+            for (const auto* hybrid : *opticalGroup)
+                SendCommandStream(hybrid->getHybridId(), cmdStream);
     }
 
     template <class Device>

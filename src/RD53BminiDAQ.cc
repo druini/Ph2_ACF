@@ -1,4 +1,5 @@
 #include "../System/SystemController.h"
+#include "../tools/Tool.h"
 #include "../Utils/argvparser.h"
 
 
@@ -17,8 +18,8 @@ struct DeviceChain {
 };
 
 template <class F>
-void for_each_chip(const SystemController& sys, F&& f) {
-    for (auto* board : *sys.fDetectorContainer) {
+void for_each_chip(SystemController* sys, F&& f) {
+    for (auto* board : *sys->fDetectorContainer) {
         for (auto* opticalGroup : *board) {
             for (auto* hybrid : *opticalGroup) {
                 for (auto* chip : *hybrid) {
@@ -46,7 +47,7 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
     
-    SystemController system;
+    Tool system;
 
     auto configFile = cmd.argument(0);
 
@@ -64,7 +65,7 @@ int main(int argc, char** argv) {
 
     auto& chipInterface = *system.fReadoutChipInterface;
 
-    for_each_chip(system, [&] (auto devices) {
+    for_each_chip(&system, [&] (auto devices) {
         const auto& registers = devices.chip->getFrontEndType() == FrontEndType::RD53B ? RD53BReg::Registers : CROCReg::Registers;
         for (const auto& reg : registers) {
             uint16_t value = chipInterface.ReadChipReg(devices.chip, reg.name);
@@ -75,7 +76,7 @@ int main(int argc, char** argv) {
             LOG(INFO) << ss.str();   
         }
     });
-
+    
     system.Destroy();
 
     LOG(INFO) << "RD53BminiDAQ finished successfully.";
