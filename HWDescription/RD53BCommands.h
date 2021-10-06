@@ -144,12 +144,12 @@ namespace RD53BCmd {
     });
 
 
-    template <uint8_t OpCode, class... Fields>
-    auto Command(const Fields&... fields) {
+    template <uint8_t OpCode, class FieldsObject>
+    auto Command(const FieldsObject& fieldsObject) {
         return Object(
             Field("op_code"_s, Constant<OpCode>(Uint<8>())),
             Field("fields"_s, Compose3(
-                Object(fields...),
+                fieldsObject,
                 Many(Uint<5>()),
                 Many(Validated(Transformed(Uint<8>(), FieldEncodingTransform), [] (auto value) { 
                         return value < FieldEncodingTransform.size(); 
@@ -162,44 +162,44 @@ namespace RD53BCmd {
 
     const auto PLLlock = Constant<0b1010101010101010>(Uint<16>());
 
-    const auto GlobalPulse = Command<0b01011100>(Field("chip_id"_s, Uint<5>()));
+    const auto GlobalPulse = Command<0b01011100>(Object(Field("chip_id"_s, Uint<5>())));
 
-    const auto Clear = Command<0b01011010>(Field("chip_id"_s, Uint<5>()));
+    const auto Clear = Command<0b01011010>(Object(Field("chip_id"_s, Uint<5>())));
 
-    const auto RdReg = Command<0b01100101>(
+    const auto RdReg = Command<0b01100101>(Object(
         Field("chip_id"_s, Uint<5>()),
         Field("padding"_s, Constant<0>(Bool())),
         Field("address"_s, Uint<9>())
-    );
+    ));
 
-    const auto WrReg = Command<0b01100110>(
+    const auto WrReg = Command<0b01100110>(Object(
         Field("chip_id"_s, Uint<5>()),
         Field("padding0"_s, Constant<0>(Bool())),
         Field("address"_s, Uint<9>()),
         Field("data"_s, Uint<16>()),
         Field("padding1"_s, Constant<0>(Uint<4>()))
-    );
+    ));
 
-    const auto WrRegLong = Command<0b01100110>(
+    const auto WrRegLong = Command<0b01100110>(Object(
         Field("chip_id"_s, Uint<5>()),
         Field("padding"_s, Constant<0b1000000000>(Uint<10>())),
         Field("data"_s, Many<1>(Uint<10>()))
-    );
+    ));
 
-    const auto Cal = Command<0b01100011>(
+    const auto Cal = Command<0b01100011>(Object(
         Field("chip_id"_s, Uint<5>()),
         Field("mode"_s, Bool()),
         Field("edge_delay"_s, Uint<5>()),
         Field("edge_duration"_s, Uint<8>()),
         Field("aux_enable"_s, Bool()),
         Field("aux_delay"_s, Uint<5>())
-    );
+    ));
 
-    const auto ReadTrigger = Command<0b01101001>(
+    const auto ReadTrigger = Command<0b01101001>(Object(
         Field("chip_id"_s, Uint<5>()),
         Field("padding"_s, Constant<0>(Uint<2>())),
         Field("tag"_s, Uint<8>())
-    );
+    ));
 
     const auto Trigger = Object(
         Field("pattern"_s, Converted(Uint<4>(), Uint<8>(), TriggerPatternTransform)),
@@ -210,6 +210,36 @@ namespace RD53BCmd {
     template <>                 constexpr bool isBroadcast<decltype(Sync)>    = true;
     template <>                 constexpr bool isBroadcast<decltype(PLLlock)> = true;
     template <>                 constexpr bool isBroadcast<decltype(Trigger)> = true;
+
+    
+    template <class BlockType, class CmdType>
+    void SerializeCommand(BitVector<BlockType>& bits, const CmdType& type, value_type_t<CmdType>&& value) {
+        auto result = type.serialize(value, bits);
+        if (!result) {
+            std::stringstream ss;
+            ss << "Command serialization error: " << result.error();
+            throw std::runtime_error(ss.str());
+        }
+    }
+    
+    template <class BlockType, class CmdType, class... Args, typename std::enable_if_t<isBroadcast<CmdType>, int> = 0>
+    void SerializeCommand(BitVector<BlockType>& bits, const CmdType& type, uint8_t chip_id, Args&&... args) {
+        SerializeCommand(bits, type, value_type_t<CmdType>(std::forward<Args>(args)...));
+    }
+
+
+    template <class BlockType, class CmdType, class... Args, typename std::enable_if_t<!isBroadcast<CmdType>, int> = 0>
+    void SerializeCommand(BitVector<BlockType>& bits, const CmdType& type, uint8_t chip_id, Args&&... args) {
+        SerializeCommand(bits, type, value_type_t<CmdType>({chip_id, std::forward<Args>(args)...}));
+    }
+
+
+    template <class BlockType=uint16_t, class CmdType, class... Args>
+    auto SerializeCommand(const CmdType& type, uint8_t chip_id, Args&&... args) {
+        BitVector<BlockType>& bits;
+        SerializeCommand(bits, type, std::forward<Args>(args)...);
+        return bits;
+    }
 
 } // namespace RD53BCmd
 

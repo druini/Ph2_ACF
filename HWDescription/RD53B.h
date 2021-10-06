@@ -22,6 +22,8 @@
 
 #include <iomanip>
 
+#include "../Utils/Matrix.hpp"
+
 
 namespace Ph2_HwDescription
 {
@@ -51,7 +53,7 @@ struct CMS {
 template <class Flavor>
 class RD53B : public RD53Base
 {
-  public:
+public:
     static constexpr size_t nRows = Flavor::nRows;
     static constexpr size_t nCols = Flavor::nCols;
 
@@ -67,6 +69,16 @@ class RD53B : public RD53Base
     static const decltype(RD53BConstants::GetIMUX()) IMUX;
     static const decltype(RD53BConstants::GetVMUX()) VMUX;
 
+    template <class T>
+    using PixelMatrix = Matrix<T, nRows, nCols>;
+
+    struct PixelConfig {
+        PixelMatrix<bool> enable;
+        PixelMatrix<bool> enableInjections;
+        PixelMatrix<bool> enableHitOr;
+        PixelMatrix<uint8_t> tdac;
+        PixelMatrix<bool> tdacSign;
+    };
 
     template <class T>
     static uint8_t ChipIdFor(const T* device) { return BroadcastId; }
@@ -120,7 +132,6 @@ class RD53B : public RD53Base
         }
     }
 
-
     // get/set register fields
     template <class Key>
     uint16_t getRegField(Key&& key, size_t field_index) const {
@@ -142,8 +153,9 @@ class RD53B : public RD53Base
         return regValue;
     }
 
-
     uint16_t getCurrentRow() const { return currentRow; }
+
+    PixelConfig pixelConfig;
 
   private:
     std::array<uint16_t, Reg::nRegs> registerValues;

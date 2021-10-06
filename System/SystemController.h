@@ -20,7 +20,6 @@
 #include "../HWInterface/D19clpGBTInterface.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/RD53Interface.h"
-#include "../HWInterface/RD53BInterface.h"
 #include "../HWInterface/RD53lpGBTInterface.h"
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/SSAInterface.h"

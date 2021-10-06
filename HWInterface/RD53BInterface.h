@@ -84,103 +84,58 @@ public:
     void InitRD53Downlink(const BeBoard* pBoard);
     void InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes = 1);
 
-private:
-    template <class CmdType>
-    BitVector<uint16_t> SerializeCommand(const CmdType& cmdType, BitSerialization::value_type_t<CmdType>& cmdValue) {
+    // serialize a command for any destination device into an existing BitVector
+    template <class Device, class CmdType, class... Args>
+    void SerializeCommand(const Device* destination, BitVector<uint16_t> bits, const CmdType& cmdType, Args&&... args) {
+        RD53BCmd::SerializeCommand(bits, cmdType, RD53B::ChipIdFor(destination), std::forward<Args>(args)...);
+    }
+
+    // serialize a command for any destination device into a new BitVector
+    template <class Device, class CmdType, class... Args>
+    auto SerializeCommand(const Device* destination, const CmdType& cmdType, Args&&... args) {
         BitVector<uint16_t> bits;
-        auto result = cmdType.serialize(cmdValue, bits);
-        if (!result) {
-            std::stringstream ss;
-            ss << "Command serialization error: " << result.error();
-            throw std::runtime_error(ss.str());
-        }
+        SerializeCommand(destination, bits, cmdType, std::forward<Args>(args)...);   
         return bits;
     }
 
-public:
-    template <class Device, class CmdType, typename std::enable_if_t<!std::is_same<Device, BeBoard>::value, int> = 0>
-    void SendCommand(const Device* device, const CmdType& cmdType, BitSerialization::value_type_t<CmdType> cmdValue) {
-        SendCommandStream(device->getHybridId(), SerializeCommand(cmdType, cmdValue));
+    // send a single command to any destination device
+    template <class Device, class CmdType, class... Args>
+    void SendCommand(const Device* destination, const CmdType& cmdType, Args&&... args) {
+        SendCommandStream(destination, SerializeCommand(destination, cmdType, std::forward<Args>(args)...));
     }
 
-    template <class Device, class CmdType, class FirstArg, class... Args, typename std::enable_if_t<!RD53BCmd::isBroadcast<CmdType> && !std::is_same<Device, BeBoard>::value, int> = 0>
-    void SendCommand(const Device* device, const CmdType& cmdType, FirstArg firstArg, Args... args) {
-        auto cmdValue = cmdType.Create({RD53B::ChipIdFor(device), firstArg, args...});
-        SendCommandStream(device->getHybridId(), SerializeCommand(cmdType, cmdValue));
+    // send a BitVector containing serialized commands to the hybrid which is/contains the given destination device
+    template <class Device, typename std::enable_if_t<!std::is_same<Device, BeBoard>::value, int> = 0>
+    void SendCommandStream(const Device* destination, const BitVector<uint16_t>& cmdStream) {
+        setup(destination).WriteChipCommand(cmdStream.blocks(), destination->getHybridId());
     }
 
-    template <class Device, class CmdType, typename std::enable_if_t<!RD53BCmd::isBroadcast<CmdType> && !std::is_same<Device, BeBoard>::value, int> = 0>
-    void SendCommand(const Device* device, const CmdType& cmdType) {
-        auto cmdValue =  cmdType.Create({RD53B::ChipIdFor(device)});
-        SendCommandStream(device->getHybridId(), SerializeCommand(cmdType, cmdValue));
-    }
-
-    template <class Device, class CmdType, typename std::enable_if_t<RD53BCmd::isBroadcast<CmdType> && !std::is_same<Device, BeBoard>::value, int> = 0>
-    void SendCommand(const Device* device, const CmdType& cmdType) {
-        BitSerialization::value_type_t<CmdType> cmdValue{};
-        SendCommandStream(device->getHybridId(), SerializeCommand(cmdType, cmdValue));
-    }
-
-
-    template <class CmdType>
-    void SendCommand(const BeBoard* pBoard, const CmdType& cmdType, BitSerialization::value_type_t<CmdType>& cmdValue) {
-        SendCommandStream(pBoard, SerializeCommand(cmdType, cmdValue));
-        // for (const auto* opticalGroup : *pBoard)
-        //     for (const auto* hybrid : *opticalGroup)
-        //         SendCommandStream(hybrid->getHybridId(), SerializeCommand(cmdType, cmdValue));
-    }
-
-    template <class CmdType, class FirstArg, class... Args, typename std::enable_if_t<!RD53BCmd::isBroadcast<CmdType>, int> = 0>
-    void SendCommand(const BeBoard* pBoard, const CmdType& cmdType, FirstArg firstArg, Args... args) {
-        auto cmdValue = cmdType.Create({RD53B::BroadcastId, firstArg, args...});
-        SendCommand(pBoard, cmdType, cmdValue);
-    }
-
-    template <class CmdType, typename std::enable_if_t<!RD53BCmd::isBroadcast<CmdType>, int> = 0>
-    void SendCommand(const BeBoard* pBoard, const CmdType& cmdType) {
-        auto cmdValue = cmdType.Create({RD53B::BroadcastId});
-        SendCommand(pBoard, cmdType, cmdValue);
-    }
-
-    template <class CmdType, typename std::enable_if_t<RD53BCmd::isBroadcast<CmdType>, int> = 0>
-    void SendCommand(const BeBoard* pBoard, const CmdType& cmdType) {   
-        BitSerialization::value_type_t<CmdType> cmdValue{};
-        SendCommand(pBoard, cmdType, cmdValue);
-    }
-
-    void SendCommandStream(uint8_t hybridId, const BitVector<uint16_t>& cmdStream) {
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream.blocks(), hybridId);
-    }
-
-    template <class Device, typename std::enable_if_t<std::is_base_of<Ph2_HwDescription::FrontEndDescription, Device>::value, int> = 0>
-    void SendCommandStream(const Device* device, const BitVector<uint16_t>& cmdStream) {
-        SendCommandStream(device->getHybridId(), cmdStream);
-    }
-
+    // send a BitVector containing serialized commands to all hybrids of a BeBoard
     void SendCommandStream(const BeBoard* pBoard, const BitVector<uint16_t>& cmdStream) {
+        auto& fwInterface = setup(pBoard);
         for (const auto* opticalGroup : *pBoard)
             for (const auto* hybrid : *opticalGroup)
-                SendCommandStream(hybrid->getHybridId(), cmdStream);
+                fwInterface.WriteChipCommand(cmdStream.blocks(), hybrid->getHybridId());
     }
 
     template <class Device>
-    void SendGlobalPulse(Device* device, const std::vector<std::string>& routes, uint8_t width = 1) {
+    void SendGlobalPulse(Device* destination, const std::vector<std::string>& routes, uint8_t width = 1) {
         uint16_t route_value = 0;
 
         for (const auto& name : routes) 
             route_value |= (1 << RD53B::GlobalPulseRoutes.at(name));
 
-        WriteReg(device, Ph2_HwDescription::RD53BReg::GlobalPulseConf, route_value);
-        WriteReg(device, Ph2_HwDescription::RD53BReg::GlobalPulseWidth, width);
-        SendCommand(device, RD53BCmd::GlobalPulse);
+        WriteReg(destination, Reg::GlobalPulseConf, route_value);
+        WriteReg(destination, Reg::GlobalPulseWidth, width);
+        SendCommand(destination, RD53BCmd::GlobalPulse);
     }
 
     void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) {}
     void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) {}
 
 private:
-    RD53FWInterface& setup(const Chip* pChip) {
-        this->setBoard(pChip->getBeBoardId());
+    RD53FWInterface& setup(const Ph2_HwDescription::FrontEndDescription* device) {
+        this->setBoard(device->getBeBoardId());
         return *static_cast<RD53FWInterface*>(fBoardFW);
     }
 

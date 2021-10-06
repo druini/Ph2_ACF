@@ -1,6 +1,7 @@
 #include "../System/SystemController.h"
 #include "../tools/Tool.h"
 #include "../Utils/argvparser.h"
+#include "../HWDescription/RD53B.h"
 
 
 INITIALIZE_EASYLOGGINGPP
@@ -76,7 +77,7 @@ int main(int argc, char** argv) {
             LOG(INFO) << ss.str();   
         }
     });
-    
+
     system.Destroy();
 
     LOG(INFO) << "RD53BminiDAQ finished successfully.";

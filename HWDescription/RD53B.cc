@@ -74,16 +74,38 @@ uint8_t RD53B<Flavor>::getNumberOfBits(const std::string& regName)
     return it->second.fBitSize;
 }
 
-
 template <class Flavor>
 void RD53B<Flavor>::loadfRegMap(const std::string& fileName)
 {
     if (boost::filesystem::exists(fileName)) {
         auto data = toml::parse(fileName);
+
         if (data.contains("Registers")) {
             for (const auto& key_value : data.at("Registers").as_table()) {
                 setRegValue(key_value.first, key_value.second.as_integer());
             }
+        }
+
+        if (data.contains("Pixels")) {
+            auto load_matrix = [] (std::string csvFileName, auto& matrix) {
+                std::ifstream csvFile(csvFileName);
+                csvFile >> matrix;
+            };
+            for (const auto& key_value : data.at("Pixels").as_table()) {
+                if (key_value.first == "enable")
+                    load_matrix(key_value.second.as_string(), pixelConfig.enable);
+                else if (key_value.first == "enableInjections")
+                    load_matrix(key_value.second.as_string(), pixelConfig.enableInjections);
+                else if (key_value.first == "enableHitOr")
+                    load_matrix(key_value.second.as_string(), pixelConfig.enableHitOr);
+                else if (key_value.first == "tdac")
+                    load_matrix(key_value.second.as_string(), pixelConfig.tdac);
+                else if (key_value.first == "tdacSign")
+                    load_matrix(key_value.second.as_string(), pixelConfig.tdacSign);
+                else
+                    throw std::runtime_error("Unkown pixel configuration field " + key_value.first + " in " + fileName);
+            }
+
         }
     }
 }
@@ -98,9 +120,19 @@ void RD53B<Flavor>::saveRegMap(const std::string& fName2Add)
     for (size_t i = 0; i < Registers.size(); ++i) {
         if (getRegValue(i) != Registers[i].defaultValue) {
             register_table.insert({Registers[i].name, getRegValue(i)});
-        } 
+        }
     }
-    file << toml::value(toml::table({{"Registers", std::move(register_table)}}));
+
+    file << toml::value(toml::table({
+        {"Registers", std::move(register_table)},
+        {"Pixels", toml::table({
+            {"enable", pixelConfig.enable.to_string()},
+            {"enableInjections", pixelConfig.enableInjections.to_string()},
+            {"enableHitOr", pixelConfig.enableHitOr.to_string()},
+            {"tdac", pixelConfig.tdac.to_string()},
+            {"tdacSign", pixelConfig.tdacSign.to_string()}
+        })}
+    }));
 }
 
 template class RD53B<RD53BFlavor::ATLAS>;

@@ -13,6 +13,8 @@
 #include "../tools/RD53Monitor.h"
 #include "../tools/SEHMonitor.h"
 
+#include "../HWInterface/RD53BInterface.h"
+
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
