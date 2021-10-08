@@ -37,6 +37,8 @@ struct ATLAS {
     using Reg = RD53BReg;
 
     static constexpr FrontEndType feType = FrontEndType::RD53B; 
+
+    static constexpr char name[] = "ATLAS";
 };
 
 struct CMS {
@@ -46,6 +48,8 @@ struct CMS {
     using Reg = CROCReg;
 
     static constexpr FrontEndType feType = FrontEndType::CROC;
+
+    static constexpr char name[] = "CMS";
 };
 
 }
@@ -156,6 +160,7 @@ public:
     uint16_t getCurrentRow() const { return currentRow; }
 
     PixelConfig pixelConfig;
+    PixelConfig defaultPixelConfig;
 
   private:
     std::array<uint16_t, Reg::nRegs> registerValues;

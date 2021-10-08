@@ -15,6 +15,11 @@
 namespace Ph2_HwDescription
 {
 
+namespace RD53BFlavor {
+    constexpr char ATLAS::name[];
+    constexpr char CMS::name[];
+}
+
 template <class Flavor>
 const decltype(Flavor::Reg::GetRegisters()) RD53B<Flavor>::Registers = Flavor::Reg::GetRegisters();
 
@@ -50,6 +55,8 @@ RD53B<Flavor>::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t p
     }
     
     RD53B::loadfRegMap(configFileName);
+
+    defaultPixelConfig = pixelConfig;
 }
 
 template <class Flavor>

@@ -96,6 +96,17 @@ struct Matrix {
     template <class ReplacementType, typename std::enable_if_t<std::is_convertible<ReplacementType, std::valarray<T>>::value, int> = 0>
     Matrix(ReplacementType&& data) : Matrix(std::valarray<T>(std::forward<ReplacementType>(data))) {}
 
+    template <class U>
+    Matrix(const Matrix<U, Rows, Cols>& other) : _data(size) {
+        for (size_t i = 0; i < size; ++i)
+            _data[i] = other._data[i];
+    }
+
+    // =======> Utilities <=================================================================================
+    T* data() { return &_data[0]; }
+    T* begin() { return data(); }
+    T* end() { return data() + _data.size(); }
+
     // =======> Assignment operators <======================================================================
     Matrix& operator=(const T& value) { _data = value; return *this; }
 
@@ -144,10 +155,26 @@ struct Matrix {
         return {_data, gslice(slices)};
     }
 
-    std::valarray<T> operator[](const std::vector<Slice>& slices) const {
+    Matrix operator[](const std::vector<Slice>& slices) const {
         return _data[gslice(slices)];
     }
 
+    auto row(size_t i) {
+        return operator[]({Slice(i, i + 1), Slice(0, Cols)});
+    }
+
+    auto row(size_t i) const {
+        return operator[]({Slice(i, i + 1), Slice(0, Cols)});
+    }
+    
+    auto col(size_t i) {
+        return operator[]({Slice(0, Rows), Slice(i, i + 1)});
+    }
+
+    auto col(size_t i) const {
+        return operator[]({Slice(0, Rows), Slice(i, i + 1)});
+    }
+    
     // =======> Printing <==================================================================================
     friend std::ostream& operator<<(std::ostream& os, const Matrix& mat) {
         for (int row = 0; row < Rows - 1; ++row) {

@@ -579,6 +579,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("MPA") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("CIC") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53") != std::string::npos;
+            cIsTrackerASIC             = cIsTrackerASIC || cName.find("CROC") != std::string::npos;
 
             if(cIsTrackerASIC)
             {
@@ -598,7 +599,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     {
                         pBoard->setFrontEndType(FrontEndType::CROC);
                         this->parseRD53B<RD53BFlavor::CMS>(cChild, cHybrid, cConfigFileDirectory, os);
-                        if(cNextName.empty() || cNextName != cName) this->parseGlobalRD53BSettings<RD53BFlavor::ATLAS>(pHybridNode, cHybrid, os);
+                        if(cNextName.empty() || cNextName != cName) this->parseGlobalRD53BSettings<RD53BFlavor::CMS>(pHybridNode, cHybrid, os);
                     }
                     else if(cName.find("RD53") != std::string::npos)
                     {
@@ -1174,7 +1175,7 @@ void FileParser::parseRD53BSettings(pugi::xml_node theChipNode, ReadoutChip* the
     pugi::xml_node cLocalChipSettings = theChipNode.child("Settings");
     if(cLocalChipSettings != nullptr)
     {
-        os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53" << RESET << std::endl;
+        os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53B" << RESET << std::endl;
 
         for(const pugi::xml_attribute& attr: cLocalChipSettings.attributes())
         {
