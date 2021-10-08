@@ -236,7 +236,7 @@ namespace RD53BCmd {
 
     template <class BlockType=uint16_t, class CmdType, class... Args>
     auto SerializeCommand(const CmdType& type, uint8_t chip_id, Args&&... args) {
-        BitVector<BlockType> bits;
+        BitVector<BlockType>& bits;
         SerializeCommand(bits, type, std::forward<Args>(args)...);
         return bits;
     }
