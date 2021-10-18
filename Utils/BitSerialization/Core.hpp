@@ -174,6 +174,27 @@ inline auto Bool() {
     return UintType<1>();
 }
 
+
+template <class Type, class T, class Parent = VoidValue>
+auto serialize(const Type& type, value_type_t<Type>& value, BitVector<T>& bits, const Parent& parent) {
+    return type.serialize(value, bits, parent);
+}
+
+template <class Type, class T, class Parent = VoidValue>
+auto serialize(const Type& type, value_type_t<Type>&& value, BitVector<T>& bits, const Parent& parent) {
+    return type.serialize(value, bits, parent);
+}
+
+
+template <class Type, class T, class U, class Parent = VoidValue, typename std::enable_if_t<(!std::is_same<ConvertibleVector<U>, value_type_t<Type>>::value), int> = 0>
+auto serialize(const Type& type, const ConvertibleVector<U>& value, BitVector<T>& bits, const Parent& parent) {
+    value_type_t<Type> new_value{};
+    for (const auto& el : value)
+        new_value.push_back(typename value_type_t<Type>::value_type(el));
+    // std::copy(value.begin(), value.end(), std::back_inserter(new_value))
+    return type.serialize(new_value, bits, parent);
+}
+
 } // namespace BitSerialization
 
 #endif

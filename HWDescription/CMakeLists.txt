@@ -19,6 +19,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
     #endif()
 
+    target_precompile_headers(Ph2_Description PRIVATE RD53BEventDecoder.h RD53BFWEvent.h RD53BFWEventDecoder.h)
+
     ####################################
     ## EXECUTABLES
     ####################################

@@ -151,7 +151,7 @@ namespace RD53BCmd {
             Field("fields"_s, Compose3(
                 fieldsObject,
                 Many(Uint<5>()),
-                Many(Validated(Transformed(Uint<8>(), FieldEncodingTransform), [] (auto value) { 
+                Many(Validated(Transformed(Uint<8>(), FieldEncodingTransform), [] (const auto&, const auto& value) { 
                         return value < FieldEncodingTransform.size(); 
                 }))
             ))
@@ -184,6 +184,7 @@ namespace RD53BCmd {
         Field("chip_id"_s, Uint<5>()),
         Field("padding"_s, Constant<0b1000000000>(Uint<10>())),
         Field("data"_s, Many<1>(Uint<10>()))
+        // Field("data"_s, Validated(List(Uint<10>()), [] (const auto& value) { return value.size() > 0; }))
     ));
 
     const auto Cal = Command<0b01100011>(Object(

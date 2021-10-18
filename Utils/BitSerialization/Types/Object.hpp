@@ -10,8 +10,8 @@ namespace BitSerialization {
 
 template <class Key, class Type>
 struct _Field {
-    static constexpr auto key = Key::value;
-
+    // static constexpr auto name = Key::value;
+    using key = Key;
     using type = Type;
 
     _Field(const Type& type) : _type(type) {}
@@ -43,7 +43,6 @@ struct _Object {
 
     using required_fields_tuple = tuple_subset_t<fields_tuple, required_field_indices>;
     
-
     template <class>
     struct ObjectValue;
 
@@ -52,7 +51,8 @@ struct _Object {
 
     template <class... RequiredFields>
     struct ObjectValue<std::tuple<RequiredFields...>> {
-        static constexpr char const* keys[] = {Fields::key...};
+        static constexpr char const* keys[] = {Fields::key::value...};
+        static constexpr uint32_t hashes[] = {Fields::key::hash...};
 
         template <class Field>
         using field_value_type = value_type_t<typename Field::type, ObjectValue>;
@@ -71,9 +71,18 @@ struct _Object {
 
         template <class Other, typename std::enable_if_t<std::is_convertible<decltype(std::declval<Other>().values()), values_tuple>::value, int> = 0>
         ObjectValue(const Other& other)
-          : _values(other.values()) 
+          : _values(other.values())
         {}
+        
+        template <size_t Size = sizeof...(RequiredFields), typename std::enable_if_t<Size == 1, int> = 0>
+        operator field_value_type<std::tuple_element_t<0, required_fields_tuple>>() const {
+            return std::get<0>(get_values_tuple(required_field_indices()));
+        }
 
+        template <size_t Size = sizeof...(RequiredFields), typename std::enable_if_t<Size == 1, int> = 0>
+        operator field_value_type<std::tuple_element_t<0, required_fields_tuple>>&() {
+            return std::get<0>(get_values_tuple(required_field_indices()));
+        }
 
         template <size_t... Is>
         auto get_values_tuple(std::index_sequence<Is...>) {
@@ -81,32 +90,35 @@ struct _Object {
         }
 
         template <size_t... Is>
-        const auto get_values_tuple(std::index_sequence<Is...>) const {
-            return std::tie(std::get<Is>(_values)...);
+        const auto& get_values_tuple(std::index_sequence<Is...>) const {
+            return _values;
         }
 
         friend bool operator==(const ObjectValue& a, const ObjectValue& b) {
             return a.get_values_tuple(required_field_indices()) == b.get_values_tuple(required_field_indices());
         }
 
-        struct NameFinder {
-            const char* name;
+        // struct NameFinder {
+        //     const char* name;
 
-            constexpr bool operator()(const char* value) {
-                return strings_equal(name, value);
-            }
-        };
+        //     constexpr bool operator()(const char* value) {
+        //         return strings_equal(name, value);
+        //     }
+        // };
+
+        template <class Key>
+        static constexpr size_t index_of = find(std::begin(hashes), std::end(hashes), Key::hash) - std::begin(hashes);
 
         template <class Key>
         auto& operator[](Key) {
-            constexpr auto i = find_if(std::begin(keys), std::end(keys), NameFinder{Key::value}) - std::begin(keys);
-            return std::get<i>(_values);
+            // constexpr auto i = find_if(std::begin(keys), std::end(keys), NameFinder{Key::value}) - std::begin(keys);
+            return std::get<index_of<Key>>(_values);
         }
 
         template <class Key>
         const auto& operator[](Key) const {
-            constexpr auto i = find_if(std::begin(keys), std::end(keys), NameFinder{Key::value}) - std::begin(keys);
-            return std::get<i>(_values);
+            // constexpr auto i = find_if(std::begin(keys), std::end(keys), NameFinder{Key::value}) - std::begin(keys);
+            return std::get<index_of<Key>>(_values);
         }
 
         template <size_t I>
@@ -168,7 +180,7 @@ struct _Object {
             typename error_getter<typename Field::type, value_type>::type sub_error;
 
             friend std::ostream& operator<<(std::ostream& os, const FieldError& self) {
-                os << "Object error (field \"" << Field::key << "\"): " << self.sub_error;
+                os << "Object error (field \"" << Field::key::value << "\"): " << self.sub_error;
                 return os;
             };
         };

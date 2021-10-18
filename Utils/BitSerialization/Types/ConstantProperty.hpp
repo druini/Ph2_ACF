@@ -6,20 +6,26 @@
 namespace BitSerialization {
 
 template <class ValueType>
-struct Variable {
+struct ConstantProperty {
     static constexpr bool ignores_input_value = true;
 
-    Variable() {}
+    ConstantProperty() {}
+
+    ConstantProperty(const ValueType)
 
     template <class T, class U=VoidValue>
     ParseResult<ValueType> parse(const BitView<T>& bits, const U& parent={}) const {
-        return {ValueType{}};
+        return {_value};
     }
 
     template <class T, class U=VoidValue>
     auto serialize(ValueType& value, BitVector<T>& bits, const U& parent={}) const {
+        value = _value;
         return SerializeResult<>{};
     }
+
+private:
+    ValueType _value;
 };
 
 } // namespace BitSerialization

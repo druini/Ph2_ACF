@@ -17,10 +17,10 @@ struct ListType {
     static constexpr const char name[] = "Array";
 
     template <class T, class U=VoidValue>
-    ParseResult<std::vector<value_type_t<Type>>, ElementError<parse_error_t<Type>, name>>
+    ParseResult<ConvertibleVector<value_type_t<Type>>, ElementError<parse_error_t<Type>, name>>
     parse(const BitView<T>& bits, const U& parent={}) const {
         size_t size = _size_getter(parent);
-        std::vector<value_type_t<Type>> results;
+        ConvertibleVector<value_type_t<Type>> results;
         results.reserve(size);
         size_t offset = 0;
         for (size_t i = 0; i < size; ++i) {
@@ -30,7 +30,7 @@ struct ListType {
             results.push_back(std::move(parse_result.value()));
             offset += parse_result.size();
         }
-        return ParseResult<std::vector<value_type_t<Type>>, ElementError<parse_error_t<Type>, name>>{std::move(results), offset};
+        return ParseResult<ConvertibleVector<value_type_t<Type>>, ElementError<parse_error_t<Type>, name>>{std::move(results), offset};
     }
 
     using SerializeError = ElementError<serialize_error_t<Type>, name>;
@@ -39,7 +39,7 @@ struct ListType {
     SerializeResult<SerializeError>
     serialize(ValueType& value, BitVector<T>& bits, const U& parent={}) const {
         for (size_t i = 0; i < value.size(); ++i) {
-            auto result = _type.serialize(value[i], bits, parent);
+            auto result = BitSerialization::serialize(_type, value[i], bits, parent);
             if (!result) 
                 return SerializeError{i, std::move(result.error())};
         }

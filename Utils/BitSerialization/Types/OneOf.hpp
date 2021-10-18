@@ -76,7 +76,7 @@ struct OneOfType {
         if (done)
             return {};
         else
-            return std::move(error);
+            return {std::move(error)};
     }
 
 private:

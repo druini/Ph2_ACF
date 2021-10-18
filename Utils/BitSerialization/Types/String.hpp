@@ -9,7 +9,7 @@ template <class ElementType, class TerminatorType, bool IncludeTerminator=true>
 struct StringType {
     static constexpr bool ignores_input_value = ignores_input_value_v<ElementType>;
 
-    using value_type = std::vector<value_type_t<ElementType>>;
+    using value_type = ConvertibleVector<value_type_t<ElementType>>;
 
     StringType(const ElementType& type, const TerminatorType& terminator)
       : _type(type)
@@ -56,13 +56,13 @@ struct StringType {
     template <class T, class U, class ValueType>
     auto serialize_terminator(std::true_type, ValueType& value, BitVector<T>& bits, const U& parent) const {
         value_type_t<TerminatorType> v{value};
-        return _terminator.serialize(v, bits, parent);
+        return BitSerialization::serialize(_terminator, v, bits, parent);
     }
 
     template <class T, class U, class ValueType>
     auto serialize_terminator(std::false_type, ValueType&, BitVector<T>& bits, const U& parent) const {
         value_type_t<TerminatorType> value{};
-        return _terminator.serialize(value, bits, parent);
+        return BitSerialization::serialize(_terminator, value, bits, parent);
     }
     
 
@@ -70,7 +70,7 @@ struct StringType {
     SerializeResult<SerializeError>
     serialize(value_type& value, BitVector<T>& bits, const U& parent={}) const {
         for (size_t i = 0; i < value.size() - IncludeTerminator; ++i) {
-            auto result = _type.serialize(value[i], bits, parent);
+            auto result = BitSerialization::serialize(_type, value[i], bits, parent);
             if (!result)
                 return {SerializeElementError{i, std::move(result.error())}};
         }

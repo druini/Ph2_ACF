@@ -1,36 +1,38 @@
 #include "../System/SystemController.h"
-#include "../tools/Tool.h"
+// #include "../tools/Tool.h"
 #include "../Utils/argvparser.h"
 #include "../HWDescription/RD53B.h"
 
+#include "../tools/RD53BTool.h"
+#include "../tools/RD53BInjectionTool.h"
+#include "../tools/RD53BPixelAlive.h"
 
-INITIALIZE_EASYLOGGINGPP
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
+using namespace RD53BTools;
+
+#define TOOL(x) std::make_pair(#x##_s, x<Flavor>())
+
+template <class Flavor>
+using Tools = ToolManager<decltype(named_tuple(
+    TOOL(RD53BInjectionTool),
+    TOOL(RD53BPixelAlive)
+))>;
 
 
-struct DeviceChain {
-    BeBoard* board;
-    OpticalGroup* opticalGroup;
-    Hybrid* hybrid;
-    Chip* chip;
-};
+template <class Flavor>
+void run(SystemController& system, const std::string& toolConfigFilename, const std::string& toolName) {
+    auto config = toml::parse(toolConfigFilename);
+    auto tools = Tools<Flavor>(config);
 
-template <class F>
-void for_each_chip(SystemController* sys, F&& f) {
-    for (auto* board : *sys->fDetectorContainer) {
-        for (auto* opticalGroup : *board) {
-            for (auto* hybrid : *opticalGroup) {
-                for (auto* chip : *hybrid) {
-                    std::forward<F>(f)(DeviceChain{board, opticalGroup, hybrid, chip});
-                }
-            }
-        }
-    }
+    tools.with_tool(toolName, [&] (auto tool) {
+        tool.run(system);
+    });
 }
 
+INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char** argv) {
     CommandLineProcessing::ArgvParser cmd;
@@ -48,7 +50,7 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
     
-    Tool system;
+    SystemController system;
 
     auto configFile = cmd.argument(0);
 
@@ -64,20 +66,25 @@ int main(int argc, char** argv) {
     
     system.Configure(configFile);
 
-    auto& chipInterface = *system.fReadoutChipInterface;
+    if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
+        run<RD53BFlavor::ATLAS>(system, cmd.argument(1), cmd.argument(2));
+    else
+        run<RD53BFlavor::CMS>(system, cmd.argument(1), cmd.argument(2));
 
-    for_each_chip(&system, [&] (auto devices) {
-        LOG(INFO) << "Reading registers of chip: " << devices.chip->getId() << RESET;
-        const auto& registers = devices.chip->getFrontEndType() == FrontEndType::RD53B ? RD53BReg::Registers : CROCReg::Registers;
-        for (const auto& reg : registers) {
-            uint16_t value = chipInterface.ReadChipReg(devices.chip, reg.name);
-            std::stringstream ss;
-            ss << reg.name << " = " << value;
-            if (value != reg.defaultValue) 
-                ss << " (default: " << reg.defaultValue << ")" << RESET;
-            LOG(INFO) << ss.str();   
-        }
-    });
+    // auto& chipInterface = *system.fReadoutChipInterface;
+
+    // for_each_chip(&system, [&] (auto devices) {
+    //     LOG(INFO) << "Reading registers of chip: " << devices.chip->getId() << RESET;
+    //     const auto& registers = devices.chip->getFrontEndType() == FrontEndType::RD53B ? RD53BReg::Registers : CROCReg::Registers;
+    //     for (const auto& reg : registers) {
+    //         uint16_t value = chipInterface.ReadChipReg(devices.chip, reg.name);
+    //         std::stringstream ss;
+    //         ss << reg.name << " = " << value;
+    //         if (value != reg.defaultValue) 
+    //             ss << " (default: " << reg.defaultValue << ")" << RESET;
+    //         LOG(INFO) << ss.str();   
+    //     }
+    // });
 
     system.Destroy();
 

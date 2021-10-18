@@ -38,7 +38,7 @@ struct OptionalType {
     serialize(value_type& value, BitVector<T>& bits, const U& parent={}) const {
         if (_condition(parent)) {
             auto v = value.get();
-            auto result = _type.serialize(v, bits, parent);
+            auto result = BitSerialization::serialize(_type, v, bits, parent);
             if (!result)
                 return {std::move(result.error())};
             else {

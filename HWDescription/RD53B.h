@@ -30,41 +30,50 @@ namespace Ph2_HwDescription
 
 namespace RD53BFlavor {
 
-struct ATLAS { 
-    static constexpr size_t nRows = 384;
-    static constexpr size_t nCols = 400;
+    enum class Flavor {
+        ATLAS,
+        CMS
+    };
 
-    using Reg = RD53BReg;
+    struct ATLAS {
+        static constexpr Flavor flavor = Flavor::ATLAS;
+        static constexpr size_t nRows = 384;
+        static constexpr size_t nCols = 400;
 
-    static constexpr FrontEndType feType = FrontEndType::RD53B; 
+        using Reg = RD53BReg;
 
-    static constexpr char name[] = "ATLAS";
-};
+        static constexpr FrontEndType feType = FrontEndType::RD53B; 
 
-struct CMS {
-    static constexpr size_t nRows = 336;
-    static constexpr size_t nCols = 432;
+        static constexpr char name[] = "ATLAS";
+    };
 
-    using Reg = CROCReg;
+    struct CMS {
+        static constexpr Flavor flavor = Flavor::CMS;
+        static constexpr size_t nRows = 336;
+        static constexpr size_t nCols = 432;
 
-    static constexpr FrontEndType feType = FrontEndType::CROC;
+        using Reg = CROCReg;
 
-    static constexpr char name[] = "CMS";
-};
+        static constexpr FrontEndType feType = FrontEndType::CROC;
 
+        static constexpr char name[] = "CMS";
+    };
+    
 }
+
 
 template <class Flavor>
 class RD53B : public RD53Base
 {
 public:
-    static constexpr size_t nRows = Flavor::nRows;
-    static constexpr size_t nCols = Flavor::nCols;
-
-    static constexpr uint8_t BroadcastId = 0b11111;
+    // using flavor = Flavor;
 
     using Reg = typename Flavor::Reg;
     using Register = typename Reg::Register;
+
+    static constexpr size_t nRows = Flavor::nRows;
+    static constexpr size_t nCols = Flavor::nCols;
+    static constexpr uint8_t BroadcastId = 0b11111;
 
     static const decltype(Reg::GetRegisters()) Registers;
     static const decltype(Reg::GetRegisterIndexMap()) RegisterIndexMap;

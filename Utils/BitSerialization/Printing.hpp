@@ -7,6 +7,8 @@
 #include <array>
 #include <boost/optional.hpp>
 
+#include "Utility.hpp"
+
 namespace BitSerialization {
 
 /* Helper function to get a storage index in a stream */
@@ -81,6 +83,12 @@ inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const u
 
 template <class T>
 inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const std::vector<T>> wrapper)
+{
+    return BitSerialization::print_container(os, wrapper.get());
+}
+
+template <class T>
+inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const ConvertibleVector<T>> wrapper)
 {
     return BitSerialization::print_container(os, wrapper.get());
 }

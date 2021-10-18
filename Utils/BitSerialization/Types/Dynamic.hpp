@@ -6,12 +6,12 @@
 namespace BitSerialization {
 
 template <class Type, class ValueGetter>
-struct DynamicType {
+struct _Dynamic {
     static constexpr bool ignores_input_value = true;
 
     using value_type = value_type_t<Type>;
 
-    DynamicType(const Type& type, const ValueGetter& value_getter) 
+    _Dynamic(const Type& type, const ValueGetter& value_getter) 
       : _type(type) 
       , _value_getter(value_getter)  
     {}
@@ -42,7 +42,7 @@ struct DynamicType {
     {
         if (!std::is_same<U, VoidValue>::value)
             value = _value_getter(parent);
-        return _type.serialize(value, bits, parent);
+        return BitSerialization::serialize(_type, value, bits, parent);
     }
     
 private:
@@ -52,11 +52,11 @@ private:
 
 
 template <class Type, class ValueGetter>
-constexpr const char DynamicType<Type, ValueGetter>::name[];
+constexpr const char _Dynamic<Type, ValueGetter>::name[];
 
 template <class... Args>
 auto Dynamic(const Args&... args) {
-    return DynamicType<Args...>(args...);
+    return _Dynamic<Args...>(args...);
 }
 
 } // namespace BitSerialization

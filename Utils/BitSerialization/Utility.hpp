@@ -8,12 +8,55 @@
 #include <functional>
 #include <array>
 
+#include "compile_time_string_literal.hpp"
+
 namespace BitSerialization {
+
+using namespace compile_time_string_literal;
 
 template <size_t N>
 using uint_t =  std::conditional_t<N <=  8, uint8_t,
                 std::conditional_t<N <= 16, uint16_t,
                 std::conditional_t<N <= 32, uint32_t, uint64_t>>>;
+
+
+template <class T>
+struct ConvertibleVector : public std::vector<T> {
+    ConvertibleVector() {}
+
+    ConvertibleVector(size_t count, const T& value) : std::vector<T>(count, value) {}
+
+    explicit ConvertibleVector(size_t count) : std::vector<T>(count) {}
+
+    template< class InputIt >
+    ConvertibleVector(InputIt first, InputIt last) : std::vector<T>(first, last) {}
+
+    ConvertibleVector(const ConvertibleVector& other) : std::vector<T>(other) {}
+
+    ConvertibleVector(ConvertibleVector&& other) : std::vector<T>(std::move(other)) {}
+
+    ConvertibleVector(std::initializer_list<T> init) : std::vector<T>(std::move(init)) {}
+
+    template <class U, typename std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    ConvertibleVector(const std::vector<U>& vec) : std::vector<T>(vec.begin(), vec.end()) {}
+
+    ConvertibleVector(std::vector<T>&& vec) : std::vector<T>(std::move(vec)) {}
+
+    auto& operator=(const ConvertibleVector& other) {
+        std::vector<T>::operator=(other);
+        return *this;
+    }
+
+    auto& operator=(ConvertibleVector&& other) {
+        std::vector<T>::operator=(std::move(other));
+        return *this;
+    }
+
+    template <class U, typename std::enable_if_t<std::is_convertible<T, U>::value, int> = 0>
+    operator ConvertibleVector<U>() {
+        return {this->begin(), this->end()};
+    }
+};
 
 
 constexpr int iabs(int x) { return x < 0 ? -x : x; }
@@ -48,28 +91,9 @@ constexpr void for_each_index(F&& f) {
     for_each_index(std::forward<F>(f), std::make_index_sequence<N>());
 }
 
-
-template <char... Chars>
-struct c_str {
-    static const char value[sizeof...(Chars) + 1];
-};
-
-template <char... Chars>
-const char c_str<Chars...>::value[] = {Chars..., 0};
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-
-template<typename Char, Char... Cs>
-constexpr c_str<Cs...> operator"" _s(){
-    return {};
-}
-
-#pragma GCC diagnostic pop
-
-constexpr bool strings_equal(char const * a, char const * b) {
-    return *a == *b && (*a == '\0' || strings_equal(a + 1, b + 1));
-}
+// constexpr bool strings_equal(char const * a, char const * b) {
+//     return *a == *b && (*a == '\0' || strings_equal(a + 1, b + 1));
+// }
 
 
 

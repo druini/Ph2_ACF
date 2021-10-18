@@ -30,14 +30,14 @@ struct TransformedType {
     auto serialize(value_type& value, BitVector<T>& bits, const U& parent={}) const {
         if (ignores_input_value_v<Type>) {
             value_type_t<Type> tmp = {};
-            auto result = _type.serialize(tmp, bits, parent);
+            auto result = BitSerialization::serialize(_type, tmp, bits, parent);
             if (result)
                 value = _transform.decode(tmp);
             return result;
         }
         else {
             auto encoded_value = _transform.encode(value);
-            return _type.serialize(encoded_value, bits, parent);
+            return BitSerialization::serialize(_type, encoded_value, bits, parent);
         }
     }
 

@@ -8,7 +8,7 @@ namespace BitSerialization {
 template <class Type, size_t MinSize = 0>
 struct ManyType {
     static constexpr bool ignores_input_value = ignores_input_value_v<Type>;
-    using value_type = std::vector<value_type_t<Type>>;
+    using value_type = ConvertibleVector<value_type_t<Type>>;
 
     ManyType(const Type& type) : _type(type) {}
 
@@ -40,7 +40,7 @@ struct ManyType {
     SerializeResult<SerializeError>
     serialize(ValueType& value, BitVector<T>& bits, const U& parent={}) const {
         for (size_t i = 0; i < value.size(); ++i) {
-            auto result = _type.serialize(value[i], bits, parent);
+            auto result = BitSerialization::serialize(_type, value[i], bits, parent);
             if (!result) 
                 return SerializeError{i, std::move(result.error())};
         }

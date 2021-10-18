@@ -55,7 +55,7 @@ struct Compose3Type {
         if (!destination_result)
             return {make_error<2>(std::move(destination_result.error()))};
         
-        auto intermediate_result = _intermediate_type.serialize(
+        auto intermediate_result = BitSerialization::serialize(_intermediate_type, 
             destination_result.value(), 
             new_bits, 
             parent
@@ -83,7 +83,7 @@ struct Compose3Type {
         
         // std::cout << "Compose3 input: " << std::ref(value) << std::endl;
 
-        auto source_result = _source_type.serialize(value, new_bits, parent);
+        auto source_result = BitSerialization::serialize(_source_type, value, new_bits, parent);
         if (!source_result)
             return {make_error<0>(std::move(source_result.error()))};
         
@@ -95,7 +95,7 @@ struct Compose3Type {
             
         // std::cout << "Compose3 value: " << std::ref(intermediate_result.value()) << std::endl;
 
-        auto destination_result = _destination_type.serialize(
+        auto destination_result = BitSerialization::serialize(_destination_type, 
             intermediate_result.value(), 
             bits, 
             parent

@@ -1,3 +1,4 @@
+#include "../Core.hpp"
 #include "Array.hpp"
 #include "Compose3.hpp"
 #include "Constant.hpp"
@@ -9,6 +10,7 @@
 #include "Property.hpp"
 #include "SeparatedBy.hpp"
 #include "String.hpp"
+#include "Stream.hpp"
 #include "Transformed.hpp"
 #include "Validated.hpp"
 #include "Aligned.hpp"

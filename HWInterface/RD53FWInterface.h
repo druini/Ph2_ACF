@@ -217,6 +217,8 @@ class RD53FWInterface : public BeBoardFWInterface
     float calcVoltage(uint32_t senseVDD, uint32_t senseGND);
 
     UplinkDataRate getUplinkDataRate() { return uplinkDataRate; }
+    
+    void                  ConfigureFastCommands(const FastCommandsConfig* config = nullptr);
 
   private:
     void                  PrintFWstatus();
@@ -225,7 +227,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void                  ResetFastCmdBlk();
     void                  ResetSlowCmdBlk();
     void                  ResetReadoutBlk();
-    void                  ConfigureFastCommands(const FastCommandsConfig* config = nullptr);
     void                  ConfigureDIO5(const DIO5Config* config);
     void                  SendBoardCommand(const std::string& cmd_reg);
     void                  InitHybridByHybrid(const Ph2_HwDescription::BeBoard* pBoard);

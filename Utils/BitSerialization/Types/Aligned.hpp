@@ -45,7 +45,7 @@ struct AlignedType {
     SerializeResult<serialize_error_t<Type>>
     serialize(value_type_t<Type>& value, BitVector<T>& bits, const U& parent={}) const {
         size_t original_size = bits.size();
-        auto result = _type.serialize(value, bits, parent);
+        auto result = BitSerialization::serialize(_type, value, bits, parent);
         if (!result)
             return {std::move(result.error())};
         size_t leftover_bits = (bits.size() - original_size) % Size;

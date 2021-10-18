@@ -81,13 +81,10 @@ public:
 private:
     template<typename T> struct type_tag { };
 
-    template <class T>
-    T get(type_tag<T>, bool big_endian) const {
-        U<T> result;
+    template <class ByteIterator>
+    void copy_into(ByteIterator begin, ByteIterator end) const {
         int block_offset = _start / block_size;
         size_t bit_offset = _start % block_size;
-        auto begin = big_endian ? std::end(result.raw) - 1 : std::begin(result.raw);
-        const auto end = big_endian ? std::begin(result.raw) - 1 : std::end(result.raw);
         while (begin != end) {
             if (bit_offset + 8 > block_size) {
                 int left = block_size - bit_offset;
@@ -101,18 +98,23 @@ private:
                 *begin = (_data[block_offset] & BitViewDetails::mid_mask<BlockType>(bit_offset, bit_offset + 8)) >> (block_size - 8 - bit_offset);
                 bit_offset += 8;
             }
-            if (big_endian)
-                --begin;
-            else
-                ++begin;
+            ++begin;
         }
+    }
+
+    template <class T>
+    T get(type_tag<T>, bool big_endian) const {
+        U<T> result;
+        if (big_endian)
+            copy_into(std::rbegin(result.raw), std::rend(result.raw));
+        else
+            copy_into(std::begin(result.raw), std::end(result.raw));
         if (size() < 8 * sizeof(T)) {
             if (big_endian)
-                result.val = result.val >> (8 * sizeof(T) - (_end - _start));
+                result.val >>= 8 * sizeof(T) - size();
             else
-                result.val = result.val & BitViewDetails::low_mask<T>(_end - _start);
+                result.val &= BitViewDetails::low_mask<T>(size());
         }
-        // std::cout << "(" << _start << ", " << _end << "): " << std::bitset<64>(result.val) << std::endl;
         return result.val;
     }
 

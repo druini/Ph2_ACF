@@ -39,7 +39,7 @@ struct ArrayType {
     SerializeResult<SerializeError>
     serialize(ValueType& value, BitVector<T>& bits, const U& parent={}) const {
         for (size_t i = 0; i < value.size(); ++i) {
-            auto result = _type.serialize(value[i], bits, parent);
+            auto result = BitSerialization::serialize(_type, value[i], bits, parent);
             if (!result) 
                 return SerializeError{i, std::move(result.error())};
         }

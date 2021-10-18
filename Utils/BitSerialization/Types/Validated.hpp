@@ -30,7 +30,7 @@ struct ValidatedType {
         auto result = _type.parse(bits, parent);
         if (!result)
             return {std::move(result.error())};
-        if (!_predicate(result.value()))
+        if (!_predicate(parent, result.value()))
             return {_ValueError{std::move(result.value())}};
         else
             return {std::move(result.value()), result.size()};
@@ -44,9 +44,9 @@ struct ValidatedType {
     template <class T, class U=VoidValue>
     SerializeResult<SerializeError> 
     serialize(value_type& value, BitVector<T>& bits, const U& parent={}) const {
-        if (!_predicate(value))
+        if (!_predicate(parent, value))
             return {_ValueError{value}};
-        auto result = _type.serialize(value, bits, parent);
+        auto result = BitSerialization::serialize(_type, value, bits, parent);
         if (!result)
             return {std::move(result.error())};
         else
@@ -68,8 +68,8 @@ auto Validated(const Type& type, const Predicate& predicate) {
 
 template <size_t Value>
 struct ValueValidator {
-    template <class T>
-    bool operator()(const T& value) const {
+    template <class T, class U>
+    bool operator()(const T&, const U& value) const {
         return value == Value;
     }
 };

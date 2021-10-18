@@ -35,7 +35,7 @@ class RD53BInterface : public RD53InterfaceBase
     using Hybrid = Ph2_HwDescription::Hybrid;
     using RD53B = Ph2_HwDescription::RD53B<Flavor>;
 
-    using Reg = typename Flavor::Reg;
+    using Reg = typename RD53B::Reg;
     using Register = typename RD53B::Register;
 
 public:
@@ -183,7 +183,6 @@ public:
     void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) {}
     void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) {}
 
-private:
     RD53FWInterface& setup(const Ph2_HwDescription::FrontEndDescription* device) {
         this->setBoard(device->getBeBoardId());
         return *static_cast<RD53FWInterface*>(fBoardFW);
@@ -197,7 +196,6 @@ private:
     // ###########################
     // # Dedicated to minitoring #
     // ###########################
-public:
     void ReadChipMonitor(ReadoutChip* pChip, const std::vector<std::string>& args)
     {
         for(const auto& arg: args) ReadChipMonitor(pChip, arg);

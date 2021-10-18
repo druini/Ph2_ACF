@@ -10,7 +10,7 @@ struct SeparatedByType {
     static_assert(ignores_input_value_v<SeparatorType>, "SeparatorType must ignore input value (ie. be a constant or something)");
 
     static constexpr bool ignores_input_value = ignores_input_value_v<Type>;
-    using value_type = std::vector<value_type_t<Type>>;
+    using value_type = ConvertibleVector<value_type_t<Type>>;
 
     SeparatedByType(const Type& type, const SeparatorType& separator)
       : _type(type)
@@ -52,12 +52,12 @@ struct SeparatedByType {
     serialize(value_type& value, BitVector<T>& bits, const U& parent={}) const {
         if (value.size() > 0) {
             for (size_t i = 0; i < value.size(); ++i) {
-                auto element = _type.serialize(value[i], bits, parent);
+                auto element = BitSerialization::serialize(_type, value[i], bits, parent);
                 if (!element)
                     return {SerializeElementError{i, std::move(element.error())}};
                 if (i < value.size() - 1) {
                     value_type_t<SeparatorType> v;
-                    auto sep = _separator.serialize(v, bits, parent);
+                    auto sep = BitSerialization::serialize(_separator, v, bits, parent);
                     if (!sep)
                         return {std::move(sep.error())};
                 }

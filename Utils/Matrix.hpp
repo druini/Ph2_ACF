@@ -110,6 +110,10 @@ struct Matrix {
     // =======> Assignment operators <======================================================================
     Matrix& operator=(const T& value) { _data = value; return *this; }
 
+    // =======> Conversion operators <======================================================================
+    operator std::valarray<T>&() { return _data; }
+    operator const std::valarray<T>&() const { return _data; }
+
 
     // =======> Indexing <==================================================================================
     T& operator[](const std::array<size_t, 2>& indices) {
