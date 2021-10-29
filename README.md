@@ -42,14 +42,10 @@ The user can define multiple tools of the same tool type. Any parameters that ar
 There are currently only two tool types:
 
 - RD53BRegReader (`Tools/RD53BInjectionTool`):
-  
     - `run`: Reads all registers and prints their values in the terminal.
 
 - RD53BInjectionTool (`Tools/RD53BInjectionTool`):
-
-    - `run`:
-    Performs a given number of injections for each pixel of a given rectangular area. 
-    
+    - `run`: Performs a given number of injections for each pixel of a given rectangular area. 
     - `draw`: Draws the resulting hitmap using root and reports the mean occupancy in the terminal.
 
 ## Usage
