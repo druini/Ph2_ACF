@@ -4,33 +4,26 @@
 #include "../Core.hpp"
 
 namespace BitSerialization {
-
-template <class Type, class Predicate>
-struct ValidatedType {
+    
+template <class Type, auto Predicate>
+struct Validated {
     using value_type = value_type_t<Type>;
 
-    ValidatedType(const Type& type, const Predicate& predicate)
-      : _type(type)
-      , _predicate(predicate)
-    {}
-
-    static constexpr const char name[] = "Validated";
-
-    using _ValueError = ValueError<name, value_type>;
+    using _ValueError = ValueError<"Validated", value_type>;
 
     using ParseError = ErrorVariant<
         _ValueError, 
         parse_error_t<Type>
     >;
 
-    template <class T, class U=VoidValue>
-    ParseResult<value_type, ParseError> 
-    parse(const BitView<T>& bits, const U& parent={}) const
+    template <class T, class U=Void>
+    static ParseResult<value_type, ParseError> 
+    parse(const BitView<T>& bits, const U& parent={}) 
     {
-        auto result = _type.parse(bits, parent);
+        auto result = Type::parse(bits, parent);
         if (!result)
             return {std::move(result.error())};
-        if (!_predicate(parent, result.value()))
+        if (!Predicate(parent, result.value()))
             return {_ValueError{std::move(result.value())}};
         else
             return {std::move(result.value()), result.size()};
@@ -41,51 +34,29 @@ struct ValidatedType {
         serialize_error_t<Type>
     >;
 
-    template <class T, class U=VoidValue>
-    SerializeResult<SerializeError> 
-    serialize(value_type& value, BitVector<T>& bits, const U& parent={}) const {
-        if (!_predicate(parent, value))
+    template <class T, class U=Void>
+    static SerializeResult<SerializeError> 
+    serialize(value_type& value, BitVector<T>& bits, const U& parent={}) {
+        if (!Predicate(parent, value))
             return {_ValueError{value}};
-        auto result = BitSerialization::serialize(_type, value, bits, parent);
+        auto result = Type::serialize(value, bits, parent);
         if (!result)
             return {std::move(result.error())};
         else
             return {};
     }
-
-private:
-    Type _type;
-    Predicate _predicate;
 };
 
-template <class Type, class Predicate>
-constexpr const char ValidatedType<Type, Predicate>::name[];
+template <class Type, value_type_t<Type> Value>
+struct _ValidatedConstant {
+    using type = Validated<Type, [] (const auto&, const auto& value) {
+        return (value == Value);
+    }>;
+};
 
-template <class Type, class Predicate>
-auto Validated(const Type& type, const Predicate& predicate) {
-    return ValidatedType<Type, Predicate>(type, predicate);
+template <class Type, value_type_t<Type> Value>
+using ValidatedConstant = typename _ValidatedConstant<Type, Value>::type;
+
 }
-
-template <size_t Value>
-struct ValueValidator {
-    template <class T, class U>
-    bool operator()(const T&, const U& value) const {
-        return value == Value;
-    }
-};
-
-template <class Type, size_t Value, class Base = ValidatedType<Type, ValueValidator<Value>>>
-struct ValidatedConstantType : public Base {
-    ValidatedConstantType(const Type& type)
-      : Base(type, ValueValidator<Value>{})
-    {}
-};
-
-template <size_t Value, class Type>
-auto ValidatedConstant(const Type& type) {
-    return ValidatedConstantType<Type, Value>(type);
-}
-
-} // namespace BitSerialization
 
 #endif

@@ -53,6 +53,10 @@ namespace RD53BUtils {
         friend bool operator<(const ChipLocation& l, const ChipLocation& r ) {
             return l.hash() < r.hash();
         }
+
+        friend std::ostream& operator<<(std::ostream& os, const ChipLocation& loc) {
+            return (os << '[' << loc.board_id << '/' << loc.hybrid_id << '/' << loc.chip_id << ']');
+        }
     };
 
 
@@ -77,7 +81,7 @@ namespace RD53BUtils {
         class TargetDevice, 
         class F, 
         class Device, 
-        typename std::enable_if_t<(!detail::callable_with<F, TargetDevice*>::value && !std::is_same<Device, TargetDevice>::value), int> = 0
+        typename std::enable_if_t<(!detail::callable_with<F, TargetDevice*>::value && !std::is_base_of<TargetDevice, Device>::value), int> = 0
     >
     void for_each_device(Device* device, F&& f, DeviceChain devices = {}) {
         devices.set(device);
@@ -99,7 +103,7 @@ namespace RD53BUtils {
         class TargetDevice, 
         class F, 
         class Device, 
-        typename std::enable_if_t<(detail::callable_with<F, TargetDevice*>::value && !std::is_same<Device, TargetDevice>::value), int> = 0
+        typename std::enable_if_t<(detail::callable_with<F, TargetDevice*>::value && !std::is_base_of<TargetDevice, Device>::value), int> = 0
     >
     void for_each_device(Device* device, F&& f) {
         for (auto* child_device : *device) {

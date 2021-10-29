@@ -62,6 +62,10 @@ struct gslice_array : public std::gslice_array<T> {
       , _slice(std::move(slice)) 
     {}
 
+    operator std::valarray<T>() const {
+        return {_slice};
+    }
+
 private:
     std::gslice _slice;
 };
@@ -70,36 +74,57 @@ private:
 // =======> Matrix <====================================================================================
 // A fixed-size Matrix class supporting slicing, masking and element-wise arithmetic operations and comparisons.
 
-template <class T, int Rows, int Cols>
+template <class T, size_t Rows, size_t Cols>
 struct Matrix {
-    template<class, int, int> friend class Matrix; // make all Matrix<...> instantiations friends
+    template<class, size_t, size_t> friend class Matrix; // make all Matrix<...> instantiations friends
 
-    static constexpr int rows = Rows;
-    static constexpr int cols = Cols;
+    static constexpr size_t rows = Rows;
+    static constexpr size_t cols = Cols;
     static constexpr size_t size = Rows * Cols;
     
     // =======> Constructors <==============================================================================
     Matrix() : _data(size) {}
 
-    explicit Matrix(const T& value) : _data(value, size) {}
+    Matrix(const T& value) : _data(value, size) {}
 
     Matrix(const std::valarray<T>& data) : _data(data) {
-        if (_data.size() != size) 
-            throw std::runtime_error("Matrix error: Invalid data size.");
+        if (_data.size() != size) {
+            std::stringstream ss;
+            ss << "Matrix error1: Invalid data size: " << _data.size() << " instead of " << size;
+            throw std::runtime_error(ss.str());
+        }
     }
 
     Matrix(std::valarray<T>&& data) : _data(std::move(data)) {
-        if (_data.size() != size) 
-            throw std::runtime_error("Matrix error: Invalid data size.");
+        if (_data.size() != size) {
+            std::stringstream ss;
+            ss << "Matrix error2: Invalid data size: " << _data.size() << " instead of " << size;
+            throw std::runtime_error(ss.str());
+        }
     }
 
-    template <class ReplacementType, typename std::enable_if_t<std::is_convertible<ReplacementType, std::valarray<T>>::value, int> = 0>
+    template <class U, typename std::enable_if_t<std::is_constructible<U, T>::value, int> = 0>
+    Matrix(const std::valarray<U>& data) {
+        if (_data.size() != size) {
+            std::stringstream ss;
+            ss << "Matrix error3: Invalid data size: " << _data.size() << " instead of " << size;
+            throw std::runtime_error(ss.str());
+        }
+        std::copy(std::begin(data), std::end(data), std::begin(_data));
+    }
+
+    template <class ReplacementType, typename std::enable_if_t<std::is_constructible<std::valarray<T>, ReplacementType>::value, int> = 0>
     Matrix(ReplacementType&& data) : Matrix(std::valarray<T>(std::forward<ReplacementType>(data))) {}
 
     template <class U>
     Matrix(const Matrix<U, Rows, Cols>& other) : _data(size) {
         for (size_t i = 0; i < size; ++i)
             _data[i] = other._data[i];
+    }
+
+    Matrix(const gslice_array<T>& slice) : _data(slice) {
+        if (_data.size() != size)
+            throw std::runtime_error("Matrix error: Invalid data size.");
     }
 
     // =======> Utilities <=================================================================================
@@ -109,6 +134,9 @@ struct Matrix {
 
     // =======> Assignment operators <======================================================================
     Matrix& operator=(const T& value) { _data = value; return *this; }
+    
+    template <class ReplacementType, typename std::enable_if_t<std::is_constructible<std::valarray<T>, ReplacementType>::value, int> = 0>
+    Matrix& operator=(const ReplacementType& value) { _data = value; return *this; }
 
     // =======> Conversion operators <======================================================================
     operator std::valarray<T>&() { return _data; }
@@ -159,35 +187,35 @@ struct Matrix {
         return {_data, gslice(slices)};
     }
 
-    Matrix operator[](const std::vector<Slice>& slices) const {
+    std::valarray<T> operator[](const std::vector<Slice>& slices) const {
         return _data[gslice(slices)];
     }
 
-    auto row(size_t i) {
-        return operator[]({Slice(i, i + 1), Slice(0, Cols)});
+    Matrix<T, 1, Cols> row(size_t i) {
+        return {operator[]({Slice(i, i + 1), Slice(0, Cols)})};
     }
 
-    auto row(size_t i) const {
-        return operator[]({Slice(i, i + 1), Slice(0, Cols)});
+    Matrix<T, 1, Cols> row(size_t i) const {
+        return {operator[]({Slice(i, i + 1), Slice(0, Cols)})};
     }
     
-    auto col(size_t i) {
-        return operator[]({Slice(0, Rows), Slice(i, i + 1)});
+    Matrix<T, Rows, 1> col(size_t i) {
+        return {operator[]({Slice(0, Rows), Slice(i, i + 1)})};
     }
 
-    auto col(size_t i) const {
-        return operator[]({Slice(0, Rows), Slice(i, i + 1)});
+    Matrix<T, Rows, 1> col(size_t i) const {
+        return {operator[]({Slice(0, Rows), Slice(i, i + 1)})};
     }
     
     // =======> Printing <==================================================================================
     friend std::ostream& operator<<(std::ostream& os, const Matrix& mat) {
-        for (int row = 0; row < Rows - 1; ++row) {
-            for (int col = 0; col < Cols - 1; ++col) {
+        for (size_t row = 0; row < Rows - 1; ++row) {
+            for (size_t col = 0; col < Cols - 1; ++col) {
                 os << mat(row, col) << ", ";
             }
             os << mat(row, Cols - 1) << '\n';
         }
-        for (int col = 0; col < Cols - 1; ++col) {
+        for (size_t col = 0; col < Cols - 1; ++col) {
             os << mat(Rows - 1, col) << ", ";
         }
         os << mat(Rows - 1, Cols - 1);
@@ -237,6 +265,37 @@ struct Matrix {
     Matrix& operator^=(const Matrix& other) { _data.operator^=(other._data); return *this; }
     Matrix& operator<<=(const Matrix& other) { _data.operator<<=(other._data); return *this; }
     Matrix& operator>>=(const Matrix& other) { _data.operator>>=(other._data); return *this; }
+    
+    // template <class U, typename std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    Matrix& operator+=(const std::valarray<T>& other) { _data.operator+=(other); return *this; }
+    
+    // template <class U, typename std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    Matrix& operator-=(const std::valarray<T>& other) { _data.operator-=(other); return *this; }
+    
+    // template <class U, typename std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    Matrix& operator*=(const std::valarray<T>& other) { _data.operator*=(other); return *this; }
+    
+    // template <class U, typename std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    Matrix& operator/=(const std::valarray<T>& other) { _data.operator/=(other); return *this; }
+    
+    // template <class U, typename std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    Matrix& operator%=(const std::valarray<T>& other) { _data.operator%=(other); return *this; }
+    
+    // template <class U, typename std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    Matrix& operator&=(const std::valarray<T>& other) { _data.operator&=(other); return *this; }
+    
+    // template <class U, typename std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    Matrix& operator|=(const std::valarray<T>& other) { _data.operator|=(other); return *this; }
+    
+    // template <class U, typename std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    Matrix& operator^=(const std::valarray<T>& other) { _data.operator^=(other); return *this; }
+    
+    // template <class U, typename std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    Matrix& operator<<=(const std::valarray<T>& other) { _data.operator<<=(other); return *this; }
+    
+    // template <class U, typename std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    Matrix& operator>>=(const std::valarray<T>& other) { _data.operator>>=(other); return *this; }
+
 
     Matrix& operator+=(const T& value) { _data.operator+=(value); return *this; }
     Matrix& operator-=(const T& value) { _data.operator-=(value); return *this; }
@@ -248,6 +307,48 @@ struct Matrix {
     Matrix& operator^=(const T& value) { _data.operator^=(value); return *this; }
     Matrix& operator<<=(const T& value) { _data.operator<<=(value); return *this; }
     Matrix& operator>>=(const T& value) { _data.operator>>=(value); return *this; }
+
+    template <class ReplacementType, typename std::enable_if_t<std::is_constructible<std::valarray<T>, ReplacementType>::value, int> = 0>
+    Matrix& operator+=(const ReplacementType& values) { _data.operator+=(values); return *this; }
+    template <class ReplacementType, typename std::enable_if_t<std::is_constructible<std::valarray<T>, ReplacementType>::value, int> = 0>
+    Matrix& operator-=(const ReplacementType& values) { _data.operator-=(values); return *this; }
+    template <class ReplacementType, typename std::enable_if_t<std::is_constructible<std::valarray<T>, ReplacementType>::value, int> = 0>
+    Matrix& operator*=(const ReplacementType& values) { _data.operator*=(values); return *this; }
+    template <class ReplacementType, typename std::enable_if_t<std::is_constructible<std::valarray<T>, ReplacementType>::value, int> = 0>
+    Matrix& operator/=(const ReplacementType& values) { _data.operator/=(values); return *this; }
+    template <class ReplacementType, typename std::enable_if_t<std::is_constructible<std::valarray<T>, ReplacementType>::value, int> = 0>
+    Matrix& operator%=(const ReplacementType& values) { _data.operator%=(values); return *this; }
+    template <class ReplacementType, typename std::enable_if_t<std::is_constructible<std::valarray<T>, ReplacementType>::value, int> = 0>
+    Matrix& operator&=(const ReplacementType& values) { _data.operator&=(values); return *this; }
+    template <class ReplacementType, typename std::enable_if_t<std::is_constructible<std::valarray<T>, ReplacementType>::value, int> = 0>
+    Matrix& operator|=(const ReplacementType& values) { _data.operator|=(values); return *this; }
+    template <class ReplacementType, typename std::enable_if_t<std::is_constructible<std::valarray<T>, ReplacementType>::value, int> = 0>
+    Matrix& operator^=(const ReplacementType& values) { _data.operator^=(values); return *this; }
+    template <class ReplacementType, typename std::enable_if_t<std::is_constructible<std::valarray<T>, ReplacementType>::value, int> = 0>
+    Matrix& operator<<=(const ReplacementType& values) { _data.operator<<=(values); return *this; }
+    template <class ReplacementType, typename std::enable_if_t<std::is_constructible<std::valarray<T>, ReplacementType>::value, int> = 0>
+    Matrix& operator>>=(const ReplacementType& values) { _data.operator>>=(values); return *this; }
+
+    // template <class U, std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    // Matrix& operator+=(const gslice_array<U>& values) { _data.operator+=(values); return *this; }
+    // template <class U, std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    // Matrix& operator-=(const gslice_array<U>& values) { _data.operator-=(values); return *this; }
+    // template <class U, std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    // Matrix& operator*=(const gslice_array<U>& values) { _data.operator*=(values); return *this; }
+    // template <class U, std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    // Matrix& operator/=(const gslice_array<U>& values) { _data.operator/=(values); return *this; }
+    // template <class U, std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    // Matrix& operator%=(const gslice_array<U>& values) { _data.operator%=(values); return *this; }
+    // template <class U, std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    // Matrix& operator&=(const gslice_array<U>& values) { _data.operator&=(values); return *this; }
+    // template <class U, std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    // Matrix& operator|=(const gslice_array<U>& values) { _data.operator|=(values); return *this; }
+    // template <class U, std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    // Matrix& operator^=(const gslice_array<U>& values) { _data.operator^=(values); return *this; }
+    // template <class U, std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    // Matrix& operator<<=(const gslice_array<U>& values) { _data.operator<<=(values); return *this; }
+    // template <class U, std::enable_if_t<std::is_convertible<U, T>::value, int> = 0>
+    // Matrix& operator>>=(const gslice_array<U>& values) { _data.operator>>=(values); return *this; }
 
     // =======> Binary arithmetic operators <=============================================================
     friend Matrix operator+(const Matrix& a, const Matrix& b) { return std::valarray<T>(a._data + b._data); }
@@ -263,31 +364,157 @@ struct Matrix {
     friend Matrix operator&&(const Matrix& a, const Matrix& b) { return a._data && b._data; }
     friend Matrix operator||(const Matrix& a, const Matrix& b) { return a._data || b._data; }
 
-    friend Matrix operator+(const Matrix& mat, const T& value) { return mat._data + value; }
-    friend Matrix operator-(const Matrix& mat, const T& value) { return mat._data - value; }
-    friend Matrix operator*(const Matrix& mat, const T& value) { return mat._data * value; }
-    friend Matrix operator/(const Matrix& mat, const T& value) { return mat._data / value; }
-    friend Matrix operator%(const Matrix& mat, const T& value) { return mat._data % value; }
-    friend Matrix operator&(const Matrix& mat, const T& value) { return mat._data & value; }
-    friend Matrix operator|(const Matrix& mat, const T& value) { return mat._data | value; }
-    friend Matrix operator^(const Matrix& mat, const T& value) { return mat._data ^ value; }
-    friend Matrix operator<<(const Matrix& mat, const T& value) { return mat._data << value; }
-    friend Matrix operator>>(const Matrix& mat, const T& value) { return mat._data >> value; }
-    friend Matrix operator&&(const Matrix& mat, const T& value) { return mat._data && value; }
-    friend Matrix operator||(const Matrix& mat, const T& value) { return mat._data || value; }
 
-    friend Matrix operator+(const T& value, const Matrix& mat) { return value + mat._data; }
-    friend Matrix operator-(const T& value, const Matrix& mat) { return value - mat._data; }
-    friend Matrix operator*(const T& value, const Matrix& mat) { return value * mat._data; }
-    friend Matrix operator/(const T& value, const Matrix& mat) { return value / mat._data; }
-    friend Matrix operator%(const T& value, const Matrix& mat) { return value % mat._data; }
-    friend Matrix operator&(const T& value, const Matrix& mat) { return value & mat._data; }
-    friend Matrix operator|(const T& value, const Matrix& mat) { return value | mat._data; }
-    friend Matrix operator^(const T& value, const Matrix& mat) { return value ^ mat._data; }
-    friend Matrix operator<<(const T& value, const Matrix& mat) { return value << mat._data; }
-    friend Matrix operator>>(const T& value, const Matrix& mat) { return value >> mat._data; }
-    friend Matrix operator&&(const T& value, const Matrix& mat) { return value && mat._data; }
-    friend Matrix operator||(const T& value, const Matrix& mat) { return value || mat._data; }
+    
+    template <class U>
+    friend auto operator+(const Matrix& mat, const U& value) 
+        -> Matrix<decltype(std::declval<T>() + std::declval<U>()), Rows, Cols>
+    { return mat._data + value; }
+    
+    template <class U>
+    friend auto operator-(const Matrix& mat, const U& value) 
+        -> Matrix<decltype(std::declval<T>() - std::declval<U>()), Rows, Cols>
+    { return mat._data - value; }
+    
+    template <class U>
+    friend auto operator*(const Matrix& mat, const U& value) 
+        -> Matrix<decltype(std::declval<T>() * std::declval<U>()), Rows, Cols>
+    { return mat._data * value; }
+    
+    template <class U>
+    friend auto operator/(const Matrix& mat, const U& value) 
+        -> Matrix<decltype(std::declval<T>() / std::declval<U>()), Rows, Cols>
+    { return mat._data / value; }
+    
+    template <class U>
+    friend auto operator%(const Matrix& mat, const U& value) 
+        -> Matrix<decltype(std::declval<T>() % std::declval<U>()), Rows, Cols>
+    { return mat._data % value; }
+    
+    template <class U>
+    friend auto operator&(const Matrix& mat, const U& value) 
+        -> Matrix<decltype(std::declval<T>() & std::declval<U>()), Rows, Cols>
+    { return mat._data & value; }
+    
+    template <class U>
+    friend auto operator|(const Matrix& mat, const U& value) 
+        -> Matrix<decltype(std::declval<T>() | std::declval<U>()), Rows, Cols>
+    { return mat._data | value; }
+    
+    template <class U>
+    friend auto operator^(const Matrix& mat, const U& value) 
+        -> Matrix<decltype(std::declval<T>() ^ std::declval<U>()), Rows, Cols>
+    { return mat._data ^ value; }
+    
+    template <class U>
+    friend auto operator<<(const Matrix& mat, const U& value) 
+        -> Matrix<decltype(std::declval<T>() << std::declval<U>()), Rows, Cols>
+    { 
+        // using value_type = decltype(std::declval<T>() << std::declval<U>());
+        return {std::valarray<T>(mat._data << value)}; 
+    }
+    
+    template <class U>
+    friend auto operator>>(const Matrix& mat, const U& value) 
+        -> Matrix<decltype(std::declval<T>() >> std::declval<U>()), Rows, Cols>
+    { return mat._data >> value; }
+    
+    template <class U>
+    friend auto operator&&(const Matrix& mat, const U& value) 
+        -> Matrix<decltype(std::declval<T>() && std::declval<U>()), Rows, Cols>
+    { return mat._data && value; }
+    
+    template <class U>
+    friend auto operator||(const Matrix& mat, const U& value) 
+        -> Matrix<decltype(std::declval<T>() || std::declval<U>()), Rows, Cols>
+    { return mat._data || value; }
+
+    
+    template <class U>
+    friend auto operator+(const U& value, const Matrix& mat) 
+        ->Matrix<decltype(std::declval<U>() + std::declval<T>()), Rows, Cols>
+    { return value + mat._data; }
+    
+    template <class U>
+    friend auto operator-(const U& value, const Matrix& mat) 
+        ->Matrix<decltype(std::declval<U>() - std::declval<T>()), Rows, Cols>
+    { return value - mat._data; }
+    
+    template <class U>
+    friend auto operator*(const U& value, const Matrix& mat) 
+        ->Matrix<decltype(std::declval<U>() * std::declval<T>()), Rows, Cols>
+    { return value * mat._data; }
+    
+    template <class U>
+    friend auto operator/(const U& value, const Matrix& mat) 
+        ->Matrix<decltype(std::declval<U>() / std::declval<T>()), Rows, Cols>
+    { return value / mat._data; }
+    
+    template <class U>
+    friend auto operator%(const U& value, const Matrix& mat) 
+        ->Matrix<decltype(std::declval<U>() % std::declval<T>()), Rows, Cols>
+    { return value % mat._data; }
+    
+    template <class U>
+    friend auto operator&(const U& value, const Matrix& mat) 
+        ->Matrix<decltype(std::declval<U>() & std::declval<T>()), Rows, Cols>
+    { return value & mat._data; }
+    
+    template <class U>
+    friend auto operator|(const U& value, const Matrix& mat) 
+        ->Matrix<decltype(std::declval<U>() | std::declval<T>()), Rows, Cols>
+    { return value | mat._data; }
+    
+    template <class U>
+    friend auto operator^(const U& value, const Matrix& mat) 
+        ->Matrix<decltype(std::declval<U>() ^ std::declval<T>()), Rows, Cols>
+    { return value ^ mat._data; }
+    
+    // template <class U, std::enable_if_t<!std::is_base_of<std::ostream, U>::value, int> = 0>
+    // friend auto operator<<(const U& value, const Matrix& mat) 
+    //     ->Matrix<decltype(std::declval<U>() << std::declval<T>()), Rows, Cols>
+    // { return value << mat._data; }
+    
+    // template <class U, std::enable_if_t<!std::is_base_of<std::istream, U>::value, int> = 0>
+    // friend auto operator>>(const U& value, const Matrix& mat) 
+    //     ->Matrix<decltype(std::declval<U>() >> std::declval<T>()), Rows, Cols>
+    // { return value >> mat._data; }
+    
+    template <class U>
+    friend auto operator&&(const U& value, const Matrix& mat) 
+        ->Matrix<decltype(std::declval<U>() && std::declval<T>()), Rows, Cols>
+    { return value && mat._data; }
+    
+    template <class U>
+    friend auto operator||(const U& value, const Matrix& mat) 
+        ->Matrix<decltype(std::declval<U>() || std::declval<T>()), Rows, Cols>
+    { return value || mat._data; }
+
+    // friend Matrix operator+(const Matrix& mat, const T& value) { return mat._data + value; }
+    // friend Matrix operator-(const Matrix& mat, const T& value) { return mat._data - value; }
+    // friend Matrix operator*(const Matrix& mat, const T& value) { return mat._data * value; }
+    // friend Matrix operator/(const Matrix& mat, const T& value) { return mat._data / value; }
+    // friend Matrix operator%(const Matrix& mat, const T& value) { return mat._data % value; }
+    // friend Matrix operator&(const Matrix& mat, const T& value) { return mat._data & value; }
+    // friend Matrix operator|(const Matrix& mat, const T& value) { return mat._data | value; }
+    // friend Matrix operator^(const Matrix& mat, const T& value) { return mat._data ^ value; }
+    // friend Matrix operator<<(const Matrix& mat, const T& value) { return mat._data << value; }
+    // friend Matrix operator>>(const Matrix& mat, const T& value) { return mat._data >> value; }
+    // friend Matrix operator&&(const Matrix& mat, const T& value) { return mat._data && value; }
+    // friend Matrix operator||(const Matrix& mat, const T& value) { return mat._data || value; }
+
+    // friend Matrix operator+(const T& value, const Matrix& mat) { return value + mat._data; }
+    // friend Matrix operator-(const T& value, const Matrix& mat) { return value - mat._data; }
+    // friend Matrix operator*(const T& value, const Matrix& mat) { return value * mat._data; }
+    // friend Matrix operator/(const T& value, const Matrix& mat) { return value / mat._data; }
+    // friend Matrix operator%(const T& value, const Matrix& mat) { return value % mat._data; }
+    // friend Matrix operator&(const T& value, const Matrix& mat) { return value & mat._data; }
+    // friend Matrix operator|(const T& value, const Matrix& mat) { return value | mat._data; }
+    // friend Matrix operator^(const T& value, const Matrix& mat) { return value ^ mat._data; }
+    // friend Matrix operator<<(const T& value, const Matrix& mat) { return value << mat._data; }
+    // friend Matrix operator>>(const T& value, const Matrix& mat) { return value >> mat._data; }
+    // friend Matrix operator&&(const T& value, const Matrix& mat) { return value && mat._data; }
+    // friend Matrix operator||(const T& value, const Matrix& mat) { return value || mat._data; }
 
     // =======> Comparison operators <====================================================================
     friend Matrix<bool, Rows, Cols> operator==(const Matrix& a, const Matrix& b) { return a._data == b._data; }

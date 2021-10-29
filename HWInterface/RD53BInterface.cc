@@ -9,6 +9,10 @@
 
 #include "RD53BInterface.h"
 
+#include "../Utils/xtensor/xview.hpp"
+// #include "../Utils/xtensor/xadapt.hpp"
+
+
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
@@ -20,23 +24,50 @@ RD53BInterface<Flavor>::RD53BInterface(const BeBoardFWMap& pBoardMap) : RD53Inte
 template <class Flavor>
 bool RD53BInterface<Flavor>::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
+    // char pause;
     setup(pChip);
 
     auto* chip = static_cast<RD53B*>(pChip);
 
-    std::vector<std::pair<const Register&, uint16_t>> regValuePairs;
-
-    for (const auto& reg : RD53B::Registers) {
-        if (!reg.readOnly)
-            regValuePairs.emplace_back(reg, chip->getRegValue(reg));
-    }
-
-    WriteRegs(pChip, regValuePairs);
+    // std::cout << "ConfigureChip";
+    // std::cin >> pause;
     
     WriteReg(chip, Reg::PIX_DEFAULT_CONFIG, 0x9CE2);
     WriteReg(chip, Reg::PIX_DEFAULT_CONFIG_B, 0x631D);
+    usleep(100000);
+
+    std::vector<std::pair<const Register&, uint16_t>> regValuePairs;
+
+    for (const auto& ref : chip->getConfiguredRegisters()) {
+        const auto& reg = ref.get();
+        if (!reg.readOnly) {
+            WriteReg(chip, reg, chip->getRegValue(reg));
+            // regValuePairs.emplace_back(reg, chip->getRegValue(reg));
+            LOG(INFO) << reg.name << " <- " << chip->getRegValue(reg) << RESET;
+        }
+    }
+    usleep(100000);
+
+    // WriteRegs(pChip, regValuePairs);
+
+
     WriteRegField(chip, Reg::TriggerConfig, 0, 0); // trigger mode
-    WriteRegField(chip, Reg::DataConcentratorConf, 3, 1); // events / stream
+    WriteRegField(chip, Reg::DataConcentratorConf, 3, 0); // events / stream
+    WriteRegField(chip, Reg::DataConcentratorConf, 2, 0); // eos_marker
+    WriteRegField(chip, Reg::CoreColEncoderConf, 0, 0); // drop tot
+    WriteRegField(chip, Reg::CoreColEncoderConf, 1, 0); // raw hitmap
+    WriteRegField(chip, Reg::DataMerging, 1, 0); // chip_id in event stream
+
+    WriteReg(chip, Reg::RingOscConfig, 0x7fff);
+    WriteReg(chip, Reg::RingOscConfig, 0x5eff);
+
+    // std::cout << "UpdateCoreColumns";
+    // std::cin >> pause;
+    UpdateCoreColumns(chip);
+    // std::cout << "after UpdateCoreColumns";
+    // std::cin >> pause;
+
+
 
     return true;
 }
@@ -78,8 +109,8 @@ void RD53BInterface<Flavor>::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLane
     // RD53BCmd::Clear.serialize(cmdValue, bits);
     // RD53BCmd::Clear.serialize(cmdValue, bits);
     // SendCommandStream(pChip, bits);
-    SendCommand(pChip, RD53BCmd::Clear);
-    SendCommand(pChip, RD53BCmd::Clear);
+    SendCommand<RD53BCmd::Clear>(pChip);
+    SendCommand<RD53BCmd::Clear>(pChip);
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
@@ -110,17 +141,17 @@ bool RD53BInterface<Flavor>::WriteChipReg(Chip* pChip, const std::string& regNam
 }
 
 template <class Flavor>
-void RD53BInterface<Flavor>::WriteReg(Chip* pChip, const Register& reg, const uint16_t value)
+void RD53BInterface<Flavor>::WriteReg(Chip* pChip, const Register& reg, uint16_t value)
 {
-    SendCommand(pChip, RD53BCmd::WrReg, reg.address, value);
+    SendCommand<RD53BCmd::WrReg>(pChip, reg.address, value);
     static_cast<RD53B*>(pChip)->setRegValue(reg, value);
 
     if((reg == Reg::VCAL_HIGH) || (reg == Reg::VCAL_MED)) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
 }
 
 template <class Flavor>
-void RD53BInterface<Flavor>::WriteReg(const Hybrid* hybrid, const Register& reg, const uint16_t value) {
-    SendCommand(hybrid, RD53BCmd::WrReg, reg.address, value);
+void RD53BInterface<Flavor>::WriteReg(const Hybrid* hybrid, const Register& reg, uint16_t value) {
+    SendCommand<RD53BCmd::WrReg>(hybrid, reg.address, value);
     
     for (auto* chip : *hybrid)
         static_cast<RD53B*>(chip)->setRegValue(reg, value);
@@ -129,7 +160,7 @@ void RD53BInterface<Flavor>::WriteReg(const Hybrid* hybrid, const Register& reg,
 }
 
 template <class Flavor>
-void RD53BInterface<Flavor>::WriteReg(const BeBoard* pBoard, const Register& reg, const uint16_t data)
+void RD53BInterface<Flavor>::WriteReg(const BeBoard* pBoard, const Register& reg, uint16_t data)
 {
     setup(pBoard);
 
@@ -141,7 +172,7 @@ void RD53BInterface<Flavor>::WriteReg(const BeBoard* pBoard, const Register& reg
 }
 
 template <class Flavor>
-void RD53BInterface<Flavor>::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std::string& regName, const uint16_t data)
+void RD53BInterface<Flavor>::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std::string& regName, uint16_t data)
 {
     WriteReg(pBoard, RD53B::getRegister(regName), data);
 }
@@ -156,7 +187,7 @@ uint16_t RD53BInterface<Flavor>::ReadChipReg(Chip* pChip, const std::string& reg
     const int nAttempts = 10; // @CONST@
     for(auto attempt = 0; attempt < nAttempts; attempt++)
     {
-        SendCommand(chip, RD53BCmd::RdReg, reg.address);
+        SendCommand<RD53BCmd::RdReg>(chip, reg.address);
 
         uint16_t address = reg == Reg::PIX_PORTAL ? bits::pack<1, 9>(1, chip->getCurrentRow()) : reg.address;
 
@@ -206,6 +237,40 @@ void RD53BInterface<Flavor>::ChipErrorReport(ReadoutChip* pChip)
     LOG(INFO) << BOLDBLUE << "BCIDCnt            = " << BOLDYELLOW << ReadChipReg(pChip, "BCIDCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
     LOG(INFO) << BOLDBLUE << "TrigCnt            = " << BOLDYELLOW << ReadChipReg(pChip, "TrigCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
     LOG(INFO) << BOLDBLUE << "ReadTrigCnt        = " << BOLDYELLOW << ReadChipReg(pChip, "ReadTrigCnt") << std::setfill(' ') << std::setw(8) << "" << RESET;
+}
+
+template <class Flavor>
+xt::xtensor_fixed<uint16_t, xt::xshape<RD53B<Flavor>::nRows, 1>> RD53BInterface<Flavor>::ExtractColPairMaskConfig(const typename RD53B::PixelConfig& cfg, size_t col_pair) {
+    const uint16_t col = col_pair * 2;
+    // xt::xtensor_fixed<uint16_t, xt::xshape<RD53B::nRows, 1>> result = xt::zeros<uint16_t>(std::array<size_t, 2>({RD53B::nRows, 1}));
+    xt::xarray<uint16_t> result = xt::col(cfg.enable, col + 1);
+    // result = result | xt::col(cfg.enable, col);
+    result |= xt::left_shift(xt::col(cfg.enableInjections, col + 1), 1);
+    result |= xt::left_shift(xt::col(cfg.enableHitOr, col + 1),  2);
+    result = xt::left_shift(result, 5);
+    result |= xt::col(cfg.enable, col);
+    result |= xt::left_shift(xt::col(cfg.enableInjections, col), 1);
+    result |= xt::left_shift(xt::col(cfg.enableHitOr, col), 2);
+    
+    // LOG(INFO) << col_pair << RESET;
+    // for (auto word : result) {
+    //     LOG (INFO) << std::bitset<10>(word) << RESET;
+    // }
+    return result;
+}
+
+template <class Flavor>
+xt::xtensor_fixed<uint16_t, xt::xshape<RD53B<Flavor>::nRows, 1>> RD53BInterface<Flavor>::ExtractColPairTdacConfig(const typename RD53B::PixelConfig& cfg, size_t col_pair) {
+    const uint16_t col = col_pair * 2;
+    // xt::xtensor_fixed<uint16_t, xt::xshape<RD53B::nRows, 1>> result = xt::zeros<uint16_t>(std::array<size_t, 2>({RD53B::nRows, 1}));
+    // xt::xtensor_fixed<uint16_t, xt::xshape<RD53B::nRows, 1>> 
+    xt::xarray<uint16_t> result = xt::col(cfg.tdac, col + 1) & 0xF;
+    // result |= (xt::col(cfg.tdac, col) & 0xF);
+    result |= xt::left_shift(xt::col(cfg.tdacSign, col + 1), 4);
+    result = xt::left_shift(result, 5);
+    result |= xt::col(cfg.tdac, col) & 0xF;
+    result |= xt::left_shift(xt::col(cfg.tdacSign, col), 4);
+    return result;
 }
 
 // template <class Flavor> template <class Device>

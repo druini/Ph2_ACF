@@ -1,4 +1,3 @@
-#include "../Core.hpp"
 #include "Array.hpp"
 #include "Compose3.hpp"
 #include "Constant.hpp"
@@ -14,5 +13,5 @@
 #include "Transformed.hpp"
 #include "Validated.hpp"
 #include "Aligned.hpp"
-#include "Converted.hpp"
-#include "Object.hpp"
+#include "NamedTuple.hpp"
+#include "ClassObject.hpp"

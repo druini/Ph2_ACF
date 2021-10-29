@@ -9,6 +9,13 @@
 
 #include "RD53Event.h"
 
+
+#ifdef __USE_ROOT__
+#include "TFile.h"
+#include "TTree.h"
+#endif
+
+
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface

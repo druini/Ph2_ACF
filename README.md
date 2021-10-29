@@ -1,16 +1,78 @@
 # RD53B Version
 
-This version requires the `devtoolset-10` package: `sudo yum install devtoolset-10`
-
-There is currently a single executable (`RD53BminiDAQ`) which simply configures the system, reads all the registers of each chip and prints their values.
-
-There is an example configuration file (`RD53B.xml`) in `settings`.
-
-To reset the system run: `RD53BminiDAQ -r RD53B.xml`
-
-To configure the system and read all registers run: `RD53BminiDAQ RD53B.xml`
+This version requires the `devtoolset-10` package: 
+```bash
+sudo yum install centos-release-scl
+sudo yum install devtoolset-10
+```
 
 Compatible firmware images can be found here: https://cernbox.cern.ch/index.php/s/MSHAo1FdMaml0m8
+
+
+## Tools
+
+The tool system has been redesigned for RD53B. Each tool type is a class which has a `run` member function with a `SystemController&` parameter and optionally a `draw` member function with a parameter of the same type as the result of `run`. To each tool type is associated a NamedTuple (similar to std::tuple but each field has an associated name) containing the name, type and default value of each parameter for this tool type. A tool type must be added to the list of known tool types in `RD53BminiDAQ.cc` in order to be used.
+
+Tools, as opposed to tool types, are not defined in code but are configured in a special .toml file such as the following:
+
+```toml
+[RegReader]
+type = "RD53BRegReader"
+args = {}
+
+[DigitalScan]
+type = "RD53BInjectionTool"
+
+[DigitalScan.args]
+injectionType = "Digital"
+nInjections = 10
+triggerDuration = 2
+triggerLatency = 134
+hitsPerCol = 21
+offset = [0, 0]
+size = [0, 0]
+
+[AnalogScan]
+type = "RD53BInjectionTool"
+args = { injectionType = "Analog", nInjections = 10 }
+```
+
+The user can define multiple tools of the same tool type. Any parameters that are not specified will have their default values. Tools can have other tools as parameters in which case the name of the desired tool of the required type should be used.
+
+There are currently only two tool types:
+
+- RD53BRegReader (`Tools/RD53BInjectionTool`):
+  
+    - `run`: Reads all registers and prints their values in the terminal.
+
+- RD53BInjectionTool (`Tools/RD53BInjectionTool`):
+
+    - `run`:
+    Performs a given number of injections for each pixel of a given rectangular area. 
+    
+    - `draw`: Draws the resulting hitmap using root and reports the mean occupancy in the terminal.
+
+## Usage
+
+- Configuration:
+
+    Exaple hardware description files: `settings/RD53B.xml` (RD53B-ATLAS), `settings/CROC.xml` (RD53B-CMS)
+
+    Example tools configuration file: `settings/RD53BTools.toml`
+
+- Reset: 
+    ```
+    RD53BminiDAQ -f HwDescripion.xml -r
+    ```
+
+- Run a tool: 
+    ```
+    RD53BminiDAQ -f HwDescription -t RD53BTools.toml DigitalScan
+    ```
+- Run a sequence of tools:
+    ```
+    RD53BminiDAQ -f HwDescription -t RD53BTools.toml DigitalScan AnalogScan RegReader
+    ```
 
 
 # CMS Ph2 ACF (Acquisition & Control Framework)

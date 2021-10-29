@@ -5,8 +5,10 @@
 
 #include "../tools/RD53BTool.h"
 #include "../tools/RD53BInjectionTool.h"
-#include "../tools/RD53BPixelAlive.h"
+#include "../tools/RD53BRegReader.h"
+// #include "../tools/RD53BPixelAlive.h"
 
+#include <experimental/type_traits>
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
@@ -18,18 +20,42 @@ using namespace RD53BTools;
 template <class Flavor>
 using Tools = ToolManager<decltype(named_tuple(
     TOOL(RD53BInjectionTool),
-    TOOL(RD53BPixelAlive)
+    TOOL(RD53BRegReader)
+    // ,TOOL(RD53BPixelAlive)
 ))>;
+
+// template <class T>
+// using tool_result_t = decltype(std::declval<T>().run(std::declval<SystemController&>()));
+
+template <class T>
+using has_draw = decltype(std::declval<T>().draw(std::declval<T>().run(std::declval<SystemController&>())));
+
+
+struct ToolRunner {
+    const std::string& toolName;
+    SystemController& system;
+
+    template <class Tool, typename std::enable_if_t<std::experimental::is_detected_v<has_draw, Tool>, int> = 0>
+    void operator()(const Tool& tool) {
+        std::cout << "toolName: " << toolName << std::endl;
+        auto result = tool.run(system);
+        tool.draw(result);
+    }
+
+    template <class Tool, typename std::enable_if_t<!std::experimental::is_detected_v<has_draw, Tool>, int> = 0>
+    void operator()(const Tool& tool) {
+        std::cout << "toolName: " << toolName << std::endl;
+        tool.run(system);
+    }
+};
 
 
 template <class Flavor>
-void run(SystemController& system, const std::string& toolConfigFilename, const std::string& toolName) {
-    auto config = toml::parse(toolConfigFilename);
-    auto tools = Tools<Flavor>(config);
+void run(SystemController& system, const toml::value& toolConfig, const std::vector<std::string>& toolNames) {
+    auto tools = Tools<Flavor>(toolConfig);
 
-    tools.with_tool(toolName, [&] (auto tool) {
-        tool.run(system);
-    });
+    for (const auto& toolName : toolNames)
+        tools.with_tool(toolName, ToolRunner{toolName, system});
 }
 
 INITIALIZE_EASYLOGGINGPP
@@ -38,8 +64,15 @@ int main(int argc, char** argv) {
     CommandLineProcessing::ArgvParser cmd;
 
     cmd.setIntroductoryDescription("RD53B test");
+
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
+
+    cmd.defineOption("file", "Hardware description file (.xml)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("file", "f");
+
+    cmd.defineOption("tools", "Tools configuration file (.toml)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("tools", "t");
 
     int result = cmd.parse(argc, argv);
     
@@ -52,7 +85,7 @@ int main(int argc, char** argv) {
     
     SystemController system;
 
-    auto configFile = cmd.argument(0);
+    auto configFile = cmd.optionValue("file");
 
     if (reset) {
         system.InitializeSettings(configFile, std::cout);
@@ -66,25 +99,12 @@ int main(int argc, char** argv) {
     
     system.Configure(configFile);
 
+    auto toolConfig = toml::parse(cmd.optionValue("tools"));
+
     if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
-        run<RD53BFlavor::ATLAS>(system, cmd.argument(1), cmd.argument(2));
+        run<RD53BFlavor::ATLAS>(system, toolConfig, cmd.allArguments());
     else
-        run<RD53BFlavor::CMS>(system, cmd.argument(1), cmd.argument(2));
-
-    // auto& chipInterface = *system.fReadoutChipInterface;
-
-    // for_each_chip(&system, [&] (auto devices) {
-    //     LOG(INFO) << "Reading registers of chip: " << devices.chip->getId() << RESET;
-    //     const auto& registers = devices.chip->getFrontEndType() == FrontEndType::RD53B ? RD53BReg::Registers : CROCReg::Registers;
-    //     for (const auto& reg : registers) {
-    //         uint16_t value = chipInterface.ReadChipReg(devices.chip, reg.name);
-    //         std::stringstream ss;
-    //         ss << reg.name << " = " << value;
-    //         if (value != reg.defaultValue) 
-    //             ss << " (default: " << reg.defaultValue << ")" << RESET;
-    //         LOG(INFO) << ss.str();   
-    //     }
-    // });
+        run<RD53BFlavor::CMS>(system, toolConfig, cmd.allArguments());
 
     system.Destroy();
 

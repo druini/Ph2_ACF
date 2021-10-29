@@ -17,16 +17,16 @@
 namespace RD53BTools {
 
 using namespace NamedTuple;
+using namespace compile_time_string_literal;
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
+using namespace RD53BUtils;
 
 template <class>
 int ToolParameters;
 
-
 struct ToolManagerBase {
-
     const std::type_info& getToolType(const std::string& toolName) const {
         return _toolTypeInfo.at(toolName);
     }
@@ -78,16 +78,20 @@ template <class Tools>
 struct ToolManager : public ToolManagerBase {
     ToolManager(const toml::value& config) : ToolManagerBase(config) { initialize<Tools>(); }
 
+    template <class ToolType, class F>
+    void run_tool(bool doRun, const std::string& name, F&& f) const {
+        if (doRun)
+            std::forward<F>(f)(ToolType(this, name, _config.at(name).at("args")));
+    }
+    
+    // template <class ToolType, class F>
+    // void run_tool(std::false_type, const std::string& name, F&& f) const {}
+
     template <class F, size_t... Is>
     void with_tool(const std::string& name, F&& f, std::index_sequence<Is...>) const {
         std::string typeName = toml::get<std::string>(_config.at(name).at("type"));
-        int unused[] = {
-            0, 
-            (
-                Tools::names[Is] == typeName ? 
-                    (std::forward<F>(f)(typename Tools::field_type<Is>(this, name, _config.at(name).at("args"))), 0) : 0
-            )...
-        };
+        std::cout << "typeName: " << typeName << std::endl;
+        int unused[] = {0, (run_tool<typename Tools::field_type<Is>>(Tools::names[Is] == typeName, name, std::forward<F>(f)), 0)...};
         (void)unused;
     }
     
@@ -118,17 +122,21 @@ struct RD53BTool : public RD53BToolBase {
       , _parameter_values(ToolParameters<Derived>) 
     {
         initialize(args, _parameter_values.values(), std::make_index_sequence<parameter_tuple::size>{});
+        static_cast<Derived*>(this)->init();
     }
 
-    template <class Name>       auto& parameter(Name)       { return _parameter_values[Name{}]; }
-    template <class Name> const auto& parameter(Name) const { return _parameter_values[Name{}]; }
+    template <class Name>       auto& param(Name)       { return _parameter_values[Name{}]; }
+    template <class Name> const auto& param(Name) const { return _parameter_values[Name{}]; }
 
-          auto& parameters()       { return _parameter_values; }
-    const auto& parameters() const { return _parameter_values; }
+          auto& params()       { return _parameter_values; }
+    const auto& params() const { return _parameter_values; }
 
     friend std::ostream& operator<<(std::ostream& os, const RD53BTool& t) {
-        return os << "{ \"type\" : \"" << t._toolManager->getToolTypeName<Derived>() << "\", \"args\" : " << t.parameters() << " }";
+        return os << "{ \"type\" : \"" << t._toolManager->getToolTypeName<Derived>() << "\", \"args\" : " << t.params() << " }";
     }
+
+    void init() {}
+    // bool run(SystemController&) {}
 
 protected:
     static auto& getFWInterface(SystemController& system, BeBoard* board) {

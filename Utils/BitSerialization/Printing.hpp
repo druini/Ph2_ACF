@@ -5,11 +5,10 @@
 #include <utility>
 #include <vector>
 #include <array>
-#include <boost/optional.hpp>
-
-#include "Utility.hpp"
+#include <optional>
 
 namespace BitSerialization {
+    
 
 /* Helper function to get a storage index in a stream */
 inline int get_indent_index() {
@@ -45,6 +44,25 @@ inline std::ostream& endl_indent(std::ostream& stream) {
 }
 
 
+template <class T, typename std::enable_if_t<!std::is_const_v<T>, int> = 0>
+inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<T> ref) {
+    return (os << std::reference_wrapper<const T>(ref.get()));
+}
+
+
+template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, uint8_t>, int> = 0>
+inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const T> wrapper)
+{
+    os << wrapper.get();
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const uint8_t> wrapper)
+{
+    os << +wrapper.get();
+    return os;
+}
+
 template <class Container>
 inline std::ostream& print_container(std::ostream& os, const Container& container)
 {
@@ -60,55 +78,35 @@ inline std::ostream& print_container(std::ostream& os, const Container& containe
     return os;
 }
 
-
-
-template <class T, typename std::enable_if_t<!std::is_const<T>::value, int> = 0>
-inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<T> ref) {
-    return (os << std::reference_wrapper<const T>(ref));
-}
-
-
-template <class T, std::enable_if_t<std::is_integral<T>::value && !std::is_same<T, uint8_t>::value, int> = 0>
-inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const T> wrapper)
-{
-    os << wrapper.get();
-    return os;
-}
-
-inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const uint8_t> wrapper)
-{
-    os << +wrapper.get();
-    return os;
-}
-
 template <class T>
 inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const std::vector<T>> wrapper)
 {
-    return BitSerialization::print_container(os, wrapper.get());
+    return print_container(os, wrapper.get());
 }
 
 template <class T>
 inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const ConvertibleVector<T>> wrapper)
 {
-    return BitSerialization::print_container(os, wrapper.get());
+    return print_container(os, wrapper.get());
 }
 
 template <class T, size_t N>
 inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const std::array<T, N>> wrapper)
 {
-    return BitSerialization::print_container(os, wrapper.get());
+    return print_container(os, wrapper.get());
 }
 
 template <class T>
-inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const boost::optional<T>> wrapper)
+inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const std::optional<T>> wrapper)
 {
     auto& opt = wrapper.get();
     if (opt)
-        return (os << std::ref(opt.get()));
+        return (os << std::ref(opt.value()));
     else
         return (os << "N/A");
 }
 
-} // namespace BitSerialization
+
+}
 
 #endif

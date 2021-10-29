@@ -94,7 +94,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_9_NOERROR_FLAGS}")
       endif()
     endif ()
-    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fopenmp -fno-omit-frame-pointer -ftemplate-depth=256 -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
+    # set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fopenmp -fno-omit-frame-pointer -ftemplate-depth=256 -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
+    set (CMAKE_CXX_FLAGS "-std=c++1y -O3 -fopenmp -fno-omit-frame-pointer -ftemplate-depth=256 -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
     if(NoDataShipping)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     endif()
@@ -170,7 +171,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # Boost
     set(BOOST_INCLUDE_DIRS "$ENV{BOOST_INCLUDE}")
     set(BOOST_LIBRARY_DIRS "$ENV{BOOST_LIB}")
-    find_package(Boost 1.53 REQUIRED system filesystem thread program_options serialization)
+    find_package(Boost 1.53 EXACT REQUIRED system filesystem thread program_options serialization)
+
+    message("${Boost_INCLUDE_DIRS}")
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 

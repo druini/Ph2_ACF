@@ -16,12 +16,17 @@
     link_directories(${UHAL_LOG_LIB_PREFIX})
     link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
 
+    # c++20 sources (.cpp)
+    file(GLOB CXX20_SOURCES *.cpp)
+    add_library(Ph2_Utils_cxx20 OBJECT ${CXX20_SOURCES})
+    target_compile_options(Ph2_Utils_cxx20 PRIVATE -std=c++20)
+
     # Find source files
     file(GLOB HEADERS *.h)
     file(GLOB SOURCES *.cc)
 
     # Add the library
-    add_library(Ph2_Utils STATIC ${SOURCES} ${HEADERS})
+    add_library(Ph2_Utils STATIC ${SOURCES} ${HEADERS} $<TARGET_OBJECTS:Ph2_Utils_cxx20>)
     set(LIBS ${LIBS} pugixml boost_thread boost_date_time boost_iostreams boost_filesystem rt)
     TARGET_LINK_LIBRARIES(Ph2_Utils ${LIBS})
 

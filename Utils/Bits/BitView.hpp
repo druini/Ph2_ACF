@@ -212,7 +212,7 @@ BitView<const T> bit_view(const T* data, size_t start, size_t end) {
 
 template <class T>
 BitView<const T> bit_view(const std::vector<T>& vec) {
-    return {vec};
+    return {vec.data(), 0, vec.size() * 8 * sizeof(T)};
 }
 
 

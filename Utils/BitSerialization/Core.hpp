@@ -7,100 +7,63 @@
 #include "Results.hpp"
 #include "Printing.hpp"
 
-
-
 namespace BitSerialization {
 
-template <class...> using void_t = void;
+struct Void;
 
-struct VoidType;
-struct VoidValue;
+template <class Type, class Parent=Void>
+using parse_result_t = decltype(Type::parse(std::declval<BitView<uint32_t>>(), std::declval<const Parent&>()));
 
-template <class Type, class Parent=VoidValue>
-using parse_result_t = decltype(
-    std::declval<Type>().parse(
-        std::declval<BitView<uint32_t>>(), 
-        std::declval<const Parent&>()
-    )
-);
-
-template <class Type, class Parent=VoidValue>
+template <class Type, class Parent=Void>
 using value_type_t = typename parse_result_t<Type, Parent>::value_type;
 
-template <class Type, class Parent=VoidValue>
+template <class Type, class Parent=Void>
 using parse_error_t = typename parse_result_t<Type, Parent>::error_type;
 
-template <class Type, class Parent=VoidValue>
+template <class Type, class Parent=Void>
 struct parse_error { using type = parse_error_t<Type, Parent>; };
 
-template <class Type, class Parent=VoidValue>
-using serialize_result_t = decltype(
-    std::declval<Type>().serialize(
-        std::declval<value_type_t<Type>&>(), 
-        std::declval<BitVector<uint32_t>&>(), 
-        std::declval<const Parent&>()
-    )
-);
+template <class Type, class Parent=Void>
+using serialize_result_t = decltype(Type::serialize(
+    std::declval<value_type_t<Type>&>(), 
+    std::declval<BitVector<uint32_t>&>(), 
+    std::declval<const Parent&>()
+));
 
-template <class Type, class Parent=VoidValue>
+template <class Type, class Parent=Void>
 using serialize_error_t = typename serialize_result_t<Type, Parent>::error_type;
 
-template <class Type, class Parent=VoidValue>
+template <class Type, class Parent=Void>
 struct serialize_error { using type = serialize_error_t<Type, Parent>; };
 
-// template <typename T>
-// concept ignores_input_value = std::same_as<
-//     std::integral_constant<bool, T::ignores_input_value>, 
-//     std::integral_constant<bool, 1>
-// >;
-
-// template <typename T>
-// constexpr bool ignores_input_value_v = ignores_input_value<T>;
-
-template <class T, class Enable = void>
-struct ignores_input_value : public std::false_type {};
-
-template <class T>
-struct ignores_input_value<T, void_t<decltype(T::ignores_input_value)>> {
-    static constexpr bool value = T::ignores_input_value;
-};
+template <typename T>
+concept ignores_input_value = std::same_as<
+    std::integral_constant<bool, T::ignores_input_value>, 
+    std::integral_constant<bool, 1>
+>;
 
 template <typename T>
-constexpr bool ignores_input_value_v = ignores_input_value<T>::value;
+constexpr bool ignores_input_value_v = ignores_input_value<T>;
 
-struct VoidValue {
-    VoidValue() {}
 
-    template <class T>
-    VoidValue(const T&) {}
 
-    template <class T>
-    operator T() const; // { return {}; }
 
-    template <class T>
-    VoidValue operator[](T) const;
-};
-
-struct VoidType {
+struct Void {
     static constexpr bool ignores_input_value = true;
 
-    template <class T, class U=VoidValue>
-    ParseResult<VoidValue> parse(const BitView<T>& bits, const U& parent={}) const {
-        return {VoidValue(), 0};
+    template <class T, class U=Void>
+    static ParseResult<Void> parse(const BitView<T>& bits, const U& parent={}) {
+        return {Void(), 0};
     }
 
-    template <class T, class U=VoidValue>
-    SerializeResult<> 
-    serialize(VoidValue& value, BitVector<T>& bits, const U& parent={}) const {
+    template <class T, class U=Void>
+    static SerializeResult<> 
+    serialize(Void& value, BitVector<T>& bits, const U& parent={}) {
         return {};
     }
 };
 
-inline auto Void() {
-    return VoidType{};
-}
-
-inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const VoidValue> wrapper) {
+inline std::ostream& operator<<(std::ostream& os, std::reference_wrapper<const Void> wrapper) {
     return (os << "Void");
 }
 
@@ -113,88 +76,66 @@ struct EndOfStream {
         }
     };
 
-    template <class T, class U=VoidValue>
-    ParseResult<VoidValue, ParseError> parse(const BitView<T>& bits, const U& parent={}) const {
+    template <class T, class U=Void>
+    static ParseResult<Void, ParseError> parse(const BitView<T>& bits, const U& parent={}) {
         if (bits.size() > 0)
             return ParseError{};
-        return {VoidValue(), 0};
+        return {Void(), 0};
     }
 
-    template <class T, class U=VoidValue>
-    SerializeResult<> serialize(VoidValue& value, BitVector<T>& bits, const U& parent={}) const {
+    template <class T, class U=Void>
+    static SerializeResult<> 
+    serialize(Void& value, BitVector<T>& bits, const U& parent={}) {
         return {};
     }
 };
 
-template <size_t Size>
-constexpr const char* to_char_ptr(const std::array<char, Size>& array) {
-    return &std::get<0>(array);
-}
 
 template <size_t N>
-struct UintType {
-    static constexpr const char name[] = "Uint";
+struct Uint {
+    static constexpr StringLiteral name = 
+        concat_string_literals<"Uint<", to_string_literal<N>(), ">">();
 
     using value_type = uint_t<N>;
 
     using ParseError = SizeError<name>;
 
-    template <class T, class U=VoidValue>
-    ParseResult<value_type, ParseError> 
-    parse(const BitView<T>& bits, const U& parent={}) const {
+    template <class T, class U=Void>
+    static ParseResult<value_type, ParseError> 
+    parse(const BitView<T>& bits, const U& parent={}) {
         if (bits.size() < N)
             return ParseError{bits.size()};
         else
             return {bits.slice(0, N).template get<value_type>(), N};
     }
 
-    template <class T, class U=VoidValue>
-    SerializeResult<> 
-    serialize(const value_type& value, BitVector<T>& bits, const U& parent={}) const {
+    template <class T, class U=Void>
+    static SerializeResult<> 
+    serialize(const value_type& value, BitVector<T>& bits, const U& parent={}) {
         bits.append_zeros(N).template set<value_type>(value);
         return {};
     }
 };
 
-template <size_t N>
-constexpr const char UintType<N>::name[];
+using Bool = Uint<1>;
 
-// template <size_t N>
-// auto Uint(std::integral_constant<size_t, N> = {}) {
-//     return UintType<N>();
+
+
+// template <class Type, class T, class U=Void>
+// auto serialize(value_type_t<Type>& value, BitVector<T>& bits, const U& parent={}) {
+//     Type::serialize(value, bints, parent)
 // }
 
-template <size_t N>
-inline auto Uint() {
-    return UintType<N>{};
+// template <class Type, class Value, class T, class U=Void>
+//     requires(!std::same_as<Value, value_type_t<Type>>) 
+// auto serialize(Value& value, BitVector<T>& bits, const U& parent={}) {
+//     value_type_t<Type> converted_value = value;
+//     auto result = Type::serialize(converted_value, bints, parent);
+//     value = converted_value;
+//     return result;
+// }
+
+
 }
-
-
-inline auto Bool() {
-    return UintType<1>();
-}
-
-
-template <class Type, class T, class Parent = VoidValue>
-auto serialize(const Type& type, value_type_t<Type>& value, BitVector<T>& bits, const Parent& parent) {
-    return type.serialize(value, bits, parent);
-}
-
-template <class Type, class T, class Parent = VoidValue>
-auto serialize(const Type& type, value_type_t<Type>&& value, BitVector<T>& bits, const Parent& parent) {
-    return type.serialize(value, bits, parent);
-}
-
-
-template <class Type, class T, class U, class Parent = VoidValue, typename std::enable_if_t<(!std::is_same<ConvertibleVector<U>, value_type_t<Type>>::value), int> = 0>
-auto serialize(const Type& type, const ConvertibleVector<U>& value, BitVector<T>& bits, const Parent& parent) {
-    value_type_t<Type> new_value{};
-    for (const auto& el : value)
-        new_value.push_back(typename value_type_t<Type>::value_type(el));
-    // std::copy(value.begin(), value.end(), std::back_inserter(new_value))
-    return type.serialize(new_value, bits, parent);
-}
-
-} // namespace BitSerialization
 
 #endif

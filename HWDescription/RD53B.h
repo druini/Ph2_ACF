@@ -22,7 +22,9 @@
 
 #include <iomanip>
 
-#include "../Utils/Matrix.hpp"
+#include "../Utils/xtensor/xfixed.hpp"
+
+#include "../Utils/NamedTuple.h"
 
 
 namespace Ph2_HwDescription
@@ -83,7 +85,7 @@ public:
     static const decltype(RD53BConstants::GetVMUX()) VMUX;
 
     template <class T>
-    using PixelMatrix = Matrix<T, nRows, nCols>;
+    using PixelMatrix = xt::xtensor_fixed<T, xt::xshape<nRows, nCols>>;
 
     struct PixelConfig {
         PixelMatrix<bool> enable;
@@ -92,6 +94,18 @@ public:
         PixelMatrix<uint8_t> tdac;
         PixelMatrix<bool> tdacSign;
     };
+
+    static const auto& pixelConfigFields() {
+        using namespace compile_time_string_literal;
+        static const auto pixelConfigFields = NamedTuple::named_tuple(
+            std::make_pair("enable"_s, &PixelConfig::enable),
+            std::make_pair("enableInjections"_s, &PixelConfig::enableInjections),
+            std::make_pair("enableHitOr"_s, &PixelConfig::enableHitOr),
+            std::make_pair("tdac"_s, &PixelConfig::tdac),
+            std::make_pair("tdacSign"_s, &PixelConfig::tdacSign)
+        );
+        return pixelConfigFields;
+    }
 
     template <class T>
     static uint8_t ChipIdFor(const T* device) { return BroadcastId; }
@@ -145,10 +159,20 @@ public:
         }
     }
 
+    template <class Key>
+    void addConfiguredRegister(Key&& key) {
+        configuredRegisters.push_back(std::ref(getRegister(std::forward<Key>(key))));
+    }
+
+    const auto& getConfiguredRegisters() const {
+        return configuredRegisters;
+    }
+
     // get/set register fields
     template <class Key>
     uint16_t getRegField(Key&& key, size_t field_index) const {
         auto& reg = getRegister(std::forward<Key>(key));
+        field_index = reg.fieldSizes.size() - field_index - 1;
         int offset = std::accumulate(reg.fieldSizes.begin(), reg.fieldSizes.begin() + field_index, 0);
         uint16_t mask = (1 << reg.fieldSizes[field_index]) - 1;
         return (registerValues[getRegIndex(reg)] >> offset) & mask;
@@ -158,6 +182,7 @@ public:
     uint16_t setRegField(Key&& key, size_t field_index, uint16_t value) {
         size_t reg_index = getRegIndex(std::forward<Key>(key));
         auto& reg = Registers[reg_index];
+        field_index = reg.fieldSizes.size() - field_index - 1;
         int offset = std::accumulate(reg.fieldSizes.begin(), reg.fieldSizes.begin() + field_index, 0);
         uint16_t mask = ((1 << reg.fieldSizes[field_index]) - 1) << offset;
         auto regValue = registerValues[reg_index];
@@ -173,7 +198,9 @@ public:
 
   private:
     std::array<uint16_t, Reg::nRegs> registerValues;
+    std::vector<std::reference_wrapper<const Register>> configuredRegisters;
     std::string configFileName;
+    std::map<std::string, std::string> pixelConfigFileNames;
     uint16_t currentRow = 0;
 };
 

@@ -123,6 +123,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         list(REMOVE_ITEM BINARIES supervisor.cc)
     endif()
 
+    # add_executable(RD53BminiDAQ RD53BminiDAQ.cpp)
+    # target_compile_options(RD53BminiDAQ PRIVATE -std=c++20)
+    # target_link_libraries(RD53BminiDAQ ${LIBS})
+
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
 
     foreach(sourcefile ${BINARIES})

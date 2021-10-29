@@ -1,0 +1,11 @@
+[RegReader]
+type = "RD53BRegReader"
+args = {}
+
+[DigitalScan]
+type = "RD53BInjectionTool"
+args = { injectionType = "Digital", nInjections = 10, triggerDuration = 2, triggerLatency = 134, hitsPerCol = 21, offset = [0, 0], size = [0, 0] }
+
+[AnalogScan]
+type = "RD53BInjectionTool"
+args = { injectionType = "Analog", nInjections = 10, triggerDuration = 2, triggerLatency = 134, hitsPerCol = 21, offset = [0, 0], size = [0, 0] }

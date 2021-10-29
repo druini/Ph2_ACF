@@ -4,29 +4,17 @@
 #include "../Core.hpp"
 
 namespace BitSerialization {
-
+    
 template <class SourceType, class IntermediateType, class DestinationType>
-struct Compose3Type {
-    static constexpr bool ignores_input_value = ignores_input_value_v<SourceType>;
+struct Compose3 {
+    static constexpr bool ignores_input_value = ignores_input_value<SourceType>;
     using value_type = value_type_t<SourceType>;
-
-    Compose3Type(
-        const SourceType& source_type, 
-        const IntermediateType& intermediate_type,
-        const DestinationType& destination_type
-    ) 
-      : _source_type(source_type)
-      , _intermediate_type(intermediate_type)
-      , _destination_type(destination_type)
-    {}
     
     template <size_t I, class SubError>
     struct Error {
-        static constexpr const char* stage_names[] = {"source", "intermediate", "destination"};
+        static constexpr std::array stage_names = {"source", "intermediate", "destination"};
         
         SubError error;
-
-        Error() {}
 
         Error(SubError&& error) : error(std::move(error)) {}
 
@@ -46,24 +34,31 @@ struct Compose3Type {
         Error<2, parse_error_t<DestinationType>>
     >;
 
-    template <class T, class U=VoidValue>
-    ParseResult<value_type, ParseError> 
-    parse(const BitView<T>& bits, const U& parent={}) const {
+    template <class T, class U=Void>
+    static ParseResult<value_type, ParseError> 
+    parse(const BitView<T>& bits, const U& parent={}) {
         BitVector<uint64_t> new_bits;
+        
+        // std::cout << "Compose3 input: " << bits << std::endl;
 
-        auto destination_result = _destination_type.parse(bits, parent);
+        auto destination_result = DestinationType::parse(bits, parent);
         if (!destination_result)
             return {make_error<2>(std::move(destination_result.error()))};
+        // std::cout << "Compose3 value: " << std::ref(destination_result.value()) << std::endl;
         
-        auto intermediate_result = BitSerialization::serialize(_intermediate_type, 
-            destination_result.value(), 
-            new_bits, 
-            parent
-        );
+        value_type_t<IntermediateType>&& value = value_type_t<IntermediateType>(std::move(destination_result.value()));
+        
+        // std::cout << "Compose3 parse value: " << std::ref(value) << std::endl;
+
+        auto intermediate_result = IntermediateType::serialize(value, new_bits, parent);
+
         if (!intermediate_result)
             return {make_error<1>(std::move(intermediate_result.error()))};
 
-        auto source_result = _source_type.parse(bit_view(new_bits), parent);
+            
+        // std::cout << "Compose3 parse buffer: " << new_bits.view() << std::endl;
+
+        auto source_result = SourceType::parse(bit_view(new_bits), parent);
         if (!source_result)
             return {make_error<0>(std::move(source_result.error()))};
 
@@ -76,47 +71,34 @@ struct Compose3Type {
         Error<2, serialize_error_t<DestinationType>>
     >;
     
-    template <class T, class U=VoidValue>
-    SerializeResult<SerializeError> 
-    serialize(value_type& value, BitVector<T>& bits, const U& parent={}) const {
+    template <class T, class U=Void>
+    static SerializeResult<SerializeError> 
+    serialize(value_type& value, BitVector<T>& bits, const U& parent={}) {
         BitVector<uint64_t> new_bits;
         
         // std::cout << "Compose3 input: " << std::ref(value) << std::endl;
 
-        auto source_result = BitSerialization::serialize(_source_type, value, new_bits, parent);
+        auto source_result = SourceType::serialize(value, new_bits, parent);
         if (!source_result)
             return {make_error<0>(std::move(source_result.error()))};
         
-        // std::cout << "Compose3 buffer: " << new_bits.view() << std::endl;
+        // std::cout << "Compose3 serialize buffer: " << new_bits.view() << std::endl;
 
-        auto intermediate_result = _intermediate_type.parse(bit_view(new_bits), parent);
+        auto intermediate_result = IntermediateType::parse(bit_view(new_bits), parent);
         if (!intermediate_result)
             return {make_error<1>(std::move(intermediate_result.error()))};
             
-        // std::cout << "Compose3 value: " << std::ref(intermediate_result.value()) << std::endl;
+        // std::cout << "Compose3 serialize intermediate value: " << std::ref(intermediate_result.value()) << std::endl;
+        value_type_t<DestinationType>&& new_value = std::move(intermediate_result.value());
 
-        auto destination_result = BitSerialization::serialize(_destination_type, 
-            intermediate_result.value(), 
-            bits, 
-            parent
-        );
+        auto destination_result = DestinationType::serialize(new_value, bits, parent);
         if (!destination_result)
             return {make_error<2>(std::move(destination_result.error()))};
         
         return {};
     }
-
-private:
-    SourceType _source_type;
-    IntermediateType _intermediate_type;
-    DestinationType _destination_type;
 };
 
-template <class... Args>
-auto Compose3(const Args&... args) {
-    return Compose3Type<Args...>(args...);
 }
-
-} // namespace BitSerialization
 
 #endif
