@@ -12,13 +12,7 @@
 
 #include "../tools/Tool.h"
 #include "ITchipTestingInterface.h"
-
-// #ifdef __POWERSUPPLY__
-// #include "DeviceHandler.h"
-// #include "PowerSupply.h"
-// #include "PowerSupplyChannel.h"
-// #include "Keithley.h"
-// #endif
+ì
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53DACScanHistograms.h"
@@ -33,8 +27,7 @@
 class DACScan : public Tool
 {
   public:
-    void run(std::string configFile);
-    // void   draw(const DetectorDataContainer& DataContainer, double* fitStart, double* fitEnd, double** VMUXvolt, double** DACcode, double** DNLcode, double** INLcode, const char* writeVar);
+    void run(std::string configFile);ì
     void draw(bool saveData = true);
 
 #ifdef __USE_ROOT__
@@ -46,14 +39,9 @@ class DACScan : public Tool
     double*  fitEnd   = new double[9]();
     double** VMUXvolt = new double*[9];
     double** DACcode  = new double*[9];
-    double** DNLcode  = new double*[9];
-    double** INLcode  = new double*[9];
 
     std::string readVar[9]  = {"CAL_HI", "CAL_MED", "REF_KRUM_LIN", "Vthreshold_LIN", "VTH_SYNC", "VBL_SYNC", "VREF_KRUM_SYNC", "VTH_HI_DIFF", "VTH_LO_DIFF"};
-    std::string writeVar[9] = {"VCAL_HIGH", "VCAL_MED", "REF_KRUM_LIN", "Vthreshold_LIN", "VTH_SYNC", "VBL_SYNC", "VREF_KRUM_SYNC", "VTH1_DIFF", "VTH2_DIFF"};
-
-    // const char* readVar[9] = {"CAL_HI","CAL_MED","REF_KRUM_LIN","Vthreshold_LIN","VTH_SYNC","VBL_SYNC","VREF_KRUM_SYNC","VTH_HI_DIFF","VTH_LO_DIFF"};
-    // const char* writeVar[9] = {"VCAL_HIGH","VCAL_MED","REF_KRUM_LIN","Vthreshold_LIN","VTH_SYNC","VBL_SYNC","VREF_KRUM_SYNC","VTH1_DIFF","VTH2_DIFF"};
+    std::string writeVar[9] = {"VCAL_HIGH", "VCAL_MED", "REF_KRUM_LIN", "Vthreshold_LIN", "VTH_SYNC", "VBL_SYNC", "VREF_KRUM_SYNC", "VTH1_DIFF", "VTH2_DIFF"};ì
 
     // const char* readVar[28] = {"DACbandgap","CAL_MED","CAL_HI","TEMPSENS_1","RADSENS_1","TEMPSENS_2","RADSENS_2","TEMPSENS_4","RADSENS_4","RADSENS_3","TEMPSENS_3","VOUT_BG","VREF_VDAC",
     //	"REF_KRUM_LIN","Vthreshold_LIN","VTH_SYNC","VBL_SYNC","VREF_KRUM_SYNC","VTH_HI_DIFF","VTH_LO_DIFF","VIN_ana_ShuLDO","VOUT_ana_ShuLDO","VREF_ana_ShuLDO","VOFF_ana_ShuLDO","VIN_dig_ShuLDO",

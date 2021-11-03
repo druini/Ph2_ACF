@@ -27,11 +27,11 @@
 class RingOscillatorHistograms : public DQMHistogramBase
 {
   public:
-    void fillRO(double gloPulse[11], double oscCounts[8][11], double oscFrequency[8][11], double trimOscCounts[8][16], double trimOscFrequency[8][16], double trimVoltage[16]);
+    void fillRO(double gloPulse[128], double oscCounts[34][128], double oscFrequency[34][128], double trimOscCounts[34][16], double trimOscFrequency[34][16], double trimVoltage[16]);
 
   private:
     DetectorDataContainer DetectorData;
-    const char*           oscNames[8] = {"CKND0", "CKND4", "INV0", "INV4", "NAND0", "NAND4", "NOR0", "NOR4"};
+    const char*           oscNames[34] = {"CKND0", "CKND4", "INV0", "INV4", "NAND0", "NAND4", "NOR0", "NOR4"};
 };
 
 #endif

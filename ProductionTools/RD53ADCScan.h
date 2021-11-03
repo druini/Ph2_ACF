@@ -12,13 +12,9 @@
 
 #include "../tools/Tool.h"
 #include "ITchipTestingInterface.h"
-
-// #ifdef __POWERSUPPLY__
-// #include "DeviceHandler.h"
-// #include "PowerSupply.h"
-// #include "PowerSupplyChannel.h"
-// #include "Keithley.h"
-// #endif
+#include "../System/SystemController.h"
+#include "../HWInterface/RD53BInterface.h"
+#include "BackendAlignmentInterface.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53ADCScanHistograms.h"
@@ -45,8 +41,6 @@ class ADCScan : public Tool
     double*  fitEnd   = new double[9]();
     double** VMUXvolt = new double*[9];
     double** ADCcode  = new double*[9];
-    double** DNLcode  = new double*[9];
-    double** INLcode  = new double*[9];
 
     std::string readVar[9]  = {"CAL_HI", "CAL_MED", "REF_KRUM_LIN", "Vthreshold_LIN", "VTH_SYNC", "VBL_SYNC", "VREF_KRUM_SYNC", "VTH_HI_DIFF", "VTH_LO_DIFF"};
     std::string writeVar[9] = {"VCAL_HIGH", "VCAL_MED", "REF_KRUM_LIN", "Vthreshold_LIN", "VTH_SYNC", "VBL_SYNC", "VREF_KRUM_SYNC", "VTH1_DIFF", "VTH2_DIFF"};

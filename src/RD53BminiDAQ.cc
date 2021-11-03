@@ -2,6 +2,11 @@
 #include "../tools/Tool.h"
 #include "../Utils/argvparser.h"
 #include "../HWDescription/RD53B.h"
+#include "RD53BRingOscillator.h"
+#include "RD53ADCScan.h"
+#include "RD53DACScan.h"
+#include "RD53TempSensor.h"
+#include "RD53MuxScan.h"
 
 
 INITIALIZE_EASYLOGGINGPP
@@ -51,6 +56,7 @@ int main(int argc, char** argv) {
     Tool system;
 
     auto configFile = cmd.argument(0);
+    auto whichCalib = cmd.argument(1);
 
     if (reset) {
         system.InitializeSettings(configFile, std::cout);
@@ -78,6 +84,95 @@ int main(int argc, char** argv) {
             LOG(INFO) << ss.str();   
         }
     });
+	
+	
+	if(whichCalib == "ringosc")
+        {
+            // ##################
+            // # Run RingOscillator #
+            // ##################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing RingOscillator @@@" << RESET;
+
+            std::string    fileName("RingOscillator_Test");
+            BRingOscillator ros;
+            ros.Inherit(&system);
+            ros.run();
+            ros.draw();
+        }
+        else if(whichCalib == "adcscan")
+//        if(whichCalib == "adcscan")
+        {
+            // #ifdef __POWERSUPPLY__
+            // ##################
+            // # Run ADCScan #
+            // ##################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing ADCScan @@@" << RESET;
+
+            std::string    fileName("ADCScan_Test");
+            ADCScan     adc;
+            adc.Inherit(&system);
+            adc.run(configFile);
+            adc.draw();
+            // #else
+            //             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
+            //             exit(EXIT_FAILURE);
+            // #endif
+        }
+        else if(whichCalib == "dacscan")
+//        if(whichCalib == "adcscan")
+        {
+            // #ifdef __POWERSUPPLY__
+            // ##################
+            // # Run ADCScan #
+            // ##################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing DACScan @@@" << RESET;
+
+            std::string    fileName("DACScan_Test");
+            DACScan     dac;
+            dac.Inherit(&system);
+            dac.run(configFile);
+            dac.draw();
+            // #else
+            //             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
+            //             exit(EXIT_FAILURE);
+            // #endif
+        }
+        else if(whichCalib == "tempsens")
+        {
+            // #ifdef __POWERSUPPLY__
+            // ##################
+            // # Run TempSensor #
+            // ##################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing TempSensor @@@" << RESET;
+
+            std::string fileName("TempSensor_Test");
+            TempSensor  tsn;
+            tsn.Inherit(&system);
+            tsn.run(configFile);
+            tsn.draw();
+            // #else
+            //             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
+            //             exit(EXIT_FAILURE);
+            // #endif
+        }
+        else if(whichCalib == "muxscan")
+        {
+            // #ifdef __POWERSUPPLY__
+            // ##################
+            // # Run VMUXScan #
+            // ##################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing MUXScan @@@" << RESET;
+
+            std::string fileName("MUXScan_Test");
+            MuxScan  mxs;
+            mxs.Inherit(&system);
+            mxs.run();
+            mxs.draw(0);
+            // #else
+            //             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
+            //             exit(EXIT_FAILURE);
+            // #endif
+        }
 
     system.Destroy();
 

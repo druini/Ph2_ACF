@@ -15,29 +15,6 @@ using namespace Ph2_ITchipTesting;
 
 void DACScan::run(std::string configFile)
 {
-    // #ifdef __POWERSUPPLY__
-
-    //     pugi::xml_document docSettings;
-    //     std::string cPowerSupply = "TestKeithley";
-
-    //     DeviceHandler ps_deviceHandler;
-    //     ps_deviceHandler.readSettings(configFile, docSettings);
-
-    //     PowerSupply* ps = ps_deviceHandler.getPowerSupply(cPowerSupply);
-    //     // PowerSupplyChannel* dPowerSupply = ps->getChannel("Front");
-
-    //     KeithleyChannel* dKeithley2410 = static_cast<KeithleyChannel*>(ps->getChannel("Front"));
-
-    //     //Configure Keithley for voltage measurements
-    //     dKeithley2410->turnOff();
-    //     dKeithley2410->setCurrentMode();
-    //     // dKeithley2410->setCurrentRange(1e-6); // is private..
-    //     dKeithley2410->setParameter("Isrc_range", (float)1e-6);
-    //     dKeithley2410->setCurrent(0.0);
-    //     dKeithley2410->setVoltageCompliance(2.0);
-
-    //     dKeithley2410->turnOn();
-
     ITpowerSupplyChannelInterface dKeithley2410(fPowerSupplyClient, "TestKeithley", "Front");
 
     dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
@@ -51,48 +28,39 @@ void DACScan::run(std::string configFile)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    for(int input = 0; input < 4096; input += 1)
+                    for(int input = 0; input < 4096; input += 10)
                     {
                         LOG(INFO) << BOLDBLUE << "i        = " << BOLDYELLOW << input << " " << RESET;
                         for(int variable = 0; variable < 1; variable++)
                         {
-                            ChipRegMap& pRD53RegMap = static_cast<RD53*>(cChip)->getRegMap();
-                            if(input > pow(2.0, pRD53RegMap[writeVar[variable]].fBitSize) - 1) continue;
+                            if(input > 4095) continue;
                             if(input == 0)
                             {
                                 VMUXvolt[variable] = new double[5000];
                                 DACcode[variable]  = new double[5000];
-                                DNLcode[variable]  = new double[5000];
-                                INLcode[variable]  = new double[5000];
                             }
-                            static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteChipReg(cChip, writeVar[variable], input);
-                            DACcode[variable][input] = input;
+                            fReadoutChipInterface->WriteChipReg(cChip, writeVar[variable], input);
+                            //fReadoutChipInterface->WriteChipReg(cChip, "VCAL_MED", input);
+                            DACcode[variable][int(input/10)] = input;
                             // Change voltage being read
-                            RD53ChipInterface->ReadChipMonitor(cChip, readVar[variable]);
+							fReadoutChipInterface->WriteChipReg(cChip, "MonitorConfig", 0b1000000000111); //Choose VCAL_HIGH MUX entry
+							//fReadoutChipInterface->WriteChipReg(cChip, "MonitorConfig", 0b1000000001000); //Choose VCAL_MED MUX entry
 
-                            VMUXvolt[variable][input] = dKeithley2410.getVoltage(); // dKeithley2410->getOutputVoltage();
-                            LOG(INFO) << BOLDBLUE << "VMUXvolt[input]        = " << BOLDYELLOW << VMUXvolt[variable][input] << " " << RESET;
+                            VMUXvolt[variable][int(input/10)] = dKeithley2410.getVoltage();
+                            LOG(INFO) << BOLDBLUE << "VMUXvolt[int(input/10)]        = " << BOLDYELLOW << VMUXvolt[variable][int(input/10)] << " " << RESET;
 
                             if(input > 1)
                             {
-                                if(((DACcode[variable][input] > 0 && DACcode[variable][input - 1] == 0) || (DACcode[variable][input - 1] > 0 && DACcode[variable][input] == 0)) &&
+                                if(((DACcode[variable][int(input/10)] > 0 && DACcode[variable][int(input/10) - 1] == 0) || (DACcode[variable][int(input/10) - 1] > 0 && DACcode[variable][int(input/10)] == 0)) &&
                                    fitStart[variable] == 0)
                                 {
-                                    fitStart[variable] = VMUXvolt[variable][input - 1];
-                                    // The last two with inverse structure don't have the correct starting point
+                                    fitStart[variable] = VMUXvolt[variable][int(input/10) - 1];
                                 }
-                                if(((DACcode[variable][input] == 4095 && DACcode[variable][input - 1] < 4095) || (DACcode[variable][input] < 4095 && DACcode[variable][input - 1] == 4095)) &&
+                                if(((DACcode[variable][int(input/10)] == 4095 && DACcode[variable][int(input/10) - 1] < 4095) || (DACcode[variable][int(input/10)] < 4095 && DACcode[variable][int(input/10) - 1] == 4095)) &&
                                    fitEnd[variable] == 0)
-                                    fitEnd[variable] = VMUXvolt[variable][input];
-                                if(fitEnd[variable] == 0 && input == pow(2.0, pRD53RegMap[writeVar[variable]].fBitSize) - 1 - 1) fitEnd[variable] = VMUXvolt[variable][input];
+                                    fitEnd[variable] = VMUXvolt[variable][int(input/10)];
+                                if(fitEnd[variable] == 0 && input == 4094) fitEnd[variable] = VMUXvolt[variable][int(input/10)];
                             }
-
-                            if(input > 0) { DNLcode[variable][input] = DACcode[variable][input] - DACcode[variable][input - 1] - 1; }
-                            else
-                            {
-                                DNLcode[variable][0] = 0;
-                            }
-                            INLcode[variable][input] = DACcode[variable][input] - DACcode[variable][0] - input;
                         }
                     }
                 }
@@ -102,6 +70,6 @@ void DACScan::run(std::string configFile)
 void DACScan::draw(bool saveData)
 {
 #ifdef __USE_ROOT__
-    histos->fillDAC(*fDetectorContainer, fitStart, fitEnd, VMUXvolt, DACcode, DNLcode, INLcode, writeVar);
+    histos->fillDAC(*fDetectorContainer, fitStart, fitEnd, VMUXvolt, DACcode, writeVar);
 #endif
 }

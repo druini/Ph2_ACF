@@ -16,7 +16,7 @@
 #include "../tools/RD53PixelAlive.h"
 
 #include "../ProductionTools/RD53ADCHistogram.h"
-#include "../ProductionTools/RD53RingOscillator.h"
+//#include "../ProductionTools/RD53RingOscillator.h"
 
 // #ifdef __POWERSUPPLY__
 #include "../ProductionTools/RD53ADCPowerSupply.h"
@@ -199,19 +199,19 @@ int main(int argc, char** argv)
             adch.run();
             adch.draw();
         }
-        else if(whichCalib == "ringosc")
-        {
-            // ##################
-            // # Run RingOscillator #
-            // ##################
-            LOG(INFO) << BOLDMAGENTA << "@@@ Performing RingOscillator @@@" << RESET;
-
-            std::string    fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_RingOscillator");
-            RingOscillator ros;
-            ros.Inherit(&mySysCntr);
-            ros.run();
-            ros.draw();
-        }
+//        else if(whichCalib == "ringosc")
+//        {
+//            // ##################
+//            // # Run RingOscillator #
+//            // ##################
+//            LOG(INFO) << BOLDMAGENTA << "@@@ Performing RingOscillator @@@" << RESET;
+//
+//            std::string    fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_RingOscillator");
+//            RingOscillator ros;
+//            ros.Inherit(&mySysCntr);
+//            ros.run();
+//            ros.draw();
+//        }
         else if(whichCalib == "adcps")
         {
             // #ifdef __POWERSUPPLY__
