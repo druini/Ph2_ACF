@@ -210,11 +210,18 @@ struct FWEvent : public Aligned<
         NamedField<"error_code", Uint<4>>,
         NamedField<"hybrid_id", Uint<8>>,
         NamedField<"chip_id", Uint<4>>,
-        NamedField<"l1aize", Uint<12>>,
+        NamedField<"l1a_size", Uint<12>>,
         NamedField<"padding", Uint<16>>,
         NamedField<"chip_type", Uint<4>>,
         NamedField<"frame_delay", Uint<12>>,
-        NamedField<"chip_data", EventStream<Cfg>>
+        NamedField<"chip_data", 
+            // EventStream<Cfg>
+            Compose3<
+                EventStream<Cfg>,
+                Many<Uint<64>>,
+                List<Uint<64>, [] (const auto& self) { return 2 * self["l1a_size"_s] - 1; }>
+            >
+        >
         // ,
         // NamedField<"print", 
         //     Property<bool, [] (const auto& self) {
@@ -299,7 +306,8 @@ BoardEventsMap decode_events(const std::vector<uint32_t>& data) {
                     event["hits"_s],
                     fwEventContainer["bx_counter"_s],
                     event["trigger_tag"_s],
-                    event["trigger_pos"_s]
+                    event["trigger_pos"_s],
+                    fwEventContainer["dummy_size"_s]
                 });
             }
         }

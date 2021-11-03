@@ -8,6 +8,16 @@ sudo yum install devtoolset-10
 
 Compatible firmware images can be found here: https://cernbox.cern.ch/index.php/s/MSHAo1FdMaml0m8
 
+## Registers
+
+In addition to regular registers a set of virtual registers have been defined.
+A virtual register is composed of one or more subranges of one or more registers.
+All regular registers are also virtual registers.
+Regular and virtual register names have been taken from the "Register Name" and "Fields" columns in: https://docs.google.com/spreadsheets/d/1Gpl-JAMNmP0ptnrrdEOHit5j4pc7nAd4J_Z8solMxo8/edit#gid=1394811518
+
+A python script has been developed to generate the c++ source files containing the register definitions (RD53BATLASRegisters.* and RD53BCMSRegisters.*) from the .csv files exported from google docs: https://gitlab.cern.ch/alpapado/rd53b-register-table-code-generator
+
+Users can use virtual register names in the XML config file.
 
 ## Tools
 

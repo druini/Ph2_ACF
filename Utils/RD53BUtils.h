@@ -38,7 +38,7 @@ namespace RD53BUtils {
     };
 
     struct ChipLocation {
-        // ChipLocation(Chip* pChip) : board_id(pChip->getBoardId()), hybrid_id(pChip->getHybridId()), chip_id(pChip->getId()) {}
+        explicit ChipLocation(Chip* pChip) : board_id(pChip->getBeBoardId()), hybrid_id(pChip->getHybridId()), chip_id(pChip->getId()) {}
 
         // Chip* getChip(SystemController& system) {
         //     return system.fDetectorContainer->at(board_id)->at(0)->at(hybrid_id)->at(chip_id);

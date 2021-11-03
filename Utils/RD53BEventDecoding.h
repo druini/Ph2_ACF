@@ -33,6 +33,7 @@ struct RD53BEvent {
     uint32_t BCID;
     uint8_t triggerTag;
     uint8_t triggerPos;
+    uint16_t dummySize;
 };
 
 using BoardEventsMap = std::map<std::pair<uint8_t, uint8_t>, std::vector<RD53BEvent>>;

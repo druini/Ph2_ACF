@@ -6,6 +6,8 @@
 #include "../tools/RD53BTool.h"
 #include "../tools/RD53BInjectionTool.h"
 #include "../tools/RD53BRegReader.h"
+#include "../tools/RD53BThresholdScan.h"
+#include "../tools/RD53BInjectionMaskGenerator.h"
 // #include "../tools/RD53BPixelAlive.h"
 
 #include <experimental/type_traits>
@@ -15,12 +17,15 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace RD53BTools;
 
-#define TOOL(x) std::make_pair(#x##_s, x<Flavor>())
+#define TOOL(x) std::make_pair(#x##_s, x<Flavor>{})
 
 template <class Flavor>
-using Tools = ToolManager<decltype(named_tuple(
+using Tools = ToolManager<decltype(make_named_tuple(
     TOOL(RD53BInjectionTool),
-    TOOL(RD53BRegReader)
+    TOOL(RD53BRegReader),
+    TOOL(RD53BThresholdScan),
+    TOOL(RD53BInjectionMaskGenerator)
+    
     // ,TOOL(RD53BPixelAlive)
 ))>;
 

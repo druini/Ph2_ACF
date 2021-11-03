@@ -94,6 +94,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     RD53FWInterface::ResetSlowCmdBlk();
     RD53FWInterface::ResetReadoutBlk();
 
+    WriteReg("user.ctrl_regs.Aurora_block.event_stream_timeout", 0xFFFF);
+
     // ###############################################
     // # FW register initialization from config file #
     // ###############################################

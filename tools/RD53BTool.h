@@ -14,6 +14,25 @@
 #include <../Utils/toml.hpp>
 
 
+
+namespace toml
+{
+
+template<class... Fields>
+struct from<NamedTuple::NamedTuple<Fields...>>
+{
+    static NamedTuple::NamedTuple<Fields...> from_toml(const value& v)
+    {
+        NamedTuple::NamedTuple<Fields...> t;
+        t.for_each([&] (const auto& name, auto& value) {
+            value = find<std::decay_t<decltype(value)>>(v, name.value);    
+        });
+        return t;
+    }
+};
+
+} // toml
+
 namespace RD53BTools {
 
 using namespace NamedTuple;
@@ -80,6 +99,7 @@ struct ToolManager : public ToolManagerBase {
 
     template <class ToolType, class F>
     void run_tool(bool doRun, const std::string& name, F&& f) const {
+        std::cout << name << ": " << doRun << std::endl;
         if (doRun)
             std::forward<F>(f)(ToolType(this, name, _config.at(name).at("args")));
     }
@@ -91,6 +111,7 @@ struct ToolManager : public ToolManagerBase {
     void with_tool(const std::string& name, F&& f, std::index_sequence<Is...>) const {
         std::string typeName = toml::get<std::string>(_config.at(name).at("type"));
         std::cout << "typeName: " << typeName << std::endl;
+        std::cout << "nTools: " << sizeof...(Is) << std::endl;
         int unused[] = {0, (run_tool<typename Tools::field_type<Is>>(Tools::names[Is] == typeName, name, std::forward<F>(f)), 0)...};
         (void)unused;
     }
@@ -102,11 +123,14 @@ struct ToolManager : public ToolManagerBase {
 };
 
 
+
 struct RD53BToolBase {};
 
 template <class Derived>
 struct RD53BTool : public RD53BToolBase {
     using parameter_tuple = std::decay_t<decltype(ToolParameters<Derived>)>;
+
+    using ChipResult = void;
 
     RD53BTool() {}
 
@@ -121,7 +145,7 @@ struct RD53BTool : public RD53BToolBase {
       , _toolManager(toolManager)
       , _parameter_values(ToolParameters<Derived>) 
     {
-        initialize(args, _parameter_values.values(), std::make_index_sequence<parameter_tuple::size>{});
+        initialize(_parameter_values, args);
         static_cast<Derived*>(this)->init();
     }
 
@@ -144,11 +168,26 @@ protected:
     }
 
 private:
-    template <class T, std::enable_if_t<!std::is_base_of<RD53BToolBase, T>::value, int> = 0>
-    T convert(const char* argName, const toml::value& argValue) const { return toml::get<T>(argValue); }
+    template <class T, std::enable_if_t<std::is_base_of<NamedTupleBase, T>::value, int> = 0>
+    void convert(T& value, const char* argName, const toml::value& argValue) const { 
+        initialize(value, argValue);
+    }
+
+    // template <class T, std::enable_if_t<std::is_base_of<NamedTupleBase, T>::value, int> = 0>
+    // void convert(std::vector<T>& value, const char* argName, const toml::value& argValue) const { 
+    //     value.clear();
+    //     for (const auto& value : argValue.as_array())
+    //         value.push
+    //     initialize(value, argValue);
+    // }
+
+    template <class T, std::enable_if_t<!std::is_base_of<RD53BToolBase, T>::value && !std::is_base_of<NamedTupleBase, T>::value, int> = 0>
+    void convert(T& value, const char* argName, const toml::value& argValue) const { 
+        value = toml::get<T>(argValue);
+    }
 
     template <class T, std::enable_if_t<std::is_base_of<RD53BToolBase, T>::value, int> = 0>
-    T convert(const char* argName, const toml::value& argValue) const { 
+    void convert(T& value, const char* argName, const toml::value& argValue) const { 
         std::string toolName = toml::get<std::string>(argValue);
         if (typeid(T) != _toolManager->getToolType(toolName)) {
             std::stringstream ss;
@@ -158,13 +197,15 @@ private:
                 << ", got " << _toolManager->getToolTypeName(toolName) << ").";
             throw std::runtime_error(ss.str());
         }
-        return {_toolManager, toolName, _toolManager->getToolArgs(toolName)}; 
+        value = T{_toolManager, toolName, _toolManager->getToolArgs(toolName)}; 
     }
     
-    template <size_t... Is, class... Ts>
-    void initialize(const toml::value& args, std::tuple<Ts...>& values, std::index_sequence<Is...>) {
-        int unused[] = {0, (std::get<Is>(values) = args.contains(parameter_tuple::names[Is]) ? convert<Ts>(parameter_tuple::names[Is], args.at(parameter_tuple::names[Is])) : std::get<Is>(values), 0)...};
-        (void)unused;
+    template <class... Ts, template <class...> class Inner>
+    void initialize(Inner<Ts...>& tuple, const toml::value& args) {
+        tuple.for_each([&] (const auto& name, auto& value) {
+            if (args.contains(name.value))
+                convert(value, name.value, args.at(name.value));
+        });
     }
 
     std::string _name = "Untitled";
@@ -172,17 +213,11 @@ private:
     parameter_tuple _parameter_values;
 };
 
+template <class Tool>
+using tool_result_t = decltype(std::declval<Tool>().run(std::declval<SystemController&>()));
+
 template <class T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
-    if (vec.size() == 0)
-        return os << "[]";
-    os << "[ ";
-    for (int i = 0; i < (int)vec.size() - 1; ++i) {
-        os << vec[i] << ", ";
-    }
-    os << vec.back() << " ]";
-    return os;
-}
+using ChipDataMap = std::map<RD53BUtils::ChipLocation, T>;
 
 }
 

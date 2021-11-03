@@ -23,12 +23,6 @@ namespace RD53BFlavor {
 }
 
 template <class Flavor>
-const decltype(Flavor::Reg::GetRegisters()) RD53B<Flavor>::Registers = Flavor::Reg::GetRegisters();
-
-template <class Flavor>
-const decltype(Flavor::Reg::GetRegisterIndexMap()) RD53B<Flavor>::RegisterIndexMap = Flavor::Reg::GetRegisterIndexMap();
-
-template <class Flavor>
 const decltype(RD53BConstants::GetGlobalPulseRoutes()) RD53B<Flavor>::GlobalPulseRoutes = RD53BConstants::GetGlobalPulseRoutes();
 
 template <class Flavor>
@@ -51,10 +45,6 @@ RD53B<Flavor>::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t p
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
     configFileName    = fileName;
     setFrontEndType(Flavor::feType);
-
-    for (size_t i = 0; i < Registers.size(); ++i) {
-        registerValues[i] = Registers[i].defaultValue;
-    }
     
     RD53B::loadfRegMap(configFileName);
 
@@ -92,7 +82,7 @@ void RD53B<Flavor>::loadfRegMap(const std::string& fileName)
 
         if (data.contains("Registers")) {
             for (const auto& key_value : data.at("Registers").as_table()) {
-                setRegValue(key_value.first, key_value.second.as_integer());
+                configureRegister(key_value.first, key_value.second.as_integer());
             }
         }
 
@@ -119,9 +109,9 @@ void RD53B<Flavor>::saveRegMap(const std::string& fName2Add)
     std::ofstream file(fileName);
     
     toml::table register_table;
-    for (size_t i = 0; i < Registers.size(); ++i) {
-        if (getRegValue(i) != Registers[i].defaultValue) {
-            register_table.insert({Registers[i].name, getRegValue(i)});
+    for (size_t i = 0; i < Regs.size(); ++i) {
+        if (Regs[i].type == RD53BConstants::RegType::ReadWrite && registerValues[i]) {
+            register_table.insert({Regs[i].name, *registerValues[i]});
         }
     }
     

@@ -8,4 +8,15 @@ args = { injectionType = "Digital", nInjections = 10, triggerDuration = 2, trigg
 
 [AnalogScan]
 type = "RD53BInjectionTool"
-args = { injectionType = "Analog", nInjections = 10, triggerDuration = 2, triggerLatency = 134, hitsPerCol = 21, offset = [0, 0], size = [0, 0] }
+args = { injectionType = "Analog", nInjections = 10, triggerDuration = 2, triggerLatency = 134, hitsPerCol = 8, offset = [0, 0], size = [0, 0], injectionPeriod = 200 }
+
+
+[ThresholdScanInjection]
+type = "RD53BInjectionTool"
+args = { injectionType = "Analog", nInjections = 100, triggerDuration = 2, triggerLatency = 134, hitsPerCol = 21 }
+
+[ThresholdScan]
+type = "RD53BThresholdScan"
+args = { injectionTool = "ThresholdScanInjection", vcalMed = 300, vcalHighRange = [600, 2100], vcalHighStep = 50 }
+
+

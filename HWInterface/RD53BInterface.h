@@ -19,6 +19,8 @@
 #include "../HWDescription/RD53BCommands.h"
 #include "../Utils/RD53BUtils.h"
 
+#include "../Utils/xtensor/xview.hpp"
+
 // #############
 // # CONSTANTS #
 // #############
@@ -37,7 +39,8 @@ class RD53BInterface : public RD53InterfaceBase
     using RD53B = Ph2_HwDescription::RD53B<Flavor>;
 
     using Reg = typename RD53B::Reg;
-    using Register = typename RD53B::Register;
+    using Register = Ph2_HwDescription::RD53BConstants::Register;
+    using RegisterField = Ph2_HwDescription::RD53BConstants::RegisterField;
 
 public:
     RD53BInterface(const BeBoardFWMap& pBoardMap);
@@ -55,32 +58,51 @@ public:
     bool     MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerifLoop = true) override;
     bool     maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override;
 
+    boost::optional<uint16_t> ReadChipReg(RD53B* chip, const Register& reg);
+    uint16_t ReadReg(Chip* chip, const Register& reg, bool update = false);
+    size_t ReadReg(Chip* chip, const std::string& regName, bool update = false);
+
     void WriteReg(Chip* chip, const Register& reg, uint16_t value);
-    void WriteReg(const Hybrid* chip, const Register& reg, uint16_t value);
-    void WriteReg(const BeBoard* board, const Register& reg, uint16_t value);
+    void WriteRegField(Chip* chip, const RegisterField& field, uint16_t value, bool update = false);
+    void WriteReg(Chip* chip, const std::string& regName, size_t value, bool update = false);
+    void WriteReg(Hybrid* chip, const Register& reg, uint16_t value);
+    void WriteReg(Hybrid* chip, const std::string& regName, size_t value, bool update = false);
+    
 
-    template <class Device>
-    void WriteRegs(Device* device, std::vector<std::pair<const Register&, uint16_t>> regValuePairs) {
-        BitVector<uint16_t> bits;
+private:
 
-        for (const auto& regValuePair : regValuePairs)
-            SerializeCommand<RD53BCmd::WrReg>(device, bits, regValuePair.first.address, regValuePair.second);
+    // template <class Device, class T>
+    // void WriteReg(const Device* board, const T& reg, uint16_t value) {
+    //     setup(pBoard);
+    //     for (const auto* opticalGroup : *pBoard) {
+    //         for (const auto* hybrid : *opticalGroup) {
+    //             WriteReg(hybrid, reg, data);
+    //         }
+    //     }
+    // }
 
-        SendCommandStream(device, bits);
-    }
+    // template <class Device>
+    // void WriteRegs(Device* device, std::vector<std::pair<const Register&, uint16_t>> regValuePairs) {
+    //     BitVector<uint16_t> bits;
 
-    void WriteRegField(RD53B* chip, const Register& reg, size_t field, uint16_t value) {
-        ReadChipReg(chip, reg.name);
-        uint16_t newValue = chip->setRegField(reg, field, value);
-        WriteReg(chip, reg, newValue);
-    }
+    //     for (const auto& regValuePair : regValuePairs)
+    //         SerializeCommand<RD53BCmd::WrReg>(device, bits, regValuePair.first.address, regValuePair.second);
 
-    template <class Device, typename std::enable_if_t<!std::is_base_of<Chip, Device>::value, int> = 0>
-    void WriteRegField(Device* device, const Register& reg, size_t field, uint16_t value) {
-        RD53BUtils::for_each_device<Chip>(device, [&] (Chip* chip) {
-            WriteRegField(static_cast<RD53B*>(chip), reg, field, value);
-        });
-    }
+    //     SendCommandStream(device, bits);
+    // }
+
+    // void WriteRegField(RD53B* chip, const Register& reg, size_t field, uint16_t value) {
+    //     ReadChipReg(chip, reg.name);
+    //     uint16_t newValue = chip->setRegField(reg, field, value);
+    //     WriteReg(chip, reg, newValue);
+    // }
+
+    // template <class Device, typename std::enable_if_t<!std::is_base_of<Chip, Device>::value, int> = 0>
+    // void WriteRegField(Device* device, const Register& reg, size_t field, uint16_t value) {
+    //     RD53BUtils::for_each_device<Chip>(device, [&] (Chip* chip) {
+    //         WriteRegField(static_cast<RD53B*>(chip), reg, field, value);
+    //     });
+    // }
 
     void ChipErrorReport(ReadoutChip* pChip);
 
@@ -103,6 +125,7 @@ public:
         setup(device);
 
         for (uint16_t col_pair = 0; col_pair < RD53B::nCols / 2; ++col_pair) {
+            const uint16_t col = col_pair * 2;
             BitVector<uint16_t> cmd_stream;
 
             SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, Reg::REGION_COL.address, col_pair);
@@ -111,20 +134,13 @@ public:
                 SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, Reg::REGION_ROW.address, uint16_t{0});
                 SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, Reg::PIX_MODE.address, uint16_t{1}); // mask + auto-row
                 
-                // xt::fixed_tensor<uint16_t, xt::shape<RD53B::nRows, 1>> mask_data(0);
-                // mask_data |= cfg.enable.col(col);
-                // mask_data |= cfg.enableInjections.col(col) << 1;
-                // mask_data |= cfg.enableHitOr.col(col) << 2;
-                // mask_data <<= 5;
-                // mask_data |= cfg.enable.col(col + 1);
-                // mask_data |= cfg.enableInjections.col(col + 1) << 1;
-                // mask_data |= cfg.enableHitOr.col(col + 1) << 2;
-                auto mask_data = ExtractColPairMaskConfig(cfg, col_pair);
-
-                // LOG(INFO) << col_pair << RESET;
-                // for (auto word : mask_data) {
-                //     LOG (INFO) << std::bitset<10>(word) << RESET;
-                // }
+                xt::xarray<uint16_t> mask_data = xt::col(cfg.enable, col + 1);
+                mask_data |= xt::left_shift(xt::col(cfg.enableInjections, col + 1), 1);
+                mask_data |= xt::left_shift(xt::col(cfg.enableHitOr, col + 1),  2);
+                mask_data = xt::left_shift(mask_data, 5);
+                mask_data |= xt::col(cfg.enable, col);
+                mask_data |= xt::left_shift(xt::col(cfg.enableInjections, col), 1);
+                mask_data |= xt::left_shift(xt::col(cfg.enableHitOr, col), 2);
 
                 SerializeCommand<RD53BCmd::WrRegLong>(device, cmd_stream, std::vector<uint16_t>(mask_data.begin(), mask_data.end()));
             }
@@ -133,18 +149,14 @@ public:
                 SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, Reg::REGION_ROW.address, uint16_t{0});
                 SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, Reg::PIX_MODE.address, uint16_t{3}); // tdac + auto-row
                 
-                // Matrix<uint16_t, RD53B::nRows, 1> tdac_data(0);
-                // tdac_data |= cfg.tdac.col(col);
-                // tdac_data |= cfg.tdacSign.col(col) << 4;
-                // tdac_data <<= 5;
-                // tdac_data |= cfg.tdac.col(col + 1);
-                // tdac_data |= cfg.tdacSign.col(col + 1) << 4;
-                auto tdac_data = ExtractColPairTdacConfig(cfg, col_pair);
+                xt::xarray<uint16_t> tdac_data = xt::col(cfg.tdac, col + 1) & 0xF;
+                tdac_data |= xt::left_shift(xt::col(cfg.tdacSign, col + 1), 4);
+                tdac_data = xt::left_shift(tdac_data, 5);
+                tdac_data |= xt::col(cfg.tdac, col) & 0xF;
+                tdac_data |= xt::left_shift(xt::col(cfg.tdacSign, col), 4);
 
                 SerializeCommand<RD53BCmd::WrRegLong>(device, cmd_stream, std::vector<uint16_t>(tdac_data.begin(), tdac_data.end()));
             }
-
-            // std::cout << "cmd_stream length: " << cmd_stream.size() << std::endl;
 
             SendCommandStream(device, cmd_stream);
         }
