@@ -94,6 +94,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     RD53FWInterface::ResetSlowCmdBlk();
     RD53FWInterface::ResetReadoutBlk();
 
+    WriteReg("user.ctrl_regs.Aurora_block.event_stream_timeout", 0xFFFF);
+
     // ###############################################
     // # FW register initialization from config file #
     // ###############################################
@@ -672,6 +674,7 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     if((this->fSaveToFile == true) && (pData.size() != 0)) this->fFileHandler->setData(pData);
     return pData.size();
 }
+
 
 void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {

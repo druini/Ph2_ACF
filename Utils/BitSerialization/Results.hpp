@@ -3,13 +3,13 @@
 
 #include "Errors.hpp"
 
-#include <boost/optional.hpp>
-
-
 namespace BitSerialization {
+    
+struct ResultBase {};
 
 template <class T, class Error=VoidError>
-class ParseResult {
+class ParseResult : public ResultBase {
+    static_assert(!std::is_base_of_v<ResultBase, T>);
 
     struct _Data {
         T value;
@@ -35,20 +35,20 @@ public:
     {}
 
     operator bool() const {
-        return _storage.type() != typeid(Error);
+        return !std::holds_alternative<Error>(_storage);
     }
 
-    T& value() { return boost::get<_Data>(_storage).value; }
-    const T& value() const { return boost::get<_Data>(_storage).value; }
+    T& value() { return std::get<_Data>(_storage).value; }
+    const T& value() const { return std::get<_Data>(_storage).value; }
 
-    size_t& size() { return boost::get<_Data>(_storage).size; }
-    const size_t& size() const { return boost::get<_Data>(_storage).size; }
+    size_t& size() { return std::get<_Data>(_storage).size; }
+    const size_t& size() const { return std::get<_Data>(_storage).size; }
 
-    Error& error() { return boost::get<Error>(_storage); }
-    const Error& error() const { return boost::get<Error>(_storage); }
+    Error& error() { return std::get<Error>(_storage); }
+    const Error& error() const { return std::get<Error>(_storage); }
 
 private:
-    boost::variant<_Data, Error> _storage;
+    std::variant<_Data, Error> _storage;
 };
 
 
@@ -67,13 +67,14 @@ struct SerializeResult {
         return !bool(_storage);
     }
 
-    Error& error() { return _storage.get(); }
-    const Error& error() const { return _storage.get(); }
+    Error& error() { return _storage.value(); }
+    const Error& error() const { return _storage.value(); }
 
 private:
-    boost::optional<Error> _storage;
+    std::optional<Error> _storage;
 };
 
-} // namespace BitSerialization
+
+}
 
 #endif

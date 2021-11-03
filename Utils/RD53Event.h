@@ -19,11 +19,6 @@
 #include <condition_variable>
 #include <omp.h>
 
-#ifdef __USE_ROOT__
-#include "TFile.h"
-#include "TTree.h"
-#endif
-
 // #############
 // # CONSTANTS #
 // #############

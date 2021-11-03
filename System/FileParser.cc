@@ -1145,8 +1145,9 @@ void FileParser::parseGlobalRD53BSettings(pugi::xml_node pHybridNode, Hybrid* pH
             uint16_t    regvalue = convertAnyInt(attr.value());
             os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
 
-            for(auto theChip: *pHybrid) // static_cast<ReadoutChip*>(theChip)->setReg(regname, regvalue, true);
-                static_cast<RD53B<Flavor>*>(theChip)->setRegValue(regname, regvalue);
+            for(auto theChip: *pHybrid) {
+                static_cast<RD53B<Flavor>*>(theChip)->configureRegister(regname, regvalue);
+            }
         }
     }
 }
@@ -1180,7 +1181,7 @@ void FileParser::parseRD53BSettings(pugi::xml_node theChipNode, ReadoutChip* the
         for(const pugi::xml_attribute& attr: cLocalChipSettings.attributes())
         {
             uint16_t    regvalue = convertAnyInt(attr.value());
-            static_cast<RD53B<Flavor>*>(theChip)->setRegValue(attr.name(), regvalue);
+            static_cast<RD53B<Flavor>*>(theChip)->configureRegister(attr.name(), regvalue);
             // theChip->setReg(attr.name(), regvalue, true);
             os << GREEN << "|\t|\t|\t|----" << attr.name() << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
         }

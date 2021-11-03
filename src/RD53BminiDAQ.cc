@@ -1,5 +1,5 @@
 #include "../System/SystemController.h"
-#include "../tools/Tool.h"
+// #include "../tools/Tool.h"
 #include "../Utils/argvparser.h"
 #include "../HWDescription/RD53B.h"
 #include "RD53BRingOscillator.h"
@@ -8,41 +8,81 @@
 #include "RD53TempSensor.h"
 #include "RD53MuxScan.h"
 
+#include "../tools/RD53BTool.h"
+#include "../tools/RD53BInjectionTool.h"
+#include "../tools/RD53BRegReader.h"
+#include "../tools/RD53BThresholdScan.h"
+#include "../tools/RD53BInjectionMaskGenerator.h"
+// #include "../tools/RD53BPixelAlive.h"
 
-INITIALIZE_EASYLOGGINGPP
+#include <experimental/type_traits>
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
+using namespace RD53BTools;
+
+#define TOOL(x) std::make_pair(#x##_s, x<Flavor>{})
+
+template <class Flavor>
+using Tools = ToolManager<decltype(make_named_tuple(
+    TOOL(RD53BInjectionTool),
+    TOOL(RD53BRegReader),
+    TOOL(RD53BThresholdScan),
+    TOOL(RD53BInjectionMaskGenerator)
+    
+    // ,TOOL(RD53BPixelAlive)
+))>;
+
+// template <class T>
+// using tool_result_t = decltype(std::declval<T>().run(std::declval<SystemController&>()));
+
+template <class T>
+using has_draw = decltype(std::declval<T>().draw(std::declval<T>().run(std::declval<SystemController&>())));
 
 
-struct DeviceChain {
-    BeBoard* board;
-    OpticalGroup* opticalGroup;
-    Hybrid* hybrid;
-    Chip* chip;
+struct ToolRunner {
+    const std::string& toolName;
+    SystemController& system;
+
+    template <class Tool, typename std::enable_if_t<std::experimental::is_detected_v<has_draw, Tool>, int> = 0>
+    void operator()(const Tool& tool) {
+        std::cout << "toolName: " << toolName << std::endl;
+        auto result = tool.run(system);
+        tool.draw(result);
+    }
+
+    template <class Tool, typename std::enable_if_t<!std::experimental::is_detected_v<has_draw, Tool>, int> = 0>
+    void operator()(const Tool& tool) {
+        std::cout << "toolName: " << toolName << std::endl;
+        tool.run(system);
+    }
 };
 
-template <class F>
-void for_each_chip(SystemController* sys, F&& f) {
-    for (auto* board : *sys->fDetectorContainer) {
-        for (auto* opticalGroup : *board) {
-            for (auto* hybrid : *opticalGroup) {
-                for (auto* chip : *hybrid) {
-                    std::forward<F>(f)(DeviceChain{board, opticalGroup, hybrid, chip});
-                }
-            }
-        }
-    }
+
+template <class Flavor>
+void run(SystemController& system, const toml::value& toolConfig, const std::vector<std::string>& toolNames) {
+    auto tools = Tools<Flavor>(toolConfig);
+
+    for (const auto& toolName : toolNames)
+        tools.with_tool(toolName, ToolRunner{toolName, system});
 }
 
+INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char** argv) {
     CommandLineProcessing::ArgvParser cmd;
 
     cmd.setIntroductoryDescription("RD53B test");
+
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
+
+    cmd.defineOption("file", "Hardware description file (.xml)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("file", "f");
+
+    cmd.defineOption("tools", "Tools configuration file (.toml)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("tools", "t");
 
     int result = cmd.parse(argc, argv);
     
@@ -53,7 +93,7 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
     
-    Tool system;
+    SystemController system;
 
     auto configFile = cmd.argument(0);
     auto whichCalib = cmd.argument(1);

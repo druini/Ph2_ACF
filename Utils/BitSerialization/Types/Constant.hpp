@@ -4,28 +4,25 @@
 #include "../Core.hpp"
 
 namespace BitSerialization {
-
+    
 template <class Type, value_type_t<Type> Value>
-struct ConstantType {
+struct Constant {
     static constexpr bool ignores_input_value = true;
-
-    static constexpr const char name[] = "Constant";
 
     using value_type = value_type_t<Type>;
 
-    ConstantType(const Type& type) : _type(type) {}
-
-    using _ValueError = ValueError<name, value_type>;
+    using _ValueError = ValueError<"Constant", value_type>;
 
     using ParseError = ErrorVariant<
         _ValueError, 
         parse_error_t<Type>
     >;
 
-    template <class T, class U=VoidValue>
-    ParseResult<value_type, ParseError> parse(const BitView<T>& bits, const U& parent={}) const
+    template <class T, class U=Void>
+    static ParseResult<value_type, ParseError> 
+    parse(const BitView<T>& bits, const U& parent={})
     {
-        auto result = _type.parse(bits, parent);
+        auto result = Type::parse(bits, parent);
         if (!result)
             return {std::move(result.error())};
         if (result.value() != Value)
@@ -33,26 +30,14 @@ struct ConstantType {
         return {std::move(result.value()), result.size()};
     }
 
-    template <class T, class U=VoidValue>
-    auto serialize(const value_type&, BitVector<T>& bits, const U& parent={}) const
+    template <class T, class U=Void>
+    static auto serialize(const value_type&, BitVector<T>& bits, const U& parent={})
     {
         value_type value = Value;
-        return _type.serialize(value, bits, parent);
+        return Type::serialize(value, bits, parent);
     }
-
-private:
-    Type _type;
 };
 
-
-template <class Type, value_type_t<Type> Value>
-constexpr const char ConstantType<Type, Value>::name[];
-
-template <size_t Value, class Type>
-auto Constant(const Type& type) {
-    return ConstantType<Type, Value>(type);
 }
-
-} // namespace BitSerialization
 
 #endif

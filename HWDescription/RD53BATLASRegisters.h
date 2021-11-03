@@ -1,0 +1,286 @@
+// Automatically generated using: https://gitlab.cern.ch/alpapado/rd53b-register-table-code-generator
+
+#ifndef ATLASREGISTERS_H
+#define ATLASREGISTERS_H
+
+#include "RD53BRegister.h"
+
+#include <vector>
+#include <array>
+#include <cstdint>
+#include <cstddef>
+#include <string>
+#include <unordered_map>
+
+namespace Ph2_HwDescription {
+
+namespace RD53BConstants {
+
+struct ATLASRegisters {
+    static const std::array<Register, 256> Regs;
+
+    static const std::unordered_map<std::string, std::vector<RegisterField>> vRegs;
+
+    static constexpr const Register& PIX_PORTAL = Regs[0];
+    static constexpr const Register& REGION_COL = Regs[1];
+    static constexpr const Register& REGION_ROW = Regs[2];
+    static constexpr const Register& PIX_MODE = Regs[3];
+    static constexpr const Register& PIX_DEFAULT_CONFIG = Regs[4];
+    static constexpr const Register& PIX_DEFAULT_CONFIG_B = Regs[5];
+    static constexpr const Register& GCR_DEFAULT_CONFIG = Regs[6];
+    static constexpr const Register& GCR_DEFAULT_CONFIG_B = Regs[7];
+    static constexpr const Register& DAC_PREAMP_L_DIFF = Regs[8];
+    static constexpr const Register& DAC_PREAMP_R_DIFF = Regs[9];
+    static constexpr const Register& DAC_PREAMP_TL_DIFF = Regs[10];
+    static constexpr const Register& DAC_PREAMP_TR_DIFF = Regs[11];
+    static constexpr const Register& DAC_PREAMP_T_DIFF = Regs[12];
+    static constexpr const Register& DAC_PREAMP_M_DIFF = Regs[13];
+    static constexpr const Register& DAC_PRECOMP_DIFF = Regs[14];
+    static constexpr const Register& DAC_COMP_DIFF = Regs[15];
+    static constexpr const Register& DAC_VFF_DIFF = Regs[16];
+    static constexpr const Register& DAC_TH1_L_DIFF = Regs[17];
+    static constexpr const Register& DAC_TH1_R_DIFF = Regs[18];
+    static constexpr const Register& DAC_TH1_M_DIFF = Regs[19];
+    static constexpr const Register& DAC_TH2_DIFF = Regs[20];
+    static constexpr const Register& DAC_LCC_DIFF = Regs[21];
+    static constexpr const Register& DAC_PREAMP_L_LIN = Regs[22];
+    static constexpr const Register& DAC_PREAMP_R_LIN = Regs[23];
+    static constexpr const Register& DAC_PREAMP_TL_LIN = Regs[24];
+    static constexpr const Register& DAC_PREAMP_TR_LIN = Regs[25];
+    static constexpr const Register& DAC_PREAMP_T_LIN = Regs[26];
+    static constexpr const Register& DAC_PREAMP_M_LIN = Regs[27];
+    static constexpr const Register& DAC_FC_LIN = Regs[28];
+    static constexpr const Register& DAC_KRUM_CURR_LIN = Regs[29];
+    static constexpr const Register& DAC_REF_KRUM_LIN = Regs[30];
+    static constexpr const Register& DAC_COMP_LIN = Regs[31];
+    static constexpr const Register& DAC_COMP_TA_LIN = Regs[32];
+    static constexpr const Register& DAC_GDAC_L_LIN = Regs[33];
+    static constexpr const Register& DAC_GDAC_R_LIN = Regs[34];
+    static constexpr const Register& DAC_GDAC_M_LIN = Regs[35];
+    static constexpr const Register& DAC_LDAC_LIN = Regs[36];
+    static constexpr const Register& LEACKAGE_FEEDBACK = Regs[37];
+    static constexpr const Register& VOLTAGE_TRIM = Regs[38];
+    static constexpr const Register& EnCoreCol_3 = Regs[39];
+    static constexpr const Register& EnCoreCol_2 = Regs[40];
+    static constexpr const Register& EnCoreCol_1 = Regs[41];
+    static constexpr const Register& EnCoreCol_0 = Regs[42];
+    static constexpr const Register& EnCoreColumnReset_3 = Regs[43];
+    static constexpr const Register& EnCoreColumnReset_2 = Regs[44];
+    static constexpr const Register& EnCoreColumnReset_1 = Regs[45];
+    static constexpr const Register& EnCoreColumnReset_0 = Regs[46];
+    static constexpr const Register& TriggerConfig = Regs[47];
+    static constexpr const Register& SelfTriggerConfig_1 = Regs[48];
+    static constexpr const Register& SelfTriggerConfig_0 = Regs[49];
+    static constexpr const Register& HitOrPatternLUT = Regs[50];
+    static constexpr const Register& ReadTriggerConfig = Regs[51];
+    static constexpr const Register& TruncationTimeoutConf = Regs[52];
+    static constexpr const Register& CalibrationConfig = Regs[53];
+    static constexpr const Register& CLK_DATA_FINE_DELAY = Regs[54];
+    static constexpr const Register& VCAL_HIGH = Regs[55];
+    static constexpr const Register& VCAL_MED = Regs[56];
+    static constexpr const Register& MEAS_CAP = Regs[57];
+    static constexpr const Register& CdrConf = Regs[58];
+    static constexpr const Register& ChSyncConf = Regs[59];
+    static constexpr const Register& GlobalPulseConf = Regs[60];
+    static constexpr const Register& GlobalPulseWidth = Regs[61];
+    static constexpr const Register& ServiceDataConf = Regs[62];
+    static constexpr const Register& ToTConfig = Regs[63];
+    static constexpr const Register& PrecisionToTEnable_3 = Regs[64];
+    static constexpr const Register& PrecisionToTEnable_2 = Regs[65];
+    static constexpr const Register& PrecisionToTEnable_1 = Regs[66];
+    static constexpr const Register& PrecisionToTEnable_0 = Regs[67];
+    static constexpr const Register& DataMerging = Regs[68];
+    static constexpr const Register& DataMergingMux = Regs[69];
+    static constexpr const Register& EnCoreColumnCalibration_3 = Regs[70];
+    static constexpr const Register& EnCoreColumnCalibration_2 = Regs[71];
+    static constexpr const Register& EnCoreColumnCalibration_1 = Regs[72];
+    static constexpr const Register& EnCoreColumnCalibration_0 = Regs[73];
+    static constexpr const Register& DataConcentratorConf = Regs[74];
+    static constexpr const Register& CoreColEncoderConf = Regs[75];
+    static constexpr const Register& EvenMask = Regs[76];
+    static constexpr const Register& OddMask = Regs[77];
+    static constexpr const Register& EfusesConfig = Regs[78];
+    static constexpr const Register& EfusesWriteData1 = Regs[79];
+    static constexpr const Register& EfusesWriteData0 = Regs[80];
+    static constexpr const Register& AuroraConfig = Regs[81];
+    static constexpr const Register& AURORA_CB_CONFIG1 = Regs[82];
+    static constexpr const Register& AURORA_CB_CONFIG0 = Regs[83];
+    static constexpr const Register& AURORA_INIT_WAIT = Regs[84];
+    static constexpr const Register& OUTPUT_PAD_CONFIG = Regs[85];
+    static constexpr const Register& GP_CMOS_ROUTE = Regs[86];
+    static constexpr const Register& GP_LVDS_ROUTE_1 = Regs[87];
+    static constexpr const Register& GP_LVDS_ROUTE_0 = Regs[88];
+    static constexpr const Register& DAC_CP_CDR = Regs[89];
+    static constexpr const Register& DAC_CP_FD_CDR = Regs[90];
+    static constexpr const Register& DAC_CP_BUFF_CDR = Regs[91];
+    static constexpr const Register& DAC_VCO_CDR = Regs[92];
+    static constexpr const Register& DAC_VCOBUFF_CDR = Regs[93];
+    static constexpr const Register& SER_SEL_OUT = Regs[94];
+    static constexpr const Register& CML_CONFIG = Regs[95];
+    static constexpr const Register& DAC_CML_BIAS_2 = Regs[96];
+    static constexpr const Register& DAC_CML_BIAS_1 = Regs[97];
+    static constexpr const Register& DAC_CML_BIAS_0 = Regs[98];
+    static constexpr const Register& MonitorConfig = Regs[99];
+    static constexpr const Register& ErrWngMask = Regs[100];
+    static constexpr const Register& MON_SENS_SLDO = Regs[101];
+    static constexpr const Register& MON_SENS_ACB = Regs[102];
+    static constexpr const Register& MON_ADC = Regs[103];
+    static constexpr const Register& DAC_NTC = Regs[104];
+    static constexpr const Register& HITOR_MASK_3 = Regs[105];
+    static constexpr const Register& HITOR_MASK_2 = Regs[106];
+    static constexpr const Register& HITOR_MASK_1 = Regs[107];
+    static constexpr const Register& HITOR_MASK_0 = Regs[108];
+    static constexpr const Register& AutoRead0 = Regs[109];
+    static constexpr const Register& AutoRead1 = Regs[110];
+    static constexpr const Register& AutoRead2 = Regs[111];
+    static constexpr const Register& AutoRead3 = Regs[112];
+    static constexpr const Register& AutoRead4 = Regs[113];
+    static constexpr const Register& AutoRead5 = Regs[114];
+    static constexpr const Register& AutoRead6 = Regs[115];
+    static constexpr const Register& AutoRead7 = Regs[116];
+    static constexpr const Register& RingOscConfig = Regs[117];
+    static constexpr const Register& RingOscRoute = Regs[118];
+    static constexpr const Register& RING_OSC_A_OUT = Regs[119];
+    static constexpr const Register& RING_OSC_B_OUT = Regs[120];
+    static constexpr const Register& BCIDCnt = Regs[121];
+    static constexpr const Register& TrigCnt = Regs[122];
+    static constexpr const Register& ReadTrigCnt = Regs[123];
+    static constexpr const Register& LockLossCnt = Regs[124];
+    static constexpr const Register& BitFlipWngCnt = Regs[125];
+    static constexpr const Register& BitFlipErrCnt = Regs[126];
+    static constexpr const Register& CmdErrCnt = Regs[127];
+    static constexpr const Register& RdWrFifoErrorCount = Regs[128];
+    static constexpr const Register& AI_REGION_ROW = Regs[129];
+    static constexpr const Register& HitOr_3_Cnt = Regs[130];
+    static constexpr const Register& HitOr_2_Cnt = Regs[131];
+    static constexpr const Register& HitOr_1_Cnt = Regs[132];
+    static constexpr const Register& HitOr_0_Cnt = Regs[133];
+    static constexpr const Register& SkippedTriggerCnt = Regs[134];
+    static constexpr const Register& EfusesReadData1 = Regs[135];
+    static constexpr const Register& EfusesReadData0 = Regs[136];
+    static constexpr const Register& MonitoringDataADC = Regs[137];
+    static constexpr const Register& SEU00_notmr = Regs[138];
+    static constexpr const Register& SEU01_notmr = Regs[139];
+    static constexpr const Register& SEU02_notmr = Regs[140];
+    static constexpr const Register& SEU03_notmr = Regs[141];
+    static constexpr const Register& SEU04_notmr = Regs[142];
+    static constexpr const Register& SEU05_notmr = Regs[143];
+    static constexpr const Register& SEU06_notmr = Regs[144];
+    static constexpr const Register& SEU07_notmr = Regs[145];
+    static constexpr const Register& SEU08_notmr = Regs[146];
+    static constexpr const Register& SEU09_notmr = Regs[147];
+    static constexpr const Register& SEU10_notmr = Regs[148];
+    static constexpr const Register& SEU11_notmr = Regs[149];
+    static constexpr const Register& SEU12_notmr = Regs[150];
+    static constexpr const Register& SEU13_notmr = Regs[151];
+    static constexpr const Register& SEU14_notmr = Regs[152];
+    static constexpr const Register& SEU15_notmr = Regs[153];
+    static constexpr const Register& SEU16_notmr = Regs[154];
+    static constexpr const Register& SEU17_notmr = Regs[155];
+    static constexpr const Register& SEU18_notmr = Regs[156];
+    static constexpr const Register& SEU19_notmr = Regs[157];
+    static constexpr const Register& SEU20_notmr = Regs[158];
+    static constexpr const Register& SEU21_notmr = Regs[159];
+    static constexpr const Register& SEU22_notmr = Regs[160];
+    static constexpr const Register& SEU23_notmr = Regs[161];
+    static constexpr const Register& SEU24_notmr = Regs[162];
+    static constexpr const Register& SEU25_notmr = Regs[163];
+    static constexpr const Register& SEU26_notmr = Regs[164];
+    static constexpr const Register& SEU27_notmr = Regs[165];
+    static constexpr const Register& SEU28_notmr = Regs[166];
+    static constexpr const Register& SEU29_notmr = Regs[167];
+    static constexpr const Register& SEU30_notmr = Regs[168];
+    static constexpr const Register& SEU31_notmr = Regs[169];
+    static constexpr const Register& SEU32_notmr = Regs[170];
+    static constexpr const Register& SEU33_notmr = Regs[171];
+    static constexpr const Register& SEU34_notmr = Regs[172];
+    static constexpr const Register& SEU35_notmr = Regs[173];
+    static constexpr const Register& SEU36_notmr = Regs[174];
+    static constexpr const Register& SEU37_notmr = Regs[175];
+    static constexpr const Register& SEU38_notmr = Regs[176];
+    static constexpr const Register& SEU39_notmr = Regs[177];
+    static constexpr const Register& SEU40_notmr = Regs[178];
+    static constexpr const Register& SEU41_notmr = Regs[179];
+    static constexpr const Register& SEU42_notmr = Regs[180];
+    static constexpr const Register& SEU43_notmr = Regs[181];
+    static constexpr const Register& SEU44_notmr = Regs[182];
+    static constexpr const Register& SEU45_notmr = Regs[183];
+    static constexpr const Register& SEU46_notmr = Regs[184];
+    static constexpr const Register& SEU47_notmr = Regs[185];
+    static constexpr const Register& SEU48_notmr = Regs[186];
+    static constexpr const Register& SEU49_notmr = Regs[187];
+    static constexpr const Register& SEU50_notmr = Regs[188];
+    static constexpr const Register& SEU51_notmr = Regs[189];
+    static constexpr const Register& SEU52_notmr = Regs[190];
+    static constexpr const Register& SEU53_notmr = Regs[191];
+    static constexpr const Register& SEU54_notmr = Regs[192];
+    static constexpr const Register& SEU55_notmr = Regs[193];
+    static constexpr const Register& SEU56_notmr = Regs[194];
+    static constexpr const Register& SEU57_notmr = Regs[195];
+    static constexpr const Register& SEU58_notmr = Regs[196];
+    static constexpr const Register& SEU59_notmr = Regs[197];
+    static constexpr const Register& SEU60_notmr = Regs[198];
+    static constexpr const Register& SEU61_notmr = Regs[199];
+    static constexpr const Register& SEU62_notmr = Regs[200];
+    static constexpr const Register& SEU63_notmr = Regs[201];
+    static constexpr const Register& SEU00 = Regs[202];
+    static constexpr const Register& SEU01 = Regs[203];
+    static constexpr const Register& SEU02 = Regs[204];
+    static constexpr const Register& SEU03 = Regs[205];
+    static constexpr const Register& SEU04 = Regs[206];
+    static constexpr const Register& SEU05 = Regs[207];
+    static constexpr const Register& SEU06 = Regs[208];
+    static constexpr const Register& SEU07 = Regs[209];
+    static constexpr const Register& SEU08 = Regs[210];
+    static constexpr const Register& SEU09 = Regs[211];
+    static constexpr const Register& SEU10 = Regs[212];
+    static constexpr const Register& SEU11 = Regs[213];
+    static constexpr const Register& SEU12 = Regs[214];
+    static constexpr const Register& SEU13 = Regs[215];
+    static constexpr const Register& SEU14 = Regs[216];
+    static constexpr const Register& SEU15 = Regs[217];
+    static constexpr const Register& SEU16 = Regs[218];
+    static constexpr const Register& SEU17 = Regs[219];
+    static constexpr const Register& SEU18 = Regs[220];
+    static constexpr const Register& SEU19 = Regs[221];
+    static constexpr const Register& SEU20 = Regs[222];
+    static constexpr const Register& SEU21 = Regs[223];
+    static constexpr const Register& SEU22 = Regs[224];
+    static constexpr const Register& SEU23 = Regs[225];
+    static constexpr const Register& SEU24 = Regs[226];
+    static constexpr const Register& SEU25 = Regs[227];
+    static constexpr const Register& SEU26 = Regs[228];
+    static constexpr const Register& SEU27 = Regs[229];
+    static constexpr const Register& SEU28 = Regs[230];
+    static constexpr const Register& SEU29 = Regs[231];
+    static constexpr const Register& SEU30 = Regs[232];
+    static constexpr const Register& SEU31 = Regs[233];
+    static constexpr const Register& SEU32 = Regs[234];
+    static constexpr const Register& SEU33 = Regs[235];
+    static constexpr const Register& SEU34 = Regs[236];
+    static constexpr const Register& SEU35 = Regs[237];
+    static constexpr const Register& SEU36 = Regs[238];
+    static constexpr const Register& SEU37 = Regs[239];
+    static constexpr const Register& SEU38 = Regs[240];
+    static constexpr const Register& SEU39 = Regs[241];
+    static constexpr const Register& SEU40 = Regs[242];
+    static constexpr const Register& SEU41 = Regs[243];
+    static constexpr const Register& SEU42 = Regs[244];
+    static constexpr const Register& SEU43 = Regs[245];
+    static constexpr const Register& SEU44 = Regs[246];
+    static constexpr const Register& SEU45 = Regs[247];
+    static constexpr const Register& SEU46 = Regs[248];
+    static constexpr const Register& SEU47 = Regs[249];
+    static constexpr const Register& SEU48 = Regs[250];
+    static constexpr const Register& SEU49 = Regs[251];
+    static constexpr const Register& SEU50 = Regs[252];
+    static constexpr const Register& SEU51 = Regs[253];
+    static constexpr const Register& SEU52 = Regs[254];
+    static constexpr const Register& SEU53 = Regs[255];
+};
+
+}
+
+}
+
+#endif

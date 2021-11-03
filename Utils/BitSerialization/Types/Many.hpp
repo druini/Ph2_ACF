@@ -4,61 +4,59 @@
 #include "../Core.hpp"
 
 namespace BitSerialization {
-
+    
 template <class Type, size_t MinSize = 0>
-struct ManyType {
-    static constexpr bool ignores_input_value = ignores_input_value_v<Type>;
-    using value_type = std::vector<value_type_t<Type>>;
+struct Many {
+    static constexpr bool ignores_input_value = ignores_input_value<Type>;
+    using value_type = ConvertibleVector<value_type_t<Type>>;
 
-    ManyType(const Type& type) : _type(type) {}
 
-    static constexpr const char name[] = "Many";
+    struct ManySizeError {
+        size_t size;
 
-    using ParseError = ElementError<parse_error_t<Type>, name>;
+        friend std::ostream& operator<<(std::ostream& os, const ManySizeError& error) {
+            return (os << "Many error: not enough elements (" << error.size << " / " << MinSize << ").");
+        }
+    };
 
-    template <class T, class U=VoidValue>
-    ParseResult<value_type, ParseError> 
-    parse(const BitView<T>& bits, const U& parent={}) const {
+    using ManyElementError = ElementError<parse_error_t<Type>, "Many">;
+
+    using ParseError = ErrorVariant<ManyElementError, ManySizeError>;
+
+    template <class T, class U=Void>
+    static ParseResult<value_type, ParseError> 
+    parse(const BitView<T>& bits, const U& parent={}) {
         value_type results;
         size_t offset = 0;
         while (offset < bits.size()) {
-            auto result = _type.parse(bits.slice(offset), parent);
+            auto result = Type::parse(bits.slice(offset), parent);
             if (!result) {
                 if (results.size() < MinSize)
-                    return ParseError(results.size(), std::move(result.error()));
+                    return {ManyElementError(results.size(), std::move(result.error()))};
                 break;
             }
             results.push_back(std::move(result.value()));
             offset += result.size();
         }
+        if (results.size() < MinSize)
+            return {ManySizeError(results.size())};
         return {std::move(results), offset};
     }
 
-    using SerializeError = ElementError<serialize_error_t<Type>, name>;
+    using SerializeError = ElementError<serialize_error_t<Type>, "Many">;
 
-    template <class ValueType, class T, class U=VoidValue>
-    SerializeResult<SerializeError>
-    serialize(ValueType& value, BitVector<T>& bits, const U& parent={}) const {
+    template <class T, class U=Void>
+    static SerializeResult<SerializeError>
+    serialize(value_type& value, BitVector<T>& bits, const U& parent={}) {
         for (size_t i = 0; i < value.size(); ++i) {
-            auto result = _type.serialize(value[i], bits, parent);
+            auto result = Type::serialize(value[i], bits, parent);
             if (!result) 
                 return SerializeError{i, std::move(result.error())};
         }
         return {};
     }
-    
-private:
-    Type _type;
 };
 
-template <class Type, size_t MinSize>
-constexpr const char ManyType<Type, MinSize>::name[];
-
-template <size_t MinSize=0, class Type>
-auto Many(const Type& type) {
-    return ManyType<Type, MinSize>(type);
 }
-
-} // namespace BitSerialization
 
 #endif
