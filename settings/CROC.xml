@@ -23,15 +23,29 @@
         <CROC Id="15" Lane="0" configfile="RD53B.toml" RxGroups="6" RxChannels="0" TxGroups="3" TxChannels="0">
           <!-- Overwrite .toml configuration file settings -->
           <Settings
-              DAC_VFF_DIFF           =  "100"
-              VCAL_HIGH              =  "500"
-              VCAL_MED               =  "300"
+              
               />
         </CROC>
 
         <Global
-            VCAL_HIGH              =  "600"
-            VCAL_MED               =  "300"
+          DAC_PREAMP_L_LIN = "300"
+          DAC_PREAMP_R_LIN = "300"
+          DAC_PREAMP_TL_LIN = "300"
+          DAC_PREAMP_TR_LIN = "300"
+          DAC_PREAMP_T_LIN = "300"
+          DAC_PREAMP_M_LIN = "300"
+          DAC_FC_LIN = "20"
+          DAC_KRUM_CURR_LIN = "70"
+          DAC_REF_KRUM_LIN = "360"
+          DAC_COMP_LIN = "110"
+          DAC_COMP_TA_LIN = "110"
+          DAC_GDAC_L_LIN = "500"
+          DAC_GDAC_R_LIN = "500"
+          DAC_GDAC_M_LIN = "500"
+          DAC_LDAC_LIN = "110"
+          LEACKAGE_FEEDBACK = "0"
+          VCAL_HIGH = "1800"
+          VCAL_MED = "300"
             />
       </Hybrid>
     </OpticalGroup>

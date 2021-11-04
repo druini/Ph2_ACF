@@ -19,4 +19,7 @@ args = { injectionType = "Analog", nInjections = 100, triggerDuration = 2, trigg
 type = "RD53BThresholdScan"
 args = { injectionTool = "ThresholdScanInjection", vcalMed = 300, vcalHighRange = [600, 2100], vcalHighStep = 50 }
 
+[RingOsc]
+type = "RD53BRingOscillator"
+args = {}
 

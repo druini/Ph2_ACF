@@ -7,8 +7,8 @@
 #include "../tools/RD53BInjectionTool.h"
 #include "../tools/RD53BRegReader.h"
 #include "../tools/RD53BThresholdScan.h"
-#include "../tools/RD53BInjectionMaskGenerator.h"
-// #include "../tools/RD53BPixelAlive.h"
+#include "../tools/RD53BRingOscillator.h"
+// #include "../tools/RD53BInjectionMaskGenerator.h"
 
 #include <experimental/type_traits>
 
@@ -24,9 +24,7 @@ using Tools = ToolManager<decltype(make_named_tuple(
     TOOL(RD53BInjectionTool),
     TOOL(RD53BRegReader),
     TOOL(RD53BThresholdScan),
-    TOOL(RD53BInjectionMaskGenerator)
-    
-    // ,TOOL(RD53BPixelAlive)
+    TOOL(RD53BRingOscillator)
 ))>;
 
 // template <class T>

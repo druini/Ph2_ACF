@@ -44,6 +44,32 @@ struct RD53BInjectionMaskGenerator : public RD53BTool<RD53BInjectionMaskGenerato
 
         std::cout << Base::params() << std::endl;
 
+        std::vector<size_t> min_size = {1, 1};
+        std::vector<size_t> max_size = param("size"_s);
+
+        for (int dim = 0; dim < 2; ++dim) {
+            for (const auto& step : param("steps"_s)) {
+                if (step["dim"]_s == dim) {
+                    if (step["size"_s] == 0)
+                        break
+                    min_size[dim] *= step["size"_s];
+                }
+            }
+
+            for (auto it = param("steps"_s).rbegin(); it != param("steps"_s).rend(); ++it) {
+                const auto& step = *it
+                if (step["dim"]_s == dim) {
+                    if (step["size"_s] == 0)
+                        break
+                    max_size[dim] = std::ceil(double(max_size[dim]) / step["size"_s]);
+                }
+            }
+
+            if (max_size[dim] != 
+        }
+
+        
+
         // auto size = param("size"_s);
 
         // size_t width, height;

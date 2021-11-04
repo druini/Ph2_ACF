@@ -177,10 +177,11 @@ struct RD53BInjectionTool : public RD53BTool<RD53BInjectionTool<Flavor>> {
                     ++nHits;
                 }
             }
+            it->second[15] = (nHitsExpected - nHits) / double(nHitsExpected);
         }
         return tot;
     }
-    
+
     void draw(const ChipEventsMap& result) const {
         TApplication app("app", nullptr, nullptr);
 
@@ -194,12 +195,14 @@ struct RD53BInjectionTool : public RD53BTool<RD53BInjectionTool<Flavor>> {
             // Draw Tot Distribution
             TCanvas* c1 = new TCanvas("c1", "ToT Distribution", 600, 600);
             (void)c1;
-            TH1* totHist = new TH1F("tot", "ToT Distribution", 16, 0, 15);
+            TH1* totHist = new TH1F("tot", "ToT Distribution", 16, 0, 16);
             totHist->SetYTitle("Frequency");
             totHist->SetXTitle("ToT code");
 
-            for (int i = 0; i < 16; ++i) 
-                totHist->SetBinContent(i, tot[i]);
+            for (int i = 0; i < 16; ++i) {
+                std::cout << tot[i] << std::endl;
+                totHist->SetBinContent(i + 1, tot[i]);
+            }
 
             totHist->Draw("HIST");
 

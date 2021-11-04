@@ -8,6 +8,29 @@ sudo yum install devtoolset-10
 
 Compatible firmware images can be found here: https://cernbox.cern.ch/index.php/s/MSHAo1FdMaml0m8
 
+## Usage
+
+- Configuration:
+
+    Exaple hardware description files: `settings/RD53B.xml` (RD53B-ATLAS), `settings/CROC.xml` (RD53B-CMS)
+
+    Example tools configuration file: `settings/RD53BTools.toml`
+
+- Reset: 
+    ```
+    RD53BminiDAQ -f CROC.xml -r
+    ```
+
+- Run a tool: 
+    ```
+    RD53BminiDAQ -f CROC.xml -t RD53BTools.toml DigitalScan
+    ```
+
+- Run a sequence of tools:
+    ```
+    RD53BminiDAQ -f CROC.xml -t RD53BTools.toml DigitalScan AnalogScan RegReader
+    ```
+
 ## Registers
 
 In addition to regular registers a set of virtual registers have been defined.
@@ -49,36 +72,141 @@ args = { injectionType = "Analog", nInjections = 10 }
 
 The user can define multiple tools of the same tool type. Any parameters that are not specified will have their default values. Tools can have other tools as parameters in which case the name of the desired tool of the required type should be used.
 
-There are currently only two tool types:
+There are currently only three tool types:
 
-- RD53BRegReader (`Tools/RD53BInjectionTool`):
+- RD53BRegReader (`tools/RD53BInjectionTool.h`):
     - `run`: Reads all registers and prints their values in the terminal.
 
-- RD53BInjectionTool (`Tools/RD53BInjectionTool`):
+- RD53BInjectionTool (`tools/RD53BInjectionTool.h`):
     - `run`: Performs a given number of injections for each pixel of a given rectangular area. 
     - `draw`: Draws the resulting hitmap using root and reports the mean occupancy in the terminal.
 
-## Usage
+- RD53BThresholdScan (`tools/RD53BThresholdScan.h`):
+    - `run`: Runs the specified RD53BInjectionTool for the given range of VCAL_HIGH values. 
+    - `draw`: Draws the resulting s-curves.
 
-- Configuration:
+### Tool Development
 
-    Exaple hardware description files: `settings/RD53B.xml` (RD53B-ATLAS), `settings/CROC.xml` (RD53B-CMS)
+To create a new tool called `MyTool` with an `int` parameter called `myInt` and a `std::vector<std::string>` parameter called `optionList`:
 
-    Example tools configuration file: `settings/RD53BTools.toml`
+- In `tools/RD53BMyTool.h`:
+  - `#include "RD53BTool.h"`
+  - Enter the `RD53BTools` namespace: 
 
-- Reset: 
-    ```
-    RD53BminiDAQ -f HwDescripion.xml -r
+    ```c++
+    namespace RD53BTools {
     ```
 
-- Run a tool: 
+  - Forward declare your tool class template:
+
+    ```c++
+    template <class Flavor>
+    struct MyTool;
     ```
-    RD53BminiDAQ -f HwDescription -t RD53BTools.toml DigitalScan
+
+  - Specialize the `ToolParameters` variable template for your tool type and initialize it with a NamedTuple<...> defining the names, types and default values of your tool's parameters.
+    
+    ```c++
+    template <class Flavor>
+    const auto ToolParameters<RD53BThresholdScan<Flavor>> = make_named_tuple(
+        std::make_pair("myInt"_s, 42),
+        std::make_pair("optionList"_s, std::vector<std::string>({
+            "Opt1", 
+            "Opt2"
+        }))
+    );
     ```
-- Run a sequence of tools:
+    Note: the weird `_s` suffix for the parameter names is important.
+
+    If your tool doesn't have parameters you can use an empty `NamedTuple<>`:
+
+    ```c++
+    template <class Flavor>
+    const auto ToolParameters<RD53BThresholdScan<Flavor>> = make_named_tuple();
     ```
-    RD53BminiDAQ -f HwDescription -t RD53BTools.toml DigitalScan AnalogScan RegReader
+
+  - Define your tool class template and have it inherit from `RD53BTool<MyTool<Flavor>>`:
+
+    ```c++
+    template <class Flavor>
+    struct MyTool : public RD53BTool<MyTool<Flavor>> {
     ```
+
+  - Inherit the constructor of the base class:
+
+    ```c++
+    using Base = RD53BTool<RD53BThresholdScan>;
+    using Base::Base;
+    using Base::params; // optional
+    ```
+
+  - Optionally define an `init` function which will be called once upon initialization. For `MyTool` for example, `init` turns all options to lower-case so that they become case-insensitive:
+
+    ```c++
+    void init() {
+        for (auto& opt : param("optionList"_s))
+            std::transform(opt.begin(), opt.end(), opt.begin(), [] (const char& c) { 
+                return (char)std::tolower(c); 
+            });
+    }
+    ```
+
+    Note: parameters can be accessed with the `param` function. The `_s` suffix must be used here as well.
+
+  - Define a `run` function which takes a `SystemController&` and returns anything:
+  
+    ```c++
+    auto run(SystemController&) const {
+        MyResultType result;
+        //...
+        return result;
+    }
+    ```
+
+  - Optionally define a `draw` function which takes one argument of the same type as the result of `run` and creates plots:
+
+    ```c++
+    void draw(const MyResultType&) const {
+        TApplication app("app", nullptr, nullptr);
+        //...
+        app.Run(true);
+    }
+    ```
+
+- In `src/RD53BminiDAQ.cc`:
+  - `#include "../tools/RD53BMyTool.h`
+  - Add your tool to the list at the begining of the file:
+
+    ```c++
+    template <class Flavor>
+    using Tools = ToolManager<decltype(make_named_tuple(
+        TOOL(RD53BInjectionTool),
+        TOOL(RD53BRegReader),
+        TOOL(RD53BThresholdScan),
+        TOOL(MyTool) // <---------------------
+    ))>;
+    ```
+- In your `RD53BTools.toml`:
+  - Add one or more tools of your tool type:
+
+    ```toml
+    [MyTool1]
+    type = "MyTool"
+    args = { myInt = 1, optionList = ["opt1"] }
+    
+    [MyTool2]
+    type = "MyTool"
+    args = { myInt = 42, optionList = ["OPT2, OPT3"] }
+    ```
+
+- Build the software.
+- Test your tool: 
+    
+    ```
+    RD53BminiDAQ -f CROC.xml -t RD53BTools.toml MyTool1
+    ```
+
+## 
 
 
 # CMS Ph2 ACF (Acquisition & Control Framework)
