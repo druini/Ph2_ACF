@@ -68,6 +68,82 @@ struct RD53BInjectionMaskGenerator : public RD53BTool<RD53BInjectionMaskGenerato
             if (max_size[dim] != 
         }
 
+        std::vector<xt::xtensor<bool, 2>> masks(nMasks, {shape})
+
+        std::array<size_t, 2> currentSize = {0, 0};
+
+        size_t lastDim;
+        size_t lastSize;
+
+        for (step : steps) {
+            auto& source =  xt::view(mask, xt::range(0, currentSize[0]), xt::range(0, currentSize[1]));
+            std::vector<std::array<size_t, 2>> destRanges;
+            auto otherDimRange = xt::range(0, currentSize[!step["dim"_s]]);
+            if (step["fill"_s][0] == 'p') {
+                for (size_t i = 0; i < step["size"_s] - 1; ++step)
+                    destRanges.push_back({i * currentSize[step["dim"_s]], (i + 1) * currentSize[step["dim"_s]]});
+                    // auto currentDimRange = xt::range(i * currentSize[step["dim"_s]], (i + 1) * currentSize[step["dim"_s]]);
+                    // auto otherDimRange = xt::range(0, currentSize[!step["dim"_s]]);
+                    // if (step["dim"_s] == 0)
+                    //     xt::view(mask, currentDimRange, otherDimRange) = source;
+                    // else 
+                    //     xt::view(mask, otherDimRange, currentDimRange) = source;
+                
+            }
+            else {
+                destRanges.push_back({StepId * currentSize[step["dim"_s]], (i + 1) * currentSize[step["dim"_s]]});
+            }
+
+            for (const auto& range : dstRanges) {
+                if (step["dim"_s] == 0)
+                    xt::view(mask, range, otherDimRange) = xt::roll(source, lastDim);
+                else 
+                    xt::view(mask, otherDimRange, range) = source;
+            };
+
+            if (step["fill"_s] == 'p') {
+                for (mask : masks) {
+                    for (range : destRanges)
+                        if (step["dim"_s] == 0)
+                            xt::view(mask, range, otherDimRange) = source;
+                        else 
+                            xt::view(mask, otherDimRange, range) = source;
+                }
+            }
+            else {
+                std::vector<xt::xtensor<bool, 2>> new_masks;
+                for (auto& mask : masks) {
+                    offset = 0;
+                    for (size_t i = 1; i < step["size"_s]; ++i) {
+                        auto new_mask = mask;
+                        size_t size = lastSize;
+                        size_t totalShift = 0;
+                        size_t coeff = 1;
+                        for (shift : step["shift"_s]) {
+                            totalShift += (i / coeff) * shift;
+                            coeff *= size / shift;
+                        }
+                        auto sourceShifted = xt::roll(source, , step["dim"_s])
+                        auto range = xt::range(i * currentSize[step["dim"_s]], (i + 1) * currentSize[step["dim"_s]]);
+                        if (step["dim"_s] == 0)
+                            xt::view(new_mask, range, otherDimRange) = source;
+                        else 
+                            xt::view(new_mask, otherDimRange, range) = source;
+                        new_masks.push_back(std::move(mask));
+                    }
+
+                    auto it = new_masks.insert(new_masks.end(), step["size"_s], mask);
+                    for (; it != new_masks.end(); ++it) {
+                        if (step["dim"_s] == 0)
+                            xt::view(mask, range, otherDimRange) = source;
+                        else 
+                            xt::view(mask, otherDimRange, range) = source;
+                    }
+                    // it = masks.insert(it, step["size"_s], *it);
+                }
+                masks = std::move(new_masks);
+            }
+        }
         
 
         // auto size = param("size"_s);

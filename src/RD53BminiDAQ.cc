@@ -31,24 +31,44 @@ using Tools = ToolManager<decltype(make_named_tuple(
 // using tool_result_t = decltype(std::declval<T>().run(std::declval<SystemController&>()));
 
 template <class T>
-using has_draw = decltype(std::declval<T>().draw(std::declval<T>().run(std::declval<SystemController&>())));
+using has_draw = decltype(std::declval<T>().draw(std::declval<T>().run(std::declval<SystemController&>(), std::declval<Task>())));
 
 
 struct ToolRunner {
     const std::string& toolName;
     SystemController& system;
+    
+    template <class Tool> 
+    auto run(const Tool& tool) {
+        indicators::ProgressBar bar {
+            indicators::option::BarWidth{100},
+            indicators::option::Start{" ["},
+            indicators::option::Fill{"█"},
+            indicators::option::Lead{"█"},
+            indicators::option::Remainder{"-"},
+            indicators::option::End{"]"},
+            indicators::option::PrefixText{toolName},
+            indicators::option::ForegroundColor{indicators::Color::green},
+            indicators::option::ShowElapsedTime{true},
+            indicators::option::ShowRemainingTime{true},
+            indicators::option::FontStyles{std::vector<indicators::FontStyle>{indicators::FontStyle::bold}}
+        };
+        indicators::show_console_cursor(false);
+        bar.set_progress(0);
+        auto result = tool.run(system, Task(bar));
+        bar.set_progress(100);
+        indicators::show_console_cursor(true);
+        return result;
+    }
 
     template <class Tool, typename std::enable_if_t<std::experimental::is_detected_v<has_draw, Tool>, int> = 0>
     void operator()(const Tool& tool) {
-        std::cout << "toolName: " << toolName << std::endl;
-        auto result = tool.run(system);
-        tool.draw(result);
+        tool.draw(run(tool));
     }
 
     template <class Tool, typename std::enable_if_t<!std::experimental::is_detected_v<has_draw, Tool>, int> = 0>
     void operator()(const Tool& tool) {
-        std::cout << "toolName: " << toolName << std::endl;
-        tool.run(system);
+        run(tool);
     }
 };
 

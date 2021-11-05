@@ -45,6 +45,8 @@ bool RD53BInterface<Flavor>::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_
     WriteReg(chip, Reg::RingOscConfig, 0x7fff);
     WriteReg(chip, Reg::RingOscConfig, 0x5eff);
 
+    UpdatePixelConfig(chip, chip->pixelConfig);
+
     UpdateCoreColumns(chip);
 
     return true;

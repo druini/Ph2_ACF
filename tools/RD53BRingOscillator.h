@@ -34,7 +34,7 @@ struct RD53BRingOscillator : public RD53BTool<RD53BRingOscillator<Flavor>> {
         double trimVoltage[16];
     };
 
-    auto run(Ph2_System::SystemController& system) const {
+    auto run(Ph2_System::SystemController& system, Task progress) const {
         ChipDataMap<ChipResults> results;
         auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
 
@@ -42,16 +42,15 @@ struct RD53BRingOscillator : public RD53BTool<RD53BRingOscillator<Flavor>> {
 
         dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
 
-
         LOG(INFO) << "[RD53BRingOscillator] exampleParam = " << Base::param("exampleParam"_s) << RESET;
 
         for_each_device<Chip>(system, [&] (Chip* chip) {
             auto& gloPulse = results[chip].gloPulse;
             auto& oscCounts = results[chip].oscCounts;
 
-            for(int gPulse = 0; gPulse < 10; gPulse++){ //VS PULSE DURATION
+            for (int gPulse = 0; gPulse < 10; gPulse++) { //VS PULSE DURATION
                 gloPulse[gPulse] = gPulse*10;
-                for(int ringOsc = 0; ringOsc < 8; ringOsc++){
+                for (int ringOsc = 0; ringOsc < 8; ringOsc++) {
                     chipInterface.WriteReg(chip, "RingOscAEnable", 0b11111111);
                     chipInterface.WriteReg(chip, "RingOscAClear", 1);
                     chipInterface.WriteReg(chip, "RingOscAClear", 0);
@@ -65,13 +64,13 @@ struct RD53BRingOscillator : public RD53BTool<RD53BRingOscillator<Flavor>> {
 
             auto& trimOscCounts = results[chip].trimOscCounts;
                 
-            for(int vTrim = 0; vTrim < 16; vTrim++){ //VS VDDD
+            for (int vTrim = 0; vTrim < 16; vTrim++) { //VS VDDD
                 //Trim voltages
                 chipInterface.WriteReg(chip, "VOLTAGE_TRIM", vTrim);
                 chipInterface.WriteReg(chip, "MonitorEnable", 1);
                 chipInterface.WriteReg(chip, "VMonitor", 38);
                 results[chip].trimVoltage[vTrim] = dKeithley2410.getVoltage()*2;
-                for(int ringOsc = 0; ringOsc < 34; ringOsc++){
+                for (int ringOsc = 0; ringOsc < 34; ringOsc++) {
                     //Set up oscillators
                     chipInterface.WriteReg(chip, "RingOscBEnBL", 1);
                     chipInterface.WriteReg(chip, "RingOscBEnBR", 1);

@@ -13,7 +13,8 @@
 #include <../Utils/NamedTuple.h>
 #include <../Utils/toml.hpp>
 
-
+#include <../Utils/indicators/cursor_control.hpp>
+#include <../Utils/indicators/progress_bar.hpp>
 
 namespace toml
 {
@@ -44,6 +45,29 @@ using namespace RD53BUtils;
 
 template <class>
 int ToolParameters;
+
+struct Task {
+    Task(indicators::ProgressBar& bar, std::array<double, 2> progressRange = {0, 1})
+      : _bar(bar)
+      , _progressRange{progressRange}
+    {}
+
+    double size() const { return _progressRange[1] - _progressRange[0]; }
+
+    void update(double progress) {
+        _bar.set_progress(100 * (_progressRange[0] + progress * size()));
+    }
+
+    Task subTask(std::array<double, 2> progressRange) {
+        
+        return {_bar, {_progressRange[0] + progressRange[0] * size(), _progressRange[0] + progressRange[1] * size()}};
+    }
+
+private:
+    indicators::ProgressBar& _bar;
+    std::array<double, 2> _progressRange;
+};
+
 
 struct ToolManagerBase {
     const std::type_info& getToolType(const std::string& toolName) const {
@@ -93,13 +117,13 @@ protected:
     toml::value _config;
 };
 
+
 template <class Tools>
 struct ToolManager : public ToolManagerBase {
     ToolManager(const toml::value& config) : ToolManagerBase(config) { initialize<Tools>(); }
 
     template <class ToolType, class F>
     void run_tool(bool doRun, const std::string& name, F&& f) const {
-        std::cout << name << ": " << doRun << std::endl;
         if (doRun)
             std::forward<F>(f)(ToolType(this, name, _config.at(name).at("args")));
     }
@@ -110,8 +134,6 @@ struct ToolManager : public ToolManagerBase {
     template <class F, size_t... Is>
     void with_tool(const std::string& name, F&& f, std::index_sequence<Is...>) const {
         std::string typeName = toml::get<std::string>(_config.at(name).at("type"));
-        std::cout << "typeName: " << typeName << std::endl;
-        std::cout << "nTools: " << sizeof...(Is) << std::endl;
         int unused[] = {0, (run_tool<typename Tools::field_type<Is>>(Tools::names[Is] == typeName, name, std::forward<F>(f)), 0)...};
         (void)unused;
     }
@@ -218,6 +240,89 @@ using tool_result_t = decltype(std::declval<Tool>().run(std::declval<SystemContr
 
 template <class T>
 using ChipDataMap = std::map<RD53BUtils::ChipLocation, T>;
+
+
+
+
+
+
+// struct Task {
+//     Task* parent = nullptr;
+//     size_t currentStep = 0;
+
+//     void setParent(Task* p) { parent = p; }
+
+//     virtual size_t size() const = 0;
+//     virtual double percentage() const = 0;
+    
+//     virtual void update(size_t count = 1) {
+//         currentStep = std::min(currentStep + count, size());
+//         if (parent) {
+//             if (currentStep == size())
+//                 parent->update(0);
+//             else
+//                 parent->update(1);
+//         }
+//     }
+// };
+
+// struct StandaloneTask : public Task {
+//     size_t total;
+//     size_t size() const { return total; }
+//     size_t percentage() const { return 100 * double(this->currentStep) / total; }
+// };
+
+// struct CompositeTask : public Task {
+//     explicit CompositeTask(const std::vector<StandaloneTask>& tasks) {
+//         for (const auto& task : tasks) {
+//             auto new_task = new StandaloneTask(task)
+//             mew_task.setParent(this);
+//             subTasks.emplace_back(new_task);
+//         }
+//     }
+    
+//     CompositeTask(std::vector<std::unique_ptr<Task>>&& tasks)
+//       : subTasks(std::move(tasks))
+//     {
+//         for (auto& task : subTasks)
+//             task.setParent(this);
+//     }
+
+//     std::vector<std::unique_ptr<Task>> subTasks;
+//     size_t currentTask = 0;
+
+//     size_t size() const {
+//         return std::accumulate(subTasks.begin(), subTasks.end(), 0, (auto s, auto x) {
+//             s += x.size();
+//         });
+//     }
+
+//     size_t percentage() const { return 100 * double(this->currentStep) / size() + subTasks[this->currentStep].percentage() / size(); }
+// };
+
+// struct RootTask : public CompositeTask {
+//     using CompositeTask::CompositeTask;
+
+//     void update() {
+//         progressBar.set_progress(percentage());
+//     }
+
+// private:
+//     indicators::ProgressBar progressBar = {
+//         option::BarWidth{50},
+//         option::Start{" ["},
+//         option::Fill{"█"},
+//         option::Lead{"█"},
+//         option::Remainder{"-"},
+//         option::End{"]"},
+//         option::PrefixText{"Training Gaze Network 👀"},
+//         option::ForegroundColor{Color::yellow},
+//         option::ShowElapsedTime{true},
+//         option::ShowRemainingTime{true},
+//         option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}
+//     };
+// };
+
 
 }
 
