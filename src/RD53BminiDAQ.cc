@@ -7,6 +7,7 @@
 #include "../tools/RD53BInjectionTool.h"
 #include "../tools/RD53BRegReader.h"
 #include "../tools/RD53BThresholdScan.h"
+#include "../tools/RD53BRegTest.h"
 #include "../tools/RD53BRingOscillator.h"
 
 
@@ -22,7 +23,8 @@ using Tools = ToolManager<decltype(make_named_tuple(
     TOOL(RD53BInjectionTool),
     TOOL(RD53BRegReader),
     TOOL(RD53BThresholdScan),
-    TOOL(RD53BRingOscillator)
+    TOOL(RD53BRingOscillator),
+    TOOL(RD53BRegTest)
 ))>;
 
 

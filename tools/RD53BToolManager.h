@@ -71,6 +71,7 @@ private:
             indicators::option::ForegroundColor{indicators::Color::green},
             indicators::option::ShowElapsedTime{true},
             indicators::option::ShowRemainingTime{true},
+            indicators::option::ShowPercentage{true},
             indicators::option::FontStyles{std::vector<indicators::FontStyle>{indicators::FontStyle::bold}}
         };
         indicators::show_console_cursor(false);

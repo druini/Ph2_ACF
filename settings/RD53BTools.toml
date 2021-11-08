@@ -2,6 +2,10 @@
 type = "RD53BRegReader"
 args = {}
 
+[RegTest]
+type = "RD53BRegTest"
+args = { testPixels = true }
+
 [DigitalScan]
 type = "RD53BInjectionTool"
 
