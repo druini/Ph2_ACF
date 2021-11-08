@@ -13,9 +13,9 @@ triggerLatency = 134
 offset = [0, 0]
 size = [0, 0]
 maskGen = [
-    { dim = 0, size = 0, parallel = 0, shift = [8, 1] },
-    { dim = 1, size = 0, parallel = 1, shift = [] },
-    { dim = 0, size = 21, parallel = 1, shift = [] }
+    { dim = 0, size = 0, parallel = false, shift = [8, 1] },
+    { dim = 1, size = 0, parallel = true, shift = [] },
+    { dim = 0, size = 21, parallel = true, shift = [] }
 ]
 
 [AnalogScan]
@@ -30,9 +30,9 @@ injectionPeriod = 800
 offset = [0, 0]
 size = [0, 0]
 maskGen = [
-    { dim = 0, size = 0, parallel = 0, shift = [8, 1] },
-    { dim = 1, size = 0, parallel = 1, shift = [] },
-    { dim = 0, size = 21, parallel = 1, shift = [] }
+    { dim = 0, size = 0, parallel = false, shift = [8, 1] },
+    { dim = 1, size = 0, parallel = true, shift = [] },
+    { dim = 0, size = 21, parallel = true, shift = [] }
 ]
 
 [ThresholdScanInjection]
@@ -47,9 +47,9 @@ injectionPeriod = 1000
 offset = [0, 0]
 size = [0, 0]
 maskGen = [
-    { dim = 0, size = 0, parallel = 0, shift = [8, 1] },
-    { dim = 1, size = 0, parallel = 1, shift = [] },
-    { dim = 0, size = 21, parallel = 1, shift = [] }
+    { dim = 0, size = 0, parallel = false, shift = [8, 1] },
+    { dim = 1, size = 0, parallel = true, shift = [] },
+    { dim = 0, size = 21, parallel = true, shift = [] }
 ]
 
 [ThresholdScan]
