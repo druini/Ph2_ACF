@@ -4,16 +4,53 @@ args = {}
 
 [DigitalScan]
 type = "RD53BInjectionTool"
-args = { injectionType = "Digital", nInjections = 10, triggerDuration = 2, triggerLatency = 134, hitsPerCol = 21, offset = [0, 0], size = [0, 0] }
+
+[DigitalScan.args]
+injectionType = "Digital"
+nInjections = 10
+triggerDuration = 4
+triggerLatency = 134
+offset = [0, 0]
+size = [0, 0]
+maskGen = [
+    { dim = 0, size = 0, parallel = 0, shift = [8, 1] },
+    { dim = 1, size = 0, parallel = 1, shift = [] },
+    { dim = 0, size = 21, parallel = 1, shift = [] }
+]
 
 [AnalogScan]
 type = "RD53BInjectionTool"
-args = { injectionType = "Analog", nInjections = 10, triggerDuration = 2, triggerLatency = 134, hitsPerCol = 8, offset = [0, 0], size = [0, 0], injectionPeriod = 200 }
 
+[AnalogScan.args]
+injectionType = "Analog"
+nInjections = 50
+triggerDuration = 2
+triggerLatency = 134
+injectionPeriod = 800
+offset = [0, 0]
+size = [0, 0]
+maskGen = [
+    { dim = 0, size = 0, parallel = 0, shift = [8, 1] },
+    { dim = 1, size = 0, parallel = 1, shift = [] },
+    { dim = 0, size = 21, parallel = 1, shift = [] }
+]
 
 [ThresholdScanInjection]
 type = "RD53BInjectionTool"
-args = { injectionType = "Analog", nInjections = 100, triggerDuration = 2, triggerLatency = 134, hitsPerCol = 21 }
+
+[ThresholdScanInjection.args]
+injectionType = "Analog"
+nInjections = 100
+triggerDuration = 2
+triggerLatency = 134
+injectionPeriod = 1000
+offset = [0, 0]
+size = [0, 0]
+maskGen = [
+    { dim = 0, size = 0, parallel = 0, shift = [8, 1] },
+    { dim = 1, size = 0, parallel = 1, shift = [] },
+    { dim = 0, size = 21, parallel = 1, shift = [] }
+]
 
 [ThresholdScan]
 type = "RD53BThresholdScan"
@@ -22,4 +59,3 @@ args = { injectionTool = "ThresholdScanInjection", vcalMed = 300, vcalHighRange 
 [RingOsc]
 type = "RD53BRingOscillator"
 args = {}
-

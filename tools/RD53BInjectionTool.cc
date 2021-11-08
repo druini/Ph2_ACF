@@ -1,5 +1,7 @@
 #include "RD53BInjectionTool.h"
 
+#include <boost/math/common_factor_rt.hpp>
+
 namespace RD53BTools {
 
 template <class Flavor>
@@ -9,6 +11,46 @@ void RD53BInjectionTool<Flavor>::init() {
     if (param("size"_s)[1] == 0)
         param("size"_s)[1] = RD53B<Flavor>::nCols - param("offset"_s)[1];
     std::transform(param("injectionType"_s).begin(), param("injectionType"_s).end(), param("injectionType"_s).begin(), [] (const char& c) { return (char)std::tolower(c); });
+
+    auto& steps = param("maskGen"_s);
+
+    std::vector<size_t> sizes[2] = {{1}, {1}};
+    std::vector<size_t> stepId[2];
+
+    int i = 0;
+    for (auto step : steps) {
+        sizes[step["dim"_s]].push_back(step["size"_s]);
+        stepId[step["dim"_s]].push_back(i);
+        ++i;
+    }
+
+    for (int dim = 0; dim < 2; ++dim) {
+        auto zeroPos = std::find(sizes[dim].begin(), sizes[dim].end(), 0);
+        auto& zeroStep = steps[stepId[dim][zeroPos - sizes[dim].begin() - 1]];
+        auto prev_size = std::accumulate(sizes[dim].begin(), zeroPos, 1lu, std::multiplies<>{});
+        auto next_size = std::accumulate(sizes[dim].rbegin(), std::make_reverse_iterator(zeroPos + 1), param("size"_s)[dim], [=] (auto a, auto b) {
+            return size_t(std::ceil(double(a) / b));
+        });
+        auto lcm = zeroStep["shift"_s].size() ? boost::math::lcm(prev_size, zeroStep["shift"_s][0]) : prev_size;
+        // std::cout << "next_size = " << next_size << ", prev_size = " << prev_size << ", shift = " << shifts[dim][zeroSize - sizes[dim].begin() - 1] << ", lcm = " << lcm << std::endl;
+        *zeroPos = size_t(std::ceil(double(next_size) / lcm)) * lcm / prev_size;
+        // std::cout << *zeroSize << std::endl;
+        std::partial_sum(sizes[dim].begin(), sizes[dim].end() - 1, sizes[dim].begin(), std::multiplies<>{});
+        sizes[dim].back() = size_t(std::ceil(double(param("size"_s)[dim]) / *(sizes[dim].end() - 2))) * *(sizes[dim].end() - 2);
+        for (auto it = sizes[dim].rbegin(); it != sizes[dim].rend() - 1; ++it)
+            *it = *it / *(it + 1);
+        for (size_t i = 1; i < sizes[dim].size(); ++i)
+            steps[stepId[dim][i - 1]]["size"_s] = sizes[dim][i];
+        // std::cout << "dim = " << dim << ", sizes: ";
+        // for (const auto& s : sizes[dim])
+        //     std::cout << s << " ";
+        // std::cout << std::endl;
+    }
+
+    nFrames = 1;
+    for (const auto& step : steps) 
+        if (!step["parallel"_s])
+            nFrames *= step["size"_s];
 }
 
 template <class Flavor>
@@ -18,8 +60,6 @@ typename RD53BInjectionTool<Flavor>::ChipEventsMap RD53BInjectionTool<Flavor>::r
     ChipEventsMap systemEventsMap;
 
     const auto nEvents = param("nInjections"_s) * param("triggerDuration"_s);
-    
-    size_t n_masks = param("size"_s)[0] / param("hitsPerCol"_s);
 
     configureInjections(system);
 
@@ -29,10 +69,9 @@ typename RD53BInjectionTool<Flavor>::ChipEventsMap RD53BInjectionTool<Flavor>::r
         chipInterface.WriteReg(hybrid, "LatencyConfig", param("triggerLatency"_s));
         chipInterface.WriteReg(hybrid, "DigitalInjectionEnable", param("injectionType"_s) == "digital");
     });
-
         
-    for (size_t i = 0; i < n_masks ; ++i) {
-        auto mask = generateInjectionMask(i);
+    for (size_t frameId = 0; frameId < nFrames ; ++frameId) {
+        auto mask = generateInjectionMask(frameId);
 
         for_each_device<BeBoard>(system, [&] (BeBoard* board) {
             auto& fwInterface = Base::getFWInterface(system, board);
@@ -114,7 +153,7 @@ typename RD53BInjectionTool<Flavor>::ChipEventsMap RD53BInjectionTool<Flavor>::r
             }
         });
 
-        progress.update(double(i + 1) / n_masks);
+        progress.update(double(frameId + 1) / nFrames);
     }
 
     return systemEventsMap;
@@ -218,18 +257,62 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) const {
 }
 
 template <class Flavor>
-auto RD53BInjectionTool<Flavor>::generateInjectionMask(size_t i) const {
-    typename RD53B<Flavor>::PixelMatrix<bool> mask;
-    mask.fill(false);
-    const size_t height = param("size"_s)[0] / param("hitsPerCol"_s);
-    for (size_t col = 0; col < param("size"_s)[1]; ++col) {
-        for (size_t j = 0; j < param("hitsPerCol"_s); ++j) {
-            size_t row = 8 * col;
-            row += (row / height) + i;
-            mask(param("offset"_s)[0] + j * height + row % height, param("offset"_s)[1] + col) = true;
+auto RD53BInjectionTool<Flavor>::generateInjectionMask(size_t frameId) const {
+    typename RD53B<Flavor>::PixelMatrix<bool> fullMask;
+    fullMask.fill(false);
+
+    xt::xtensor<bool, 2> mask = xt::ones<bool>({1, 1});
+    size_t lastDim = 0;
+    std::vector<size_t> currentShifts;
+
+    for (auto step : param("maskGen"_s)) {
+        auto size = step["size"_s];
+        // std::cout << "step: " << step << std::endl;
+        
+        auto shape = mask.shape();
+        // std::cout << "shape: " << shape[0] << ", " << shape[1] << std::endl;
+        
+        std::array<size_t, 2> new_shape = shape;
+        new_shape[step["dim"_s]] *= size;
+        // std::cout << "new_shape: " << new_shape[0] << ", " << new_shape[1] << std::endl;
+        
+        xt::xtensor<bool, 2> new_mask = xt::zeros<bool>(new_shape);
+
+        size_t n = step["parallel"_s] ? size : 1;
+        for (size_t i = 0; i < n; ++i) {
+            size_t j = step["parallel"_s] ? i : frameId % size;
+            size_t shift_count = i;
+            size_t shift = 0;
+            size_t wrapAroundSize = shape[lastDim]; 
+            for (auto s : currentShifts) {
+                shift += shift_count * s;
+                shift_count = shift_count * s / wrapAroundSize;
+                wrapAroundSize = s;
+            }
+            shift %= shape[lastDim];
+            if (step["dim"_s] == 0) 
+                xt::view(new_mask, xt::range(j * shape[0], (j + 1) * shape[0]), xt::all()) = xt::roll(mask, shift, lastDim);
+            else
+                xt::view(new_mask, xt::all(), xt::range(j * shape[1], (j + 1) * shape[1])) = xt::roll(mask, shift, lastDim);
         }
+
+        if (!step["parallel"_s])
+            frameId /= size;
+
+        mask = new_mask;
+        lastDim = step["dim"_s];
+        currentShifts = step["shift"_s];
+        // std::cout << "mask shape: " << mask.shape()[0] << ", " << mask.shape()[1] << std::endl;
     }
-    return mask;
+
+    auto row_range = xt::range(param("offset"_s)[0], param("offset"_s)[0] + param("size"_s)[0]);
+    auto col_range = xt::range(param("offset"_s)[1], param("offset"_s)[1] + param("size"_s)[1]);
+
+    xt::view(fullMask, row_range, col_range) = xt::view(mask, xt::range(0, param("size"_s)[0]), xt::range(0, param("size"_s)[1]));
+
+    // std::cout << fullMask << std::endl;
+
+    return fullMask;
 }
 
 template <class Flavor>

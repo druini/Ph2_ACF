@@ -98,11 +98,11 @@ public:
     using PixelMatrix = xt::xtensor_fixed<T, xt::xshape<nRows, nCols>>;
 
     struct PixelConfig {
-        PixelMatrix<bool> enable;
-        PixelMatrix<bool> enableInjections;
-        PixelMatrix<bool> enableHitOr;
-        PixelMatrix<uint8_t> tdac;
-        PixelMatrix<bool> tdacSign;
+        PixelMatrix<bool> enable = xt::zeros<bool>({nRows, nCols});
+        PixelMatrix<bool> enableInjections = xt::zeros<bool>({nRows, nCols});
+        PixelMatrix<bool> enableHitOr = xt::zeros<bool>({nRows, nCols});
+        PixelMatrix<uint8_t> tdac = 15 * xt::ones<uint8_t>({nRows, nCols});
+        PixelMatrix<bool> tdacSign = xt::zeros<bool>({nRows, nCols});
     };
 
     static const auto& pixelConfigFields() {

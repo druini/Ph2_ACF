@@ -34,7 +34,7 @@ struct RD53BRingOscillator : public RD53BTool<RD53BRingOscillator<Flavor>> {
         double trimVoltage[16];
     };
 
-    auto run(Ph2_System::SystemController& system, Task progress) const {
+    auto run(Ph2_System::SystemController& system) const {
         ChipDataMap<ChipResults> results;
         auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
 

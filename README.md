@@ -85,6 +85,28 @@ There are currently only three tool types:
     - `run`: Runs the specified RD53BInjectionTool for the given range of VCAL_HIGH values. 
     - `draw`: Draws the resulting s-curves.
 
+### Injection Pattern Generator
+
+
+A pattern is conceptually a 3-D boolean array.
+
+We start with a 1x1x1 pattern representing a single frame with a single enabled pixel and expand it in a sequence of steps.
+
+Parallel steps tile the pattern in one of the two spacial directions (rows or columns) a given number of times.
+
+Each successive tile is optionally shifted (with wrapping around) by some amount in the direction of the previous step to enable diagonal patterns.
+
+The difference between parallel and sequential steps is that the latter place each tile in a different frame, thus expanding the temporal dimension.
+
+To summarize, each step has:
+  * A dimension (0 for rows and 1 for columns)
+  * A size relative to the size of the pattern produced in the previous step. A size of 1 doesn't do anything. At least one step in each dimension must have size 0 which means that this step will take up all available space in its dimension.
+  * It can be parallel or sequential
+  * It can have a variable number of shifts that will be applied to the pattern as it gets tiled in the next step. The shifts of the last step do not have any effect.
+
+You can try out the pattern generator here:
+https://mybinder.org/v2/git/https%3A%2F%2Fgitlab.cern.ch%2Falpapado%2Finjection-pattern.git/master?labpath=injection_pattern.ipynb
+
 ### Tool Development
 
 To create a new tool called `MyTool` with an `int` parameter called `myInt` and a `std::vector<std::string>` parameter called `optionList`:

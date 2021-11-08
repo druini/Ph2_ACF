@@ -124,6 +124,11 @@ public:
     void UpdatePixelConfig(Device* device, const typename RD53B::PixelConfig& cfg, bool updateMasks = true, bool updateTdac = true) {
         setup(device);
 
+        std::vector<uint16_t> pixModeValues;
+        RD53BUtils::for_each_device<Chip>(device, [&] (Chip* chip) {
+            pixModeValues.push_back(ReadReg(chip, Reg::PIX_MODE));
+        });
+
         for (uint16_t col_pair = 0; col_pair < RD53B::nCols / 2; ++col_pair) {
             const uint16_t col = col_pair * 2;
             BitVector<uint16_t> cmd_stream;
@@ -161,8 +166,11 @@ public:
             SendCommandStream(device, cmd_stream);
         }
 
+        auto pixMode = pixModeValues.begin();
         RD53BUtils::for_each_device<Chip>(device, [&] (Chip* chip) {
             static_cast<RD53B*>(chip)->pixelConfig = cfg;
+            WriteReg(chip, Reg::PIX_MODE, *pixMode);
+            ++pixMode;
         });
 
     }

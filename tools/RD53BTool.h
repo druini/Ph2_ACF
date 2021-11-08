@@ -16,6 +16,8 @@
 #include <../Utils/indicators/cursor_control.hpp>
 #include <../Utils/indicators/progress_bar.hpp>
 
+#include <experimental/type_traits>
+
 namespace toml
 {
 
@@ -117,35 +119,6 @@ protected:
     toml::value _config;
 };
 
-
-template <class Tools>
-struct ToolManager : public ToolManagerBase {
-    ToolManager(const toml::value& config) : ToolManagerBase(config) { initialize<Tools>(); }
-
-    template <class ToolType, class F>
-    void run_tool(bool doRun, const std::string& name, F&& f) const {
-        if (doRun)
-            std::forward<F>(f)(ToolType(this, name, _config.at(name).at("args")));
-    }
-    
-    // template <class ToolType, class F>
-    // void run_tool(std::false_type, const std::string& name, F&& f) const {}
-
-    template <class F, size_t... Is>
-    void with_tool(const std::string& name, F&& f, std::index_sequence<Is...>) const {
-        std::string typeName = toml::get<std::string>(_config.at(name).at("type"));
-        int unused[] = {0, (run_tool<typename Tools::field_type<Is>>(Tools::names[Is] == typeName, name, std::forward<F>(f)), 0)...};
-        (void)unused;
-    }
-    
-    template <class F>
-    void with_tool(const std::string& name, F&& f) const {
-        with_tool(name, std::forward<F>(f), std::make_index_sequence<Tools::size>());
-    }
-};
-
-
-
 struct RD53BToolBase {};
 
 template <class Derived>
@@ -177,13 +150,15 @@ struct RD53BTool : public RD53BToolBase {
           auto& params()       { return _parameter_values; }
     const auto& params() const { return _parameter_values; }
 
+    std::string name() const { return _name; }
+
     friend std::ostream& operator<<(std::ostream& os, const RD53BTool& t) {
         return os << "{ \"type\" : \"" << t._toolManager->getToolTypeName<Derived>() << "\", \"args\" : " << t.params() << " }";
     }
 
     void init() {}
-    // bool run(SystemController&) {}
-
+    
+   
 protected:
     static auto& getFWInterface(SystemController& system, BeBoard* board) {
         return *static_cast<RD53FWInterface*>(system.fBeBoardFWMap.at(board->getId()));
@@ -194,14 +169,6 @@ private:
     void convert(T& value, const char* argName, const toml::value& argValue) const { 
         initialize(value, argValue);
     }
-
-    // template <class T, std::enable_if_t<std::is_base_of<NamedTupleBase, T>::value, int> = 0>
-    // void convert(std::vector<T>& value, const char* argName, const toml::value& argValue) const { 
-    //     value.clear();
-    //     for (const auto& value : argValue.as_array())
-    //         value.push
-    //     initialize(value, argValue);
-    // }
 
     template <class T, std::enable_if_t<!std::is_base_of<RD53BToolBase, T>::value && !std::is_base_of<NamedTupleBase, T>::value, int> = 0>
     void convert(T& value, const char* argName, const toml::value& argValue) const { 
@@ -240,88 +207,6 @@ using tool_result_t = decltype(std::declval<Tool>().run(std::declval<SystemContr
 
 template <class T>
 using ChipDataMap = std::map<RD53BUtils::ChipLocation, T>;
-
-
-
-
-
-
-// struct Task {
-//     Task* parent = nullptr;
-//     size_t currentStep = 0;
-
-//     void setParent(Task* p) { parent = p; }
-
-//     virtual size_t size() const = 0;
-//     virtual double percentage() const = 0;
-    
-//     virtual void update(size_t count = 1) {
-//         currentStep = std::min(currentStep + count, size());
-//         if (parent) {
-//             if (currentStep == size())
-//                 parent->update(0);
-//             else
-//                 parent->update(1);
-//         }
-//     }
-// };
-
-// struct StandaloneTask : public Task {
-//     size_t total;
-//     size_t size() const { return total; }
-//     size_t percentage() const { return 100 * double(this->currentStep) / total; }
-// };
-
-// struct CompositeTask : public Task {
-//     explicit CompositeTask(const std::vector<StandaloneTask>& tasks) {
-//         for (const auto& task : tasks) {
-//             auto new_task = new StandaloneTask(task)
-//             mew_task.setParent(this);
-//             subTasks.emplace_back(new_task);
-//         }
-//     }
-    
-//     CompositeTask(std::vector<std::unique_ptr<Task>>&& tasks)
-//       : subTasks(std::move(tasks))
-//     {
-//         for (auto& task : subTasks)
-//             task.setParent(this);
-//     }
-
-//     std::vector<std::unique_ptr<Task>> subTasks;
-//     size_t currentTask = 0;
-
-//     size_t size() const {
-//         return std::accumulate(subTasks.begin(), subTasks.end(), 0, (auto s, auto x) {
-//             s += x.size();
-//         });
-//     }
-
-//     size_t percentage() const { return 100 * double(this->currentStep) / size() + subTasks[this->currentStep].percentage() / size(); }
-// };
-
-// struct RootTask : public CompositeTask {
-//     using CompositeTask::CompositeTask;
-
-//     void update() {
-//         progressBar.set_progress(percentage());
-//     }
-
-// private:
-//     indicators::ProgressBar progressBar = {
-//         option::BarWidth{50},
-//         option::Start{" ["},
-//         option::Fill{"█"},
-//         option::Lead{"█"},
-//         option::Remainder{"-"},
-//         option::End{"]"},
-//         option::PrefixText{"Training Gaze Network 👀"},
-//         option::ForegroundColor{Color::yellow},
-//         option::ShowElapsedTime{true},
-//         option::ShowRemainingTime{true},
-//         option::FontStyles{std::vector<FontStyle>{FontStyle::bold}}
-//     };
-// };
 
 
 }
