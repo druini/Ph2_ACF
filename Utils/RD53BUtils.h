@@ -55,7 +55,7 @@ namespace RD53BUtils {
         }
 
         friend std::ostream& operator<<(std::ostream& os, const ChipLocation& loc) {
-            return (os << '[' << loc.board_id << '/' << loc.hybrid_id << '/' << loc.chip_id << ']');
+            return (os << "{ board: " << loc.board_id << ", hybrid: " << loc.hybrid_id << ", chip: " << loc.chip_id << " }");
         }
     };
 

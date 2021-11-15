@@ -1,12 +1,6 @@
 #ifndef RD53BTOOL_H
 #define RD53BTOOL_H
 
-#include <iostream>
-#include <vector>
-#include <unordered_map>
-#include <sstream>
-#include <typeindex>
-
 #include <../System/SystemController.h>
 #include <../HWInterface/RD53BInterface.h>
 #include <../Utils/RD53BUtils.h>
@@ -16,6 +10,15 @@
 #include <../Utils/indicators/cursor_control.hpp>
 #include <../Utils/indicators/progress_bar.hpp>
 
+#include <boost/filesystem.hpp>
+#include <boost/range/iterator_range.hpp>
+
+#include <iostream>
+#include <vector>
+#include <unordered_map>
+#include <sstream>
+#include <typeindex>
+#include <regex>
 #include <experimental/type_traits>
 
 namespace toml
@@ -80,10 +83,6 @@ struct ToolManagerBase {
     std::string getToolTypeName() const {
         return _toolTypeNames.at(typeid(T));
     }
-    
-    std::string getToolTypeName(const std::type_info& type) const {
-        return _toolTypeNames.at(type);
-    }
 
     std::string getToolTypeName(const std::string& tool) const {
         return toml::get<std::string>(_config.at(tool).at("type"));
@@ -121,11 +120,10 @@ protected:
 
 struct RD53BToolBase {};
 
-template <class Derived>
+template <template <class> class ToolTmpl, class Flavor>
 struct RD53BTool : public RD53BToolBase {
+    using Derived = ToolTmpl<Flavor>;
     using parameter_tuple = std::decay_t<decltype(ToolParameters<Derived>)>;
-
-    using ChipResult = void;
 
     RD53BTool() {}
 
@@ -150,7 +148,32 @@ struct RD53BTool : public RD53BToolBase {
           auto& params()       { return _parameter_values; }
     const auto& params() const { return _parameter_values; }
 
-    std::string name() const { return _name; }
+    const std::string& name() const { return _name; }
+    std::string& name() { return _name; }
+
+    std::string getResultPath(const std::string& suffix) const {
+        auto path = boost::filesystem::path("Results/") / (_name + suffix);
+        if (boost::filesystem::exists(path)) {
+            std::regex runNumberRegex(_name + "\\(([0-9]+)\\)");
+            size_t maxRunNumber = 0;
+            for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator("Results/"), {})) {
+                if (boost::filesystem::is_regular_file(entry.status())) {
+                    std::string stem = entry.path().stem().string();
+                    std::smatch m;
+                    if (std::regex_match(stem, m, runNumberRegex) && m.size() > 1) 
+                        maxRunNumber = std::max(maxRunNumber, std::stoul(m[1])); 
+                }
+            }
+            std::stringstream ss;
+            ss << "Results/" << _name << "(" << (maxRunNumber + 1) << ')' << suffix;
+            return ss.str();
+        }
+        else {
+            if (!boost::filesystem::exists(path.parent_path()))
+                boost::filesystem::create_directory(path.parent_path());
+            return path.string();
+        }
+    }
 
     friend std::ostream& operator<<(std::ostream& os, const RD53BTool& t) {
         return os << "{ \"type\" : \"" << t._toolManager->getToolTypeName<Derived>() << "\", \"args\" : " << t.params() << " }";
@@ -166,17 +189,17 @@ protected:
 
 private:
     template <class T, std::enable_if_t<std::is_base_of<NamedTupleBase, T>::value, int> = 0>
-    void convert(T& value, const char* argName, const toml::value& argValue) const { 
+    void parse(T& value, const char* argName, const toml::value& argValue) const { 
         initialize(value, argValue);
     }
 
     template <class T, std::enable_if_t<!std::is_base_of<RD53BToolBase, T>::value && !std::is_base_of<NamedTupleBase, T>::value, int> = 0>
-    void convert(T& value, const char* argName, const toml::value& argValue) const { 
+    void parse(T& value, const char* argName, const toml::value& argValue) const { 
         value = toml::get<T>(argValue);
     }
 
     template <class T, std::enable_if_t<std::is_base_of<RD53BToolBase, T>::value, int> = 0>
-    void convert(T& value, const char* argName, const toml::value& argValue) const { 
+    void parse(T& value, const char* argName, const toml::value& argValue) const { 
         std::string toolName = toml::get<std::string>(argValue);
         if (typeid(T) != _toolManager->getToolType(toolName)) {
             std::stringstream ss;
@@ -189,11 +212,11 @@ private:
         value = T{_toolManager, toolName, _toolManager->getToolArgs(toolName)}; 
     }
     
-    template <class... Ts, template <class...> class Inner>
-    void initialize(Inner<Ts...>& tuple, const toml::value& args) {
+    template <class NamedTuple>
+    void initialize(NamedTuple& tuple, const toml::value& args) {
         tuple.for_each([&] (const auto& name, auto& value) {
             if (args.contains(name.value))
-                convert(value, name.value, args.at(name.value));
+                parse(value, name.value, args.at(name.value));
         });
     }
 
@@ -202,8 +225,34 @@ private:
     parameter_tuple _parameter_values;
 };
 
+template <class T>
+using detect_has_draw1 = decltype(std::declval<T>().draw(std::declval<T>().run(std::declval<SystemController&>())));
+
+template <class T>
+using detect_has_draw2 = decltype(std::declval<T>().draw(std::declval<T>().run(std::declval<SystemController&>(), std::declval<Task>())));
+
+template <class T>
+constexpr bool has_draw_v = std::experimental::is_detected_v<detect_has_draw1, T> || std::experimental::is_detected_v<detect_has_draw2, T>;
+
+template <class T>
+using detect_has_progress = decltype(std::declval<T>().run(std::declval<SystemController&>(), std::declval<Task>()));
+
+template <class T>
+constexpr bool has_progress_v = std::experimental::is_detected_v<detect_has_progress, T>;
+
+template <class Tool, bool B=has_progress_v<Tool>>
+struct tool_result {
+    using type = decltype(std::declval<Tool>().run(std::declval<SystemController&>(), std::declval<Task>()));
+};
+
 template <class Tool>
-using tool_result_t = decltype(std::declval<Tool>().run(std::declval<SystemController&>()));
+struct tool_result<Tool, false> {
+    using type = decltype(std::declval<Tool>().run(std::declval<SystemController&>()));
+};
+
+
+template <class Tool>
+using tool_result_t = typename tool_result<Tool>::type;
 
 template <class T>
 using ChipDataMap = std::map<RD53BUtils::ChipLocation, T>;

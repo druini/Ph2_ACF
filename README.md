@@ -1,4 +1,4 @@
-# RD53B Version
+# [RD53B]
 
 This version requires the `devtoolset-10` package: 
 ```bash
@@ -8,7 +8,7 @@ sudo yum install devtoolset-10
 
 Compatible firmware images can be found here: https://cernbox.cern.ch/index.php/s/MSHAo1FdMaml0m8
 
-## Usage
+# [RD53B] Usage
 
 - Configuration:
 
@@ -31,7 +31,7 @@ Compatible firmware images can be found here: https://cernbox.cern.ch/index.php/
     RD53BminiDAQ -f CROC.xml -t RD53BTools.toml DigitalScan AnalogScan RegReader
     ```
 
-## Registers
+# [RD53B] Registers
 
 In addition to regular registers a set of virtual registers have been defined.
 A virtual register is composed of one or more subranges of one or more registers.
@@ -42,7 +42,7 @@ A python script has been developed to generate the c++ source files containing t
 
 Users can use virtual register names in the XML config file.
 
-## Tools
+# [RD53B] Tools
 
 The tool system has been redesigned for RD53B. Each tool type is a class which has a `run` member function with a `SystemController&` parameter and optionally a `draw` member function with a parameter of the same type as the result of `run`. To each tool type is associated a NamedTuple (similar to std::tuple but each field has an associated name) containing the name, type and default value of each parameter for this tool type. A tool type must be added to the list of known tool types in `RD53BminiDAQ.cc` in order to be used.
 
@@ -72,20 +72,229 @@ args = { injectionType = "Analog", nInjections = 10 }
 
 The user can define multiple tools of the same tool type. Any parameters that are not specified will have their default values. Tools can have other tools as parameters in which case the name of the desired tool of the required type should be used.
 
-There are currently only three tool types:
+# [RD53B] Tool types
 
-- RD53BRegReader (`tools/RD53BInjectionTool.h`):
-    - `run`: Reads all registers and prints their values in the terminal.
+## RD53BRegReader
 
-- RD53BInjectionTool (`tools/RD53BInjectionTool.h`):
-    - `run`: Performs a given number of injections for each pixel of a given rectangular area. 
-    - `draw`: Draws the resulting hitmap using root and reports the mean occupancy in the terminal.
+Reads all chip registers.
 
-- RD53BThresholdScan (`tools/RD53BThresholdScan.h`):
-    - `run`: Runs the specified RD53BInjectionTool for the given range of VCAL_HIGH values. 
-    - `draw`: Draws the resulting s-curves.
+### Parameters
 
-### Injection Pattern Generator
+None.
+
+### Public Member Functions
+
+- `run`: Runs the tool.
+
+    - **Signature**:
+
+        ```C++
+        ChipDataMap<std::array<size_t, 256>> run(SystemController& system, Task progress)
+        ```
+
+    - **Parameters**:
+
+        | Name | Description |
+        |-----------|-------------|
+        | system    | The system on which to run the tool. |
+        | progress  | Represents some fraction of the progress bar. |
+
+    - **Returns**: A map containing an array with the values of all registers for each chip
+
+
+- `draw`: Prints the values of all registers of each chip.
+
+  - **Signature**:
+
+      ```C++
+      void draw(const ChipDataMap<std::array<size_t, 256>>& data)
+      ```
+
+  - **Parameters**:
+
+      | Parameter | Description |
+      |-----------|-------------|
+      | data  | The result of `run`. |
+
+## RD53BInjectionTool
+
+Performs a number of injections on each pixel using a configurable injection pattern and returns the results. 
+
+### Parameters
+
+| Name              | Deascription
+|---                | ---
+| `nInjections` | number of injections for each pixel (default: 10) |
+| `triggerDuration` | number of consecutive triggers to send per injection (default: 10) |
+| `triggerLatency` | written into the `LatencyConfig` field of the `TriggerConfig` chip register (default: 133) |
+| `injectionType` | can be either `"Analog"` or `"Digital"` |
+| `injectionPeriod` | can be used to adjust the rate of injections |
+| `fineDelay` | calibration command edge delay |
+| `pulseDuration` | calibration command edge duration (useful for digital injections) |
+| `offset` | the address (row, column) of the top-left pixel of the rectangular scan area. |
+| `size` | the size (height, width) of the rectangular scan area. |
+| `maskGen` | injection patter generator |
+
+### Public member functions
+
+
+- `run`: Runs the tool.
+
+    - **Signature**:
+
+        ```C++
+        ChipDataMap<std::vector<RD53BEvent>> run(SystemController& system, Task progress) const;
+        ```
+
+    - **Parameters**:
+
+        | Name | Description |
+        |-----------|-------------|
+        | system    | The system on which to run the tool. |
+        | progress  | Represents some fraction of the progress bar. |
+
+    - **Returns**: A map containing a vector of events for each chip
+
+- `draw`: Draws the 2D occupancy histogram and the ToT distribution histogram for each chip.
+
+  - **Signature**:
+
+      ```C++
+      void draw(const ChipDataMap<std::vector<RD53BEvent>>& data) const;
+      ```
+
+  - **Parameters**:
+
+      | Parameter | Description |
+      |-----------|-------------|
+      | data  | The result of `run`. |
+
+-  `configureInjections`: Configures the system for injections.
+
+    - **Signature**:
+        ```c++
+        void configureInjections(Ph2_System::SystemController& system) const;
+        ```
+
+    - **Parameters**:
+
+        | Parameter | Description |
+        |-----------|-------------|
+        | system    | The system to configure. |
+
+-  `setupMaskFrame`: Configures the pixels for a frame of the injection pattern.
+
+    - **Signature**:
+        ```c++
+        void setupMaskFrame(Ph2_System::SystemController& system, size_t frameId) const;
+        ```
+
+    - **Parameters**:
+
+        | Parameter | Description |
+        |-----------|-------------|
+        | system    | The system to configure. |
+        | frameId   | The frame of the injetion pattern to use |
+
+
+- `inject`: Performs `nInjections` injections and adds the resulting events in the given container.
+
+    - **Signature**:
+        ```c++
+        void configureInjections(Ph2_System::SystemController& system, ChipDataMap<std::vector<RD53BEvent>>& events) const;
+        ```
+
+    - **Parameters**:
+
+        | Parameter | Description |
+        |-----------|-------------|
+        | system    | The system to inject. |
+        | events    | The map of vectors in which to add the events for each chip. |
+
+
+- `occupancy`: Computes the occupancy map from the events.
+
+    - **Signature**:
+
+        ```c++
+        ChipDataMap<pixel_matrix_t<Flavor, double>> occupancy(const ChipDataMap<std::vector<RD53BEvent>>& data) const;
+        ```
+
+    - **Parameters**:
+
+        | Parameter | Description |
+        |-----------|-------------|
+        | data    | The result of `run`. |
+
+    - **Returns**: A `ChipDataMap` containing the occupancy matrix for each chip.
+
+
+- `totDistribution`: Computes the tot distribution from the events.
+
+    - **Signature**:
+
+        ```c++
+        ChipDataMap<std::array<double, 16>> totDistribution(const ChipDataMap<std::vector<RD53BEvent>>& data) const;
+        ```
+
+    - **Parameters**:
+
+        | Parameter | Description |
+        |-----------|-------------|
+        | data    | The result of `run`. |
+
+    - **Returns**: A `ChipDataMap` containing the tot distribution for each chip.
+
+## RD53BThresholdScan
+
+Performs injections using the given injection tool for different values of the VCAL_HIGH register.
+
+
+### Parameters
+
+| Name              | Deascription
+|---                | ---
+| `injectionTool` | A tool of type RD53BInjectionTool to be used for injections. |
+| `vcalMed` | The value of VCAL_MED to use. |
+| `vcalHighRange` | The lowest and highest VCAL_HIGH values to use. |
+| `vcalHighStep` | The VCAL_HIGH step to use. |
+
+
+### Public member functions
+
+
+- `run`: Runs the tool.
+
+    - **Signature**:
+
+        ```C++
+        ChipDataMap<xt::xtensor<double, 3>> run(Ph2_System::SystemController& system, Task progress);
+        ```
+
+    - **Parameters**:
+
+        | Name | Description |
+        |-----------|-------------|
+        | system    | The system on which to run the tool. |
+        | progress  | Represents some fraction of the progress bar. |
+
+    - **Returns**: A map containing a 3-D occupancy array (dimensions: vcal steps, rows, columns) for each chip.
+
+- `draw`: Draws the S-Curves of each pixel (superimposed), the threshold map and distribution and the noise map and distribution.
+
+  - **Signature**:
+
+      ```C++
+      void draw(const ChipDataMap<xt::xtensor<double, 3>>& data) const;
+      ```
+
+  - **Parameters**:
+
+      | Parameter | Description |
+      |-----------|-------------|
+      | data  | The result of `run`. |
+
+# [RD53B] Injection Pattern Generator
 
 
 A pattern is conceptually a 3-D boolean array.
@@ -107,7 +316,7 @@ To summarize, each step has:
 You can try out the pattern generator here:
 https://mybinder.org/v2/git/https%3A%2F%2Fgitlab.cern.ch%2Falpapado%2Finjection-pattern.git/master?labpath=injection_pattern.ipynb
 
-### Tool Development
+# [RD53B] Tool Development
 
 To create a new tool called `MyTool` with an `int` parameter called `myInt` and a `std::vector<std::string>` parameter called `optionList`:
 
@@ -227,8 +436,6 @@ To create a new tool called `MyTool` with an `int` parameter called `myInt` and 
     ```
     RD53BminiDAQ -f CROC.xml -t RD53BTools.toml MyTool1
     ```
-
-## 
 
 
 # CMS Ph2 ACF (Acquisition & Control Framework)

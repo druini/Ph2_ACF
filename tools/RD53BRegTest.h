@@ -14,8 +14,8 @@ const auto ToolParameters<RD53BRegTest<Flavor>> = make_named_tuple(
 );
 
 template <class Flavor>
-struct RD53BRegTest : public RD53BTool<RD53BRegTest<Flavor>> {
-    using Base = RD53BTool<RD53BRegTest>;
+struct RD53BRegTest : public RD53BTool<RD53BRegTest, Flavor> {
+    using Base = RD53BTool<RD53BRegTest, Flavor>;
     using Base::Base;
 
     bool run(Ph2_System::SystemController& system, Task progress) const {

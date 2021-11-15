@@ -179,7 +179,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     this->setBoard(pChip->getBeBoardId());
 
     RD53Interface::sendCommand(static_cast<RD53*>(pChip), RD53Cmd::WrReg(pChip->getId(), pChip->getRegItem(regName).fAddress, data));
-    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
+    // if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
 
     bool status = true;
     if(pVerifLoop == true)
@@ -220,7 +220,7 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
 
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, address, nameAndValue.second).getFrames(), -1);
 
-    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
+    // if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
 }
 
 uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)

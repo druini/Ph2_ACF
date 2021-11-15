@@ -21,8 +21,8 @@ const auto ToolParameters<RD53BRingOscillator<Flavor>> = make_named_tuple(
 );
 
 template <class Flavor>
-struct RD53BRingOscillator : public RD53BTool<RD53BRingOscillator<Flavor>> {
-    using Base = RD53BTool<RD53BRingOscillator>;
+struct RD53BRingOscillator : public RD53BTool<RD53BRingOscillator, Flavor> {
+    using Base = RD53BTool<RD53BRingOscillator, Flavor>;
     using Base::Base;
 
     struct ChipResults {

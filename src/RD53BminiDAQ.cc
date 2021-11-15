@@ -9,6 +9,8 @@
 #include "../tools/RD53BThresholdScan.h"
 #include "../tools/RD53BRegTest.h"
 #include "../tools/RD53BRingOscillator.h"
+// #include "../tools/RD53BThresholdEqualization.h"
+// #include "../tools/RD53BRegisterThresholdScan.h"
 
 
 using namespace Ph2_System;
@@ -25,6 +27,8 @@ using Tools = ToolManager<decltype(make_named_tuple(
     TOOL(RD53BThresholdScan),
     TOOL(RD53BRingOscillator),
     TOOL(RD53BRegTest)
+    // , TOOL(RD53BThresholdEqualization)
+    // , TOOL(RD53BRegisterThresholdScan)
 ))>;
 
 

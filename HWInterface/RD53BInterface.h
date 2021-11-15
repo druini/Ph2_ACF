@@ -68,42 +68,6 @@ public:
     void WriteReg(Hybrid* chip, const Register& reg, uint16_t value);
     void WriteReg(Hybrid* chip, const std::string& regName, size_t value, bool update = false);
     
-
-private:
-
-    // template <class Device, class T>
-    // void WriteReg(const Device* board, const T& reg, uint16_t value) {
-    //     setup(pBoard);
-    //     for (const auto* opticalGroup : *pBoard) {
-    //         for (const auto* hybrid : *opticalGroup) {
-    //             WriteReg(hybrid, reg, data);
-    //         }
-    //     }
-    // }
-
-    // template <class Device>
-    // void WriteRegs(Device* device, std::vector<std::pair<const Register&, uint16_t>> regValuePairs) {
-    //     BitVector<uint16_t> bits;
-
-    //     for (const auto& regValuePair : regValuePairs)
-    //         SerializeCommand<RD53BCmd::WrReg>(device, bits, regValuePair.first.address, regValuePair.second);
-
-    //     SendCommandStream(device, bits);
-    // }
-
-    // void WriteRegField(RD53B* chip, const Register& reg, size_t field, uint16_t value) {
-    //     ReadChipReg(chip, reg.name);
-    //     uint16_t newValue = chip->setRegField(reg, field, value);
-    //     WriteReg(chip, reg, newValue);
-    // }
-
-    // template <class Device, typename std::enable_if_t<!std::is_base_of<Chip, Device>::value, int> = 0>
-    // void WriteRegField(Device* device, const Register& reg, size_t field, uint16_t value) {
-    //     RD53BUtils::for_each_device<Chip>(device, [&] (Chip* chip) {
-    //         WriteRegField(static_cast<RD53B*>(chip), reg, field, value);
-    //     });
-    // }
-
     void ChipErrorReport(ReadoutChip* pChip);
 
     void InitRD53Downlink(const BeBoard* pBoard);
@@ -113,13 +77,7 @@ private:
         UpdatePixelConfig(pRD53, pRD53->pixelConfig);
     }
 
-private:
-    xt::xtensor_fixed<uint16_t, xt::xshape<RD53B::nRows, 1>> ExtractColPairMaskConfig(const typename RD53B::PixelConfig& cfg, size_t col_pair);
-    
-    xt::xtensor_fixed<uint16_t, xt::xshape<RD53B::nRows, 1>> ExtractColPairTdacConfig(const typename RD53B::PixelConfig& cfg, size_t col_pair);
-
 public:
-
     template <class Device>
     void UpdatePixelConfig(Device* device, const typename RD53B::PixelConfig& cfg, bool updateMasks = true, bool updateTdac = true) {
         setup(device);
@@ -154,11 +112,8 @@ public:
                 SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, Reg::REGION_ROW.address, uint16_t{0});
                 SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, Reg::PIX_MODE.address, uint16_t{3}); // tdac + auto-row
                 
-                xt::xarray<uint16_t> tdac_data = xt::col(cfg.tdac, col + 1) & 0xF;
-                tdac_data |= xt::left_shift(xt::col(cfg.tdacSign, col + 1), 4);
-                tdac_data = xt::left_shift(tdac_data, 5);
-                tdac_data |= xt::col(cfg.tdac, col) & 0xF;
-                tdac_data |= xt::left_shift(xt::col(cfg.tdacSign, col), 4);
+                xt::xarray<uint16_t> tdac_data = xt::col(cfg.tdac, col + 1) & 0x1F;
+                tdac_data |= xt::left_shift(xt::col(cfg.tdac, col)  & 0x1F, 5);
 
                 SerializeCommand<RD53BCmd::WrRegLong>(device, cmd_stream, std::vector<uint16_t>(tdac_data.begin(), tdac_data.end()));
             }

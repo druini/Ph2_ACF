@@ -42,12 +42,12 @@ bool RD53BInterface<Flavor>::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_
     WriteReg(chip, "RawData", 0);
     WriteReg(chip, "EnOutputDataChipId", 0);
 
-    WriteReg(chip, Reg::RingOscConfig, 0x7fff);
-    WriteReg(chip, Reg::RingOscConfig, 0x5eff);
-
-    UpdatePixelConfig(chip, chip->pixelConfig);
+    // WriteReg(chip, Reg::RingOscConfig, 0x7fff);
+    // WriteReg(chip, Reg::RingOscConfig, 0x5eff);
 
     UpdateCoreColumns(chip);
+
+    UpdatePixelConfig(chip, chip->pixelConfig);
 
     return true;
 }
