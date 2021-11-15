@@ -21,6 +21,7 @@ maskGen = [
     { dim = 1, size = 0, parallel = true, shift = [] },
     { dim = 0, size = 21, parallel = true, shift = [] }
 ]
+showPlots = true
 
 [AnalogScan]
 type = "RD53BInjectionTool"
@@ -38,6 +39,7 @@ maskGen = [
     { dim = 1, size = 0, parallel = true, shift = [] },
     { dim = 0, size = 21, parallel = true, shift = [] }
 ]
+showPlots = true
 
 [ThresholdScanInjection]
 type = "RD53BInjectionTool"
