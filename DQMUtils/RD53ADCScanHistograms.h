@@ -23,7 +23,7 @@
 class ADCScanHistograms : public DQMHistogramBase
 {
   public:
-    void fillADC(DetectorContainer& DataContainer, double* fitStart, double* fitEnd, double** VMUXvolt, double** ADCcode, std::string* writeVar);
+    void fillADC(double* fitStart, double* fitEnd, double** VMUXvolt, double** ADCcode, std::string* writeVar);
 
   private:
     DetectorDataContainer DetectorData;

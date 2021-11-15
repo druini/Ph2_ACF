@@ -23,12 +23,17 @@
 #include "TF1.h"
 #include "TH1.h"
 #include "TMultiGraph.h"
+#include <stdio.h>
+#include <time.h>
+
+#define LOGNAME_FORMAT "%Y%m%d_%H%M%S"
+#define LOGNAME_SIZE 50
 
 class TempSensorHistograms : public DQMHistogramBase
 {
   public:
-    void fillTC(double time[100], double temperature[5][100], double idealityFactor[4], double calibNTCtemp[4][2], double calibSenstemp[4][2], double power[2]);
-
+    void fillTC( double idealityFactor[4], double calibNTCtemp[4][2], double calibSenstemp[4][2], double power[2]);
+	
   private:
     DetectorDataContainer DetectorData;
 };

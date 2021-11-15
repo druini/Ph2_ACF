@@ -23,7 +23,7 @@
 class DACScanHistograms : public DQMHistogramBase
 {
   public:
-    void fillDAC(DetectorContainer& DataContainer, double* fitStart, double* fitEnd, double** VMUXvolt, double** DACcode, std::string* writeVar);
+    void fillDAC(double* fitStart, double* fitEnd, double** VMUXvolt, double** DACcode, std::string* writeVar);
 
   private:
     DetectorDataContainer DetectorData;

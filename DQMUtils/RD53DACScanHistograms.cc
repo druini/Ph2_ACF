@@ -12,7 +12,7 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-void DACScanHistograms::fillDAC(DetectorContainer& DataContainer, double* fitStart, double* fitEnd, double** VMUXvolt, double** DACcode, std::string* writeVar)
+void DACScanHistograms::fillDAC(double* fitStart, double* fitEnd, double** VMUXvolt, double** DACcode, std::string* writeVar)
 {
     auto canvas = new TCanvas();
     remove("Results/DAC_linearity.root"); // Remove old file
@@ -21,8 +21,8 @@ void DACScanHistograms::fillDAC(DetectorContainer& DataContainer, double* fitSta
                     for(int variable = 0; variable < 1; variable++)
                     {
                         TGraph* linear = new TGraph(390, DACcode[variable], VMUXvolt[variable]);
-                        linear->SetTitle("CAL_MED;Injected DAC Code;Calibration DAC Output Voltage [V]");
-                        linear->SetName("CAL_MED");
+                        linear->SetTitle("VCAL_HIGH;Injected DAC Code;Calibration DAC Output Voltage [V]");
+                        linear->SetName("VCAL_HIGH");
                         linear->Fit("pol1","","",20,4080);
 						TFitResultPtr r = linear->Fit("pol1", "S", "", fitStart[variable], fitEnd[variable]);
                         gStyle->SetOptFit(0);
