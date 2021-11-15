@@ -33,7 +33,8 @@ const auto ToolParameters<RD53BInjectionTool<Flavor>> = make_named_tuple(
         MaskStep(0, 0, 0, {8, 1}),
         MaskStep(1, 0, 1, {}),
         MaskStep(0, 21, 1, {})
-    }))
+    })),
+    std::make_pair("showPlots"_s, true)
 );
 
 template <class Flavor>

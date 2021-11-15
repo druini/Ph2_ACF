@@ -217,7 +217,9 @@ ChipDataMap<std::array<double, 16>> RD53BInjectionTool<Flavor>::totDistribution(
 
 template <class Flavor>
 void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) const {
-    TApplication app("app", nullptr, nullptr);
+    TApplication* app = nullptr;
+    if (param("showPlots"_s))
+        app = new TApplication("app", nullptr, nullptr);
     TFile* file = new TFile(Base::getResultPath(".root").c_str(), "NEW");
 
     auto occMap = occupancy(result);
@@ -286,7 +288,8 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) const {
     file->Close();
 
     // TQObject::Connect("TGMainFrame", "CloseWindow()", "TApplication", &app, "Terminate()");
-    app.Run(true);
+    if (app)
+        app->Run(true);
 }
 
 template <class Flavor>
