@@ -29,10 +29,10 @@
 #define LOGNAME_FORMAT "%Y%m%d_%H%M%S"
 #define LOGNAME_SIZE 50
 
-class TempSensorHistograms : public DQMHistogramBase
+class TempSensorHistograms
 {
   public:
-    void fillTC( double idealityFactor[4], double calibNTCtemp[4][2], double calibSenstemp[4][2], double power[2]);
+    void fillTC( const double (&idealityFactor)[4], const double (&calibNTCtemp)[4][2], const double (&calibSenstemp)[4][2], const double (&power)[2] );
 	
   private:
     DetectorDataContainer DetectorData;

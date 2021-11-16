@@ -12,7 +12,7 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-void MuxScanHistograms::fillMUX( double* VMUXvolt, double* IMUXvolt, int run_counter )
+void MuxScanHistograms::fillMUX( const double (&VMUXvolt)[41], const double (&IMUXvolt)[33], int run_counter )
 {
 	//Need to be kept here because they are not seen in header file (investigate)
 	std::string IMUXVar[32] = {"IREF","CDR_VCO_main_bias","CDR_VCO_buffer_bias","CDR_CP_current","CDR_FD_current","CDR_buffer_bias","CML_driver_tap_2_bias","CML_driver_tap_1_bias","CML_driver_main_bias","NTC_pad_current","Capmeasure_circuit","Capmeasure_parasitic","DIFF_FE_Preamp_Main_array","DIFF_FE_PreComp","DIFF_FE_Comparator","DIFF_FE_VTH2","DIFF_FE_VTH1_Main_array","DIFF_FE_LCC","DIFF_FE_Feedback","DIFF_FE_Preamp_Left","DIFF_FE_VTH1_Left","DIFF_FE_Preamp_Right","DIFF_FE Preamp Top-Left","DIFF_FE VTH1 Right","DIFF_FE Preamp Top","DIFF_FE Preamp Top-Right","NONE","NONE","Analog_input_current","Analog_shunt_current","Digital_input_current","Digital_shunt_current"};

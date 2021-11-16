@@ -1,0 +1,9 @@
+2021-11-15 18:34:43,367 ERROR [default] [1m[31mCould not parse settings file RegReader - it is not .xml[0m
+2021-11-15 18:34:43,367 INFO [default] [1m[33mTrying to connect to the Power Supply Server...[0m
+2021-11-15 18:34:43,368 INFO [default] [1m[33mConnected to the Power Supply Server![0m
+2021-11-15 18:34:43,368 ERROR [default] [1m[31mCould not parse monitor file RegReader - it is not .xml[0m
+2021-11-15 18:34:43,368 ERROR [default] [1m[31mCould not parse settings file RegReader - it is not .xml[0m
+2021-11-15 18:34:43,368 INFO [default] [1m[35m@@@ Configuring HW parsed from xml file @@@[0m
+2021-11-15 18:34:43,368 INFO [default] [1m[31m>>> Destroying interfaces <<<[0m
+2021-11-15 18:34:43,368 INFO [default] [1m[31m>>> Interfaces  destroyed <<<[0m
+2021-11-15 18:34:43,368 INFO [default] RD53BminiDAQ finished successfully.

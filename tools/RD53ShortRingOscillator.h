@@ -5,9 +5,7 @@
 
 #include "../ProductionTools/ITchipTestingInterface.h"
 
-#ifdef __USE_ROOT__
 #include "../DQMUtils/RD53ShortRingOscillatorHistograms.h"
-#endif
 
 
 namespace RD53BTools {
@@ -21,8 +19,8 @@ const auto ToolParameters<RD53ShortRingOscillator<Flavor>> = make_named_tuple(
 );
 
 template <class Flavor>
-struct RD53ShortRingOscillator : public RD53BTool<RD53ShortRingOscillator<Flavor>> {
-    using Base = RD53BTool<RD53ShortRingOscillator>;
+struct RD53ShortRingOscillator : public RD53BTool<RD53ShortRingOscillator, Flavor> {
+    using Base = RD53BTool<RD53ShortRingOscillator, Flavor>;
     using Base::Base;
 
     struct ChipResults {
@@ -52,7 +50,7 @@ struct RD53ShortRingOscillator : public RD53BTool<RD53ShortRingOscillator<Flavor
 				chipInterface.WriteReg(chip, "RingOscARoute", ringOsc);
 				chipInterface.SendGlobalPulse(chip, {"StartRingOscillatorsA"},50); //Start Oscillators 
 				trimOscCounts[ringOsc] = chipInterface.ReadReg(chip, "RING_OSC_A_OUT") - 4096;
-				LOG(INFO) << BOLDMAGENTA << "Counts: " << trimOscCounts[ringOsc] << RESET;
+				//LOG(INFO) << BOLDMAGENTA << "Counts: " << trimOscCounts[ringOsc] << RESET;
 				//results[chip].trimOscFrequency[ringOsc] = trimOscCounts[ringOsc]/((2*51)/40);
 			}
 			for(int ringOsc = 0; ringOsc < 34; ringOsc++){
@@ -67,7 +65,7 @@ struct RD53ShortRingOscillator : public RD53BTool<RD53ShortRingOscillator<Flavor
 				chipInterface.WriteReg(chip, "RingOscBRoute", ringOsc);
 				chipInterface.SendGlobalPulse(chip, {"StartRingOscillatorsB"},50); //Start Oscillators 
 				trimOscCounts[ringOsc + 8] = chipInterface.ReadReg(chip, "RING_OSC_B_OUT") - 4096;
-				LOG(INFO) << BOLDMAGENTA << "Counts: " << trimOscCounts[ringOsc + 8] << RESET;
+				//LOG(INFO) << BOLDMAGENTA << "Counts: " << trimOscCounts[ringOsc + 8] << RESET;
 				//results[chip].trimOscFrequency[ringOsc + 8] = trimOscCounts[ringOsc + 8]/((2*51)/40);
 			}
         });
@@ -75,20 +73,16 @@ struct RD53ShortRingOscillator : public RD53BTool<RD53ShortRingOscillator<Flavor
         return results;
     }
 
-#ifdef __USE_ROOT__
 
-    void draw(ChipDataMap<ChipResults>& results, int run_counter) const {
+    void draw(const ChipDataMap<ChipResults>& results) const {
         for (const auto& item : results) {
-            ShortRingOscillatorHistograms* histos;
+            ShortRingOscillatorHistograms* histos = new ShortRingOscillatorHistograms;
             histos->fillSRO(
-                item.second.trimOscCounts, 
+                item.second.trimOscCounts
                 //item.second.trimOscFrequency, 
-                run_counter
             );
         }
     }
-
-#endif
 
 };
 

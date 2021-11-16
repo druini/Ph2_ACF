@@ -12,7 +12,7 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-void DACScanHistograms::fillDAC(double* fitStart, double* fitEnd, double** VMUXvolt, double** DACcode, std::string* writeVar)
+void DACScanHistograms::fillDAC(const double (&fitStart)[9], const double (&fitEnd)[9], const double (&VMUXvolt)[9][5000], const double (&DACcode)[9][5000], const std::string* writeVar)
 {
     auto canvas = new TCanvas();
     remove("Results/DAC_linearity.root"); // Remove old file

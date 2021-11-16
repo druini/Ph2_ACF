@@ -13,7 +13,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 #include <stdio.h>
 
-void TempSensorHistograms::fillTC( double idealityFactor[4], double calibNTCtemp[4][2], double calibSenstemp[4][2], double power[2])
+void TempSensorHistograms::fillTC( const double (&idealityFactor)[4], const double (&calibNTCtemp)[4][2], const double (&calibSenstemp)[4][2], const double (&power)[2] )
 {
 	const char* tNames[5] = {"TEMPSENS_1","TEMPSENS_2","TEMPSENS_3","TEMPSENS_4","NTC"};
 	static char auxvar[LOGNAME_SIZE];
