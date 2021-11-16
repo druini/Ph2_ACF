@@ -20,10 +20,10 @@
 #include "TGraph.h"
 #include <TStyle.h>
 
-class DACScanHistograms : public DQMHistogramBase
+class DACScanHistograms
 {
   public:
-    void fillDAC(double* fitStart, double* fitEnd, double** VMUXvolt, double** DACcode, std::string* writeVar);
+    void fillDAC(const double (&fitStart)[9], const double (&fitEnd)[9], const double (&VMUXvolt)[9][5000], const double (&DACcode)[9][5000], const std::string* writeVar);
 
   private:
     DetectorDataContainer DetectorData;

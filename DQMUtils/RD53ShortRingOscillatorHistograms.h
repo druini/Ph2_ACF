@@ -21,10 +21,10 @@
 #include <fstream>
 #include "TObject.h"
 
-class ShortRingOscillatorHistograms : public DQMHistogramBase
+class ShortRingOscillatorHistograms
 {
   public:
-    void fillSRO( double oscCounts[42], int run_counter = 0 );
+    void fillSRO( const double (&oscCounts)[42], int run_counter = 0 );
 	
   private:
     DetectorDataContainer DetectorData;

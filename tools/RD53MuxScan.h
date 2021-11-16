@@ -5,9 +5,7 @@
 
 #include "../ProductionTools/ITchipTestingInterface.h"
 
-#ifdef __USE_ROOT__
 #include "../DQMUtils/RD53MuxScanHistograms.h"
-#endif
 
 
 namespace RD53BTools {
@@ -21,8 +19,8 @@ const auto ToolParameters<RD53MuxScan<Flavor>> = make_named_tuple(
 );
 
 template <class Flavor>
-struct RD53MuxScan : public RD53BTool<RD53MuxScan<Flavor>> {
-    using Base = RD53BTool<RD53MuxScan>;
+struct RD53MuxScan : public RD53BTool<RD53MuxScan, Flavor> {
+    using Base = RD53BTool<RD53MuxScan, Flavor>;
     using Base::Base;
 
     struct ChipResults {
@@ -64,20 +62,16 @@ struct RD53MuxScan : public RD53BTool<RD53MuxScan<Flavor>> {
         return results;
     }
 
-#ifdef __USE_ROOT__
-
-    void draw(ChipDataMap<ChipResults>& results, int run_counter) const {
+    void draw(const ChipDataMap<ChipResults>& results) const {
         for (const auto& item : results) {
-            MuxScanHistograms* histos;
+			MuxScanHistograms* histos = new MuxScanHistograms;
             histos->fillMUX(
                 item.second.VMUXvolt, 
-                item.second.IMUXvolt,
-                0
+                item.second.IMUXvolt
             );
         }
     }
 
-#endif
 
 };
 

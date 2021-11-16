@@ -12,7 +12,7 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-void ShortRingOscillatorHistograms::fillSRO( double oscCounts[42], int run_counter )
+void ShortRingOscillatorHistograms::fillSRO( const double (&oscCounts)[42], int run_counter )
 {
 	const char*           oscNames[42] = {"CKND0", "CKND4", "INV0", "INV4", "NAND0", "NAND4", "NOR0", "NOR4", 
 											"CKND0 L","CKND0 R", "CKND4 L", "CKND4 R", "INV0 L","INV0 R", "INV4 L", "INV4 R", "NAND0 L","NAND0 R", "NAND4 L","NAND4 R", "NOR0 L","NOR0 R", "NOR4 L","NOR4 R",

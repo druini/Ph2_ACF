@@ -20,10 +20,10 @@
 #include "TGraph.h"
 #include <TStyle.h>
 
-class ADCScanHistograms : public DQMHistogramBase
+class ADCScanHistograms
 {
   public:
-    void fillADC(double* fitStart, double* fitEnd, double** VMUXvolt, double** ADCcode, std::string* writeVar);
+    void fillADC(const double (&fitStart)[9], const double (&fitEnd)[9], const double (&VMUXvolt)[9][5000], const double (&ADCcode)[9][5000], const std::string* writeVar);
 
   private:
     DetectorDataContainer DetectorData;

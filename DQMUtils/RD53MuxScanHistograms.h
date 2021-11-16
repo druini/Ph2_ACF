@@ -19,10 +19,10 @@
 #include <TStyle.h>
 #include "TApplication.h"
 
-class MuxScanHistograms : public DQMHistogramBase
+class MuxScanHistograms
 {
   public:
-    void fillMUX( double* VMUXvolt, double* IMUXvolt, int run_counter = 0 );
+    void fillMUX( const double (&VMUXvolt)[41], const double (&IMUXvolt)[33], int run_counter = 0 );
 	
   private:
     DetectorDataContainer DetectorData;

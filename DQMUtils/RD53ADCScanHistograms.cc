@@ -12,7 +12,7 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-void ADCScanHistograms::fillADC(double* fitStart, double* fitEnd, double** VMUXvolt, double** ADCcode, std::string* writeVar)
+void ADCScanHistograms::fillADC(const double (&fitStart)[9], const double (&fitEnd)[9], const double (&VMUXvolt)[9][5000], const double (&ADCcode)[9][5000], const std::string* writeVar)
 {
     auto canvas = new TCanvas();
     remove("Results/ADC_linearity.root"); // Remove old file

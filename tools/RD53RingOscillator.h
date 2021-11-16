@@ -5,9 +5,7 @@
 
 #include "../ProductionTools/ITchipTestingInterface.h"
 
-#ifdef __USE_ROOT__
 #include "../DQMUtils/RD53RingOscillatorHistograms.h"
-#endif
 
 
 namespace RD53BTools {
@@ -21,8 +19,8 @@ const auto ToolParameters<RD53RingOscillator<Flavor>> = make_named_tuple(
 );
 
 template <class Flavor>
-struct RD53RingOscillator : public RD53BTool<RD53RingOscillator<Flavor>> {
-    using Base = RD53BTool<RD53RingOscillator>;
+struct RD53RingOscillator : public RD53BTool<RD53RingOscillator, Flavor> {
+    using Base = RD53BTool<RD53RingOscillator, Flavor>;
     using Base::Base;
 
     struct ChipResults {
@@ -51,6 +49,7 @@ struct RD53RingOscillator : public RD53BTool<RD53RingOscillator<Flavor>> {
                 chipInterface.WriteReg(chip, "MonitorEnable", 1);
                 chipInterface.WriteReg(chip, "VMonitor", 38);
                 results[chip].trimVoltage[vTrim] = dKeithley2410.getVoltage()*2;
+				LOG(INFO) << BOLDMAGENTA << "Voltage: " << results[chip].trimVoltage[vTrim] << RESET;
                 for(int ringOsc = 0; ringOsc < 8; ringOsc++){
                     //Set up oscillators
                     chipInterface.WriteReg(chip, "RingOscAEnable", 0b11111111);
@@ -59,7 +58,7 @@ struct RD53RingOscillator : public RD53BTool<RD53RingOscillator<Flavor>> {
                     chipInterface.WriteReg(chip, "RingOscARoute", ringOsc);
                     chipInterface.SendGlobalPulse(chip, {"StartRingOscillatorsA"},50); //Start Oscillators 
                     trimOscCounts[ringOsc][vTrim] = chipInterface.ReadReg(chip, "RING_OSC_A_OUT") - 4096;
-                    LOG(INFO) << BOLDMAGENTA << "Counts: " << trimOscCounts[ringOsc][vTrim] << RESET;
+                    //LOG(INFO) << BOLDMAGENTA << "Counts: " << trimOscCounts[ringOsc][vTrim] << RESET;
                     results[chip].trimOscFrequency[ringOsc][vTrim] = trimOscCounts[ringOsc][vTrim]/((2*51)/40);
                 }
                 for(int ringOsc = 0; ringOsc < 34; ringOsc++){
@@ -74,7 +73,7 @@ struct RD53RingOscillator : public RD53BTool<RD53RingOscillator<Flavor>> {
                     chipInterface.WriteReg(chip, "RingOscBRoute", ringOsc);
                     chipInterface.SendGlobalPulse(chip, {"StartRingOscillatorsB"},50); //Start Oscillators 
                     trimOscCounts[ringOsc + 8][vTrim] = chipInterface.ReadReg(chip, "RING_OSC_B_OUT") - 4096;
-                    LOG(INFO) << BOLDMAGENTA << "Counts: " << trimOscCounts[ringOsc + 8][vTrim] << RESET;
+                    //LOG(INFO) << BOLDMAGENTA << "Counts: " << trimOscCounts[ringOsc + 8][vTrim] << RESET;
                     results[chip].trimOscFrequency[ringOsc + 8][vTrim] = trimOscCounts[ringOsc + 8][vTrim]/((2*51)/40);
                 }
             }
@@ -83,11 +82,10 @@ struct RD53RingOscillator : public RD53BTool<RD53RingOscillator<Flavor>> {
         return results;
     }
 
-#ifdef __USE_ROOT__
 
-    void draw(ChipDataMap<ChipResults>& results) const {
+    void draw(const ChipDataMap<ChipResults>& results) const {
         for (const auto& item : results) {
-            RingOscillatorHistograms* histos;
+            RingOscillatorHistograms* histos = new RingOscillatorHistograms;
             histos->fillRO(
                 item.second.trimOscCounts, 
                 item.second.trimOscFrequency, 
@@ -96,7 +94,6 @@ struct RD53RingOscillator : public RD53BTool<RD53RingOscillator<Flavor>> {
         }
     }
 
-#endif
 
 };
 

@@ -5,9 +5,7 @@
 
 #include "../ProductionTools/ITchipTestingInterface.h"
 
-#ifdef __USE_ROOT__
 #include "../DQMUtils/RD53DACScanHistograms.h"
-#endif
 
 
 namespace RD53BTools {
@@ -21,8 +19,8 @@ const auto ToolParameters<RD53DACScan<Flavor>> = make_named_tuple(
 );
 
 template <class Flavor>
-struct RD53DACScan : public RD53BTool<RD53DACScan<Flavor>> {
-    using Base = RD53BTool<RD53DACScan>;
+struct RD53DACScan : public RD53BTool<RD53DACScan, Flavor> {
+    using Base = RD53BTool<RD53DACScan, Flavor>;
     using Base::Base;
 	
     std::string readVar[9]  = {"CAL_HI", "CAL_MED", "REF_KRUM_LIN", "Vthreshold_LIN", "VTH_SYNC", "VBL_SYNC", "VREF_KRUM_SYNC", "VTH_HI_DIFF", "VTH_LO_DIFF"};
@@ -86,11 +84,9 @@ struct RD53DACScan : public RD53BTool<RD53DACScan<Flavor>> {
         return results;
     }
 
-#ifdef __USE_ROOT__
-
-    void draw(ChipDataMap<ChipResults>& results) const {
+    void draw(const ChipDataMap<ChipResults>& results) const {
         for (const auto& item : results) {
-            DACScanHistograms* histos;
+			DACScanHistograms* histos = new DACScanHistograms;
             histos->fillDAC(
                 item.second.fitStart, 
                 item.second.fitEnd, 
@@ -100,8 +96,6 @@ struct RD53DACScan : public RD53BTool<RD53DACScan<Flavor>> {
             );
         }
     }
-
-#endif
 
 };
 

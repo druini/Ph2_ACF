@@ -71,8 +71,7 @@ int main(int argc, char** argv) {
     
     SystemController system;
 
-    auto configFile = cmd.argument(0);
-    auto whichCalib = cmd.argument(1);
+    auto configFile = cmd.optionValue("file");
 
     if (reset) {
         system.InitializeSettings(configFile, std::cout);

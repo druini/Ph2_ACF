@@ -5,9 +5,7 @@
 
 #include "../ProductionTools/ITchipTestingInterface.h"
 
-#ifdef __USE_ROOT__
 #include "../DQMUtils/RD53TempSensorHistograms.h"
-#endif
 
 
 namespace RD53BTools {
@@ -21,8 +19,8 @@ const auto ToolParameters<RD53TempSensor<Flavor>> = make_named_tuple(
 );
 
 template <class Flavor>
-struct RD53TempSensor : public RD53BTool<RD53TempSensor<Flavor>> {
-    using Base = RD53BTool<RD53TempSensor>;
+struct RD53TempSensor : public RD53BTool<RD53TempSensor, Flavor> {
+    using Base = RD53BTool<RD53TempSensor, Flavor>;
     using Base::Base;
 	
     struct ChipResults {
@@ -38,22 +36,23 @@ struct RD53TempSensor : public RD53BTool<RD53TempSensor<Flavor>> {
 		//double currentFactor;
     };
 
+	
+	static constexpr double power[2] = {1.25, 1.92};
+	static constexpr int sensor_VMUX[4] = {0b1000000000101, 0b1000000000110, 0b1000000001110, 0b1000000010000};
+	
 
-	const float T0C = 273.15;         // [Kelvin]
-	const float kb  = 1.38064852e-23; // [J/K]
-	const float e   = 1.6021766208e-19;
-	const float R   = 15; // By circuit design
-	//double      power[2] = {0.24, 0.72}; // In direct powering for RD53A
-	double      power[2] = {1.25, 1.92}; // In LDO mode for CROC
-	int sensor_VMUX[4] = {0b1000000000101, 0b1000000000110, 0b1000000001110, 0b1000000010000};
-	const float T25C = 298.15; // [Kelvin]
-	const float R25C = 10;     // [kOhm]
-	const float Rdivider = 39.2; // [kOhm]
-	const float Vdivider = 2.5;  // [V]
-	const float beta = 1000;  // [?]
-	uint16_t sensorConfigData;
-
-    auto run(Ph2_System::SystemController& system) const {
+    auto run(Ph2_System::SystemController& system) {
+		constexpr float T0C = 273.15;         // [Kelvin]
+		constexpr float kb  = 1.38064852e-23; // [J/K]
+		constexpr float e   = 1.6021766208e-19;
+		constexpr float R   = 15; // By circuit design
+		//double      power[2] = {0.24, 0.72}; // In direct powering for RD53A
+		constexpr float T25C = 298.15; // [Kelvin]
+		constexpr float R25C = 10;     // [kOhm]
+		constexpr float Rdivider = 39.2; // [kOhm]
+		constexpr float Vdivider = 2.5;  // [V]
+		constexpr float beta = 1000;  // [?]
+		
         ChipDataMap<ChipResults> results;
         auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
 
@@ -62,6 +61,9 @@ struct RD53TempSensor : public RD53BTool<RD53TempSensor<Flavor>> {
         dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
 
         LOG(INFO) << "[RD53TempSensor] exampleParam = " << Base::param("exampleParam"_s) << RESET;
+		
+		
+		uint16_t sensorConfigData;
 
         for_each_device<Chip>(system, [&] (Chip* chip) {
 			auto& idealityFactor = results[chip].idealityFactor;
@@ -82,7 +84,7 @@ struct RD53TempSensor : public RD53BTool<RD53TempSensor<Flavor>> {
 					chipInterface.WriteReg(chip, "EnCoreCol_1", 0);
 					chipInterface.WriteReg(chip, "EnCoreCol_2", 0);
 					chipInterface.WriteReg(chip, "EnCoreCol_3", 0);
-					usleep(30000000);
+					//usleep(30000000);
 				} else if(mode == 1){ //Standard power mode
 					chipInterface.WriteReg(chip, "DAC_KRUM_CURR_LIN", 70);
 					chipInterface.WriteReg(chip, "DAC_LDAC_LIN", 110);
@@ -92,13 +94,13 @@ struct RD53TempSensor : public RD53BTool<RD53TempSensor<Flavor>> {
 					chipInterface.WriteReg(chip, "EnCoreCol_1", 0b1001001001001001);
 					chipInterface.WriteReg(chip, "EnCoreCol_2", 0b0100100100100100);
 					chipInterface.WriteReg(chip, "EnCoreCol_3", 0b010010);
-					usleep(30000000);
+					//usleep(30000000);
 				}
 				for(int sensor=0;sensor<4;sensor++){
 					chipInterface.WriteReg(chip, "MonitorEnable", 1); //Choose NTC MUX entry
 					chipInterface.WriteReg(chip, "VMonitor", 0b000010);
 					//calibNTCtemp[sensor][mode] = chipInterface.ReadHybridTemperature(chip);
-					chipInterface.ReadHybridTemperature(chip);
+					//chipInterface.ReadHybridTemperature(chip);
 					NTCvoltage = dKeithley2410.getVoltage();
 					float resistance  = NTCvoltage * Rdivider / (Vdivider - NTCvoltage);              // [kOhm]
 					calibNTCtemp[sensor][mode] = 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; // [Celsius]
@@ -142,24 +144,24 @@ struct RD53TempSensor : public RD53BTool<RD53TempSensor<Flavor>> {
         return results;
     }
 
-#ifdef __USE_ROOT__
-
-    void draw(ChipDataMap<ChipResults>& results) const {
+    void draw(const ChipDataMap<ChipResults>& results) const {
         for (const auto& item : results) {
-            TempSensorHistograms* histos;
+			TempSensorHistograms* histos = new TempSensorHistograms;
             histos->fillTC(
                 item.second.idealityFactor, 
                 item.second.calibNTCtemp, 
                 item.second.calibSenstemp, 
-                item.second.power
+                power
             );
         }
     }
-
-#endif
-
 };
 
+template <class Flavor>
+const double RD53TempSensor<Flavor>::power[];
+
+template <class Flavor>
+const int RD53TempSensor<Flavor>::sensor_VMUX[];
 }
 
 #endif

@@ -5,9 +5,7 @@
 
 #include "../ProductionTools/ITchipTestingInterface.h"
 
-#ifdef __USE_ROOT__
 #include "../DQMUtils/RD53ADCScanHistograms.h"
-#endif
 
 
 namespace RD53BTools {
@@ -21,8 +19,8 @@ const auto ToolParameters<RD53ADCScan<Flavor>> = make_named_tuple(
 );
 
 template <class Flavor>
-struct RD53ADCScan : public RD53BTool<RD53ADCScan<Flavor>> {
-    using Base = RD53BTool<RD53ADCScan>;
+struct RD53ADCScan : public RD53BTool<RD53ADCScan, Flavor> {
+    using Base = RD53BTool<RD53ADCScan, Flavor>;
     using Base::Base;
 	
     std::string readVar[9]  = {"CAL_HI", "CAL_MED", "REF_KRUM_LIN", "Vthreshold_LIN", "VTH_SYNC", "VBL_SYNC", "VREF_KRUM_SYNC", "VTH_HI_DIFF", "VTH_LO_DIFF"};
@@ -53,10 +51,10 @@ struct RD53ADCScan : public RD53BTool<RD53ADCScan<Flavor>> {
 			
 			for(int input = 0; input < 4096; input+=10)
 			{
+				if(input > 4096) continue;
 				LOG(INFO) << BOLDBLUE << "i        = " << BOLDYELLOW << input << " " << RESET;
 				for(int variable = 0; variable < 1; variable++)
 				{
-					if(input > 4096) continue;
 					//if(input == 0)
 					//{
 					//	VMUXvolt[variable] = new double[5000];
@@ -89,11 +87,9 @@ struct RD53ADCScan : public RD53BTool<RD53ADCScan<Flavor>> {
         return results;
     }
 
-#ifdef __USE_ROOT__
-
-    void draw(ChipDataMap<ChipResults>& results) const {
+    void draw(const ChipDataMap<ChipResults>& results) const {
         for (const auto& item : results) {
-            ADCScanHistograms* histos;
+            ADCScanHistograms* histos = new ADCScanHistograms;
             histos->fillADC(
                 item.second.fitStart, 
                 item.second.fitEnd, 
@@ -103,8 +99,6 @@ struct RD53ADCScan : public RD53BTool<RD53ADCScan<Flavor>> {
             );
         }
     }
-
-#endif
 
 };
 
