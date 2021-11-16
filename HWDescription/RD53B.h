@@ -57,6 +57,19 @@ namespace RD53BFlavor {
         static constexpr FrontEndType feType = FrontEndType::RD53B; 
 
         static constexpr char name[] = "ATLAS";
+
+        static constexpr uint8_t encodeTDAC(uint8_t value) { 
+            if (value < 16)
+                return 1 << 4 | ~(value & 0xF);
+            else
+                return value & 0xF;
+        }
+
+        static constexpr uint8_t decodeTDAC(uint8_t code) { 
+            bool sign = code & 0x10; 
+            uint8_t value = code & 0xF;
+            return sign ? 16 + value : ~value;
+        }
     };
 
     struct CMS {
@@ -69,16 +82,22 @@ namespace RD53BFlavor {
         static constexpr FrontEndType feType = FrontEndType::CROC;
 
         static constexpr char name[] = "CMS";
+
+        static constexpr uint8_t encodeTDAC(uint8_t value) { return value; }
+        static constexpr uint8_t decodeTDAC(uint8_t code) { return code; }
     };
     
 }
+
+template <class Flavor, class T>
+using pixel_matrix_t = xt::xtensor_fixed<T, xt::xshape<Flavor::nRows, Flavor::nCols>>;
 
 template <class Flavor>
 class RD53B : public RD53Base
 {
 public:
     friend class Ph2_HwInterface::RD53BInterface<Flavor>;
-    // using flavor = Flavor;
+    using flavor = Flavor;
 
     using Reg = typename Flavor::Reg;
     using Register = RD53BConstants::Register;
@@ -95,14 +114,13 @@ public:
     static const decltype(RD53BConstants::GetVMUX()) VMUX;
 
     template <class T>
-    using PixelMatrix = xt::xtensor_fixed<T, xt::xshape<nRows, nCols>>;
+    using PixelMatrix = pixel_matrix_t<Flavor, T>;
 
     struct PixelConfig {
-        PixelMatrix<bool> enable;
-        PixelMatrix<bool> enableInjections;
-        PixelMatrix<bool> enableHitOr;
-        PixelMatrix<uint8_t> tdac;
-        PixelMatrix<bool> tdacSign;
+        PixelMatrix<bool> enable = xt::zeros<bool>({nRows, nCols});
+        PixelMatrix<bool> enableInjections = xt::zeros<bool>({nRows, nCols});
+        PixelMatrix<bool> enableHitOr = xt::zeros<bool>({nRows, nCols});
+        PixelMatrix<uint8_t> tdac = 15 * xt::ones<uint8_t>({nRows, nCols});
     };
 
     static const auto& pixelConfigFields() {
@@ -111,8 +129,7 @@ public:
             std::make_pair("enable"_s, &PixelConfig::enable),
             std::make_pair("enableInjections"_s, &PixelConfig::enableInjections),
             std::make_pair("enableHitOr"_s, &PixelConfig::enableHitOr),
-            std::make_pair("tdac"_s, &PixelConfig::tdac),
-            std::make_pair("tdacSign"_s, &PixelConfig::tdacSign)
+            std::make_pair("tdac"_s, &PixelConfig::tdac)
         );
         return pixelConfigFields;
     }

@@ -42,10 +42,12 @@ bool RD53BInterface<Flavor>::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_
     WriteReg(chip, "RawData", 0);
     WriteReg(chip, "EnOutputDataChipId", 0);
 
-    WriteReg(chip, Reg::RingOscConfig, 0x7fff);
-    WriteReg(chip, Reg::RingOscConfig, 0x5eff);
+    // WriteReg(chip, Reg::RingOscConfig, 0x7fff);
+    // WriteReg(chip, Reg::RingOscConfig, 0x5eff);
 
     UpdateCoreColumns(chip);
+
+    UpdatePixelConfig(chip, chip->pixelConfig);
 
     return true;
 }
@@ -125,7 +127,7 @@ boost::optional<uint16_t> RD53BInterface<Flavor>::ReadChipReg(RD53B* rd53b, cons
 
         LOG(WARNING) << BLUE << "Register readback (" << reg.name << ") error, attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW << nAttempts << RESET;
         if (regReadback.size()) {
-            LOG(WARNING) << BLUE << "Readback entries:" << RESET;
+            LOG(WARNING) << BLUE << "Readback entries (expected address: " << address << "): " << RESET;
             for (const auto& item : regReadback)
                 LOG(WARNING) << BLUE << "\taddress: " << item.first << ", value: " << item.second << RESET;
         }
@@ -149,10 +151,8 @@ uint16_t RD53BInterface<Flavor>::ReadReg(Chip* chip, const Register& reg, bool u
     auto value = ReadChipReg(&rd53b, reg);
     if (value)
         return *value;
-    else if (rd53b.registerValues[reg.address])
-        return *rd53b.registerValues[reg.address];
     else
-        return 0;
+        throw std::runtime_error("could not read register: " + reg.name);
 }
 
 template <class Flavor>
@@ -173,6 +173,8 @@ template <class Flavor>
 void RD53BInterface<Flavor>::WriteReg(Chip* chip, const Register& reg, uint16_t value) {
     SendCommand<RD53BCmd::WrReg>(chip, reg.address, value);
     static_cast<RD53B*>(chip)->registerValues[reg.address] = value;
+    if (reg == RD53B::Reg::REGION_ROW)
+        static_cast<RD53B*>(chip)->currentRow = value;
 }
 
 template <class Flavor>
@@ -204,8 +206,11 @@ template <class Flavor>
 void RD53BInterface<Flavor>::WriteReg(Hybrid* hybrid, const Register& reg, uint16_t value) {
     SendCommand<RD53BCmd::WrReg>(hybrid, reg.address, value);
     
-    for (auto* chip : *hybrid)
+    for (auto* chip : *hybrid) {
         static_cast<RD53B*>(chip)->registerValues[reg.address] = value;
+        if (reg == RD53B::Reg::REGION_ROW)
+            static_cast<RD53B*>(chip)->currentRow = value;
+    }
 }
 
 

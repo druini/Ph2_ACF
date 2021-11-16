@@ -47,7 +47,7 @@ void RingOscillatorHistograms::fillRO(double trimOscCounts[42][16], double trimO
     {
         TGraph* freqPlot = new TGraph(16, trimVoltage, trimOscFrequency[ringOsc]);
         freqPlot->SetTitle(oscNames[ringOsc]);
-        vdddMG->Add(freqPlot, "APL");
+        vdddMG2->Add(freqPlot, "APL");
         freqPlot->Write();
     }
     vdddMG->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");

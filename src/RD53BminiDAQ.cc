@@ -10,13 +10,15 @@
 #include "../tools/RD53ShortRingOscillator.h"
 #include "../tools/RD53RingOscillator.h"
 #include "../tools/RD53BTool.h"
+#include "../tools/RD53BToolManager.h"
 #include "../tools/RD53BInjectionTool.h"
 #include "../tools/RD53BRegReader.h"
 #include "../tools/RD53BThresholdScan.h"
-#include "../tools/RD53BInjectionMaskGenerator.h"
-// #include "../tools/RD53BPixelAlive.h"
+#include "../tools/RD53BRegTest.h"
+#include "../tools/RD53BRingOscillator.h"
+// #include "../tools/RD53BThresholdEqualization.h"
+// #include "../tools/RD53BRegisterThresholdScan.h"
 
-#include <experimental/type_traits>
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
@@ -35,42 +37,12 @@ using Tools = ToolManager<decltype(make_named_tuple(
 	TOOL(RD53MuxScan),
 	TOOL(RD53ADCScan),
 	TOOL(RD53DACScan),
-	TOOL(RD53TempSensor)
+	TOOL(RD53TempSensor),
+    TOOL(RD53BRegTest)
+    // , TOOL(RD53BThresholdEqualization)
+    // , TOOL(RD53BRegisterThresholdScan)
 ))>;
 
-// template <class T>
-// using tool_result_t = decltype(std::declval<T>().run(std::declval<SystemController&>()));
-
-template <class T>
-using has_draw = decltype(std::declval<T>().draw(std::declval<T>().run(std::declval<SystemController&>())));
-
-
-struct ToolRunner {
-    const std::string& toolName;
-    SystemController& system;
-
-    template <class Tool, typename std::enable_if_t<std::experimental::is_detected_v<has_draw, Tool>, int> = 0>
-    void operator()(const Tool& tool) {
-        std::cout << "toolName: " << toolName << std::endl;
-        auto result = tool.run(system);
-        tool.draw(result);
-    }
-
-    template <class Tool, typename std::enable_if_t<!std::experimental::is_detected_v<has_draw, Tool>, int> = 0>
-    void operator()(const Tool& tool) {
-        std::cout << "toolName: " << toolName << std::endl;
-        tool.run(system);
-    }
-};
-
-
-template <class Flavor>
-void run(SystemController& system, const toml::value& toolConfig, const std::vector<std::string>& toolNames) {
-    auto tools = Tools<Flavor>(toolConfig);
-
-    for (const auto& toolName : toolNames)
-        tools.with_tool(toolName, ToolRunner{toolName, system});
-}
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -114,121 +86,12 @@ int main(int argc, char** argv) {
     
     system.Configure(configFile);
 
-    auto& chipInterface = *system.fReadoutChipInterface;
+    auto toolConfig = toml::parse(cmd.optionValue("tools"));
 
- //   for_each_chip(&system, [&] (auto devices) {
- //       LOG(INFO) << "Reading registers of chip: " << devices.chip->getId() << RESET;
- //       const auto& registers = devices.chip->getFrontEndType() == FrontEndType::RD53B ? RD53BReg::Registers : CROCReg::Registers;
- //       for (const auto& reg : registers) {
- //           uint16_t value = chipInterface.ReadChipReg(devices.chip, reg.name);
- //           std::stringstream ss;
- //           ss << reg.name << " = " << value;
- //           if (value != reg.defaultValue) 
- //               ss << " (default: " << reg.defaultValue << ")" << RESET;
- //           LOG(INFO) << ss.str();   
- //       }
- //   });
-	
-//	
-//	if(whichCalib == "ringosc")
-//        {
-//            // ##################
-//            // # Run RingOscillator #
-//            // ##################
-//            LOG(INFO) << BOLDMAGENTA << "@@@ Performing RingOscillator @@@" << RESET;
-//
-//            std::string    fileName("RingOscillator_Test");
-//            RingOscillator ros;
-//            ros.Inherit(&system);
-//            ros.run();
-//            ros.draw();
-//        }
-//        else if(whichCalib == "sringosc")
-//        {
-//            // #ifdef __POWERSUPPLY__
-//            // ##################
-//            // # Run ShortRingOscillator #
-//            // ##################
-//            LOG(INFO) << BOLDMAGENTA << "@@@ Performing ShortRingOscillator @@@" << RESET;
-//
-//            std::string    fileName("ShortRingOscillator_Test");
-//            ShortRingOscillator ros;
-//            srs.Inherit(&system);
-//            srs.run();
-//            srs.draw();
-//        }
-//        else if(whichCalib == "adcscan")
-//        {
-//            // #ifdef __POWERSUPPLY__
-//            // ##################
-//            // # Run ADCScan #
-//            // ##################
-//            LOG(INFO) << BOLDMAGENTA << "@@@ Performing ADCScan @@@" << RESET;
-//
-//            std::string    fileName("ADCScan_Test");
-//            ADCScan     adc;
-//            adc.Inherit(&system);
-//            adc.run(configFile);
-//            adc.draw();
-//            // #else
-//            //             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
-//            //             exit(EXIT_FAILURE);
-//            // #endif
-//        }
-//        else if(whichCalib == "dacscan")
-//        {
-//            // #ifdef __POWERSUPPLY__
-//            // ##################
-//            // # Run DACScan #
-//            // ##################
-//            LOG(INFO) << BOLDMAGENTA << "@@@ Performing DACScan @@@" << RESET;
-//
-//            std::string    fileName("DACScan_Test");
-//            DACScan     dac;
-//            dac.Inherit(&system);
-//            dac.run(configFile);
-//            dac.draw();
-//            // #else
-//            //             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
-//            //             exit(EXIT_FAILURE);
-//            // #endif
-//        }
-//        else if(whichCalib == "tempsens")
-//        {
-//            // #ifdef __POWERSUPPLY__
-//            // ##################
-//            // # Run TempSensor #
-//            // ##################
-//            LOG(INFO) << BOLDMAGENTA << "@@@ Performing TempSensor @@@" << RESET;
-//
-//            std::string fileName("TempSensor_Test");
-//            TempSensor  tsn;
-//            tsn.Inherit(&system);
-//            tsn.run(configFile);
-//            tsn.draw();
-//            // #else
-//            //             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
-//            //             exit(EXIT_FAILURE);
-//            // #endif
-//        }
-//        else if(whichCalib == "muxscan")
-//        {
-//            // #ifdef __POWERSUPPLY__
-//            // ##################
-//            // # Run VMUXScan #
-//            // ##################
-//            LOG(INFO) << BOLDMAGENTA << "@@@ Performing MUXScan @@@" << RESET;
-//
-//            std::string fileName("MUXScan_Test");
-//            MuxScan  mxs;
-//            mxs.Inherit(&system);
-//            mxs.run();
-//            mxs.draw(0);
-//            // #else
-//            //             LOG(WARNING) << BOLDBLUE << "POWERSUPPLY flag was OFF during compilation" << RESET;
-//            //             exit(EXIT_FAILURE);
-//            // #endif
-//        }
+    if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
+        Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(system, cmd.allArguments());
+    else
+        Tools<RD53BFlavor::CMS>(toolConfig).run_tools(system, cmd.allArguments());
 
     system.Destroy();
 

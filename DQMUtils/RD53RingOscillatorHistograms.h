@@ -26,6 +26,7 @@
 
 class RingOscillatorHistograms : public DQMHistogramBase
 {
+  static constexpr const char* oscNames[] = {"CKND0", "CKND4", "INV0", "INV4", "NAND0", "NAND4", "NOR0", "NOR4"};
   public:
     void fillRO(double trimOscCounts[42][16], double trimOscFrequency[42][16], double trimVoltage[16]);
 

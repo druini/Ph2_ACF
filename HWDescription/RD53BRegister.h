@@ -30,6 +30,10 @@ struct Register {
     friend bool operator!=(const Register& a, const Register& b) {
         return !(a == b);
     }
+
+    friend bool operator<(const Register& a, const Register& b) {
+        return a.address < b.address;
+    }
 };
 
 struct RegisterField {

@@ -1,4 +1,4 @@
-# RD53B Version
+# [RD53B]
 
 This version requires the `devtoolset-10` package: 
 ```bash
@@ -8,7 +8,30 @@ sudo yum install devtoolset-10
 
 Compatible firmware images can be found here: https://cernbox.cern.ch/index.php/s/MSHAo1FdMaml0m8
 
-## Registers
+# [RD53B] Usage
+
+- Configuration:
+
+    Exaple hardware description files: `settings/RD53B.xml` (RD53B-ATLAS), `settings/CROC.xml` (RD53B-CMS)
+
+    Example tools configuration file: `settings/RD53BTools.toml`
+
+- Reset: 
+    ```
+    RD53BminiDAQ -f CROC.xml -r
+    ```
+
+- Run a tool: 
+    ```
+    RD53BminiDAQ -f CROC.xml -t RD53BTools.toml DigitalScan
+    ```
+
+- Run a sequence of tools:
+    ```
+    RD53BminiDAQ -f CROC.xml -t RD53BTools.toml DigitalScan AnalogScan RegReader
+    ```
+
+# [RD53B] Registers
 
 In addition to regular registers a set of virtual registers have been defined.
 A virtual register is composed of one or more subranges of one or more registers.
@@ -19,7 +42,7 @@ A python script has been developed to generate the c++ source files containing t
 
 Users can use virtual register names in the XML config file.
 
-## Tools
+# [RD53B] Tools
 
 The tool system has been redesigned for RD53B. Each tool type is a class which has a `run` member function with a `SystemController&` parameter and optionally a `draw` member function with a parameter of the same type as the result of `run`. To each tool type is associated a NamedTuple (similar to std::tuple but each field has an associated name) containing the name, type and default value of each parameter for this tool type. A tool type must be added to the list of known tool types in `RD53BminiDAQ.cc` in order to be used.
 
@@ -49,35 +72,369 @@ args = { injectionType = "Analog", nInjections = 10 }
 
 The user can define multiple tools of the same tool type. Any parameters that are not specified will have their default values. Tools can have other tools as parameters in which case the name of the desired tool of the required type should be used.
 
-There are currently only two tool types:
+# [RD53B] Tool types
 
-- RD53BRegReader (`Tools/RD53BInjectionTool`):
-    - `run`: Reads all registers and prints their values in the terminal.
+## RD53BRegReader
 
-- RD53BInjectionTool (`Tools/RD53BInjectionTool`):
-    - `run`: Performs a given number of injections for each pixel of a given rectangular area. 
-    - `draw`: Draws the resulting hitmap using root and reports the mean occupancy in the terminal.
+Reads all chip registers.
 
-## Usage
+### Parameters
 
-- Configuration:
+None.
 
-    Exaple hardware description files: `settings/RD53B.xml` (RD53B-ATLAS), `settings/CROC.xml` (RD53B-CMS)
+### Public Member Functions
 
-    Example tools configuration file: `settings/RD53BTools.toml`
+- `run`: Runs the tool.
 
-- Reset: 
+    - **Signature**:
+
+        ```C++
+        ChipDataMap<std::array<size_t, 256>> run(SystemController& system, Task progress)
+        ```
+
+    - **Parameters**:
+
+        | Name | Description |
+        |-----------|-------------|
+        | system    | The system on which to run the tool. |
+        | progress  | Represents some fraction of the progress bar. |
+
+    - **Returns**: A map containing an array with the values of all registers for each chip
+
+
+- `draw`: Prints the values of all registers of each chip.
+
+  - **Signature**:
+
+      ```C++
+      void draw(const ChipDataMap<std::array<size_t, 256>>& data)
+      ```
+
+  - **Parameters**:
+
+      | Parameter | Description |
+      |-----------|-------------|
+      | data  | The result of `run`. |
+
+## RD53BInjectionTool
+
+Performs a number of injections on each pixel using a configurable injection pattern and returns the results. 
+
+### Parameters
+
+| Name              | Deascription
+|---                | ---
+| `nInjections` | number of injections for each pixel (default: 10) |
+| `triggerDuration` | number of consecutive triggers to send per injection (default: 10) |
+| `triggerLatency` | written into the `LatencyConfig` field of the `TriggerConfig` chip register (default: 133) |
+| `injectionType` | can be either `"Analog"` or `"Digital"` |
+| `injectionPeriod` | can be used to adjust the rate of injections |
+| `fineDelay` | calibration command edge delay |
+| `pulseDuration` | calibration command edge duration (useful for digital injections) |
+| `offset` | the address (row, column) of the top-left pixel of the rectangular scan area. |
+| `size` | the size (height, width) of the rectangular scan area. |
+| `maskGen` | injection patter generator |
+
+### Public member functions
+
+
+- `run`: Runs the tool.
+
+    - **Signature**:
+
+        ```C++
+        ChipDataMap<std::vector<RD53BEvent>> run(SystemController& system, Task progress) const;
+        ```
+
+    - **Parameters**:
+
+        | Name | Description |
+        |-----------|-------------|
+        | system    | The system on which to run the tool. |
+        | progress  | Represents some fraction of the progress bar. |
+
+    - **Returns**: A map containing a vector of events for each chip
+
+- `draw`: Draws the 2D occupancy histogram and the ToT distribution histogram for each chip.
+
+  - **Signature**:
+
+      ```C++
+      void draw(const ChipDataMap<std::vector<RD53BEvent>>& data) const;
+      ```
+
+  - **Parameters**:
+
+      | Parameter | Description |
+      |-----------|-------------|
+      | data  | The result of `run`. |
+
+-  `configureInjections`: Configures the system for injections.
+
+    - **Signature**:
+        ```c++
+        void configureInjections(Ph2_System::SystemController& system) const;
+        ```
+
+    - **Parameters**:
+
+        | Parameter | Description |
+        |-----------|-------------|
+        | system    | The system to configure. |
+
+-  `setupMaskFrame`: Configures the pixels for a frame of the injection pattern.
+
+    - **Signature**:
+        ```c++
+        void setupMaskFrame(Ph2_System::SystemController& system, size_t frameId) const;
+        ```
+
+    - **Parameters**:
+
+        | Parameter | Description |
+        |-----------|-------------|
+        | system    | The system to configure. |
+        | frameId   | The frame of the injetion pattern to use |
+
+
+- `inject`: Performs `nInjections` injections and adds the resulting events in the given container.
+
+    - **Signature**:
+        ```c++
+        void configureInjections(Ph2_System::SystemController& system, ChipDataMap<std::vector<RD53BEvent>>& events) const;
+        ```
+
+    - **Parameters**:
+
+        | Parameter | Description |
+        |-----------|-------------|
+        | system    | The system to inject. |
+        | events    | The map of vectors in which to add the events for each chip. |
+
+
+- `occupancy`: Computes the occupancy map from the events.
+
+    - **Signature**:
+
+        ```c++
+        ChipDataMap<pixel_matrix_t<Flavor, double>> occupancy(const ChipDataMap<std::vector<RD53BEvent>>& data) const;
+        ```
+
+    - **Parameters**:
+
+        | Parameter | Description |
+        |-----------|-------------|
+        | data    | The result of `run`. |
+
+    - **Returns**: A `ChipDataMap` containing the occupancy matrix for each chip.
+
+
+- `totDistribution`: Computes the tot distribution from the events.
+
+    - **Signature**:
+
+        ```c++
+        ChipDataMap<std::array<double, 16>> totDistribution(const ChipDataMap<std::vector<RD53BEvent>>& data) const;
+        ```
+
+    - **Parameters**:
+
+        | Parameter | Description |
+        |-----------|-------------|
+        | data    | The result of `run`. |
+
+    - **Returns**: A `ChipDataMap` containing the tot distribution for each chip.
+
+## RD53BThresholdScan
+
+Performs injections using the given injection tool for different values of the VCAL_HIGH register.
+
+
+### Parameters
+
+| Name              | Deascription
+|---                | ---
+| `injectionTool` | A tool of type RD53BInjectionTool to be used for injections. |
+| `vcalMed` | The value of VCAL_MED to use. |
+| `vcalHighRange` | The lowest and highest VCAL_HIGH values to use. |
+| `vcalHighStep` | The VCAL_HIGH step to use. |
+
+
+### Public member functions
+
+
+- `run`: Runs the tool.
+
+    - **Signature**:
+
+        ```C++
+        ChipDataMap<xt::xtensor<double, 3>> run(Ph2_System::SystemController& system, Task progress);
+        ```
+
+    - **Parameters**:
+
+        | Name | Description |
+        |-----------|-------------|
+        | system    | The system on which to run the tool. |
+        | progress  | Represents some fraction of the progress bar. |
+
+    - **Returns**: A map containing a 3-D occupancy array (dimensions: vcal steps, rows, columns) for each chip.
+
+- `draw`: Draws the S-Curves of each pixel (superimposed), the threshold map and distribution and the noise map and distribution.
+
+  - **Signature**:
+
+      ```C++
+      void draw(const ChipDataMap<xt::xtensor<double, 3>>& data) const;
+      ```
+
+  - **Parameters**:
+
+      | Parameter | Description |
+      |-----------|-------------|
+      | data  | The result of `run`. |
+
+# [RD53B] Injection Pattern Generator
+
+
+A pattern is conceptually a 3-D boolean array.
+
+We start with a 1x1x1 pattern representing a single frame with a single enabled pixel and expand it in a sequence of steps.
+
+Parallel steps tile the pattern in one of the two spacial directions (rows or columns) a given number of times.
+
+Each successive tile is optionally shifted (with wrapping around) by some amount in the direction of the previous step to enable diagonal patterns.
+
+The difference between parallel and sequential steps is that the latter place each tile in a different frame, thus expanding the temporal dimension.
+
+To summarize, each step has:
+  * A dimension (0 for rows and 1 for columns)
+  * A size relative to the size of the pattern produced in the previous step. A size of 1 doesn't do anything. At least one step in each dimension must have size 0 which means that this step will take up all available space in its dimension.
+  * It can be parallel or sequential
+  * It can have a variable number of shifts that will be applied to the pattern as it gets tiled in the next step. The shifts of the last step do not have any effect.
+
+You can try out the pattern generator here:
+https://mybinder.org/v2/git/https%3A%2F%2Fgitlab.cern.ch%2Falpapado%2Finjection-pattern.git/master?labpath=injection_pattern.ipynb
+
+# [RD53B] Tool Development
+
+To create a new tool called `MyTool` with an `int` parameter called `myInt` and a `std::vector<std::string>` parameter called `optionList`:
+
+- In `tools/RD53BMyTool.h`:
+  - `#include "RD53BTool.h"`
+  - Enter the `RD53BTools` namespace: 
+
+    ```c++
+    namespace RD53BTools {
     ```
-    RD53BminiDAQ -f HwDescripion.xml -r
+
+  - Forward declare your tool class template:
+
+    ```c++
+    template <class Flavor>
+    struct MyTool;
     ```
 
-- Run a tool: 
+  - Specialize the `ToolParameters` variable template for your tool type and initialize it with a NamedTuple<...> defining the names, types and default values of your tool's parameters.
+    
+    ```c++
+    template <class Flavor>
+    const auto ToolParameters<RD53BThresholdScan<Flavor>> = make_named_tuple(
+        std::make_pair("myInt"_s, 42),
+        std::make_pair("optionList"_s, std::vector<std::string>({
+            "Opt1", 
+            "Opt2"
+        }))
+    );
     ```
-    RD53BminiDAQ -f HwDescription -t RD53BTools.toml DigitalScan
+    Note: the weird `_s` suffix for the parameter names is important.
+
+    If your tool doesn't have parameters you can use an empty `NamedTuple<>`:
+
+    ```c++
+    template <class Flavor>
+    const auto ToolParameters<RD53BThresholdScan<Flavor>> = make_named_tuple();
     ```
-- Run a sequence of tools:
+
+  - Define your tool class template and have it inherit from `RD53BTool<MyTool<Flavor>>`:
+
+    ```c++
+    template <class Flavor>
+    struct MyTool : public RD53BTool<MyTool<Flavor>> {
     ```
-    RD53BminiDAQ -f HwDescription -t RD53BTools.toml DigitalScan AnalogScan RegReader
+
+  - Inherit the constructor of the base class:
+
+    ```c++
+    using Base = RD53BTool<RD53BThresholdScan>;
+    using Base::Base;
+    using Base::params; // optional
+    ```
+
+  - Optionally define an `init` function which will be called once upon initialization. For `MyTool` for example, `init` turns all options to lower-case so that they become case-insensitive:
+
+    ```c++
+    void init() {
+        for (auto& opt : param("optionList"_s))
+            std::transform(opt.begin(), opt.end(), opt.begin(), [] (const char& c) { 
+                return (char)std::tolower(c); 
+            });
+    }
+    ```
+
+    Note: parameters can be accessed with the `param` function. The `_s` suffix must be used here as well.
+
+  - Define a `run` function which takes a `SystemController&` and returns anything:
+  
+    ```c++
+    auto run(SystemController&) const {
+        MyResultType result;
+        //...
+        return result;
+    }
+    ```
+
+  - Optionally define a `draw` function which takes one argument of the same type as the result of `run` and creates plots:
+
+    ```c++
+    void draw(const MyResultType&) const {
+        TApplication app("app", nullptr, nullptr);
+        //...
+        app.Run(true);
+    }
+    ```
+
+- In `src/RD53BminiDAQ.cc`:
+  - `#include "../tools/RD53BMyTool.h`
+  - Add your tool to the list at the begining of the file:
+
+    ```c++
+    template <class Flavor>
+    using Tools = ToolManager<decltype(make_named_tuple(
+        TOOL(RD53BInjectionTool),
+        TOOL(RD53BRegReader),
+        TOOL(RD53BThresholdScan),
+        TOOL(MyTool) // <---------------------
+    ))>;
+    ```
+- In your `RD53BTools.toml`:
+  - Add one or more tools of your tool type:
+
+    ```toml
+    [MyTool1]
+    type = "MyTool"
+    args = { myInt = 1, optionList = ["opt1"] }
+    
+    [MyTool2]
+    type = "MyTool"
+    args = { myInt = 42, optionList = ["OPT2, OPT3"] }
+    ```
+
+- Build the software.
+- Test your tool: 
+    
+    ```
+    RD53BminiDAQ -f CROC.xml -t RD53BTools.toml MyTool1
     ```
 
 

@@ -38,7 +38,7 @@ namespace RD53BUtils {
     };
 
     struct ChipLocation {
-        explicit ChipLocation(Chip* pChip) : board_id(pChip->getBeBoardId()), hybrid_id(pChip->getHybridId()), chip_id(pChip->getId()) {}
+        ChipLocation(Chip* pChip) : board_id(pChip->getBeBoardId()), hybrid_id(pChip->getHybridId()), chip_id(pChip->getId()) {}
 
         // Chip* getChip(SystemController& system) {
         //     return system.fDetectorContainer->at(board_id)->at(0)->at(hybrid_id)->at(chip_id);
@@ -55,7 +55,7 @@ namespace RD53BUtils {
         }
 
         friend std::ostream& operator<<(std::ostream& os, const ChipLocation& loc) {
-            return (os << '[' << loc.board_id << '/' << loc.hybrid_id << '/' << loc.chip_id << ']');
+            return (os << "{ board: " << loc.board_id << ", hybrid: " << loc.hybrid_id << ", chip: " << loc.chip_id << " }");
         }
     };
 
