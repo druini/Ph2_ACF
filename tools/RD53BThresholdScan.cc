@@ -155,6 +155,11 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) const {
             for (const double occ : xt::view(item.second, i, xt::all(), xt::all()))
                 scurves->Fill(vcalBins(i), occ * 100 + .5 * 100.0 / nInjections, 1);
 
+        
+        TCanvas* c1 = new TCanvas("scurves", "Threshold Scan S-Curves", 600, 600); (void)c1;
+        scurves->Draw("COLZ");
+        c1->Write();
+
         const auto& threshold = thresholdAndNoise[0][item.first];
         const auto& noise = thresholdAndNoise[1][item.first];
 
@@ -163,45 +168,47 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) const {
 
         auto vcalDiffBins = xt::view(vcalBins + param("vcalHighStep"_s) / 2.0, xt::range(0, -1));
 
+        TCanvas* c2 = new TCanvas("thresholdMap", "Threshold Scan Results", 600, 600); (void)c2;
         TH2F* thresholdMap = new TH2F("thresholdMap", "Threshold Map", Flavor::nCols, 0, Flavor::nCols, Flavor::nRows, 0, Flavor::nRows);
         for (size_t row = 0; row < threshold.shape()[0]; ++row)
             for (size_t col = 0; col < threshold.shape()[1]; ++col)
                 thresholdMap->Fill(offset[1] + col, Flavor::nRows - (offset[0] + row), threshold(row, col));
+        thresholdMap->Draw("COLZ");
+        ReverseYAxis(thresholdMap);
+        c2->Write();
 
+        TCanvas* c3 = new TCanvas("threshold", "Threshold Scan Results", 600, 600); (void)c3;
         TH1F* thresholdHist = new TH1F("threshold", "Threshold Distribution", vcalDiffBins.size(), vcalDiffBins(0), vcalDiffBins(vcalDiffBins.size() - 1));
         for (const auto& val : threshold)
             thresholdHist->Fill(val, 1.0 / nPixels);
+        for (int i = thresholdHist->GetMinimumBin(); i < thresholdHist->GetMaximumBin(); ++i)
+            thresholdHist->SetBinError(i, 0);
+        thresholdHist->SetFillColor(kBlue);
+        thresholdHist->Draw("BAR");
+        thresholdHist->Fit("gaus", "Q");
+        c3->Update();
+        c3->Write();
+        c3->Print(Base::getResultPath(".pdf").c_str());
 
+        TCanvas* c4 = new TCanvas("noiseMap", "Threshold Scan Results", 600, 600); (void)c4;
         TH2F* noiseMap = new TH2F("noiseMap", "Noise Map", Flavor::nCols, 0, Flavor::nCols, Flavor::nRows, 0, Flavor::nRows);
         for (size_t row = 0; row < noise.shape()[0]; ++row)
             for (size_t col = 0; col < noise.shape()[1]; ++col)
                 noiseMap->Fill(offset[1] + col, Flavor::nRows - (offset[0] + row), noise(row, col));
-
-        TH1F* noiseHist = new TH1F("noise", "Noise Distribution", 100, 0, 1.1 * xt::amax(noise)());
-        for (const auto& val : noise)
-            noiseHist->Fill(val, 1.0 / nPixels);
-
-        TCanvas* c1 = new TCanvas("scurves", "Threshold Scan S-Curves", 600, 600); (void)c1;
-        scurves->Draw("COLZ");
-        c1->Write();
-
-        TCanvas* c2 = new TCanvas("thresholdMap", "Threshold Scan Results", 600, 600); (void)c2;
-        thresholdMap->Draw("COLZ");
-        ReverseYAxis(thresholdMap);
-        c2->Write();
-        
-        TCanvas* c3 = new TCanvas("threshold", "Threshold Scan Results", 600, 600); (void)c3;
-        thresholdHist->Draw("HIST");
-        c3->Write();
-        c3->Print(Base::getResultPath(".pdf").c_str());
-        
-        TCanvas* c4 = new TCanvas("noiseMap", "Threshold Scan Results", 600, 600); (void)c4;
         noiseMap->Draw("COLZ");
         ReverseYAxis(noiseMap);
         c4->Write();
 
         TCanvas* c5 = new TCanvas("noise", "Threshold Scan Results", 600, 600); (void)c5;
-        noiseHist->Draw("HIST");
+        TH1F* noiseHist = new TH1F("noise", "Noise Distribution", 100, 0, 1.1 * xt::amax(noise)());
+        for (const auto& val : noise)
+            noiseHist->Fill(val, 1.0 / nPixels);
+        for (int i = noiseHist->GetMinimumBin(); i < noiseHist->GetMaximumBin(); ++i)
+            noiseHist->SetBinError(i, 0);
+        noiseHist->SetFillColor(kBlue);
+        noiseHist->Draw("BAR");
+        noiseHist->Fit("gaus", "Q");
+        c5->Update();
         c5->Write();
     }
 
