@@ -15,6 +15,7 @@
 #include "../Utils/GenericDataArray.h"
 #include "DQMHistogramBase.h"
 
+#include "TFitResult.h"
 #include "TApplication.h"
 #include "TGraph.h"
 #include <TStyle.h>
@@ -22,7 +23,7 @@
 class DACScanHistograms : public DQMHistogramBase
 {
   public:
-    void fillDAC(DetectorContainer& DataContainer, double* fitStart, double* fitEnd, double** VMUXvolt, double** DACcode, double** DNLcode, double** INLcode, std::string* writeVar);
+    void fillDAC(double* fitStart, double* fitEnd, double** VMUXvolt, double** DACcode, std::string* writeVar);
 
   private:
     DetectorDataContainer DetectorData;

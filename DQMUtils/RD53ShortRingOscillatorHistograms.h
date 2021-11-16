@@ -1,35 +1,31 @@
 /*!
-  \file                  RD53RingOscillatorHistograms.h
-  \brief                 Header file of RingOscillator histograms
+  \file                  RD53ShortRingOscillatorHistograms.h
+  \brief                 Header file of ShortRingOscillator histograms
   \author                Umberto MOLINATTI
   \version               1.0
-  \date                  19/04/21
+  \date                  27/07/21
   Support:               email to umberto.molinatti@cern.ch
 */
 
-#ifndef RD53RingOscillatorHistograms_H
-#define RD53RingOscillatorHistograms_H
+#ifndef RD53ShortRingOscillatorHistograms_H
+#define RD53ShortRingOscillatorHistograms_H
 
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/GenericDataArray.h"
 #include "DQMHistogramBase.h"
 
-#include "TFitResult.h"
 #include "TGraph.h"
+#include "TFitResult.h"
 #include <TStyle.h>
 #include <fstream>
+#include "TObject.h"
 
-#include "TGraph.h"
-#include "TH1.h"
-#include "TMultiGraph.h"
-
-class RingOscillatorHistograms : public DQMHistogramBase
+class ShortRingOscillatorHistograms : public DQMHistogramBase
 {
-  static constexpr const char* oscNames[] = {"CKND0", "CKND4", "INV0", "INV4", "NAND0", "NAND4", "NOR0", "NOR4"};
   public:
-    void fillRO(double trimOscCounts[42][16], double trimOscFrequency[42][16], double trimVoltage[16]);
-
+    void fillSRO( double oscCounts[42], int run_counter = 0 );
+	
   private:
     DetectorDataContainer DetectorData;
 	//static constexpr const char oscNames[] = {"CKND0", "CKND4", "INV0", "INV4", "NAND0", "NAND4", "NOR0", "NOR4", 

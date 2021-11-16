@@ -63,5 +63,32 @@ type = "RD53BThresholdScan"
 args = { injectionTool = "ThresholdScanInjection", vcalMed = 300, vcalHighRange = [600, 2100], vcalHighStep = 50 }
 
 [RingOsc]
+<<<<<<< HEAD
 type = "RD53BRingOscillator"
 args = {}
+=======
+type = "RD53RingOscillator"
+args = {}
+
+[ShortRingOsc]
+type = "RD53ShortRingOscillator"
+args = {}
+
+[MuxScan]
+type = "RD53MuxScan"
+args = {}
+
+[ADCScan]
+type = "RD53ADCScan"
+args = {}
+
+[DACScan]
+type = "RD53DACScan"
+args = {}
+
+[TempSens]
+type = "RD53TempSens"
+args = {}
+
+
+>>>>>>> 0ad145a92bc4242379be4745e9e1daeac1f948be
