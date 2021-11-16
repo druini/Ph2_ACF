@@ -8,8 +8,10 @@
 
 #include <TFile.h>
 #include <TCanvas.h>
+#include <TH1F.h>
 #include <TH2F.h>
 #include <TApplication.h>
+#include <TSystem.h>
 #include <TGaxis.h>
 
 namespace RD53BTools {
@@ -42,19 +44,13 @@ void RD53BInjectionTool<Flavor>::init() {
             return size_t(std::ceil(double(a) / b));
         });
         auto lcm = zeroStep["shift"_s].size() ? boost::math::lcm(prev_size, zeroStep["shift"_s][0]) : prev_size;
-        // std::cout << "next_size = " << next_size << ", prev_size = " << prev_size << ", shift = " << shifts[dim][zeroSize - sizes[dim].begin() - 1] << ", lcm = " << lcm << std::endl;
         *zeroPos = size_t(std::ceil(double(next_size) / lcm)) * lcm / prev_size;
-        // std::cout << *zeroSize << std::endl;
         std::partial_sum(sizes[dim].begin(), sizes[dim].end() - 1, sizes[dim].begin(), std::multiplies<>{});
         sizes[dim].back() = size_t(std::ceil(double(param("size"_s)[dim]) / *(sizes[dim].end() - 2))) * *(sizes[dim].end() - 2);
         for (auto it = sizes[dim].rbegin(); it != sizes[dim].rend() - 1; ++it)
             *it = *it / *(it + 1);
         for (size_t i = 1; i < sizes[dim].size(); ++i)
             steps[stepId[dim][i - 1]]["size"_s] = sizes[dim][i];
-        // std::cout << "dim = " << dim << ", sizes: ";
-        // for (const auto& s : sizes[dim])
-        //     std::cout << s << " ";
-        // std::cout << std::endl;
     }
 
     _nFrames = 1;
@@ -112,75 +108,84 @@ void RD53BInjectionTool<Flavor>::setupMaskFrame(Ph2_System::SystemController& sy
 
 template <class Flavor>
 void RD53BInjectionTool<Flavor>::inject(SystemController& system, ChipEventsMap& events) const {
-    const auto nEvents = param("nInjections"_s) * param("triggerDuration"_s);
 
-    for_each_device<BeBoard>(system, [&] (BeBoard* board) {
-        auto& fwInterface = Base::getFWInterface(system, board);
+    for (size_t injectionsDone = 0; injectionsDone < param("nInjections"_s); injectionsDone += param("readoutPeriod"_s)) {
+    // for (int i = 0; i < -(-param("nInjections"_s) / param("readoutPeriod"_s)); ++i) {
+        size_t nInjections = std::min(param("readoutPeriod"_s), param("nInjections"_s) - injectionsDone);
+        const auto nEvents = nInjections * param("triggerDuration"_s);
 
-        while (true) {
-            fwInterface.Start();
+        for_each_device<BeBoard>(system, [&] (BeBoard* board) {
+            auto& fwInterface = Base::getFWInterface(system, board);
+            fwInterface.WriteReg("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", nInjections);
 
-            while(fwInterface.ReadReg("user.stat_regs.trigger_cntr") < nEvents)
-                std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+            while (true) {
+                fwInterface.Start();
 
-            fwInterface.Stop();
+                auto& fwInterface = Base::getFWInterface(system, board);
 
-            std::vector<uint32_t> data;
-            fwInterface.ReadData(board, false, data, true);
+                while(fwInterface.ReadReg("user.stat_regs.trigger_cntr") < nEvents)
+                    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
 
-            if (data.size() == 0) {
-                LOG(ERROR) << BOLDRED << "Received no data." << RESET;
-                continue;
-            }
+                fwInterface.Stop();
 
-            try {
-                auto eventsMap = RD53BEventDecoding::decode_events<Flavor::flavor>(data);
-                
-                bool events_ok = true;
-                for_each_device<Chip>(board, [&] (Chip* chip) {
-                    const auto chipLoc = RD53BUtils::ChipLocation{chip};
-                    const auto& chip_events = eventsMap[{chip->getHybridId(), static_cast<RD53Base*>(chip)->getChipLane()}];
-                    if (chip_events.size() != nEvents) {
-                        LOG(ERROR) << BOLDRED << "Expected " << nEvents 
-                                    << " events but received " << chip_events.size() 
-                                    << " for chip " << chipLoc << RESET;
-                        events_ok = false;
-                    }
-                    if (chip_events.size() > nEvents) {
-                        int cnt = 0;
-                        for (const auto& event : chip_events) {
-                            std::cout << (cnt++) << " BCID: " << +event.BCID 
-                                << ", triggerTag: " << +event.triggerTag 
-                                << ", triggerPos: " << +event.triggerPos 
-                                << ", dummySize: " << +event.dummySize 
-                                << std::endl;
-                        }
+                std::vector<uint32_t> data;
+                fwInterface.ReadData(board, false, data, true);
 
-                        for (size_t i = 0; i < data.size(); i += 4) {
-                            for (size_t j = 0; j < 4; ++j) {
-                                std::cout << std::bitset<32>(data[i + j]) << "\t";
-                            }
-                            std::cout << std::endl;
-                        }
-                    }
-                });
-                
-                if (!events_ok) 
+                if (data.size() == 0) {
+                    LOG(ERROR) << BOLDRED << "Received no data." << RESET;
                     continue;
+                }
 
-                for_each_device<Chip>(board, [&] (Chip* chip) {
-                    const auto chipLoc = RD53BUtils::ChipLocation{chip};
-                    const auto& chip_events = eventsMap[{chip->getHybridId(), static_cast<RD53Base*>(chip)->getChipLane()}];
-                    std::copy(chip_events.begin(), chip_events.end(), std::back_inserter(events[chipLoc]));
-                });
+                try {
+                    auto eventsMap = RD53BEventDecoding::decode_events<Flavor::flavor>(data);
+                    
+                    bool events_ok = true;
+                    for_each_device<Chip>(board, [&] (Chip* chip) {
+                        const auto chipLoc = RD53BUtils::ChipLocation{chip};
+                        const auto& chip_events = eventsMap[{chip->getHybridId(), static_cast<RD53Base*>(chip)->getChipLane()}];
+                        if (chip_events.size() != nEvents) {
+                            LOG(ERROR) << BOLDRED << "Expected " << nEvents 
+                                        << " events but received " << chip_events.size() 
+                                        << " for chip " << chipLoc << RESET;
+                            events_ok = false;
+                        }
+                        if (chip_events.size() > nEvents) {
+                            int cnt = 0;
+                            for (const auto& event : chip_events) {
+                                std::cout << (cnt++) << " BCID: " << +event.BCID 
+                                    << ", triggerTag: " << +event.triggerTag 
+                                    << ", triggerPos: " << +event.triggerPos 
+                                    << ", dummySize: " << +event.dummySize 
+                                    << std::endl;
+                            }
+
+                            for (size_t i = 0; i < data.size(); i += 4) {
+                                for (size_t j = 0; j < 4; ++j) {
+                                    std::cout << std::bitset<32>(data[i + j]) << "\t";
+                                }
+                                std::cout << std::endl;
+                            }
+                        }
+                    });
+                    
+                    if (!events_ok) 
+                        continue;
+
+                    for_each_device<Chip>(board, [&] (Chip* chip) {
+                        const auto chipLoc = RD53BUtils::ChipLocation{chip};
+                        const auto& chip_events = eventsMap[{chip->getHybridId(), static_cast<RD53Base*>(chip)->getChipLane()}];
+                        
+                        std::copy(chip_events.begin(), chip_events.end(), std::back_inserter(events[chipLoc]));
+                    });
+                }
+                catch (std::runtime_error& e) {
+                    LOG(ERROR) << BOLDRED << e.what() << RESET;
+                    continue;
+                }
+                break;
             }
-            catch (std::runtime_error& e) {
-                LOG(ERROR) << BOLDRED << e.what() << RESET;
-                continue;
-            }
-            break;
-        }
-    });
+        });
+    }
 }
 
 
@@ -220,6 +225,7 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) const {
     TApplication* app = nullptr;
     if (param("showPlots"_s))
         app = new TApplication("app", nullptr, nullptr);
+    // TApplication app("app", nullptr, nullptr);
     TFile* file = new TFile(Base::getResultPath(".root").c_str(), "NEW");
 
     auto occMap = occupancy(result);
@@ -235,28 +241,30 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) const {
         const auto& tot = totMap[item.first];
 
         // Draw Tot Distribution
-        TCanvas* c1 = new TCanvas("c1", "ToT Distribution", 600, 600);
-        (void)c1;
-        TH1* totHist = new TH1F("tot", "ToT Distribution", 16, 0, 16);
+        TH1F* totHist = new TH1F("tot", "ToT Distribution", 16, 0, 16);
         totHist->SetYTitle("Frequency");
         totHist->SetXTitle("ToT code");
 
         for (int i = 0; i < 16; ++i)
             totHist->SetBinContent(i + 1, tot[i]);
 
+        TCanvas* c1 = new TCanvas("c1", "ToT Distribution", 600, 600);
         totHist->Draw("HIST");
+        c1->Write();
 
         // Draw Occupancy map
-        TCanvas* c2 = new TCanvas("c2", "Occupancy Map", 600, 600);
-        (void)c2;
-        TH2* occHist = new TH2F("occ", "Occupancy", RD53B<Flavor>::nCols, 0, RD53B<Flavor>::nCols, RD53B<Flavor>::nRows, 0, RD53B<Flavor>::nRows);
+        TH2F* occHist = new TH2F("occ", "Occupancy", RD53B<Flavor>::nCols, 0, RD53B<Flavor>::nCols, RD53B<Flavor>::nRows, 0, RD53B<Flavor>::nRows);
         occHist->SetYTitle("Row");
         occHist->SetXTitle("Column");
 
         for (size_t row = 0; row < Flavor::nRows; ++row)
             for (size_t col = 0; col < Flavor::nCols; ++col)
-                occHist->Fill(col, row, occ(row, col));
-
+                occHist->Fill(col, Flavor::nRows - row, occ(row, col));
+        
+        TCanvas* c2 = new TCanvas("c2", "Occupancy Map", 600, 600);
+        occHist->Draw("COLZ");
+        ReverseYAxis(occHist);
+        c2->Write();
 
         // Calculate & print mean occupancy
         auto row_range = xt::range(param("offset"_s)[0], param("offset"_s)[0] + param("size"_s)[0]);
@@ -280,12 +288,10 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) const {
             mean_occ_disabled = xt::mean(xt::filter(occ, !mask))();
         LOG (INFO) << "mean occupancy for disabled pixels: " << mean_occ_disabled << RESET;
 
-        occHist->Draw("COLZ");
-        ReverseYAxis(occHist);
     }
 
     // file->Write();
-    file->Close();
+    file->Write();
 
     // TQObject::Connect("TGMainFrame", "CloseWindow()", "TApplication", &app, "Terminate()");
     if (app)
@@ -303,14 +309,10 @@ auto RD53BInjectionTool<Flavor>::generateInjectionMask(size_t frameId) const {
 
     for (auto step : param("maskGen"_s)) {
         auto size = step["size"_s];
-        // std::cout << "step: " << step << std::endl;
-        
         auto shape = mask.shape();
-        // std::cout << "shape: " << shape[0] << ", " << shape[1] << std::endl;
         
         std::array<size_t, 2> new_shape = shape;
         new_shape[step["dim"_s]] *= size;
-        // std::cout << "new_shape: " << new_shape[0] << ", " << new_shape[1] << std::endl;
         
         xt::xtensor<bool, 2> new_mask = xt::zeros<bool>(new_shape);
 
@@ -338,15 +340,12 @@ auto RD53BInjectionTool<Flavor>::generateInjectionMask(size_t frameId) const {
         mask = new_mask;
         lastDim = step["dim"_s];
         currentShifts = step["shift"_s];
-        // std::cout << "mask shape: " << mask.shape()[0] << ", " << mask.shape()[1] << std::endl;
     }
 
     auto row_range = xt::range(param("offset"_s)[0], param("offset"_s)[0] + param("size"_s)[0]);
     auto col_range = xt::range(param("offset"_s)[1], param("offset"_s)[1] + param("size"_s)[1]);
 
     xt::view(fullMask, row_range, col_range) = xt::view(mask, xt::range(0, param("size"_s)[0]), xt::range(0, param("size"_s)[1]));
-
-    // std::cout << fullMask << std::endl;
 
     return fullMask;
 }
@@ -363,7 +362,7 @@ void RD53BInjectionTool<Flavor>::configureInjections(Ph2_System::SystemControlle
         auto& fwInterface = Base::getFWInterface(system, board);
         auto& fastCmdConfig = *fwInterface.getLocalCfgFastCmd();
 
-        fastCmdConfig.n_triggers = param("nInjections"_s);
+        fastCmdConfig.n_triggers = param("readoutPeriod"_s);
         fastCmdConfig.trigger_duration = param("triggerDuration"_s) - 1;
 
         fastCmdConfig.fast_cmd_fsm.first_cal_en = true;

@@ -24,6 +24,7 @@ const auto ToolParameters<RD53BInjectionTool<Flavor>> = make_named_tuple(
     std::make_pair("triggerDuration"_s, 10ul),
     std::make_pair("triggerLatency"_s, 133ul),
     std::make_pair("injectionType"_s, std::string("Analog")),
+    std::make_pair("readoutPeriod"_s, 100ul),
     std::make_pair("injectionPeriod"_s, 800ul),
     std::make_pair("fineDelay"_s, 0ul),
     std::make_pair("pulseDuration"_s, 2ul),

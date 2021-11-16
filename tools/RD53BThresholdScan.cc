@@ -13,9 +13,28 @@
 #include <TH1F.h>
 #include <TH2F.h>
 #include <TApplication.h>
+#include <TGaxis.h>
 
 
 namespace RD53BTools {
+
+void ReverseYAxis(TH1 *h)
+{
+    // Remove the current axis
+    h->GetYaxis()->SetLabelOffset(999);
+    h->GetYaxis()->SetTickLength(0);
+    // Redraw the new axis
+    gPad->Update();
+    TGaxis *newaxis = new TGaxis(gPad->GetUxmin(),
+                                    gPad->GetUymax(),
+                                    gPad->GetUxmin()-0.001,
+                                    gPad->GetUymin(),
+                                    h->GetYaxis()->GetXmin(),
+                                    h->GetYaxis()->GetXmax(),
+                                    510,"+");
+    newaxis->SetLabelOffset(-0.03);
+    newaxis->Draw();
+}
 
 template <class Flavor>
 typename RD53BThresholdScan<Flavor>::OccupancyMap RD53BThresholdScan<Flavor>::run(Ph2_System::SystemController& system, Task progress) {
@@ -147,7 +166,7 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) const {
         TH2F* thresholdMap = new TH2F("thresholdMap", "Threshold Map", Flavor::nCols, 0, Flavor::nCols, Flavor::nRows, 0, Flavor::nRows);
         for (size_t row = 0; row < threshold.shape()[0]; ++row)
             for (size_t col = 0; col < threshold.shape()[1]; ++col)
-                thresholdMap->Fill(offset[1] + col, offset[0] + row, threshold(row, col));
+                thresholdMap->Fill(offset[1] + col, Flavor::nRows - (offset[0] + row), threshold(row, col));
 
         TH1F* thresholdHist = new TH1F("threshold", "Threshold Distribution", vcalDiffBins.size(), vcalDiffBins(0), vcalDiffBins(vcalDiffBins.size() - 1));
         for (const auto& val : threshold)
@@ -156,7 +175,7 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) const {
         TH2F* noiseMap = new TH2F("noiseMap", "Noise Map", Flavor::nCols, 0, Flavor::nCols, Flavor::nRows, 0, Flavor::nRows);
         for (size_t row = 0; row < noise.shape()[0]; ++row)
             for (size_t col = 0; col < noise.shape()[1]; ++col)
-                noiseMap->Fill(offset[1] + col, offset[0] + row, noise(row, col));
+                noiseMap->Fill(offset[1] + col, Flavor::nRows - (offset[0] + row), noise(row, col));
 
         TH1F* noiseHist = new TH1F("noise", "Noise Distribution", 100, 0, 1.1 * xt::amax(noise)());
         for (const auto& val : noise)
@@ -168,14 +187,17 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) const {
 
         TCanvas* c2 = new TCanvas("thresholdMap", "Threshold Scan Results", 600, 600); (void)c2;
         thresholdMap->Draw("COLZ");
+        ReverseYAxis(thresholdMap);
         c2->Write();
         
         TCanvas* c3 = new TCanvas("threshold", "Threshold Scan Results", 600, 600); (void)c3;
         thresholdHist->Draw("HIST");
         c3->Write();
+        c3->Print(Base::getResultPath(".pdf").c_str());
         
         TCanvas* c4 = new TCanvas("noiseMap", "Threshold Scan Results", 600, 600); (void)c4;
         noiseMap->Draw("COLZ");
+        ReverseYAxis(noiseMap);
         c4->Write();
 
         TCanvas* c5 = new TCanvas("noise", "Threshold Scan Results", 600, 600); (void)c5;
