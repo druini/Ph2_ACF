@@ -3,6 +3,7 @@
 #include "../Utils/argvparser.h"
 #include "../HWDescription/RD53B.h"
 
+#include "../tools/RD53ShortTempSensor.h"
 #include "../tools/RD53TempSensor.h"
 #include "../tools/RD53DACScan.h"
 #include "../tools/RD53ADCScan.h"
@@ -38,6 +39,7 @@ using Tools = ToolManager<decltype(make_named_tuple(
 	TOOL(RD53ADCScan),
 	TOOL(RD53DACScan),
 	TOOL(RD53TempSensor),
+	TOOL(RD53ShortTempSensor),
     TOOL(RD53BRegTest)
     // , TOOL(RD53BThresholdEqualization)
     // , TOOL(RD53BRegisterThresholdScan)

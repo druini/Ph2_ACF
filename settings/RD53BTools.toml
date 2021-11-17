@@ -85,3 +85,7 @@ args = {}
 [TempSensor]
 type = "RD53TempSensor"
 args = {}
+
+[ShortTempSensor]
+type = "RD53ShortTempSensor"
+args = {}
