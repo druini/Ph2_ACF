@@ -40,6 +40,8 @@ uint8_t RD53B<RD53BFlavor::CMS>::ChipIdFor<Chip>(const Chip* chip) { return chip
 template <class Flavor>
 RD53B<Flavor>::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName) 
   : RD53Base(pBeId, pFMCId, pHybridId, pRD53Id, pRD53Lane)
+  , coreColEnable(nCols / 8, true)
+  , coreColEnableInjections(nCols / 8, true)
 {
     fMaxRegValue      = 0xFFFF;
     fChipOriginalMask = new ChannelGroup<nRows, nCols>;
@@ -80,10 +82,20 @@ void RD53B<Flavor>::loadfRegMap(const std::string& fileName)
     if (boost::filesystem::exists(fileName)) {
         auto data = toml::parse(fileName);
 
-        if (data.contains("Registers")) {
-            for (const auto& key_value : data.at("Registers").as_table()) {
+        if (data.contains("Registers"))
+            for (const auto& key_value : data.at("Registers").as_table())
                 configureRegister(key_value.first, key_value.second.as_integer());
-            }
+
+        if (data.contains("CoreColumns")) {
+            auto coreCols = data["CoreColumns"];
+
+            if (coreCols.contains("disable"))
+                for (const auto& range : toml::get<std::vector<std::array<size_t, 2>>>(coreCols["disable"]))
+                    std::fill_n(coreColEnable.begin() + range[0], std::min(range[1], coreColEnable.size()) - range[0], false);
+                    
+            if (coreCols.contains("disableInjections"))
+                for (const auto& range : toml::get<std::vector<std::array<size_t, 2>>>(coreCols["disableInjections"]))
+                    std::fill_n(coreColEnableInjections.begin() + range[0], std::min(range[1], coreColEnableInjections.size()) - range[0], false);
         }
 
         if (data.contains("Pixels")) {

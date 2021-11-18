@@ -160,6 +160,9 @@ public:
     PixelConfig pixelConfig;
     PixelConfig defaultPixelConfig;
 
+    std::vector<bool> coreColEnable;
+    std::vector<bool> coreColEnableInjections;
+
   private:
     std::array<boost::optional<uint16_t>, 256> registerValues;
     std::unordered_map<std::string, size_t> registerConfig;

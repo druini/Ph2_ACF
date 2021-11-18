@@ -22,6 +22,10 @@ void RD53BInjectionTool<Flavor>::init() {
         param("size"_s)[0] = RD53B<Flavor>::nRows - param("offset"_s)[0];
     if (param("size"_s)[1] == 0)
         param("size"_s)[1] = RD53B<Flavor>::nCols - param("offset"_s)[1];
+
+    if (param("readoutPeriod"_s) == 0)
+        param("readoutPeriod"_s) = param("nInjections"_s);
+
     std::transform(param("injectionType"_s).begin(), param("injectionType"_s).end(), param("injectionType"_s).begin(), [] (const char& c) { return (char)std::tolower(c); });
 
     auto& steps = param("maskGen"_s);

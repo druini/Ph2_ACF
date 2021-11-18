@@ -29,7 +29,7 @@ struct RD53BThresholdEqualization : public RD53BTool<RD53BThresholdEqualization,
         auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
 
         auto thresholdMeasurementTask   = progress.subTask({0, 0.2});
-        auto tuningTask                 = progress.subTask({0.2, 0.9});
+        auto tuningTask                 = progress.subTask({0.2, 1});
 
         auto& injectionTool = param("injectionTool"_s);
         auto& offset = injectionTool.param("offset"_s);
@@ -50,12 +50,12 @@ struct RD53BThresholdEqualization : public RD53BTool<RD53BThresholdEqualization,
         for_each_device<Chip>(system, [&] (Chip* chip) {
             auto* rd53b = static_cast<RD53B<Flavor>*>(chip);
             chipInterface.WriteReg(rd53b, Flavor::Reg::VCAL_MED, param("thresholdScan"_s).param("vcalMed"_s));
-            std::cout << thresholdMap[chip] << std::endl;
-            double meanThreshold = xt::mean(thresholdMap[chip])();
-            std::cout << "meanThreshold = " << meanThreshold << std::endl;
-            size_t VCAL_HIGH = param("thresholdScan"_s).param("vcalMed"_s) + meanThreshold;
-            std::cout << "VCAL_HIGH = " << VCAL_HIGH << std::endl;
-            chipInterface.WriteReg(rd53b, Flavor::Reg::VCAL_HIGH, VCAL_HIGH);
+            // std::cout << thresholdMap[chip] << std::endl;
+            // double meanThreshold = xt::mean(thresholdMap[chip])();
+            // std::cout << "meanThreshold = " << meanThreshold << std::endl;
+            // size_t VCAL_HIGH = param("thresholdScan"_s).param("vcalMed"_s) + meanThreshold;
+            // std::cout << "VCAL_HIGH = " << VCAL_HIGH << std::endl;
+            // chipInterface.WriteReg(rd53b, Flavor::Reg::VCAL_HIGH, VCAL_HIGH);
             rd53b->pixelConfig.tdac.fill(15);
             chipInterface.UpdatePixelConfig(rd53b, rd53b->pixelConfig, false, true);
             bestTDAC.insert({rd53b, xt::zeros<uint8_t>({size[0], size[1]})});
@@ -72,20 +72,39 @@ struct RD53BThresholdEqualization : public RD53BTool<RD53BThresholdEqualization,
         xt::print_options::set_line_width(160);
         xt::print_options::set_threshold(2000);
 
-        for (size_t i = 0; i < 6; ++i) {
-            std::cout << "step " << i << std::endl;
+        size_t nSteps = 5;
+
+        for (size_t i = 0; i < nSteps; ++i) {
             size_t tdacStep = i < 4 ? (8 >> i) : 1;
 
-            auto events = injectionTool.run(system, tuningTask.subTask({i / 5., (i + 1) / 5.}));
+            for_each_device<Chip>(system, [&] (Chip* chip) {
+                double meanThreshold = xt::mean(thresholdMap[chip])();
+                chipInterface.WriteReg(chip, Flavor::Reg::VCAL_HIGH, param("thresholdScan"_s).param("vcalMed"_s) + meanThreshold);
+            });
+
+            auto events = injectionTool.run(system, tuningTask.subTask({i / double(nSteps), (i + .5) / double(nSteps)}));
             auto occMap = injectionTool.occupancy(events);
+
+            for_each_device<Hybrid>(system, [&] (Hybrid* hybrid) {
+                chipInterface.WriteReg(hybrid, Flavor::Reg::VCAL_HIGH, 0xFFFF);
+            });
+            
+            auto eventsHighCharge = injectionTool.run(system, tuningTask.subTask({(i + .5) / double(nSteps), (i + 1) / double(nSteps)}));
+            auto occMapHighCharge = injectionTool.occupancy(eventsHighCharge);
 
             for_each_device<Chip>(system, [&] (Chip* chip) {
                 auto* rd53b = static_cast<RD53B<Flavor>*>(chip);
                 auto tdacView = xt::view(rd53b->pixelConfig.tdac, xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1]));
-                auto occ = xt::view(occMap[chip], xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1]));
+                const auto occ = xt::view(occMap[chip], xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1]));
+                const auto occHighCharge = xt::view(occMapHighCharge[chip], xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1]));
                 // std::cout << xt::adapt(occ.shape()) << std::endl;
                 // std::copy(occ.shape().cbegin(), occ.shape().cend(), std::ostream_iterator<unsigned long>(std::cout, ", "));
-                std::cout << occ << std::endl;
+                // std::cout << occ << std::endl;
+
+                const auto stuck = occHighCharge < .9;
+
+                std::cout << "stuck: " << xt::count_nonzero(stuck) << std::endl;
+
                 // std::cout << xt::abs(occ - 0.5) << std::endl;
                 // std::cout << xt::abs(bestOcc[chip] - .5) << std::endl;
                 if (i == 0) {
@@ -103,7 +122,7 @@ struct RD53BThresholdEqualization : public RD53BTool<RD53BThresholdEqualization,
                     // auto isAboveThreshold = occ > 0.5;
                     // auto isBest = (!isAboveThreshold && occ > bestOccMin[chip]) || (isAboveThreshold && occ < bestOccMin[chip]);
                     auto isBest = xt::abs(occ - 0.5) <= xt::abs(bestOcc[chip] - .5);
-                    std::cout << "nBest = " << xt::count_nonzero(isBest) << std::endl;
+                    // std::cout << "nBest = " << xt::count_nonzero(isBest) << std::endl;
                     // xt::masked_view(bestOccMax[chip], isAboveThreshold && isBest) = occ;
                     // xt::masked_view(bestOccMin[chip], !isAboveThreshold && isBest) = occ;
                     // xt::masked_view(bestTDACMax[chip], isAboveThreshold && isBest) = tdacView;
@@ -119,10 +138,10 @@ struct RD53BThresholdEqualization : public RD53BTool<RD53BThresholdEqualization,
                 // lastOcc[chip] = occ;
 
                 // std::cout << bestTDAC[chip] << std::endl;
-                if (i < 5) {
-                    tdacView = xt::where(occ > 0.5, tdacView + tdacStep, xt::where(tdacView < tdacStep, 0u, tdacView - tdacStep));
+                if (i < nSteps - 1) {
+                    tdacView = xt::where(!stuck && (occ < 0.5), tdacView + tdacStep, xt::where(tdacView > tdacStep, tdacView - tdacStep, 0u));
 
-                    std::cout << tdacView << std::endl;
+                    // std::cout << tdacView << std::endl;
 
                     chipInterface.UpdatePixelConfig(rd53b, rd53b->pixelConfig, false, true); // update tdacs
                 }
@@ -142,8 +161,7 @@ struct RD53BThresholdEqualization : public RD53BTool<RD53BThresholdEqualization,
             
             std::cout << "bestOcc:\n" << bestOcc[chip] << std::endl;
             std::cout << "bestTDAC:\n" << bestTDAC[chip] << std::endl;
-
-            std::cout << bestTDAC[chip] << std::endl; 
+            
             auto* rd53b = static_cast<RD53B<Flavor>*>(chip);
             auto tdacView = xt::view(rd53b->pixelConfig.tdac, xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1]));
             tdacView = bestTDAC[chip];

@@ -1,0 +1,9 @@
+# Set chip registers.
+# [Registers]
+# SEU00 = 999
+
+# Select core column ranges to be disabled (all core columns are enabled by default).
+# [CoreColumns]
+# disable = [[0, 99]]
+# disableInjections = [[0, 99]]
+

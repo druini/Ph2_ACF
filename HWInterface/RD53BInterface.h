@@ -190,34 +190,8 @@ public:
         return *static_cast<RD53FWInterface*>(fBoardFW);
     }
 
-    template <class Device>
-    void UpdateCoreColumns(Device* device) {
-        std::vector<bool> core_col_en(RD53B::nCols / 8, true);
-        UpdateCoreColRegs(device, "EnCoreCol", core_col_en);
-        SendCommand<RD53BCmd::Sync>(device);
-        SendCommand<RD53BCmd::Sync>(device);
-        UpdateCoreColRegs(device, "EnCoreColumnReset", core_col_en);
-        UpdateCoreColRegs(device, "EnCoreColumnCalibration", core_col_en);
-        UpdateCoreColRegs(device, "EnCoreColumnReset", core_col_en);
-        SendCommand<RD53BCmd::Clear>(device);
-    }
-
-    template <class Device>
-    void UpdateCoreColRegs(Device* device, const std::string& prefix, const std::vector<bool>& core_col_en) {
-        BitVector<uint16_t> cmd_stream;
-        for (int i = 0; i < 4; ++i)
-            SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, RD53B::getRegister(prefix + "_" + std::to_string(i)).address, uint16_t(0));
-        SerializeCommand<RD53BCmd::Sync>(device, cmd_stream);
-        SerializeCommand<RD53BCmd::Sync>(device, cmd_stream);
-        for (size_t i = 0; i < 4; ++i) {
-            uint16_t value = 0;
-            for (size_t j = 0; j < core_col_en.size() - i * 16; ++j)
-                value |= 1 << j;
-            // std::cout << "value: " << std::bitset<16>(value) << std::endl;
-            SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, RD53B::getRegister(prefix + "_" + std::to_string(i)).address, value);
-        }
-        SendCommandStream(device, cmd_stream);
-    }
+    void UpdateCoreColumns(Chip* chip);
+    void UpdateCoreColRegs(Chip* chip, const std::string& prefix, const std::vector<bool>& core_col_en);
 
     // ###########################
     // # Dedicated to minitoring #

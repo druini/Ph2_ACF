@@ -252,6 +252,35 @@ bool RD53BInterface<Flavor>::WriteChipReg(Chip* chip, const std::string& regName
     return true;
 }
 
+template <class Flavor>
+void RD53BInterface<Flavor>::UpdateCoreColumns(Chip* chip) {
+    auto* rd53b = static_cast<RD53B*>(chip);
+    UpdateCoreColRegs(chip, "EnCoreCol", rd53b->coreColEnable);
+    SendCommand<RD53BCmd::Sync>(chip);
+    SendCommand<RD53BCmd::Sync>(chip);
+    UpdateCoreColRegs(chip, "EnCoreColumnReset", rd53b->coreColEnable);
+    UpdateCoreColRegs(chip, "EnCoreColumnCalibration", rd53b->coreColEnableInjections);
+    UpdateCoreColRegs(chip, "EnCoreColumnReset", rd53b->coreColEnable);
+    SendCommand<RD53BCmd::Clear>(chip);
+}
+
+template <class Flavor>
+void RD53BInterface<Flavor>::UpdateCoreColRegs(Chip* chip, const std::string& prefix, const std::vector<bool>& core_col_en) {
+    BitVector<uint16_t> cmd_stream;
+    for (int i = 0; i < 4; ++i)
+        SerializeCommand<RD53BCmd::WrReg>(chip, cmd_stream, RD53B::getRegister(prefix + "_" + std::to_string(i)).address, uint16_t(0));
+    SerializeCommand<RD53BCmd::Sync>(chip, cmd_stream);
+    SerializeCommand<RD53BCmd::Sync>(chip, cmd_stream);
+    for (size_t i = 0; i < 4; ++i) {
+        uint16_t value = 0;
+        for (size_t j = 0; j < std::min(core_col_en.size() - i * 16, 16ul); ++j)
+            if (core_col_en[i * 16 + j])
+                value |= 1 << j;
+        SerializeCommand<RD53BCmd::WrReg>(chip, cmd_stream, RD53B::getRegister(prefix + "_" + std::to_string(i)).address, value);
+    }
+    SendCommandStream(chip, cmd_stream);
+}
+
 
 template <class Flavor>
 void RD53BInterface<Flavor>::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std::string& regName, uint16_t data)
