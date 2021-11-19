@@ -164,7 +164,9 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) const {
         const auto& noise = thresholdAndNoise[1][item.first];
 
         LOG(INFO) << "Mean threshold: " << xt::mean(threshold)();
+        LOG(INFO) << "Threshold stddev: " << xt::stddev(threshold)();
         LOG(INFO) << "Mean noise: " << xt::mean(noise)();
+        LOG(INFO) << "Noise stddev: " << xt::stddev(noise)();
 
         auto vcalDiffBins = xt::view(vcalBins + param("vcalHighStep"_s) / 2.0, xt::range(0, -1));
 

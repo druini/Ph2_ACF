@@ -103,10 +103,14 @@ void RD53B<Flavor>::loadfRegMap(const std::string& fileName)
             pixelConfigFields().for_each([&] (const auto& fieldName, auto ptr) {
                 auto it = pixelsConfig.find(fieldName.value);
                 if (it != pixelsConfig.end()) {
-                    auto fileName = it->second.as_string();
-                    pixelConfigFileNames[fieldName.value] = fileName;
-                    std::ifstream csvFile(fileName);
-                    pixelConfig.*ptr = xt::load_csv<double>(csvFile);
+                    if (it->second.is_integer())
+                        (pixelConfig.*ptr).fill(it->second.as_integer());
+                    else {
+                        auto fileName = it->second.as_string();
+                        pixelConfigFileNames[fieldName.value] = fileName;
+                        std::ifstream csvFile(fileName);
+                        pixelConfig.*ptr = xt::load_csv<double>(csvFile);
+                    }
                 }
             });
         }

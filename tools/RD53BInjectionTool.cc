@@ -120,7 +120,9 @@ void RD53BInjectionTool<Flavor>::inject(SystemController& system, ChipEventsMap&
 
         for_each_device<BeBoard>(system, [&] (BeBoard* board) {
             auto& fwInterface = Base::getFWInterface(system, board);
-            fwInterface.WriteReg("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", nInjections);
+            auto fastCmdConfig = fwInterface.getLocalCfgFastCmd();
+            fastCmdConfig->n_triggers = nInjections;
+            fwInterface.ConfigureFastCommands(fastCmdConfig);
 
             while (true) {
                 fwInterface.Start();
