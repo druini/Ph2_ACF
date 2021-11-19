@@ -154,11 +154,11 @@ struct RD53BTool : public RD53BToolBase {
     std::string getResultPath(const std::string& suffix) const {
         auto path = boost::filesystem::path("Results/") / (_name + suffix);
         if (boost::filesystem::exists(path)) {
-            std::regex runNumberRegex(_name + "\\(([0-9]+)\\)");
+            std::regex runNumberRegex(_name + "\\(([0-9]+)\\)\\" + suffix);
             size_t maxRunNumber = 0;
             for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator("Results/"), {})) {
                 if (boost::filesystem::is_regular_file(entry.status())) {
-                    std::string stem = entry.path().stem().string();
+                    std::string stem = entry.path().filename().string();
                     std::smatch m;
                     if (std::regex_match(stem, m, runNumberRegex) && m.size() > 1) 
                         maxRunNumber = std::max(maxRunNumber, std::stoul(m[1])); 

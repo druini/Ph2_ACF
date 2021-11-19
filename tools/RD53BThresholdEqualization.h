@@ -58,12 +58,16 @@ struct RD53BThresholdEqualization : public RD53BTool<RD53BThresholdEqualization,
         xt::print_options::set_line_width(160);
         xt::print_options::set_threshold(2000);
 
-        size_t nSteps = 7;
-
-        for (size_t i = 0; i < nSteps; ++i) {
-            size_t tdacStep = i < 4 ? (8 >> i) : 1;
+        // size_t nSteps = 7;
+        // for (size_t i = 0; i < nSteps; ++i) {
+        //     size_t tdacStep = i < 4 ? (8 >> i) : 1;
+        for (size_t i = 0; i < 32; ++i) {
 
             for_each_device<Chip>(system, [&] (Chip* chip) {
+                chipInterface.WriteReg(rd53b, Flavor::Reg::VCAL_MED, param("thresholdScan"_s).param("vcalMed"_s));
+                rd53b->pixelConfig.tdac.fill(i);
+                chipInterface.UpdatePixelConfig(rd53b, rd53b->pixelConfig, false, true);
+
                 double meanThreshold = xt::mean(thresholdMap[chip])();
                 chipInterface.WriteReg(chip, Flavor::Reg::VCAL_HIGH, param("thresholdScan"_s).param("vcalMed"_s) + meanThreshold);
             });

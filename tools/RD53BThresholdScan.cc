@@ -190,7 +190,7 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) const {
         thresholdHist->Fit("gaus", "Q");
         c3->Update();
         c3->Write();
-        c3->Print(Base::getResultPath(".pdf").c_str());
+        // c3->Print(Base::getResultPath(".pdf").c_str());
 
         TCanvas* c4 = new TCanvas("noiseMap", "Threshold Scan Results", 600, 600); (void)c4;
         TH2F* noiseMap = new TH2F("noiseMap", "Noise Map", Flavor::nCols, 0, Flavor::nCols, Flavor::nRows, 0, Flavor::nRows);

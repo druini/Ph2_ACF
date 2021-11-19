@@ -44,6 +44,7 @@
           DAC_GDAC_M_LIN = "500"
           DAC_LDAC_LIN = "110"
           LEACKAGE_FEEDBACK = "0"
+          AnalogInjectionMode = "0"
           VCAL_HIGH = "1800"
           VCAL_MED = "300"
             />
