@@ -50,7 +50,7 @@ struct RD53ShortRingOscillator : public RD53BTool<RD53ShortRingOscillator, Flavo
 				chipInterface.WriteReg(chip, "RingOscARoute", ringOsc);
 				chipInterface.SendGlobalPulse(chip, {"StartRingOscillatorsA"},50); //Start Oscillators 
 				trimOscCounts[ringOsc] = chipInterface.ReadReg(chip, "RING_OSC_A_OUT") - 4096;
-				//LOG(INFO) << BOLDMAGENTA << "Counts: " << trimOscCounts[ringOsc] << RESET;
+				LOG(INFO) << BOLDMAGENTA << "Counts: " << trimOscCounts[ringOsc] << RESET;
 				//results[chip].trimOscFrequency[ringOsc] = trimOscCounts[ringOsc]/((2*51)/40);
 			}
 			for(int ringOsc = 0; ringOsc < 34; ringOsc++){

@@ -15,8 +15,8 @@ using namespace Ph2_HwInterface;
 void ShortTempSensorHistograms::fillSTS(const double (&temperature)[5], int run_counter)
 {
 	////Stability plot
-	if ( run_counter == 0 )
-		remove( "Results/temperature.root" ); //Remove old file if it's not part of the current run
+	//if ( run_counter == 0 )
+	//	remove( "Results/temperature.root" ); //Remove old file if it's not part of the current run
 	TFile *file = new TFile("Results/temperature.root","UPDATE");
 	const char* tNames[5] = {"TEMPSENS_1","TEMPSENS_2","TEMPSENS_3","TEMPSENS_4","NTC"};
 	for(int sensor=0;sensor<5;sensor++){

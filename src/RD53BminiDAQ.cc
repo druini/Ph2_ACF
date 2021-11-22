@@ -3,6 +3,7 @@
 #include "../Utils/argvparser.h"
 #include "../HWDescription/RD53B.h"
 
+#include "../tools/RD53VrefTrimming.h"
 #include "../tools/RD53ShortTempSensor.h"
 #include "../tools/RD53TempSensor.h"
 #include "../tools/RD53DACScan.h"
@@ -16,7 +17,6 @@
 #include "../tools/RD53BRegReader.h"
 #include "../tools/RD53BThresholdScan.h"
 #include "../tools/RD53BRegTest.h"
-#include "../tools/RD53BRingOscillator.h"
 // #include "../tools/RD53BThresholdEqualization.h"
 // #include "../tools/RD53BRegisterThresholdScan.h"
 
@@ -40,7 +40,8 @@ using Tools = ToolManager<decltype(make_named_tuple(
 	TOOL(RD53DACScan),
 	TOOL(RD53TempSensor),
 	TOOL(RD53ShortTempSensor),
-    TOOL(RD53BRegTest)
+    TOOL(RD53BRegTest),
+    TOOL(RD53VrefTrimming)
     // , TOOL(RD53BThresholdEqualization)
     // , TOOL(RD53BRegisterThresholdScan)
 ))>;

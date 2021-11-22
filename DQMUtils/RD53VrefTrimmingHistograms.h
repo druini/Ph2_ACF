@@ -1,14 +1,14 @@
 /*!
-  \file                  RD53DACScanHistograms.h
-  \brief                 Header file of DACScan histograms
+  \file                  RD53VrefTrimmingHistograms.h
+  \brief                 Header file of VrefTrimming histograms
   \author                Umberto MOLINATTI
   \version               1.0
-  \date                  09/04/21
+  \date                  22/11/21
   Support:               email to umberto.molinatti@cern.ch
 */
 
-#ifndef RD53DACScanHistograms_H
-#define RD53DACScanHistograms_H
+#ifndef RD53VrefTrimmingHistograms_H
+#define RD53VrefTrimmingHistograms_H
 
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
@@ -16,18 +16,22 @@
 #include "DQMHistogramBase.h"
 
 #include "TFitResult.h"
-#include "TApplication.h"
 #include "TGraph.h"
+#include "TApplication.h"
 #include <TStyle.h>
+#include <fstream>
+
+#include "TH1.h"
+#include "TMultiGraph.h"
 #include <time.h>
 
 #define LOGNAME_FORMAT "%Y%m%d_%H%M%S"
 #define LOGNAME_SIZE 50
 
-class DACScanHistograms
+class VrefTrimmingHistograms
 {
   public:
-    void fillDAC(const double (&fitStart)[9], const double (&fitEnd)[9], const double (&VMUXvolt)[9][5000], const double (&DACcode)[9][5000], const std::string* writeVar);
+    void fillVT(const double (&vdddVoltage)[16], const double (&vddaVoltage)[16]);
 
   private:
     DetectorDataContainer DetectorData;

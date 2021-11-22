@@ -19,6 +19,10 @@
 #include "TApplication.h"
 #include "TGraph.h"
 #include <TStyle.h>
+#include <time.h>
+
+#define LOGNAME_FORMAT "%Y%m%d_%H%M%S"
+#define LOGNAME_SIZE 50
 
 class ADCScanHistograms
 {

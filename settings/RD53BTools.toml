@@ -89,3 +89,7 @@ args = {}
 [ShortTempSensor]
 type = "RD53ShortTempSensor"
 args = {}
+
+[VrefTrimming]
+type = "RD53VrefTrimming"
+args = {}

@@ -14,13 +14,19 @@ using namespace Ph2_HwInterface;
 
 void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], const double (&trimOscFrequency)[42][16], const double (&trimVoltage)[16])
 {
+	static char auxvar[LOGNAME_SIZE];
+	time_t now = time(0);
+	strftime(auxvar, sizeof(auxvar), LOGNAME_FORMAT, localtime(&now));
+	std::string outputname;
+	outputname = auxvar;	
+	
 	const char*           oscNames[42] = {"CKND0", "CKND4", "INV0", "INV4", "NAND0", "NAND4", "NOR0", "NOR4", 
 											"CKND0 L","CKND0 R", "CKND4 L", "CKND4 R", "INV0 L","INV0 R", "INV4 L", "INV4 R", "NAND0 L","NAND0 R", "NAND4 L","NAND4 R", "NOR0 L","NOR0 R", "NOR4 L","NOR4 R",
 											"SCAN DFF 0", "SCAN DFF 0", "DFF 0", "DFF 0", "NEG EDGE DFF 1", "NEG EDGE DFF 1",
 											"LVT INV 0", "LVT INV 4","LVT 4-IN NAND0", "LVT 4-IN NAND 4",
 											"0","1","2","3","4","5","6","7" };
     auto canvas = new TCanvas();
-    canvas->Print("Results/oscillatorPlots.pdf[");
+    canvas->Print(("Results/oscillatorPlots_" + outputname + ".pdf[").c_str());
 	//FOR RING OSCILLATORS IN THE A SECTION
     auto canvas2 = new TCanvas();
     // Oscillator graph with vddd
@@ -35,7 +41,7 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
     vdddMG0->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG0->Draw("A pmc plc");
     gPad->BuildLegend();
-    canvas2->Print("Results/oscillatorPlots.pdf");
+    canvas2->Print(("Results/oscillatorPlots_" + outputname + ".pdf").c_str());
     canvas2->Write();
 	
 	
@@ -53,7 +59,7 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
     vdddMG->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG->Draw("A pmc plc");
     gPad->BuildLegend();
-    canvas3->Print("Results/oscillatorPlots.pdf");
+    canvas3->Print(("Results/oscillatorPlots_" + outputname + ".pdf").c_str());
     canvas3->Write();
 	
 	//FOR RING OSCILLATORS IN THE B SECTION 2
@@ -70,7 +76,7 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
     vdddMG1->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG1->Draw("A pmc plc");
     gPad->BuildLegend();
-    canvas4->Print("Results/oscillatorPlots.pdf");
+    canvas4->Print(("Results/oscillatorPlots_" + outputname + ".pdf").c_str());
     canvas4->Write();
 	
 	//FOR RING OSCILLATORS IN THE B SECTION 3
@@ -87,7 +93,7 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
     vdddMG2->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG2->Draw("A pmc plc");
     gPad->BuildLegend();
-    canvas5->Print("Results/oscillatorPlots.pdf");
+    canvas5->Print(("Results/oscillatorPlots_" + outputname + ".pdf").c_str());
     canvas5->Write();
 	
 	//FOR RING OSCILLATORS IN THE B SECTION 4
@@ -104,8 +110,8 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
     vdddMG3->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG3->Draw("A pmc plc");
     gPad->BuildLegend();
-    canvas6->Print("Results/oscillatorPlots.pdf");
+    canvas6->Print(("Results/oscillatorPlots_" + outputname + ".pdf").c_str());
     canvas6->Write();
     //file->Write();
-    canvas->Print("Results/oscillatorPlots.pdf]");
+    canvas->Print(("Results/oscillatorPlots_" + outputname + ".pdf]").c_str());
 }
