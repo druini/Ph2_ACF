@@ -62,6 +62,14 @@ maskGen = [
 type = "RD53BThresholdScan"
 args = { injectionTool = "ThresholdScanInjection", vcalMed = 300, vcalHighRange = [600, 2100], vcalHighStep = 50 }
 
+[ThresholdEqualization]
+type = "RD53BThresholdEqualization"
+
+[ThresholdEqualization.args]
+thresholdScan = "ThresholdScan"
+injectionTool = "ThresholdScanInjection"
+targetThreshold = 0 # The Delta VCAL value to tune the threshold at. If it's 0 a threshold scan will be performed and the mean trheshold will be used.
+
 [RingOsc]
 type = "RD53RingOscillator"
 args = {}
