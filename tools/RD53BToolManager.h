@@ -3,8 +3,10 @@
 
 #include "RD53BTool.h"
 
-#include <../Utils/indicators/cursor_control.hpp>
-#include <../Utils/indicators/progress_bar.hpp>
+// #include "../DQMUtils/RD53BRoot.h"
+
+#include "../Utils/indicators/cursor_control.hpp"
+#include "../Utils/indicators/progress_bar.hpp"
 
 
 namespace RD53BTools {
@@ -12,7 +14,12 @@ namespace RD53BTools {
 
 template <class Tools>
 struct ToolManager : public ToolManagerBase {
-    ToolManager(const toml::value& config) : ToolManagerBase(config) { initialize<Tools>(); }
+    ToolManager(const toml::value& config, bool showPlots = true) 
+      : ToolManagerBase(config) 
+      , _showPlots(showPlots)
+    { 
+        initialize<Tools>(); 
+    }
 
     void run_tools(SystemController& system, const std::vector<std::string>& toolNames) const {
         for (const auto& toolName : toolNames)
@@ -22,8 +29,11 @@ struct ToolManager : public ToolManagerBase {
     void run_tool(SystemController& system, const std::string& toolName) const {
         std::string typeName = getToolTypeName(toolName);
         Tools::for_each_index([&] (auto index) {
-            if (Tools::names[index.value] == typeName)
-                run_tool(system, typename Tools::field_type<index.value>(this, toolName, getToolArgs(toolName)));
+            if (Tools::names[index.value] == typeName) {
+                auto tool = typename Tools::field_type<index.value>(this, toolName, getToolArgs(toolName));
+                tool.init();
+                run_tool(system, tool);
+            }
         });
     }
     
@@ -31,7 +41,7 @@ private:
 
     template <class ToolType, typename std::enable_if_t<has_draw_v<ToolType>, int> = 0>
     void run_tool(SystemController& system, ToolType&& tool) const {
-        tool.draw(run_with_progress(system, tool));
+        tool.Draw(run_with_progress(system, tool), _showPlots);
     }
     
     template <class ToolType, typename std::enable_if_t<!has_draw_v<ToolType>, int> = 0>
@@ -72,6 +82,9 @@ private:
     auto run_with_progress(SystemController& system, ToolType&& tool, Task task) const {
         return tool.run(system);
     }
+
+private:
+    bool _showPlots;
 };
 
 }

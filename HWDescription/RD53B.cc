@@ -9,10 +9,10 @@
 
 #include "RD53B.h"
 
-#include "../Utils/toml.hpp"
 #include <boost/filesystem.hpp>
 
 #include "../Utils/xtensor/xcsv.hpp"
+#include "../Utils/xtensor/xio.hpp"
 
 namespace Ph2_HwDescription
 {
@@ -80,14 +80,14 @@ template <class Flavor>
 void RD53B<Flavor>::loadfRegMap(const std::string& fileName)
 {
     if (boost::filesystem::exists(fileName)) {
-        auto data = toml::parse(fileName);
+        config = toml::parse<toml::preserve_comments, tsl::ordered_map>(fileName);
 
-        if (data.contains("Registers"))
-            for (const auto& key_value : data.at("Registers").as_table())
+        if (config.contains("Registers"))
+            for (const auto& key_value : config.at("Registers").as_table())
                 configureRegister(key_value.first, key_value.second.as_integer());
 
-        if (data.contains("CoreColumns")) {
-            auto coreCols = data["CoreColumns"];
+        if (config.contains("CoreColumns")) {
+            auto coreCols = config["CoreColumns"];
 
             if (coreCols.contains("disable"))
                 for (const auto& range : toml::get<std::vector<std::array<size_t, 2>>>(coreCols["disable"]))
@@ -98,19 +98,25 @@ void RD53B<Flavor>::loadfRegMap(const std::string& fileName)
                     std::fill_n(coreColEnableInjections.begin() + range[0], std::min(range[1], coreColEnableInjections.size()) - range[0], false);
         }
 
-        if (data.contains("Pixels")) {
-            auto&& pixelsConfig = data.at("Pixels").as_table();
+        if (config.contains("Pixels")) {
+            auto&& pixelsConfig = config.at("Pixels").as_table();
             pixelConfigFields().for_each([&] (const auto& fieldName, auto ptr) {
                 auto it = pixelsConfig.find(fieldName.value);
                 if (it != pixelsConfig.end()) {
-                    if (it->second.is_integer())
-                        (pixelConfig.*ptr).fill(it->second.as_integer());
-                    else {
-                        auto fileName = it->second.as_string();
-                        pixelConfigFileNames[fieldName.value] = fileName;
-                        std::ifstream csvFile(fileName);
-                        pixelConfig.*ptr = xt::load_csv<double>(csvFile);
-                    }
+                    // if (it->second.is_integer())
+                    //     (pixelConfig.*ptr).fill(it->second.as_integer());
+                    // else {
+                        std::string csvFileName = it->second.as_string();
+                        // pixelConfigFileNames[fieldName.value] = csvFileName;
+                        if (boost::filesystem::exists(csvFileName)) {
+                            std::ifstream csvFile(csvFileName);
+                            auto data = xt::load_csv<double>(csvFile);
+                            if (data.size() == 1)
+                                (pixelConfig.*ptr).fill(data.flat(0));
+                            else
+                                pixelConfig.*ptr = data;
+                        }
+                    // }
                 }
             });
         }
@@ -124,27 +130,43 @@ void RD53B<Flavor>::saveRegMap(const std::string& fName2Add)
     fileName.insert(fileName.rfind('/'), fName2Add);
     std::ofstream file(fileName);
     
-    toml::table register_table;
+    // toml::table register_table;
     for (size_t i = 0; i < Regs.size(); ++i) {
         if (Regs[i].type == RD53BConstants::RegType::ReadWrite && registerValues[i]) {
-            register_table.insert({Regs[i].name, *registerValues[i]});
+            config["Registers"][Regs[i].name] = *registerValues[i];
+            // register_table.insert({Regs[i].name, *registerValues[i]});
         }
     }
     
-    toml::table pixels_table;
-    pixelConfigFields().for_each([&] (const auto& fieldName, auto ptr) {
-        auto it = pixelConfigFileNames.find(fieldName.value);
-        if (it != pixelConfigFileNames.end()) {
-            std::ofstream out_file(it->second);
-            xt::dump_csv(out_file, pixelConfig.*ptr);
-            pixels_table.insert({fieldName.value, it->second});
-        }
-    });
+    // toml::table pixels_table;
+    if (config.contains("Pixels")) {
+        pixelConfigFields().for_each([&] (const auto& fieldName, auto ptr) {
+            // LOG(INFO) << "save pixel config: " << fieldName.value;
+            // auto it = pixelConfigFileNames.find(fieldName.value);
+            if (config["Pixels"].contains(fieldName.value)) {
+                std::string csvFileName = config["Pixels"][fieldName.value].as_string();
+                std::ofstream out_file(csvFileName);
+                if (xt::all(xt::equal(pixelConfig.*ptr, (pixelConfig.*ptr).flat(0))))
+                    out_file << (int)(pixelConfig.*ptr).flat(0);
+                else
+                    xt::dump_csv(out_file, xt::cast<int>(pixelConfig.*ptr));
+                config["Pixels"][fieldName.value] = csvFileName;
+                // pixels_table.insert({fieldName.value, it->second});
+            }
+            // else {
+            //     auto firstPixel = (pixelConfig.*ptr)(0, 0);
+            //     if (xt::all(pixelConfig.*ptr == firstPixel)) {
+            //         config["Pixels"].as_table().insert({fieldName.value, firstPixel});
+            //     }
+            // }
+        });
+    }
 
-    file << toml::value(toml::table({
-        {"Registers", std::move(register_table)},
-        {"Pixels", std::move(pixels_table)}
-    }));
+    // file << toml::value(toml::table({
+    //     {"Registers", std::move(register_table)},
+    //     {"Pixels", std::move(pixels_table)}
+    // }));
+    file << config;
 }
 
 template class RD53B<RD53BFlavor::ATLAS>;

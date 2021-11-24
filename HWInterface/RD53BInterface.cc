@@ -47,7 +47,7 @@ bool RD53BInterface<Flavor>::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_
 
     UpdateCoreColumns(chip);
 
-    UpdatePixelConfig(chip, chip->pixelConfig);
+    UpdatePixelConfigDense(chip, chip->pixelConfig);
 
     return true;
 }

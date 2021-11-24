@@ -94,6 +94,33 @@ class RD53FWInterface : public BeBoardFWInterface
     void                                       SendChipCommandsPack(const std::vector<uint32_t>& commandList);
     std::vector<std::pair<uint16_t, uint16_t>> ReadChipRegisters(Ph2_HwDescription::ReadoutChip* pChip);
 
+    template <class It>
+    void WriteChipCommand(It first, It last, int hybridId) {
+        std::vector<uint32_t> commandList;
+        RD53FWInterface::ComposeAndPackChipCommands(first, last, hybridId, commandList);
+        RD53FWInterface::SendChipCommandsPack(commandList);
+    }
+
+    template <class It>
+    void ComposeAndPackChipCommands(It first, It last, int hybridId, std::vector<uint32_t>& commandList) {
+        const size_t size = last - first;
+        const size_t n32bitWords = (size / 2) + (size % 2);
+
+        // ##########
+        // # Header #
+        // ##########
+        commandList.push_back(bits::pack<6, 10, 16>(RD53FWconstants::HEADEAR_WRTCMD, (hybridId < 0 ? enabledHybrids : 1 << hybridId), n32bitWords));
+
+        // ############
+        // # Commands #
+        // ############
+        for(auto i = 1u; i < size; i += 2) commandList.push_back(bits::pack<16, 16>(*(first + i - 1), *(first + i)));
+        // for(auto i = 1u; i < data.size(); i += 2) commandList.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
+
+        // If data.size() is not even, add a sync command
+        if(size % 2 != 0) commandList.push_back(bits::pack<16, 16>(*(last - 1), RD53CmdEncoder::SYNC));
+    }
+    
     enum class TriggerSource : uint32_t
     {
         IPBus = 1,

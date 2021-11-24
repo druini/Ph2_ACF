@@ -18,23 +18,23 @@
 
 namespace RD53BTools {
 
-void ReverseYAxis(TH1 *h)
-{
-    // Remove the current axis
-    h->GetYaxis()->SetLabelOffset(999);
-    h->GetYaxis()->SetTickLength(0);
-    // Redraw the new axis
-    gPad->Update();
-    TGaxis *newaxis = new TGaxis(gPad->GetUxmin(),
-                                    gPad->GetUymax(),
-                                    gPad->GetUxmin()-0.001,
-                                    gPad->GetUymin(),
-                                    h->GetYaxis()->GetXmin(),
-                                    h->GetYaxis()->GetXmax(),
-                                    510,"+");
-    newaxis->SetLabelOffset(-0.03);
-    newaxis->Draw();
-}
+// void ReverseYAxis(TH1 *h)
+// {
+//     // Remove the current axis
+//     h->GetYaxis()->SetLabelOffset(999);
+//     h->GetYaxis()->SetTickLength(0);
+//     // Redraw the new axis
+//     gPad->Update();
+//     TGaxis *newaxis = new TGaxis(gPad->GetUxmin(),
+//                                     gPad->GetUymax(),
+//                                     gPad->GetUxmin()-0.001,
+//                                     gPad->GetUymin(),
+//                                     h->GetYaxis()->GetXmin(),
+//                                     h->GetYaxis()->GetXmax(),
+//                                     510,"+");
+//     newaxis->SetLabelOffset(-0.03);
+//     newaxis->Draw();
+// }
 
 template <class Flavor>
 typename RD53BThresholdScan<Flavor>::OccupancyMap RD53BThresholdScan<Flavor>::run(Ph2_System::SystemController& system, Task progress) {
@@ -47,10 +47,6 @@ typename RD53BThresholdScan<Flavor>::OccupancyMap RD53BThresholdScan<Flavor>::ru
     for_each_device<Chip>(system, [&] (Chip* chip) {
         auto* rd53b = static_cast<RD53B<Flavor>*>(chip);
         chipInterface.WriteReg(rd53b, Flavor::Reg::VCAL_MED, param("vcalMed"_s));
-        if (param("TDAC"_s) >= 0) {
-            rd53b->pixelConfig.tdac.fill(param("TDAC"_s));
-            chipInterface.UpdatePixelConfig(rd53b, rd53b->pixelConfig, false, true);
-        }
     });
 
     param("injectionTool"_s).configureInjections(system);
@@ -120,10 +116,8 @@ std::array<ChipDataMap<xt::xtensor<double, 2>>, 2> RD53BThresholdScan<Flavor>::a
 
 
 template <class Flavor>
-void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) const {
-    TApplication app("app", nullptr, nullptr);
-    
-    TFile* file = new TFile(Base::getResultPath(".root").c_str(), "NEW");
+void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) {
+    Base::createRootFile();
 
     const auto& offset = param("injectionTool"_s).param("offset"_s);
     const size_t nInjections = param("injectionTool"_s).param("nInjections"_s);
@@ -133,91 +127,43 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) const {
     auto vcalBins = xt::arange(param("vcalHighRange"_s)[0], param("vcalHighRange"_s)[1], param("vcalHighStep"_s)) - param("vcalMed"_s);
 
     for (const auto& item : occMap) {
-        std::stringstream ss;
-        ss << "Chip " << item.first;
-        file->cd();
-        file->mkdir(ss.str().c_str())->cd();
+        Base::mkdir(item.first);
 
-        TH2F* scurves = new TH2F("scurves", "S-Curves", 
-            item.second.shape()[0], param("vcalHighRange"_s)[0] - param("vcalMed"_s), param("vcalHighRange"_s)[1] - param("vcalMed"_s), 
-            nInjections + 1, 0, 101
-        );
+        const auto& occ = item.second;
 
-        // xt::xtensor<double, 2> scurveData = xt::zeros<double>({vcalBins.size(), nInjections});
-        // auto arr = xt::xarray<double>(item.second);
-        // arr.reshape({int(vcalBins.size()), -1});
-        // for (size_t i = 0; i < vcalBins.size(); ++i)
-        //     xt::col(scurveData, i) = xt::histogram(xt::view(arr, i, xt::all()), nInjections);
+        xt::xtensor<size_t, 2> scurves = xt::zeros<size_t>({vcalBins.size(), nInjections + 1});
 
-        // std::cout << scurveData << std::endl;
+        for (size_t i = 0; i < vcalBins.size(); ++i)
+            for (size_t row = 0; row < occ.shape()[1]; ++row)
+                for (size_t col = 0; col < occ.shape()[2]; ++col)
+                    scurves(i, std::round(nInjections * occ(i, row, col))) += 1;
 
-        for (size_t i = 0; i < item.second.shape()[0]; ++i)
-            for (const double occ : xt::view(item.second, i, xt::all(), xt::all()))
-                scurves->Fill(vcalBins(i), occ * 100 + .5 * 100.0 / nInjections, 1);
-
+        Base::drawHist2D(scurves, "S-Curves", vcalBins(0), vcalBins.periodic(-1), 0, 1, "Delta VCAL", "Occupancy", "# of Pixels");
         
-        TCanvas* c1 = new TCanvas("scurves", "Threshold Scan S-Curves", 600, 600); (void)c1;
-        scurves->Draw("COLZ");
-        c1->Write();
-
         const auto& threshold = thresholdAndNoise[0][item.first];
         const auto& noise = thresholdAndNoise[1][item.first];
 
-        LOG(INFO) << "Mean threshold: " << xt::mean(threshold)();
-        LOG(INFO) << "Threshold stddev: " << xt::stddev(threshold)();
-        LOG(INFO) << "Mean noise: " << xt::mean(noise)();
-        LOG(INFO) << "Noise stddev: " << xt::stddev(noise)();
+        const auto valid = xt::view(item.second, -1, xt::all(), xt::all()) > .9;
+
+        LOG(INFO) << "Stuck pixels: " << ((double)xt::count_nonzero(!valid)() / nPixels);
+        const auto filtered_threshold = xt::filter(threshold, valid);
+        LOG(INFO) << "Mean threshold: " << xt::mean(filtered_threshold)();
+        LOG(INFO) << "Threshold stddev: " << xt::stddev(filtered_threshold)();
+        LOG(INFO) << "Min threshold: " << xt::amin(filtered_threshold)();
+        LOG(INFO) << "Max threshold: " << xt::amax(filtered_threshold)();
+        LOG(INFO) << "Mean noise: " << xt::mean(xt::filter(noise, valid))();
+        LOG(INFO) << "Noise stddev: " << xt::stddev(xt::filter(noise, valid))();
 
         auto vcalDiffBins = xt::view(vcalBins + param("vcalHighStep"_s) / 2.0, xt::range(0, -1));
 
-        TCanvas* c2 = new TCanvas("thresholdMap", "Threshold Scan Results", 600, 600); (void)c2;
-        TH2F* thresholdMap = new TH2F("thresholdMap", "Threshold Map", Flavor::nCols, 0, Flavor::nCols, Flavor::nRows, 0, Flavor::nRows);
-        for (size_t row = 0; row < threshold.shape()[0]; ++row)
-            for (size_t col = 0; col < threshold.shape()[1]; ++col)
-                thresholdMap->Fill(offset[1] + col, Flavor::nRows - (offset[0] + row), threshold(row, col));
-        thresholdMap->Draw("COLZ");
-        ReverseYAxis(thresholdMap);
-        c2->Write();
+        Base::drawMap(threshold, "Threshold Map", "Threshold", offset[0], offset[1]);
 
-        TCanvas* c3 = new TCanvas("threshold", "Threshold Scan Results", 600, 600); (void)c3;
-        TH1F* thresholdHist = new TH1F("threshold", "Threshold Distribution", vcalDiffBins.size(), vcalDiffBins(0), vcalDiffBins(vcalDiffBins.size() - 1));
-        for (const auto& val : threshold)
-            thresholdHist->Fill(val, 1.0 / nPixels);
-        for (int i = thresholdHist->GetMinimumBin(); i < thresholdHist->GetMaximumBin(); ++i)
-            thresholdHist->SetBinError(i, 0);
-        thresholdHist->SetFillColor(kBlue);
-        thresholdHist->Draw("BAR");
-        thresholdHist->Fit("gaus", "Q");
-        c3->Update();
-        c3->Write();
-        // c3->Print(Base::getResultPath(".pdf").c_str());
+        Base::drawHist(filtered_threshold, "Threshold Distribution", vcalBins.size(), vcalBins(0), vcalBins.periodic(-1), "Delta VCAL");
 
-        TCanvas* c4 = new TCanvas("noiseMap", "Threshold Scan Results", 600, 600); (void)c4;
-        TH2F* noiseMap = new TH2F("noiseMap", "Noise Map", Flavor::nCols, 0, Flavor::nCols, Flavor::nRows, 0, Flavor::nRows);
-        for (size_t row = 0; row < noise.shape()[0]; ++row)
-            for (size_t col = 0; col < noise.shape()[1]; ++col)
-                noiseMap->Fill(offset[1] + col, Flavor::nRows - (offset[0] + row), noise(row, col));
-        noiseMap->Draw("COLZ");
-        ReverseYAxis(noiseMap);
-        c4->Write();
+        Base::drawMap(noise, "Noise Map", "Noise", offset[0], offset[1]);
 
-        TCanvas* c5 = new TCanvas("noise", "Threshold Scan Results", 600, 600); (void)c5;
-        TH1F* noiseHist = new TH1F("noise", "Noise Distribution", 100, 0, 1.1 * xt::amax(noise)());
-        for (const auto& val : noise)
-            noiseHist->Fill(val, 1.0 / nPixels);
-        for (int i = noiseHist->GetMinimumBin(); i < noiseHist->GetMaximumBin(); ++i)
-            noiseHist->SetBinError(i, 0);
-        noiseHist->SetFillColor(kBlue);
-        noiseHist->Draw("BAR");
-        noiseHist->Fit("gaus", "Q");
-        c5->Update();
-        c5->Write();
+        Base::drawHist(xt::filter(noise, valid), "Noise Distribution", 32, 0, 32, "Delta VCAL");
     }
-
-    file->Write();
-
-    // TQObject::Connect("TGMainFrame", "CloseWindow()", "TApplication", &app, "Terminate()");
-    app.Run(true);
 }
 
 template class RD53BThresholdScan<RD53BFlavor::ATLAS>;

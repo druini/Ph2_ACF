@@ -222,30 +222,15 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
 
+
 void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hybridId)
 {
-    std::vector<uint32_t> commandList;
-
-    RD53FWInterface::ComposeAndPackChipCommands(data, hybridId, commandList);
-    RD53FWInterface::SendChipCommandsPack(commandList);
+    WriteChipCommand(data.begin(), data.end(), hybridId);
 }
 
 void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList)
 {
-    const size_t n32bitWords = (data.size() / 2) + (data.size() % 2);
-
-    // ##########
-    // # Header #
-    // ##########
-    commandList.emplace_back(bits::pack<6, 10, 16>(RD53FWconstants::HEADEAR_WRTCMD, (hybridId < 0 ? enabledHybrids : 1 << hybridId), n32bitWords));
-
-    // ############
-    // # Commands #
-    // ############
-    for(auto i = 1u; i < data.size(); i += 2) commandList.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
-
-    // If data.size() is not even, add a sync command
-    if(data.size() % 2 != 0) commandList.emplace_back(bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
+    ComposeAndPackChipCommands(data.begin(), data.end(), hybridId, commandList);
 }
 
 void RD53FWInterface::SendChipCommandsPack(const std::vector<uint32_t>& commandList)

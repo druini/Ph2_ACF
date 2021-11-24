@@ -85,6 +85,7 @@ typename RD53BInjectionTool<Flavor>::ChipEventsMap RD53BInjectionTool<Flavor>::r
 }
 
 
+
 template <class Flavor>
 void RD53BInjectionTool<Flavor>::setupMaskFrame(Ph2_System::SystemController& system, size_t frameId) const {
     auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
@@ -102,8 +103,8 @@ void RD53BInjectionTool<Flavor>::setupMaskFrame(Ph2_System::SystemController& sy
             
             chipInterface.UpdatePixelConfig(hybrid, cfg, true, false);
 
-            for (auto* chip : *hybrid)
-                static_cast<RD53B<Flavor>*>(chip)->pixelConfig = cfg;
+            // for (auto* chip : *hybrid)
+            //     static_cast<RD53B<Flavor>*>(chip)->pixelConfig = cfg;
         });
     });
 
@@ -227,50 +228,26 @@ ChipDataMap<std::array<double, 16>> RD53BInjectionTool<Flavor>::totDistribution(
 }
 
 template <class Flavor>
-void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) const {
-    TApplication* app = nullptr;
-    if (param("showPlots"_s))
-        app = new TApplication("app", nullptr, nullptr);
+void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) {
+    // TApplication* app = nullptr;
+    // if (param("showPlots"_s))
+        // app = new TApplication("app", nullptr, nullptr);
     // TApplication app("app", nullptr, nullptr);
-    TFile* file = new TFile(Base::getResultPath(".root").c_str(), "NEW");
-
+    // TFile* file = new TFile(Base::getResultPath(".root").c_str(), "NEW");
+    Base::createRootFile();
+    
     auto occMap = occupancy(result);
     auto totMap = totDistribution(result);
 
     for (const auto& item : result) {
-        std::stringstream ss;
-        ss << "Chip " << item.first;
-        file->cd();
-        file->mkdir(ss.str().c_str())->cd();
+        Base::mkdir(item.first);
 
         const auto& occ = occMap[item.first];
         const auto& tot = totMap[item.first];
 
-        // Draw Tot Distribution
-        TH1F* totHist = new TH1F("tot", "ToT Distribution", 16, 0, 16);
-        totHist->SetYTitle("Frequency");
-        totHist->SetXTitle("ToT code");
+        Base::drawHist(tot, "ToT Distribution", 16, 0, 16, "ToT");
 
-        for (int i = 0; i < 16; ++i)
-            totHist->SetBinContent(i + 1, tot[i]);
-
-        TCanvas* c1 = new TCanvas("c1", "ToT Distribution", 600, 600);
-        totHist->Draw("HIST");
-        c1->Write();
-
-        // Draw Occupancy map
-        TH2F* occHist = new TH2F("occ", "Occupancy", RD53B<Flavor>::nCols, 0, RD53B<Flavor>::nCols, RD53B<Flavor>::nRows, 0, RD53B<Flavor>::nRows);
-        occHist->SetYTitle("Row");
-        occHist->SetXTitle("Column");
-
-        for (size_t row = 0; row < Flavor::nRows; ++row)
-            for (size_t col = 0; col < Flavor::nCols; ++col)
-                occHist->Fill(col, Flavor::nRows - row, occ(row, col));
-        
-        TCanvas* c2 = new TCanvas("c2", "Occupancy Map", 600, 600);
-        occHist->Draw("COLZ");
-        ReverseYAxis(occHist);
-        c2->Write();
+        Base::drawMap(occ, "Occupancy Map", "Occupancy");
 
         // Calculate & print mean occupancy
         auto row_range = xt::range(param("offset"_s)[0], param("offset"_s)[0] + param("size"_s)[0]);
@@ -295,13 +272,6 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) const {
         LOG (INFO) << "mean occupancy for disabled pixels: " << mean_occ_disabled << RESET;
 
     }
-
-    // file->Write();
-    file->Write();
-
-    // TQObject::Connect("TGMainFrame", "CloseWindow()", "TApplication", &app, "Terminate()");
-    if (app)
-        app->Run(true);
 }
 
 template <class Flavor>

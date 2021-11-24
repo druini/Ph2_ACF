@@ -23,8 +23,11 @@
 #include <iomanip>
 
 #include "../Utils/xtensor/xfixed.hpp"
+#include "../Utils/xtensor/xvectorize.hpp"
 
 #include "../Utils/NamedTuple.h"
+#include "../Utils/toml.hpp"
+#include "../Utils/tsl/ordered_map.h"
 
 #include <boost/optional.hpp>
 
@@ -135,6 +138,18 @@ public:
     }
 
     template <class T>
+    static auto encodeTDAC(T&& data) {
+        static const auto f = xt::vectorize(Flavor::encodeTDAC);
+        return f(std::forward<T>(data));
+    }
+    
+    template <class T>
+    static auto decodeTDAC(T&& data) {
+        static const auto f = xt::vectorize(Flavor::decodeTDAC);
+        return f(std::forward<T>(data));
+    }
+
+    template <class T>
     static uint8_t ChipIdFor(const T* device) { return BroadcastId; }
 
     static const Register& getRegister(const std::string& name) {
@@ -167,7 +182,8 @@ public:
     std::array<boost::optional<uint16_t>, 256> registerValues;
     std::unordered_map<std::string, size_t> registerConfig;
     std::string configFileName;
-    std::map<std::string, std::string> pixelConfigFileNames;
+    toml::basic_value<toml::preserve_comments, tsl::ordered_map> config;
+    // std::map<std::string, std::string> pixelConfigFileNames;
     uint16_t currentRow = 0;
 };
 

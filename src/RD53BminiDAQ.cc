@@ -16,7 +16,7 @@
 #include "../tools/RD53BRegReader.h"
 #include "../tools/RD53BThresholdScan.h"
 #include "../tools/RD53BRegTest.h"
-// #include "../tools/RD53BThresholdEqualization.h"
+#include "../tools/RD53BThresholdEqualization.h"
 
 
 using namespace Ph2_System;
@@ -37,8 +37,8 @@ using Tools = ToolManager<decltype(make_named_tuple(
 	TOOL(RD53MuxScan),
 	TOOL(RD53ADCScan),
 	TOOL(RD53DACScan),
-	TOOL(RD53TempSensor)
-	// TOOL(RD53BThresholdEqualization)
+	TOOL(RD53TempSensor),
+	TOOL(RD53BThresholdEqualization)
 ))>;
 
 
@@ -57,6 +57,12 @@ int main(int argc, char** argv) {
 
     cmd.defineOption("tools", "Tools configuration file (.toml)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("tools", "t");
+
+    cmd.defineOption("hidePlots", "Do not show plots.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOptionAlternative("hidePlots", "h");
+
+    cmd.defineOption("saveState", "Save register values and pixel configuration in .toml file.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOptionAlternative("saveState", "s");
 
     int result = cmd.parse(argc, argv);
     
@@ -85,10 +91,17 @@ int main(int argc, char** argv) {
 
     auto toolConfig = toml::parse(cmd.optionValue("tools"));
 
+    bool showPlots = !cmd.foundOption("hidePlots");
+
     if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
-        Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(system, cmd.allArguments());
+        Tools<RD53BFlavor::ATLAS>(toolConfig, showPlots).run_tools(system, cmd.allArguments());
     else
-        Tools<RD53BFlavor::CMS>(toolConfig).run_tools(system, cmd.allArguments());
+        Tools<RD53BFlavor::CMS>(toolConfig, showPlots).run_tools(system, cmd.allArguments());
+
+    if (cmd.foundOption("saveState"))
+        for_each_device<Chip>(system, [&] (Chip* chip) {
+            chip->saveRegMap("");
+        });
 
     system.Destroy();
 

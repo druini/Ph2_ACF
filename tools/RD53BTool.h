@@ -21,6 +21,13 @@
 #include <regex>
 #include <experimental/type_traits>
 
+#include <TH1F.h>
+#include <TH2F.h>
+#include <TCanvas.h>
+#include <TGaxis.h>
+#include <TFile.h>
+#include <TApplication.h>
+
 namespace toml
 {
 
@@ -118,7 +125,10 @@ protected:
     toml::value _config;
 };
 
-struct RD53BToolBase {};
+struct RD53BToolBase {
+    static TApplication* app;
+    static size_t nPlots;
+};
 
 template <template <class> class ToolTmpl, class Flavor>
 struct RD53BTool : public RD53BToolBase {
@@ -139,7 +149,7 @@ struct RD53BTool : public RD53BToolBase {
       , _parameter_values(ToolParameters<Derived>) 
     {
         initialize(_parameter_values, args);
-        static_cast<Derived*>(this)->init();
+        // static_cast<Derived*>(this)->init();
     }
 
     template <class Name>       auto& param(Name)       { return _parameter_values[Name{}]; }
@@ -181,11 +191,149 @@ struct RD53BTool : public RD53BToolBase {
 
     void init() {}
     
+    template <class T>
+    void Draw(const T& data, bool showPlots) {
+        static_cast<Derived*>(this)->draw(data);
+        if (file)
+            file->Write();
+        if (showPlots && nPlots) {
+            app->Run(true);
+            nPlots = 0;
+        }
+    }
    
 protected:
+    void createRootFile() {
+        file = new TFile(getResultPath(".root").c_str(), "NEW");
+    }
+
+    void mkdir(const RD53BUtils::ChipLocation& chip) const {
+        if (file) {
+            std::stringstream ss;
+            ss << "Chip " << chip;
+            file->cd();
+            file->mkdir(ss.str().c_str())->cd();
+        }
+    }
+
     static auto& getFWInterface(SystemController& system, BeBoard* board) {
         return *static_cast<RD53FWInterface*>(system.fBeBoardFWMap.at(board->getId()));
     }
+
+    template <class Container>
+    static void drawHist(
+        const Container& data,
+        std::string title, 
+        double nSteps,
+        double minValue, 
+        double maxValue,
+        const std::string& xLabel = ""
+    ) {
+        std::stringstream ss;
+        ss << "plot" << nPlots;
+        TCanvas* c = new TCanvas(ss.str().c_str(), title.c_str(), 600, 600);
+        TH1F* h = new TH1F(ss.str().c_str(), title.c_str(), nSteps, minValue, maxValue);
+        h->SetXTitle(xLabel.c_str());
+        h->SetYTitle("Frequency");
+        for (const auto& value : data) 
+            h->Fill(value, 1. / data.size());
+        for (int i = 0; i < h->GetXaxis()->GetNbins(); ++i) 
+            h->SetBinError(i, 0);
+        h->SetFillColor(kBlue);
+        h->Draw("BAR");
+        h->Fit("gaus", "Q");
+        c->Write();
+        ++nPlots;
+    }
+
+    template <class Container>
+    static void drawHist2D(
+        Container data,
+        const std::string& title, 
+        double minX,
+        double maxX,
+        double minY,
+        double maxY,
+        const std::string& xLabel = "",
+        const std::string& yLabel = "",
+        const std::string& zLabel = "",
+        bool reverseYAxis = false
+    ) {
+        std::stringstream ss;
+        ss << "plot" << nPlots;
+        TCanvas* c = new TCanvas(ss.str().c_str(), title.c_str(), 600, 600);
+        TH2F* h = new TH2F(ss.str().c_str(), title.c_str(), data.shape()[0], minX, maxX, data.shape()[1], minY, maxY);
+        h->SetXTitle(xLabel.c_str());
+        h->SetYTitle(yLabel.c_str());
+        h->SetZTitle(zLabel.c_str());
+        for (size_t i = 0; i < data.shape()[0]; ++i)
+            for (size_t j = 0; j < data.shape()[1]; ++j)
+                h->SetBinContent(i + 1, j + 1, data(i, j));
+        h->Draw("COLZ");
+        
+        if (reverseYAxis) {
+            // Reverse Y Axis
+            h->GetYaxis()->SetLabelOffset(999);
+            h->GetYaxis()->SetTickLength(0);
+            // Redraw the new axis
+            gPad->Update();
+            TGaxis *newaxis = new TGaxis(gPad->GetUxmin(),
+                                            gPad->GetUymax(),
+                                            gPad->GetUxmin()-0.001,
+                                            gPad->GetUymin(),
+                                            h->GetYaxis()->GetXmin(),
+                                            h->GetYaxis()->GetXmax(),
+                                            510,"+");
+            newaxis->SetLabelOffset(-0.03);
+            newaxis->Draw();
+        }
+
+        c->Write();
+        ++nPlots;
+    }
+
+    template <class Container>
+    static void drawMap(
+        Container data,
+        const std::string& title, 
+        const std::string& zLabel = "",
+        const size_t offsetX = 0,
+        const size_t offsetY = 0
+    ) {
+        std::stringstream ss;
+        ss << "plot" << nPlots;
+        TCanvas* c = new TCanvas(ss.str().c_str(), title.c_str(), 600, 600);
+        TH2F* h = new TH2F(ss.str().c_str(), title.c_str(), Flavor::nCols, 0, Flavor::nCols, Flavor::nRows, 0, Flavor::nRows);
+        h->SetXTitle("Columns");
+        h->SetYTitle("Rows");
+        h->SetZTitle(zLabel.c_str());
+        for (size_t i = 0; i < data.shape()[0]; ++i)
+            for (size_t j = 0; j < data.shape()[1]; ++j)
+                h->Fill(j, Flavor::nRows - i - 1, data(i, j));
+        h->Draw("COLZ");
+        
+        // Reverse Y Axis
+        h->GetYaxis()->SetLabelOffset(999);
+        h->GetYaxis()->SetTickLength(0);
+        // Redraw the new axis
+        gPad->Update();
+        TGaxis *newaxis = new TGaxis(gPad->GetUxmin(),
+                                        gPad->GetUymax(),
+                                        gPad->GetUxmin()-0.001,
+                                        gPad->GetUymin(),
+                                        h->GetYaxis()->GetXmin(),
+                                        h->GetYaxis()->GetXmax(),
+                                        510,"+");
+        newaxis->SetLabelOffset(-0.03);
+        newaxis->Draw();
+
+        c->Write();
+        ++nPlots;
+    }
+
+
+protected:
+    TFile* file = nullptr;
 
 private:
     template <class T, std::enable_if_t<std::is_base_of<NamedTupleBase, T>::value, int> = 0>
@@ -210,6 +358,7 @@ private:
             throw std::runtime_error(ss.str());
         }
         value = T{_toolManager, toolName, _toolManager->getToolArgs(toolName)}; 
+        value.init();
     }
     
     template <class NamedTuple>
@@ -257,6 +406,24 @@ using tool_result_t = typename tool_result<Tool>::type;
 template <class T>
 using ChipDataMap = std::map<RD53BUtils::ChipLocation, T>;
 
+
+inline void ReverseYAxis(TH1 *h)
+{
+    // Remove the current axis
+    h->GetYaxis()->SetLabelOffset(999);
+    h->GetYaxis()->SetTickLength(0);
+    // Redraw the new axis
+    gPad->Update();
+    TGaxis *newaxis = new TGaxis(gPad->GetUxmin(),
+                                    gPad->GetUymax(),
+                                    gPad->GetUxmin()-0.001,
+                                    gPad->GetUymin(),
+                                    h->GetYaxis()->GetXmin(),
+                                    h->GetYaxis()->GetXmax(),
+                                    510,"+");
+    newaxis->SetLabelOffset(-0.03);
+    newaxis->Draw();
+}
 
 }
 

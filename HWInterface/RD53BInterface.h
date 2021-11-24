@@ -20,6 +20,11 @@
 #include "../Utils/RD53BUtils.h"
 
 #include "../Utils/xtensor/xview.hpp"
+#include "../Utils/xtensor/xsort.hpp"
+#include "../Utils/xtensor/xhistogram.hpp"
+#include "../Utils/xtensor/xio.hpp"
+#include "../Utils/xtensor/xindex_view.hpp"
+
 
 // #############
 // # CONSTANTS #
@@ -41,6 +46,7 @@ class RD53BInterface : public RD53InterfaceBase
     using Reg = typename RD53B::Reg;
     using Register = Ph2_HwDescription::RD53BConstants::Register;
     using RegisterField = Ph2_HwDescription::RD53BConstants::RegisterField;
+
 
 public:
     RD53BInterface(const BeBoardFWMap& pBoardMap);
@@ -77,25 +83,70 @@ public:
         UpdatePixelConfig(pRD53, pRD53->pixelConfig);
     }
 
-public:
     template <class Device>
-    void UpdatePixelConfig(Device* device, const typename RD53B::PixelConfig& cfg, bool updateMasks = true, bool updateTdac = true) {
+    void UpdatePixelConfigUniform(Device* device, uint8_t masks, uint8_t tdac, bool updateMasks, bool updateTdac) {
         setup(device);
+        BitVector<uint16_t> cmdStream;
 
+        tdac = Flavor::encodeTDAC(tdac);
+        std::vector<uint16_t> maskData = std::vector<uint16_t>(RD53B::nRows, masks << 5 | masks);
+        std::vector<uint16_t> tdacData = std::vector<uint16_t>(RD53B::nRows, tdac << 5 | tdac);
+
+        if (updateMasks && !updateTdac)
+            StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::PIX_MODE.address, uint16_t{5});
+                
+        if (!updateMasks && updateTdac)
+            StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::PIX_MODE.address, uint16_t{7});
+
+        for (uint16_t colPair = 0; colPair < 4; ++colPair) {
+            StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::REGION_COL.address, colPair);
+
+            if (updateMasks) {
+                StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::REGION_ROW.address, uint16_t{0});
+                if (updateTdac)
+                    StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::PIX_MODE.address, uint16_t{5});
+                StreamCommand<RD53BCmd::WrRegLong>(device, cmdStream, maskData);
+            }
+
+            if (updateTdac) {
+                StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::REGION_ROW.address, uint16_t{0});
+                if (updateMasks)
+                    StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::PIX_MODE.address, uint16_t{7});
+                StreamCommand<RD53BCmd::WrRegLong>(device, cmdStream, tdacData);
+            }
+        }
+
+        if (cmdStream.blocks().size())
+            SendCommandStream(device, cmdStream);
+
+    }
+
+    template <class Device>
+    void UpdatePixelConfigDense(Device* device, const typename RD53B::PixelConfig& cfg, bool updateMasks=true, bool updateTdac=true) {
+        setup(device);
+        
         std::vector<uint16_t> pixModeValues;
         RD53BUtils::for_each_device<Chip>(device, [&] (Chip* chip) {
             pixModeValues.push_back(ReadReg(chip, Reg::PIX_MODE));
         });
 
-        for (uint16_t col_pair = 0; col_pair < RD53B::nCols / 2; ++col_pair) {
-            const uint16_t col = col_pair * 2;
-            BitVector<uint16_t> cmd_stream;
+        BitVector<uint16_t> cmdStream;
 
-            SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, Reg::REGION_COL.address, col_pair);
+        if (updateMasks && !updateTdac)
+            StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::PIX_MODE.address, uint16_t{1});
+                
+        if (!updateMasks && updateTdac)
+            StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::PIX_MODE.address, uint16_t{3});
 
+        for (uint16_t colPair = 0; colPair < RD53B::nCols / 2; ++colPair) {
+            const uint16_t col = colPair * 2;
+
+            StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::REGION_COL.address, colPair);
+            
             if (updateMasks) {
-                SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, Reg::REGION_ROW.address, uint16_t{0});
-                SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, Reg::PIX_MODE.address, uint16_t{1}); // mask + auto-row
+                StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::REGION_ROW.address, uint16_t{0});
+                if (updateTdac)
+                    StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::PIX_MODE.address, uint16_t{1});
                 
                 xt::xarray<uint16_t> mask_data = xt::col(cfg.enable, col + 1);
                 mask_data |= xt::left_shift(xt::col(cfg.enableInjections, col + 1), 1);
@@ -105,21 +156,23 @@ public:
                 mask_data |= xt::left_shift(xt::col(cfg.enableInjections, col), 1);
                 mask_data |= xt::left_shift(xt::col(cfg.enableHitOr, col), 2);
 
-                SerializeCommand<RD53BCmd::WrRegLong>(device, cmd_stream, std::vector<uint16_t>(mask_data.begin(), mask_data.end()));
+                StreamCommand<RD53BCmd::WrRegLong>(device, cmdStream, std::vector<uint16_t>(mask_data.begin(), mask_data.end()));
             }
 
             if (updateTdac) {
-                SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, Reg::REGION_ROW.address, uint16_t{0});
-                SerializeCommand<RD53BCmd::WrReg>(device, cmd_stream, Reg::PIX_MODE.address, uint16_t{3}); // tdac + auto-row
+                StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::REGION_ROW.address, uint16_t{0});
+                if (updateMasks)
+                    StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::PIX_MODE.address, uint16_t{3});
                 
-                xt::xarray<uint16_t> tdac_data = xt::col(cfg.tdac, col + 1) & 0x1F;
-                tdac_data |= xt::left_shift(xt::col(cfg.tdac, col)  & 0x1F, 5);
+                xt::xarray<uint16_t> tdac_data = xt::left_shift(RD53B::encodeTDAC(xt::col(cfg.tdac, col + 1)) & 0x1F, 5);
+                tdac_data |= RD53B::encodeTDAC(xt::col(cfg.tdac, col)) & 0x1F;
 
-                SerializeCommand<RD53BCmd::WrRegLong>(device, cmd_stream, std::vector<uint16_t>(tdac_data.begin(), tdac_data.end()));
+                StreamCommand<RD53BCmd::WrRegLong>(device, cmdStream, std::vector<uint16_t>(tdac_data.begin(), tdac_data.end()));
             }
-
-            SendCommandStream(device, cmd_stream);
         }
+        
+        if (cmdStream.blocks().size())
+            SendCommandStream(device, cmdStream);
 
         auto pixMode = pixModeValues.begin();
         RD53BUtils::for_each_device<Chip>(device, [&] (Chip* chip) {
@@ -127,7 +180,110 @@ public:
             WriteReg(chip, Reg::PIX_MODE, *pixMode);
             ++pixMode;
         });
+    }
 
+    template <class Device>
+    void UpdatePixelConfig(Device* device, const typename RD53B::PixelConfig& cfg, bool updateMasks = true, bool updateTdac = true) {
+        setup(device);
+
+        typename RD53B::PixelMatrix<uint8_t> masks = cfg.enable | xt::left_shift(cfg.enableInjections, 1) | xt::left_shift(cfg.enableHitOr, 2);
+        
+        xt::xtensor<size_t, 1> masksBincounts = xt::zeros<size_t>({8});
+        xt::index_view(masksBincounts, xt::flatten(masks)) += 1;
+
+        xt::xtensor<size_t, 1> tdacBincounts = xt::zeros<size_t>({32});
+        xt::index_view(tdacBincounts, xt::flatten(cfg.tdac)) += 1;
+
+        uint8_t mostCommonMask = xt::argmax(masksBincounts)();
+        uint8_t mostCommonTdac = xt::argmax(tdacBincounts)();
+
+        typename RD53B::PixelMatrix<bool> masksNeedUpdate;
+        masksNeedUpdate.fill(false);
+        if (updateMasks)
+            masksNeedUpdate = xt::not_equal(masks, mostCommonMask);
+
+        typename RD53B::PixelMatrix<bool> tdacNeedsUpdate;
+        tdacNeedsUpdate.fill(false);
+        if (updateTdac)
+            tdacNeedsUpdate = xt::not_equal(cfg.tdac, mostCommonTdac);
+
+        const auto pairMasksNeedUpdate = xt::view(masksNeedUpdate, xt::all(), xt::range(0, RD53B::nCols, 2)) || xt::view(masksNeedUpdate, xt::all(), xt::range(1, RD53B::nCols, 2));
+        const auto pairTdacNeedsUpdate = xt::view(tdacNeedsUpdate, xt::all(), xt::range(0, RD53B::nCols, 2)) || xt::view(tdacNeedsUpdate, xt::all(), xt::range(1, RD53B::nCols, 2));
+
+        const auto pairNeedsUpdate = pairMasksNeedUpdate || pairTdacNeedsUpdate;
+
+        const auto colPairNeedsUpdate = xt::amax(pairNeedsUpdate, 0);
+
+        size_t denseColPairConfigSize = 8 // set column pair
+                                        + updateMasks * (
+                                            8 // set row = 0
+                                            + 8 * updateTdac // set pixMode
+                                            + 4 + 2 * RD53B::nRows // write masks
+                                        )
+                                        + updateTdac * (
+                                            8 // set row = 0
+                                            + 8 * updateMasks // set pixMode
+                                            + 4 + 2 * RD53B::nRows // write tdacs
+                                        );
+
+        size_t uniformConfigSize =  (updateMasks ^ updateTdac) * 8 // set pixMode
+                                    + 4 * denseColPairConfigSize; // configure 4 column pairs (1 core)
+
+        size_t sparseConfigSize =   uniformConfigSize // Broadcast most common values
+                                    + 8 // set pixMode
+                                    + 12 * xt::count_nonzero(colPairNeedsUpdate)() // set column pair
+                                    + 16 * xt::count_nonzero(pairNeedsUpdate)(); // set row & write config
+
+        size_t denseConfigSize =    (updateMasks ^ updateTdac) * 8 // set pixMode
+                                    + (RD53B::nCols / 2) * denseColPairConfigSize; // configure all column pairs
+
+        if (sparseConfigSize < denseConfigSize) {
+            // sparse config
+            std::vector<uint16_t> pixModeValues;
+            RD53BUtils::for_each_device<Chip>(device, [&] (Chip* chip) {
+                pixModeValues.push_back(ReadReg(chip, Reg::PIX_MODE));
+            });
+            UpdatePixelConfigUniform(device, mostCommonMask, mostCommonTdac, updateMasks, updateTdac);
+
+            BitVector<uint16_t> cmdStream;
+
+            StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::PIX_MODE.address, uint16_t{0});
+
+            for (uint16_t colPair = 0; colPair < RD53B::nCols / 2; ++colPair) {
+                const auto col = colPair * 2;
+                if (colPairNeedsUpdate(colPair)) {
+                    StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::REGION_COL.address, colPair);
+                    for (uint16_t row : xt::flatten_indices(xt::argwhere(xt::col(pairNeedsUpdate, colPair)))) {
+                        StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::REGION_ROW.address, row);
+
+                        uint16_t value = bits::pack<5, 3, 5, 3>(
+                            cfg.tdac(row, col + 1),
+                            masks(row, col + 1), 
+                            cfg.tdac(row, col), 
+                            masks(row, col)
+                        );
+
+                        StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::PIX_PORTAL.address, value);
+                    }
+                    StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                    StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                }
+            }
+
+            if (cmdStream.blocks().size())
+                SendCommandStream(device, cmdStream);
+            
+            auto pixModeIt = pixModeValues.begin();
+            RD53BUtils::for_each_device<Chip>(device, [&] (Chip* chip) {
+                static_cast<RD53B*>(chip)->pixelConfig = cfg;
+                WriteReg(chip, Reg::PIX_MODE, *pixModeIt);
+                ++pixModeIt;
+            });
+        }
+        else {
+            // dense config
+            UpdatePixelConfigDense(device, cfg, updateMasks, updateTdac);
+        }
     }
 
     // serialize a command for any destination device into an existing BitVector
@@ -142,6 +298,23 @@ public:
         BitVector<uint16_t> bits;
         SerializeCommand<Cmd>(destination, bits, std::forward<Args>(args)...);
         return bits;
+    }
+    
+    template <class Cmd, class Device, class... Args>
+    size_t StreamCommand(Device* destination, BitVector<uint16_t>& bits, Args&&... args) {
+        auto& fwInterface = setup(destination);
+        auto size = bits.blocks().size();
+        RD53BCmd::serialize<Cmd>(bits, RD53B::ChipIdFor(destination), std::forward<Args>(args)...);
+        if (bits.blocks().size() > 1024) {
+            fwInterface.WriteChipCommand(
+                bits.blocks().begin(),
+                bits.blocks().begin() + size,
+                destination->getHybridId()
+            );
+            bits.erase_blocks(bits.blocks().begin(), bits.blocks().begin() + size);
+            return size;
+        }
+        return 0;
     }
 
     // send a single command to any destination device

@@ -8,6 +8,9 @@ template <class BlockType>
 class BitVector {
     static constexpr size_t block_size = 8 * sizeof(BlockType);
 public:
+
+    using block_iterator = typename std::vector<BlockType>::iterator;
+
     BitVector() : _data(), _size(0) {}
 
     template <class C>
@@ -50,6 +53,16 @@ public:
             new_bits.slice(offset, offset + leftover_bits).set(byte);
         }
         _size += bits.size();
+    }
+
+    block_iterator erase_blocks(block_iterator it) {
+        _size = std::max(_size - block_size, 0ul);
+        return _data.erase(it);
+    }
+
+    block_iterator erase_blocks(block_iterator first, block_iterator last) {
+        _size = std::max(_size - block_size * (last - first), 0ul);
+        return _data.erase(first, last);
     }
 
     void clear() {

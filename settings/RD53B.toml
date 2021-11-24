@@ -1,9 +1,11 @@
-# Set chip registers.
-# [Registers]
-# SEU00 = 999
+[Pixels]
+tdac = "tdac.csv"
 
 # Select core column ranges to be disabled (all core columns are enabled by default).
-# [CoreColumns]
-# disable = [[0, 99]]
-# disableInjections = [[0, 99]]
+# eg.: [[0, 16], [32, 64]]
+[CoreColumns]
+disable = [] 
+disableInjections = []
 
+# Set chip registers.
+[Registers]
