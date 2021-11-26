@@ -2,6 +2,7 @@
 #define BITSERIALIZATION__RESULTS_HPP
 
 #include "Errors.hpp"
+#include <optional>
 
 namespace BitSerialization {
     

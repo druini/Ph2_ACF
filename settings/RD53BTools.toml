@@ -74,6 +74,10 @@ args = {}
 type = "RD53MuxScan"
 args = {}
 
+[IVScan]
+type = "RD53IVScan"
+args = { configFile = "config/iv_it_croc_sldo.xml", type = "steps", powerSupplyName = "TTi_MX", multimeterName = "KeithleyMultimeter", powerSupplyVoltageProtection = 3.0}
+
 [ADCScan]
 type = "RD53ADCScan"
 args = {}

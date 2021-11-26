@@ -9,6 +9,7 @@
 #include "../tools/RD53ADCScan.h"
 #include "../tools/RD53DACScan.h"
 #include "../tools/RD53MuxScan.h"
+#include "../tools/RD53IVScan.h"
 #include "../tools/RD53ShortRingOscillator.h"
 #include "../tools/RD53RingOscillator.h"
 #include "../tools/RD53BTool.h"
@@ -36,6 +37,7 @@ using Tools = ToolManager<decltype(make_named_tuple(
 	TOOL(RD53RingOscillator),
 	TOOL(RD53ShortRingOscillator),
 	TOOL(RD53MuxScan),
+	TOOL(RD53IVScan),
 	TOOL(RD53ADCScan),
 	TOOL(RD53DACScan),
 	TOOL(RD53TempSensor)
