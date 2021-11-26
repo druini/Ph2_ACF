@@ -125,7 +125,7 @@ boost::optional<uint16_t> RD53BInterface<Flavor>::ReadChipReg(RD53B* rd53b, cons
             return it->second;
         }
 
-        LOG(WARNING) << BLUE << "Register readback (" << reg.name << ") error, attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW << nAttempts << RESET;
+        LOG(WARNING) << BLUE << "Register readback (" << reg.name << ") error, attempt n. " << YELLOW << (attempt + 1) << BLUE << "/" << YELLOW << nAttempts << RESET;
         if (regReadback.size()) {
             LOG(WARNING) << BLUE << "Readback entries (expected address: " << address << "): " << RESET;
             for (const auto& item : regReadback)

@@ -128,15 +128,27 @@ void RD53BInjectionTool<Flavor>::inject(SystemController& system, ChipEventsMap&
             while (true) {
                 fwInterface.Start();
 
-                auto& fwInterface = Base::getFWInterface(system, board);
+                std::vector<uint32_t> data;
 
-                while(fwInterface.ReadReg("user.stat_regs.trigger_cntr") < nEvents)
-                    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+                // while(fwInterface.ReadReg("user.stat_regs.trigger_cntr") < nEvents)
+                //     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+
+                size_t wordsToRead;
+                size_t wordsRead = 0;
+                while ((wordsToRead = fwInterface.ReadReg("user.stat_regs.words_to_read")) == 0)
+                    std::this_thread::sleep_for(std::chrono::microseconds(10));
+
+                while (fwInterface.ReadReg("user.stat_regs.trigger_cntr") < nEvents || wordsToRead > 0) {
+                    auto chunk = fwInterface.ReadBlockRegOffset("ddr3.fc7_daq_ddr3", wordsToRead, wordsRead);
+                    data.insert(data.end(), chunk.begin(), chunk.end());
+                    wordsRead += wordsToRead;
+                    // std::this_thread::sleep_for(std::chrono::microseconds(10));
+                    wordsToRead = fwInterface.ReadReg("user.stat_regs.words_to_read");
+                }
 
                 fwInterface.Stop();
 
-                std::vector<uint32_t> data;
-                fwInterface.ReadData(board, false, data, true);
+                // fwInterface.ReadData(board, false, data, true);
 
                 if (data.size() == 0) {
                     LOG(ERROR) << BOLDRED << "Received no data." << RESET;

@@ -102,23 +102,55 @@ public:
             StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::REGION_COL.address, colPair);
 
             if (updateMasks) {
-                StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::REGION_ROW.address, uint16_t{0});
                 if (updateTdac)
                     StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::PIX_MODE.address, uint16_t{5});
+                StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::REGION_ROW.address, uint16_t{0});
+                StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                StreamCommand<RD53BCmd::Sync>(device, cmdStream);
                 StreamCommand<RD53BCmd::WrRegLong>(device, cmdStream, maskData);
+                
+                for (int i = 0; i < 6; ++i) {
+                    StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                    StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                    for (int j = 0; j < 32; ++j) 
+                        StreamCommand<RD53BCmd::PLLlock>(device, cmdStream);
+                }
             }
 
             if (updateTdac) {
-                StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::REGION_ROW.address, uint16_t{0});
                 if (updateMasks)
                     StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::PIX_MODE.address, uint16_t{7});
+
+                StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                for (int j = 0; j < 32; ++j) 
+                    StreamCommand<RD53BCmd::PLLlock>(device, cmdStream);
+                StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+
+                StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::REGION_ROW.address, uint16_t{0});
+
+                StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+
                 StreamCommand<RD53BCmd::WrRegLong>(device, cmdStream, tdacData);
+
+                 for (int i = 0; i < 4; ++i) {
+                    StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                    StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                    for (int j = 0; j < 32; ++j) 
+                        StreamCommand<RD53BCmd::PLLlock>(device, cmdStream);
+                }
             }
+            
+            StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+            StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+            
         }
-
-        if (cmdStream.blocks().size())
+        if (cmdStream.blocks().size()) {
             SendCommandStream(device, cmdStream);
-
+            // cmdStream.clear();
+        }
     }
 
     template <class Device>
@@ -169,6 +201,15 @@ public:
 
                 StreamCommand<RD53BCmd::WrRegLong>(device, cmdStream, std::vector<uint16_t>(tdac_data.begin(), tdac_data.end()));
             }
+
+            for (int i = 0; i < 6; ++i) {
+                StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                for (int j = 0; j < 32; ++j) 
+                    StreamCommand<RD53BCmd::PLLlock>(device, cmdStream);
+            }
+            StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+            StreamCommand<RD53BCmd::Sync>(device, cmdStream);
         }
         
         if (cmdStream.blocks().size())
@@ -265,6 +306,13 @@ public:
 
                         StreamCommand<RD53BCmd::WrReg>(device, cmdStream, Reg::PIX_PORTAL.address, value);
                     }
+                    
+                    for (int i = 0; i < 6; ++i) {
+                        StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                        StreamCommand<RD53BCmd::Sync>(device, cmdStream);
+                        for (int j = 0; j < 32; ++j) 
+                           StreamCommand<RD53BCmd::PLLlock>(device, cmdStream);
+                    }
                     StreamCommand<RD53BCmd::Sync>(device, cmdStream);
                     StreamCommand<RD53BCmd::Sync>(device, cmdStream);
                 }
@@ -304,8 +352,19 @@ public:
     size_t StreamCommand(Device* destination, BitVector<uint16_t>& bits, Args&&... args) {
         auto& fwInterface = setup(destination);
         auto size = bits.blocks().size();
-        RD53BCmd::serialize<Cmd>(bits, RD53B::ChipIdFor(destination), std::forward<Args>(args)...);
-        if (bits.blocks().size() > 1024) {
+        SerializeCommand<Cmd>(destination, bits, std::forward<Args>(args)...);
+        // if (size % 2048 > 1024 && bits.blocks().size() % 2048 < 1024) {
+        //     for (int i = 0; i < 6; ++i) {
+        //         StreamCommand<RD53BCmd::Sync>(destination, bits);
+        //         StreamCommand<RD53BCmd::Sync>(destination, bits);
+        //         for (int j = 0; j < 32; ++j) 
+        //             StreamCommand<RD53BCmd::PLLlock>(destination, bits);
+        //     }
+        //     StreamCommand<RD53BCmd::Sync>(destination, bits);
+        //     StreamCommand<RD53BCmd::Sync>(destination, bits);
+        // }
+        // RD53BCmd::serialize<Cmd>(bits, RD53B::ChipIdFor(destination), std::forward<Args>(args)...);
+        if (bits.blocks().size() > 60000) {
             fwInterface.WriteChipCommand(
                 bits.blocks().begin(),
                 bits.blocks().begin() + size,
