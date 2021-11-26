@@ -44,7 +44,7 @@ using Tools = ToolManager<decltype(make_named_tuple(
 	TOOL(RD53TempSensor),
 	TOOL(RD53BThresholdEqualization),
     TOOL(RD53BNoiseScan),
-    TOOL(RD53IVScan)
+    TOOL(RD53IVScan),
 	TOOL(RD53ShortTempSensor),
     TOOL(RD53VrefTrimming)
 ))>;

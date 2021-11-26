@@ -53,6 +53,8 @@ struct RD53ShortRingOscillator : public RD53BTool<RD53ShortRingOscillator, Flavo
 				LOG(INFO) << BOLDMAGENTA << "Counts: " << trimOscCounts[ringOsc] << RESET;
 				//results[chip].trimOscFrequency[ringOsc] = trimOscCounts[ringOsc]/((2*51)/40);
 			}
+			chipInterface.WriteReg(chip, "RingOscAEnable", 0b0000000);
+			chipInterface.SendGlobalPulse(chip, {"StartRingOscillatorsA"},50); //Stop Oscillators 
 			for(int ringOsc = 0; ringOsc < 34; ringOsc++){
 				//Set up oscillators
 				chipInterface.WriteReg(chip, "RingOscBEnBL", 1);
@@ -68,6 +70,12 @@ struct RD53ShortRingOscillator : public RD53BTool<RD53ShortRingOscillator, Flavo
 				//LOG(INFO) << BOLDMAGENTA << "Counts: " << trimOscCounts[ringOsc + 8] << RESET;
 				//results[chip].trimOscFrequency[ringOsc + 8] = trimOscCounts[ringOsc + 8]/((2*51)/40);
 			}
+			chipInterface.WriteReg(chip, "RingOscBEnBL", 0);
+			chipInterface.WriteReg(chip, "RingOscBEnBR", 0);
+			chipInterface.WriteReg(chip, "RingOscBEnCAPA", 0);
+			chipInterface.WriteReg(chip, "RingOscBEnFF", 0);
+			chipInterface.WriteReg(chip, "RingOscBEnLVT", 0);
+			chipInterface.SendGlobalPulse(chip, {"StartRingOscillatorsB"},50); //Stop Oscillators 
         });
 
         return results;

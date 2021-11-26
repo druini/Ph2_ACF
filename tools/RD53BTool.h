@@ -193,6 +193,8 @@ struct RD53BTool : public RD53BToolBase {
     
     template <class T>
     void Draw(const T& data, bool showPlots) {
+        if (showPlots && !app)
+            app = new TApplication("app", nullptr, nullptr);
         static_cast<Derived*>(this)->draw(data);
         if (file)
             file->Write();

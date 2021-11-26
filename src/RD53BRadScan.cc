@@ -75,21 +75,21 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
     
-    SystemController system;
+    SystemController* system = new SystemController();
 
     auto configFile = cmd.optionValue("file");
 
     if (reset) {
-        system.InitializeSettings(configFile, std::cout);
-        system.InitializeHw(configFile, std::cout, true, false);
-        if(system.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
-            static_cast<RD53FWInterface*>(system.fBeBoardFWMap[system.fDetectorContainer->at(0)->getId()])->ResetSequence("160");
+        system->InitializeSettings(configFile, std::cout);
+        system->InitializeHw(configFile, std::cout, true, false);
+        if(system->fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
+            static_cast<RD53FWInterface*>(system->fBeBoardFWMap[system->fDetectorContainer->at(0)->getId()])->ResetSequence("160");
         else
-            static_cast<RD53FWInterface*>(system.fBeBoardFWMap[system.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
+            static_cast<RD53FWInterface*>(system->fBeBoardFWMap[system->fDetectorContainer->at(0)->getId()])->ResetSequence("320");
         exit(EXIT_SUCCESS);
     }
     
-    system.Configure(configFile);
+    system->Configure(configFile);
 
     auto toolConfig = toml::parse(cmd.optionValue("tools"));
 	
@@ -113,10 +113,10 @@ int main(int argc, char** argv) {
 		
 			toolConfig = toml::parse(cmd.optionValue("tools"));
 
-			if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
-				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(system, {"ShortRingOsc"});
+			if (system->fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
+				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(*system, {"ShortRingOsc"});
 			else
-				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(system, {"ShortRingOsc"});
+				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(*system, {"ShortRingOsc"});
 		
 			current_time = time(0);
 			strftime(timeChar, sizeof(timeChar), LOGNAME_FORMAT, localtime(&current_time));
@@ -126,10 +126,10 @@ int main(int argc, char** argv) {
 			
 			toolConfig = toml::parse(cmd.optionValue("tools"));
 
-			if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
-				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(system, {"MuxScan"});
+			if (system->fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
+				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(*system, {"MuxScan"});
 			else
-				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(system, {"MuxScan"});
+				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(*system, {"MuxScan"});
 		
 		}
 		if(run_counter % 30 == 0){
@@ -142,33 +142,38 @@ int main(int argc, char** argv) {
 			
 			toolConfig = toml::parse(cmd.optionValue("tools"));
 
-			if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
-				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(system, {"ShortTempSensor"});
+			if (system->fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
+				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(*system, {"ShortTempSensor"});
 			else
-				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(system, {"ShortTempSensor"});
+				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(*system, {"ShortTempSensor"});
 		
 		}
 		if(run_counter % 120 == 0){
 		//IV curve
 //			toolConfig = toml::parse(cmd.optionValue("tools"));
 //
-//			if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
-//				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(system, {"ShortRingOsc"});
+//			if (system->fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
+//				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(*system, {"ShortRingOsc"});
 //			else
-//				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(system, {"ShortRingOsc"});
+//				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(*system, {"ShortRingOsc"});
 		
 			current_time = time(0);
 			strftime(timeChar, sizeof(timeChar), LOGNAME_FORMAT, localtime(&current_time));
 			logfile.open("Results/MainLog.txt",std::ios_base::app);
 			logfile << timeChar << " Begin ThresholdScan" << "\n";
 			logfile.close();
+
+            system->Destroy();
+            delete system;
+            system = new SystemController();
+            system->Configure(configFile);
 		
 			toolConfig = toml::parse(cmd.optionValue("tools"));
 
-			if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
-				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(system, {"ThresholdScan"});
+			if (system->fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
+				Tools<RD53BFlavor::ATLAS>(toolConfig, false).run_tools(*system, {"ThresholdScan"});
 			else
-				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(system, {"ThresholdScan"});
+				Tools<RD53BFlavor::CMS>(toolConfig, false).run_tools(*system, {"ThresholdScan"});
 		
 		}
 		if(run_counter % 300 == 0){
@@ -181,10 +186,10 @@ int main(int argc, char** argv) {
 		
 			toolConfig = toml::parse(cmd.optionValue("tools"));
 
-			if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
-				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(system, {"VrefTrimming"});
+			if (system->fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
+				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(*system, {"VrefTrimming"});
 			else
-				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(system, {"VrefTrimming"});
+				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(*system, {"VrefTrimming"});
 		
 			current_time = time(0);
 			strftime(timeChar, sizeof(timeChar), LOGNAME_FORMAT, localtime(&current_time));
@@ -194,10 +199,10 @@ int main(int argc, char** argv) {
 		
 			toolConfig = toml::parse(cmd.optionValue("tools"));
 
-			if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
-				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(system, {"RingOsc"});
+			if (system->fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
+				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(*system, {"RingOsc"});
 			else
-				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(system, {"RingOsc"});
+				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(*system, {"RingOsc"});
 		
 			current_time = time(0);
 			strftime(timeChar, sizeof(timeChar), LOGNAME_FORMAT, localtime(&current_time));
@@ -207,10 +212,10 @@ int main(int argc, char** argv) {
 		
 			toolConfig = toml::parse(cmd.optionValue("tools"));
 
-			if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
-				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(system, {"DACScan"});
+			if (system->fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
+				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(*system, {"DACScan"});
 			else
-				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(system, {"DACScan"});
+				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(*system, {"DACScan"});
 		
 			current_time = time(0);
 			strftime(timeChar, sizeof(timeChar), LOGNAME_FORMAT, localtime(&current_time));
@@ -220,17 +225,19 @@ int main(int argc, char** argv) {
 		
 			toolConfig = toml::parse(cmd.optionValue("tools"));
 
-			if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
-				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(system, {"ADCScan"});
+			if (system->fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
+				Tools<RD53BFlavor::ATLAS>(toolConfig).run_tools(*system, {"ADCScan"});
 			else
-				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(system, {"ADCScan"});
+				Tools<RD53BFlavor::CMS>(toolConfig).run_tools(*system, {"ADCScan"});
 		
 		}
 			
 		sleep(5);
 		run_counter++;
 	}
-    system.Destroy();
+    system->Destroy();
+    delete system;
+    
 
     LOG(INFO) << "RD53BminiDAQ finished successfully.";
 }
