@@ -188,6 +188,19 @@ void ITinstrumentsInterface::prepareMultimeter()
 
 void ITinstrumentsInterface::createScannerCardMap()
 {
-    std::string msg = "CreateScannerCardMap,multimeterId:" + instrumentID;
+    std::string msg = "CreateScannerCardMap,multimeterId:" + instrumentID + ",configFile:" + fConfigFileName;
     fInstrumentClient->sendAndReceivePacket(msg);
 }
+
+void ITinstrumentsInterface::readScannerCardPoint(std::string psRead)
+{
+    std::string msg = "ReadScannerCardPoint,multimeterId:" + instrumentID + ",psRead:" + psRead;
+    fInstrumentClient->sendAndReceivePacket(msg);
+}
+
+void ITinstrumentsInterface::runAnalysis()
+{
+    std::string msg = "RunAnalysis,configFile:" + fConfigFileName;
+    fInstrumentClient->sendAndReceivePacket(msg);
+}
+
