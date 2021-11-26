@@ -21,6 +21,8 @@ stages:
 build:
   stage: compile
   before_script:
+    - yum install -y centos-release-scl
+    - yum install -y devtoolset-10
     - source ./setup.sh
   script:
     - mkdir -p build; cd build
