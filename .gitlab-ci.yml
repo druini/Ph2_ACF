@@ -6,7 +6,8 @@
 
 workflow:
   rules:
-    - if: $CI_MERGE_REQUEST_ID
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
 
 image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
 
@@ -21,6 +22,8 @@ stages:
 build:
   stage: compile
   before_script:
+    - yum install -y centos-release-scl
+    - yum install -y devtoolset-10
     - source ./setup.sh
   script:
     - mkdir -p build; cd build
