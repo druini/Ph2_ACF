@@ -19,8 +19,8 @@ void ShortRingOscillatorHistograms::fillSRO( const double (&oscCounts)[42], int 
 											"SCAN DFF 0", "SCAN DFF 0", "DFF 0", "DFF 0", "NEG EDGE DFF 1", "NEG EDGE DFF 1",
 											"LVT INV 0", "LVT INV 4","LVT 4-IN NAND0", "LVT 4-IN NAND 4",
 											"0","1","2","3","4","5","6","7" };
-	if ( run_counter == 0 )
-		remove( "Results/shortOscillator.root" ); //Remove old file if it's not part of the current run
+	//if ( run_counter == 0 )
+	//	remove( "Results/shortOscillator.root" ); //Remove old file if it's not part of the current run
 	TFile *file = new TFile("Results/shortOscillator.root","UPDATE");
 	for(int ringOsc=0;ringOsc<42;ringOsc++){
 		TGraph* countPlot = NULL;

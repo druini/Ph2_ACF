@@ -23,6 +23,10 @@
 #include "TGraph.h"
 #include "TH1.h"
 #include "TMultiGraph.h"
+#include <time.h>
+
+#define LOGNAME_FORMAT "%Y%m%d_%H%M%S"
+#define LOGNAME_SIZE 50
 
 class RingOscillatorHistograms
 {

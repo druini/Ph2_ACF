@@ -1,10 +1,11 @@
 #include "../System/SystemController.h"
-// #include "../tools/Tool.h"
 #include "../Utils/argvparser.h"
 #include "../HWDescription/RD53B.h"
 
 #include "../tools/RD53BToolManager.h"
 
+#include "../tools/RD53VrefTrimming.h"
+#include "../tools/RD53ShortTempSensor.h"
 #include "../tools/RD53TempSensor.h"
 #include "../tools/RD53ADCScan.h"
 #include "../tools/RD53DACScan.h"
@@ -19,7 +20,6 @@
 #include "../tools/RD53BRegTest.h"
 #include "../tools/RD53BThresholdEqualization.h"
 #include "../tools/RD53BNoiseScan.h"
-#include "../tools/RD53IVScan.h"
 
 
 using namespace Ph2_System;
@@ -45,6 +45,8 @@ using Tools = ToolManager<decltype(make_named_tuple(
 	TOOL(RD53BThresholdEqualization),
     TOOL(RD53BNoiseScan),
     TOOL(RD53IVScan)
+	TOOL(RD53ShortTempSensor),
+    TOOL(RD53VrefTrimming)
 ))>;
 
 

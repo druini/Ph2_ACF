@@ -14,10 +14,16 @@ using namespace Ph2_HwInterface;
 
 void ADCScanHistograms::fillADC(const double (&fitStart)[9], const double (&fitEnd)[9], const double (&VMUXvolt)[9][5000], const double (&ADCcode)[9][5000], const std::string* writeVar)
 {
+	static char auxvar[LOGNAME_SIZE];
+	time_t now = time(0);
+	strftime(auxvar, sizeof(auxvar), LOGNAME_FORMAT, localtime(&now));
+	std::string outputname;
+	outputname = auxvar;	
+	
     auto canvas = new TCanvas();
-    remove("Results/ADC_linearity.root"); // Remove old file
-    TFile* file = new TFile("Results/ADC_linearity.root", "new");
-    canvas->Print("Results/ADCplots.pdf[");
+    //remove("Results/ADC_linearity.root"); // Remove old file
+    TFile* file = new TFile(("Results/ADC_linearity_" + outputname + ".root").c_str(), "new");
+    canvas->Print(("Results/ADCplots_" + outputname + ".pdf[").c_str());
                     for(int variable = 0; variable < 1; variable++)
                     {
                         TGraph* linear = new TGraph(390, ADCcode[variable], VMUXvolt[variable]);
@@ -28,7 +34,7 @@ void ADCScanHistograms::fillADC(const double (&fitStart)[9], const double (&fitE
                         gStyle->SetOptFit(0);
                         gStyle->SetFitFormat(".2g");
                         linear->Draw("APL");
-						canvas->Print("Results/ADCplots.pdf");
+						canvas->Print(("Results/ADCplots_" + outputname + ".pdf").c_str());
 						remove( "Results/calibration.txt" ); //Remove old file
 						std::ofstream outfile;
 						outfile.open("Results/calibration.txt",std::ios_base::app);
@@ -36,5 +42,5 @@ void ADCScanHistograms::fillADC(const double (&fitStart)[9], const double (&fitE
 						linear->Write();
                     }
     file->Write();
-    canvas->Print("Results/ADCplots.pdf]");
+    canvas->Print(("Results/ADCplots_" + outputname + ".pdf]").c_str());
 }
