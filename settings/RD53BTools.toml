@@ -4,7 +4,7 @@ args = {}
 
 [RegTest]
 type = "RD53BRegTest"
-args = { testPixels = true }
+args = { testRegs = true, testPixels = true, ServiceFrameSkip = 50 }
 
 [DigitalScan]
 type = "RD53BInjectionTool"
