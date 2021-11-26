@@ -7,6 +7,7 @@
 
 #include "../DQMUtils/RD53MuxScanHistograms.h"
 
+#include <iostream>
 
 namespace RD53BTools {
 
@@ -51,11 +52,12 @@ struct RD53MuxScan : public RD53BTool<RD53MuxScan, Flavor> {
 						results[chip].IMUXvolt[IMUXcode] = dKeithley2410.getVoltage();
 						LOG(INFO) << BOLDBLUE << "IMUX: " << BOLDYELLOW <<  IMUXcode << " " << RESET;
 					}
+				}else{
+					chipInterface.WriteReg(chip, "MonitorEnable", 1); //Choose MUX entry
+					chipInterface.WriteReg(chip, "VMonitor", VMUXcode);
+					results[chip].VMUXvolt[VMUXcode] = dKeithley2410.getVoltage();
+					LOG(INFO) << BOLDBLUE << "VMUX: " << BOLDYELLOW <<  VMUXcode << " " << RESET;
 				}
-				chipInterface.WriteReg(chip, "MonitorEnable", 1); //Choose MUX entry
-				chipInterface.WriteReg(chip, "VMonitor", VMUXcode);
-				results[chip].VMUXvolt[VMUXcode] = dKeithley2410.getVoltage();
-				LOG(INFO) << BOLDBLUE << "VMUX: " << BOLDYELLOW <<  VMUXcode << " " << RESET;
 			}
         });
 
@@ -78,5 +80,6 @@ struct RD53MuxScan : public RD53BTool<RD53MuxScan, Flavor> {
 }
 
 #endif
+
 
 

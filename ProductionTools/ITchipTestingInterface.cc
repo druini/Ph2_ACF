@@ -104,16 +104,16 @@ bool ITpowerSupplyChannelInterface::setupKeithley2410ChannelSource(uint16_t mode
     return true;
 }
 
-bool ITpowerSupplyChannelInterface::setVoltage(float voltage)
+bool ITpowerSupplyChannelInterface::setVoltageK2410(float voltage)
 {
-    std::string msg = "SetVoltage,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID + ",Voltage:" + std::to_string(voltage);
+    std::string msg = "K2410:SetVoltage,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID + ",Voltage:" + std::to_string(voltage);
     fPowerSupplyClient->sendAndReceivePacket(msg);
     return true;
 }
 
-bool ITpowerSupplyChannelInterface::setVoltageK2410(float voltage)
+bool ITpowerSupplyChannelInterface::setVoltage(float voltage)
 {
-    std::string msg = "K2410:SetVoltage,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID + ",Voltage:" + std::to_string(voltage);
+    std::string msg = "SetVoltage,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID + ",Voltage:" + std::to_string(voltage);
     fPowerSupplyClient->sendAndReceivePacket(msg);
     return true;
 }
@@ -124,6 +124,32 @@ float ITpowerSupplyChannelInterface::getVoltage()
     return std::stof(fPowerSupplyClient->sendAndReceivePacket(msg));
 }
 
+bool ITpowerSupplyChannelInterface::setCurrent(float current)
+{
+    std::string msg = "SetCurrent,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID + ",Current:" + std::to_string(current);
+    fPowerSupplyClient->sendAndReceivePacket(msg);
+    return true;
+}
+
+float ITpowerSupplyChannelInterface::getCurrent()
+{
+    std::string msg = "GetCurrent,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID;
+    return std::stof(fPowerSupplyClient->sendAndReceivePacket(msg));
+}
+
+bool ITpowerSupplyChannelInterface::setVoltageCompliance(float compliance)
+{
+    std::string msg = "SetVCompliance,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID + ",VoltageCompliance:" + std::to_string(compliance);
+    fPowerSupplyClient->sendAndReceivePacket(msg);
+    return true;
+}
+
+bool ITpowerSupplyChannelInterface::setVoltageProtection(float protection)
+{
+    std::string msg = "SetVProtection,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID + ",VoltageProtection:" + std::to_string(protection);
+    fPowerSupplyClient->sendAndReceivePacket(msg);
+    return true;
+}
 void ITpowerSupplyChannelInterface::turnOn()
 {
     std::string msg = "TurnOn,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID;
@@ -135,4 +161,33 @@ void ITpowerSupplyChannelInterface::turnOff()
     // fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
     std::string msg = "TurnOff,PowerSupplyId:" + powerSupplyName + ",ChannelId:" + channelID;
     fPowerSupplyClient->sendAndReceivePacket(msg);
+}
+
+/// Instrument interface
+
+ITinstrumentsInterface::ITinstrumentsInterface(TCPClient* theInstrumentClient, std::string configFileCompletePath, std::string instrumentID)
+{
+    this->fInstrumentClient = theInstrumentClient;
+    this->fConfigFileName   = configFileCompletePath;
+    this->instrumentID      = instrumentID;
+
+    if(fInstrumentClient == nullptr) LOG(ERROR) << BOLDRED << "Error parsed power supply TCP client is a nullpointer!" << RESET;
+}
+
+void ITinstrumentsInterface::runScan()
+{
+    std::string msg = "RunITIVScan,configFile:" + fConfigFileName;
+    fInstrumentClient->sendAndReceivePacket(msg);
+}
+
+void ITinstrumentsInterface::prepareMultimeter()
+{
+    std::string msg = "PrepareMultimeter,multimeterId:" + instrumentID;
+    fInstrumentClient->sendAndReceivePacket(msg);
+}
+
+void ITinstrumentsInterface::createScannerCardMap()
+{
+    std::string msg = "CreateScannerCardMap,multimeterId:" + instrumentID;
+    fInstrumentClient->sendAndReceivePacket(msg);
 }

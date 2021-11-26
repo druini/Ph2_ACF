@@ -2,9 +2,11 @@
   \file                  ITchipTestingInterface.cc
   \brief                 User interface to ITchipTesting specific functions
   \author                Dominik Koukola
+  \author                Antonio Cassese
   \version               1.0
   \date                  28/06/21
-  Support:               email to dominik.koukola@cern.ch
+  \date                  24/11/21
+  Support:               email to dominik.koukola@cern.ch, antonio.cassese@cern.ch
 */
 
 #ifndef ITchipTestingInterface_H
@@ -42,9 +44,30 @@ class ITpowerSupplyChannelInterface
 
     bool  setVoltage(float voltage);
     float getVoltage();
+    bool  setCurrent(float voltage);
+    float getCurrent();
+    bool  setVoltageCompliance(float compliance);
+    bool  setVoltageProtection(float protection);
 
     void turnOff();
     void turnOn();
+};
+
+class ITinstrumentsInterface
+{
+  private:
+    TCPClient*  fInstrumentClient;
+    std::string fConfigFileName;
+    std::string instrumentID;
+
+  public:
+    ITinstrumentsInterface(TCPClient* thePowerSupplyClient, std::string configFileCompletePath, std::string instrumentID);
+
+    void setInstrumentClient(TCPClient* theInstrumentClient) { fInstrumentClient = theInstrumentClient; };
+    void runScan();
+    void prepareMultimeter();
+    void createScannerCardMap();
+
 };
 
 } // namespace Ph2_ITchipTesting
