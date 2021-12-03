@@ -162,6 +162,8 @@ public:
     RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName);
     RD53B(const RD53B& chipObj);
 
+    void setDefaultState();
+
     void     loadfRegMap(const std::string& fileName) override;
     void     saveRegMap(const std::string& fName2Add) override;
     uint32_t getNumberOfChannels() const override;

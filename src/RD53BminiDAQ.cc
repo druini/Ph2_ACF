@@ -26,6 +26,7 @@ using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace RD53BTools;
+using namespace RD53BUtils;
 
 #define TOOL(x) std::make_pair(#x##_s, x<Flavor>{})
 
@@ -44,13 +45,36 @@ using Tools = ToolManager<decltype(make_named_tuple(
 	TOOL(RD53TempSensor),
 	TOOL(RD53BThresholdEqualization),
     TOOL(RD53BNoiseScan),
-    TOOL(RD53IVScan)
+    TOOL(RD53IVScan),
 	TOOL(RD53ShortTempSensor),
     TOOL(RD53VrefTrimming)
 ))>;
 
 
 INITIALIZE_EASYLOGGINGPP
+
+template <class Flavor>
+void run(SystemController& system, CommandLineProcessing::ArgvParser& cmd) {
+    
+    if (cmd.foundOption("assumeDefault")) {
+        for_each_device<Chip>(system, [] (Chip* chip) {
+            static_cast<RD53B<Flavor>*>(chip)->setDefaultState();
+        });
+    }
+
+    system.ConfigureHw();
+
+    auto toolConfig = toml::parse(cmd.optionValue("tools"));
+
+    bool showPlots = !cmd.foundOption("hidePlots");
+
+    Tools<Flavor>(toolConfig, showPlots).run_tools(system, cmd.allArguments());
+
+    if (cmd.foundOption("saveState"))
+        for_each_device<Chip>(system, [&] (Chip* chip) {
+            chip->saveRegMap("");
+        });
+}
 
 int main(int argc, char** argv) {
     CommandLineProcessing::ArgvParser cmd;
@@ -68,6 +92,9 @@ int main(int argc, char** argv) {
 
     cmd.defineOption("hidePlots", "Do not show plots.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("hidePlots", "h");
+
+    cmd.defineOption("assumeDefault", "Assume that chips are in their default initial state.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOptionAlternative("assumeDefault", "d");
 
     cmd.defineOption("saveState", "Save register values and pixel configuration in .toml file.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("saveState", "s");
@@ -95,21 +122,13 @@ int main(int argc, char** argv) {
         exit(EXIT_SUCCESS);
     }
     
-    system.Configure(configFile);
-
-    auto toolConfig = toml::parse(cmd.optionValue("tools"));
-
-    bool showPlots = !cmd.foundOption("hidePlots");
+    system.InitializeHw(configFile);
+    system.InitializeSettings(configFile);
 
     if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
-        Tools<RD53BFlavor::ATLAS>(toolConfig, showPlots).run_tools(system, cmd.allArguments());
+        run<RD53BFlavor::ATLAS>(system, cmd);
     else
-        Tools<RD53BFlavor::CMS>(toolConfig, showPlots).run_tools(system, cmd.allArguments());
-
-    if (cmd.foundOption("saveState"))
-        for_each_device<Chip>(system, [&] (Chip* chip) {
-            chip->saveRegMap("");
-        });
+        run<RD53BFlavor::CMS>(system, cmd);
 
     system.Destroy();
 

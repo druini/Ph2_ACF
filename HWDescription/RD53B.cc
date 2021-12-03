@@ -56,6 +56,11 @@ RD53B<Flavor>::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t p
 template <class Flavor>
 RD53B<Flavor>::RD53B(const RD53B& chipObj) : RD53Base(chipObj) {}
 
+template <class Flavor>
+void RD53B<Flavor>::setDefaultState() {
+    for (const auto& reg : Regs)
+        registerValues[reg.address] = reg.defaultValue;
+}
 
 template <class Flavor>
 uint32_t RD53B<Flavor>::getNumberOfChannels() const { return nRows * nCols; }

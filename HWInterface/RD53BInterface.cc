@@ -77,11 +77,17 @@ void RD53BInterface<Flavor>::InitRD53Downlink(const BeBoard* pBoard)
 template <class Flavor>
 void RD53BInterface<Flavor>::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
 {
+    auto rd53b = static_cast<RD53B*>(pChip);
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
 
     WriteReg(pChip, Reg::SER_SEL_OUT, 0x0055);
-    WriteReg(pChip, Reg::CML_CONFIG, 0x0001);
-    WriteReg(pChip, Reg::AuroraConfig, 0x0167);
+    WriteReg(pChip, Reg::CML_CONFIG, 1u << rd53b->getChipLane());
+    WriteReg(pChip, Reg::AuroraConfig, bits::pack<4, 6, 2>(1, 25, 3));
+    size_t laneMapping[] = {0, 1, 2, 3};
+    laneMapping[0] = rd53b->getChipLane();
+    laneMapping[rd53b->getChipLane()] = 0;
+    uint16_t val = bits::pack<2, 2, 2, 2, 2, 2, 2, 2>(3, 2, 1, 0, laneMapping[3], laneMapping[2], laneMapping[1], laneMapping[0]);
+    WriteReg(pChip, Reg::DataMergingMux, val);
     WriteReg(pChip, Reg::ServiceDataConf, (1 << 8) | 50);
     WriteReg(pChip, Reg::AURORA_CB_CONFIG0, 0x0FF1);
     WriteReg(pChip, Reg::AURORA_CB_CONFIG0, 0x0000);
