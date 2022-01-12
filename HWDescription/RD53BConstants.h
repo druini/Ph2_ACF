@@ -1,3 +1,6 @@
+#ifndef RD53BConstants_H
+#define RD53BConstants_H
+
 #include <unordered_map>
 
 namespace Ph2_HwDescription
@@ -8,18 +11,22 @@ namespace RD53BConstants
 
 static auto& GetIMUX() {
     static const std::unordered_map<std::string, uint16_t> IMUX = {
+        /* common */
         {"IREF", 0},
         {"CDR_VCO_main_bias", 1},
         {"CDR_VCO_buffer_bias", 2},
         {"CDR_CP_current", 3},
         {"CDR_FD_current", 4},
+        {"CDR_CP_FD_current", 4},
         {"CDR_buffer_bias", 5},
+        {"CDR_CP_buffer_bias", 5},
         {"CML_driver_tap_2_bias", 6},
         {"CML_driver_tap_1_bias", 7},
         {"CML_driver_main_bias", 8},
         {"NTC_pad_current", 9},
         {"Capmeasure_circuit", 10},
         {"Capmeasure_parasitic", 11},
+        /* ATLAS */
         {"DIFF_FE_Preamp_Main_array", 12},
         {"DIFF_FE_PreComp", 13},
         {"DIFF_FE_Comparator", 14},
@@ -31,32 +38,65 @@ static auto& GetIMUX() {
         {"DIFF_FE_VTH1_Left", 20},
         {"DIFF_FE_Preamp_Right", 21},
         {"DIFF_FE Preamp Top-Left", 22},
+        {"DIFF_FE_Preamp_Top-Left", 22},
         {"DIFF_FE VTH1 Right", 23},
+        {"DIFF_FE_VTH1_Right", 23},
         {"DIFF_FE Preamp Top", 24},
+        {"DIFF_FE_Preamp_Top", 24},
         {"DIFF_FE Preamp Top-Right", 25},
+        {"DIFF_FE_Preamp_Top-Right", 25},
+        /* CMS */
+        {"LIN_FE_Preamp_Main_array", 12},
+        {"LIN_FE_CompsTAR", 13},
+        {"LIN_FE_Comparator", 14},
+        {"LIN_FE_LDAC", 15},
+        {"LIN_FE_FC", 16},
+        {"LIN_FE_KrumCurr", 17},
+        {"LIN_FE_Preamp_Left", 19},
+        {"LIN_FE_Preamp_Right", 21},
+        {"LIN_FE_Preamp_Top-Left", 22},
+        {"LIN_FE_Preamp_Top", 24},
+        {"LIN_FE_Preamp_Top-Right", 25},
+        /* common */
         {"Analog_input_current", 28},
         {"Analog_shunt_current", 29},
         {"Digital_input_current", 30},
-        {"Digital_shunt_current", 31}
+        {"Digital_shunt_current", 31},
+        {"high_Z", 63}
     };
     return IMUX;
 }
 
 static auto& GetVMUX() {
     static const std::unordered_map<std::string, uint16_t> VMUX = {
+        /* common */
         {"Vref_ADC", 0},
         {"I_mux", 1},
         {"NTC", 2},
+        {"NTC_pad", 2},
         {"VCAL_DAC_half", 3},
+        {"Vref_CAL_DAC_half", 3},
+        {"VDDA_half", 4},
         {"VDDA_half", 4},
         {"Poly_TEMPSENS_top", 5},
+        {"Poly_TEMPSENS_top", 5},
+        {"Poly_TEMPSENS_bottom", 6},
         {"Poly_TEMPSENS_bottom", 6},
         {"VCAL_HI", 7},
+        {"VCAL_HI", 7},
         {"VCAL_MED", 8},
+        {"VCAL_MED", 8},
+        /* ATLAS */
         {"DIFF_FE_VTH2", 9},
         {"DIFF_FE_VTH1_Main_array", 10},
         {"DIFF_FE_VTH1_Left", 11},
         {"DIFF_FE_VTH1_Right", 12},
+        /* CMS */
+        {"LIN_FE_Ref_KRUM", 9},
+        {"LIN_FE_GDAC_Main_array", 10},
+        {"LIN_FE_GDAC_Left", 11},
+        {"LIN_FE_GDAC_Right", 12},
+        /* common */
         {"RADSENS_Analog_SLDO", 13},
         {"TEMPSENS_Analog_SLDO", 14},
         {"RADSENS_Digital_SLDO", 15},
@@ -66,13 +106,15 @@ static auto& GetVMUX() {
         {"Analog_GND", 19},
         {"Vref_CORE", 31},
         {"Vref_PRE", 32},
-        {"VINA_half", 33},
+        {"VINA_half", 33}, // actually VINA / 4, keeping it for backward compatibility
+        {"VINA_quarter", 33},
         {"VDDA_half", 34},
         {"VrefA", 35},
         {"VOFS_quarter", 36},
         {"VIND_quarter", 37},
         {"VDDD_half", 38},
-        {"VrefD", 39}
+        {"VrefD", 39},
+        {"high_Z", 63}
     };
     return VMUX;
 }
@@ -102,3 +144,5 @@ static auto& GetGlobalPulseRoutes() {
 } // namespace RD53BConstants
 
 } // namespace Ph2_HwDescription
+
+#endif
