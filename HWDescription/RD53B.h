@@ -73,6 +73,8 @@ namespace RD53BFlavor {
             uint8_t value = code & 0xF;
             return sign ? 16 + value : ~value;
         }
+
+        static constexpr uint16_t globalPulseUnit = 2;
     };
 
     struct CMS {
@@ -88,6 +90,8 @@ namespace RD53BFlavor {
 
         static constexpr uint8_t encodeTDAC(uint8_t value) { return value; }
         static constexpr uint8_t decodeTDAC(uint8_t code) { return code; }
+
+        static constexpr uint16_t globalPulseUnit = 1;
     };
     
 }
