@@ -7,8 +7,11 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
+#include <unordered_map>
+
 #include "RD53BInterface.h"
 
+#include "../Utils/Bits/BitVector.hpp"
 
 using namespace Ph2_HwDescription;
 
@@ -395,6 +398,46 @@ float RD53BInterface<Flavor>::ReadHybridVoltage(ReadoutChip* pChip)
 {
     auto& boardFW = setup(pChip);
     return boardFW.ReadHybridVoltage(pChip->getHybridId());
+}
+
+template <class Flavor>
+uint32_t RD53BInterface<Flavor>::ReadChipADC(ReadoutChip* pChip, const std::string& observableName)
+{
+    uint16_t config = 0x1000; // enable monitoring block
+
+    std::unordered_map<std::string, uint16_t>::const_iterator it(RD53B::VMUX.find(observableName));
+    if(it == RD53B::VMUX.end())
+    {
+        it = RD53B::IMUX.find(observableName);
+        if(it == RD53B::IMUX.end())
+        {
+            LOG(ERROR) << BOLDRED << "Bad analog multiplexer label: " << observableName << RESET;
+            return -1;
+        }
+        else
+        {
+            config |= it->second << 6;
+            config |= RD53B::VMUX.at("I_mux");
+        }
+    }
+    else
+    {
+        config |= (RD53B::IMUX.at("high_Z") << 6) | it->second;
+    }
+
+    uint16_t buf;
+    BitVector<uint16_t> cmdQ;
+    SerializeCommand<RD53BCmd::WrReg>(pChip, cmdQ, Reg::MonitorConfig.address, config);
+    SerializeCommand<RD53BCmd::WrReg>(pChip, cmdQ, Reg::GlobalPulseWidth.address, uint16_t{3});
+    buf = 1u << RD53B::GlobalPulseRoutes.at("ResetADC");
+    SerializeCommand<RD53BCmd::WrReg>(pChip, cmdQ, Reg::GlobalPulseConf.address, buf);
+    SerializeCommand<RD53BCmd::GlobalPulse>(pChip, cmdQ);
+    buf = 1u << RD53B::GlobalPulseRoutes.at("ADCStartOfConversion");
+    SerializeCommand<RD53BCmd::WrReg>(pChip, cmdQ, Reg::GlobalPulseConf.address, buf);
+    SerializeCommand<RD53BCmd::GlobalPulse>(pChip, cmdQ);
+    SendCommandStream(pChip, cmdQ);
+
+    return ReadReg(pChip, Reg::MonitoringDataADC);
 }
 
 template class RD53BInterface<RD53BFlavor::ATLAS>;
