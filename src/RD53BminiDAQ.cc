@@ -20,6 +20,7 @@
 #include "../tools/RD53BRegTest.h"
 #include "../tools/RD53BThresholdEqualization.h"
 #include "../tools/RD53BNoiseScan.h"
+#include "../tools/RD53RingOscillatorWLT.h"
 
 
 using namespace Ph2_System;
@@ -47,6 +48,7 @@ using Tools = ToolManager<decltype(make_named_tuple(
     TOOL(RD53BNoiseScan),
     TOOL(RD53IVScan),
 	TOOL(RD53ShortTempSensor),
+    TOOL(RD53RingOscillatorWLT),
     TOOL(RD53VrefTrimming)
 ))>;
 
