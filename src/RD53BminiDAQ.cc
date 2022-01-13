@@ -23,6 +23,7 @@
 #include "../tools/RD53RingOscillatorWLT.h"
 #include "../tools/RD53BADCCalib.h"
 #include "../tools/RD53BDACCalib.h"
+#include "../tools/RD53BDACTest.h"
 
 
 using namespace Ph2_System;
@@ -53,6 +54,7 @@ using Tools = ToolManager<decltype(make_named_tuple(
     TOOL(RD53RingOscillatorWLT),
     TOOL(RD53BADCCalib),
     TOOL(RD53BDACCalib),
+    TOOL(RD53BDACTest),
     TOOL(RD53VrefTrimming)
 ))>;
 
