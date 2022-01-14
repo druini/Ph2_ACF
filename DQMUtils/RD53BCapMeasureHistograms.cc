@@ -69,36 +69,7 @@ void RD53BCapMeasureHistograms::fillCap( const double (&VMain)[16], const double
             thisGraph->Write("",TObject::kOverwrite);
             myfile << "Parasitic VDDA  = "<< 2*VDDAPara[trimSetting]<< "\n";
 
-
-
-	/*for(int mainIndex=0;mainIndex<3;mainIndex++){
-            TGraph* thisGraph = NULL;
-            if(file->GetListOfKeys()->Contains(MainVar[mainIndex].c_str())){
-                    thisGraph = (TGraph*)file->Get(MainVar[mainIndex].c_str());
-            }else{
-                    thisGraph = new TGraph (1);
-                    thisGraph->SetTitle(MainVar[mainIndex].c_str());
-                    thisGraph->SetName(MainVar[mainIndex].c_str());
-            }
-            thisGraph->SetPoint(thisGraph->GetN(),(thisGraph->GetN()-1),MainVolt[mainIndex]);
-            thisGraph->Write("",TObject::kOverwrite);
-	    myfile << MainVar[mainIndex] <<" = " << MainVolt[mainIndex] << "\n";
-	}
-	for(int paraIndex=0;paraIndex<3;paraIndex++){
-            TGraph* thisGraph = NULL;
-            if(file->GetListOfKeys()->Contains(ParaVar[paraIndex].c_str())){
-                    thisGraph = (TGraph*)file->Get(ParaVar[paraIndex].c_str());
-            }else{
-                    thisGraph = new TGraph (1);
-                    thisGraph->SetTitle(ParaVar[paraIndex].c_str());
-                    thisGraph->SetName(ParaVar[paraIndex].c_str());
-            }
-            thisGraph->SetPoint(thisGraph->GetN(),(thisGraph->GetN()-1),ParaVolt[paraIndex]);
-            thisGraph->Write("",TObject::kOverwrite);
-            myfile << ParaVar[paraIndex] << " = " << ParaVolt[paraIndex] << "\n";
-	}*/
             double capacitance = calcCapacitance(VMain[trimSetting],VPara[trimSetting],2*VDDAMain[trimSetting]);
-        //double capacitance = calcCapacitance(MainVolt[0],ParaVolt[0],MainVolt[1]>0 ? 2*MainVolt[1] : 1.208); //Also ensure a calculation is possible when reading from the IMUX pad directly. 
 
              thisGraph = NULL;
             if(file->GetListOfKeys()->Contains("capacitance")){
