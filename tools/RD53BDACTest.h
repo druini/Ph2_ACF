@@ -4,6 +4,7 @@
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <fstream>
 #include <map>
 #include <sstream>
 #include <stdexcept>
@@ -11,8 +12,6 @@
 #include <thread>
 #include <utility>
 #include <vector>
-
-#include "pugixml.hpp"
 
 #include "RD53B.h"
 #include "RD53BCommands.h"
@@ -135,24 +134,29 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
     }
 
     void draw(const Results& results) const {
+        std::ofstream json(Base::getResultPath(".json"));
         TFile f(Base::getResultPath(".root").c_str(), "RECREATE");
 
-        pugi::xml_document doc;
-        pugi::xml_node root = doc.append_child("daccalib");
-
         TF1 line("line", "[offset]+[slope]*x");
+
+        const char* str = "{";
+        json << std::scientific << "{\"chips\":[";
         for (const std::pair<const ChipLocation, std::vector<DACData>>& chipRes : results) {
             const ChipLocation &chip = chipRes.first;
+
+            json << str;
+            str = ",{";
+
+            json << "\"board\":" << chip.board_id << ","
+                 << "\"hybrid\":" << chip.hybrid_id << ","
+                 << "\"id\":" << chip.chip_id << ",";
 
             f.mkdir(("board_" + std::to_string(chip.board_id)).c_str(), "", true)
             ->mkdir(("hybrid_" + std::to_string(chip.hybrid_id)).c_str(), "", true)
             ->mkdir(("chip_"+ std::to_string(chip.chip_id)).c_str(), "", true)->cd();
 
-            pugi::xml_node dev = root.append_child("device");
-            dev.append_attribute("board") = chip.board_id;
-            dev.append_attribute("hybrid") = chip.hybrid_id;
-            dev.append_attribute("chip") = chip.chip_id;
-
+            const char* str2 = "{";
+            json << "\"DACs\":[";
             for (const DACData& data : chipRes.second) {
                 const RD53BConstants::Register& reg = data.reg;
                 float m = (data.volt.back() - data.volt.front()) / (data.code.back() - data.code.front());
@@ -204,11 +208,7 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
                     }
                 }
                 g->Write();
-                LOG(INFO) << "Chip: " << chip.board_id << "/" << chip.hybrid_id << "/" << chip.chip_id
-                          << "; DAC: " << reg.name
-                          << std::scientific
-                          << "; slope = " << line.GetParameter("slope")
-                          << "; offset = " << line.GetParameter("offset") << RESET;
+
                 for(int i = 0; i < g->GetN(); ++i) {
                     g->SetPointY(i, g->GetPointY(i) - line.GetParameter("offset") - line.GetParameter("slope") * g->GetPointX(i));
                 }
@@ -220,21 +220,25 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
                     g->GetYaxis()->SetTitle("Residual (output voltage) [V]");
                 }
                 g->Write();
-
-                pugi::xml_node dac = dev.append_child("dac");
-                dac.append_attribute("offset") = line.GetParameter("offset");
-                dac.append_attribute("slope") = line.GetParameter("slope");
-                dac.append_attribute("name") = reg.name.c_str();
-                for (size_t i = 0; i < data.code.size(); ++i) {
-                    pugi::xml_node pt = dac.append_child("point");
-                    pt.append_attribute("x") = data.code[i];
-                    pt.append_attribute("y") = data.volt[i];
-                    if(!data.voltErr.empty()) pt.append_attribute("yuncert") = data.voltErr[i];
-                }
                 delete g;
+
+                json << str2;
+                str2 = ",{";
+                json << "\"reg\":\"" << reg.name << "\","
+                     << "\"fitted_line\":{\"intercept\":" << line.GetParameter("offset") << ",\"slope\":" << line.GetParameter("slope") << "},"
+                     << "\"points\":[";
+                for (size_t i = 0; i < data.code.size(); ++i) {
+                    json << "{\"input\":" << static_cast<uint16_t>(data.code[i])
+                         << ",\"voltage\":{\"val\":" << data.volt[i];
+                    if(!data.voltErr.empty()) json << ",\"err\":" << data.voltErr[i];
+                    json << "}}";
+                    if(i < data.code.size() - 1) json << ",";
+                }
+                json << "]}";
             }
-            doc.save_file(Base::getResultPath(".xml").c_str());
+            json << "]}";
         }
+        json << "]}";
     };
 
   private:

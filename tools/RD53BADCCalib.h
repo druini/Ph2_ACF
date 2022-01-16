@@ -3,13 +3,12 @@
 
 #include <array>
 #include <cmath>
+#include <fstream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "pugixml.hpp"
 
 #include "TAxis.h"
 #include "TDirectory.h"
@@ -46,7 +45,7 @@ class RD53BADCCalib : public RD53BTool<RD53BADCCalib, F> {
 public:
     struct Data {
         std::map<float, std::map<short, unsigned int>> adcData;
-        std::array<std::vector<float>, 2>                       psData;
+        std::array<std::vector<float>, 2> psData;
     };
 
     using Base = RD53BTool<RD53BADCCalib, F>;
@@ -64,7 +63,8 @@ public:
         if(max > 1.3f) throw std::logic_error("Bad configuration: maximum voltage is dangerously high.");
         nVolt = param("nVoltages"_s);
         nSamp = param("adcSamples"_s);
-        psMsg = "GetVoltage,PowerSupplyId:" + psId + ",ChannelId:" + psChId + ",Stats,Samples:" + std::to_string(param("powerSupplySamples"_s));
+        psMsg = "GetVoltage,PowerSupplyId:" + psId + ",ChannelId:" + psChId;
+        if(param("powerSupplySamples"_s) > 1) psMsg += ",Stats,Samples:" + std::to_string(param("powerSupplySamples"_s));
     }
 
     Results run(Ph2_System::SystemController& sysCtrl) {
@@ -84,13 +84,12 @@ public:
     }
 
     void draw(const Results& results) {
+        std::ofstream json(Base::getResultPath(".json"));
         TFile f(Base::getResultPath(".root").c_str(), "RECREATE");
 
-        pugi::xml_document doc;
-        pugi::xml_node root = doc.append_child("adccalib");
-
-        unsigned char boardId, hybridId, chipId;
-        float setV, measV, errMeasV;
+        uint16_t boardId, hybridId, chipId;
+        float setV, measV;
+        float errMeasV = NAN;
 
         std::vector<short> adcRdng;
         adcRdng.reserve(nSamp);
@@ -105,40 +104,45 @@ public:
         t->Branch("adcRdng", &adcRdng);
 
         TF1 line("line", "[V(0)]+[dV/dADC]*x");
-        std::vector<float> x, errX, diff;
-        x.reserve(nVolt);
-        errX.reserve(nVolt);
-        diff.reserve(nVolt);
+        std::vector<float> x, xErr, spread;
+
+        const char* str = "{";
+        json << std::scientific << "{\"chips\":[";
         for(const std::pair<const ChipLocation, Data>& chipRes: results) {
-            const ChipLocation& chip = chipRes.first;
+            const std::vector<float>& y = chipRes.second.psData[0];
+            const std::vector<float>& yErr = chipRes.second.psData[1];
 
-            boardId = chip.board_id;
-            hybridId = chip.hybrid_id;
-            chipId = chip.chip_id;
+            if(y.empty()) continue;
 
-            f.mkdir(("board_" + std::to_string(chip.board_id)).c_str(), "", true)
-                ->mkdir(("hybrid_" + std::to_string(chip.hybrid_id)).c_str(), "", true)
-                ->mkdir(("chip_" + std::to_string(chip.chip_id)).c_str(), "", true)
+            json << str;
+            str = ",{";
+
+            boardId = chipRes.first.board_id;
+            hybridId = chipRes.first.hybrid_id;
+            chipId = chipRes.first.chip_id;
+
+            json << "\"board\":" << boardId << ","
+                 << "\"hybrid\":" << hybridId << ","
+                 << "\"id\":" << chipId << ",";
+
+            f.mkdir(("board_" + std::to_string(boardId)).c_str(), "", true)
+                ->mkdir(("hybrid_" + std::to_string(hybridId)).c_str(), "", true)
+                ->mkdir(("chip_" + std::to_string(chipId)).c_str(), "", true)
                 ->cd();
 
-            pugi::xml_node dev = root.append_child("device");
-            dev.append_attribute("board") = chip.board_id;
-            dev.append_attribute("hybrid") = chip.hybrid_id;
-            dev.append_attribute("chip") = chip.chip_id;
-
-            std::vector<float> y = chipRes.second.psData[0];
-            std::vector<float> yErr = chipRes.second.psData[1];
-
+            x.reserve(y.size());
+            xErr.reserve(y.size());
+            spread.reserve(y.size());
             x.clear();
-            errX.clear();
-            diff.clear();
+            xErr.clear();
+            spread.clear();
             for(const std::pair<const float, std::map<short, unsigned int>>& p: chipRes.second.adcData) {
-                adcRdng.clear();
                 short min = 4096;
                 short max = -1;
                 unsigned long long n = 0;
                 unsigned long long sum = 0;
                 unsigned long long sum2 = 0;
+                adcRdng.clear();
                 for(const std::pair<const short, unsigned int>& pp: p.second) {
                     if(pp.first < min) min = pp.first;
                     if(pp.first > max) max = pp.first;
@@ -148,80 +152,78 @@ public:
                     n += pp.second;
                     adcRdng.insert(adcRdng.end(), pp.second, pp.first);
                 }
-                if(n == 0) {
-                    y.erase(y.cbegin()+x.size());
-                    yErr.erase(yErr.cbegin()+x.size());
+                x.push_back(sum / static_cast<double>(n));
+                if(n > 1) {
+                    xErr.push_back(std::sqrt((sum2 * n - sum * sum) / static_cast<double>(n - 1)) / n);
                 }
-                else {
-                    x.push_back(sum / static_cast<double>(n));
-                    errX.push_back(std::sqrt((sum2 * n - sum * sum) / static_cast<double>(n - 1)) / n);
-                    diff.push_back(max-min);
-                    setV = p.first;
-                    measV = y[x.size()-1];
-                    errMeasV = y[x.size()-1];
-                    t->Fill();
-                }
+                spread.push_back(max - min + 1);
+                setV = p.first;
+                measV = y[x.size() - 1];
+                if(!yErr.empty()) errMeasV = yErr[x.size() - 1];
+                t->Fill();
             }
 
-            if(y.empty()) continue;
+            TGraph gSpread(y.size(), y.data(), spread.data());
+            gSpread.SetName("adcSpread");
+            gSpread.SetTitle("A/D conversions spread");
+            gSpread.GetXaxis()->SetTitle("Injected voltage [V]");
+            gSpread.GetYaxis()->SetTitle("Spread [ADC counts]");
+            gSpread.Write();
 
-            std::vector<float>::size_type a = 0;
-            std::vector<float>::size_type b = y.size() - 1;
-            for(; a < y.size() - 1; ++a) if(!std::isnan(x[a]) && !std::isnan(y[a])) break;
-            for(; b > 0; --b) if(!std::isnan(x[b]) && !std::isnan(y[b])) break;
-            float m = (y[b] - y[a]) / (x[b] - x[a]);
-            float q = y[a] - m * x[a];
+            float m = (y.back() - y.front()) / (x.back() - x.front());
+            float q = y.front() - m * x.front();
             line.SetParameter("V(0)", q);
             line.SetParameter("dV/dADC", m);
 
-            TGraphErrors g(x.size(), x.data(), y.data(), errX.data(), yErr.data());
-            g.SetName("adcCalib");
-            g.SetTitle("ADC calibration");
-            g.GetXaxis()->SetTitle("ADC conversion [ADC counts]");
-            g.GetYaxis()->SetTitle("Injected voltage [V]");
-            g.Fit(&line, "Q");
-            q = line.GetParameter(0);
-            m = line.GetParameter(1);
-            LOG(INFO) << std::scientific << "Offset [mV] = " << q << " +- " << line.GetParError(0) << RESET;
-            LOG(INFO) << std::scientific << "Slope [mV/ADC LSB] = " << m << " +- " << line.GetParError(1) << RESET;
-            g.Write();
+            TGraph* g;
+            if(xErr.empty() && yErr.empty()) {
+                g = new TGraph(x.size(), x.data(), y.data());
+            }
+            else if(xErr.empty()) {
+                g = new TGraphErrors(x.size(), x.data(), y.data(), nullptr, yErr.data());
+            }
+            else if(yErr.empty()) {
+                g = new TGraphErrors(x.size(), x.data(), y.data(), xErr.data(), nullptr);
+            }
+            else {
+                g = new TGraphErrors(x.size(), x.data(), y.data(), xErr.data(), yErr.data());
+            }
+            g->SetName("adcCalib");
+            g->SetTitle("ADC calibration");
+            g->GetXaxis()->SetTitle("ADC conversion [ADC counts]");
+            g->GetYaxis()->SetTitle("Injected voltage [V]");
+            g->Fit(&line, "Q");
+            g->Write();
 
-            TGraph gDiff(y.size(), y.data(), diff.data());
-            gDiff.SetName("adcDiff");
-            gDiff.SetTitle("ADC conversions distribution width");
-            gDiff.GetXaxis()->SetTitle("Injected voltage [V]");
-            gDiff.GetYaxis()->SetTitle("Distribution width [ADC counts]");
-            gDiff.Write();
+            q = line.GetParameter("V(0)");
+            m = line.GetParameter("dV/dADC");
 
-            /* calculating residuals for next plot */ 
-            std::vector<float> resid;
-            resid.reserve(y.size());
-            for(std::vector<float>::size_type i = 0; i < y.size(); ++i)
+            for(int i = 0; i < g->GetN(); ++i)
             {
-                resid.push_back(y[i] - q - m * x[i]);
+                g->SetPointY(i, y[i] - q - m * x[i]);
             }
 
-            TGraphErrors gResid(x.size(), x.data(), resid.data(), errX.data(), yErr.data());
-            gResid.SetName("adcResid");
-            gResid.SetTitle("Residuals");
-            gResid.GetXaxis()->SetTitle("ADC conversion [ADC counts]");
-            gResid.GetYaxis()->SetTitle("Voltage residual [V]");
-            gResid.Write();
+            g->SetName("adcResid");
+            g->SetTitle("Residuals");
+            g->GetXaxis()->SetTitle("ADC conversion [ADC counts]");
+            g->GetYaxis()->SetTitle("Residual (voltage) [V]");
+            g->Write();
 
-            dev.append_attribute("offset") = line.GetParameter("V(0)");
-            dev.append_attribute("slope") = line.GetParameter("dV/dADC");
+            json << "\"fitted_line\":{\"intercept\":" << q << ",\"slope\":" << m << "},"
+                 << "\"points\":[";
             for(size_t i = 0; i < x.size(); ++i) {
-                pugi::xml_node pt = dev.append_child("point");
-                pt.append_attribute("x") = x[i];
-                pt.append_attribute("y") = y[i];
-                pt.append_attribute("xuncert") = errX[i];
-                pt.append_attribute("yuncert") = yErr[i];
+                json << "{\"ADC\":{\"val\":" << x[i];
+                if(!xErr.empty()) json << ",\"err\":" << xErr[i];
+                json << "},\"voltage\":{\"val\":" << y[i];
+                if(!yErr.empty()) json << ",\"err\":" << yErr[i];
+                json << "}}";
+                if(i < x.size() - 1) json << ",";
             }
+            json << "]}";
         }
+        json << "]}";
 
         t->Write();
-
-        doc.save_file(Base::getResultPath(".xml").c_str());
     }
 
 private:
@@ -278,19 +280,14 @@ private:
             psIface.sendAndReceivePacket("SetVoltage,PowerSupplyId:" + psId + ",ChannelId:" + psChId + ",Voltage:" + std::to_string(volt));
             psIface.sendAndReceivePacket("TurnOn,PowerSupplyId:" + psId + ",ChannelId:" + psChId);
 
-            double buf[2];
+            double arr[2];
             std::istringstream resp(psIface.sendAndReceivePacket(psMsg));
-            resp >> buf[0] >> buf[1];
-            if(resp) {
-                res.psData[0].push_back(buf[0] - groundOffset);
-                res.psData[1].push_back(buf[1] / std::sqrt(param("powerSupplySamples"_s)));
-            }
-            else {
-                res.psData[0].push_back(NAN);
-                res.psData[1].push_back(NAN);
-            }
+            resp >> arr[0];
+            if(param("powerSupplySamples"_s) > 1) resp >> arr[1];
 
-            std::map<short, unsigned int>& m = res.adcData[volt];
+            if(!resp) continue;
+
+            std::map<short, unsigned int> m;
             for(int j = 0; j < nSamp; ++j) {
                 unsigned short x = chipIface.ReadChipADC(static_cast<RD53B<F>*>(chip), "high_Z");
                 if(param("abortOnLimit"_s) && (x == 0 || x == 4095)) {
@@ -298,6 +295,11 @@ private:
                     break;
                 }
                 m[x] += 1;
+            }
+            if(!m.empty()) {
+                res.adcData.emplace(volt, std::move(m));
+                res.psData[0].push_back(arr[0] - groundOffset);
+                if(param("powerSupplySamples"_s) > 1) res.psData[1].push_back(arr[1] / std::sqrt(param("powerSupplySamples"_s)));
             }
         }
 

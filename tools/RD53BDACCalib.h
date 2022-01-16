@@ -3,14 +3,13 @@
 
 #include <array>
 #include <cmath>
+#include <fstream>
 #include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "pugixml.hpp"
 
 #include "RD53B.h"
 #include "RD53BCommands.h"
@@ -132,24 +131,29 @@ class RD53BDACCalib : public RD53BTool<RD53BDACCalib, F> {
     }
 
     void draw(const Results& results) const {
+        std::ofstream json(Base::getResultPath(".json"));
         TFile f(Base::getResultPath(".root").c_str(), "RECREATE");
 
-        pugi::xml_document doc;
-        pugi::xml_node root = doc.append_child("daccalib");
-
         TF1 line("line", "[offset]+[slope]*x");
+
+        const char* str = "{";
+        json << std::scientific << "{\"chips\":[";
         for (const std::pair<const ChipLocation, std::map<RD53BConstants::Register, DACData>>& chipRes : results) {
             const ChipLocation &chip = chipRes.first;
+
+            json << str;
+            str = ",{";
+
+            json << "\"board\":" << chip.board_id << ","
+                 << "\"hybrid\":" << chip.hybrid_id << ","
+                 << "\"id\":" << chip.chip_id << ",";
 
             f.mkdir(("board_" + std::to_string(chip.board_id)).c_str(), "", true)
             ->mkdir(("hybrid_" + std::to_string(chip.hybrid_id)).c_str(), "", true)
             ->mkdir(("chip_"+ std::to_string(chip.chip_id)).c_str(), "", true)->cd();
 
-            pugi::xml_node dev = root.append_child("device");
-            dev.append_attribute("board") = chip.board_id;
-            dev.append_attribute("hybrid") = chip.hybrid_id;
-            dev.append_attribute("chip") = chip.chip_id;
-
+            const char* str2 = "{";
+            json << "\"DACs\":[";
             for (const std::pair<const RD53BConstants::Register, DACData>& p : chipRes.second) {
                 const RD53BConstants::Register& reg = p.first;
                 const DACData& data = p.second;
@@ -200,26 +204,24 @@ class RD53BDACCalib : public RD53BTool<RD53BDACCalib, F> {
                     }
                 }
                 g.Write();
-                LOG(INFO) << "Chip: " << chip.board_id << "/" << chip.hybrid_id << "/" << chip.chip_id
-                          << "; DAC: " << reg.name
-                          << std::scientific
-                          << "; slope = " << line.GetParameter("slope")
-                          << "; offset = " << line.GetParameter("offset") << RESET;
 
-                pugi::xml_node dac = dev.append_child("dac");
-                dac.append_attribute("offset") = line.GetParameter("offset");
-                dac.append_attribute("slope") = line.GetParameter("slope");
-                dac.append_attribute("name") = reg.name.c_str();
+                json << str2;
+                str2 = ",{";
+                json << "\"reg\":\"" << reg.name << "\","
+                     << "\"fitted_line\":{\"intercept\":" << line.GetParameter("offset") << ",\"slope\":" << line.GetParameter("slope") << "},"
+                     << "\"points\":[";
                 for (size_t i = 0; i < data.code.size(); ++i) {
-                    pugi::xml_node pt = dac.append_child("point");
-                    pt.append_attribute("x") = data.code[i];
-                    pt.append_attribute("y") = data.volt[i];
-                    pt.append_attribute("yuncert") = data.voltErr[i];
+                    json << "{\"input\":" << static_cast<uint16_t>(data.code[i])
+                         << ",\"voltage\":{\"val\":" << data.volt[i] << ",\"err\":" << data.voltErr[i]
+                         << "}}";
+                    if(i < data.code.size() - 1) json << ",";
                 }
+                json << "]}";
             }
-            doc.save_file(Base::getResultPath(".xml").c_str());
+            json << "]}";
         }
-    };
+        json << "]}";
+    }
 
   private:
     size_t nCod, nSamp;

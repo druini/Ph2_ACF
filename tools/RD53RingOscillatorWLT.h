@@ -8,9 +8,8 @@
 #include "../Utils/Bits/BitVector.hpp"
 
 #include <cmath>
+#include <fstream>
 #include <string>
-
-#include "pugixml.hpp"
 
 #include "TFile.h"
 
@@ -41,6 +40,7 @@ public:
         double trimOscFrequency[42][16];
         double trimVoltage[16];
         int n;
+        int countEnableTimeBX;
 
         ChipResults() : n{0} {}
     };
@@ -68,6 +68,8 @@ public:
 
         for_each_device<Chip>(system, [&](DeviceChain devs) {
             RD53B<Flavor>* chip = static_cast<RD53B<Flavor>*>(devs.chip);
+
+            results[chip].countEnableTimeBX = nBX;
 
             auto& trimOscCounts = results[chip].trimOscCounts;
             auto& trimOscFrequency = results[chip].trimOscFrequency;
@@ -130,18 +132,13 @@ public:
     }
 
     void draw(const ChipDataMap<ChipResults>& results) const {
+        double fitResults[42][2];
         TFile f(Base::getResultPath(".root").c_str(), "RECREATE");
 
-        pugi::xml_document doc;
-        pugi::xml_node root = doc.append_child("ringosc");
-
         for(const std::pair<const ChipLocation, ChipResults>& item: results) {
-            const ChipLocation& loc = item.first;
-            const ChipResults&  res = item.second;
-
-            f.mkdir(("board_" + std::to_string(loc.board_id)).c_str(), "", true)
-                ->mkdir(("hybrid_" + std::to_string(loc.hybrid_id)).c_str(), "", true)
-                ->mkdir(("chip_" + std::to_string(loc.chip_id)).c_str(), "", true)
+            f.mkdir(("board_" + std::to_string(item.first.board_id)).c_str(), "", true)
+                ->mkdir(("hybrid_" + std::to_string(item.first.hybrid_id)).c_str(), "", true)
+                ->mkdir(("chip_" + std::to_string(item.first.chip_id)).c_str(), "", true)
                 ->cd();
 
             RingOscillatorHistograms histos;
@@ -149,38 +146,42 @@ public:
                 item.second.trimOscCounts,
                 item.second.trimOscFrequency,
                 item.second.trimVoltage,
-                item.second.n
+                item.second.n,
+                fitResults
             );
             f.Write();
-
-            pugi::xml_node dev = root.append_child("chip");
-            dev.append_attribute("id") = loc.chip_id;
-            dev.append_attribute("board") = loc.board_id;
-            dev.append_attribute("hybrid") = loc.hybrid_id;
-
-            for(int i = 0; i < 8; ++i) {
-                pugi::xml_node osc = root.append_child("oscillator");
-                osc.append_attribute("bank") = "A";
-                osc.append_attribute("number") = i;
-                for(int j = 0; j < res.n; ++j) {
-                    pugi::xml_node p = osc.append_child("point");
-                    p.append_attribute("vddd") = res.trimVoltage[j];
-                    p.append_attribute("freq") = res.trimOscFrequency[i][j];
-                }
-            }
-
-            for(int i = 0; i < 34; ++i) {
-                pugi::xml_node osc = root.append_child("oscillator");
-                osc.append_attribute("bank") = "B";
-                osc.append_attribute("number") = i;
-                for(int j = 0; j < res.n; ++j) {
-                    pugi::xml_node p = osc.append_child("point");
-                    p.append_attribute("vddd") = res.trimVoltage[j];
-                    p.append_attribute("freq") = res.trimOscFrequency[8 + i][j];
-                }
-            }
         }
-        doc.save_file(Base::getResultPath(".xml").c_str());
+
+        std::ofstream json(Base::getResultPath(".json"));
+        const char* str = "{";
+        json << std::scientific
+             << "{\"chips\":[";
+        for(const std::pair<const ChipLocation, ChipResults>& chip: results) {
+            json << str;
+            str = ",{";
+            json << "\"board\":" << chip.first.board_id << ","
+                 << "\"hybrid\":" << chip.first.hybrid_id << ","
+                 << "\"id\":" << chip.first.chip_id << ","
+                 << "\"count_en_t_BX\":" << chip.second.countEnableTimeBX << ","
+                 << "\"oscillators\":[";
+            for(int i = 0; i < 42; ++i) {
+                /* oscillator data begins here */
+                json << "{\"bank\":\"" << (i < 8 ? 'A' : 'B') << "\","
+                     << "\"number\":" << (i < 8 ? i : i - 8) << ","
+                     << "\"fitted_line\":{\"intercept\":" << fitResults[i][0] << ",\"slope\":" << fitResults[i][1] << "},"
+                     << "\"points\":[";
+                for(int j = 0; j < chip.second.n; ++j) {
+                    json << "{\"VDDD\":" << chip.second.trimVoltage[j] << ","
+                         << "\"frequency\":" << chip.second.trimOscFrequency[i][j] * 1e6 << "}";
+                    if(j < chip.second.n - 1) json << ",";
+                }
+                json << "]}";
+                /* oscillator data ends here */
+                if(i < 42 - 1) json << ",";
+            }
+            json << "]}";
+        }
+        json << "]}";
     }
 
 
