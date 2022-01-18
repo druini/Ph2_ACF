@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -38,10 +39,10 @@ const auto ToolParameters<RD53BDACTest<F>> = make_named_tuple(
     std::make_pair("voltmeterChannelId"_s, std::string("dacCalib")),
     std::make_pair("voltmeterSamples"_s, 2),
     std::make_pair("dacRegisters"_s, std::vector<std::string>()),
-    std::make_pair("muxInput"_s, std::vector<std::string>()),
     std::make_pair("currentMuxResistance"_s, -1.0f),
     std::make_pair("vcalDelay"_s, 0.0f),
     std::make_pair("keithSpeed"_s, 0.01f),
+    std::make_pair("dacMax"_s, std::vector<uint16_t>{}),
     std::make_pair("fitThresholdV"_s, INFINITY)
 );
 
@@ -51,7 +52,6 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
     struct DACData {
         std::vector<float> code, volt, voltErr;
         RD53BConstants::Register reg;
-        bool isCurr;
     };
 
     using Base = RD53BTool<RD53BDACTest, F>;
@@ -66,55 +66,27 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
         vmetChId = param("voltmeterChannelId"_s);
         imuxR = param("currentMuxResistance"_s);
 
+        regs.reserve(param("dacRegisters"_s).size());
+        masks.reserve(param("dacRegisters"_s).size());
         for (const std::string& regName : param("dacRegisters"_s)) {
             const std::vector<RD53BConstants::RegisterField>& vReg = RD53B<F>::vRegs.at(regName);
-            if(vReg.size() != 1 || vReg.front().offset != 0) {
+            if(vReg.size() != 1 || vReg.front().offset != 0 || muxSett.count(vReg.front().reg) == 0) {
                 throw std::logic_error("Register " + regName + " is not supported by this routine.");
             }
             regs.push_back(vReg.front());
             if(regs.back().size * 2 > nCod) nCod = regs.back().size * 2;
             masks.push_back(~(0xffffu >> regs.back().size << regs.back().size));
+            if(imuxR < 0.0f && isCurr(regs.back().reg)) throw std::logic_error(
+                "The value for the resistance at the output of the current multiplexer is invalid or was not set at all."
+            );
         }
-        const std::vector<std::string> &muxInputs = param("muxInput"_s);
 
-        if (regs.size() != muxInputs.size()) {
-            throw std::logic_error("The number of entries in the list of mux inputs"
+        dacMax = param("dacMax"_s);
+        if (regs.size() != dacMax.size()) {
+            throw std::logic_error("The number of entries in the list of the maximum DAC settings"
                                    " does not match the number of DACs to calibrate.");
         }
 
-        muxSelecs.resize(regs.size());
-        isCurr.resize(regs.size());
-        masks.resize(regs.size());
-
-        bool currDet = false;
-        for (size_t i = 0; i < regs.size(); ++i) {
-            auto &imux = RD53B<F>::IMUX;
-            auto &vmux = RD53B<F>::VMUX;
-
-            uint16_t selec = 0;
-
-            auto it = vmux.find(muxInputs[i]);
-            if (it == vmux.end()) {
-                auto it = imux.find(muxInputs[i]);
-                if (it == imux.end()) {
-                    throw std::logic_error(muxInputs[i] + "is not a valid name for a multiplexer input.");
-                } else { // is a current DAC
-                    isCurr[i] = true;
-                    selec = (it->second << 6) | vmux.at("I_mux");
-                    currDet = true;
-                }
-            } else { // is a voltage DAC
-                selec = (imux.at("high_Z") << 6) | it->second;
-                isCurr[i] = false;
-            }
-
-            muxSelecs[i] = selec;
-        }
-
-        if (currDet && imuxR < 0.0f) {
-            throw std::logic_error("The value for the resistance at the output of the current"
-                                   " multiplexer is invalid or was not set at all.");
-        }
     }
 
     Results run(Ph2_System::SystemController& sysCtrl) {
@@ -167,7 +139,7 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
                 else g = new TGraphErrors(data.code.size(), data.code.data(), data.volt.data(), nullptr, data.voltErr.data());
                 g->SetNameTitle(reg.name.c_str());
                 g->GetXaxis()->SetTitle("DAC code [DAC LSB]");
-                if(data.isCurr)
+                if(isCurr(reg))
                 {
                     g->GetYaxis()->SetTitle("Output current [A]");
                 }
@@ -189,7 +161,7 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
                     bool found = false;
                     float min;
                     float max;
-                    float lim = param("fitThresholdV"_s) / (data.isCurr ? imuxR : 1);
+                    float lim = param("fitThresholdV"_s) / (isCurr(reg) ? imuxR : 1);
                     for(std::vector<float>::size_type i = 0; i < data.code.size(); ++i) {
                         if(data.volt[i] < lim) {
                             if(!found) {
@@ -213,7 +185,7 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
                     g->SetPointY(i, g->GetPointY(i) - line.GetParameter("offset") - line.GetParameter("slope") * g->GetPointX(i));
                 }
                 g->SetNameTitle((reg.name + "_diff").c_str());
-                if(data.isCurr) {
+                if(isCurr(reg)) {
                     g->GetYaxis()->SetTitle("Residual (output current) [A]");
                 }
                 else {
@@ -228,8 +200,10 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
                      << "\"fitted_line\":{\"intercept\":" << line.GetParameter("offset") << ",\"slope\":" << line.GetParameter("slope") << "},"
                      << "\"points\":[";
                 for (size_t i = 0; i < data.code.size(); ++i) {
-                    json << "{\"input\":" << static_cast<uint16_t>(data.code[i])
-                         << ",\"voltage\":{\"val\":" << data.volt[i];
+                    json << "{\"input\":" << static_cast<uint16_t>(data.code[i]);
+                    if(isCurr(reg)) json << ",\"current\":{\"val\":";
+                    else json << ",\"voltage\":{\"val\":";
+                    json << data.volt[i];
                     if(!data.voltErr.empty()) json << ",\"err\":" << data.voltErr[i];
                     json << "}}";
                     if(i < data.code.size() - 1) json << ",";
@@ -242,13 +216,20 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
     };
 
   private:
+    static const std::map<Ph2_HwDescription::RD53BConstants::Register, uint16_t> muxSett;
+
     size_t nCod, nSamp;
     float imuxR;
     std::string vmetId, vmetChId;
-    std::vector<uint16_t> muxSelecs;
-    std::vector<bool> isCurr;
     std::vector<RD53BConstants::RegisterField> regs;
     std::vector<uint16_t> masks;
+    std::vector<uint16_t> dacMax;
+
+    bool isCurr(const Ph2_HwDescription::RD53BConstants::Register& dac) const {
+        uint16_t vmux;
+        std::tie(std::ignore, vmux) = bits::unpack<6, 6>(muxSett.at(dac));
+        return vmux == RD53B<F>::VMUX.at("I_mux");
+    }
 
     void calibChip(Chip* chip,
                    Ph2_System::SystemController& sysCtrl,
@@ -265,27 +246,30 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
                                       ",ChannelId:" + vmetChId +
                                       ",Value:1.3");
 
+        chipIface.WriteReg(chip, "SEL_CAL_RANGE", 1);
+
         BitVector<uint16_t> cmdQ;
         std::vector<uint16_t> codes(regs.size());
         res.resize(regs.size());
         for(size_t i = 0; i < regs.size(); ++i) {
             res[i].reg = regs[i].reg;
-            res[i].isCurr = isCurr[i];
         }
         for(size_t i = 0; i < nCod; ++i) {
             // setting all the DACs
             cmdQ.clear();
             for(size_t j = 0; j < codes.size(); ++j) {
+                if(codes[j] > masks[j] || codes[j] > dacMax[j]) continue;
                 chipIface.template SerializeCommand<RD53BCmd::Sync>(chip, cmdQ);
                 chipIface.template SerializeCommand<RD53BCmd::WrReg>(chip, cmdQ, regs[j].reg.address, codes[j]);
             }
+            if(cmdQ.size() == 0) return;
             chipIface.SendCommandStream(chip, cmdQ);
             auto start = std::chrono::steady_clock::now();
             // all DACs set
             // measuring all DAC outputs
             for (size_t j = 0; j < regs.size(); ++j) {
-                if(codes[j] > masks[j]) continue;
-                chipIface.WriteChipReg(chip, "MonitorConfig", muxSelecs[j]);
+                if(codes[j] > masks[j] || codes[j] > dacMax[j]) continue;
+                chipIface.WriteChipReg(chip, "MonitorConfig", muxSett.at(regs[j].reg));
                 std::chrono::duration<float> delay = std::chrono::steady_clock::now() - start;
                 if((regs[j].reg == F::Reg::VCAL_HIGH || regs[j].reg == F::Reg::VCAL_MED) && delay.count() > param("vcalDelay"_s)) {
                     std::this_thread::sleep_until(start + std::chrono::duration<float>(param("vcalDelay"_s)));
@@ -296,7 +280,7 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
                 if(nSamp > 1) psResp >> b;
                 DACData& data = res[j];
                 if (psResp) { // a proper voltage was returned
-                    if (isCurr[j]) {
+                    if (isCurr(regs[j].reg)) {
                         a /= imuxR;
                         if(nSamp > 1) b /= imuxR * std::sqrt(nSamp);
                     }
@@ -316,7 +300,6 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
                 else if ((codes[j] ^ masks[j]) > codes[j]) codes[j] <<= 1;
                 else codes[j] = (~((codes[j] ^ masks[j]) >> 1)) & masks[j];
             }
-
         }
         // all codes tested for all DACs
     }
