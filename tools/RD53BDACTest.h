@@ -6,6 +6,7 @@
 #include <cmath>
 #include <fstream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -42,7 +43,8 @@ const auto ToolParameters<RD53BDACTest<F>> = make_named_tuple(
     std::make_pair("currentMuxResistance"_s, -1.0f),
     std::make_pair("vcalDelay"_s, 0.0f),
     std::make_pair("keithSpeed"_s, 0.01f),
-    std::make_pair("dacMax"_s, std::vector<uint16_t>{}),
+    std::make_pair("n"_s, std::map<std::string, uint16_t>{}),
+    std::make_pair("add"_s, std::map<std::string, std::vector<uint16_t>>{}),
     std::make_pair("fitThresholdV"_s, INFINITY)
 );
 
@@ -51,47 +53,37 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
   public:
     struct DACData {
         std::vector<float> code, volt, voltErr;
-        RD53BConstants::Register reg;
     };
 
     using Base = RD53BTool<RD53BDACTest, F>;
     using Base::Base;
     using Base::param;
-    using Results = ChipDataMap<std::vector<DACData>>;
+    using Results = ChipDataMap<std::map<RD53BConstants::Register, DACData>>;
 
     void init() {
-        nCod = 0;
         nSamp = param("voltmeterSamples"_s);
         vmetId = param("voltmeterId"_s);
         vmetChId = param("voltmeterChannelId"_s);
         imuxR = param("currentMuxResistance"_s);
-
-        regs.reserve(param("dacRegisters"_s).size());
-        masks.reserve(param("dacRegisters"_s).size());
-        for (const std::string& regName : param("dacRegisters"_s)) {
-            const std::vector<RD53BConstants::RegisterField>& vReg = RD53B<F>::vRegs.at(regName);
-            if(vReg.size() != 1 || vReg.front().offset != 0 || muxSett.count(vReg.front().reg) == 0) {
-                throw std::logic_error("Register " + regName + " is not supported by this routine.");
+        
+        code["VCAL"] = {0,1,2,3,4,7,8,15,16,31,32,63,64,127,128,255,256,511,512,1023,1024,2047,2048,4095};
+        for(const std::pair<std::string, std::array<uint16_t, 2>>& p : lim) {
+            auto nIt = param("n"_s).find(p.first);
+            uint16_t n = (nIt == param("n"_s).cend()) ? 2 : nIt->second;
+            if(n < 2) throw std::logic_error("The number of points for " + p.first + " cannot be < 2");
+            for(uint16_t i = 0; i < n; ++i) {
+                float min = lim.at(p.first)[0];
+                float max = lim.at(p.first)[1];
+                float c = (max * i + min * (n - 1 - i)) / (n - 1);
+                code[p.first].insert(std::round(c));
             }
-            regs.push_back(vReg.front());
-            if(regs.back().size * 2 > nCod) nCod = regs.back().size * 2;
-            masks.push_back(~(0xffffu >> regs.back().size << regs.back().size));
-            if(imuxR < 0.0f && isCurr(regs.back().reg)) throw std::logic_error(
-                "The value for the resistance at the output of the current multiplexer is invalid or was not set at all."
-            );
+            auto addIt = param("add"_s).find(p.first);
+            if(addIt != param("add"_s).cend()) code[p.first].insert(addIt->second.cbegin(), addIt->second.cend());
         }
-
-        dacMax = param("dacMax"_s);
-        if (regs.size() != dacMax.size()) {
-            throw std::logic_error("The number of entries in the list of the maximum DAC settings"
-                                   " does not match the number of DACs to calibrate.");
-        }
-
     }
 
     Results run(Ph2_System::SystemController& sysCtrl) {
         Results res;
-
         sysCtrl.fPowerSupplyClient->sendAndReceivePacket(
             "K2410:SetSpeed"
             ",PowerSupplyId:" + vmetId +
@@ -99,147 +91,78 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
             ",IntegrationTime:" + std::to_string(param("keithSpeed"_s))
         );
         for_each_device<Chip>(sysCtrl, [this, &sysCtrl, &res] (Chip* chip) {
-            this->calibChip(chip, sysCtrl, res[chip]);
+            std::vector<RD53BConstants::Register> dac;
+            RD53BInterface<F>& chipIface = *static_cast<RD53BInterface<F>*>(sysCtrl.fReadoutChipInterface);
+            /* first set of DACs */
+            dac = {
+                F::Reg::DAC_PREAMP_L_LIN,
+                F::Reg::DAC_PREAMP_R_LIN,
+                F::Reg::DAC_PREAMP_TL_LIN,
+                F::Reg::DAC_PREAMP_TR_LIN,
+                F::Reg::DAC_PREAMP_T_LIN,
+                F::Reg::DAC_PREAMP_M_LIN,
+                F::Reg::DAC_FC_LIN,
+                F::Reg::DAC_KRUM_CURR_LIN,
+                F::Reg::DAC_COMP_TA_LIN,
+                F::Reg::DAC_GDAC_L_LIN,
+                F::Reg::DAC_GDAC_R_LIN,
+                F::Reg::DAC_GDAC_M_LIN,
+                F::Reg::DAC_LDAC_LIN,
+                F::Reg::VCAL_HIGH,
+                F::Reg::VCAL_MED
+            };
+            chipIface.WriteReg(chip, F::Reg::DAC_REF_KRUM_LIN, 300);
+            chipIface.WriteReg(chip, F::Reg::DAC_COMP_LIN, 250);
+            this->calibChip(chip, sysCtrl, res[chip], dac);
+            /* last set of DACs */
+            dac = {
+                F::Reg::DAC_REF_KRUM_LIN,
+                F::Reg::DAC_COMP_LIN
+            };
+            chipIface.WriteReg(chip, F::Reg::DAC_LDAC_LIN, 80);
+            for(const auto& reg : {F::Reg::DAC_GDAC_L_LIN, F::Reg::DAC_GDAC_R_LIN, F::Reg::DAC_GDAC_M_LIN}) {
+                chipIface.WriteReg(chip, reg, 900);
+            }
+            this->calibChip(chip, sysCtrl, res[chip], dac);
         });
-
         return res;
     }
 
-    void draw(const Results& results) const {
-        std::ofstream json(Base::getResultPath(".json"));
-        TFile f(Base::getResultPath(".root").c_str(), "RECREATE");
-
-        TF1 line("line", "[offset]+[slope]*x");
-
-        const char* str = "{";
-        json << std::scientific << "{\"chips\":[";
-        for (const std::pair<const ChipLocation, std::vector<DACData>>& chipRes : results) {
-            const ChipLocation &chip = chipRes.first;
-
-            json << str;
-            str = ",{";
-
-            json << "\"board\":" << chip.board_id << ","
-                 << "\"hybrid\":" << chip.hybrid_id << ","
-                 << "\"id\":" << chip.chip_id << ",";
-
-            f.mkdir(("board_" + std::to_string(chip.board_id)).c_str(), "", true)
-            ->mkdir(("hybrid_" + std::to_string(chip.hybrid_id)).c_str(), "", true)
-            ->mkdir(("chip_"+ std::to_string(chip.chip_id)).c_str(), "", true)->cd();
-
-            const char* str2 = "{";
-            json << "\"DACs\":[";
-            for (const DACData& data : chipRes.second) {
-                const RD53BConstants::Register& reg = data.reg;
-                float m = (data.volt.back() - data.volt.front()) / (data.code.back() - data.code.front());
-                float q = data.volt.front() - m * data.code.front();
-
-                TGraph* g;
-                if(data.voltErr.empty()) g = new TGraph(data.code.size(), data.code.data(), data.volt.data());
-                else g = new TGraphErrors(data.code.size(), data.code.data(), data.volt.data(), nullptr, data.voltErr.data());
-                g->SetNameTitle(reg.name.c_str());
-                g->GetXaxis()->SetTitle("DAC code [DAC LSB]");
-                if(isCurr(reg))
-                {
-                    g->GetYaxis()->SetTitle("Output current [A]");
-                }
-                else
-                {
-                    g->GetYaxis()->SetTitle("Output voltage [V]");
-                }
-                line.SetParameter("offset", q);
-                line.SetParameter("slope", m);
-                using namespace Ph2_HwDescription::RD53BFlavor;
-                using namespace Ph2_HwDescription::RD53BConstants;
-                if(
-                    (F::flavor == Flavor::CMS && (data.reg == CMSRegisters::VCAL_HIGH || data.reg == CMSRegisters::VCAL_MED)) ||
-                    (F::flavor == Flavor::ATLAS && (data.reg == ATLASRegisters::VCAL_HIGH || data.reg == ATLASRegisters::VCAL_MED))
-                ) {
-                    g->Fit(&line, "Q");
-                }
-                else {
-                    bool found = false;
-                    float min;
-                    float max;
-                    float lim = param("fitThresholdV"_s) / (isCurr(reg) ? imuxR : 1);
-                    for(std::vector<float>::size_type i = 0; i < data.code.size(); ++i) {
-                        if(data.volt[i] < lim) {
-                            if(!found) {
-                                min = data.code[i];
-                                max = data.code[i];
-                                found = true;
-                            }
-                            else {
-                                if(data.code[i] < min) min = data.code[i];
-                                if(data.code[i] > max) max = data.code[i];
-                            }
-                        }
-                    }
-                    if(found) {
-                        g->Fit(&line, "Q", "", min, max);
-                    }
-                }
-                g->Write();
-
-                for(int i = 0; i < g->GetN(); ++i) {
-                    g->SetPointY(i, g->GetPointY(i) - line.GetParameter("offset") - line.GetParameter("slope") * g->GetPointX(i));
-                }
-                g->SetNameTitle((reg.name + "_diff").c_str());
-                if(isCurr(reg)) {
-                    g->GetYaxis()->SetTitle("Residual (output current) [A]");
-                }
-                else {
-                    g->GetYaxis()->SetTitle("Residual (output voltage) [V]");
-                }
-                g->Write();
-                delete g;
-
-                json << str2;
-                str2 = ",{";
-                json << "\"reg\":\"" << reg.name << "\","
-                     << "\"fitted_line\":{\"intercept\":" << line.GetParameter("offset") << ",\"slope\":" << line.GetParameter("slope") << "},"
-                     << "\"points\":[";
-                for (size_t i = 0; i < data.code.size(); ++i) {
-                    json << "{\"input\":" << static_cast<uint16_t>(data.code[i]);
-                    if(isCurr(reg)) json << ",\"current\":{\"val\":";
-                    else json << ",\"voltage\":{\"val\":";
-                    json << data.volt[i];
-                    if(!data.voltErr.empty()) json << ",\"err\":" << data.voltErr[i];
-                    json << "}}";
-                    if(i < data.code.size() - 1) json << ",";
-                }
-                json << "]}";
-            }
-            json << "]}";
-        }
-        json << "]}";
-    };
+    void draw(const Results& results) const;
 
   private:
-    static const std::map<Ph2_HwDescription::RD53BConstants::Register, uint16_t> muxSett;
+    static const std::map<std::string, std::array<uint16_t, 2>> lim;
+    static const std::map<RD53BConstants::Register, std::string> dacSett;
+    static const std::map<RD53BConstants::Register, uint16_t> muxSett;
 
-    size_t nCod, nSamp;
+    std::map<std::string, std::set<uint16_t>> code;
+    
+    size_t nSamp;
     float imuxR;
     std::string vmetId, vmetChId;
-    std::vector<RD53BConstants::RegisterField> regs;
-    std::vector<uint16_t> masks;
-    std::vector<uint16_t> dacMax;
-
+    
     bool isCurr(const Ph2_HwDescription::RD53BConstants::Register& dac) const {
         uint16_t vmux;
         std::tie(std::ignore, vmux) = bits::unpack<6, 6>(muxSett.at(dac));
         return vmux == RD53B<F>::VMUX.at("I_mux");
     }
-
+    
     void calibChip(Chip* chip,
                    Ph2_System::SystemController& sysCtrl,
-                   std::vector<DACData>& res) {
+                   std::map<RD53BConstants::Register, DACData>& res,
+                   const std::vector<RD53BConstants::Register>& dac) {
+        using RD53BConstants::Register;
+        
         auto &chipIface = *static_cast<RD53BInterface<F>*>(sysCtrl.fReadoutChipInterface);
         TCPClient &psIface = *sysCtrl.fPowerSupplyClient;
-
-        std::ostringstream psReq("ReadVoltmeter,VoltmeterId:", std::ostringstream::ate);
+        
+        std::ostringstream psReq;
+        psReq = std::ostringstream("ReadVoltmeter,VoltmeterId:", std::ostringstream::ate);
         psReq << vmetId << ",ChannelId:" << vmetChId;
         if(nSamp > 1) psReq << ",Stats,N:" << nSamp;
+        
+        std::map<Register, std::set<uint16_t>> code;
+        for(const Register& reg : dac) code[reg] = this->code.at(dacSett.at(reg));
 
         psIface.sendAndReceivePacket("VoltmeterSetRange"
                                       ",VoltmeterId:" + vmetId +
@@ -249,57 +172,47 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
         chipIface.WriteReg(chip, "SEL_CAL_RANGE", 1);
 
         BitVector<uint16_t> cmdQ;
-        std::vector<uint16_t> codes(regs.size());
-        res.resize(regs.size());
-        for(size_t i = 0; i < regs.size(); ++i) {
-            res[i].reg = regs[i].reg;
-        }
-        for(size_t i = 0; i < nCod; ++i) {
+        while(true) {
             // setting all the DACs
             cmdQ.clear();
-            for(size_t j = 0; j < codes.size(); ++j) {
-                if(codes[j] > masks[j] || codes[j] > dacMax[j]) continue;
+            for(std::pair<const Register, std::set<uint16_t>>& p : code) {
+                if(p.second.empty()) continue;
+                
                 chipIface.template SerializeCommand<RD53BCmd::Sync>(chip, cmdQ);
-                chipIface.template SerializeCommand<RD53BCmd::WrReg>(chip, cmdQ, regs[j].reg.address, codes[j]);
+                chipIface.template SerializeCommand<RD53BCmd::WrReg>(chip, cmdQ, p.first.address, *p.second.begin());
             }
+            
             if(cmdQ.size() == 0) return;
+            
             chipIface.SendCommandStream(chip, cmdQ);
             auto start = std::chrono::steady_clock::now();
             // all DACs set
             // measuring all DAC outputs
-            for (size_t j = 0; j < regs.size(); ++j) {
-                if(codes[j] > masks[j] || codes[j] > dacMax[j]) continue;
-                chipIface.WriteChipReg(chip, "MonitorConfig", muxSett.at(regs[j].reg));
-                std::chrono::duration<float> delay = std::chrono::steady_clock::now() - start;
-                if((regs[j].reg == F::Reg::VCAL_HIGH || regs[j].reg == F::Reg::VCAL_MED) && delay.count() > param("vcalDelay"_s)) {
+            for(const Register& reg : dac) {
+                if(code.at(reg).empty()) continue;
+                
+                chipIface.WriteChipReg(chip, "MonitorConfig", muxSett.at(reg));
+                if(reg == F::Reg::VCAL_HIGH || reg == F::Reg::VCAL_MED) {
                     std::this_thread::sleep_until(start + std::chrono::duration<float>(param("vcalDelay"_s)));
                 }
-                std::istringstream psResp(psIface.sendAndReceivePacket(psReq.str()));
+                std::istringstream psResp(psIface.sendAndReceivePacket(/*psReq.str()*/""));
                 float a, b;
                 psResp >> a;
                 if(nSamp > 1) psResp >> b;
-                DACData& data = res[j];
-                if (psResp) { // a proper voltage was returned
-                    if (isCurr(regs[j].reg)) {
+                if (psResp) {
+                    if (isCurr(reg)) {
                         a /= imuxR;
                         if(nSamp > 1) b /= imuxR * std::sqrt(nSamp);
                     }
-                    data.code.push_back(codes[j]);
-                    data.volt.push_back(a);
-                    if(nSamp > 1) data.voltErr.push_back(b);
+                    res[reg].code.push_back(*code.at(reg).cbegin());
+                    res[reg].volt.push_back(a);
+                    if(nSamp > 1) res[reg].voltErr.push_back(b);
                 }
+            }
+            for(std::pair<const Register, std::set<uint16_t>>& p : code) {
+                if(!p.second.empty()) p.second.erase(p.second.begin());
             }
             // all DAC outputs measured for a single configuration
-            for (size_t j = 0; j < regs.size(); ++j) {
-                // note that if codes[j] == masks[j] == 0xffff the calibration for this chip is over
-                if(codes[j] >= masks[j]) {
-                    codes[j] = 0xffffu;
-                    continue;
-                }
-                if (codes[j] == 0) codes[j] = 1;
-                else if ((codes[j] ^ masks[j]) > codes[j]) codes[j] <<= 1;
-                else codes[j] = (~((codes[j] ^ masks[j]) >> 1)) & masks[j];
-            }
         }
         // all codes tested for all DACs
     }
