@@ -210,16 +210,34 @@ public:
             g->Write();
 
             json << "\"fitted_line\":{\"intercept\":" << q << ",\"slope\":" << m << "},"
-                 << "\"points\":[";
+                 << "\"volt\":[";
             for(size_t i = 0; i < x.size(); ++i) {
-                json << "{\"ADC\":{\"val\":" << x[i];
-                if(!xErr.empty()) json << ",\"err\":" << xErr[i];
-                json << "},\"voltage\":{\"val\":" << y[i];
-                if(!yErr.empty()) json << ",\"err\":" << yErr[i];
-                json << "}}";
+                json << x[i];
                 if(i < x.size() - 1) json << ",";
             }
-            json << "]}";
+            json << "],\"conv\":[";
+            for(size_t i = 0; i < x.size(); ++i) {
+                json << y[i];
+                if(i < x.size() - 1) json << ",";
+            }
+            json << "]";
+            if(!xErr.empty()) {
+                json << ",\"conv_err\":[";
+                for(size_t i = 0; i < x.size(); ++i) {
+                    json << xErr[i];
+                    if(i < x.size() - 1) json << ",";
+                }
+                json << "]";
+            }
+            if(!yErr.empty()) {
+                json << ",\"volt_err\":[";
+                for(size_t i = 0; i < x.size(); ++i) {
+                    json << yErr[i];
+                    if(i < x.size() - 1) json << ",";
+                }
+                json << "]";
+            }
+            json << "}"; // end of chip data
         }
         json << "]}";
 

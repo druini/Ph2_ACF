@@ -169,17 +169,21 @@ public:
                 json << "{\"bank\":\"" << (i < 8 ? 'A' : 'B') << "\","
                      << "\"number\":" << (i < 8 ? i : i - 8) << ","
                      << "\"fitted_line\":{\"intercept\":" << fitResults[i][0] << ",\"slope\":" << fitResults[i][1] << "},"
-                     << "\"points\":[";
+                     << "\"frequency\":[";
                 for(int j = 0; j < chip.second.n; ++j) {
-                    json << "{\"VDDD\":" << chip.second.trimVoltage[j] << ","
-                         << "\"frequency\":" << chip.second.trimOscFrequency[i][j] * 1e6 << "}";
+                    json << chip.second.trimOscFrequency[i][j] * 1e6;
                     if(j < chip.second.n - 1) json << ",";
                 }
                 json << "]}";
                 /* oscillator data ends here */
                 if(i < 42 - 1) json << ",";
             }
-            json << "]}";
+            json << "],\"VDDD\":[";
+            for(int j = 0; j < chip.second.n; ++j) {
+                json << chip.second.trimVoltage[j];
+                if(j < chip.second.n - 1) json << ",";
+            }
+            json << "]}"; // end of chip data
         }
         json << "]}";
     }
