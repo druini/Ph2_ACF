@@ -211,29 +211,33 @@ public:
 
             json << "\"fitted_line\":{\"intercept\":" << q << ",\"slope\":" << m << "},"
                  << "\"volt\":[";
-            for(size_t i = 0; i < x.size(); ++i) {
-                json << x[i];
-                if(i < x.size() - 1) json << ",";
+            const char* str2 = "";
+            for(const float& y : y) {
+                json << str2 << y;
+                str2 = ",";
             }
             json << "],\"conv\":[";
-            for(size_t i = 0; i < x.size(); ++i) {
-                json << y[i];
-                if(i < x.size() - 1) json << ",";
+            str2 = "";
+            for(const float& x : x) {
+                json << str2 << x;
+                str2 = ",";
             }
             json << "]";
             if(!xErr.empty()) {
                 json << ",\"conv_err\":[";
-                for(size_t i = 0; i < x.size(); ++i) {
-                    json << xErr[i];
-                    if(i < x.size() - 1) json << ",";
+                str2 = "";
+                for(const float& xErr : xErr) {
+                    json << str2 << xErr;
+                    str2 = ",";
                 }
                 json << "]";
             }
             if(!yErr.empty()) {
                 json << ",\"volt_err\":[";
-                for(size_t i = 0; i < x.size(); ++i) {
-                    json << yErr[i];
-                    if(i < x.size() - 1) json << ",";
+                str2 = "";
+                for(const float& yErr : yErr) {
+                    json << str2 << yErr;
+                    str2 = ",";
                 }
                 json << "]";
             }
