@@ -20,6 +20,7 @@
 #include "../tools/RD53BRegTest.h"
 #include "../tools/RD53BThresholdEqualization.h"
 #include "../tools/RD53BNoiseScan.h"
+#include "../tools/RD53BDataMergingTest.h"
 
 
 using namespace Ph2_System;
@@ -45,33 +46,33 @@ using Tools = ToolManager<decltype(make_named_tuple(
 	TOOL(RD53TempSensor),
 	TOOL(RD53BThresholdEqualization),
     TOOL(RD53BNoiseScan),
-    TOOL(RD53IVScan),
 	TOOL(RD53ShortTempSensor),
-    TOOL(RD53VrefTrimming)
+    TOOL(RD53VrefTrimming),
+    TOOL(RD53BDataMergingTest)
 ))>;
 
 
 INITIALIZE_EASYLOGGINGPP
 
 template <class Flavor>
-void run(SystemController& system, CommandLineProcessing::ArgvParser& cmd) {
+void run(SystemController& sys, CommandLineProcessing::ArgvParser& cmd) {
     
     if (cmd.foundOption("assumeDefault")) {
-        for_each_device<Chip>(system, [] (Chip* chip) {
+        for_each_device<Chip>(sys, [] (Chip* chip) {
             static_cast<RD53B<Flavor>*>(chip)->setDefaultState();
         });
     }
 
-    system.ConfigureHw();
+    sys.ConfigureHw();
 
     auto toolConfig = toml::parse(cmd.optionValue("tools"));
 
     bool showPlots = !cmd.foundOption("hidePlots");
 
-    Tools<Flavor>(toolConfig, showPlots).run_tools(system, cmd.allArguments());
+    Tools<Flavor>(toolConfig, showPlots).run_tools(sys, cmd.allArguments());
 
     if (cmd.foundOption("saveState"))
-        for_each_device<Chip>(system, [&] (Chip* chip) {
+        for_each_device<Chip>(sys, [&] (Chip* chip) {
             chip->saveRegMap("");
         });
 }

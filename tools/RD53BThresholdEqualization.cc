@@ -43,11 +43,13 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Ph2
         });
     }
 
+    // ChipDataMap<xt::xtensor<bool, 2>> alwaysStuck;
     ChipDataMap<xt::xtensor<uint8_t, 2>> bestTDAC;
     ChipDataMap<xt::xtensor<double, 2>> bestOcc;
 
     for_each_device<Chip>(system, [&] (Chip* chip) {
         chipInterface.WriteReg(chip, Flavor::Reg::VCAL_MED, param("thresholdScan"_s).param("vcalMed"_s));
+        // alwaysStuck.insert({chip, xt::ones<bool>({size[0], size[1]})});
         bestTDAC.insert({chip, 15 * xt::ones<uint8_t>({size[0], size[1]})});
         bestOcc.insert({chip, xt::zeros<double>({size[0], size[1]})});
     });
@@ -86,7 +88,7 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Ph2
             const auto occ = xt::view(occMap[chip], xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1]));
             const auto occHighCharge = xt::view(occMapHighCharge[chip], xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1]));
 
-            const auto stuck = occHighCharge < .9;
+            const auto stuck = occHighCharge < .5;
 
             // std::cout << "stuck: " << xt::count_nonzero(stuck) << std::endl;
 
@@ -95,10 +97,13 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Ph2
             //     bestTDAC[chip] = tdacView;
             // }
             // else {
+            // auto isBest = (stuck && alwaysStuck[chip]) || (!stuck && (xt::abs(occ - 0.5) <= xt::abs(bestOcc[chip] - .5) + 1e-10));
             auto isBest = !stuck && (xt::abs(occ - 0.5) <= xt::abs(bestOcc[chip] - .5) + 1e-10);
             xt::masked_view(bestOcc[chip], isBest) = occ;
             xt::masked_view(bestTDAC[chip], isBest) = tdacView;
             // }
+
+            // alwaysStuck[chip] = alwaysStuck[chip] && stuck;
 
             // std::cout << "isBest:\n" <<  xt::filter(isBest, xt::abs(bestOcc[chip] - .5) > .49) << std::endl;
             // std::cout << "diff:\n" <<  xt::filter((xt::abs(occ - 0.5) - xt::abs(bestOcc[chip] - .5)), xt::abs(bestOcc[chip] - .5) > .49) << std::endl;

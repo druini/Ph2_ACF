@@ -18,10 +18,10 @@ namespace RD53BTools {
 
 template <class Flavor>
 void RD53BInjectionTool<Flavor>::init() {
-    if (param("size"_s)[0] == 0)
-        param("size"_s)[0] = RD53B<Flavor>::nRows - param("offset"_s)[0];
-    if (param("size"_s)[1] == 0)
-        param("size"_s)[1] = RD53B<Flavor>::nCols - param("offset"_s)[1];
+    if (param("size"_s)[0] <= 0)
+        param("size"_s)[0] += RD53B<Flavor>::nRows - param("offset"_s)[0];
+    if (param("size"_s)[1] <= 0)
+        param("size"_s)[1] += RD53B<Flavor>::nCols - param("offset"_s)[1];
 
     if (param("readoutPeriod"_s) == 0)
         param("readoutPeriod"_s) = param("nInjections"_s);
@@ -279,7 +279,7 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) {
             << RESET;
 
         double mean_occ_disabled = 0;
-        if (param("size"_s)[0] < RD53B<Flavor>::nRows || param("size"_s)[1] < RD53B<Flavor>::nCols)
+        if (!xt::all(mask))
             mean_occ_disabled = xt::mean(xt::filter(occ, !mask))();
         LOG (INFO) << "mean occupancy for disabled pixels: " << mean_occ_disabled << RESET;
 

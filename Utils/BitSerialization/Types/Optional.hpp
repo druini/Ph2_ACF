@@ -26,8 +26,6 @@ struct Optional {
         }
     }
 
-    using SerializeError = serialize_error_t<Type>;
-
     template <class T, class U=Void>
     static SerializeResult<serialize_error_t<Type>> 
     serialize(value_type& value, BitVector<T>& bits, const U& parent={}) {

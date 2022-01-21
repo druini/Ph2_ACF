@@ -51,7 +51,7 @@ triggerDuration = 2
 triggerLatency = 134
 injectionPeriod = 1000
 offset = [0, 0]
-size = [0, 0]
+size = [128, 128]
 maskGen = [
     { dim = 0, size = 0, parallel = false, shift = [8, 1] },
     { dim = 1, size = 0, parallel = true, shift = [] },

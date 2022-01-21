@@ -99,7 +99,7 @@ using HitMap = BitSerialization::NamedTuple<
     NamedField<"hits", Array<Uint<1>, 16>>
 >;
 
-// Type aliase templates (ie. templated "using" definitions) containing lambdas
+// Type alias templates (ie. templated "using" definitions) containing lambdas
 // fail to compile probably due to some bug in gcc. In this case a new class
 // definition with public inheritance can be used instead.
 template <bool CompressedHitmap, bool EnableToT, bool IsLast = false>

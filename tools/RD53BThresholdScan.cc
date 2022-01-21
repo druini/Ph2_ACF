@@ -70,7 +70,7 @@ typename RD53BThresholdScan<Flavor>::OccupancyMap RD53BThresholdScan<Flavor>::ru
     OccupancyMap overallOccMap;
     for (size_t i = 0; i < nSteps; ++i) {
         for (const auto& item : param("injectionTool"_s).occupancy(events[i])) {
-            overallOccMap.insert({item.first, xt::zeros<double>({nSteps, size[0], size[1]})});
+            overallOccMap.insert({item.first, xt::zeros<double>({nSteps, size_t(size[0]), size_t(size[1])})});
             xt::view(overallOccMap[item.first], i, xt::all(), xt::all()) = 
                 xt::view(item.second, xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1]));
         }

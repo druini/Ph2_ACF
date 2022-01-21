@@ -52,6 +52,9 @@ namespace RD53BFlavor {
 
     struct ATLAS {
         static constexpr Flavor flavor = Flavor::ATLAS;
+        static constexpr bool isAtlas = true;
+        static constexpr bool isCMS = false;
+
         static constexpr size_t nRows = 384;
         static constexpr size_t nCols = 400;
 
@@ -77,6 +80,9 @@ namespace RD53BFlavor {
 
     struct CMS {
         static constexpr Flavor flavor = Flavor::CMS;
+        static constexpr bool isAtlas = false;
+        static constexpr bool isCMS = true;
+
         static constexpr size_t nRows = 336;
         static constexpr size_t nCols = 432;
 
@@ -85,7 +91,7 @@ namespace RD53BFlavor {
         static constexpr FrontEndType feType = FrontEndType::CROC;
 
         static constexpr char name[] = "CMS";
-
+        
         static constexpr uint8_t encodeTDAC(uint8_t value) { return value; }
         static constexpr uint8_t decodeTDAC(uint8_t code) { return code; }
     };

@@ -498,6 +498,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintFrequencyLVDS(); // @TMP@
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
+            RD53Event::JoinDecodingThreads();
             RD53Event::ForkDecodingThreads();
         }
     }

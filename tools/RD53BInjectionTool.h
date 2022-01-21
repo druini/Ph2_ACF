@@ -29,7 +29,7 @@ const auto ToolParameters<RD53BInjectionTool<Flavor>> = make_named_tuple(
     std::make_pair("fineDelay"_s, 0ul),
     std::make_pair("pulseDuration"_s, 6ul),
     std::make_pair("offset"_s, std::vector<size_t>({0, 0})),
-    std::make_pair("size"_s, std::vector<size_t>({0, 0})),
+    std::make_pair("size"_s, std::vector<int>({0, 0})),
     std::make_pair("maskGen"_s, std::vector<MaskStep>({
         MaskStep(0, 0, 0, {8, 1}),
         MaskStep(1, 0, 1, {}),
