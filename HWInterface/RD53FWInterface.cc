@@ -537,8 +537,8 @@ uint32_t RD53FWInterface::GetHybridEnabledChips(const Hybrid* pHybrid)
         uint32_t hyb_chips_en = 0;
         for(const auto cChip: *pHybrid)
         {
-            // uint32_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
-            uint32_t chip_lane = getChipLane(cChip);
+            uint32_t chip_lane = static_cast<RD53*>(cChip)->getChipLane();
+            // uint32_t chip_lane = getChipLane(cChip);
             hyb_chips_en |= 1 << chip_lane;
         }
         chips_en |= hyb_chips_en << (RD53FWconstants::NLANE_HYBRID * hybrid_id);
