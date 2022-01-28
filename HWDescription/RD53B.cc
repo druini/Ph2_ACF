@@ -22,15 +22,6 @@ namespace RD53BFlavor {
     constexpr char CMS::name[];
 }
 
-template <class Flavor>
-const decltype(RD53BConstants::GetGlobalPulseRoutes()) RD53B<Flavor>::GlobalPulseRoutes = RD53BConstants::GetGlobalPulseRoutes();
-
-template <class Flavor>
-const decltype(RD53BConstants::GetIMUX()) RD53B<Flavor>::IMUX = RD53BConstants::GetIMUX();
-
-template <class Flavor>
-const decltype(RD53BConstants::GetVMUX()) RD53B<Flavor>::VMUX = RD53BConstants::GetVMUX();
-
 template <> template <>
 uint8_t RD53B<RD53BFlavor::ATLAS>::ChipIdFor<Chip>(const Chip* chip) { return chip->getId(); }
 
