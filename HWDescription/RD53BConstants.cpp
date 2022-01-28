@@ -55,7 +55,8 @@ namespace Ph2_HwDescription
             {"IINA", 28},
             {"ISHUNTA", 29},
             {"IIND", 30},
-            {"ISHUNTD", 31}
+            {"ISHUNTD", 31},
+            {"HIGH_Z", 63}
         };
 
         const std::unordered_map<std::string, uint16_t> ATLAS_VMUX = {
@@ -87,7 +88,8 @@ namespace Ph2_HwDescription
             {"VMON_VOFS", 36},
             {"VMON_VIND", 37},
             {"VMON_VDDD", 38},
-            {"VMON_VREFD", 39}
+            {"VMON_VREFD", 39},
+            {"HIGH_Z", 63}
         };
 
         const std::unordered_map<std::string, uint16_t> CMS_IMUX = {
@@ -117,7 +119,8 @@ namespace Ph2_HwDescription
             {"IINA", 28},
             {"ISHUNTA", 29},
             {"IIND", 30},
-            {"ISHUNTD", 31}
+            {"ISHUNTD", 31},
+            {"HIGH_Z", 63}
         };
 
         const std::unordered_map<std::string, uint16_t> CMS_VMUX = {
@@ -149,7 +152,8 @@ namespace Ph2_HwDescription
             {"VMON_VOFS", 36},
             {"VMON_VIND", 37},
             {"VMON_VDDD", 38},
-            {"VMON_VREFD", 39}
+            {"VMON_VREFD", 39},
+            {"HIGH_Z", 63}
         };
 
     } // namespace RD53BConstants
