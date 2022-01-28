@@ -9,10 +9,12 @@
 
 #include "RD53RingOscillatorHistograms.h"
 
+#include "TF1.h"
+
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], const double (&trimOscFrequency)[42][16], const double (&trimVoltage)[16])
+void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], const double (&trimOscFrequency)[42][16], const double (&trimVoltage)[16], int nPoints, double fitResults[42][2])
 {
 	static char auxvar[LOGNAME_SIZE];
 	time_t now = time(0);
@@ -25,6 +27,7 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
 											"SCAN DFF 0", "SCAN DFF 0", "DFF 0", "DFF 0", "NEG EDGE DFF 1", "NEG EDGE DFF 1",
 											"LVT INV 0", "LVT INV 4","LVT 4-IN NAND0", "LVT 4-IN NAND 4",
 											"0","1","2","3","4","5","6","7" };
+    TF1 line("line", "[offset]+[slope]*x");
     auto canvas = new TCanvas();
     canvas->Print(("Results/oscillatorPlots_" + outputname + ".pdf[").c_str());
 	//FOR RING OSCILLATORS IN THE A SECTION
@@ -33,10 +36,17 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
     auto vdddMG0 = new TMultiGraph();
     for(int ringOsc = 0; ringOsc < 8; ringOsc++)
     {
-        TGraph* freqPlot = new TGraph(16, trimVoltage, trimOscFrequency[ringOsc]);
+        TGraph* freqPlot = new TGraph(nPoints, trimVoltage, trimOscFrequency[ringOsc]);
         freqPlot->SetTitle(oscNames[ringOsc]);
         vdddMG0->Add(freqPlot, "APL");
         freqPlot->Write();
+        line.SetParameter(1, (trimOscFrequency[ringOsc][nPoints - 1] - trimOscFrequency[ringOsc][0]) / (trimVoltage[nPoints - 1] - trimVoltage[0]));
+        line.SetParameter(0, trimOscFrequency[ringOsc][nPoints - 1] - trimVoltage[nPoints - 1] * line.GetParameter(1));
+        freqPlot->Fit(&line, "NQ");
+        if(fitResults != nullptr) {
+            fitResults[ringOsc][0] = line.GetParameter(0);
+            fitResults[ringOsc][1] = line.GetParameter(1);
+        }
     }
     vdddMG0->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG0->Draw("A pmc plc");
@@ -51,10 +61,18 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
     auto vdddMG = new TMultiGraph();
     for(int ringOsc = 8; ringOsc < 24; ringOsc++)
     {
-        TGraph* freqPlot = new TGraph(16, trimVoltage, trimOscFrequency[ringOsc]);
+        TGraph* freqPlot = new TGraph(nPoints, trimVoltage, trimOscFrequency[ringOsc]);
         freqPlot->SetTitle(oscNames[ringOsc]);
         vdddMG->Add(freqPlot, "APL");
         freqPlot->Write();
+        line.SetParameter(1, (trimOscFrequency[ringOsc][nPoints - 1] - trimOscFrequency[ringOsc][0]) / (trimVoltage[nPoints - 1] - trimVoltage[0]));
+        line.SetParameter(0, trimOscFrequency[ringOsc][nPoints - 1] - trimVoltage[nPoints - 1] * line.GetParameter(1));
+        freqPlot->Fit(&line, "NQ");
+        if(fitResults != nullptr) {
+            fitResults[ringOsc][0] = line.GetParameter(0);
+            fitResults[ringOsc][1] = line.GetParameter(1);
+        }
+
     }
     vdddMG->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG->Draw("A pmc plc");
@@ -68,10 +86,18 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
     auto vdddMG1 = new TMultiGraph();
     for(int ringOsc = 24; ringOsc < 30; ringOsc++)
     {
-        TGraph* freqPlot = new TGraph(16, trimVoltage, trimOscFrequency[ringOsc]);
+        TGraph* freqPlot = new TGraph(nPoints, trimVoltage, trimOscFrequency[ringOsc]);
         freqPlot->SetTitle(oscNames[ringOsc]);
         vdddMG1->Add(freqPlot, "APL");
         freqPlot->Write();
+        line.SetParameter(1, (trimOscFrequency[ringOsc][nPoints - 1] - trimOscFrequency[ringOsc][0]) / (trimVoltage[nPoints - 1] - trimVoltage[0]));
+        line.SetParameter(0, trimOscFrequency[ringOsc][nPoints - 1] - trimVoltage[nPoints - 1] * line.GetParameter(1));
+        freqPlot->Fit(&line, "NQ");
+        if(fitResults != nullptr) {
+            fitResults[ringOsc][0] = line.GetParameter(0);
+            fitResults[ringOsc][1] = line.GetParameter(1);
+        }
+
     }
     vdddMG1->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG1->Draw("A pmc plc");
@@ -85,10 +111,18 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
     auto vdddMG2 = new TMultiGraph();
     for(int ringOsc = 30; ringOsc < 34; ringOsc++)
     {
-        TGraph* freqPlot = new TGraph(16, trimVoltage, trimOscFrequency[ringOsc]);
+        TGraph* freqPlot = new TGraph(nPoints, trimVoltage, trimOscFrequency[ringOsc]);
         freqPlot->SetTitle(oscNames[ringOsc]);
         vdddMG2->Add(freqPlot, "APL");
         freqPlot->Write();
+        line.SetParameter(1, (trimOscFrequency[ringOsc][nPoints - 1] - trimOscFrequency[ringOsc][0]) / (trimVoltage[nPoints - 1] - trimVoltage[0]));
+        line.SetParameter(0, trimOscFrequency[ringOsc][nPoints - 1] - trimVoltage[nPoints - 1] * line.GetParameter(1));
+        freqPlot->Fit(&line, "NQ");
+        if(fitResults != nullptr) {
+            fitResults[ringOsc][0] = line.GetParameter(0);
+            fitResults[ringOsc][1] = line.GetParameter(1);
+        }
+
     }
     vdddMG2->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG2->Draw("A pmc plc");
@@ -102,10 +136,18 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
     auto vdddMG3 = new TMultiGraph();
     for(int ringOsc = 34; ringOsc < 42; ringOsc++)
     {
-        TGraph* freqPlot = new TGraph(16, trimVoltage, trimOscFrequency[ringOsc]);
+        TGraph* freqPlot = new TGraph(nPoints, trimVoltage, trimOscFrequency[ringOsc]);
         freqPlot->SetTitle(oscNames[ringOsc]);
         vdddMG3->Add(freqPlot, "APL");
         freqPlot->Write();
+        line.SetParameter(1, (trimOscFrequency[ringOsc][nPoints - 1] - trimOscFrequency[ringOsc][0]) / (trimVoltage[nPoints - 1] - trimVoltage[0]));
+        line.SetParameter(0, trimOscFrequency[ringOsc][nPoints - 1] - trimVoltage[nPoints - 1] * line.GetParameter(1));
+        freqPlot->Fit(&line, "NQ");
+        if(fitResults != nullptr) {
+            fitResults[ringOsc][0] = line.GetParameter(0);
+            fitResults[ringOsc][1] = line.GetParameter(1);
+        }
+
     }
     vdddMG3->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG3->Draw("A pmc plc");

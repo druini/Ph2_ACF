@@ -435,7 +435,7 @@ public:
     float    ReadChipMonitor(ReadoutChip* pChip, const std::string& observableName) { return 0; }
     float    ReadHybridTemperature(ReadoutChip* pChip);
     float    ReadHybridVoltage(ReadoutChip* pChip);
-    uint32_t ReadChipADC(ReadoutChip* pChip, const std::string& observableName) { return 0; }
+    uint32_t ReadChipADC(ReadoutChip* pChip, const std::string& observableName);
 
     // private:
     // uint32_t getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage);

@@ -32,7 +32,7 @@ class RingOscillatorHistograms
 {
   static constexpr const char* oscNames[] = {"CKND0", "CKND4", "INV0", "INV4", "NAND0", "NAND4", "NOR0", "NOR4"};
   public:
-    void fillRO(const double (&trimOscCounts)[42][16], const double (&trimOscFrequency)[42][16], const double (&trimVoltage)[16]);
+    void fillRO(const double (&trimOscCounts)[42][16], const double (&trimOscFrequency)[42][16], const double (&trimVoltage)[16], int nPoints = 16, double fitResults[42][2] = nullptr);
 
   private:
     DetectorDataContainer DetectorData;
