@@ -262,7 +262,7 @@ private:
         if(param("groundCorrection"_s)) {
             psIface.sendAndReceivePacket("TurnOff,PowerSupplyId:" + psId + ",ChannelId:" + psChId);
 
-            chipIface.WriteReg(chip, F::Reg::MonitorConfig, RD53B<F>::IMUX.at("HIGH_Z") << 6 | RD53B<F>::VMUX.at("GNDA"));
+            chipIface.WriteReg(chip, F::Reg::MonitorConfig, (uint8_t)RD53B<F>::IMux::HIGH_Z << 6 | (uint8_t)RD53B<F>::VMux::GNDA);
             psIface.sendAndReceivePacket(
                 "VoltmeterSetRange"
                 ",VoltmeterId:" + param("voltmeterId"_s) +
@@ -276,7 +276,7 @@ private:
             ));
             LOG(INFO) << BOLDBLUE << "Analog ground offset = " << BOLDYELLOW << groundOffset << " V" << RESET;
 
-            chipIface.WriteReg(chip, F::Reg::MonitorConfig, RD53B<F>::IMUX.at("HIGH_Z") << 6 | RD53B<F>::VMUX.at("VREF_ADC"));
+            chipIface.WriteReg(chip, F::Reg::MonitorConfig, (uint8_t)RD53B<F>::IMux::HIGH_Z << 6 | (uint8_t)RD53B<F>::VMux::VREF_ADC);
             std::string adcRef(psIface.sendAndReceivePacket(
                 "ReadVoltmeter"
                 ",VoltmeterId:" + param("voltmeterId"_s) +
@@ -285,7 +285,7 @@ private:
             LOG(INFO) << BOLDBLUE << "ADC reference voltage = " << BOLDYELLOW << adcRef << " V" << RESET;
         }
 
-        chipIface.WriteReg(chip, F::Reg::MonitorConfig, 1u << 12 | RD53B<F>::IMUX.at("HIGH_Z") << 6 | RD53B<F>::VMUX.at("HIGH_Z"));
+        chipIface.WriteReg(chip, F::Reg::MonitorConfig, 1u << 12 | (uint8_t)RD53B<F>::IMux::HIGH_Z << 6 | (uint8_t)RD53B<F>::VMux::HIGH_Z);
 
         /* additional setup in case a Keithley SMU is being used */
         psIface.sendAndReceivePacket(

@@ -132,8 +132,12 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
 
   private:
     static const std::map<std::string, std::array<uint16_t, 2>> lim;
-    static const std::map<RD53BConstants::Register, std::string> dacSett;
-    static const std::map<RD53BConstants::Register, uint16_t> muxSett;
+
+    // static const std::map<RD53BConstants::Register, std::string> dacSett;
+    static const std::map<std::reference_wrapper<const RD53BConstants::Register>, std::string> dacSett;
+    
+    // static const std::map<RD53BConstants::Register, uint16_t> muxSett;
+    static const std::map<std::reference_wrapper<const RD53BConstants::Register>, uint16_t> muxSett;
 
     std::map<std::string, std::set<uint16_t>> code;
     
@@ -143,8 +147,8 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
     
     bool isCurr(const Ph2_HwDescription::RD53BConstants::Register& dac) const {
         uint16_t vmux;
-        std::tie(std::ignore, vmux) = bits::unpack<6, 6>(muxSett.at(dac));
-        return vmux == RD53B<F>::VMUX.at("IMUX_OUT");
+        std::tie(std::ignore, vmux) = bits::unpack<6, 6>(muxSett.at(std::ref(dac)));
+        return vmux == (uint8_t)RD53B<F>::VMux::IMUX_OUT;
     }
     
     void calibChip(Chip* chip,
@@ -162,7 +166,7 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
         if(nSamp > 1) psReq << ",Stats,N:" << nSamp;
         
         std::map<Register, std::set<uint16_t>> code;
-        for(const Register& reg : dac) code[reg] = this->code.at(dacSett.at(reg));
+        for(const Register& reg : dac) code[reg] = this->code.at(dacSett.at(std::ref(reg)));
 
         psIface.sendAndReceivePacket("VoltmeterSetRange"
                                       ",VoltmeterId:" + vmetId +

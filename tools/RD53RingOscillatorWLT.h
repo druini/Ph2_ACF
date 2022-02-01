@@ -83,7 +83,7 @@ public:
             /* initialization */
 
             uint16_t monConf = chipInterface.ReadReg(chip, Flavor::Reg::MonitorConfig);
-            monConf = (monConf & 0xffc0) | RD53B<Flavor>::VMUX.at("VDDD_HALF");
+            monConf = (monConf & 0xffc0) | (uint8_t)RD53B<Flavor>::VMux::VDDD_HALF;
 
             chipInterface.template SerializeCommand<RD53BCmd::WrReg>(chip, initQ, Flavor::Reg::MonitorConfig.address, monConf);
             chipInterface.template SerializeCommand<RD53BCmd::WrReg>(chip, initQ, Flavor::Reg::GlobalPulseWidth.address, pulseWidth);

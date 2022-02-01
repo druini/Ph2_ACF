@@ -120,6 +120,9 @@ boost::optional<uint16_t> RD53BInterface<Flavor>::ReadChipReg(RD53B* rd53b, cons
 
         auto regReadback = boardFW.ReadChipRegisters(rd53b);
 
+        if (regReadback.size() > 1)
+            LOG(WARNING) << BLUE << "Register readback (" << reg.name << ") warning: Too many entries (" << YELLOW << (regReadback.size()) << BLUE << ")" << RESET;
+
         auto it = std::find_if(regReadback.begin(), regReadback.end(), [=] (auto& readback) {
             return readback.first == address;
         });
@@ -405,11 +408,11 @@ uint32_t RD53BInterface<Flavor>::ReadChipADC(ReadoutChip* pChip, const std::stri
 {
     uint16_t config = 0x1000; // enable monitoring block
 
-    std::unordered_map<std::string, uint16_t>::const_iterator it(RD53B::VMUX.find(observableName));
-    if(it == RD53B::VMUX.end())
+    std::unordered_map<std::string, uint8_t>::const_iterator it(RD53B::VMuxMap.find(observableName));
+    if(it == RD53B::VMuxMap.end())
     {
-        it = RD53B::IMUX.find(observableName);
-        if(it == RD53B::IMUX.end())
+        it = RD53B::IMuxMap.find(observableName);
+        if(it == RD53B::IMuxMap.end())
         {
             LOG(ERROR) << BOLDRED << "Bad analog multiplexer label: " << observableName << RESET;
             return -1;
@@ -417,12 +420,12 @@ uint32_t RD53BInterface<Flavor>::ReadChipADC(ReadoutChip* pChip, const std::stri
         else
         {
             config |= it->second << 6;
-            config |= RD53B::VMUX.at("IMUX_OUT");
+            config |= (uint8_t)RD53B::VMux::IMUX_OUT;
         }
     }
     else
     {
-        config |= (RD53B::IMUX.at("HIGH_Z") << 6) | it->second;
+        config |= ((uint8_t)RD53B::IMux::HIGH_Z << 6) | it->second;
     }
 
     uint16_t buf;

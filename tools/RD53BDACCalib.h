@@ -75,8 +75,8 @@ class RD53BDACCalib : public RD53BTool<RD53BDACCalib, F> {
 
         bool currDet = false;
         for (size_t i = 0; i < regs.size(); ++i) {
-            auto &imux = RD53B<F>::IMUX;
-            auto &vmux = RD53B<F>::VMUX;
+            auto &imux = RD53B<F>::IMuxMap;
+            auto &vmux = RD53B<F>::VMuxMap;
 
             uint16_t selec = 0;
 
@@ -87,11 +87,11 @@ class RD53BDACCalib : public RD53BTool<RD53BDACCalib, F> {
                     throw std::logic_error(muxInputs[i] + "is not a valid name for a multiplexer input.");
                 } else { // is a current DAC
                     isCurr[regs[i]] = true;
-                    selec = (it->second << 6) | vmux.at("IMUX_OUT");
+                    selec = (it->second << 6) | (uint8_t)RD53B<F>::VMux::IMUX_OUT;
                     currDet = true;
                 }
             } else { // is a voltage DAC
-                selec = (imux.at("HIGH_Z") << 6) | it->second;
+                selec = ((uint8_t)RD53B<F>::IMux::HIGH_Z << 6) | it->second;
                 isCurr[regs[i]] = false;
             }
 

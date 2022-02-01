@@ -141,12 +141,13 @@ template<> const std::map<std::string, std::array<uint16_t, 2>> RD53BDACTest<CMS
     { "REF_KRUM_LIN", { 300, 450 } }
 };
 
-template<> const std::map<Register, std::string> RD53BDACTest<ATLAS>::dacSett = {
+template<> 
+const std::map<std::reference_wrapper<const Register>, std::string> RD53BDACTest<ATLAS>::dacSett = {
     { ATLAS::Reg::VCAL_HIGH, std::string("VCAL") },
     { ATLAS::Reg::VCAL_MED, std::string("VCAL") }
 };
 
-template<> const std::map<Register, std::string> RD53BDACTest<CMS>::dacSett = {
+template<> const std::map<std::reference_wrapper<const Register>, std::string> RD53BDACTest<CMS>::dacSett = {
     { CMS::Reg::DAC_PREAMP_L_LIN, "PA_IN_BIAS_LIN" },
     { CMS::Reg::DAC_PREAMP_R_LIN, "PA_IN_BIAS_LIN" },
     { CMS::Reg::DAC_PREAMP_TL_LIN, "PA_IN_BIAS_LIN" },
@@ -166,43 +167,43 @@ template<> const std::map<Register, std::string> RD53BDACTest<CMS>::dacSett = {
     { CMS::Reg::VCAL_MED, "VCAL" }
 };
 
-template<> const std::map<Register, uint16_t> RD53BDACTest<ATLAS>::muxSett = {
-    { ATLAS::Reg::DAC_PREAMP_L_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("I_PREAMP_L"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::DAC_PREAMP_R_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("I_PREAMP_R"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::DAC_PREAMP_TL_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("I_PREAMP_TL"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::DAC_PREAMP_TR_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("I_PREAMP_TR"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::DAC_PREAMP_T_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("I_PREAMP_T"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::DAC_PREAMP_M_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("I_PREAMP_M"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::DAC_PRECOMP_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("I_PRECOMPARATOR"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::DAC_COMP_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("I_COMPARATOR"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::DAC_VFF_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("I_FEEDBACK"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::DAC_TH1_L_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("I_VTH1_L"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::DAC_TH1_R_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("I_VTH1_R"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::DAC_TH1_M_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("I_VTH1_M"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::DAC_TH2_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("I_VTH2"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::DAC_LCC_DIFF, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("LEAKAGE_CURRENT_COMP"), RD53B<ATLAS>::VMUX.at("IMUX_OUT")) },
-    { ATLAS::Reg::VCAL_HIGH, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("HIGH_Z"), RD53B<ATLAS>::VMUX.at("VCAL_HIGH")) },
-    { ATLAS::Reg::VCAL_MED, bits::pack<6, 6>(RD53B<ATLAS>::IMUX.at("HIGH_Z"), RD53B<ATLAS>::VMUX.at("VCAL_MED")) }
+template<> const std::map<std::reference_wrapper<const Register>, uint16_t> RD53BDACTest<ATLAS>::muxSett = {
+    { ATLAS::Reg::DAC_PREAMP_L_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::I_PREAMP_L, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::DAC_PREAMP_R_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::I_PREAMP_R, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::DAC_PREAMP_TL_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::I_PREAMP_TL, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::DAC_PREAMP_TR_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::I_PREAMP_TR, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::DAC_PREAMP_T_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::I_PREAMP_T, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::DAC_PREAMP_M_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::I_PREAMP_M, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::DAC_PRECOMP_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::I_PRECOMPARATOR, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::DAC_COMP_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::I_COMPARATOR, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::DAC_VFF_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::I_FEEDBACK, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::DAC_TH1_L_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::I_VTH1_L, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::DAC_TH1_R_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::I_VTH1_R, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::DAC_TH1_M_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::I_VTH1_M, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::DAC_TH2_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::I_VTH2, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::DAC_LCC_DIFF, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::LEAKAGE_CURRENT_COMP, (uint8_t)RD53B<ATLAS>::VMux::IMUX_OUT) },
+    { ATLAS::Reg::VCAL_HIGH, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::HIGH_Z, (uint8_t)RD53B<ATLAS>::VMux::VCAL_HIGH) },
+    { ATLAS::Reg::VCAL_MED, bits::pack<6, 6>((uint8_t)RD53B<ATLAS>::IMux::HIGH_Z, (uint8_t)RD53B<ATLAS>::VMux::VCAL_MED) }
 };
 
-template<> const std::map<Register, uint16_t> RD53BDACTest<CMS>::muxSett = {
-    { CMS::Reg::DAC_PREAMP_L_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("I_PREAMP_L"), RD53B<CMS>::VMUX.at("IMUX_OUT")) },
-    { CMS::Reg::DAC_PREAMP_R_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("I_PREAMP_R"), RD53B<CMS>::VMUX.at("IMUX_OUT")) },
-    { CMS::Reg::DAC_PREAMP_TL_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("I_PREAMP_TL"), RD53B<CMS>::VMUX.at("IMUX_OUT")) },
-    { CMS::Reg::DAC_PREAMP_TR_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("I_PREAMP_TR"), RD53B<CMS>::VMUX.at("IMUX_OUT")) },
-    { CMS::Reg::DAC_PREAMP_T_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("I_PREAMP_T"), RD53B<CMS>::VMUX.at("IMUX_OUT")) },
-    { CMS::Reg::DAC_PREAMP_M_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("I_PREAMP_M"), RD53B<CMS>::VMUX.at("IMUX_OUT")) },
-    { CMS::Reg::DAC_FC_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("I_FC"), RD53B<CMS>::VMUX.at("IMUX_OUT")) },
-    { CMS::Reg::DAC_KRUM_CURR_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("I_KRUMMENAKER"), RD53B<CMS>::VMUX.at("IMUX_OUT")) },
-    { CMS::Reg::DAC_REF_KRUM_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("HIGH_Z"), RD53B<CMS>::VMUX.at("VREF_KRUM")) },
-    { CMS::Reg::DAC_COMP_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("I_COMPARATOR"), RD53B<CMS>::VMUX.at("IMUX_OUT")) },
-    { CMS::Reg::DAC_COMP_TA_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("I_COMPARATOR_STAR"), RD53B<CMS>::VMUX.at("IMUX_OUT")) },
-    { CMS::Reg::DAC_GDAC_L_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("HIGH_Z"), RD53B<CMS>::VMUX.at("GDAC_L")) },
-    { CMS::Reg::DAC_GDAC_R_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("HIGH_Z"), RD53B<CMS>::VMUX.at("GDAC_R")) },
-    { CMS::Reg::DAC_GDAC_M_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("HIGH_Z"), RD53B<CMS>::VMUX.at("GDAC_M")) },
-    { CMS::Reg::DAC_LDAC_LIN, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("I_LDAC"), RD53B<CMS>::VMUX.at("IMUX_OUT")) },
-    { CMS::Reg::VCAL_HIGH, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("HIGH_Z"), RD53B<CMS>::VMUX.at("VCAL_HIGH")) },
-    { CMS::Reg::VCAL_MED, bits::pack<6, 6>(RD53B<CMS>::IMUX.at("HIGH_Z"), RD53B<CMS>::VMUX.at("VCAL_MED")) }
+template<> const std::map<std::reference_wrapper<const Register>, uint16_t> RD53BDACTest<CMS>::muxSett = {
+    { CMS::Reg::DAC_PREAMP_L_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::I_PREAMP_L, (uint8_t)RD53B<CMS>::VMux::IMUX_OUT) },
+    { CMS::Reg::DAC_PREAMP_R_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::I_PREAMP_R, (uint8_t)RD53B<CMS>::VMux::IMUX_OUT) },
+    { CMS::Reg::DAC_PREAMP_TL_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::I_PREAMP_TL, (uint8_t)RD53B<CMS>::VMux::IMUX_OUT) },
+    { CMS::Reg::DAC_PREAMP_TR_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::I_PREAMP_TR, (uint8_t)RD53B<CMS>::VMux::IMUX_OUT) },
+    { CMS::Reg::DAC_PREAMP_T_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::I_PREAMP_T, (uint8_t)RD53B<CMS>::VMux::IMUX_OUT) },
+    { CMS::Reg::DAC_PREAMP_M_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::I_PREAMP_M, (uint8_t)RD53B<CMS>::VMux::IMUX_OUT) },
+    { CMS::Reg::DAC_FC_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::I_FC, (uint8_t)RD53B<CMS>::VMux::IMUX_OUT) },
+    { CMS::Reg::DAC_KRUM_CURR_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::I_KRUMMENAKER, (uint8_t)RD53B<CMS>::VMux::IMUX_OUT) },
+    { CMS::Reg::DAC_REF_KRUM_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::HIGH_Z, (uint8_t)RD53B<CMS>::VMux::VREF_KRUM) },
+    { CMS::Reg::DAC_COMP_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::I_COMPARATOR, (uint8_t)RD53B<CMS>::VMux::IMUX_OUT) },
+    { CMS::Reg::DAC_COMP_TA_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::I_COMPARATOR_STAR, (uint8_t)RD53B<CMS>::VMux::IMUX_OUT) },
+    { CMS::Reg::DAC_GDAC_L_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::HIGH_Z, (uint8_t)RD53B<CMS>::VMux::GDAC_L) },
+    { CMS::Reg::DAC_GDAC_R_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::HIGH_Z, (uint8_t)RD53B<CMS>::VMux::GDAC_R) },
+    { CMS::Reg::DAC_GDAC_M_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::HIGH_Z, (uint8_t)RD53B<CMS>::VMux::GDAC_M) },
+    { CMS::Reg::DAC_LDAC_LIN, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::I_LDAC, (uint8_t)RD53B<CMS>::VMux::IMUX_OUT) },
+    { CMS::Reg::VCAL_HIGH, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::HIGH_Z, (uint8_t)RD53B<CMS>::VMux::VCAL_HIGH) },
+    { CMS::Reg::VCAL_MED, bits::pack<6, 6>((uint8_t)RD53B<CMS>::IMux::HIGH_Z, (uint8_t)RD53B<CMS>::VMux::VCAL_MED) }
 };
 
 template class RD53BTools::RD53BDACTest<ATLAS>;

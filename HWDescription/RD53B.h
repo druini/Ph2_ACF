@@ -54,8 +54,11 @@ namespace RD53BFlavor {
         static constexpr Flavor flavor = Flavor::ATLAS;
         static constexpr size_t nRows = 384;
         static constexpr size_t nCols = 400;
-        static constexpr auto& IMUX = RD53BConstants::ATLAS_IMUX;
-        static constexpr auto& VMUX = RD53BConstants::ATLAS_VMUX;
+        static constexpr auto& IMuxMap = RD53BConstants::AtlasIMuxMap;
+        static constexpr auto& VMuxMap = RD53BConstants::AtlasVMuxMap;
+
+        using IMux = RD53BConstants::AtlasIMux;
+        using VMux = RD53BConstants::AtlasVMux;
 
         using Reg = RD53BConstants::ATLASRegisters;
 
@@ -83,8 +86,11 @@ namespace RD53BFlavor {
         static constexpr Flavor flavor = Flavor::CMS;
         static constexpr size_t nRows = 336;
         static constexpr size_t nCols = 432;
-        static constexpr auto& IMUX = RD53BConstants::CMS_IMUX;
-        static constexpr auto& VMUX = RD53BConstants::CMS_VMUX;
+        static constexpr auto& IMuxMap = RD53BConstants::CmsIMuxMap;
+        static constexpr auto& VMuxMap = RD53BConstants::CmsVMuxMap;
+
+        using IMux = RD53BConstants::CmsIMux;
+        using VMux = RD53BConstants::CmsVMux;
 
         using Reg = RD53BConstants::CMSRegisters;
 
@@ -121,8 +127,13 @@ public:
     static constexpr const auto& vRegs = Reg::vRegs;
 
     static constexpr auto& GlobalPulseRoutes = RD53BConstants::GlobalPulseRoutes;
-    static constexpr auto& IMUX = Flavor::IMUX;
-    static constexpr auto& VMUX = Flavor::VMUX;
+    
+    static constexpr auto& IMuxMap = Flavor::IMuxMap;
+    static constexpr auto& VMuxMap = Flavor::VMuxMap;
+
+    using IMux = typename Flavor::IMux;
+    using VMux = typename Flavor::VMux;
+
     // static const decltype(RD53BConstants::GetGlobalPulseRoutes()) GlobalPulseRoutes;
     // static const decltype(RD53BConstants::GetIMUX()) IMUX;
     // static const decltype(RD53BConstants::GetVMUX()) VMUX;

@@ -6,7 +6,7 @@ namespace Ph2_HwDescription
     namespace RD53BConstants 
     {
 
-        const std::unordered_map<std::string, uint16_t> GlobalPulseRoutes = {
+        const std::unordered_map<std::string, uint8_t> GlobalPulseRoutes = {
             {"ResetChannelSynchronizer", 0},
             {"ResetCommandDecoder", 1},
             {"ResetGlobalConfiguration", 2},
@@ -25,7 +25,7 @@ namespace Ph2_HwDescription
             {"StartEfusesProgrammer", 15}
         };
 
-        const std::unordered_map<std::string, uint16_t> ATLAS_IMUX = {
+        const std::unordered_map<std::string, uint8_t> AtlasIMuxMap = {
             {"IREF_4UA", 0},
             {"CDR_VCO", 1},
             {"CDR_VCOBUFF", 2},
@@ -59,7 +59,7 @@ namespace Ph2_HwDescription
             {"HIGH_Z", 63}
         };
 
-        const std::unordered_map<std::string, uint16_t> ATLAS_VMUX = {
+        const std::unordered_map<std::string, uint8_t> AtlasVMuxMap = {
             {"VREF_ADC", 0},
             {"IMUX_OUT", 1},
             {"NTC", 2},
@@ -92,7 +92,7 @@ namespace Ph2_HwDescription
             {"HIGH_Z", 63}
         };
 
-        const std::unordered_map<std::string, uint16_t> CMS_IMUX = {
+        const std::unordered_map<std::string, uint8_t> CmsIMuxMap = {
             {"IREF_4UA", 0},
             {"CDR_VCO", 1},
             {"CDR_VCOBUFF", 2},
@@ -123,7 +123,7 @@ namespace Ph2_HwDescription
             {"HIGH_Z", 63}
         };
 
-        const std::unordered_map<std::string, uint16_t> CMS_VMUX = {
+        const std::unordered_map<std::string, uint8_t> CmsVMuxMap = {
             {"VREF_ADC", 0},
             {"IMUX_OUT", 1},
             {"NTC", 2},
