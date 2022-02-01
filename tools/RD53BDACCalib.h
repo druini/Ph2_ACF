@@ -87,7 +87,7 @@ class RD53BDACCalib : public RD53BTool<RD53BDACCalib, F> {
                     throw std::logic_error(muxInputs[i] + "is not a valid name for a multiplexer input.");
                 } else { // is a current DAC
                     isCurr[regs[i]] = true;
-                    selec = (it->second << 6) | vmux.at("I_mux");
+                    selec = (it->second << 6) | vmux.at("IMUX_OUT");
                     currDet = true;
                 }
             } else { // is a voltage DAC

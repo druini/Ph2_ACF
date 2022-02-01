@@ -417,7 +417,7 @@ uint32_t RD53BInterface<Flavor>::ReadChipADC(ReadoutChip* pChip, const std::stri
         else
         {
             config |= it->second << 6;
-            config |= RD53B::VMUX.at("I_mux");
+            config |= RD53B::VMUX.at("IMUX_OUT");
         }
     }
     else
