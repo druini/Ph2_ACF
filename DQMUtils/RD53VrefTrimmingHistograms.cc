@@ -9,6 +9,7 @@
 
 #include "RD53VrefTrimmingHistograms.h"
 
+#include <boost/filesystem.hpp>
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
@@ -48,5 +49,18 @@ void VrefTrimmingHistograms::fillVT(const double (&vdddVoltage)[16], const doubl
 	vdda_countPlot->SetPoint(vdda_countPlot->GetN(),(vdda_countPlot->GetN()-1),vdda_idealTrim);
 	vdda_countPlot->Write("",TObject::kOverwrite);
 	
+	
+    static const std::string fileName = "Results/vref_trimming.csv";
+    std::ofstream outFile;
+    if (boost::filesystem::exists(fileName))
+        outFile.open(fileName, std::ios_base::app);
+    else {
+        outFile.open(fileName);
+        outFile << "time, VDDD_trim, VDDA_trim\n";
+    }
+    auto now = time(0);
+    outFile << std::put_time(std::localtime(&now), "%Y-%m-%d %H:%M:%S, ") << vddd_idealTrim << " ," << vdda_idealTrim <<"\n";
+	
     file->Write();
+    file->Close();
 }

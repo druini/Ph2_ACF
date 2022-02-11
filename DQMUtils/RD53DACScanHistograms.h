@@ -20,6 +20,7 @@
 #include "TGraph.h"
 #include <TStyle.h>
 #include <time.h>
+#include "TVector.h"
 
 #define LOGNAME_FORMAT "%Y%m%d_%H%M%S"
 #define LOGNAME_SIZE 50
@@ -27,7 +28,7 @@
 class DACScanHistograms
 {
   public:
-    void fillDAC(const double (&fitStart)[9], const double (&fitEnd)[9], const double (&VMUXvolt)[9][5000], const double (&DACcode)[9][5000], const std::string* writeVar);
+    void fillDAC(const double (&fitStart)[9], const double (&fitEnd)[9], const std::vector<std::vector<double>>& VMUXvolt, const std::vector<std::vector<double>>& DACcode, const std::string* writeVar);
 
   private:
     DetectorDataContainer DetectorData;

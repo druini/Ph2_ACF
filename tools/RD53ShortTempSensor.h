@@ -46,6 +46,11 @@ struct RD53ShortTempSensor : public RD53BTool<RD53ShortTempSensor, Flavor> {
 
         dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
 
+        
+        Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2000(system.fPowerSupplyClient, "KeithleyMultimeter", "Front");
+
+        //dKeithley2000.setupKeithley2000ChannelSense(VOLTAGESENSE, 2.0);
+
         LOG(INFO) << "[RD53ShortTempSensor] exampleParam = " << Base::param("exampleParam"_s) << RESET;
 		
 		
@@ -64,7 +69,7 @@ struct RD53ShortTempSensor : public RD53BTool<RD53ShortTempSensor, Flavor> {
 				// Get high bias voltage
 				for(int sensorDEM=0;sensorDEM<16;sensorDEM+=7){ //Unsure if this actually works
 					sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 0, true, sensorDEM, 0);
-					chipInterface.WriteReg(chip, "MON_SENS_SLDO", sensorConfigData);
+					chipInterface.WriteReg(chip, "MON_SENS_SLDO", sensorConfigData); //Apply high bias
 					valueHigh += dKeithley2410.getVoltage();
 				}
 				valueHigh = valueHigh/3;
@@ -73,15 +78,17 @@ struct RD53ShortTempSensor : public RD53BTool<RD53ShortTempSensor, Flavor> {
 				// Get low bias voltage
 				for(int sensorDEM=0;sensorDEM<16;sensorDEM+=7){
 					sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 1, true, sensorDEM, 1);
-					chipInterface.WriteReg(chip, "MON_SENS_SLDO", sensorConfigData);
+					chipInterface.WriteReg(chip, "MON_SENS_SLDO", sensorConfigData); //Apply low bias
 					valueLow += dKeithley2410.getVoltage();
 				}
 				valueLow = valueLow/3;
 				
-				//temperature[4]=chipInterface.ReadHybridTemperature(chip); //Does not currently work, to be fixed
-				temperature[4]=0; 
 				temperature[sensor] = (e/(kb*log(R)))*(valueLow-valueHigh)/idealityFactor[sensor]-T0C;
 			}
+			//Get NTC temperature
+			//temperature[4]=chipInterface.ReadHybridTemperature(chip); //Does not currently work, to be fixed
+			chipInterface.WriteReg(chip, "VMonitor", 2);
+			temperature[4]=dKeithley2410.getVoltage(); 
         });
         return results;
     }

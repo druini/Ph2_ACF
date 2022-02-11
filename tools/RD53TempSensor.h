@@ -49,9 +49,9 @@ struct RD53TempSensor : public RD53BTool<RD53TempSensor, Flavor> {
 		//double      power[2] = {0.24, 0.72}; // In direct powering for RD53A
 		constexpr float T25C = 298.15; // [Kelvin]
 		constexpr float R25C = 10;     // [kOhm]
-		constexpr float Rdivider = 39.2; // [kOhm]
-		constexpr float Vdivider = 2.5;  // [V]
-		constexpr float beta = 1000;  // [?]
+		//constexpr float Rdivider = 39.2; // [kOhm]
+		//constexpr float Vdivider = 2.5;  // [V]
+		constexpr float beta = 3435;  // [?]
 		
         ChipDataMap<ChipResults> results;
         auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
@@ -87,7 +87,7 @@ struct RD53TempSensor : public RD53BTool<RD53TempSensor, Flavor> {
 						chipInterface.WriteReg(chip, "EnCoreCol_1", 0);
 						chipInterface.WriteReg(chip, "EnCoreCol_2", 0);
 						chipInterface.WriteReg(chip, "EnCoreCol_3", 0);
-						//usleep(30000000);
+						usleep(30000000);
 					} else if(mode == 1){ //Standard power mode
 						chipInterface.WriteReg(chip, "DAC_KRUM_CURR_LIN", 70);
 						chipInterface.WriteReg(chip, "DAC_LDAC_LIN", 110);
@@ -97,19 +97,31 @@ struct RD53TempSensor : public RD53BTool<RD53TempSensor, Flavor> {
 						chipInterface.WriteReg(chip, "EnCoreCol_1", 0b1001001001001001);
 						chipInterface.WriteReg(chip, "EnCoreCol_2", 0b0100100100100100);
 						chipInterface.WriteReg(chip, "EnCoreCol_3", 0b010010);
-						//usleep(30000000);
+						usleep(30000000);
 					}
 					for(int sensor=0;sensor<4;sensor++){
 						chipInterface.WriteReg(chip, "MonitorEnable", 1); //Choose NTC MUX entry
 						chipInterface.WriteReg(chip, "VMonitor", 0b000010);
 						//calibNTCtemp[sensor][mode] = chipInterface.ReadHybridTemperature(chip);
+						
+						
 						fwInterface.ReadHybridTemperature(chip->getHybridId());
+						
+						
+						
+						chipInterface.WriteReg(chip, "MonitorConfig", 2); //Choose MUX entry
 						NTCvoltage = dKeithley2410.getVoltage();
-						float resistance  = NTCvoltage * Rdivider / (Vdivider - NTCvoltage);              // [kOhm]
+						chipInterface.WriteReg(chip, "VMonitor", 0b000001); //Choose MUX entry
+						chipInterface.WriteReg(chip, "IMonitor", 9);
+						float NTCcurrent = dKeithley2410.getVoltage() / 4990;
+						//float resistance  = NTCvoltage * Rdivider / (Vdivider - NTCvoltage);              // [kOhm]
+						float resistance  = NTCvoltage/NTCcurrent / 1000;              // [kOhm]
 						calibNTCtemp[sensor][mode] = 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; // [Celsius]
-						LOG(INFO) << BOLDMAGENTA << "NTC VOLTAGE " << NTCvoltage << RESET;
+						//LOG(INFO) << BOLDMAGENTA << "NTC VOLTAGE " << NTCvoltage << RESET;
+						//LOG(INFO) << BOLDMAGENTA << "NTC CALC " << calibNTCtemp[sensor][mode] + T0C << RESET;
 						LOG(INFO) << BOLDMAGENTA << "NTC TEMPERATURE " << calibNTCtemp[sensor][mode] << RESET;
 						chipInterface.WriteReg(chip, "MonitorConfig", sensor_VMUX[sensor]); //Choose MUX entry
+						//LOG(INFO) << BOLDMAGENTA << "DAC NTC " << chipInterface.ReadReg(chip, "DAC_NTC") << RESET;
 						
 						valueHigh = 0;
 						// Get high bias voltage

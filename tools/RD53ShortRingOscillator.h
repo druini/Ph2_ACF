@@ -32,11 +32,6 @@ struct RD53ShortRingOscillator : public RD53BTool<RD53ShortRingOscillator, Flavo
         ChipDataMap<ChipResults> results;
         auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
 
-        Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2410(system.fPowerSupplyClient, "TestKeithley", "Front");
-
-        dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
-
-
         LOG(INFO) << "[RD53ShortRingOscillator] exampleParam = " << Base::param("exampleParam"_s) << RESET;
 
         for_each_device<Chip>(system, [&] (Chip* chip) {

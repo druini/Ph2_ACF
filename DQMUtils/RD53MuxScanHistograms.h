@@ -22,7 +22,7 @@
 class MuxScanHistograms
 {
   public:
-    void fillMUX( const double (&VMUXvolt)[41], const double (&IMUXvolt)[33], int run_counter = 0 );
+    void fillMUX( const std::vector<double>& VMUXvolt, const std::vector<double>& VMUXvolt_ADC, const std::vector<double>& IMUXvolt, const std::vector<double>& IMUXvolt_ADC, int run_counter = 0 );
 	
   private:
     DetectorDataContainer DetectorData;

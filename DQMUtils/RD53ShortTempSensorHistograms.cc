@@ -9,6 +9,11 @@
 
 #include "RD53ShortTempSensorHistograms.h"
 
+#include <boost/filesystem.hpp>
+#include "../Utils/xtensor/xadapt.hpp"
+#include "../Utils/xtensor/xcsv.hpp"
+
+
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
@@ -18,7 +23,23 @@ void ShortTempSensorHistograms::fillSTS(const double (&temperature)[5], int run_
 	//if ( run_counter == 0 )
 	//	remove( "Results/temperature.root" ); //Remove old file if it's not part of the current run
 	TFile *file = new TFile("Results/temperature.root","UPDATE");
-	const char* tNames[5] = {"TEMPSENS_1","TEMPSENS_2","TEMPSENS_3","TEMPSENS_4","NTC"};
+	static std::vector<const char*> tNames = {"Poly Tempsens top","Poly Tempsens bottom","Tempsens Ana. SLDO","Tempsens Dig. SLDO","NTC"};
+    
+    static const std::string fileName = "Results/temperature.csv";
+    std::ofstream outFile;
+    if (boost::filesystem::exists(fileName))
+        outFile.open(fileName, std::ios_base::app);
+    else {
+        outFile.open(fileName);
+        outFile << "time, ";
+        for (size_t i = 0; i < tNames.size() - 1; ++i)
+            outFile << tNames[i] << ", ";
+        outFile << tNames.back() << '\n';
+    }
+    auto now = time(0);
+    outFile << std::put_time(std::localtime(&now), "%Y-%m-%d_%H:%M:%S, ");
+    xt::dump_csv(outFile, xt::adapt(temperature, {1, 5}));
+
 	for(int sensor=0;sensor<5;sensor++){
 		TGraph* countPlot = NULL;
 		if(file->GetListOfKeys()->Contains(tNames[sensor])){
@@ -32,6 +53,7 @@ void ShortTempSensorHistograms::fillSTS(const double (&temperature)[5], int run_
 		countPlot->Write("",TObject::kOverwrite);
 	}
 	file->Write();
+    file->Close();
 	//for(int sensor=0;sensor<5;sensor++){ //THIS SHOULDN'T BE NECESSARY AND CAN BE REMOVED, KEPT BECAUSE THE ABOVE COULD NOT YET BE TESTED
 	//	TGraph *countPlot = new TGraph (5, time,temperature[sensor]);
 	//	countPlot->SetTitle(tNames[sensor]);

@@ -25,14 +25,16 @@ struct RD53MuxScan : public RD53BTool<RD53MuxScan, Flavor> {
     using Base::Base;
 
     struct ChipResults {
-        double VMUXvolt[41];
-        double IMUXvolt[33];
+        std::vector<double> VMUXvolt;
+        std::vector<double> VMUXvolt_ADC;
+        std::vector<double> IMUXvolt;
+        std::vector<double> IMUXvolt_ADC;
     };
 
     auto run(Ph2_System::SystemController& system) const {
         ChipDataMap<ChipResults> results;
         auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
-
+        
         Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2410(system.fPowerSupplyClient, "TestKeithley", "Front");
 
         dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
@@ -49,13 +51,17 @@ struct RD53MuxScan : public RD53BTool<RD53MuxScan, Flavor> {
 						chipInterface.WriteReg(chip, "MonitorEnable", 1); //Choose MUX entry
 						chipInterface.WriteReg(chip, "VMonitor", 0b000001);
 						chipInterface.WriteReg(chip, "IMonitor", IMUXcode);
-						results[chip].IMUXvolt[IMUXcode] = dKeithley2410.getVoltage();
+						results[chip].IMUXvolt.push_back(dKeithley2410.getVoltage());
+						chipInterface.SendGlobalPulse(chip, {"ADCStartOfConversion"}); //ADC start conversion
+						results[chip].IMUXvolt_ADC.push_back(chipInterface.ReadReg(chip, "MonitoringDataADC"));
 						LOG(INFO) << BOLDBLUE << "IMUX: " << BOLDYELLOW <<  IMUXcode << " " << RESET;
 					}
 				}else{
 					chipInterface.WriteReg(chip, "MonitorEnable", 1); //Choose MUX entry
 					chipInterface.WriteReg(chip, "VMonitor", VMUXcode);
-					results[chip].VMUXvolt[VMUXcode] = dKeithley2410.getVoltage();
+					results[chip].VMUXvolt.push_back(dKeithley2410.getVoltage());
+					chipInterface.SendGlobalPulse(chip, {"ADCStartOfConversion"}); //ADC start conversion
+					results[chip].VMUXvolt_ADC.push_back(chipInterface.ReadReg(chip, "MonitoringDataADC"));
 					LOG(INFO) << BOLDBLUE << "VMUX: " << BOLDYELLOW <<  VMUXcode << " " << RESET;
 				}
 			}
@@ -69,7 +75,9 @@ struct RD53MuxScan : public RD53BTool<RD53MuxScan, Flavor> {
 			MuxScanHistograms* histos = new MuxScanHistograms;
             histos->fillMUX(
                 item.second.VMUXvolt, 
-                item.second.IMUXvolt
+                item.second.VMUXvolt_ADC, 
+                item.second.IMUXvolt,
+                item.second.IMUXvolt_ADC
             );
         }
     }

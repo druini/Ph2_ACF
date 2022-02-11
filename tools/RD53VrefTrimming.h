@@ -48,6 +48,20 @@ struct RD53VrefTrimming : public RD53BTool<RD53VrefTrimming, Flavor> {
                 results[chip].vdddVoltage[vTrim] = dKeithley2410.getVoltage()*2;
 				LOG(INFO) << BOLDMAGENTA << "Voltage: " << results[chip].vdddVoltage[vTrim] << RESET;
             }
+            
+            {
+                size_t i_best = 0;
+                double best = 999;
+                for (int i = 0; i < 16; ++i) {
+                    auto value = std::abs(results[chip].vdddVoltage[i] - 1.2);
+                    if (value < best) {
+                        best = value;
+                        i_best = i;
+                    }
+                }
+                chipInterface.WriteReg(chip, "TRIM_VREFD", i_best);
+             }
+
             for(int vTrim = 0; vTrim < 16; vTrim++){ //VS VDDA
                 //Trim voltages
                 chipInterface.WriteReg(chip, "TRIM_VREFA", vTrim);
@@ -56,7 +70,24 @@ struct RD53VrefTrimming : public RD53BTool<RD53VrefTrimming, Flavor> {
                 results[chip].vddaVoltage[vTrim] = dKeithley2410.getVoltage()*2;
 				LOG(INFO) << BOLDMAGENTA << "Voltage: " << results[chip].vddaVoltage[vTrim] << RESET;
             }
+
+            {
+                size_t i_best = 0;
+                double best = 999;
+                for (int i = 0; i < 16; ++i) {
+                    auto value = std::abs(results[chip].vddaVoltage[i] - 1.2);
+                    if (value < best) {
+                        best = value;
+                        i_best = i;
+                    }
+                }
+                chipInterface.WriteReg(chip, "TRIM_VREFA", i_best);
+            }
+
+            
         });
+
+        
 
         return results;
     }
