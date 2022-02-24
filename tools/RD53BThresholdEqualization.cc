@@ -24,7 +24,7 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Ph2
     for_each_device<Chip>(system, [&] (Chip* chip) {
         auto* rd53b = static_cast<RD53B<Flavor>*>(chip);
         rd53b->pixelConfig.tdac.fill(15);
-        chipInterface.UpdatePixelConfig(rd53b, rd53b->pixelConfig, false, true);
+        chipInterface.UpdatePixelConfig(rd53b, false, true);
     });
 
     ChipDataMap<size_t> VCAL_HIGH;
@@ -110,7 +110,7 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Ph2
                 tdacView = xt::where(!stuck && (occ < 0.5), tdacView + tdacStep, xt::where(tdacView > tdacStep, tdacView - tdacStep, 0u));
                 // std::cout << tdacView << std::endl;
 
-                chipInterface.UpdatePixelConfig(rd53b, rd53b->pixelConfig, false, true); // update tdacs
+                chipInterface.UpdatePixelConfig(rd53b, false, true); // update tdacs
             }
         });
     }
@@ -125,7 +125,7 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Ph2
         auto tdacView = xt::view(rd53b->pixelConfig.tdac, xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1]));
         tdacView = bestTDAC[chip];
         // std::cout << rd53b->pixelConfig.tdac << std::endl;
-        chipInterface.UpdatePixelConfig(rd53b, rd53b->pixelConfig, false, true);
+        chipInterface.UpdatePixelConfig(rd53b, false, true);
     }); 
 
 

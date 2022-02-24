@@ -207,7 +207,7 @@ protected:
         file = new TFile(getResultPath(".root").c_str(), "NEW");
     }
 
-    void mkdir(const RD53BUtils::ChipLocation& chip) const {
+    void mkdir(const ChipLocation& chip) const {
         if (file) {
             std::stringstream ss;
             ss << "Chip " << chip;
@@ -404,7 +404,7 @@ template <class Tool>
 using tool_result_t = typename tool_result<Tool>::type;
 
 template <class T>
-using ChipDataMap = std::map<RD53BUtils::ChipLocation, T>;
+using ChipDataMap = std::map<ChipLocation, T>;
 
 
 inline void ReverseYAxis(TH1 *h)

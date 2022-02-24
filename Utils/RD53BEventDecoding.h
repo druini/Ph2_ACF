@@ -41,6 +41,9 @@ using BoardEventsMap = std::map<std::pair<uint8_t, uint8_t>, std::vector<RD53BEv
 template <Ph2_HwDescription::RD53BFlavor::Flavor Flavor>
 BoardEventsMap decode_events(const std::vector<uint32_t>& data);
 
+template <Ph2_HwDescription::RD53BFlavor::Flavor Flavor>
+void decode_events(const std::vector<uint32_t>& data, BoardEventsMap& eventsMap);
+
 }
 
 #endif

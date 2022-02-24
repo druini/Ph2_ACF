@@ -286,9 +286,19 @@ struct FWEventData : public
 // >
 {};
 
+
 template <Ph2_HwDescription::RD53BFlavor::Flavor Flavor>
 BoardEventsMap decode_events(const std::vector<uint32_t>& data) {
     BoardEventsMap eventsMap;
+    decode_events<Flavor>(data, eventsMap);
+    return eventsMap;
+}
+
+template BoardEventsMap decode_events<Ph2_HwDescription::RD53BFlavor::Flavor::ATLAS>(const std::vector<uint32_t>&);
+template BoardEventsMap decode_events<Ph2_HwDescription::RD53BFlavor::Flavor::CMS>(const std::vector<uint32_t>&);
+
+template <Ph2_HwDescription::RD53BFlavor::Flavor Flavor>
+void decode_events(const std::vector<uint32_t>& data, BoardEventsMap& eventsMap) {
     auto bits = bit_view(data);
 
     auto result = FWEventData<Config{Flavor, true, true, false}>::parse(bits);
@@ -312,11 +322,9 @@ BoardEventsMap decode_events(const std::vector<uint32_t>& data) {
             }
         }
     }
-
-    return eventsMap;
 }
 
-template BoardEventsMap decode_events<Ph2_HwDescription::RD53BFlavor::Flavor::ATLAS>(const std::vector<uint32_t>&);
-template BoardEventsMap decode_events<Ph2_HwDescription::RD53BFlavor::Flavor::CMS>(const std::vector<uint32_t>&);
+template void decode_events<Ph2_HwDescription::RD53BFlavor::Flavor::ATLAS>(const std::vector<uint32_t>&, BoardEventsMap&);
+template void decode_events<Ph2_HwDescription::RD53BFlavor::Flavor::CMS>(const std::vector<uint32_t>&, BoardEventsMap&);
 
 }

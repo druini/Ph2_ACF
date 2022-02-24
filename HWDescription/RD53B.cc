@@ -99,9 +99,9 @@ void RD53B<Flavor>::loadfRegMap(const std::string& fileName)
             pixelConfigFields().for_each([&] (const auto& fieldName, auto ptr) {
                 auto it = pixelsConfig.find(fieldName.value);
                 if (it != pixelsConfig.end()) {
-                    // if (it->second.is_integer())
-                    //     (pixelConfig.*ptr).fill(it->second.as_integer());
-                    // else {
+                    if (it->second.is_integer())
+                        (pixelConfig.*ptr).fill(it->second.as_integer());
+                    else {
                         std::string csvFileName = it->second.as_string();
                         // pixelConfigFileNames[fieldName.value] = csvFileName;
                         if (boost::filesystem::exists(csvFileName)) {
@@ -112,7 +112,7 @@ void RD53B<Flavor>::loadfRegMap(const std::string& fileName)
                             else
                                 pixelConfig.*ptr = data;
                         }
-                    // }
+                    }
                 }
             });
         }
@@ -139,14 +139,21 @@ void RD53B<Flavor>::saveRegMap(const std::string& fName2Add)
         pixelConfigFields().for_each([&] (const auto& fieldName, auto ptr) {
             // LOG(INFO) << "save pixel config: " << fieldName.value;
             // auto it = pixelConfigFileNames.find(fieldName.value);
+            auto data = pixelConfig.*ptr;
             if (config["Pixels"].contains(fieldName.value)) {
-                std::string csvFileName = config["Pixels"][fieldName.value].as_string();
-                std::ofstream out_file(csvFileName);
-                if (xt::all(xt::equal(pixelConfig.*ptr, (pixelConfig.*ptr).flat(0))))
-                    out_file << (int)(pixelConfig.*ptr).flat(0);
-                else
+                if (xt::all(xt::equal(pixelConfig.*ptr, (pixelConfig.*ptr).flat(0)))) {
+                    config["Pixels"][fieldName.value] = (int)(pixelConfig.*ptr).flat(0);
+                }
+                else {
+                    std::ostringstream csvFileNameStream;
+                    if (config["Pixels"][fieldName.value].is_string())
+                        csvFileNameStream.str(config["Pixels"][fieldName.value].as_string());
+                    else
+                        csvFileNameStream << fieldName.value << ".csv";
+                    std::ofstream out_file(csvFileNameStream.str());
                     xt::dump_csv(out_file, xt::cast<int>(pixelConfig.*ptr));
-                config["Pixels"][fieldName.value] = csvFileName;
+                    config["Pixels"][fieldName.value] = csvFileNameStream.str();
+                }
                 // pixels_table.insert({fieldName.value, it->second});
             }
             // else {

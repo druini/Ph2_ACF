@@ -11,13 +11,6 @@ namespace RD53BTools {
 template <class>
 struct RD53BNoiseScan; // forward declaration
 
-using MaskStep = decltype(make_named_tuple(
-    std::make_pair("dim"_s, size_t{}),
-    std::make_pair("size"_s, size_t{}),
-    std::make_pair("parallel"_s, bool{}),
-    std::make_pair("shift"_s, std::vector<size_t>{})
-));
-
 template <class Flavor>
 const auto ToolParameters<RD53BNoiseScan<Flavor>> = make_named_tuple(
     std::make_pair("nTriggers"_s, 10ul),
@@ -26,8 +19,12 @@ const auto ToolParameters<RD53BNoiseScan<Flavor>> = make_named_tuple(
     std::make_pair("triggerLatency"_s, 133ul),
     std::make_pair("readoutPeriod"_s, 0ul),
     std::make_pair("offset"_s, std::vector<size_t>({0, 0})),
-    std::make_pair("size"_s, std::vector<size_t>({0, 0}))
+    std::make_pair("size"_s, std::vector<size_t>({0, 0})),
+    std::make_pair("occupancyThreshold"_s, 10e-6),
+    std::make_pair("maskNoisyPixels"_s, false)
 );
+
+
 
 template <class Flavor>
 struct RD53BNoiseScan : public RD53BTool<RD53BNoiseScan, Flavor> {

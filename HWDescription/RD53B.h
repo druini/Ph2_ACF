@@ -109,6 +109,25 @@ namespace RD53BFlavor {
 template <class Flavor, class T>
 using pixel_matrix_t = xt::xtensor_fixed<T, xt::xshape<Flavor::nRows, Flavor::nCols>>;
 
+struct ChipLocation {
+    ChipLocation(Chip* pChip) : board_id(pChip->getBeBoardId()), hybrid_id(pChip->getHybridId()), chip_id(pChip->getId()) {}
+
+    uint16_t board_id;
+    uint16_t hybrid_id;
+    uint16_t chip_id;
+
+    size_t hash() const { return (board_id << 16) | (hybrid_id << 8) | chip_id; }
+
+    friend bool operator<(const ChipLocation& l, const ChipLocation& r ) {
+        return l.hash() < r.hash();
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const ChipLocation& loc) {
+        return (os << "{ board: " << loc.board_id << ", hybrid: " << loc.hybrid_id << ", chip: " << loc.chip_id << " }");
+    }
+};
+
+
 template <class Flavor>
 class RD53B : public RD53Base
 {

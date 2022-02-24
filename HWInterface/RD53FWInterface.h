@@ -19,6 +19,8 @@
 #include "D19cFpgaConfig.h"
 #include "RD53lpGBTInterface.h"
 
+#include "Utils/RD53BEventDecoding.h"
+
 #include <uhal/uhal.hpp>
 
 // #######################
@@ -79,6 +81,15 @@ class RD53FWInterface : public BeBoardFWInterface
                                     const bool                        doReset               = false);
     void     ResetBoard();
     uint32_t ReadArbitraryRegister(const std::string& regName);
+
+
+    using ChipEventsMap = std::map<Ph2_HwDescription::ChipLocation, std::vector<RD53BEventDecoding::RD53BEvent>>;
+
+    template <class Flavor>
+    ChipEventsMap GetEvents(Ph2_HwDescription::BeBoard* pBoard);
+    
+    template <class Flavor>
+    void GetEvents(Ph2_HwDescription::BeBoard* board, ChipEventsMap& events);
 
     // ####################################
     // # Check AURORA lock on data stream #
