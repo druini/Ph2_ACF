@@ -721,7 +721,7 @@ void RD53FWInterface::GetEvents(BeBoard* board, ChipEventsMap& events) {
     auto nEvents = localCfgFastCmd.n_triggers * (localCfgFastCmd.trigger_duration + 1);
     ConfigureFastCommands();
 
-    TimedLoop("Getting events", std::chrono::minutes(30), [&] () {
+    TimedLoop("Getting events", std::chrono::seconds(30), [&] () {
         try {
             std::vector<uint32_t> data;
             size_t wordsToRead;
