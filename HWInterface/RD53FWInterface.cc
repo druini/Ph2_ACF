@@ -744,7 +744,7 @@ void RD53FWInterface::GetEvents(BeBoard* board, ChipEventsMap& events) {
 
             Stop();
 
-            auto eventsMap = RD53BEventDecoding::decode_events<Flavor::flavor>(data);
+            auto eventsMap = RD53BEventDecoding::decode_events<Flavor>(data);
             
             bool events_ok = true;
             RD53BUtils::for_each_device<Chip>(board, [&] (Chip* chip) {

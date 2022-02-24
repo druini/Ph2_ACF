@@ -6,7 +6,6 @@
 namespace RD53BEventDecoding {
 
 struct Config {
-    Ph2_HwDescription::RD53BFlavor::Flavor flavor;
     bool compressed_hitmap;
     bool enable_tot;
     bool has_chip_id;
@@ -38,10 +37,10 @@ struct RD53BEvent {
 
 using BoardEventsMap = std::map<std::pair<uint8_t, uint8_t>, std::vector<RD53BEvent>>;
 
-template <Ph2_HwDescription::RD53BFlavor::Flavor Flavor>
+template <class Flavor>
 BoardEventsMap decode_events(const std::vector<uint32_t>& data);
 
-template <Ph2_HwDescription::RD53BFlavor::Flavor Flavor>
+template <class Flavor>
 void decode_events(const std::vector<uint32_t>& data, BoardEventsMap& eventsMap);
 
 }
