@@ -46,7 +46,7 @@ void TimedLoop(const char* description, D timeout, B&& body) {
             return;
     }
     std::ostringstream ss;
-    ss << "Timed out (" << std::chrono::milliseconds(timeout).count() << " ms) while:" << description;
+    ss << "Timed out (" << std::chrono::milliseconds(timeout).count() << " ms) while: " << description;
     throw TimeoutException(ss.str());
 }
 
@@ -770,6 +770,7 @@ void RD53FWInterface::GetEvents(BeBoard* board, ChipEventsMap& events) {
         }
         catch (std::exception& e) {
             LOG(ERROR) << BOLDRED << e.what() << RESET;
+            return true;
         }
         return false;
     });
