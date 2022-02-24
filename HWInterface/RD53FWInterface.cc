@@ -721,7 +721,7 @@ void RD53FWInterface::GetEvents(BeBoard* board, ChipEventsMap& events) {
     auto nEvents = localCfgFastCmd.n_triggers * (localCfgFastCmd.trigger_duration + 1);
     ConfigureFastCommands();
 
-    TimedLoop("Getting events", std::chrono::minutes(2), [&] () {
+    TimedLoop("Getting events", std::chrono::minutes(30), [&] () {
         try {
             std::vector<uint32_t> data;
             size_t wordsToRead;
@@ -729,12 +729,12 @@ void RD53FWInterface::GetEvents(BeBoard* board, ChipEventsMap& events) {
 
             Start();
 
-            TimedLoop("Waiting for data to become available", std::chrono::seconds(10), [&] () { 
+            TimedLoop("Waiting for data to become available", std::chrono::seconds(5), [&] () { 
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
                 return (wordsToRead = ReadReg("user.stat_regs.words_to_read")) == 0;
             });
 
-            TimedLoop("Reading data and waiting for triggers to complete", std::chrono::seconds(30), [&] () { 
+            TimedLoop("Reading data and waiting for triggers to complete", std::chrono::seconds(5), [&] () { 
                 auto chunk = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", wordsToRead, wordsRead);
                 data.insert(data.end(), chunk.begin(), chunk.end());
                 wordsRead += wordsToRead;
