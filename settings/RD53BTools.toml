@@ -58,7 +58,7 @@ maskGen = [
 
 [ThresholdScan]
 type = "RD53BThresholdScan"
-args = { injectionTool = "ThresholdScanInjection", vcalMed = 300, vcalHighRange = [600, 2100], vcalHighStep = 50 }
+args = { injectionTool = "ThresholdScanInjection", vcalMed = 300, vcalRange = [300, 1800], vcalStep = 50 }
 
 [ThresholdEqualization]
 type = "RD53BThresholdEqualization"

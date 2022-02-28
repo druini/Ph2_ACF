@@ -40,7 +40,7 @@ template <class Flavor>
 typename RD53BThresholdScan<Flavor>::OccupancyMap RD53BThresholdScan<Flavor>::run(Ph2_System::SystemController& system, Task progress) {
     auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
 
-    size_t nSteps = (param("vcalHighRange"_s)[1] - param("vcalHighRange"_s)[0]) / param("vcalHighStep"_s);
+    size_t nSteps = (param("vcalRange"_s)[1] - param("vcalRange"_s)[0]) / param("vcalStep"_s);
     const auto& offset = param("injectionTool"_s).param("offset"_s);
     const auto& size = param("injectionTool"_s).param("size"_s);
 
@@ -57,7 +57,7 @@ typename RD53BThresholdScan<Flavor>::OccupancyMap RD53BThresholdScan<Flavor>::ru
 
     for (size_t frame = 0; frame < nFrames; ++frame) {
         param("injectionTool"_s).setupMaskFrame(system, frame);
-        for (size_t i = 0, vcalHigh = param("vcalHighRange"_s)[0]; i < nSteps; ++i, vcalHigh += param("vcalHighStep"_s)) {
+        for (size_t i = 0, vcalHigh = param("vcalMed"_s) + param("vcalRange"_s)[0]; i < nSteps; ++i, vcalHigh += param("vcalStep"_s)) {
             for_each_device<Hybrid>(system, [&] (Hybrid* hybrid) {
                 chipInterface.WriteReg(hybrid, Flavor::Reg::VCAL_HIGH, vcalHigh);
             });
@@ -85,14 +85,14 @@ std::array<ChipDataMap<xt::xtensor<double, 2>>, 2> RD53BThresholdScan<Flavor>::a
     ChipDataMap<xt::xtensor<double, 2>> thresholdMap;
     ChipDataMap<xt::xtensor<double, 2>> noiseMap;
 
-    auto vcalBins = xt::arange(param("vcalHighRange"_s)[0], param("vcalHighRange"_s)[1], param("vcalHighStep"_s)) - param("vcalMed"_s);
+    auto vcalBins = xt::arange(param("vcalRange"_s)[0], param("vcalRange"_s)[1], param("vcalStep"_s));
 
     for (const auto& item : occMap) {
         const auto& occ = item.second;
 
         auto diff = xt::diff(occ, 1, 0);
 
-        auto vcalDiffBins = xt::view(vcalBins + param("vcalHighStep"_s) / 2.0, xt::range(0, -1));
+        auto vcalDiffBins = xt::view(vcalBins + param("vcalStep"_s) / 2.0, xt::range(0, -1));
 
         thresholdMap.insert({item.first, xt::zeros<double>({occ.shape()[1], occ.shape()[2]})});
         noiseMap.insert({item.first, xt::zeros<double>({occ.shape()[1], occ.shape()[2]})});
@@ -124,7 +124,7 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) {
     const size_t nPixels = param("injectionTool"_s).param("size"_s)[0] * param("injectionTool"_s).param("size"_s)[1];
 
     auto thresholdAndNoise = analyze(occMap);
-    auto vcalBins = xt::arange(param("vcalHighRange"_s)[0], param("vcalHighRange"_s)[1], param("vcalHighStep"_s)) - param("vcalMed"_s);
+    auto vcalBins = xt::arange(param("vcalRange"_s)[0], param("vcalRange"_s)[1], param("vcalStep"_s));
 
     for (const auto& item : occMap) {
         Base::mkdir(item.first);
@@ -154,7 +154,7 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) {
         LOG(INFO) << "Mean noise: " << xt::mean(xt::filter(noise, valid))();
         LOG(INFO) << "Noise stddev: " << xt::stddev(xt::filter(noise, valid))();
 
-        auto vcalDiffBins = xt::view(vcalBins + param("vcalHighStep"_s) / 2.0, xt::range(0, -1));
+        auto vcalDiffBins = xt::view(vcalBins + param("vcalStep"_s) / 2.0, xt::range(0, -1));
 
         Base::drawMap(threshold, "Threshold Map", "Threshold", offset[0], offset[1]);
 

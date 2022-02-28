@@ -227,16 +227,24 @@ protected:
         double nSteps,
         double minValue, 
         double maxValue,
-        const std::string& xLabel = ""
+        const std::string& xLabel = "",
+        bool useFrequency = true
     ) {
         std::stringstream ss;
         ss << "plot" << nPlots;
         TCanvas* c = new TCanvas(ss.str().c_str(), title.c_str(), 600, 600);
         TH1F* h = new TH1F(ss.str().c_str(), title.c_str(), nSteps, minValue, maxValue);
         h->SetXTitle(xLabel.c_str());
-        h->SetYTitle("Frequency");
-        for (const auto& value : data) 
-            h->Fill(value, 1. / data.size());
+        if (useFrequency) {
+            h->SetYTitle("Frequency");
+            for (const auto& value : data) 
+                h->Fill(value, 1. / data.size());
+        }
+        else {
+            h->SetYTitle("Count");
+            for (const auto& value : data) 
+                h->Fill(value, 1);
+        }
         for (int i = 0; i < h->GetXaxis()->GetNbins(); ++i) 
             h->SetBinError(i, 0);
         h->SetFillColor(kBlue);

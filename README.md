@@ -256,8 +256,8 @@ Performs injections using the given injection tool for different values of the V
 |---                | ---
 | `injectionTool` | A tool of type RD53BInjectionTool to be used for injections. |
 | `vcalMed` | The value of VCAL_MED to use. |
-| `vcalHighRange` | The lowest and highest VCAL_HIGH values to use. |
-| `vcalHighStep` | The VCAL_HIGH step to use. |
+| `vcalRange` | The lowest and highest VCAL (= VCAL_HIGH - VCAL_MED) values to use. |
+| `vcalStep` | The VCAL step to use. |
 
 
 ### Public member functions

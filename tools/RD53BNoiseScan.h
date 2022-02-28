@@ -38,7 +38,7 @@ struct RD53BNoiseScan : public RD53BTool<RD53BNoiseScan, Flavor> {
 
     ChipEventsMap run(Ph2_System::SystemController& system, Task progress) const;
 
-    ChipDataMap<pixel_matrix_t<Flavor, double>> occupancy(const ChipEventsMap& data) const;
+    ChipDataMap<pixel_matrix_t<Flavor, size_t>> hitCount(const ChipEventsMap& data) const;
 
     ChipDataMap<std::array<double, 16>> totDistribution(const ChipEventsMap& data) const;
 

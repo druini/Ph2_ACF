@@ -26,7 +26,9 @@
 #include "../tools/RD53BADCCalib.h"
 #include "../tools/RD53BDACCalib.h"
 #include "../tools/RD53BDACTest.h"
+#include "../tools/RD53BGlobalThresholdTuning.h"
 
+#include <signal.h>
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
@@ -59,11 +61,20 @@ using Tools = ToolManager<decltype(make_named_tuple(
     TOOL(RD53RingOscillatorWLT),
     TOOL(RD53BADCCalib),
     TOOL(RD53BDACCalib),
-    TOOL(RD53BDACTest)
+    TOOL(RD53BDACTest),
+    TOOL(RD53BGlobalThresholdTuning)
 ))>;
 
-
 INITIALIZE_EASYLOGGINGPP
+
+
+void resetAndExit(int sig) {
+    indicators::show_console_cursor(true); // show cursor
+    std::fputs("\033[0m", stdout); // reset colors
+    std::fflush(stdout); // flush stdout
+    signal(sig, SIG_DFL); // set default signal handler
+    raise(sig); // re-raise signal
+}
 
 template <class Flavor>
 void run(SystemController& system, CommandLineProcessing::ArgvParser& cmd) {
@@ -136,6 +147,9 @@ int main(int argc, char** argv) {
     
     system.InitializeHw(configFile);
     system.InitializeSettings(configFile);
+
+    signal(SIGINT, resetAndExit);
+    signal(SIGTERM, resetAndExit);
 
     if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
         run<RD53BFlavor::ATLAS>(system, cmd);

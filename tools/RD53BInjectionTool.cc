@@ -137,8 +137,8 @@ void RD53BInjectionTool<Flavor>::inject(SystemController& system, ChipEventsMap&
 
 template <class Flavor>
 ChipDataMap<pixel_matrix_t<Flavor, double>> RD53BInjectionTool<Flavor>::occupancy(const ChipEventsMap& data) const {
-    using OccMatrix = pixel_matrix_t<Flavor, double>;
-    ChipDataMap<OccMatrix> occ;
+    // using OccMatrix = pixel_matrix_t<Flavor, double>;
+    ChipDataMap<pixel_matrix_t<Flavor, double>> occ;
     for (const auto& item : data) {
         occ[item.first].fill(0);
         for (const auto& event : item.second)

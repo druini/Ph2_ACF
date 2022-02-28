@@ -93,10 +93,10 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Ph2_S
     }
 
     if (param("maskNoisyPixels"_s)) {
-        auto occMap = occupancy(events);
+        const auto hitCountMap = hitCount(events);
         for_each_device<Chip>(system, [&] (Chip* chip) {
             auto rd53b = static_cast<RD53B<Flavor>*>(chip);
-            auto noisy = occMap[chip] > param("occupancyThreshold"_s);
+            const auto noisy = hitCountMap[chip] / double(param("nTriggers"_s)) > param("occupancyThreshold"_s);
             rd53b->pixelConfig.enable = !noisy;
             chipInterface.UpdatePixelConfig(rd53b, true, false);
 
@@ -107,19 +107,31 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Ph2_S
     return events;
 }
 
-
 template <class Flavor>
-ChipDataMap<pixel_matrix_t<Flavor, double>> RD53BNoiseScan<Flavor>::occupancy(const ChipEventsMap& data) const {
-    using OccMatrix = pixel_matrix_t<Flavor, double>;
-    ChipDataMap<OccMatrix> occ;
+ChipDataMap<pixel_matrix_t<Flavor, size_t>> RD53BNoiseScan<Flavor>::hitCount(const ChipEventsMap& data) const {
+    using HitCountMatrix = pixel_matrix_t<Flavor, size_t>;
+    ChipDataMap<HitCountMatrix> hitCountMap;
     for (const auto& item : data) {
-        occ[item.first].fill(0);
+        hitCountMap[item.first].fill(0);
         for (const auto& event : item.second)
             for (const auto& hit : event.hits)
-                occ[item.first](hit.row, hit.col) += 1.0 / param("nTriggers"_s);
+                ++hitCountMap[item.first](hit.row, hit.col);
     }
-    return occ;
+    return hitCountMap;
 }
+
+// template <class Flavor>
+// ChipDataMap<pixel_matrix_t<Flavor, double>> RD53BNoiseScan<Flavor>::occupancy(const ChipEventsMap& data) const {
+//     using OccMatrix = pixel_matrix_t<Flavor, double>;
+//     ChipDataMap<OccMatrix> occ;
+//     for (const auto& item : data) {
+//         occ[item.first].fill(0);
+//         for (const auto& event : item.second)
+//             for (const auto& hit : event.hits)
+//                 occ[item.first](hit.row, hit.col) += 1.0 / param("nTriggers"_s);
+//     }
+//     return occ;
+// }
 
 template <class Flavor>
 ChipDataMap<std::array<double, 16>> RD53BNoiseScan<Flavor>::totDistribution(const ChipEventsMap& data) const {
@@ -143,18 +155,23 @@ template <class Flavor>
 void RD53BNoiseScan<Flavor>::draw(const ChipEventsMap& result) {
     Base::createRootFile();
     
-    auto occMap = occupancy(result);
+    auto hitCountMap = hitCount(result);
     auto totMap = totDistribution(result);
 
     for (const auto& item : result) {
         Base::mkdir(item.first);
 
-        const auto& occ = occMap[item.first];
+        const auto& hitCount = hitCountMap[item.first];
         const auto& tot = totMap[item.first];
+        const auto occ = hitCount / double(param("nTriggers"_s));
 
         Base::drawHist(tot, "ToT Distribution", 16, 0, 16, "ToT");
 
         Base::drawMap(occ, "Occupancy Map", "Occupancy");
+
+        size_t maxHits = xt::amax(hitCount)();
+
+        Base::drawHist(hitCount, "Hit Count Distribution", maxHits, 0, maxHits, "Hit Count", false);
 
         // Calculate & print mean occupancy
         auto row_range = xt::range(param("offset"_s)[0], param("offset"_s)[0] + param("size"_s)[0]);
