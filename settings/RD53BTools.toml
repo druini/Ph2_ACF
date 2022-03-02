@@ -76,7 +76,7 @@ args = {}
 
 [IVScan]
 type = "RD53IVScan"
-args = { configFile = "/home/cms/works/power_supply/config/iv_it_croc_sldo.xml", type = "steps", powerSupplyName = "TTi_MX", multimeterName = "KeithleyMultimeter", powerSupplyVoltageProtection = 3.0, scanPointCurrentRange = [0.5, 2.0], scanPointCurrentStep = 0.1}
+args = { configFile = "/home/cms/works/power_supply/config/iv_it_croc_sldo.xml", type = "steps", powerSupplyName = "TTi_MX", channelID_Digital = "first", channelID_Analog = "second", multimeterName = "KeithleyMultimeter", powerSupplyVoltageProtection = 2.7, scanPointCurrentRange = [0.5, 2.0], scanPointCurrentStep = 0.1, finalCurrentPoint = 1.0}
 
 [ADCScan]
 type = "RD53ADCScan"
