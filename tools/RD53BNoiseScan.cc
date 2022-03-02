@@ -76,24 +76,15 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Ph2_S
         for_each_device<BeBoard>(system, [&] (BeBoard* board) {
             auto& fwInterface = Base::getFWInterface(system, board);
             fwInterface.getLocalCfgFastCmd()->n_triggers = nTriggers;
-            // auto fastCmdConfig = fwInterface.getLocalCfgFastCmd();
-            // fastCmdConfig->n_triggers = nTriggers;
-            // fwInterface.ConfigureFastCommands(fastCmdConfig);
 
             fwInterface.template GetEvents<Flavor>(board, events);
-
-            // for_each_device<Chip>(board, [&] (Chip* chip) {
-            //     const auto& chip_events = eventsMap[{chip->getHybridId(), static_cast<RD53Base*>(chip)->getChipLane()}];
-            //     events[chip].insert(std::make_move_iterator(chip_events.begin()), std::make_move_iterator(chip_events.end()));
-            // });
-
         });
         
         progress.update(triggersSent / param("nTriggers"_s));
     }
 
     if (param("maskNoisyPixels"_s)) {
-        const auto hitCountMap = hitCount(events);
+        auto hitCountMap = hitCount(events);
         for_each_device<Chip>(system, [&] (Chip* chip) {
             auto rd53b = static_cast<RD53B<Flavor>*>(chip);
             const auto noisy = hitCountMap[chip] / double(param("nTriggers"_s)) > param("occupancyThreshold"_s);
@@ -119,19 +110,6 @@ ChipDataMap<pixel_matrix_t<Flavor, size_t>> RD53BNoiseScan<Flavor>::hitCount(con
     }
     return hitCountMap;
 }
-
-// template <class Flavor>
-// ChipDataMap<pixel_matrix_t<Flavor, double>> RD53BNoiseScan<Flavor>::occupancy(const ChipEventsMap& data) const {
-//     using OccMatrix = pixel_matrix_t<Flavor, double>;
-//     ChipDataMap<OccMatrix> occ;
-//     for (const auto& item : data) {
-//         occ[item.first].fill(0);
-//         for (const auto& event : item.second)
-//             for (const auto& hit : event.hits)
-//                 occ[item.first](hit.row, hit.col) += 1.0 / param("nTriggers"_s);
-//     }
-//     return occ;
-// }
 
 template <class Flavor>
 ChipDataMap<std::array<double, 16>> RD53BNoiseScan<Flavor>::totDistribution(const ChipEventsMap& data) const {
