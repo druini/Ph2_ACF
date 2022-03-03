@@ -25,8 +25,8 @@ struct RD53BGlobalThresholdTuning : public RD53BTool<RD53BGlobalThresholdTuning,
 
     using result_type = ChipDataMap<std::array<size_t, 256>>;
 
-    ChipDataMap<size_t> run(Ph2_System::SystemController& system, Task progress) const {
-        auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
+    ChipDataMap<size_t> run(Task progress) const {
+        auto& chipInterface = Base::chipInterface();
 
         auto& injectionTool = param("injectionTool"_s);
         // auto& offset = injectionTool.param("offset"_s);
@@ -41,7 +41,7 @@ struct RD53BGlobalThresholdTuning : public RD53BTool<RD53BGlobalThresholdTuning,
         size_t step = std::ceil(size / 4.0);
         size_t nSteps = std::ceil(std::log2(size));
 
-        for_each_device<Chip>(system, [&] (Chip* chip) {
+        Base::for_each_chip([&] (Chip* chip) {
             chipInterface.WriteReg(chip, Flavor::Reg::VCAL_MED, param("vcalMed"_s));
             chipInterface.WriteReg(chip, Flavor::Reg::VCAL_HIGH, param("vcalMed"_s) + param("targetThreshold"_s));
             GDAC[chip] =  gdacRange[0] + size / 2;
@@ -61,19 +61,19 @@ struct RD53BGlobalThresholdTuning : public RD53BTool<RD53BGlobalThresholdTuning,
 
         for (size_t i = 0; i < nSteps; ++i) {
 
-            for_each_device<Chip>(system, [&] (Chip* chip) {
+            Base::for_each_chip([&] (Chip* chip) {
                 chipInterface.WriteReg(chip, Flavor::Reg::DAC_GDAC_L_LIN, GDAC[chip]);
                 chipInterface.WriteReg(chip, Flavor::Reg::DAC_GDAC_R_LIN, GDAC[chip]);
                 chipInterface.WriteReg(chip, Flavor::Reg::DAC_GDAC_M_LIN, GDAC[chip]);
                 chipInterface.WriteReg(chip, Flavor::Reg::VCAL_HIGH, 0xFFFF);
             });
 
-            auto eventsHighCharge = injectionTool.run(system, progress.subTask({i / double(nSteps), (i + .5) / double(nSteps)}));
+            auto eventsHighCharge = injectionTool.run(progress.subTask({i / double(nSteps), (i + .5) / double(nSteps)}));
             auto occMapHighCharge = injectionTool.occupancy(eventsHighCharge);
 
             ChipDataMap<bool> isChipInValidState;
 
-            for_each_device<Chip>(system, [&] (Chip* chip) {
+            Base::for_each_chip([&] (Chip* chip) {
                 size_t nStuck = xt::count_nonzero(xt::filter(occMapHighCharge[chip] < .9, mask))();
                 LOG(INFO) << RESET << "nStuck: " << nStuck;
                 if (nStuck > param("maxStuckPixelRatio"_s) * injectionTool.param("size"_s)[0] * injectionTool.param("size"_s)[1]) {
@@ -87,10 +87,10 @@ struct RD53BGlobalThresholdTuning : public RD53BTool<RD53BGlobalThresholdTuning,
             });
 
             if (std::any_of(isChipInValidState.begin(), isChipInValidState.end(), [] (const auto& item) { return item.second; })) {
-                auto events = injectionTool.run(system, progress.subTask({(i + .5) / double(nSteps), (i + 1) / double(nSteps)}));
+                auto events = injectionTool.run(progress.subTask({(i + .5) / double(nSteps), (i + 1) / double(nSteps)}));
                 auto occMap = injectionTool.occupancy(events);
 
-                for_each_device<Chip>(system, [&] (Chip* chip) {
+                Base::for_each_chip([&] (Chip* chip) {
                     double mean_occ = xt::mean(xt::filter(occMap[chip], mask))(); // xt::mean(occMap[chip])();
                     LOG(INFO) << RESET << "gdac: " << GDAC[chip] << ", step: " << step  << ", occ: " << mean_occ << ", valid: " << isChipInValidState[chip];
                     if (isChipInValidState[chip]) {
@@ -111,7 +111,7 @@ struct RD53BGlobalThresholdTuning : public RD53BTool<RD53BGlobalThresholdTuning,
         }
 
 
-        for_each_device<Chip>(system, [&] (Chip* chip) {
+        Base::for_each_chip([&] (Chip* chip) {
             chipInterface.WriteReg(chip, Flavor::Reg::DAC_GDAC_L_LIN, bestGDAC[chip]);
             chipInterface.WriteReg(chip, Flavor::Reg::DAC_GDAC_R_LIN, bestGDAC[chip]);
             chipInterface.WriteReg(chip, Flavor::Reg::DAC_GDAC_M_LIN, bestGDAC[chip]);

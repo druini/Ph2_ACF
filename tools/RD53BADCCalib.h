@@ -67,18 +67,18 @@ public:
         if(param("powerSupplySamples"_s) > 1) psMsg += ",Stats,Samples:" + std::to_string(param("powerSupplySamples"_s));
     }
 
-    Results run(Ph2_System::SystemController& sysCtrl) {
+    Results run() {
         Results res;
 
         /* additional setup in case a Keithley SMU is being used */
-        sysCtrl.fPowerSupplyClient->sendAndReceivePacket(
+        Base::system().fPowerSupplyClient->sendAndReceivePacket(
             "K2410:SetSpeed"
             ",PowerSupplyId:" + psId +
             ",ChannelId:" + psChId +
             ",IntegrationTime:0.01"
         );
 
-        for_each_device<Chip>(sysCtrl, [this, &sysCtrl, &res](Chip* chip) { this->calibChip(chip, sysCtrl, res[chip]); });
+        Base::for_each_chip([this, &res](Chip* chip) { this->calibChip(chip, res[chip]); });
 
         return res;
     }
@@ -253,9 +253,9 @@ private:
     int nSamp, nVolt;
     std::string psId, psChId, psMsg;
 
-    void calibChip(Chip* chip, Ph2_System::SystemController& sysCtrl, Data& res) {
-        auto& chipIface = *static_cast<RD53BInterface<F>*>(sysCtrl.fReadoutChipInterface);
-        TCPClient& psIface = *sysCtrl.fPowerSupplyClient;
+    void calibChip(Chip* chip, Data& res) {
+        auto& chipIface = *static_cast<RD53BInterface<F>*>(Base::system().fReadoutChipInterface);
+        TCPClient& psIface = *Base::system().fPowerSupplyClient;
 
         double groundOffset = 0.0;
 

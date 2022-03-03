@@ -16,16 +16,16 @@ namespace RD53BTools {
 
 
     template <class Flavor>
-    typename RD53BCapMeasure<Flavor>::capVoltages  RD53BCapMeasure<Flavor>::run(Ph2_System::SystemController& system) const {
+    typename RD53BCapMeasure<Flavor>::capVoltages  RD53BCapMeasure<Flavor>::run() const {
         capVoltages results;
-        auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
+        auto& chipInterface = Base::chipInterface();
 
-        Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2410(system.fPowerSupplyClient, "TestKeithley", "Front");
+        Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2410(Base::system().fPowerSupplyClient, "TestKeithley", "Front");
 
         dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
 
 
-        for_each_device<Chip>(system, [&] (Chip* chip) {
+        Base::for_each_chip([&] (Chip* chip) {
                         chipInterface.WriteReg(chip, "MonitorEnable", 1);
                         chipInterface.WriteReg(chip, "EN_INJCAP_MEAS", 1);
                         chipInterface.WriteReg(chip, "VMonitor", 0b000001);

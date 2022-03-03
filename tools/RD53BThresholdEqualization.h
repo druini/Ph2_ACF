@@ -13,7 +13,10 @@ template <class Flavor>
 const auto ToolParameters<RD53BThresholdEqualization<Flavor>> = make_named_tuple(
     std::make_pair("thresholdScan"_s, RD53BThresholdScan<Flavor>()),
     std::make_pair("injectionTool"_s, RD53BInjectionTool<Flavor>()),
-    std::make_pair("targetThreshold"_s, 0ul)
+    std::make_pair("targetThreshold"_s, 0ul),
+    std::make_pair("initialTDAC"_s, 15ul),
+    std::make_pair("nSteps"_s, 6ul),
+    std::make_pair("eliminateBias"_s, false)
 );
 
 template <class Flavor>
@@ -22,7 +25,7 @@ struct RD53BThresholdEqualization : public RD53BTool<RD53BThresholdEqualization,
     using Base::Base;
     using Base::param;
 
-    ChipDataMap<xt::xtensor<uint8_t, 2>> run(Ph2_System::SystemController& system, Task progress);
+    ChipDataMap<xt::xtensor<uint8_t, 2>> run(Task progress);
 
     void draw(const ChipDataMap<xt::xtensor<uint8_t, 2>>& bestTDAC);
 };

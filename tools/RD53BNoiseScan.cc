@@ -27,19 +27,19 @@ void RD53BNoiseScan<Flavor>::init() {
 }
 
 template <class Flavor>
-typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Ph2_System::SystemController& system, Task progress) const {
+typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Task progress) const {
     using namespace RD53BEventDecoding;
     
     ChipEventsMap events;
 
-    auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
-    for_each_device<Hybrid>(system, [&] (Hybrid* hybrid) {
+    auto& chipInterface = Base::chipInterface();
+    Base::for_each_hybrid([&] (Hybrid* hybrid) {
         chipInterface.WriteReg(hybrid, "LatencyConfig", param("triggerLatency"_s));
     });
 
     // configure FW FSM    
-    for (auto* board : *system.fDetectorContainer) {
-        auto& fwInterface = Base::getFWInterface(system, board);
+    for (auto* board : *Base::system().fDetectorContainer) {
+        auto& fwInterface = Base::getFWInterface(board);
         auto& fastCmdConfig = *fwInterface.getLocalCfgFastCmd();
 
         fastCmdConfig.n_triggers = param("readoutPeriod"_s);
@@ -59,7 +59,7 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Ph2_S
     auto size = param("size"_s);
 
     // configure pixels
-    for_each_device<Hybrid>(system, [&] (Hybrid* hybrid) {
+    Base::for_each_hybrid([&] (Hybrid* hybrid) {
         auto cfg = static_cast<RD53B<Flavor>*>(hybrid->at(0))->pixelConfig;
         
         cfg.enable.fill(false);
@@ -73,8 +73,8 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Ph2_S
     for (size_t triggersSent = 0; triggersSent < param("nTriggers"_s); triggersSent += param("readoutPeriod"_s)) {
 
         size_t nTriggers = std::min(param("readoutPeriod"_s), param("nTriggers"_s) - triggersSent);
-        for_each_device<BeBoard>(system, [&] (BeBoard* board) {
-            auto& fwInterface = Base::getFWInterface(system, board);
+        Base::for_each_board([&] (BeBoard* board) {
+            auto& fwInterface = Base::getFWInterface(board);
             fwInterface.getLocalCfgFastCmd()->n_triggers = nTriggers;
 
             fwInterface.template GetEvents<Flavor>(board, events);
@@ -85,7 +85,7 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Ph2_S
 
     if (param("maskNoisyPixels"_s)) {
         auto hitCountMap = hitCount(events);
-        for_each_device<Chip>(system, [&] (Chip* chip) {
+        Base::for_each_chip([&] (Chip* chip) {
             auto rd53b = static_cast<RD53B<Flavor>*>(chip);
             const auto noisy = hitCountMap[chip] / double(param("nTriggers"_s)) > param("occupancyThreshold"_s);
             rd53b->pixelConfig.enable = !noisy;

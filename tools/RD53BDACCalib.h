@@ -114,17 +114,17 @@ class RD53BDACCalib : public RD53BTool<RD53BDACCalib, F> {
         }
     }
 
-    Results run(Ph2_System::SystemController& sysCtrl) {
+    Results run() {
         Results res;
 
-        sysCtrl.fPowerSupplyClient->sendAndReceivePacket(
+        Base::system().fPowerSupplyClient->sendAndReceivePacket(
             "K2410:SetSpeed"
             ",PowerSupplyId:" + vmetId +
             ",ChannelId:" + vmetChId +
             ",IntegrationTime:0.01"
         );
-        for_each_device<Chip>(sysCtrl, [this, &sysCtrl, &res] (Chip* chip) {
-            this->calibChip(chip, sysCtrl, res[chip]);
+        Base::for_each_chip([this, &res] (Chip* chip) {
+            this->calibChip(chip, res[chip]);
         });
 
         return res;
@@ -232,11 +232,9 @@ class RD53BDACCalib : public RD53BTool<RD53BDACCalib, F> {
     std::vector<RD53BConstants::Register> regs;
     std::vector<uint16_t> min, max;
 
-    void calibChip(Chip* chip,
-                   Ph2_System::SystemController& sysCtrl,
-                   std::map<RD53BConstants::Register, DACData>& res) {
-        auto &chipIface = *static_cast<RD53BInterface<F>*>(sysCtrl.fReadoutChipInterface);
-        TCPClient &psIface = *sysCtrl.fPowerSupplyClient;
+    void calibChip(Chip* chip, std::map<RD53BConstants::Register, DACData>& res) {
+        auto &chipIface = *static_cast<RD53BInterface<F>*>(Base::system().fReadoutChipInterface);
+        TCPClient &psIface = *Base::system().fPowerSupplyClient;
 
         std::ostringstream psReq("ReadVoltmeter,VoltmeterId:", std::ostringstream::ate);
         psReq << vmetId << ",ChannelId:" << vmetChId << ",Stats,N:" << nSamp;

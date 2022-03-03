@@ -27,6 +27,7 @@
 #include "../tools/RD53BDACCalib.h"
 #include "../tools/RD53BDACTest.h"
 #include "../tools/RD53BGlobalThresholdTuning.h"
+// #include "../tools/RD53BThresholdEqualizationUnbiased.h"
 
 #include <signal.h>
 
@@ -63,6 +64,8 @@ using Tools = ToolManager<decltype(make_named_tuple(
     TOOL(RD53BDACCalib),
     TOOL(RD53BDACTest),
     TOOL(RD53BGlobalThresholdTuning)
+    // ,
+    // TOOL(RD53BThresholdEqualizationUnbiased)
 ))>;
 
 INITIALIZE_EASYLOGGINGPP
@@ -91,7 +94,7 @@ void run(SystemController& system, CommandLineProcessing::ArgvParser& cmd) {
 
     bool showPlots = !cmd.foundOption("hidePlots");
 
-    Tools<Flavor>(toolConfig, showPlots).run_tools(system, cmd.allArguments());
+    Tools<Flavor>(system, toolConfig, showPlots).run_tools(cmd.allArguments());
 
     if (cmd.foundOption("saveState"))
         for_each_device<Chip>(system, [&] (Chip* chip) {
@@ -150,6 +153,7 @@ int main(int argc, char** argv) {
 
     signal(SIGINT, resetAndExit);
     signal(SIGTERM, resetAndExit);
+    signal(SIGABRT, resetAndExit);
 
     if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
         run<RD53BFlavor::ATLAS>(system, cmd);

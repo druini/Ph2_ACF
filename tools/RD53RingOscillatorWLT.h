@@ -59,14 +59,14 @@ public:
         }
     }
 
-    auto run(Ph2_System::SystemController& system) const {
+    auto run() const {
         ChipDataMap<ChipResults> results;
-        auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
+        auto& chipInterface = Base::chipInterface();
 
-        system.fPowerSupplyClient->sendAndReceivePacket("K2410:SetSpeed,PowerSupplyId:" + param("vmeter"_s) + ",ChannelId:" + param("vmeterCH"_s) + ",IntegrationTime:1");
-        system.fPowerSupplyClient->sendAndReceivePacket("VoltmeterSetRange,VoltmeterId:" + param("vmeter"_s) + ",ChannelId:" + param("vmeterCH"_s) + ",Value:1.3");
+        Base::system().fPowerSupplyClient->sendAndReceivePacket("K2410:SetSpeed,PowerSupplyId:" + param("vmeter"_s) + ",ChannelId:" + param("vmeterCH"_s) + ",IntegrationTime:1");
+        Base::system().fPowerSupplyClient->sendAndReceivePacket("VoltmeterSetRange,VoltmeterId:" + param("vmeter"_s) + ",ChannelId:" + param("vmeterCH"_s) + ",Value:1.3");
 
-        for_each_device<Chip>(system, [&](DeviceChain devs) {
+        Base::for_each_chip([&](DeviceChain devs) {
             RD53B<Flavor>* chip = static_cast<RD53B<Flavor>*>(devs.chip);
 
             results[chip].countEnableTimeBX = nBX;
@@ -99,7 +99,7 @@ public:
             for(int vTrim = param("minVDDD"_s); vTrim <= param("maxVDDD"_s); vTrim++) {
                 //Trim voltages
                 chipInterface.WriteReg(chip, "TRIM_VREFD", vTrim);
-                double v = 2 * std::stod(system.fPowerSupplyClient->sendAndReceivePacket(
+                double v = 2 * std::stod(Base::system().fPowerSupplyClient->sendAndReceivePacket(
                     "ReadVoltmeter"
                     ",VoltmeterId:" + param("vmeter"_s) +
                     ",ChannelId:" + param("vmeterCH"_s))

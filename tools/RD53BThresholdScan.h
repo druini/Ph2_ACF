@@ -24,7 +24,7 @@ struct RD53BThresholdScan : public RD53BTool<RD53BThresholdScan, Flavor> {
 
     using OccupancyMap = ChipDataMap<xt::xtensor<double, 3>>;
 
-    OccupancyMap run(Ph2_System::SystemController& system, Task progress);
+    OccupancyMap run(Task progress);
 
     std::array<ChipDataMap<xt::xtensor<double, 2>>, 2> analyze(const OccupancyMap& occMap) const;
 

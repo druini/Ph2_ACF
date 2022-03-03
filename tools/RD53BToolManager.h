@@ -16,25 +16,25 @@ namespace RD53BTools {
 
 template <class Tools>
 struct ToolManager : public ToolManagerBase {
-    ToolManager(const toml::value& config, bool showPlots = true) 
-      : ToolManagerBase(config) 
+    ToolManager(SystemController& system, const toml::value& config, bool showPlots = true) 
+      : ToolManagerBase(system, config) 
       , _showPlots(showPlots)
     { 
         initialize<Tools>(); 
     }
 
-    void run_tools(SystemController& system, const std::vector<std::string>& toolNames) const {
+    void run_tools(const std::vector<std::string>& toolNames) const {
         for (const auto& toolName : toolNames)
-            run_tool(system, toolName);
+            run_tool(toolName);
     }
 
-    void run_tool(SystemController& system, const std::string& toolName) const {
+    void run_tool(const std::string& toolName) const {
         std::string typeName = getToolTypeName(toolName);
         Tools::for_each_index([&] (auto index) {
             if (Tools::names[index.value] == typeName) {
                 auto tool = typename Tools::field_type<index.value>(this, toolName, getToolArgs(toolName));
                 tool.init();
-                run_tool(system, tool);
+                run_tool(tool);
             }
         });
     }
@@ -42,13 +42,13 @@ struct ToolManager : public ToolManagerBase {
 private:
 
     template <class ToolType, typename std::enable_if_t<has_draw_v<ToolType>, int> = 0>
-    void run_tool(SystemController& system, ToolType&& tool) const {
-        tool.Draw(run_with_progress(system, tool), _showPlots);
+    void run_tool(ToolType&& tool) const {
+        tool.Draw(run_with_progress(tool), _showPlots);
     }
     
     template <class ToolType, typename std::enable_if_t<!has_draw_v<ToolType>, int> = 0>
-    void run_tool(SystemController& system, ToolType&& tool) const {
-        run_with_progress(system, tool);
+    void run_tool(ToolType&& tool) const {
+        run_with_progress(tool);
     }
 
 
@@ -60,7 +60,7 @@ private:
     };
 
     template <class ToolType>
-    auto run_with_progress(SystemController& system, ToolType&& tool) const {
+    auto run_with_progress(ToolType&& tool) const {
         
         // Change the streambuf of std::cout, to force all new lines to be inserted before the last one which is used for the progress bar.
 
@@ -99,7 +99,7 @@ private:
         indicators::show_console_cursor(false);
         bar.set_progress(0);
         
-        auto result = run_with_progress(system, tool, Task(bar));
+        auto result = run_with_progress(tool, Task(bar));
 
         bar.set_progress(100);
         indicators::show_console_cursor(true);
@@ -111,13 +111,13 @@ private:
     }
 
     template <class ToolType, typename std::enable_if_t<has_progress_v<ToolType>, int> = 0>
-    auto run_with_progress(SystemController& system, ToolType&& tool, Task task) const {
-        return tool.run(system, task);
+    auto run_with_progress(ToolType&& tool, Task task) const {
+        return tool.run(task);
     }
     
     template <class ToolType, typename std::enable_if_t<!has_progress_v<ToolType>, int> = 0>
-    auto run_with_progress(SystemController& system, ToolType&& tool, Task task) const {
-        return tool.run(system);
+    auto run_with_progress(ToolType&& tool, Task task) const {
+        return tool.run();
     }
 
 private:

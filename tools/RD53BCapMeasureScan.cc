@@ -15,16 +15,16 @@ namespace RD53BTools {
 
 
     template <class Flavor>
-    typename RD53BCapMeasureScan<Flavor>::capVoltages  RD53BCapMeasureScan<Flavor>::run(Ph2_System::SystemController& system) const {
+    typename RD53BCapMeasureScan<Flavor>::capVoltages  RD53BCapMeasureScan<Flavor>::run() const {
         capVoltages results;
-        auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
+        auto& chipInterface = Base::chipInterface();
 
-        Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2410(system.fPowerSupplyClient, "TestKeithley", "Front");
+        Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2410(Base::system().fPowerSupplyClient, "TestKeithley", "Front");
 
         dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
 
 
-        for_each_device<Chip>(system, [&] (Chip* chip) {
+        Base::for_each_chip([&] (Chip* chip) {
                         int default_trim = bits::pack<4, 4>(8, 8);
                         for (int trimVal=0; trimVal<16; trimVal++){
                             int theTrim = bits::pack<4,4>(trimVal,8);

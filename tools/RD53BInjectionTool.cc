@@ -64,36 +64,34 @@ void RD53BInjectionTool<Flavor>::init() {
 }
 
 template <class Flavor>
-typename RD53BInjectionTool<Flavor>::ChipEventsMap RD53BInjectionTool<Flavor>::run(Ph2_System::SystemController& system, Task progress) const {
+typename RD53BInjectionTool<Flavor>::ChipEventsMap RD53BInjectionTool<Flavor>::run(Task progress) const {
     ChipEventsMap systemEventsMap;
-    
-    auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
 
     // store original
     std::map<ChipLocation, pixel_matrix_t<Flavor, bool>> originalEnableMasks;
     std::map<ChipLocation, pixel_matrix_t<Flavor, bool>> originalEnableInjectionsMasks;
-    for_each_device<Chip>(system, [&] (Chip* chip) {
+    Base::for_each_chip([&] (Chip* chip) {
         auto rd53b = static_cast<RD53B<Flavor>*>(chip);
         originalEnableMasks[chip] = rd53b->pixelConfig.enable;
         originalEnableInjectionsMasks[chip] = rd53b->pixelConfig.enableInjections;
     });
 
-    configureInjections(system);
+    configureInjections();
     
     for (size_t frameId = 0; frameId < _nFrames ; ++frameId) {
-        setupMaskFrame(system, frameId);
+        setupMaskFrame(frameId);
 
-        inject(system, systemEventsMap);
+        inject(systemEventsMap);
 
         progress.update(double(frameId + 1) / _nFrames);
     }
 
     
-    for_each_device<Chip>(system, [&] (Chip* chip) {
+    Base::for_each_chip([&] (Chip* chip) {
         auto rd53b = static_cast<RD53B<Flavor>*>(chip);
         rd53b->pixelConfig.enable = originalEnableMasks[chip];
         rd53b->pixelConfig.enableInjections = originalEnableInjectionsMasks[chip];
-        chipInterface.UpdatePixelConfig(rd53b, true, false);
+        Base::chipInterface().UpdatePixelConfig(rd53b, true, false);
     });
 
     return systemEventsMap;
@@ -102,29 +100,29 @@ typename RD53BInjectionTool<Flavor>::ChipEventsMap RD53BInjectionTool<Flavor>::r
 
 
 template <class Flavor>
-void RD53BInjectionTool<Flavor>::setupMaskFrame(Ph2_System::SystemController& system, size_t frameId) const {
-    auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
+void RD53BInjectionTool<Flavor>::setupMaskFrame(size_t frameId) const {
+    auto& chipInterface = Base::chipInterface();
 
     auto mask = generateInjectionMask(frameId);
 
-    for_each_device<Hybrid>(system, [&] (Hybrid* hybrid) {
-        auto& cfg = static_cast<RD53B<Flavor>*>(hybrid->at(0))->pixelConfig;
+    Base::for_each_chip([&] (Chip* chip) {
+        auto& cfg = static_cast<RD53B<Flavor>*>(chip)->pixelConfig;
         cfg.enable = mask;
         cfg.enableInjections = mask;
-        chipInterface.UpdatePixelConfig(hybrid, cfg, true, false);
+        chipInterface.UpdatePixelConfig(chip, cfg, true, false);
     });
 }
 
 
 template <class Flavor>
-void RD53BInjectionTool<Flavor>::inject(SystemController& system, ChipEventsMap& events) const {
+void RD53BInjectionTool<Flavor>::inject(ChipEventsMap& events) const {
 
     for (size_t injectionsDone = 0; injectionsDone < param("nInjections"_s); injectionsDone += param("readoutPeriod"_s)) {
     // for (int i = 0; i < -(-param("nInjections"_s) / param("readoutPeriod"_s)); ++i) {
         size_t nInjections = std::min(param("readoutPeriod"_s), param("nInjections"_s) - injectionsDone);
 
-        for_each_device<BeBoard>(system, [&] (BeBoard* board) {
-            auto& fwInterface = Base::getFWInterface(system, board);
+        Base::for_each_board([&] (BeBoard* board) {
+            auto& fwInterface = Base::getFWInterface(board);
             auto fastCmdConfig = fwInterface.getLocalCfgFastCmd();
             fastCmdConfig->n_triggers = nInjections;
             fwInterface.ConfigureFastCommands(fastCmdConfig);
@@ -266,15 +264,15 @@ auto RD53BInjectionTool<Flavor>::generateInjectionMask(size_t frameId) const {
 }
 
 template <class Flavor>
-void RD53BInjectionTool<Flavor>::configureInjections(Ph2_System::SystemController& system) const {
-    auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
-    for_each_device<Hybrid>(system, [&] (Hybrid* hybrid) {
+void RD53BInjectionTool<Flavor>::configureInjections() const {
+    auto& chipInterface = Base::chipInterface();
+    Base::for_each_hybrid([&] (Hybrid* hybrid) {
         chipInterface.WriteReg(hybrid, "LatencyConfig", param("triggerLatency"_s));
         chipInterface.WriteReg(hybrid, "DigitalInjectionEnable", param("injectionType"_s) == "digital");
     });
     
-    for (auto* board : *system.fDetectorContainer) {
-        auto& fwInterface = Base::getFWInterface(system, board);
+    for (auto* board : *Base::system().fDetectorContainer) {
+        auto& fwInterface = Base::getFWInterface(board);
         auto& fastCmdConfig = *fwInterface.getLocalCfgFastCmd();
 
         fastCmdConfig.n_triggers = param("readoutPeriod"_s);

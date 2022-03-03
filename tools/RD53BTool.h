@@ -99,9 +99,12 @@ struct ToolManagerBase {
         return _config.at(tool).at("args");
     }
 
+    SystemController& system() const { return _system; }
+
 protected:
-    ToolManagerBase(const toml::value& config) 
+    ToolManagerBase(SystemController& system, const toml::value& config) 
       : _config(config)
+      , _system(system)
     {}
 
     template <class ToolsTuple>
@@ -123,6 +126,7 @@ protected:
     std::unordered_map<std::type_index, std::string> _toolTypeNames;
     std::unordered_map<std::string, const std::type_info&> _toolTypeInfo;
     toml::value _config;
+    SystemController& _system;
 };
 
 struct RD53BToolBase {
@@ -160,6 +164,8 @@ struct RD53BTool : public RD53BToolBase {
 
     const std::string& name() const { return _name; }
     std::string& name() { return _name; }
+
+    SystemController& system() const { return _toolManager->system(); }
 
     std::string getResultPath(const std::string& suffix) const {
         auto path = boost::filesystem::path("Results/") / (_name + suffix);
@@ -203,6 +209,23 @@ struct RD53BTool : public RD53BToolBase {
     }
    
 protected:
+
+    template <class F>
+    void for_each_chip(F&& f) const {
+        for_each_device<Chip>(system(), std::forward<F>(f));
+    }
+
+    template <class F>
+    void for_each_hybrid(F&& f) const {
+        for_each_device<Hybrid>(system(), std::forward<F>(f));
+    }
+
+    template <class F>
+    void for_each_board(F&& f) const {
+        for_each_device<BeBoard>(system(), std::forward<F>(f));
+    }
+
+
     void createRootFile() {
         file = new TFile(getResultPath(".root").c_str(), "NEW");
     }
@@ -216,8 +239,12 @@ protected:
         }
     }
 
-    static auto& getFWInterface(SystemController& system, BeBoard* board) {
-        return *static_cast<RD53FWInterface*>(system.fBeBoardFWMap.at(board->getId()));
+    auto& getFWInterface(BeBoard* board) const {
+        return *static_cast<RD53FWInterface*>(system().fBeBoardFWMap.at(board->getId()));
+    }
+    
+    auto& chipInterface() const { 
+        return *static_cast<RD53BInterface<Flavor>*>(system().fReadoutChipInterface); 
     }
 
     template <class Container>
@@ -383,28 +410,28 @@ private:
 };
 
 template <class T>
-using detect_has_draw1 = decltype(std::declval<T>().draw(std::declval<T>().run(std::declval<SystemController&>())));
+using detect_has_draw1 = decltype(std::declval<T>().draw(std::declval<T>().run()));
 
 template <class T>
-using detect_has_draw2 = decltype(std::declval<T>().draw(std::declval<T>().run(std::declval<SystemController&>(), std::declval<Task>())));
+using detect_has_draw2 = decltype(std::declval<T>().draw(std::declval<T>().run(std::declval<Task>())));
 
 template <class T>
 constexpr bool has_draw_v = std::experimental::is_detected_v<detect_has_draw1, T> || std::experimental::is_detected_v<detect_has_draw2, T>;
 
 template <class T>
-using detect_has_progress = decltype(std::declval<T>().run(std::declval<SystemController&>(), std::declval<Task>()));
+using detect_has_progress = decltype(std::declval<T>().run(std::declval<Task>()));
 
 template <class T>
 constexpr bool has_progress_v = std::experimental::is_detected_v<detect_has_progress, T>;
 
 template <class Tool, bool B=has_progress_v<Tool>>
 struct tool_result {
-    using type = decltype(std::declval<Tool>().run(std::declval<SystemController&>(), std::declval<Task>()));
+    using type = decltype(std::declval<Tool>().run(std::declval<Task>()));
 };
 
 template <class Tool>
 struct tool_result<Tool, false> {
-    using type = decltype(std::declval<Tool>().run(std::declval<SystemController&>()));
+    using type = decltype(std::declval<Tool>().run());
 };
 
 

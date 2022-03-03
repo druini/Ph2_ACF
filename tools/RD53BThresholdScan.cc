@@ -18,51 +18,33 @@
 
 namespace RD53BTools {
 
-// void ReverseYAxis(TH1 *h)
-// {
-//     // Remove the current axis
-//     h->GetYaxis()->SetLabelOffset(999);
-//     h->GetYaxis()->SetTickLength(0);
-//     // Redraw the new axis
-//     gPad->Update();
-//     TGaxis *newaxis = new TGaxis(gPad->GetUxmin(),
-//                                     gPad->GetUymax(),
-//                                     gPad->GetUxmin()-0.001,
-//                                     gPad->GetUymin(),
-//                                     h->GetYaxis()->GetXmin(),
-//                                     h->GetYaxis()->GetXmax(),
-//                                     510,"+");
-//     newaxis->SetLabelOffset(-0.03);
-//     newaxis->Draw();
-// }
-
 template <class Flavor>
-typename RD53BThresholdScan<Flavor>::OccupancyMap RD53BThresholdScan<Flavor>::run(Ph2_System::SystemController& system, Task progress) {
-    auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
+typename RD53BThresholdScan<Flavor>::OccupancyMap RD53BThresholdScan<Flavor>::run(Task progress) {
+    auto& chipInterface = Base::chipInterface();
 
     size_t nSteps = (param("vcalRange"_s)[1] - param("vcalRange"_s)[0]) / param("vcalStep"_s);
     const auto& offset = param("injectionTool"_s).param("offset"_s);
     const auto& size = param("injectionTool"_s).param("size"_s);
 
-    for_each_device<Chip>(system, [&] (Chip* chip) {
+    Base::for_each_chip([&] (Chip* chip) {
         auto* rd53b = static_cast<RD53B<Flavor>*>(chip);
         chipInterface.WriteReg(rd53b, Flavor::Reg::VCAL_MED, param("vcalMed"_s));
     });
 
-    param("injectionTool"_s).configureInjections(system);
+    param("injectionTool"_s).configureInjections();
 
     std::vector<tool_result_t<RD53BInjectionTool<Flavor>>> events(nSteps);
 
     size_t nFrames = param("injectionTool"_s).nFrames();
 
     for (size_t frame = 0; frame < nFrames; ++frame) {
-        param("injectionTool"_s).setupMaskFrame(system, frame);
+        param("injectionTool"_s).setupMaskFrame(frame);
         for (size_t i = 0, vcalHigh = param("vcalMed"_s) + param("vcalRange"_s)[0]; i < nSteps; ++i, vcalHigh += param("vcalStep"_s)) {
-            for_each_device<Hybrid>(system, [&] (Hybrid* hybrid) {
+            Base::for_each_hybrid([&] (Hybrid* hybrid) {
                 chipInterface.WriteReg(hybrid, Flavor::Reg::VCAL_HIGH, vcalHigh);
             });
             
-            param("injectionTool"_s).inject(system, events[i]);
+            param("injectionTool"_s).inject(events[i]);
             progress.update(double(frame * nSteps + i) / (nFrames * nSteps));
         }
     }

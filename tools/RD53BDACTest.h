@@ -82,17 +82,17 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
         }
     }
 
-    Results run(Ph2_System::SystemController& sysCtrl) {
+    Results run() {
         Results res;
-        sysCtrl.fPowerSupplyClient->sendAndReceivePacket(
+        Base::system().fPowerSupplyClient->sendAndReceivePacket(
             "K2410:SetSpeed"
             ",PowerSupplyId:" + vmetId +
             ",ChannelId:" + vmetChId +
             ",IntegrationTime:" + std::to_string(param("keithSpeed"_s))
         );
-        for_each_device<Chip>(sysCtrl, [this, &sysCtrl, &res] (Chip* chip) {
+        Base::for_each_chip([this, &res] (Chip* chip) {
             std::vector<RD53BConstants::Register> dac;
-            RD53BInterface<F>& chipIface = *static_cast<RD53BInterface<F>*>(sysCtrl.fReadoutChipInterface);
+            RD53BInterface<F>& chipIface = *static_cast<RD53BInterface<F>*>(Base::system().fReadoutChipInterface);
             /* first set of DACs */
             dac = {
                 F::Reg::DAC_PREAMP_L_LIN,
@@ -113,7 +113,7 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
             };
             chipIface.WriteReg(chip, F::Reg::DAC_REF_KRUM_LIN, 300);
             chipIface.WriteReg(chip, F::Reg::DAC_COMP_LIN, 250);
-            this->calibChip(chip, sysCtrl, res[chip], dac);
+            this->calibChip(chip, res[chip], dac);
             /* last set of DACs */
             dac = {
                 F::Reg::DAC_REF_KRUM_LIN,
@@ -123,7 +123,7 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
             for(const auto& reg : {F::Reg::DAC_GDAC_L_LIN, F::Reg::DAC_GDAC_R_LIN, F::Reg::DAC_GDAC_M_LIN}) {
                 chipIface.WriteReg(chip, reg, 900);
             }
-            this->calibChip(chip, sysCtrl, res[chip], dac);
+            this->calibChip(chip, res[chip], dac);
         });
         return res;
     }
@@ -152,13 +152,12 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
     }
     
     void calibChip(Chip* chip,
-                   Ph2_System::SystemController& sysCtrl,
                    std::map<RD53BConstants::Register, DACData>& res,
                    const std::vector<RD53BConstants::Register>& dac) {
         using RD53BConstants::Register;
         
-        auto &chipIface = *static_cast<RD53BInterface<F>*>(sysCtrl.fReadoutChipInterface);
-        TCPClient &psIface = *sysCtrl.fPowerSupplyClient;
+        auto &chipIface = *static_cast<RD53BInterface<F>*>(Base::system().fReadoutChipInterface);
+        TCPClient &psIface = *Base::system().fPowerSupplyClient;
         
         std::ostringstream psReq;
         psReq = std::ostringstream("ReadVoltmeter,VoltmeterId:", std::ostringstream::ate);

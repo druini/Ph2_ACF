@@ -28,7 +28,7 @@ struct RD53BCapMeasure : public RD53BTool<RD53BCapMeasure, Flavor> {
 
 
     using capVoltages = ChipDataMap<RD53BCapMeasure::CapVoltages>;
-    capVoltages run(Ph2_System::SystemController& system) const;
+    capVoltages run() const;
 
     void draw(const capVoltages& results) const;
 

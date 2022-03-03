@@ -37,24 +37,24 @@ struct RD53IVScan : public RD53BTool<RD53IVScan, Flavor>
         double IMUXvolt[33];
     };
 
-    auto run(Ph2_System::SystemController& system) const
+    auto run() const
     {
         // TODO The following line should be eliminated somehow - Antonio Nov 24 2021 18:41
         ChipDataMap<ChipResults> results;
 	std::vector<Ph2_ITchipTesting::ITpowerSupplyChannelInterface> channelsPS;
 	std::map<int, std::string> channelMap;
 
-        LOG(INFO) << "PowerSupply client" << system.fPowerSupplyClient << RESET;
+        LOG(INFO) << "PowerSupply client" << Base::system().fPowerSupplyClient << RESET;
 
-        Ph2_ITchipTesting::ITinstrumentsInterface scannerCardKeithley(system.fPowerSupplyClient, Base::param("configFile"_s), Base::param("multimeterName"_s));
+        Ph2_ITchipTesting::ITinstrumentsInterface scannerCardKeithley(Base::system().fPowerSupplyClient, Base::param("configFile"_s), Base::param("multimeterName"_s));
 
         LOG(INFO) << "[RD53IVScan] configFile = " << Base::param("configFile"_s) << RESET;
 
         if     (Base::param("type"_s) == "complete") scannerCardKeithley.runScan();
         else if(Base::param("type"_s) == "steps")
 	{
-	  Ph2_ITchipTesting::ITpowerSupplyChannelInterface digitalChannel(system.fPowerSupplyClient, Base::param("powerSupplyName"_s), "first");
-	  Ph2_ITchipTesting::ITpowerSupplyChannelInterface analogChannel(system.fPowerSupplyClient, Base::param("powerSupplyName"_s), "second");
+	  Ph2_ITchipTesting::ITpowerSupplyChannelInterface digitalChannel(Base::system().fPowerSupplyClient, Base::param("powerSupplyName"_s), "first");
+	  Ph2_ITchipTesting::ITpowerSupplyChannelInterface analogChannel(Base::system().fPowerSupplyClient, Base::param("powerSupplyName"_s), "second");
 	  channelsPS.push_back(digitalChannel);
 	  channelsPS.push_back(analogChannel);
 	  scannerCardKeithley.prepareMultimeter();

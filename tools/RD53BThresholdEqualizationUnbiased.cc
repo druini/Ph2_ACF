@@ -1,4 +1,4 @@
-#include "RD53BThresholdEqualization.h"
+#include "RD53BThresholdEqualizationUnbiased.h"
 
 #include "../Utils/xtensor/xmasked_view.hpp"
 #include "../Utils/xtensor/xindex_view.hpp"
@@ -12,7 +12,7 @@
 namespace RD53BTools {
 
 template <class Flavor>
-ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Task progress) {
+ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualizationUnbiased<Flavor>::run(Task progress) {
     auto& chipInterface = Base::chipInterface();
 
     auto thresholdMeasurementTask   = progress.subTask({0, 0.2});
@@ -24,7 +24,7 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
 
     Base::for_each_chip([&] (Chip* chip) {
         auto* rd53b = static_cast<RD53B<Flavor>*>(chip);
-        rd53b->pixelConfig.tdac.fill(param("initialTDAC"_s));
+        rd53b->pixelConfig.tdac.fill(15);
         chipInterface.UpdatePixelConfig(rd53b, false, true);
     });
 
@@ -49,17 +49,19 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
 
     Base::for_each_chip([&] (Chip* chip) {
         chipInterface.WriteReg(chip, Flavor::Reg::VCAL_MED, param("thresholdScan"_s).param("vcalMed"_s));
-        bestTDAC.insert({chip, param("initialTDAC"_s) * xt::ones<uint8_t>({size[0], size[1]})});
-        bestOcc.insert({chip, xt::zeros<double>({size[0], size[1]})});
+        bestTDAC.insert({chip, 15 * xt::ones<uint8_t>(size)});
+        bestOcc.insert({chip, xt::zeros<double>(size)});
     });
     
-    xt::print_options::set_line_width(200);
-    xt::print_options::set_threshold(3000);
+    xt::print_options::set_line_width(160);
+    xt::print_options::set_threshold(2000);
 
-    size_t nSteps = param("nSteps"_s);
+    xt::xtensor<bool, 2> last_step_choice = xt::random::randint<int>(size, 0, 1);
+
+    size_t nSteps = 6;
     for (size_t i = 0; i < nSteps; ++i) {
-        int tdacStep = i < 4 ? (8 >> i) : 1;
-        
+        size_t tdacStep = i < 4 ? (8 >> i) : 1;
+
         Base::for_each_chip([&] (Chip* chip) {
             chipInterface.WriteReg(chip, Flavor::Reg::VCAL_HIGH, VCAL_HIGH[chip]);
         });
@@ -82,33 +84,28 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
 
             const auto stuck = occHighCharge < .9;
 
-            // auto isBest = !stuck && (xt::abs(occ - 0.5) <= xt::abs(bestOcc[chip] - .5) + 1e-10);
-            // xt::masked_view(bestOcc[chip], isBest) = occ;
-            // xt::masked_view(bestTDAC[chip], isBest) = tdacView;
-
             auto cost = xt::abs(occ - 0.5);
             auto minCost = xt::abs(bestOcc[chip] - 0.5);
 
-            xt::xtensor<bool, 2> isBest = cost < minCost || xt::isclose(occ, bestOcc[chip]);
+            xt::xtensor<bool, 2> isBest = !stuck && cost < minCost;
 
-            if (param("eliminateBias"_s) && i == nSteps - 1)
-                isBest |= (xt::isclose(cost, minCost) && xt::random::randint<int>(size, 0, 1));
-
-            isBest &= !stuck;
-            
-            std::cout << "Step: " << i << std::endl;
-            std::cout << "nStuck: " <<  xt::count_nonzero(stuck) << std::endl;
-            std::cout << "nUpdated: " <<  xt::count_nonzero(isBest) << std::endl;
-            std::cout << "nEquivalent: " << xt::count_nonzero(xt::isclose(cost, minCost)) << std::endl;
-            std::cout << "nActuallyBetter: " << xt::count_nonzero(cost < minCost && !xt::isclose(cost, minCost)) << std::endl;
-            std::cout << "nUncertain: " <<  xt::count_nonzero(minCost > 0.4) << std::endl;
-            std::cout << "==========================================" << std::endl;
+            if (i < nSteps - 1)
+                isBest |= xt::isclose(cost, minCost);
+            else
+                isBest |= xt::isclose(occ, bestOcc[chip]) || (xt::isclose(cost, minCost) && last_step_choice);
 
             xt::masked_view(bestOcc[chip], isBest) = occ;
             xt::masked_view(bestTDAC[chip], isBest) = tdacView;
 
+            // std::cout << "isBest:\n" <<  xt::filter(isBest, xt::abs(bestOcc[chip] - .5) > .49) << std::endl;
+            // std::cout << "diff:\n" <<  xt::filter((xt::abs(occ - 0.5) - xt::abs(bestOcc[chip] - .5)), xt::abs(bestOcc[chip] - .5) > .49) << std::endl;
+            // std::cout << "occ:\n" <<  xt::filter(occ, xt::abs(bestOcc[chip] - .5) > .49) << std::endl;
+            // std::cout << "bestOcc:\n" <<  xt::filter(bestOcc[chip], xt::abs(bestOcc[chip] - .5) > .49) << std::endl;
+            // std::cout << "bestTDAC:\n" <<  xt::filter(bestTDAC[chip], xt::abs(bestOcc[chip] - .5) > .49) << std::endl;
+
             if (i < nSteps - 1) {
-                tdacView = xt::clip(xt::where(!stuck && (occ < 0.5), tdacView + tdacStep, tdacView - tdacStep), 0, 31);
+                tdacView = xt::where(!stuck && (occ < 0.5), tdacView + tdacStep, xt::where(tdacView > tdacStep, tdacView - tdacStep, 0u));
+                // std::cout << tdacView << std::endl;
 
                 chipInterface.UpdatePixelConfig(rd53b, false, true); // update tdacs
             }
@@ -133,7 +130,7 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
 }
 
 template <class Flavor>
-void RD53BThresholdEqualization<Flavor>::draw(const ChipDataMap<xt::xtensor<uint8_t, 2>>& bestTDAC) {
+void RD53BThresholdEqualizationUnbiased<Flavor>::draw(const ChipDataMap<xt::xtensor<uint8_t, 2>>& bestTDAC) {
     Base::createRootFile();
     auto& offset = param("injectionTool"_s).param("offset"_s);
 
@@ -146,7 +143,7 @@ void RD53BThresholdEqualization<Flavor>::draw(const ChipDataMap<xt::xtensor<uint
 }
 
 
-template class RD53BThresholdEqualization<RD53BFlavor::ATLAS>;
-template class RD53BThresholdEqualization<RD53BFlavor::CMS>;
+template class RD53BThresholdEqualizationUnbiased<RD53BFlavor::ATLAS>;
+template class RD53BThresholdEqualizationUnbiased<RD53BFlavor::CMS>;
 
 }

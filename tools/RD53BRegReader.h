@@ -16,12 +16,12 @@ struct RD53BRegReader : public RD53BTool<RD53BRegReader, Flavor> {
     using Base = RD53BTool<RD53BRegReader, Flavor>;
     using Base::Base;
 
-    auto run(Ph2_System::SystemController& system, Task progress) const {
-        auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
+    auto run(Task progress) const {
+        auto& chipInterface = Base::chipInterface();
         size_t nChips = 0;
-        for_each_device<Chip>(system, [&] (Chip* chip) { ++nChips; });
+        Base::for_each_chip([&] (Chip* chip) { ++nChips; });
         double i = 0;
-        for_each_device<Chip>(system, [&] (Chip* chip) {
+        Base::for_each_chip([&] (Chip* chip) {
             LOG(INFO) << "Register values for chip: " << ChipLocation(chip) << RESET;
 
             auto subTask = progress.subTask({i / nChips, (i + 1) / nChips});
