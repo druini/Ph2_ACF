@@ -40,8 +40,8 @@ struct RD53IVScan : public RD53BTool<RD53IVScan, Flavor>
     {
         // TODO The following line should be eliminated somehow - Antonio Nov 24 2021 18:41
         ChipDataMap<ChipResults>                                      results;
+        auto&                                                         chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
         std::vector<Ph2_ITchipTesting::ITpowerSupplyChannelInterface> channelsPS;
-        // std::map<int, std::string>                                    channelMap;
 
         LOG(INFO) << "PowerSupply client" << system.fPowerSupplyClient << RESET;
 
@@ -68,14 +68,41 @@ struct RD53IVScan : public RD53BTool<RD53IVScan, Flavor>
             float vStep        = Base::param("scanPointCurrentStep"_s);
             float finalCurrent = Base::param("finalCurrentPoint"_s);
             LOG(INFO) << "[RD53IVScan] Ready to run an IV curve from = " << vMin << " to " << vMax << " with steps of " << vStep << RESET;
+
+            std::string fileHeader = "currentD;currentA;InputA;ShuntA;InputD;ShuntD";
+            itIVtest.prepareImuxFileHeader(fileHeader);
+
             for(float vCurrent = vMin; vCurrent <= vMax + 1e-5; vCurrent += vStep)
             {
                 LOG(INFO) << "[RD53IVScan] Scanning current point " << vCurrent << " A " << RESET;
-                std::string psRead = "";
+                std::string psRead           = "";
+                std::string currentReadValue = "";
                 for(unsigned int v = 0; v < channelsPS.size(); ++v) channelsPS[v].setCurrent(vCurrent);
                 sleep(1);
-                for(unsigned int v = 0; v < channelsPS.size(); ++v) psRead = psRead + std::to_string(channelsPS[v].getCurrent()) + ";" + std::to_string(channelsPS[v].getVoltage()) + ";";
+                for(unsigned int v = 0; v < channelsPS.size(); ++v)
+                {
+                    std::string currentStr = std::to_string(channelsPS[v].getCurrent());
+                    std::string voltageStr = std::to_string(channelsPS[v].getVoltage());
+                    psRead                 = psRead + currentStr + ";" + voltageStr + ";";
+                    currentReadValue       = currentReadValue + currentStr + ";";
+                }
+                for_each_device<Chip>(system,
+                                      [&](Chip* chip)
+                                      {
+                                          for(unsigned int vIMUXcode = 28; vIMUXcode < 32; ++vIMUXcode)
+                                          {
+                                              chipInterface.WriteReg(chip, "MonitorEnable", 1); // Choose MUX entry
+                                              chipInterface.WriteReg(chip, "VMonitor", 0b000001);
+                                              chipInterface.WriteReg(chip, "IMonitor", vIMUXcode);
+                                              chipInterface.SendGlobalPulse(chip, {"ADCStartOfConversion"}); // ADC start conversion
+                                              double      iRead   = chipInterface.ReadReg(chip, "MonitoringDataADC");
+                                              std::string iMuxStr = std::to_string(iRead);
+                                              currentReadValue    = currentReadValue + iMuxStr + ";";
+                                          }
+                                      });
                 scannerCardKeithley.readScannerCardPoint(psRead);
+                currentReadValue.pop_back();
+                itIVtest.writeImuxLine(currentReadValue);
                 sleep(1);
             }
             for(unsigned int v = 0; v < channelsPS.size(); ++v) channelsPS[v].setCurrent(finalCurrent);

@@ -219,3 +219,17 @@ void ITIVSLDOTestInterface::endAcquisition()
     std::string msg = "EndAcquisition,configFile:" + fConfigFileName;
     fTestClient->sendAndReceivePacket(msg);
 }
+
+
+void ITIVSLDOTestInterface::prepareImuxFileHeader(std::string header)
+{
+    std::string msg = "ImuxFileHeader, FileHeader:" + header;
+    fTestClient->sendAndReceivePacket(msg);
+}
+
+
+void ITIVSLDOTestInterface::writeImuxLine(std::string imuxReading)
+{
+    std::string msg = "ImuxReading, Reading:" + imuxReading;
+    fTestClient->sendAndReceivePacket(msg);
+}

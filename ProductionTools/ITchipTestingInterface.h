@@ -84,6 +84,8 @@ class ITIVSLDOTestInterface
     void runITIVSLDOScan();
     void runAnalysis();
     void endAcquisition();
+    void prepareImuxFileHeader(std::string header);
+    void writeImuxLine(std::string imuxReading);
 };
 
 } // namespace Ph2_ITchipTesting
