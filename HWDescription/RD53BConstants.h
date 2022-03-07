@@ -1,104 +1,158 @@
+#ifndef RD53BCONSTANTS_H
+#define RD53BCONSTANTS_H
+
 #include <unordered_map>
+#include <string>
 
 namespace Ph2_HwDescription
 {
 
-namespace RD53BConstants 
-{
+    namespace RD53BConstants 
+    {
 
-static auto& GetIMUX() {
-    static const std::unordered_map<std::string, uint16_t> IMUX = {
-        {"IREF", 0},
-        {"CDR_VCO_main_bias", 1},
-        {"CDR_VCO_buffer_bias", 2},
-        {"CDR_CP_current", 3},
-        {"CDR_FD_current", 4},
-        {"CDR_buffer_bias", 5},
-        {"CML_driver_tap_2_bias", 6},
-        {"CML_driver_tap_1_bias", 7},
-        {"CML_driver_main_bias", 8},
-        {"NTC_pad_current", 9},
-        {"Capmeasure_circuit", 10},
-        {"Capmeasure_parasitic", 11},
-        {"DIFF_FE_Preamp_Main_array", 12},
-        {"DIFF_FE_PreComp", 13},
-        {"DIFF_FE_Comparator", 14},
-        {"DIFF_FE_VTH2", 15},
-        {"DIFF_FE_VTH1_Main_array", 16},
-        {"DIFF_FE_LCC", 17},
-        {"DIFF_FE_Feedback", 18},
-        {"DIFF_FE_Preamp_Left", 19},
-        {"DIFF_FE_VTH1_Left", 20},
-        {"DIFF_FE_Preamp_Right", 21},
-        {"DIFF_FE Preamp Top-Left", 22},
-        {"DIFF_FE VTH1 Right", 23},
-        {"DIFF_FE Preamp Top", 24},
-        {"DIFF_FE Preamp Top-Right", 25},
-        {"Analog_input_current", 28},
-        {"Analog_shunt_current", 29},
-        {"Digital_input_current", 30},
-        {"Digital_shunt_current", 31}
-    };
-    return IMUX;
-}
+        extern const std::unordered_map<std::string, uint8_t> GlobalPulseRoutes;
 
-static auto& GetVMUX() {
-    static const std::unordered_map<std::string, uint16_t> VMUX = {
-        {"Vref_ADC", 0},
-        {"I_mux", 1},
-        {"NTC", 2},
-        {"VCAL_DAC_half", 3},
-        {"VDDA_half", 4},
-        {"Poly_TEMPSENS_top", 5},
-        {"Poly_TEMPSENS_bottom", 6},
-        {"VCAL_HI", 7},
-        {"VCAL_MED", 8},
-        {"DIFF_FE_VTH2", 9},
-        {"DIFF_FE_VTH1_Main_array", 10},
-        {"DIFF_FE_VTH1_Left", 11},
-        {"DIFF_FE_VTH1_Right", 12},
-        {"RADSENS_Analog_SLDO", 13},
-        {"TEMPSENS_Analog_SLDO", 14},
-        {"RADSENS_Digital_SLDO", 15},
-        {"TEMPSENS_Digital_SLDO", 16},
-        {"RADSENS_center", 17},
-        {"TEMPSENS_center", 18},
-        {"Analog_GND", 19},
-        {"Vref_CORE", 31},
-        {"Vref_PRE", 32},
-        {"VINA_half", 33},
-        {"VDDA_half", 34},
-        {"VrefA", 35},
-        {"VOFS_quarter", 36},
-        {"VIND_quarter", 37},
-        {"VDDD_half", 38},
-        {"VrefD", 39}
-    };
-    return VMUX;
-}
+        extern const std::unordered_map<std::string, uint8_t> AtlasIMuxMap;
 
-static auto& GetGlobalPulseRoutes() {
-    static const std::unordered_map<std::string, uint16_t> GlobalPulseRoutes = {
-        {"ResetChannelSynchronizer", 0},
-        {"ResetCommandDecoder", 1},
-        {"ResetGlobalConfiguration", 2},
-        {"ResetServiceData", 3},
-        {"ResetAurora", 4},
-        {"ResetSerializers", 5},
-        {"ResetADC", 6},
-        {"ResetDataMerging", 7},
-        {"ResetEfuses", 8},
-        {"ResetTriggerTable", 9},
-        {"ResetBCIDCounter", 10},
-        {"SendCalResetPulse", 11},
-        {"ADCStartOfConversion", 12},
-        {"StartRingOscillatorsA", 13},
-        {"StartRingOscillatorsB", 14},
-        {"StartEfusesProgrammer", 15}
-    };
-    return GlobalPulseRoutes;
-}
+        extern const std::unordered_map<std::string, uint8_t> AtlasVMuxMap;
 
-} // namespace RD53BConstants
+        extern const std::unordered_map<std::string, uint8_t> CmsIMuxMap;
+
+        extern const std::unordered_map<std::string, uint8_t> CmsVMuxMap;
+
+        enum class AtlasIMux : uint8_t {
+            IREF_4UA = 0,
+            CDR_VCO = 1,
+            CDR_VCOBUFF = 2,
+            CDR_CP = 3,
+            CDR_CPFD = 4,
+            CDR_CPBUFF = 5,
+            CML_BIAS_2 = 6,
+            CML_BIAS_1 = 7,
+            CML_BIAS_0 = 8,
+            I_NTC = 9,
+            INJ_CAP = 10,
+            INJ_CAP_PAR = 11,
+            I_PREAMP_M = 12,
+            I_PRECOMPARATOR = 13,
+            I_COMPARATOR = 14,
+            I_VTH2 = 15,
+            I_VTH1_M = 16,
+            LEAKAGE_CURRENT_COMP = 17,
+            I_FEEDBACK  = 18,
+            I_PREAMP_L = 19,
+            I_VTH1_L = 20,
+            I_PREAMP_R = 21,
+            I_PREAMP_TL = 22,
+            I_VTH1_R = 23,
+            I_PREAMP_T = 24,
+            I_PREAMP_TR = 25,
+            IINA = 28,
+            ISHUNTA = 29,
+            IIND = 30,
+            ISHUNTD = 31,
+            HIGH_Z = 6
+        };
+
+        enum class AtlasVMux : uint8_t {
+            VREF_ADC = 0,
+            IMUX_OUT = 1,
+            NTC = 2,
+            VREF_VCAL_DAC = 3,
+            INJCAP_VDDA_HALF = 4,
+            RPOLYTSENS_TOP = 5,
+            RPOLYTSENS_BOTTOM = 6,
+            VCAL_HIGH = 7,
+            VCAL_MED = 8,
+            VTH2G = 9,
+            VTH1G_M  = 10,
+            VTH1G_L  = 11,
+            VTH1G_R  = 12,
+            RADSENS_SLDOA = 13,
+            TEMPSENS_SLDOA = 14,
+            RADSENS_SLDOD = 15,
+            TEMPSENS_SLDOD = 16,
+            RADSENS_ACB = 17,
+            TEMPSENS_ACB = 18,
+            GNDA = 19,
+            VREF_CORE = 31,
+            VREF_PRE = 32,
+            VINA_QUARTER = 33,
+            VDDA_HALF = 34,
+            VREFA = 35,
+            VOFS_QUARTER = 36,
+            VIND_QUARTER = 37,
+            VDDD_HALF = 38,
+            VREFD = 39,
+            HIGH_Z = 63
+        };
+
+        enum class CmsIMux : uint8_t {
+            IREF_4UA = 0,
+            CDR_VCO = 1,
+            CDR_VCOBUFF = 2,
+            CDR_CP = 3,
+            CDR_CPFD = 4,
+            CDR_CPBUFF = 5,
+            CML_BIAS_2 = 6,
+            CML_BIAS_1 = 7,
+            CML_BIAS_0 = 8,
+            I_NTC = 9,
+            INJ_CAP = 10,
+            INJ_CAP_PAR = 11,
+            I_PREAMP_M = 12,
+            I_COMPARATOR_STAR = 13,
+            I_COMPARATOR = 14,
+            I_LDAC = 15,
+            I_FC = 16,
+            I_KRUMMENAKER = 17,
+            I_PREAMP_L = 19,
+            I_PREAMP_R = 21,
+            I_PREAMP_TL = 22,
+            I_PREAMP_T = 24,
+            I_PREAMP_TR = 25,
+            IINA = 28,
+            ISHUNTA = 29,
+            IIND = 30,
+            ISHUNTD = 31,
+            HIGH_Z = 63
+        };
+
+        enum class CmsVMux : uint8_t {
+            VREF_ADC = 0,
+            IMUX_OUT = 1,
+            NTC = 2,
+            VREF_VCAL_DAC = 3,
+            INJCAP_VDDA_HALF = 4,
+            RPOLYTSENS_TOP = 5,
+            RPOLYTSENS_BOTTOM = 6,
+            VCAL_HIGH = 7,
+            VCAL_MED = 8,
+            VREF_KRUM = 9,
+            GDAC_M = 10,
+            GDAC_L = 11,
+            GDAC_R = 12,
+            RADSENS_SLDOA = 13,
+            TEMPSENS_SLDOA = 14,
+            RADSENS_SLDOD = 15,
+            TEMPSENS_SLDOD = 16,
+            RADSENS_ACB = 17,
+            TEMPSENS_ACB = 18,
+            GNDA = 19,
+            VREF_CORE = 31,
+            VREF_PRE = 32,
+            VINA_QUARTER = 33,
+            VDDA_HALF = 34,
+            VREFA = 35,
+            VOFS_QUARTER = 36,
+            VIND_QUARTER = 37,
+            VDDD_HALF = 38,
+            VREFD = 39,
+            HIGH_Z = 63
+        };
+
+    } // namespace RD53BConstants
 
 } // namespace Ph2_HwDescription
+
+#endif

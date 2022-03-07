@@ -33,16 +33,16 @@ struct RD53ShortTempSensor : public RD53BTool<RD53ShortTempSensor, Flavor> {
 	static constexpr double idealityFactor[4] = {1.4, 1.4, 1.4, 1.4};
 	
 
-    auto run(Ph2_System::SystemController& system) {
+    auto run() {
 		constexpr float T0C = 273.15;         // [Kelvin]
 		constexpr float kb  = 1.38064852e-23; // [J/K]
 		constexpr float e   = 1.6021766208e-19;
 		constexpr float R   = 15; // By circuit design
 		
         ChipDataMap<ChipResults> results;
-        auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
+        auto& chipInterface = Base::chipInterface();
 
-        Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2410(system.fPowerSupplyClient, "TestKeithley", "Front");
+        Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2410(Base::system().fPowerSupplyClient, "TestKeithley", "Front");
 
         dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
 
@@ -56,7 +56,7 @@ struct RD53ShortTempSensor : public RD53BTool<RD53ShortTempSensor, Flavor> {
 		
 		uint16_t sensorConfigData;
 
-        for_each_device<Chip>(system, [&] (Chip* chip) {
+        Base::for_each_chip([&] (Chip* chip) {
 			auto& valueLow = results[chip].valueLow;
 			auto& valueHigh = results[chip].valueHigh;
 			auto& temperature = results[chip].temperature;

@@ -47,13 +47,13 @@ struct RD53BInjectionTool : public RD53BTool<RD53BInjectionTool, Flavor> {
 
     void init();
 
-    ChipEventsMap run(Ph2_System::SystemController& system, Task progress) const;
+    ChipEventsMap run(Task progress) const;
 
-    void configureInjections(Ph2_System::SystemController& system) const;
+    void configureInjections() const;
 
-    void setupMaskFrame(Ph2_System::SystemController& system, size_t frameId) const;
+    void setupMaskFrame(size_t frameId) const;
 
-    void inject(Ph2_System::SystemController& system, ChipEventsMap& events) const;
+    void inject(ChipEventsMap& events) const;
 
     ChipDataMap<pixel_matrix_t<Flavor, double>> occupancy(const ChipEventsMap& data) const;
 

@@ -67,7 +67,8 @@ class ITinstrumentsInterface
     void runScan();
     void prepareMultimeter();
     void createScannerCardMap();
-
+    void readScannerCardPoint(std::string psRead);
+    void runAnalysis();
 };
 
 } // namespace Ph2_ITchipTesting

@@ -16,11 +16,13 @@ struct RD53IVScan; // forward declaration
 
 template <class Flavor>
 const auto ToolParameters<RD53IVScan<Flavor>> = make_named_tuple(
-    std::make_pair("configFile"_s                    ,std::string("config/iv_it_sldo.xml")),
-    std::make_pair("type"_s                          ,std::string("complete")),
-    std::make_pair("powerSupplyName"_s               ,std::string("powerSupply")),
-    std::make_pair("multimeterName"_s                ,std::string("multimeter")),
-    std::make_pair("powerSupplyVoltageProtection"_s  ,3.0)
+    std::make_pair("configFile"_s                    , std::string("config/iv_it_sldo.xml")),
+    std::make_pair("type"_s                          , std::string("complete")),
+    std::make_pair("powerSupplyName"_s               , std::string("powerSupply")),
+    std::make_pair("multimeterName"_s                , std::string("multimeter")),
+    std::make_pair("powerSupplyVoltageProtection"_s  , 3.0),
+    std::make_pair("scanPointCurrentRange"_s         , std::vector<float>({0.5, 2.0})),
+    std::make_pair("scanPointCurrentStep"_s          , 0.1)
     );
 
 template <class Flavor>
@@ -35,30 +37,26 @@ struct RD53IVScan : public RD53BTool<RD53IVScan, Flavor>
         double IMUXvolt[33];
     };
 
-    auto run(Ph2_System::SystemController& system) const
+    auto run() const
     {
         // TODO The following line should be eliminated somehow - Antonio Nov 24 2021 18:41
         ChipDataMap<ChipResults> results;
 	std::vector<Ph2_ITchipTesting::ITpowerSupplyChannelInterface> channelsPS;
 	std::map<int, std::string> channelMap;
 
-        LOG(INFO) << "PowerSupply client" << system.fPowerSupplyClient << RESET;
+        LOG(INFO) << "PowerSupply client" << Base::system().fPowerSupplyClient << RESET;
 
-        Ph2_ITchipTesting::ITinstrumentsInterface scannerCardKeithley(system.fPowerSupplyClient, Base::param("configFile"_s), Base::param("multimeterName"_s));
+        Ph2_ITchipTesting::ITinstrumentsInterface scannerCardKeithley(Base::system().fPowerSupplyClient, Base::param("configFile"_s), Base::param("multimeterName"_s));
 
         LOG(INFO) << "[RD53IVScan] configFile = " << Base::param("configFile"_s) << RESET;
 
         if     (Base::param("type"_s) == "complete") scannerCardKeithley.runScan();
         else if(Base::param("type"_s) == "steps")
 	{
-	  Ph2_ITchipTesting::ITpowerSupplyChannelInterface digitalChannel(system.fPowerSupplyClient, Base::param("powerSupplyName"_s), "first");
-	  Ph2_ITchipTesting::ITpowerSupplyChannelInterface analogChannel(system.fPowerSupplyClient, Base::param("powerSupplyName"_s), "second");
+	  Ph2_ITchipTesting::ITpowerSupplyChannelInterface digitalChannel(Base::system().fPowerSupplyClient, Base::param("powerSupplyName"_s), "first");
+	  Ph2_ITchipTesting::ITpowerSupplyChannelInterface analogChannel(Base::system().fPowerSupplyClient, Base::param("powerSupplyName"_s), "second");
 	  channelsPS.push_back(digitalChannel);
 	  channelsPS.push_back(analogChannel);
-	  //std::cout << "Reading analog channel voltage: "  << std::endl << analogChannel .getVoltage()  << std::endl;
-	  //std::cout << "Reading digital channel voltage: " << std::endl << digitalChannel.getVoltage() << std::endl;
-	  //std::cout << "Reading analog channel current: "  << std::endl << analogChannel .getCurrent()  << std::endl;
-	  //std::cout << "Reading digital channel current: " << std::endl << digitalChannel.getCurrent() << std::endl;
 	  scannerCardKeithley.prepareMultimeter();
 	  float voltageProtection = Base::param("powerSupplyVoltageProtection"_s);
 	  for (unsigned int v = 0; v < channelsPS.size(); ++v)
@@ -66,6 +64,23 @@ struct RD53IVScan : public RD53BTool<RD53IVScan, Flavor>
 	  for (unsigned int v = 0; v < channelsPS.size(); ++v)
 	    channelsPS[v].turnOn();
 	  scannerCardKeithley.createScannerCardMap();
+	  float vMin  = Base::param("scanPointCurrentRange"_s)[0];
+	  float vMax  = Base::param("scanPointCurrentRange"_s)[1];
+	  float vStep = Base::param("scanPointCurrentStep"_s);
+	  LOG(INFO) << "[RD53IVScan] Ready to run an IV curve from = " << vMin << " to " << vMax << " with steps of " << vStep << RESET;
+	  for (float vCurrent = vMin; vCurrent <= vMax; vCurrent += vStep)
+	  {
+	    LOG(INFO) << "[RD53IVScan] Scanning current point " << vCurrent << " A " << RESET;
+	    std::string psRead = "";
+	    for (unsigned int v = 0; v < channelsPS.size(); ++v)
+	      channelsPS[v].setCurrent(vCurrent);
+	    sleep(1);
+	    for (unsigned int v = 0; v < channelsPS.size(); ++v)
+	      psRead = psRead + std::to_string(channelsPS[v].getCurrent()) + ";" + std::to_string(channelsPS[v].getVoltage()) + ";";
+	    scannerCardKeithley.readScannerCardPoint(psRead);
+	    sleep(1);
+	  }
+	  scannerCardKeithley.runAnalysis();
 	}
 	else LOG(ERROR) << BOLDRED << "Bad ""type"" value in toml configuration file for IVScan, please choose among [complete steps]!" << RESET;
 

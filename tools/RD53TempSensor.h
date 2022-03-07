@@ -41,7 +41,7 @@ struct RD53TempSensor : public RD53BTool<RD53TempSensor, Flavor> {
 	static constexpr int sensor_VMUX[4] = {0b1000000000101, 0b1000000000110, 0b1000000001110, 0b1000000010000};
 	
 
-    auto run(Ph2_System::SystemController& system) {
+    auto run() {
 		constexpr float T0C = 273.15;         // [Kelvin]
 		constexpr float kb  = 1.38064852e-23; // [J/K]
 		constexpr float e   = 1.6021766208e-19;
@@ -54,9 +54,9 @@ struct RD53TempSensor : public RD53BTool<RD53TempSensor, Flavor> {
 		constexpr float beta = 3435;  // [?]
 		
         ChipDataMap<ChipResults> results;
-        auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
+        auto& chipInterface = Base::chipInterface();
 
-        Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2410(system.fPowerSupplyClient, "TestKeithley", "Front");
+        Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2410(Base::system().fPowerSupplyClient, "TestKeithley", "Front");
 
         dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
 
@@ -65,8 +65,8 @@ struct RD53TempSensor : public RD53BTool<RD53TempSensor, Flavor> {
 		
 		uint16_t sensorConfigData;
 
-		for_each_device<BeBoard>(system, [&] (BeBoard* board) {
-			auto& fwInterface = Base::getFWInterface(system, board);
+		Base::for_each_board([&] (BeBoard* board) {
+			auto& fwInterface = Base::getFWInterface(board);
 			for_each_device<Chip>(board, [&] (Chip* chip) {
 				
 				auto& idealityFactor = results[chip].idealityFactor;

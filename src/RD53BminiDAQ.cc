@@ -20,12 +20,22 @@
 #include "../tools/RD53BRegTest.h"
 #include "../tools/RD53BThresholdEqualization.h"
 #include "../tools/RD53BNoiseScan.h"
+#include "../tools/RD53BCapMeasureScan.h"
+#include "../tools/RD53BCapMeasure.h"
+#include "../tools/RD53RingOscillatorWLT.h"
+#include "../tools/RD53BADCCalib.h"
+#include "../tools/RD53BDACCalib.h"
+#include "../tools/RD53BDACTest.h"
+#include "../tools/RD53BGlobalThresholdTuning.h"
+// #include "../tools/RD53BThresholdEqualizationUnbiased.h"
 
+#include <signal.h>
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace RD53BTools;
+using namespace RD53BUtils;
 
 #define TOOL(x) std::make_pair(#x##_s, x<Flavor>{})
 
@@ -46,11 +56,51 @@ using Tools = ToolManager<decltype(make_named_tuple(
     TOOL(RD53BNoiseScan),
     TOOL(RD53IVScan),
 	TOOL(RD53ShortTempSensor),
-    TOOL(RD53VrefTrimming)
+    TOOL(RD53VrefTrimming),
+    TOOL(RD53BCapMeasureScan),
+    TOOL(RD53BCapMeasure),
+    TOOL(RD53RingOscillatorWLT),
+    TOOL(RD53BADCCalib),
+    TOOL(RD53BDACCalib),
+    TOOL(RD53BDACTest),
+    TOOL(RD53BGlobalThresholdTuning)
+    // ,
+    // TOOL(RD53BThresholdEqualizationUnbiased)
 ))>;
 
-
 INITIALIZE_EASYLOGGINGPP
+
+
+void resetAndExit(int sig) {
+    indicators::show_console_cursor(true); // show cursor
+    std::fputs("\033[0m", stdout); // reset colors
+    std::fflush(stdout); // flush stdout
+    signal(sig, SIG_DFL); // set default signal handler
+    raise(sig); // re-raise signal
+}
+
+template <class Flavor>
+void run(SystemController& system, CommandLineProcessing::ArgvParser& cmd) {
+    
+    if (cmd.foundOption("assumeDefault")) {
+        for_each_device<Chip>(system, [] (Chip* chip) {
+            static_cast<RD53B<Flavor>*>(chip)->setDefaultState();
+        });
+    }
+
+    system.ConfigureHw();
+
+    auto toolConfig = toml::parse(cmd.optionValue("tools"));
+
+    bool showPlots = !cmd.foundOption("hidePlots");
+
+    Tools<Flavor>(system, toolConfig, showPlots).run_tools(cmd.allArguments());
+
+    if (cmd.foundOption("saveState"))
+        for_each_device<Chip>(system, [&] (Chip* chip) {
+            chip->saveRegMap("");
+        });
+}
 
 int main(int argc, char** argv) {
     CommandLineProcessing::ArgvParser cmd;
@@ -68,6 +118,9 @@ int main(int argc, char** argv) {
 
     cmd.defineOption("hidePlots", "Do not show plots.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("hidePlots", "h");
+
+    cmd.defineOption("assumeDefault", "Assume that chips are in their default initial state.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOptionAlternative("assumeDefault", "d");
 
     cmd.defineOption("saveState", "Save register values and pixel configuration in .toml file.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("saveState", "s");
@@ -95,21 +148,17 @@ int main(int argc, char** argv) {
         exit(EXIT_SUCCESS);
     }
     
-    system.Configure(configFile);
+    system.InitializeHw(configFile);
+    system.InitializeSettings(configFile);
 
-    auto toolConfig = toml::parse(cmd.optionValue("tools"));
-
-    bool showPlots = !cmd.foundOption("hidePlots");
+    signal(SIGINT, resetAndExit);
+    signal(SIGTERM, resetAndExit);
+    signal(SIGABRT, resetAndExit);
 
     if (system.fDetectorContainer->at(0)->getFrontEndType() == FrontEndType::RD53B)
-        Tools<RD53BFlavor::ATLAS>(toolConfig, showPlots).run_tools(system, cmd.allArguments());
+        run<RD53BFlavor::ATLAS>(system, cmd);
     else
-        Tools<RD53BFlavor::CMS>(toolConfig, showPlots).run_tools(system, cmd.allArguments());
-
-    if (cmd.foundOption("saveState"))
-        for_each_device<Chip>(system, [&] (Chip* chip) {
-            chip->saveRegMap("");
-        });
+        run<RD53BFlavor::CMS>(system, cmd);
 
     system.Destroy();
 

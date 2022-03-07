@@ -32,25 +32,25 @@ struct RD53BRegisterThresholdScan : public RD53BTool<RD53BRegisterThresholdScan,
 
     using ThresholdMap = ChipDataMap<xt::xtensor<double, 3>>;
 
-    ThresholdMap run(Ph2_System::SystemController& system, Task progress) {
+    ThresholdMap run(Task progress) {
         ThresholdMap result;
-        auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
+        auto& chipInterface = Base::chipInterface();
         
         uint16_t regValue = param("regValueRange"_s)[0];
         size_t nSteps = (param("regValueRange"_s)[1] - param("regValueRange"_s)[0]) / param("regValueStep"_s);
 
         const auto& size = param("thresholdScan"_s).param("injectionTool"_s).param("size"_s);
-        for_each_device<Chip>(system, [&] (Chip* chip) {
+        Base::for_each_chip([&] (Chip* chip) {
             result.insert({chip, xt::zeros<double>({nSteps, size[0], size[1]})});
         });
 
         for (size_t i = 0; i < nSteps; ++i) {
-            for_each_device<Chip>(system, [&] (Chip* chip) {
+            Base::for_each_chip([&] (Chip* chip) {
                 for (const auto& regName : param("regNames"_s))
                     chipInterface.WriteReg(chip, regName, regValue);
             });
             
-            auto occMap = param("thresholdScan"_s).run(system, progress.subTask({double(i) / nSteps, double(i + 1) / nSteps}));
+            auto occMap = param("thresholdScan"_s).run(progress.subTask({double(i) / nSteps, double(i + 1) / nSteps}));
             auto thresholdMap = param("thresholdScan"_s).analyze(occMap)[0];
             for (const auto item : thresholdMap)
                 xt::view(result[item.first], i, xt::all(), xt::all()) = item.second;

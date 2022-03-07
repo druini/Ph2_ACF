@@ -79,8 +79,8 @@ public:
     void InitRD53Downlink(const BeBoard* pBoard);
     void InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes = 1);
 
-    void UpdatePixelConfig(RD53B* pRD53) {
-        UpdatePixelConfig(pRD53, pRD53->pixelConfig);
+    void UpdatePixelConfig(RD53B* pRD53, bool updateMasks = true, bool updateTdac = true) {
+        UpdatePixelConfig(pRD53, pRD53->pixelConfig, updateMasks, updateTdac);
     }
 
     template <class Device>
@@ -217,7 +217,9 @@ public:
 
         auto pixMode = pixModeValues.begin();
         RD53BUtils::for_each_device<Chip>(device, [&] (Chip* chip) {
-            static_cast<RD53B*>(chip)->pixelConfig = cfg;
+            auto& chipConfig = static_cast<RD53B*>(chip)->pixelConfig;
+            if (&cfg != &chipConfig)
+                chipConfig = cfg;
             WriteReg(chip, Reg::PIX_MODE, *pixMode);
             ++pixMode;
         });
@@ -323,7 +325,9 @@ public:
             
             auto pixModeIt = pixModeValues.begin();
             RD53BUtils::for_each_device<Chip>(device, [&] (Chip* chip) {
-                static_cast<RD53B*>(chip)->pixelConfig = cfg;
+                auto& chipConfig = static_cast<RD53B*>(chip)->pixelConfig;
+                if (&cfg != &chipConfig)
+                    chipConfig = cfg;
                 WriteReg(chip, Reg::PIX_MODE, *pixModeIt);
                 ++pixModeIt;
             });
@@ -435,7 +439,7 @@ public:
     float    ReadChipMonitor(ReadoutChip* pChip, const std::string& observableName) { return 0; }
     float    ReadHybridTemperature(ReadoutChip* pChip);
     float    ReadHybridVoltage(ReadoutChip* pChip);
-    uint32_t ReadChipADC(ReadoutChip* pChip, const std::string& observableName) { return 0; }
+    uint32_t ReadChipADC(ReadoutChip* pChip, const std::string& observableName);
 
     // private:
     // uint32_t getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage);

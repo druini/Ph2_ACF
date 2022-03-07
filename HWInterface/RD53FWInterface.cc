@@ -10,10 +10,66 @@
 #include "RD53FWInterface.h"
 #include "RD53Interface.h"
 
+#include "Utils/RD53BUtils.h"
+
+#include <chrono>
+
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
+
+struct Timer {
+    template <class D> Timer(const D& duration) : end_time(std::chrono::system_clock::now() + duration) {}
+    operator bool() const { return std::chrono::system_clock::now() > end_time; }
+    std::chrono::time_point<std::chrono::system_clock> end_time;
+};
+
+class TimeoutException: public std::exception {
+private:
+    std::string message_;
+public:
+    explicit TimeoutException(const std::string& message) : message_(message) {}
+    const char* what() const noexcept override {
+        return message_.c_str();
+    }
+};
+
+// Repeatedly calls a function until it either returns false or
+// time runs out in which case it throws an exception with the 
+// description included in the error message.
+template <class D, class B>
+void TimedLoop(const char* description, D timeout, B&& body) {
+    Timer timer(timeout);
+    while(!timer) {
+        if (!std::forward<B>(body)()) 
+            return;
+    }
+    std::ostringstream ss;
+    ss << "Timed out (" << std::chrono::milliseconds(timeout).count() << " ms) while: " << description;
+    throw TimeoutException(ss.str());
+}
+
+// template <class D, class C, class B>
+// void TimedWhile(const char* description, D timeout, C&& condition, B&& body) {
+//     Timer timer(timeout);
+//     while(!timer) {
+//         if (std::forward<C>(condition)()) 
+//             std::forward<B>(body)();
+//         else
+//             return;
+//     }
+//     std::ostringstream ss;
+//     ss << "Timed out (" << std::chrono::milliseconds(timeout).count() << " ms) while:" << description;
+//     throw TimeoutException(ss.str());
+// }
+
+// template <class D, class B>
+// void TimedLoop(const char* description, D timeout, B&& body) {
+//     TimedWhile(description, timeout, [] () { return true; }, body);
+// }
+
+
 RD53FWInterface::RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), fpgaConfig(nullptr), ddr3Offset(0), FWinfo(0) {}
 
 void RD53FWInterface::setFileHandler(FileHandler* pHandler)
@@ -660,6 +716,78 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     return pData.size();
 }
 
+template <class Flavor>
+void RD53FWInterface::GetEvents(BeBoard* board, ChipEventsMap& events) {
+    auto nEvents = localCfgFastCmd.n_triggers * (localCfgFastCmd.trigger_duration + 1);
+    ConfigureFastCommands();
+
+    TimedLoop("Getting events", std::chrono::seconds(30), [&] () {
+        try {
+            std::vector<uint32_t> data;
+            size_t wordsToRead;
+            size_t wordsRead = 0;
+
+            Start();
+
+            TimedLoop("Waiting for data to become available", std::chrono::seconds(5), [&] () { 
+                std::this_thread::sleep_for(std::chrono::microseconds(10));
+                return (wordsToRead = ReadReg("user.stat_regs.words_to_read")) == 0;
+            });
+
+            TimedLoop("Reading data and waiting for triggers to complete", std::chrono::seconds(5), [&] () { 
+                auto chunk = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", wordsToRead, wordsRead);
+                data.insert(data.end(), chunk.begin(), chunk.end());
+                wordsRead += wordsToRead;
+                wordsToRead = ReadReg("user.stat_regs.words_to_read");
+                return ReadReg("user.stat_regs.trigger_cntr") < nEvents || wordsToRead > 0;
+            });
+
+            Stop();
+
+            auto eventsMap = RD53BEventDecoding::decode_events<Flavor>(data);
+            
+            bool events_ok = true;
+            RD53BUtils::for_each_device<Chip>(board, [&] (Chip* chip) {
+                const auto chipLoc = ChipLocation{chip};
+                const auto& chip_events = eventsMap[{chip->getHybridId(), static_cast<RD53Base*>(chip)->getChipLane()}];
+                if (chip_events.size() != nEvents) {
+                    LOG(ERROR) << BOLDRED << "Expected " << nEvents 
+                                << " events but received " << chip_events.size() 
+                                << " for chip " << chipLoc << RESET;
+                    events_ok = false;
+                }
+            });
+            
+            if (!events_ok) 
+                return true;
+
+            RD53BUtils::for_each_device<Chip>(board, [&] (Chip* chip) {
+                const auto chipLoc = ChipLocation{chip};
+                const auto& chip_events = eventsMap[{chip->getHybridId(), static_cast<RD53Base*>(chip)->getChipLane()}];
+
+                events[chipLoc].insert(events[chipLoc].begin(), std::make_move_iterator(chip_events.begin()), std::make_move_iterator(chip_events.end()));
+            });
+        }
+        catch (std::exception& e) {
+            LOG(ERROR) << BOLDRED << e.what() << RESET;
+            return true;
+        }
+        return false;
+    });
+}
+
+template void RD53FWInterface::GetEvents<RD53BFlavor::ATLAS>(BeBoard* board, RD53FWInterface::ChipEventsMap& events);
+template void RD53FWInterface::GetEvents<RD53BFlavor::CMS>(BeBoard* board, RD53FWInterface::ChipEventsMap& events);
+
+template <class Flavor>
+RD53FWInterface::ChipEventsMap RD53FWInterface::GetEvents(BeBoard* board) {
+    ChipEventsMap events;
+    GetEvents<Flavor>(board, events);
+    return events;
+}
+
+template RD53FWInterface::ChipEventsMap RD53FWInterface::GetEvents<RD53BFlavor::ATLAS>(BeBoard* board);
+template RD53FWInterface::ChipEventsMap RD53FWInterface::GetEvents<RD53BFlavor::CMS>(BeBoard* board);
 
 void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {

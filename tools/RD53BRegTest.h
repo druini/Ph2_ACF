@@ -20,15 +20,15 @@ struct RD53BRegTest : public RD53BTool<RD53BRegTest, Flavor> {
     using Base = RD53BTool<RD53BRegTest, Flavor>;
     using Base::Base;
 
-    bool run(Ph2_System::SystemController& system, Task progress) const {
-        auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
+    bool run(Task progress) const {
+        auto& chipInterface = Base::chipInterface();
         
         size_t nChips = 0;
-        for_each_device<Chip>(system, [&] (Chip* chip) { ++nChips; });
+        Base::for_each_chip([&] (Chip* chip) { ++nChips; });
         
         size_t i = 0;
-        for_each_device<Chip>(system, [&] (DeviceChain devices) {
-            auto& fwInterface = Base::getFWInterface(system, devices.board);
+        Base::for_each_chip([&] (DeviceChain devices) {
+            auto& fwInterface = Base::getFWInterface(devices.board);
             auto chip = static_cast<RD53B<Flavor>*>(devices.chip);
 
             chipInterface.WriteReg(chip, "ServiceFrameSkip", Base::param("ServiceFrameSkip"_s));

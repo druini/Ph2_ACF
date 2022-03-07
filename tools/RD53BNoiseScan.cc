@@ -27,18 +27,19 @@ void RD53BNoiseScan<Flavor>::init() {
 }
 
 template <class Flavor>
-typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Ph2_System::SystemController& system, Task progress) const {
+typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Task progress) const {
     using namespace RD53BEventDecoding;
     
-    ChipEventsMap systemEventsMap;
+    ChipEventsMap events;
 
-    auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
-    for_each_device<Hybrid>(system, [&] (Hybrid* hybrid) {
+    auto& chipInterface = Base::chipInterface();
+    Base::for_each_hybrid([&] (Hybrid* hybrid) {
         chipInterface.WriteReg(hybrid, "LatencyConfig", param("triggerLatency"_s));
     });
-    
-    for (auto* board : *system.fDetectorContainer) {
-        auto& fwInterface = Base::getFWInterface(system, board);
+
+    // configure FW FSM    
+    for (auto* board : *Base::system().fDetectorContainer) {
+        auto& fwInterface = Base::getFWInterface(board);
         auto& fastCmdConfig = *fwInterface.getLocalCfgFastCmd();
 
         fastCmdConfig.n_triggers = param("readoutPeriod"_s);
@@ -57,7 +58,8 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Ph2_S
     auto offset = param("offset"_s);
     auto size = param("size"_s);
 
-    for_each_device<Hybrid>(system, [&] (Hybrid* hybrid) {
+    // configure pixels
+    Base::for_each_hybrid([&] (Hybrid* hybrid) {
         auto cfg = static_cast<RD53B<Flavor>*>(hybrid->at(0))->pixelConfig;
         
         cfg.enable.fill(false);
@@ -66,109 +68,47 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Ph2_S
         
         chipInterface.UpdatePixelConfig(hybrid, cfg, true, false);
     });
-
     
+    // send triggers and read events
     for (size_t triggersSent = 0; triggersSent < param("nTriggers"_s); triggersSent += param("readoutPeriod"_s)) {
 
         size_t nTriggers = std::min(param("readoutPeriod"_s), param("nTriggers"_s) - triggersSent);
-        const auto nEvents = nTriggers * param("triggerDuration"_s);
+        Base::for_each_board([&] (BeBoard* board) {
+            auto& fwInterface = Base::getFWInterface(board);
+            fwInterface.getLocalCfgFastCmd()->n_triggers = nTriggers;
 
-        for_each_device<BeBoard>(system, [&] (BeBoard* board) {
-            auto& fwInterface = Base::getFWInterface(system, board);
-            auto fastCmdConfig = fwInterface.getLocalCfgFastCmd();
-            fastCmdConfig->n_triggers = nTriggers;
-            fwInterface.ConfigureFastCommands(fastCmdConfig);
+            fwInterface.template GetEvents<Flavor>(board, events);
+        });
+        
+        progress.update(triggersSent / param("nTriggers"_s));
+    }
 
-            while (true) {
-                fwInterface.Start();
+    if (param("maskNoisyPixels"_s)) {
+        auto hitCountMap = hitCount(events);
+        Base::for_each_chip([&] (Chip* chip) {
+            auto rd53b = static_cast<RD53B<Flavor>*>(chip);
+            const auto noisy = hitCountMap[chip] / double(param("nTriggers"_s)) > param("occupancyThreshold"_s);
+            rd53b->pixelConfig.enable = !noisy;
+            chipInterface.UpdatePixelConfig(rd53b, true, false);
 
-                std::vector<uint32_t> data;
-
-                size_t wordsToRead;
-                size_t wordsRead = 0;
-                while ((wordsToRead = fwInterface.ReadReg("user.stat_regs.words_to_read")) == 0)
-                    std::this_thread::sleep_for(std::chrono::microseconds(10));
-
-                while (fwInterface.ReadReg("user.stat_regs.trigger_cntr") < nEvents || wordsToRead > 0) {
-                    auto chunk = fwInterface.ReadBlockRegOffset("ddr3.fc7_daq_ddr3", wordsToRead, wordsRead);
-                    data.insert(data.end(), chunk.begin(), chunk.end());
-                    wordsRead += wordsToRead;
-                    wordsToRead = fwInterface.ReadReg("user.stat_regs.words_to_read");
-                }
-
-                fwInterface.Stop();
-
-                if (data.size() == 0) {
-                    LOG(ERROR) << BOLDRED << "Received no data." << RESET;
-                    continue;
-                }
-
-                try {
-                    auto eventsMap = RD53BEventDecoding::decode_events<Flavor::flavor>(data);
-                    
-                    bool events_ok = true;
-                    for_each_device<Chip>(board, [&] (Chip* chip) {
-                        const auto chipLoc = RD53BUtils::ChipLocation{chip};
-                        const auto& chip_events = eventsMap[{chip->getHybridId(), static_cast<RD53Base*>(chip)->getChipLane()}];
-                        if (chip_events.size() != nEvents) {
-                            LOG(ERROR) << BOLDRED << "Expected " << nEvents 
-                                        << " events but received " << chip_events.size() 
-                                        << " for chip " << chipLoc << RESET;
-                            events_ok = false;
-                        }
-                        if (chip_events.size() > nEvents) {
-                            int cnt = 0;
-                            for (const auto& event : chip_events) {
-                                std::cout << (cnt++) << " BCID: " << +event.BCID 
-                                    << ", triggerTag: " << +event.triggerTag 
-                                    << ", triggerPos: " << +event.triggerPos 
-                                    << ", dummySize: " << +event.dummySize 
-                                    << std::endl;
-                            }
-
-                            for (size_t i = 0; i < data.size(); i += 4) {
-                                for (size_t j = 0; j < 4; ++j)
-                                    std::cout << std::bitset<32>(data[i + j]) << "\t";
-                                std::cout << std::endl;
-                            }
-                        }
-                    });
-                    
-                    if (!events_ok) 
-                        continue;
-
-                    for_each_device<Chip>(board, [&] (Chip* chip) {
-                        const auto chipLoc = RD53BUtils::ChipLocation{chip};
-                        const auto& chip_events = eventsMap[{chip->getHybridId(), static_cast<RD53Base*>(chip)->getChipLane()}];
-                        
-                        std::copy(chip_events.begin(), chip_events.end(), std::back_inserter(systemEventsMap[chipLoc]));
-                    });
-                }
-                catch (std::runtime_error& e) {
-                    LOG(ERROR) << BOLDRED << e.what() << RESET;
-                    continue;
-                }
-                break;
-            }
+            LOG(INFO) << "Masking " << xt::count_nonzero(noisy) << " noisy pixels for chip: " << ChipLocation(chip) << RESET;
         });
     }
 
-    return systemEventsMap;
+    return events;
 }
 
-
-
 template <class Flavor>
-ChipDataMap<pixel_matrix_t<Flavor, double>> RD53BNoiseScan<Flavor>::occupancy(const ChipEventsMap& data) const {
-    using OccMatrix = pixel_matrix_t<Flavor, double>;
-    ChipDataMap<OccMatrix> occ;
+ChipDataMap<pixel_matrix_t<Flavor, size_t>> RD53BNoiseScan<Flavor>::hitCount(const ChipEventsMap& data) const {
+    using HitCountMatrix = pixel_matrix_t<Flavor, size_t>;
+    ChipDataMap<HitCountMatrix> hitCountMap;
     for (const auto& item : data) {
-        occ[item.first].fill(0);
+        hitCountMap[item.first].fill(0);
         for (const auto& event : item.second)
             for (const auto& hit : event.hits)
-                occ[item.first](hit.row, hit.col) += 1.0 / param("nTriggers"_s);
+                ++hitCountMap[item.first](hit.row, hit.col);
     }
-    return occ;
+    return hitCountMap;
 }
 
 template <class Flavor>
@@ -191,25 +131,25 @@ ChipDataMap<std::array<double, 16>> RD53BNoiseScan<Flavor>::totDistribution(cons
 
 template <class Flavor>
 void RD53BNoiseScan<Flavor>::draw(const ChipEventsMap& result) {
-    // TApplication* app = nullptr;
-    // if (param("showPlots"_s))
-        // app = new TApplication("app", nullptr, nullptr);
-    // TApplication app("app", nullptr, nullptr);
-    // TFile* file = new TFile(Base::getResultPath(".root").c_str(), "NEW");
     Base::createRootFile();
     
-    auto occMap = occupancy(result);
+    auto hitCountMap = hitCount(result);
     auto totMap = totDistribution(result);
 
     for (const auto& item : result) {
         Base::mkdir(item.first);
 
-        const auto& occ = occMap[item.first];
+        const auto& hitCount = hitCountMap[item.first];
         const auto& tot = totMap[item.first];
+        const auto occ = hitCount / double(param("nTriggers"_s));
 
         Base::drawHist(tot, "ToT Distribution", 16, 0, 16, "ToT");
 
         Base::drawMap(occ, "Occupancy Map", "Occupancy");
+
+        size_t maxHits = xt::amax(hitCount)();
+
+        Base::drawHist(hitCount, "Hit Count Distribution", maxHits, 0, maxHits, "Hit Count", false);
 
         // Calculate & print mean occupancy
         auto row_range = xt::range(param("offset"_s)[0], param("offset"_s)[0] + param("size"_s)[0]);
@@ -223,17 +163,16 @@ void RD53BNoiseScan<Flavor>::draw(const ChipEventsMap& result) {
         for (const auto event : result.at(item.first))
             nHits += event.hits.size();
 
-        LOG (INFO) << "number of enabled pixels: " << xt::count_nonzero(mask)() << RESET;
+        LOG (INFO) << "Enabled pixels: " << xt::count_nonzero(mask)() << " / " << (Flavor::nRows * Flavor::nCols) << RESET;
 
         LOG (INFO) << "Total number of hits: " << nHits << RESET;
 
-        LOG (INFO) << "mean occupancy for enabled pixels: " << xt::mean(xt::filter(occ, mask))() << RESET;
+        LOG (INFO) << "Mean occupancy for enabled pixels: " << xt::mean(xt::filter(occ, mask))() << RESET;
 
         double mean_occ_disabled = 0;
         if (param("size"_s)[0] < RD53B<Flavor>::nRows || param("size"_s)[1] < RD53B<Flavor>::nCols)
             mean_occ_disabled = xt::mean(xt::filter(occ, !mask))();
-        LOG (INFO) << "mean occupancy for disabled pixels: " << mean_occ_disabled << RESET;
-
+        LOG (INFO) << "Mean occupancy for disabled pixels: " << mean_occ_disabled << RESET;
     }
 }
 

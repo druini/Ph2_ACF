@@ -7,8 +7,11 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
+#include <unordered_map>
+
 #include "RD53BInterface.h"
 
+#include "../Utils/Bits/BitVector.hpp"
 
 using namespace Ph2_HwDescription;
 
@@ -77,11 +80,17 @@ void RD53BInterface<Flavor>::InitRD53Downlink(const BeBoard* pBoard)
 template <class Flavor>
 void RD53BInterface<Flavor>::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
 {
+    auto rd53b = static_cast<RD53B*>(pChip);
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
 
     WriteReg(pChip, Reg::SER_SEL_OUT, 0x0055);
-    WriteReg(pChip, Reg::CML_CONFIG, 0x0001);
-    WriteReg(pChip, Reg::AuroraConfig, 0x0167);
+    WriteReg(pChip, Reg::CML_CONFIG, 1u << rd53b->getChipLane());
+    WriteReg(pChip, Reg::AuroraConfig, bits::pack<4, 6, 2>(1, 25, 3));
+    size_t laneMapping[] = {0, 1, 2, 3};
+    laneMapping[0] = rd53b->getChipLane();
+    laneMapping[rd53b->getChipLane()] = 0;
+    uint16_t val = bits::pack<2, 2, 2, 2, 2, 2, 2, 2>(3, 2, 1, 0, laneMapping[3], laneMapping[2], laneMapping[1], laneMapping[0]);
+    WriteReg(pChip, Reg::DataMergingMux, val);
     WriteReg(pChip, Reg::ServiceDataConf, (1 << 8) | 50);
     WriteReg(pChip, Reg::AURORA_CB_CONFIG0, 0x0FF1);
     WriteReg(pChip, Reg::AURORA_CB_CONFIG0, 0x0000);
@@ -110,6 +119,9 @@ boost::optional<uint16_t> RD53BInterface<Flavor>::ReadChipReg(RD53B* rd53b, cons
         uint16_t address = reg == Reg::PIX_PORTAL ? bits::pack<1, 9>(1, rd53b->currentRow) : reg.address;
 
         auto regReadback = boardFW.ReadChipRegisters(rd53b);
+
+        if (regReadback.size() > 1)
+            LOG(WARNING) << BLUE << "Register readback (" << reg.name << ") warning: Too many entries (" << YELLOW << (regReadback.size()) << BLUE << ")" << RESET;
 
         auto it = std::find_if(regReadback.begin(), regReadback.end(), [=] (auto& readback) {
             return readback.first == address;
@@ -389,6 +401,46 @@ float RD53BInterface<Flavor>::ReadHybridVoltage(ReadoutChip* pChip)
 {
     auto& boardFW = setup(pChip);
     return boardFW.ReadHybridVoltage(pChip->getHybridId());
+}
+
+template <class Flavor>
+uint32_t RD53BInterface<Flavor>::ReadChipADC(ReadoutChip* pChip, const std::string& observableName)
+{
+    uint16_t config = 0x1000; // enable monitoring block
+
+    std::unordered_map<std::string, uint8_t>::const_iterator it(RD53B::VMuxMap.find(observableName));
+    if(it == RD53B::VMuxMap.end())
+    {
+        it = RD53B::IMuxMap.find(observableName);
+        if(it == RD53B::IMuxMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "Bad analog multiplexer label: " << observableName << RESET;
+            return -1;
+        }
+        else
+        {
+            config |= it->second << 6;
+            config |= (uint8_t)RD53B::VMux::IMUX_OUT;
+        }
+    }
+    else
+    {
+        config |= ((uint8_t)RD53B::IMux::HIGH_Z << 6) | it->second;
+    }
+
+    uint16_t buf;
+    BitVector<uint16_t> cmdQ;
+    SerializeCommand<RD53BCmd::WrReg>(pChip, cmdQ, Reg::MonitorConfig.address, config);
+    SerializeCommand<RD53BCmd::WrReg>(pChip, cmdQ, Reg::GlobalPulseWidth.address, uint16_t{3});
+    buf = 1u << RD53B::GlobalPulseRoutes.at("ResetADC");
+    SerializeCommand<RD53BCmd::WrReg>(pChip, cmdQ, Reg::GlobalPulseConf.address, buf);
+    SerializeCommand<RD53BCmd::GlobalPulse>(pChip, cmdQ);
+    buf = 1u << RD53B::GlobalPulseRoutes.at("ADCStartOfConversion");
+    SerializeCommand<RD53BCmd::WrReg>(pChip, cmdQ, Reg::GlobalPulseConf.address, buf);
+    SerializeCommand<RD53BCmd::GlobalPulse>(pChip, cmdQ);
+    SendCommandStream(pChip, cmdQ);
+
+    return ReadReg(pChip, Reg::MonitoringDataADC);
 }
 
 template class RD53BInterface<RD53BFlavor::ATLAS>;

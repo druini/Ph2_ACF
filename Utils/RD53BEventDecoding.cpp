@@ -102,13 +102,16 @@ using HitMap = BitSerialization::NamedTuple<
 // Type aliase templates (ie. templated "using" definitions) containing lambdas
 // fail to compile probably due to some bug in gcc. In this case a new class
 // definition with public inheritance can be used instead.
-template <bool CompressedHitmap, bool EnableToT, bool IsLast = false>
+template <class Flavor, bool CompressedHitmap, bool EnableToT, bool IsLast = false>
 struct QRow : public BitSerialization::NamedTuple<
     NamedField<"is_last", Constant<Bool, IsLast>>,
     NamedField<"is_neighbor", Bool>,
-    NamedField<"qrow", Optional<Uint<8>, [] (const auto& self) {
-        return !(bool)self["is_neighbor"_s];
-    }>>,
+    NamedField<"qrow", Optional<
+        Validated<Uint<8>, [] (const auto&, auto value) { return value < Flavor::nRows / 2; }>,
+        [] (const auto& self) {
+            return !(bool)self["is_neighbor"_s];
+        }
+    >>,
     NamedField<"hitmap", std::conditional_t<CompressedHitmap, CompressedHitMap, HitMap>>,
     NamedField<"tots", std::conditional_t<EnableToT,
         List<Uint<4>, [] (const auto& self) {
@@ -124,20 +127,20 @@ struct QRow : public BitSerialization::NamedTuple<
 > {};
 
 
-template <bool CompressedHitmap, bool EnableToT>
+template <class Flavor, bool CompressedHitmap, bool EnableToT>
 struct CCol : public BitSerialization::NamedTuple<
     NamedField<"ccol", Validated<Uint<6>, [] (const auto&, const auto& value) { 
-        return (value > 0); 
+        return (value > 0) && (value <= Flavor::nCols / 8); 
     }>>,
-    NamedField<"qrows", String<QRow<CompressedHitmap, EnableToT>, QRow<CompressedHitmap, EnableToT, true>>>
+    NamedField<"qrows", String<QRow<Flavor, CompressedHitmap, EnableToT>, QRow<Flavor, CompressedHitmap, EnableToT, true>>>
 > {};
 
 
-template <bool CompressedHitmap, bool EnableToT>
+template <class Flavor, bool CompressedHitmap, bool EnableToT>
 struct Event : public BitSerialization::NamedTuple<
     NamedField<"trigger_tag", Uint<6>>,
     NamedField<"trigger_pos", Uint<2>>,
-    NamedField<"ccols", Many<CCol<CompressedHitmap, EnableToT>>>,
+    NamedField<"ccols", Many<CCol<Flavor, CompressedHitmap, EnableToT>>>,
     NamedField<"hits", Property<std::vector<RD53BEvent::Hit>, [] (const auto& parent) {
         std::vector<RD53BEvent::Hit> hits;
         std::array<int, 54> last_qrow;
@@ -172,8 +175,8 @@ struct Event : public BitSerialization::NamedTuple<
 > {};
 
 
-template <bool CompressedHitmap, bool EnableToT>
-using EventList = SeparatedBy<Event<CompressedHitmap, EnableToT>, Constant<Uint<3>, 0b111>>;
+template <class Flavor, bool CompressedHitmap, bool EnableToT>
+using EventList = SeparatedBy<Event<Flavor, CompressedHitmap, EnableToT>, Constant<Uint<3>, 0b111>>;
 
 
 template <bool IsDelimiter, bool HasChipId>
@@ -184,10 +187,10 @@ using StreamPacket = BitSerialization::NamedTuple<
 >;
 
 
-template <Config Cfg>
+template <class Flavor, Config Cfg>
 struct EventStream : public Compose3<
     Aligned<
-        EventList<Cfg.compressed_hitmap, Cfg.enable_tot>,
+        EventList<Flavor, Cfg.compressed_hitmap, Cfg.enable_tot>,
         // Validated<
         //     EventList<Cfg.compressed_hitmap, Cfg.enable_tot>, 
         //     [] (const auto&, const auto& value) { return (value.size() > 0); }
@@ -195,7 +198,7 @@ struct EventStream : public Compose3<
         63
     >,
     Many<Uint<63>>,
-    std::conditional_t<(Cfg.flavor == Ph2_HwDescription::RD53BFlavor::Flavor::ATLAS),
+    std::conditional_t<(Flavor::flavor == Ph2_HwDescription::RD53BFlavor::Flavor::ATLAS),
         Stream<StreamPacket<true, Cfg.has_chip_id>, StreamPacket<false, Cfg.has_chip_id>>,
         String<StreamPacket<false, Cfg.has_chip_id>, StreamPacket<true, Cfg.has_chip_id>>
     >
@@ -203,7 +206,7 @@ struct EventStream : public Compose3<
 
 
 
-template <Config Cfg>
+template <class Flavor, Config Cfg>
 struct FWEvent : public Aligned<
     BitSerialization::NamedTuple<
         NamedField<"header", Constant<Uint<4>, 0xA>>,
@@ -215,9 +218,9 @@ struct FWEvent : public Aligned<
         NamedField<"chip_type", Uint<4>>,
         NamedField<"frame_delay", Uint<12>>,
         NamedField<"chip_data", 
-            // EventStream<Cfg>
+            // EventStream<Flavor, Cfg>
             Compose3<
-                EventStream<Cfg>,
+                EventStream<Flavor, Cfg>,
                 Many<Uint<64>>,
                 List<Uint<64>, [] (const auto& self) { return 2 * self["l1a_size"_s] - 1; }>
             >
@@ -233,7 +236,7 @@ struct FWEvent : public Aligned<
     128
 > {};
 
-template <Config Cfg>
+template <class Flavor, Config Cfg>
 struct FWEventData : public 
 // NamedTuple<
 //     NamedField<"data",
@@ -250,7 +253,7 @@ struct FWEventData : public
                 NamedField<"events",
                     Compose3<
                         Many<
-                            FWEvent<Cfg>,
+                            FWEvent<Flavor, Cfg>,
                             // Validated<
                             //     FWEvent<Cfg>,
                             //     [] (const auto& self, const auto& value) {
@@ -286,12 +289,22 @@ struct FWEventData : public
 // >
 {};
 
-template <Ph2_HwDescription::RD53BFlavor::Flavor Flavor>
+
+template <class Flavor>
 BoardEventsMap decode_events(const std::vector<uint32_t>& data) {
     BoardEventsMap eventsMap;
+    decode_events<Flavor>(data, eventsMap);
+    return eventsMap;
+}
+
+template BoardEventsMap decode_events<Ph2_HwDescription::RD53BFlavor::ATLAS>(const std::vector<uint32_t>&);
+template BoardEventsMap decode_events<Ph2_HwDescription::RD53BFlavor::CMS>(const std::vector<uint32_t>&);
+
+template <class Flavor>
+void decode_events(const std::vector<uint32_t>& data, BoardEventsMap& eventsMap) {
     auto bits = bit_view(data);
 
-    auto result = FWEventData<Config{Flavor, true, true, false}>::parse(bits);
+    auto result = FWEventData<Flavor, Config{true, true, false}>::parse(bits);
 
     if (!result) {
         std::stringstream ss;
@@ -312,11 +325,9 @@ BoardEventsMap decode_events(const std::vector<uint32_t>& data) {
             }
         }
     }
-
-    return eventsMap;
 }
 
-template BoardEventsMap decode_events<Ph2_HwDescription::RD53BFlavor::Flavor::ATLAS>(const std::vector<uint32_t>&);
-template BoardEventsMap decode_events<Ph2_HwDescription::RD53BFlavor::Flavor::CMS>(const std::vector<uint32_t>&);
+template void decode_events<Ph2_HwDescription::RD53BFlavor::ATLAS>(const std::vector<uint32_t>&, BoardEventsMap&);
+template void decode_events<Ph2_HwDescription::RD53BFlavor::CMS>(const std::vector<uint32_t>&, BoardEventsMap&);
 
 }

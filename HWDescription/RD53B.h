@@ -54,6 +54,11 @@ namespace RD53BFlavor {
         static constexpr Flavor flavor = Flavor::ATLAS;
         static constexpr size_t nRows = 384;
         static constexpr size_t nCols = 400;
+        static constexpr auto& IMuxMap = RD53BConstants::AtlasIMuxMap;
+        static constexpr auto& VMuxMap = RD53BConstants::AtlasVMuxMap;
+
+        using IMux = RD53BConstants::AtlasIMux;
+        using VMux = RD53BConstants::AtlasVMux;
 
         using Reg = RD53BConstants::ATLASRegisters;
 
@@ -73,12 +78,19 @@ namespace RD53BFlavor {
             uint8_t value = code & 0xF;
             return sign ? 16 + value : ~value;
         }
+
+        static constexpr uint16_t globalPulseUnit = 2;
     };
 
     struct CMS {
         static constexpr Flavor flavor = Flavor::CMS;
         static constexpr size_t nRows = 336;
         static constexpr size_t nCols = 432;
+        static constexpr auto& IMuxMap = RD53BConstants::CmsIMuxMap;
+        static constexpr auto& VMuxMap = RD53BConstants::CmsVMuxMap;
+
+        using IMux = RD53BConstants::CmsIMux;
+        using VMux = RD53BConstants::CmsVMux;
 
         using Reg = RD53BConstants::CMSRegisters;
 
@@ -88,12 +100,33 @@ namespace RD53BFlavor {
 
         static constexpr uint8_t encodeTDAC(uint8_t value) { return value; }
         static constexpr uint8_t decodeTDAC(uint8_t code) { return code; }
+
+        static constexpr uint16_t globalPulseUnit = 1;
     };
     
 }
 
 template <class Flavor, class T>
 using pixel_matrix_t = xt::xtensor_fixed<T, xt::xshape<Flavor::nRows, Flavor::nCols>>;
+
+struct ChipLocation {
+    ChipLocation(Chip* pChip) : board_id(pChip->getBeBoardId()), hybrid_id(pChip->getHybridId()), chip_id(pChip->getId()) {}
+
+    uint16_t board_id;
+    uint16_t hybrid_id;
+    uint16_t chip_id;
+
+    size_t hash() const { return (board_id << 16) | (hybrid_id << 8) | chip_id; }
+
+    friend bool operator<(const ChipLocation& l, const ChipLocation& r ) {
+        return l.hash() < r.hash();
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const ChipLocation& loc) {
+        return (os << "{ board: " << loc.board_id << ", hybrid: " << loc.hybrid_id << ", chip: " << loc.chip_id << " }");
+    }
+};
+
 
 template <class Flavor>
 class RD53B : public RD53Base
@@ -112,9 +145,17 @@ public:
     static constexpr const auto& Regs = Reg::Regs;
     static constexpr const auto& vRegs = Reg::vRegs;
 
-    static const decltype(RD53BConstants::GetGlobalPulseRoutes()) GlobalPulseRoutes;
-    static const decltype(RD53BConstants::GetIMUX()) IMUX;
-    static const decltype(RD53BConstants::GetVMUX()) VMUX;
+    static constexpr auto& GlobalPulseRoutes = RD53BConstants::GlobalPulseRoutes;
+    
+    static constexpr auto& IMuxMap = Flavor::IMuxMap;
+    static constexpr auto& VMuxMap = Flavor::VMuxMap;
+
+    using IMux = typename Flavor::IMux;
+    using VMux = typename Flavor::VMux;
+
+    // static const decltype(RD53BConstants::GetGlobalPulseRoutes()) GlobalPulseRoutes;
+    // static const decltype(RD53BConstants::GetIMUX()) IMUX;
+    // static const decltype(RD53BConstants::GetVMUX()) VMUX;
 
     template <class T>
     using PixelMatrix = pixel_matrix_t<Flavor, T>;
@@ -161,6 +202,8 @@ public:
 
     RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName);
     RD53B(const RD53B& chipObj);
+
+    void setDefaultState();
 
     void     loadfRegMap(const std::string& fileName) override;
     void     saveRegMap(const std::string& fName2Add) override;

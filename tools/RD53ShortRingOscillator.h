@@ -28,13 +28,13 @@ struct RD53ShortRingOscillator : public RD53BTool<RD53ShortRingOscillator, Flavo
         //double trimOscFrequency[42];
     };
 
-    auto run(Ph2_System::SystemController& system) const {
+    auto run() const {
         ChipDataMap<ChipResults> results;
-        auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
+        auto& chipInterface = Base::chipInterface();
 
         LOG(INFO) << "[RD53ShortRingOscillator] exampleParam = " << Base::param("exampleParam"_s) << RESET;
 
-        for_each_device<Chip>(system, [&] (Chip* chip) {
+        Base::for_each_chip([&] (Chip* chip) {
             auto& trimOscCounts = results[chip].trimOscCounts;
 			
 			for(int ringOsc = 0; ringOsc < 8; ringOsc++){

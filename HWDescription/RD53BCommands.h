@@ -49,7 +49,7 @@ struct Trigger {
 
 
 template <class Cmd>
-void serialize(Cmd&&, BitVector<uint16_t>&);
+extern void serialize(Cmd&&, BitVector<uint16_t>&);
 
 template <class Cmd>
 const bool isBroadcast = false;
@@ -57,10 +57,6 @@ const bool isBroadcast = false;
 template <> const bool isBroadcast<Sync> = true;
 template <> const bool isBroadcast<PLLlock> = true;
 template <> const bool isBroadcast<Trigger> = true;
-
-
-template <class Cmd>
-void serialize(Cmd&&, BitVector<uint16_t>&);
 
 
 template <class Cmd, class... Args>

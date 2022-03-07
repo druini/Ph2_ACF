@@ -31,18 +31,18 @@ struct RD53MuxScan : public RD53BTool<RD53MuxScan, Flavor> {
         std::vector<double> IMUXvolt_ADC;
     };
 
-    auto run(Ph2_System::SystemController& system) const {
+    auto run() const {
         ChipDataMap<ChipResults> results;
-        auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(system.fReadoutChipInterface);
-        
-        Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2410(system.fPowerSupplyClient, "TestKeithley", "Front");
+        auto& chipInterface = Base::chipInterface();
+
+        Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2410(Base::system().fPowerSupplyClient, "TestKeithley", "Front");
 
         dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
 
 
         LOG(INFO) << "[RD53MuxScan] exampleParam = " << Base::param("exampleParam"_s) << RESET;
 
-        for_each_device<Chip>(system, [&] (Chip* chip) {
+        Base::for_each_chip([&] (Chip* chip) {
 		
 			for(int VMUXcode=0;VMUXcode<40;VMUXcode++){
 				//Set Mux output
