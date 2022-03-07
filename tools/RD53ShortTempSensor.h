@@ -46,11 +46,6 @@ struct RD53ShortTempSensor : public RD53BTool<RD53ShortTempSensor, Flavor> {
 
         dKeithley2410.setupKeithley2410ChannelSense(VOLTAGESENSE, 2.0);
 
-        
-        Ph2_ITchipTesting::ITpowerSupplyChannelInterface dKeithley2000(system.fPowerSupplyClient, "KeithleyMultimeter", "Front");
-
-        //dKeithley2000.setupKeithley2000ChannelSense(VOLTAGESENSE, 2.0);
-
         LOG(INFO) << "[RD53ShortTempSensor] exampleParam = " << Base::param("exampleParam"_s) << RESET;
 		
 		
