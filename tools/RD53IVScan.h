@@ -36,7 +36,7 @@ struct RD53IVScan : public RD53BTool<RD53IVScan, Flavor>
         double IMUXvolt[33];
     };
 
-    auto run() const
+    auto run(Task progress) const
     {
         // TODO The following line should be eliminated somehow - Antonio Nov 24 2021 18:41
         ChipDataMap<ChipResults>                                      results;
@@ -74,6 +74,7 @@ struct RD53IVScan : public RD53BTool<RD53IVScan, Flavor>
 
             for(float vCurrent = vMin; vCurrent <= vMax + 1e-5; vCurrent += vStep)
             {
+                progress.update((vCurrent - vMin) / (vMax - vMin));
                 LOG(INFO) << "[RD53IVScan] Scanning current point " << vCurrent << " A " << RESET;
                 std::string psRead           = "";
                 std::string currentReadValue = "";
@@ -95,7 +96,7 @@ struct RD53IVScan : public RD53BTool<RD53IVScan, Flavor>
                                               chipInterface.WriteReg(chip, "VMonitor", 0b000001);
                                               chipInterface.WriteReg(chip, "IMonitor", vIMUXcode);
                                               chipInterface.SendGlobalPulse(chip, {"ADCStartOfConversion"}); // ADC start conversion
-                                              double      iRead   = chipInterface.ReadReg(chip, "MonitoringDataADC");
+                                              unsigned int iRead  = chipInterface.ReadReg(chip, "MonitoringDataADC");
                                               std::string iMuxStr = std::to_string(iRead);
                                               currentReadValue    = currentReadValue + iMuxStr + ";";
                                           }
