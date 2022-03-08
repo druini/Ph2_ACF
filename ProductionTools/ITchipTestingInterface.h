@@ -29,8 +29,8 @@ class ITpowerSupplyChannelInterface
 {
   private:
     TCPClient*  fPowerSupplyClient;
-    std::string powerSupplyName;
-    std::string channelID;
+    std::string fPowerSupplyName;
+    std::string fChannelID;
 
   public:
     ITpowerSupplyChannelInterface(TCPClient* thePowerSupplyClient, std::string powerSupplyName, std::string channelID);
@@ -53,22 +53,39 @@ class ITpowerSupplyChannelInterface
     void turnOn();
 };
 
-class ITinstrumentsInterface
+class ITScannerCardInterface
 {
   private:
-    TCPClient*  fInstrumentClient;
+    TCPClient*  fScannerCardClient;
     std::string fConfigFileName;
-    std::string instrumentID;
+    std::string fScannerCardID;
 
   public:
-    ITinstrumentsInterface(TCPClient* thePowerSupplyClient, std::string configFileCompletePath, std::string instrumentID);
+    ITScannerCardInterface(TCPClient* theScannerCardClient, std::string configFileCompletePath, std::string instrumentID);
 
-    void setInstrumentClient(TCPClient* theInstrumentClient) { fInstrumentClient = theInstrumentClient; };
-    void runScan();
+    void setScannerCardClient(TCPClient* theScannerCardClient) { fScannerCardClient = theScannerCardClient; };
+    void runITIVSLDOScan();
     void prepareMultimeter();
-    void createScannerCardMap();
     void readScannerCardPoint(std::string psRead);
     void runAnalysis();
+};
+
+class ITIVSLDOTestInterface
+{
+  private:
+    TCPClient*  fTestClient;
+    std::string fConfigFileName;
+
+  public:
+    ITIVSLDOTestInterface(TCPClient* theTestClient, std::string configFileCompletePath);
+
+    void setTestClient(TCPClient* theTestClient) { fTestClient = theTestClient; };
+    void initITIVTools();
+    void runITIVSLDOScan();
+    void runAnalysis();
+    void endAcquisition();
+    void prepareImuxFileHeader(std::string header);
+    void writeImuxLine(std::string imuxReading);
 };
 
 } // namespace Ph2_ITchipTesting
