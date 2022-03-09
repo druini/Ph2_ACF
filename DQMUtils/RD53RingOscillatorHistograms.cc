@@ -9,6 +9,7 @@
 
 #include "RD53RingOscillatorHistograms.h"
 
+#include <boost/filesystem.hpp>
 #include "TF1.h"
 
 using namespace Ph2_HwDescription;
@@ -36,17 +37,24 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
     auto vdddMG0 = new TMultiGraph();
     for(int ringOsc = 0; ringOsc < 8; ringOsc++)
     {
+        
         TGraph* freqPlot = new TGraph(nPoints, trimVoltage, trimOscFrequency[ringOsc]);
         freqPlot->SetTitle(oscNames[ringOsc]);
         vdddMG0->Add(freqPlot, "APL");
         freqPlot->Write();
-        line.SetParameter(1, (trimOscFrequency[ringOsc][nPoints - 1] - trimOscFrequency[ringOsc][0]) / (trimVoltage[nPoints - 1] - trimVoltage[0]));
-        line.SetParameter(0, trimOscFrequency[ringOsc][nPoints - 1] - trimVoltage[nPoints - 1] * line.GetParameter(1));
-        freqPlot->Fit(&line, "NQ");
-        if(fitResults != nullptr) {
-            fitResults[ringOsc][0] = line.GetParameter(0);
-            fitResults[ringOsc][1] = line.GetParameter(1);
-        }
+		TFitResultPtr r = freqPlot->Fit("pol1", "SN", "", 0, 16);
+		static const std::string fileName = ("Results/RoscVDDD_" + outputname + ".csv").c_str();
+		std::ofstream outFile;
+		if (boost::filesystem::exists(fileName))
+			outFile.open(fileName, std::ios_base::app);
+		else {
+			outFile.open(fileName);
+			outFile << "ROSC name, time, Intercept, Slope\n";
+		}
+		auto now = time(0);
+        outFile << oscNames[ringOsc] << ",";
+		outFile << std::put_time(std::localtime(&now), "%Y-%m-%d %H:%M:%S, ");
+		outFile << r->Value(0) << ", " << r->Value(1) << "\n";
     }
     vdddMG0->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG0->Draw("A pmc plc");
@@ -65,14 +73,19 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
         freqPlot->SetTitle(oscNames[ringOsc]);
         vdddMG->Add(freqPlot, "APL");
         freqPlot->Write();
-        line.SetParameter(1, (trimOscFrequency[ringOsc][nPoints - 1] - trimOscFrequency[ringOsc][0]) / (trimVoltage[nPoints - 1] - trimVoltage[0]));
-        line.SetParameter(0, trimOscFrequency[ringOsc][nPoints - 1] - trimVoltage[nPoints - 1] * line.GetParameter(1));
-        freqPlot->Fit(&line, "NQ");
-        if(fitResults != nullptr) {
-            fitResults[ringOsc][0] = line.GetParameter(0);
-            fitResults[ringOsc][1] = line.GetParameter(1);
-        }
-
+		TFitResultPtr r = freqPlot->Fit("pol1", "SN", "", 0, 16);
+		static const std::string fileName = ("Results/RoscVDDD_" + outputname + ".csv").c_str();
+		std::ofstream outFile;
+		if (boost::filesystem::exists(fileName))
+			outFile.open(fileName, std::ios_base::app);
+		else {
+			outFile.open(fileName);
+			outFile << "ROSC name, time, Intercept, Slope\n";
+		}
+		auto now = time(0);
+        outFile << oscNames[ringOsc] << ",";
+		outFile << std::put_time(std::localtime(&now), "%Y-%m-%d %H:%M:%S, ");
+		outFile << r->Value(0) << ", " << r->Value(1) << "\n";
     }
     vdddMG->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG->Draw("A pmc plc");
@@ -90,14 +103,19 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
         freqPlot->SetTitle(oscNames[ringOsc]);
         vdddMG1->Add(freqPlot, "APL");
         freqPlot->Write();
-        line.SetParameter(1, (trimOscFrequency[ringOsc][nPoints - 1] - trimOscFrequency[ringOsc][0]) / (trimVoltage[nPoints - 1] - trimVoltage[0]));
-        line.SetParameter(0, trimOscFrequency[ringOsc][nPoints - 1] - trimVoltage[nPoints - 1] * line.GetParameter(1));
-        freqPlot->Fit(&line, "NQ");
-        if(fitResults != nullptr) {
-            fitResults[ringOsc][0] = line.GetParameter(0);
-            fitResults[ringOsc][1] = line.GetParameter(1);
-        }
-
+		TFitResultPtr r = freqPlot->Fit("pol1", "SN", "", 0, 16);
+		static const std::string fileName = ("Results/RoscVDDD_" + outputname + ".csv").c_str();
+		std::ofstream outFile;
+		if (boost::filesystem::exists(fileName))
+			outFile.open(fileName, std::ios_base::app);
+		else {
+			outFile.open(fileName);
+			outFile << "ROSC name, time, Intercept, Slope\n";
+		}
+		auto now = time(0);
+        outFile << oscNames[ringOsc] << ",";
+		outFile << std::put_time(std::localtime(&now), "%Y-%m-%d %H:%M:%S, ");
+		outFile << r->Value(0) << ", " << r->Value(1) << "\n";
     }
     vdddMG1->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG1->Draw("A pmc plc");
@@ -115,14 +133,19 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
         freqPlot->SetTitle(oscNames[ringOsc]);
         vdddMG2->Add(freqPlot, "APL");
         freqPlot->Write();
-        line.SetParameter(1, (trimOscFrequency[ringOsc][nPoints - 1] - trimOscFrequency[ringOsc][0]) / (trimVoltage[nPoints - 1] - trimVoltage[0]));
-        line.SetParameter(0, trimOscFrequency[ringOsc][nPoints - 1] - trimVoltage[nPoints - 1] * line.GetParameter(1));
-        freqPlot->Fit(&line, "NQ");
-        if(fitResults != nullptr) {
-            fitResults[ringOsc][0] = line.GetParameter(0);
-            fitResults[ringOsc][1] = line.GetParameter(1);
-        }
-
+		TFitResultPtr r = freqPlot->Fit("pol1", "SN", "", 0, 16);
+		static const std::string fileName = ("Results/RoscVDDD_" + outputname + ".csv").c_str();
+		std::ofstream outFile;
+		if (boost::filesystem::exists(fileName))
+			outFile.open(fileName, std::ios_base::app);
+		else {
+			outFile.open(fileName);
+			outFile << "ROSC name, time, Intercept, Slope\n";
+		}
+		auto now = time(0);
+        outFile << oscNames[ringOsc] << ",";
+		outFile << std::put_time(std::localtime(&now), "%Y-%m-%d %H:%M:%S, ");
+		outFile << r->Value(0) << ", " << r->Value(1) << "\n";
     }
     vdddMG2->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG2->Draw("A pmc plc");
@@ -140,14 +163,19 @@ void RingOscillatorHistograms::fillRO(const double (&trimOscCounts)[42][16], con
         freqPlot->SetTitle(oscNames[ringOsc]);
         vdddMG3->Add(freqPlot, "APL");
         freqPlot->Write();
-        line.SetParameter(1, (trimOscFrequency[ringOsc][nPoints - 1] - trimOscFrequency[ringOsc][0]) / (trimVoltage[nPoints - 1] - trimVoltage[0]));
-        line.SetParameter(0, trimOscFrequency[ringOsc][nPoints - 1] - trimVoltage[nPoints - 1] * line.GetParameter(1));
-        freqPlot->Fit(&line, "NQ");
-        if(fitResults != nullptr) {
-            fitResults[ringOsc][0] = line.GetParameter(0);
-            fitResults[ringOsc][1] = line.GetParameter(1);
-        }
-
+		TFitResultPtr r = freqPlot->Fit("pol1", "SN", "", 0, 16);
+		static const std::string fileName = ("Results/RoscVDDD_" + outputname + ".csv").c_str();
+		std::ofstream outFile;
+		if (boost::filesystem::exists(fileName))
+			outFile.open(fileName, std::ios_base::app);
+		else {
+			outFile.open(fileName);
+			outFile << "ROSC name, time, Intercept, Slope\n";
+		}
+		auto now = time(0);
+        outFile << oscNames[ringOsc] << ",";
+		outFile << std::put_time(std::localtime(&now), "%Y-%m-%d %H:%M:%S, ");
+		outFile << r->Value(0) << ", " << r->Value(1) << "\n";
     }
     vdddMG3->SetTitle("Oscillator Frequency Graph;VDDD[V];Frequency[MHz]");
     vdddMG3->Draw("A pmc plc");

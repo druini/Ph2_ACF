@@ -20,9 +20,11 @@
 #include "TGraph.h"
 #include <TStyle.h>
 #include <time.h>
+#include <fstream>
 #include "TVector.h"
+#include "TH1.h"
 
-#define LOGNAME_FORMAT "%Y%m%d_%H%M%S"
+#define LOGNAME_FORMAT "%d%m%y_%H%M%S"
 #define LOGNAME_SIZE 50
 
 class ADCScanHistograms
