@@ -109,6 +109,9 @@ namespace RD53BFlavor {
 template <class Flavor, class T>
 using pixel_matrix_t = xt::xtensor_fixed<T, xt::xshape<Flavor::nRows, Flavor::nCols>>;
 
+template <class Flavor, class T>
+using ccol_array_t = std::array<T, Flavor::nCols / 8>;
+
 struct ChipLocation {
     ChipLocation(Chip* pChip) : board_id(pChip->getBeBoardId()), hybrid_id(pChip->getHybridId()), chip_id(pChip->getId()) {}
 
@@ -140,6 +143,7 @@ public:
 
     static constexpr size_t nRows = Flavor::nRows;
     static constexpr size_t nCols = Flavor::nCols;
+    static constexpr size_t nCoreCols = nCols / 8;
     static constexpr uint8_t BroadcastId = 0b11111;
 
     static constexpr const auto& Regs = Reg::Regs;
@@ -153,17 +157,26 @@ public:
     using IMux = typename Flavor::IMux;
     using VMux = typename Flavor::VMux;
 
-    // static const decltype(RD53BConstants::GetGlobalPulseRoutes()) GlobalPulseRoutes;
-    // static const decltype(RD53BConstants::GetIMUX()) IMUX;
-    // static const decltype(RD53BConstants::GetVMUX()) VMUX;
-
     template <class T>
     using PixelMatrix = pixel_matrix_t<Flavor, T>;
 
+    template <class T>
+    using CoreColArray = ccol_array_t<Flavor, T>;
+
+    static const auto& pixelConfigDefauls() {
+        static const auto pixelConfigDefauls = std::map<std::string, uint8_t>({
+            {"enable", 1},
+            {"enableInjections", 1},
+            {"enableInjections", 1},
+            {"tdac", 15}
+        });
+        return pixelConfigDefauls;
+    }
+
     struct PixelConfig {
-        PixelMatrix<bool> enable = xt::zeros<bool>({nRows, nCols});
-        PixelMatrix<bool> enableInjections = xt::zeros<bool>({nRows, nCols});
-        PixelMatrix<bool> enableHitOr = xt::zeros<bool>({nRows, nCols});
+        PixelMatrix<bool> enable = xt::ones<bool>({nRows, nCols});
+        PixelMatrix<bool> enableInjections = xt::ones<bool>({nRows, nCols});
+        PixelMatrix<bool> enableHitOr = xt::ones<bool>({nRows, nCols});
         PixelMatrix<uint8_t> tdac = 15 * xt::ones<uint8_t>({nRows, nCols});
     };
 
@@ -215,13 +228,16 @@ public:
         registerConfig[name] = value;
     }
 
-    PixelConfig pixelConfig;
-    PixelConfig defaultPixelConfig;
+    const PixelConfig& pixelConfig() const { return _pixelConfig; }
+    PixelConfig& pixelConfig() { return _pixelConfig; }
 
-    std::vector<bool> coreColEnable;
-    std::vector<bool> coreColEnableInjections;
+    // PixelConfig defaultPixelConfig;
+
+    CoreColArray<bool> coreColEnable;
+    CoreColArray<bool> coreColEnableInjections;
 
   private:
+    PixelConfig _pixelConfig;
     std::array<boost::optional<uint16_t>, 256> registerValues;
     std::unordered_map<std::string, size_t> registerConfig;
     std::string configFileName;

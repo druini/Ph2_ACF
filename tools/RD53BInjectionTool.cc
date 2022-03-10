@@ -67,15 +67,6 @@ template <class Flavor>
 typename RD53BInjectionTool<Flavor>::ChipEventsMap RD53BInjectionTool<Flavor>::run(Task progress) const {
     ChipEventsMap systemEventsMap;
 
-    // store original
-    std::map<ChipLocation, pixel_matrix_t<Flavor, bool>> originalEnableMasks;
-    std::map<ChipLocation, pixel_matrix_t<Flavor, bool>> originalEnableInjectionsMasks;
-    Base::for_each_chip([&] (Chip* chip) {
-        auto rd53b = static_cast<RD53B<Flavor>*>(chip);
-        originalEnableMasks[chip] = rd53b->pixelConfig.enable;
-        originalEnableInjectionsMasks[chip] = rd53b->pixelConfig.enableInjections;
-    });
-
     configureInjections();
     
     for (size_t frameId = 0; frameId < _nFrames ; ++frameId) {
@@ -86,12 +77,9 @@ typename RD53BInjectionTool<Flavor>::ChipEventsMap RD53BInjectionTool<Flavor>::r
         progress.update(double(frameId + 1) / _nFrames);
     }
 
-    
+    // reset masks
     Base::for_each_chip([&] (Chip* chip) {
-        auto rd53b = static_cast<RD53B<Flavor>*>(chip);
-        rd53b->pixelConfig.enable = originalEnableMasks[chip];
-        rd53b->pixelConfig.enableInjections = originalEnableInjectionsMasks[chip];
-        Base::chipInterface().UpdatePixelConfig(rd53b, true, false);
+        Base::chipInterface().UpdatePixelConfig(chip, true, false);
     });
 
     return systemEventsMap;
@@ -106,10 +94,8 @@ void RD53BInjectionTool<Flavor>::setupMaskFrame(size_t frameId) const {
     auto mask = generateInjectionMask(frameId);
 
     Base::for_each_chip([&] (Chip* chip) {
-        auto& cfg = static_cast<RD53B<Flavor>*>(chip)->pixelConfig;
-        cfg.enable = mask;
-        cfg.enableInjections = mask;
-        chipInterface.UpdatePixelConfig(chip, cfg, true, false);
+        auto& cfg = static_cast<RD53B<Flavor>*>(chip)->pixelConfig();
+        chipInterface.UpdatePixelMasks(chip, mask, mask, cfg.enableHitOr);
     });
 }
 

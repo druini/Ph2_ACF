@@ -71,7 +71,7 @@ struct RD53BRegTest : public RD53BTool<RD53BRegTest, Flavor> {
 
                     auto pixelsValueProgress = pixelsProgress.subTask({valueId * 0.5, (valueId + 1) * 0.5});
                     
-                    chipInterface.UpdatePixelConfigUniform(chip, mask, tdac, true, true);
+                    chipInterface.UpdatePixelConfigUniform(chip, mask & 1, mask & 2, mask & 4, tdac);
                     
                     chipInterface.WriteReg(chip, Flavor::Reg::PIX_MODE, uint16_t{1});
 

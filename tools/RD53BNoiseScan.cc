@@ -58,15 +58,13 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Task 
     auto offset = param("offset"_s);
     auto size = param("size"_s);
 
+    pixel_matrix_t<Flavor, bool> mask = false;
+    xt::view(mask, xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1])) = true;
+
     // configure pixels
-    Base::for_each_hybrid([&] (Hybrid* hybrid) {
-        auto cfg = static_cast<RD53B<Flavor>*>(hybrid->at(0))->pixelConfig;
-        
-        cfg.enable.fill(false);
-        xt::view(cfg.enable, xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1])).fill(true);
-        cfg.enableInjections.fill(false);
-        
-        chipInterface.UpdatePixelConfig(hybrid, cfg, true, false);
+    Base::for_each_chip([&] (Chip* chip) {
+        auto cfg = static_cast<RD53B<Flavor>*>(chip)->pixelConfig();
+        chipInterface.UpdatePixelMasks(chip, mask, false, mask && cfg.enableHitOr);
     });
     
     // send triggers and read events
@@ -88,12 +86,15 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Task 
         Base::for_each_chip([&] (Chip* chip) {
             auto rd53b = static_cast<RD53B<Flavor>*>(chip);
             const auto noisy = hitCountMap[chip] / double(param("nTriggers"_s)) > param("occupancyThreshold"_s);
-            rd53b->pixelConfig.enable = !noisy;
-            chipInterface.UpdatePixelConfig(rd53b, true, false);
-
-            LOG(INFO) << "Masking " << xt::count_nonzero(noisy) << " noisy pixels for chip: " << ChipLocation(chip) << RESET;
+            LOG(INFO) << "Masking " << xt::count_nonzero(rd53b->pixelConfig().enable && noisy) << " noisy pixels for chip: " << ChipLocation(chip) << RESET;
+            rd53b->pixelConfig().enable &= !noisy;
         });
     }
+    
+    // reset pixel config
+    Base::for_each_chip([&] (Chip* chip) {
+        chipInterface.UpdatePixelConfig(chip, true, false);
+    });
 
     return events;
 }
