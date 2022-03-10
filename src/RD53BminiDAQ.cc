@@ -27,7 +27,7 @@
 #include "../tools/RD53BDACCalib.h"
 #include "../tools/RD53BDACTest.h"
 #include "../tools/RD53BGlobalThresholdTuning.h"
-// #include "../tools/RD53BThresholdEqualizationUnbiased.h"
+#include "../tools/RD53BStuckPixelScan.h"
 
 #include <signal.h>
 
@@ -63,9 +63,8 @@ using Tools = ToolManager<decltype(make_named_tuple(
     TOOL(RD53BADCCalib),
     TOOL(RD53BDACCalib),
     TOOL(RD53BDACTest),
-    TOOL(RD53BGlobalThresholdTuning)
-    // ,
-    // TOOL(RD53BThresholdEqualizationUnbiased)
+    TOOL(RD53BGlobalThresholdTuning),
+    TOOL(RD53BStuckPixelScan)
 ))>;
 
 INITIALIZE_EASYLOGGINGPP
