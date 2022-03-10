@@ -90,13 +90,14 @@ def getTomlFile(xmlConfig):
 
 def run_Ph2_ACF(task, paramsForLog=[]):
     for i in range(task["maxAttempts"]):
-        p = subprocess.Popen(["RD53BminiDAQ", "-f", task["configFile"], "-t", "RD53BTools.toml", "-h", "-s", *task["tools"]])
+        dir_name =  task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        p = subprocess.Popen(["RD53BminiDAQ", "-f", task["configFile"], "-t", "RD53BTools.toml", "-h", "-s", "-o", dir_name, *task["tools"]])
         try:
             returncode = p.wait(timeout=task['timeout'])
         except:
             p.terminate()
             returncode = -1
-        add_log_entry(task["name"], returncode, i, paramsForLog)
+        add_log_entry([task["name"], returncode, i, dir_name, *paramsForLog])
         if returncode == 0:
             break
         else:
@@ -106,10 +107,10 @@ def run_Ph2_ACF(task, paramsForLog=[]):
         return False
     return True
 
-def add_log_entry(name, returncode, attempt_id, paramsForLog):
+def add_log_entry(row):
     with open(logFile, 'a+') as f:
         write = csv.writer(f)
-        write.writerow([datetime.now().strftime(fmt), name, returncode, attempt_id, *paramsForLog])
+        write.writerow([datetime.now().strftime(fmt), *row])
 
 
 def Ph2_ACF_Task(task):
