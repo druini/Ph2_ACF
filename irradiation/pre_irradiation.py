@@ -1,4 +1,5 @@
 from instrument_control import PowerSupplyController
+from vi_scan import vi_curves
 import xml.etree.ElementTree as ET
 import toml
 import itertools
@@ -56,22 +57,22 @@ config = [
         "timeout" : 600,
         "maxAttempts" : 3
     }
-    # ,
-    # {
-    #     "name": "IVConfigured",
-    #     "type": "IV",
-    #     "configFile": "CROC2.xml",
-    #     "startingCurrent" : 0.8,
-    #     "finalCurrent" : 2.5,
-    #     "currentStep" : 0.1
-    # },
-    # {
-    #     "name": "IVDefault",
-    #     "type": "IV",
-    #     "startingCurrent" : 0.1,
-    #     "finalCurrent" : 2.5,
-    #     "currentStep" : 0.1 
-    # }
+    ,
+    {
+        "name": "IVConfigured",
+        "type": "IV",
+        "configFile": "CROC2.xml",
+        "startingCurrent" : 2.5,
+        "finalCurrent" : .5,
+        "currentStep" : 0.1
+    },
+    {
+        "name": "IVDefault",
+        "type": "IV",
+        "startingCurrent" : 0.1,
+        "finalCurrent" : 2.5,
+        "currentStep" : 0.1 
+    }
 ]
 
 powerSupplyResource = "/dev/ttyUSB0"
