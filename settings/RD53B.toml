@@ -1,4 +1,7 @@
 [Pixels]
+enable = "enable.csv"
+enableInjections = "enableInjections.csv"
+enableHitOr = "enableHitOr.csv"
 tdac = "tdac.csv"
 
 # Select core column ranges to be disabled (all core columns are enabled by default).
