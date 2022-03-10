@@ -5,6 +5,8 @@
 #include <../HWInterface/RD53BInterface.h>
 #include <../Utils/RD53BUtils.h>
 #include <../Utils/NamedTuple.h>
+#include <../Utils/FilesystemUtils.h>
+
 #include <../Utils/toml.hpp>
 
 #include <../Utils/indicators/cursor_control.hpp>
@@ -101,9 +103,12 @@ struct ToolManagerBase {
 
     SystemController& system() const { return _system; }
 
+    const auto& resultsPath() const { return _resultsPath; }
+
 protected:
-    ToolManagerBase(SystemController& system, const toml::value& config) 
+    ToolManagerBase(SystemController& system, const toml::value& config, std::string resultsPath) 
       : _config(config)
+      , _resultsPath(std::move(resultsPath))
       , _system(system)
     {}
 
@@ -126,6 +131,7 @@ protected:
     std::unordered_map<std::type_index, std::string> _toolTypeNames;
     std::unordered_map<std::string, const std::type_info&> _toolTypeInfo;
     toml::value _config;
+    std::string _resultsPath;
     SystemController& _system;
 };
 
@@ -168,27 +174,7 @@ struct RD53BTool : public RD53BToolBase {
     SystemController& system() const { return _toolManager->system(); }
 
     std::string getResultPath(const std::string& suffix) const {
-        auto path = boost::filesystem::path("Results/") / (_name + suffix);
-        if (boost::filesystem::exists(path)) {
-            std::regex runNumberRegex(_name + "\\(([0-9]+)\\)\\" + suffix);
-            size_t maxRunNumber = 0;
-            for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator("Results/"), {})) {
-                if (boost::filesystem::is_regular_file(entry.status())) {
-                    std::string stem = entry.path().filename().string();
-                    std::smatch m;
-                    if (std::regex_match(stem, m, runNumberRegex) && m.size() > 1) 
-                        maxRunNumber = std::max(maxRunNumber, std::stoul(m[1])); 
-                }
-            }
-            std::stringstream ss;
-            ss << "Results/" << _name << "(" << (maxRunNumber + 1) << ')' << suffix;
-            return ss.str();
-        }
-        else {
-            if (!boost::filesystem::exists(path.parent_path()))
-                boost::filesystem::create_directory(path.parent_path());
-            return path.string();
-        }
+        return FSUtils::getAvailablePath(boost::filesystem::path(_toolManager->resultsPath()) / (_name + suffix));
     }
 
     friend std::ostream& operator<<(std::ostream& os, const RD53BTool& t) {
@@ -257,10 +243,8 @@ protected:
         const std::string& xLabel = "",
         bool useFrequency = true
     ) {
-        std::stringstream ss;
-        ss << "plot" << nPlots;
-        TCanvas* c = new TCanvas(ss.str().c_str(), title.c_str(), 600, 600);
-        TH1F* h = new TH1F(ss.str().c_str(), title.c_str(), nSteps, minValue, maxValue);
+        TCanvas* c = new TCanvas(title.c_str(), title.c_str(), 600, 600);
+        TH1F* h = new TH1F(title.c_str(), title.c_str(), nSteps, minValue, maxValue);
         h->SetXTitle(xLabel.c_str());
         if (useFrequency) {
             h->SetYTitle("Frequency");
@@ -294,10 +278,8 @@ protected:
         const std::string& zLabel = "",
         bool reverseYAxis = false
     ) {
-        std::stringstream ss;
-        ss << "plot" << nPlots;
-        TCanvas* c = new TCanvas(ss.str().c_str(), title.c_str(), 600, 600);
-        TH2F* h = new TH2F(ss.str().c_str(), title.c_str(), data.shape()[0], minX, maxX, data.shape()[1], minY, maxY);
+        TCanvas* c = new TCanvas(title.c_str(), title.c_str(), 600, 600);
+        TH2F* h = new TH2F(title.c_str(), title.c_str(), data.shape()[0], minX, maxX, data.shape()[1], minY, maxY);
         h->SetXTitle(xLabel.c_str());
         h->SetYTitle(yLabel.c_str());
         h->SetZTitle(zLabel.c_str());
@@ -335,10 +317,8 @@ protected:
         const size_t offsetX = 0,
         const size_t offsetY = 0
     ) {
-        std::stringstream ss;
-        ss << "plot" << nPlots;
-        TCanvas* c = new TCanvas(ss.str().c_str(), title.c_str(), 600, 600);
-        TH2F* h = new TH2F(ss.str().c_str(), title.c_str(), Flavor::nCols, 0, Flavor::nCols, Flavor::nRows, 0, Flavor::nRows);
+        TCanvas* c = new TCanvas(title.c_str(), title.c_str(), 600, 600);
+        TH2F* h = new TH2F(title.c_str(), title.c_str(), Flavor::nCols, 0, Flavor::nCols, Flavor::nRows, 0, Flavor::nRows);
         h->SetXTitle("Columns");
         h->SetYTitle("Rows");
         h->SetZTitle(zLabel.c_str());

@@ -92,7 +92,13 @@ void run(SystemController& system, CommandLineProcessing::ArgvParser& cmd) {
 
     bool showPlots = !cmd.foundOption("hidePlots");
 
-    Tools<Flavor>(system, toolConfig, showPlots).run_tools(cmd.allArguments());
+    std::string resultsPath;
+    if (cmd.foundOption("outputDir"))
+        resultsPath = cmd.optionValue("outputDir");
+    else
+        resultsPath = "Results/";
+        
+    Tools<Flavor>(system, toolConfig, showPlots, resultsPath).run_tools(cmd.allArguments());
 
     if (cmd.foundOption("saveState"))
         for_each_device<Chip>(system, [&] (Chip* chip) {
@@ -122,6 +128,9 @@ int main(int argc, char** argv) {
 
     cmd.defineOption("saveState", "Save register values and pixel configuration in .toml file.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("saveState", "s");
+
+    cmd.defineOption("outputDir", "Specify output directory (default: \"Results/\")", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("outputDir", "o");
 
     int result = cmd.parse(argc, argv);
     

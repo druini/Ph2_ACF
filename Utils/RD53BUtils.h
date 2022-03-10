@@ -37,28 +37,6 @@ namespace RD53BUtils {
         void set(Chip* chip) { this->chip = chip; }
     };
 
-    // struct ChipLocation {
-    //     ChipLocation(Chip* pChip) : board_id(pChip->getBeBoardId()), hybrid_id(pChip->getHybridId()), chip_id(pChip->getId()) {}
-
-    //     // Chip* getChip(SystemController& system) {
-    //     //     return system.fDetectorContainer->at(board_id)->at(0)->at(hybrid_id)->at(chip_id);
-    //     // }
-
-    //     uint16_t board_id;
-    //     uint16_t hybrid_id;
-    //     uint16_t chip_id;
-
-    //     size_t hash() const { return (board_id << 16) | (hybrid_id << 8) | chip_id; }
-
-    //     friend bool operator<(const ChipLocation& l, const ChipLocation& r ) {
-    //         return l.hash() < r.hash();
-    //     }
-
-    //     friend std::ostream& operator<<(std::ostream& os, const ChipLocation& loc) {
-    //         return (os << "{ board: " << loc.board_id << ", hybrid: " << loc.hybrid_id << ", chip: " << loc.chip_id << " }");
-    //     }
-    // };
-
 
     // for_each_device: call given function for each device of given type
     // usage: for_each_device<Target>(root, f);

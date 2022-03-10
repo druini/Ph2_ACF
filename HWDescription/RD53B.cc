@@ -8,9 +8,9 @@
 */
 
 #include "RD53B.h"
+#include "../Utils/FilesystemUtils.h"
 
 #include <boost/filesystem.hpp>
-#include <boost/range/iterator_range.hpp>
 
 #include "../Utils/xtensor/xcsv.hpp"
 #include "../Utils/xtensor/xio.hpp"
@@ -122,28 +122,6 @@ void RD53B<Flavor>::loadfRegMap(const std::string& fileName)
         }
     }
 }
-
-std::string getAvailablePath(const boost::filesystem::path& path) {
-    if (!boost::filesystem::exists(path))
-        return path.string();
-    else {
-        std::regex runNumberRegex(path.stem().string() + "\\(([0-9]+)\\)\\" + path.extension().string());
-        std::vector<size_t> existingRunNumbers{{0}};
-        for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(path.parent_path()), {})) {
-            if (boost::filesystem::is_regular_file(entry.status())) {
-                std::string filename = entry.path().filename().string();
-                std::smatch m;
-                if (std::regex_match(filename, m, runNumberRegex) && m.size() > 1)
-                    existingRunNumbers.push_back(std::stoul(m[1]));
-            }
-        }
-        std::sort(existingRunNumbers.begin(), existingRunNumbers.end());
-        auto it = std::adjacent_find(existingRunNumbers.begin(), existingRunNumbers.end(), [] (auto a, auto b) { return b != a + 1; });
-        std::stringstream ss;
-        ss <<  path.parent_path() << path.stem() << '(' << (*it + 1) << ')' << path.extension();
-        return ss.str();
-    }
-}
     
 template <class Flavor>
 void RD53B<Flavor>::saveRegMap(const std::string& fName2Add)
@@ -180,7 +158,7 @@ void RD53B<Flavor>::saveRegMap(const std::string& fName2Add)
                 else {
                     std::ostringstream csvFileNameStream;
                     csvFileNameStream << fieldName.value << ".csv";
-                    csvFileName = getAvailablePath(csvFileNameStream.str());
+                    csvFileName = FSUtils::getAvailablePath(csvFileNameStream.str());
                     config["Pixels"][fieldName.value] = csvFileName;
                 }
                 std::ofstream out_file(csvFileName);
