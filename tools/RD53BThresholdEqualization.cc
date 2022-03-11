@@ -98,13 +98,13 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
 
             isBest &= !stuck;
             
-            std::cout << "Step: " << i << std::endl;
-            std::cout << "nStuck: " <<  xt::count_nonzero(stuck) << std::endl;
-            std::cout << "nUpdated: " <<  xt::count_nonzero(isBest) << std::endl;
-            std::cout << "nEquivalent: " << xt::count_nonzero(xt::isclose(cost, minCost)) << std::endl;
-            std::cout << "nActuallyBetter: " << xt::count_nonzero(cost < minCost && !xt::isclose(cost, minCost)) << std::endl;
-            std::cout << "nUncertain: " <<  xt::count_nonzero(minCost > 0.4) << std::endl;
-            std::cout << "==========================================" << std::endl;
+            LOG(INFO) << "Step: " << i;
+            LOG(INFO) << "nStuck: " <<  xt::count_nonzero(stuck);
+            LOG(INFO) << "nUpdated: " <<  xt::count_nonzero(isBest);
+            LOG(INFO) << "nEquivalent: " << xt::count_nonzero(xt::isclose(cost, minCost));
+            LOG(INFO) << "nActuallyBetter: " << xt::count_nonzero(cost < minCost && !xt::isclose(cost, minCost));
+            LOG(INFO) << "nUncertain: " <<  xt::count_nonzero(minCost > 0.4);
+            LOG(INFO) << "==========================================";
 
             xt::masked_view(bestOcc[chip], isBest) = occ;
             xt::masked_view(bestTDAC[chip], isBest) = tdacView;

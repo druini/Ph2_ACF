@@ -65,7 +65,7 @@ std::array<ChipDataMap<xt::xtensor<double, 2>>, 2> RD53BThresholdScan<Flavor>::a
     ChipDataMap<xt::xtensor<double, 2>> thresholdMap;
     ChipDataMap<xt::xtensor<double, 2>> noiseMap;
 
-    auto vcalBins = xt::arange(param("vcalRange"_s)[0], param("vcalRange"_s)[1], param("vcalStep"_s));
+    auto vcalBins = xt::arange(param("vcalRange"_s)[0], param("vcalRange"_s)[1], param("vcalStep"_s)) + param("vcalStep"_s) / 2.0;
     auto rowRange = xt::range(offset[0], size[0]);
     auto colRange = xt::range(offset[1], size[1]);
 
@@ -75,7 +75,7 @@ std::array<ChipDataMap<xt::xtensor<double, 2>>, 2> RD53BThresholdScan<Flavor>::a
 
         auto diff = xt::diff(occ, 1, 0);
 
-        auto vcalDiffBins = xt::view(vcalBins + param("vcalStep"_s) / 2.0, xt::range(0, -1));
+        auto vcalDiffBins = xt::view(vcalBins + param("vcalStep"_s) / 2.0, xt::range(0, diff.shape()[0]));
 
         thresholdMap.insert({chip, xt::zeros<double>({occ.shape()[1], occ.shape()[2]})});
         noiseMap.insert({chip, xt::zeros<double>({occ.shape()[1], occ.shape()[2]})});
