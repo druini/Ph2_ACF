@@ -72,6 +72,10 @@ struct Task {
         _bar.set_progress(100 * (_progressRange[0] + progress * size()));
     }
 
+    Task subTask(double start, double end, double size) {
+        return subTask({start / size, end / size});
+    }
+
     Task subTask(std::array<double, 2> progressRange) {
         
         return {_bar, {_progressRange[0] + progressRange[0] * size(), _progressRange[0] + progressRange[1] * size()}};
@@ -198,7 +202,9 @@ protected:
 
     template <class F>
     void for_each_chip(F&& f) const {
-        for_each_device<Chip>(system(), std::forward<F>(f));
+        for_each_device<Chip>(system(), [&] (Chip* chip) {
+            return std::forward<F>(f)(static_cast<RD53B<Flavor>*>(chip));
+        });
     }
 
     template <class F>
@@ -263,6 +269,18 @@ protected:
         h->Fit("gaus", "Q");
         c->Write();
         ++nPlots;
+    }
+
+    template <class Container>
+    static void drawHist2D(
+        Container data, 
+        const std::string& title, 
+        const std::string& xLabel = "",
+        const std::string& yLabel = "",
+        const std::string& zLabel = "",
+        bool reverseYAxis = false
+    ) {
+        drawHist2D(data, title, 0, data.shape()[0], 0, data.shape()[1], xLabel, yLabel, zLabel, reverseYAxis);
     }
 
     template <class Container>

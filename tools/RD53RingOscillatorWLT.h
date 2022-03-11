@@ -66,9 +66,7 @@ public:
         Base::system().fPowerSupplyClient->sendAndReceivePacket("K2410:SetSpeed,PowerSupplyId:" + param("vmeter"_s) + ",ChannelId:" + param("vmeterCH"_s) + ",IntegrationTime:1");
         Base::system().fPowerSupplyClient->sendAndReceivePacket("VoltmeterSetRange,VoltmeterId:" + param("vmeter"_s) + ",ChannelId:" + param("vmeterCH"_s) + ",Value:1.3");
 
-        Base::for_each_chip([&](DeviceChain devs) {
-            RD53B<Flavor>* chip = static_cast<RD53B<Flavor>*>(devs.chip);
-
+        Base::for_each_chip([&](RD53B<Flavor>* chip) {
             results[chip].countEnableTimeBX = nBX;
 
             auto& trimOscCounts = results[chip].trimOscCounts;

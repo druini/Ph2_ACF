@@ -6,8 +6,8 @@
 namespace FSUtils {
     std::string getAvailablePath(const boost::filesystem::path& path) {
         if (!boost::filesystem::exists(path)) {
-            if (!boost::filesystem::exists(path.parent_path()))
-                boost::filesystem::create_directory(path.parent_path());
+            if (!path.parent_path().empty())
+                boost::filesystem::create_directories(path.parent_path());
             return path.string();
         }
         else {
@@ -17,15 +17,21 @@ namespace FSUtils {
                 if (boost::filesystem::is_regular_file(entry.status())) {
                     std::string filename = entry.path().filename().string();
                     std::smatch m;
-                    if (std::regex_match(filename, m, runNumberRegex) && m.size() > 1)
+                    if (std::regex_match(filename, m, runNumberRegex) && m.size() > 1) {
+                        std::cout << "filename: " << filename << std::endl;
                         existingRunNumbers.push_back(std::stoul(m[1]));
+                    }
                 }
             }
             std::sort(existingRunNumbers.begin(), existingRunNumbers.end());
+            existingRunNumbers.erase(std::unique(existingRunNumbers.begin(), existingRunNumbers.end()), existingRunNumbers.end());
+            std::cout << "existingRunNumbers:" << std::endl;
+            for (const auto& runNo : existingRunNumbers)
+                std::cout << runNo << std::endl;
             auto it = std::adjacent_find(existingRunNumbers.begin(), existingRunNumbers.end(), [] (auto a, auto b) { return b != a + 1; });
             size_t runNumber;
             if (it == existingRunNumbers.end())
-                runNumber = existingRunNumbers.back();
+                runNumber = existingRunNumbers.back() + 1;
             else
                 runNumber = *it + 1;
             std::stringstream ss;

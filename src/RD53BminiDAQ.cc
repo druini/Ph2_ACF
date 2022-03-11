@@ -28,6 +28,7 @@
 #include "../tools/RD53BDACTest.h"
 #include "../tools/RD53BGlobalThresholdTuning.h"
 #include "../tools/RD53BStuckPixelScan.h"
+#include "../tools/RD53BTimeWalk.h"
 
 #include <signal.h>
 
@@ -63,7 +64,8 @@ using Tools = ToolManager<decltype(make_named_tuple(
     TOOL(RD53BDACCalib),
     TOOL(RD53BDACTest),
     TOOL(RD53BGlobalThresholdTuning),
-    TOOL(RD53BStuckPixelScan)
+    TOOL(RD53BStuckPixelScan),
+    TOOL(RD53BTimeWalk)
 ))>;
 
 INITIALIZE_EASYLOGGINGPP
@@ -97,7 +99,7 @@ void run(SystemController& system, CommandLineProcessing::ArgvParser& cmd) {
         resultsPath = cmd.optionValue("outputDir");
     else
         resultsPath = "Results/";
-        
+
     Tools<Flavor>(system, toolConfig, showPlots, resultsPath).run_tools(cmd.allArguments());
 
     if (cmd.foundOption("saveState"))

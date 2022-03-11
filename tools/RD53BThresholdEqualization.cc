@@ -22,7 +22,15 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
     auto& offset = injectionTool.param("offset"_s);
     auto& size = injectionTool.param("size"_s);
 
+    ChipDataMap<pixel_matrix_t<Flavor, uint8_t>> tdac;
+    ChipDataMap<xt::xtensor<uint8_t, 2>> bestTDAC;
+    ChipDataMap<xt::xtensor<double, 2>> bestOcc;
+
     Base::for_each_chip([&] (Chip* chip) {
+        tdac[chip].fill(param("initialTDAC"_s));
+        chipInterface.WriteReg(chip, Flavor::Reg::VCAL_MED, param("thresholdScan"_s).param("vcalMed"_s));
+        bestTDAC.insert({chip, param("initialTDAC"_s) * xt::ones<uint8_t>({size[0], size[1]})});
+        bestOcc.insert({chip, xt::zeros<double>({size[0], size[1]})});
         // auto* rd53b = static_cast<RD53B<Flavor>*>(chip);
         // rd53b->pixelConfig.tdac.fill(param("initialTDAC"_s));
         // chipInterface.UpdatePixelConfig(rd53b, false, true);
@@ -45,16 +53,7 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
         });
     }
 
-    ChipDataMap<pixel_matrix_t<Flavor, uint8_t>> tdac;
-    ChipDataMap<xt::xtensor<uint8_t, 2>> bestTDAC;
-    ChipDataMap<xt::xtensor<double, 2>> bestOcc;
-
-    Base::for_each_chip([&] (Chip* chip) {
-        tdac[chip] = 15;
-        chipInterface.WriteReg(chip, Flavor::Reg::VCAL_MED, param("thresholdScan"_s).param("vcalMed"_s));
-        bestTDAC.insert({chip, param("initialTDAC"_s) * xt::ones<uint8_t>({size[0], size[1]})});
-        bestOcc.insert({chip, xt::zeros<double>({size[0], size[1]})});
-    });
+   
     
     xt::print_options::set_line_width(200);
     xt::print_options::set_threshold(3000);
@@ -119,8 +118,8 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
     }
 
 
-    Base::for_each_chip([&] (Chip* chip) {
-        auto tdacView = xt::view(tdac[chip], xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1]));
+    Base::for_each_chip([&] (RD53B<Flavor>* chip) {
+        auto tdacView = xt::view(chip->pixelConfig().tdac, xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1]));
         tdacView = bestTDAC[chip];
         chipInterface.UpdatePixelConfig(chip, false, true);
     }); 

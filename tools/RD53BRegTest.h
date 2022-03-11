@@ -27,7 +27,7 @@ struct RD53BRegTest : public RD53BTool<RD53BRegTest, Flavor> {
         Base::for_each_chip([&] (Chip* chip) { ++nChips; });
         
         size_t i = 0;
-        Base::for_each_chip([&] (DeviceChain devices) {
+        for_each_device<Chip>(Base::system(), [&] (DeviceChain devices) {
             auto& fwInterface = Base::getFWInterface(devices.board);
             auto chip = static_cast<RD53B<Flavor>*>(devices.chip);
 

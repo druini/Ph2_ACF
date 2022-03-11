@@ -58,17 +58,18 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Task 
     auto offset = param("offset"_s);
     auto size = param("size"_s);
 
-    pixel_matrix_t<Flavor, bool> mask = false;
-    xt::view(mask, xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1])) = true;
+    pixel_matrix_t<Flavor, bool> mask;
+    mask.fill(false);
+    xt::view(mask, xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1])).fill(true);
 
     // configure pixels
     Base::for_each_chip([&] (Chip* chip) {
         auto cfg = static_cast<RD53B<Flavor>*>(chip)->pixelConfig();
-        chipInterface.UpdatePixelMasks(chip, mask, false, mask && cfg.enableHitOr);
+        chipInterface.UpdatePixelMasks(chip, mask && cfg.enable, cfg.enableInjections, mask && cfg.enableHitOr);
     });
     
     // send triggers and read events
-    for (size_t triggersSent = 0; triggersSent < param("nTriggers"_s); triggersSent += param("readoutPeriod"_s)) {
+    for (size_t triggersSent = 0; triggersSent < param("nTriggers"_s); ) {
 
         size_t nTriggers = std::min(param("readoutPeriod"_s), param("nTriggers"_s) - triggersSent);
         Base::for_each_board([&] (BeBoard* board) {
@@ -77,8 +78,8 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Task 
 
             fwInterface.template GetEvents<Flavor>(board, events);
         });
-        
-        progress.update(triggersSent / param("nTriggers"_s));
+        triggersSent += nTriggers;
+        progress.update(double(triggersSent) / param("nTriggers"_s));
     }
 
     if (param("maskNoisyPixels"_s)) {

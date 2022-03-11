@@ -167,7 +167,7 @@ public:
         static const auto pixelConfigDefauls = std::map<std::string, uint8_t>({
             {"enable", 1},
             {"enableInjections", 1},
-            {"enableInjections", 1},
+            {"enableHitOr", 1},
             {"tdac", 15}
         });
         return pixelConfigDefauls;

@@ -24,12 +24,20 @@ struct RD53BThresholdScan : public RD53BTool<RD53BThresholdScan, Flavor> {
 
     using OccupancyMap = ChipDataMap<xt::xtensor<double, 3>>;
 
+    void init() {
+        offset = param("injectionTool"_s).param("offset"_s);
+        size = param("injectionTool"_s).param("size"_s);
+    }
+
     OccupancyMap run(Task progress);
 
     std::array<ChipDataMap<xt::xtensor<double, 2>>, 2> analyze(const OccupancyMap& occMap) const;
 
     void draw(const OccupancyMap& occMap);
 
+private:
+    std::vector<size_t> offset;
+    std::vector<size_t> size;
 };
 
 }
