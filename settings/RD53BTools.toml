@@ -68,6 +68,10 @@ thresholdScan = "ThresholdScan"
 injectionTool = "ThresholdScanInjection"
 targetThreshold = 0 # The Delta VCAL value to tune the threshold at. If it's 0 a threshold scan will be performed and the mean trheshold will be used.
 
+[GlobalThresholdTuning]
+type = "RD53BGlobalThresholdTuning"
+args = { injectionTool = "ThresholdScanInjection", targetThreshold = 500, gdacRange = [370, 550], maxStuckPixelRatio = 0.01 }
+
 [RingOsc]
 type = "RD53RingOscillator"
 args = {}
