@@ -34,11 +34,11 @@ class PowerSupplyController:
         with self.tti:
             return self.tti.measure(channel)[1]
 
-    def power_cycle():
+    def power_cycle(channel='ALL'):
         with self.tti:
-            self.tti.off('ALL')
+            self.tti.off(channel)
             time.sleep(.5)
-            return self.tti.on('ALL')
+            return self.tti.on(channel)
 
 class MultimeterController:
     def __init__(self, resource):

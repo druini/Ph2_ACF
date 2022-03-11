@@ -178,7 +178,7 @@ def curr_vs_DAC_Task(task):
             toml.dump(tomlData, f)
         configureCROC(task['configFile'])
         data = list(values)
-        data.append(powerSupply.read_voltage(task['PSchannel']))
+        data.append(powerSupply.read_current(task['PSchannel']))
         with open(outfile, 'a+') as f:
             csv.writer(f).writerow(data)
 
