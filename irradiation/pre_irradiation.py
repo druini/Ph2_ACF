@@ -30,7 +30,7 @@ config = [
         "configFile": "CROC.xml",
         "timeout" : 600,
         "maxAttempts" : 3,
-        "tools": ["GlobalThresholdTuning"],
+        "tools": ["AnalogScan", "DigitalScan", "RingOsc", "ADCScan", "DACScan", "GlobalThresholdTuning"],
         "params": [
             {
                 "table" : "Pixels",
@@ -68,7 +68,7 @@ config = [
         "name": "AFEScans1000",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
-        "tools": ["ThresholdEqualization", "GlobalThresholdTuning", "ThresholdEqualization", "ThresholdScan", "AnalogScan", "TimeWalk", "Noise"],
+        "tools": ["ThresholdEqualization", "GlobalThresholdTuning", "ThresholdEqualization", "ThresholdScan", "DigitalScan", "AnalogScan", "TimeWalk", "Noise"],
         "timeout" : 600,
         "maxAttempts" : 3
     },
