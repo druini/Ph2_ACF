@@ -129,15 +129,17 @@ public:
         return results;
     }
 
-    void draw(const ChipDataMap<ChipResults>& results) const {
+    void draw(const ChipDataMap<ChipResults>& results) {
         double fitResults[42][2];
-        TFile f(Base::getResultPath(".root").c_str(), "RECREATE");
+        // TFile f(Base::getAvailablePath(".root").c_str(), "RECREATE");
+        Base::createRootFile();
 
         for(const std::pair<const ChipLocation, ChipResults>& item: results) {
-            f.mkdir(("board_" + std::to_string(item.first.board_id)).c_str(), "", true)
-                ->mkdir(("hybrid_" + std::to_string(item.first.hybrid_id)).c_str(), "", true)
-                ->mkdir(("chip_" + std::to_string(item.first.chip_id)).c_str(), "", true)
-                ->cd();
+            Base::createRootFileDirectory(item.first);
+            // f.mkdir(("board_" + std::to_string(item.first.board_id)).c_str(), "", true)
+            //     ->mkdir(("hybrid_" + std::to_string(item.first.hybrid_id)).c_str(), "", true)
+            //     ->mkdir(("chip_" + std::to_string(item.first.chip_id)).c_str(), "", true)
+            //     ->cd();
 
             RingOscillatorHistograms histos;
             histos.fillRO(
@@ -147,10 +149,10 @@ public:
                 item.second.n,
                 fitResults
             );
-            f.Write();
+            // f.Write();
         }
 
-        std::ofstream json(Base::getResultPath(".json"));
+        std::ofstream json(Base::getOutputFilePath("results.json"));
         const char* str = "{";
         json << std::scientific
              << "{\"chips\":[";

@@ -90,7 +90,7 @@ void run(SystemController& system, CommandLineProcessing::ArgvParser& cmd) {
 
     system.ConfigureHw();
 
-    auto toolConfig = toml::parse(cmd.optionValue("tools"));
+    // auto toolConfig = toml::parse(cmd.optionValue("tools"));
 
     bool showPlots = !cmd.foundOption("hidePlots");
 
@@ -100,7 +100,7 @@ void run(SystemController& system, CommandLineProcessing::ArgvParser& cmd) {
     else
         resultsPath = "Results/";
 
-    Tools<Flavor>(system, toolConfig, showPlots, resultsPath).run_tools(cmd.allArguments());
+    Tools<Flavor>(system, cmd.optionValue("tools"), showPlots, resultsPath).run_tools(cmd.allArguments());
 
     if (cmd.foundOption("saveState"))
         for_each_device<Chip>(system, [&] (Chip* chip) {

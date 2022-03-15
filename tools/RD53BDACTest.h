@@ -128,7 +128,7 @@ class RD53BDACTest : public RD53BTool<RD53BDACTest, F> {
         return res;
     }
 
-    void draw(const Results& results) const;
+    void draw(const Results& results);
 
   private:
     static const std::map<std::string, std::array<uint16_t, 2>> lim;

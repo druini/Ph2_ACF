@@ -139,7 +139,7 @@ void RD53BNoiseScan<Flavor>::draw(const ChipEventsMap& result) {
     auto totMap = totDistribution(result);
 
     for (const auto& item : result) {
-        Base::mkdir(item.first);
+        Base::createRootFileDirectory(item.first);
 
         const auto& hitCount = hitCountMap[item.first];
         const auto& tot = totMap[item.first];

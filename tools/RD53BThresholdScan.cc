@@ -118,7 +118,7 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) {
 
     Base::for_each_chip([&] (RD53B<Flavor>* chip) {
     // for (const auto& item : occMap) {
-        Base::mkdir(chip);
+        Base::createRootFileDirectory(chip);
 
         const auto& occ = occMap.at(chip);
 

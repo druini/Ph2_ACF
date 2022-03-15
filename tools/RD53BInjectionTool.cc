@@ -163,7 +163,7 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) {
     auto totMap = totDistribution(result);
 
     Base::for_each_chip([&] (RD53B<Flavor>* chip) {
-        Base::mkdir(chip);
+        Base::createRootFileDirectory(chip);
 
         const auto& occ = occMap[chip];
         const auto& tot = totMap[chip];

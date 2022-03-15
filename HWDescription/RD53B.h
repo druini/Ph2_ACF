@@ -224,6 +224,10 @@ public:
     bool     isDACLocal(const std::string& regName) override;
     uint8_t  getNumberOfBits(const std::string& regName) override;
 
+    const auto& getConfigFileName() const { return configFileName; }
+
+    const auto& getConfig() const { return config; }    
+
     void configureRegister(std::string name, size_t value) {
         registerConfig[name] = value;
     }

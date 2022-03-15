@@ -152,7 +152,7 @@ void RD53B<Flavor>::saveRegMap(const std::string& fName2Add)
                 else {
                     std::ostringstream csvFileNameStream;
                     csvFileNameStream << fieldName.value << ".csv";
-                    csvFileName = FSUtils::getAvailablePath(csvFileNameStream.str());
+                    csvFileName = FSUtils::getAvailableFilePath(csvFileNameStream.str()).string();
                     config["Pixels"][fieldName.value] = csvFileName;
                 }
                 std::ofstream out_file(csvFileName);
