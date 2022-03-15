@@ -1,93 +1,14 @@
 from instrument_control import PowerSupplyController
-from vi_scan import vi_curves
+from vi_scan import vi_curves, vmonitor
 import xml.etree.ElementTree as ET
 import toml
 import itertools
 import subprocess
 from datetime import datetime
 import time
-import csv 
-
-config = [
-    {
-        'name': 'current_vs_PA_IN_BIAS_LIN',
-        'type': 'curr_vs_DAC',
-        'configFile': 'CROC.xml',
-        'timeout': 300,
-        'maxAttempts': 3,
-        'PSchannel': 2,
-        'params': [
-            {
-                'table': 'Registers',
-                'keys' : ['DAC_PREAMP_L_LIN', 'DAC_PREAMP_R_LIN', 'DAC_PREAMP_TL_LIN', 'DAC_PREAMP_TR_LIN', 'DAC_PREAMP_T_LIN', 'DAC_PREAMP_M_LIN'],
-                'values' : [0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000]
-            },
-        ]
-    },
-    {
-        "name": "GlobalThresholdTuning3000",
-        "type": "Ph2_ACF",
-        "configFile": "CROC.xml",
-        "timeout" : 600,
-        "maxAttempts" : 3,
-        "tools": ["AnalogScan", "DigitalScan", "RingOsc", "ADCScan", "DACScan", "GlobalThresholdTuning"],
-        "params": [
-            {
-                "table" : "Pixels",
-                "keys" : ["tdac"],
-                "values" : [16]
-            }
-        ]
-    },
-    {
-        "name": "ThresholdScan3000",
-        "type": "Ph2_ACF",
-        "configFile": "CROC.xml",
-        "timeout" : 600,
-        "maxAttempts" : 3,
-        "tools": ["ThresholdScan"],
-        "params": [
-            {
-                "table" : "Registers", 
-                "keys" : ["DAC_PREAMP_L_LIN", "DAC_PREAMP_R_LIN", "DAC_PREAMP_TL_LIN", "DAC_PREAMP_TR_LIN", "DAC_PREAMP_T_LIN", "DAC_PREAMP_M_LIN"],
-                "values" : [100, 250, 200, 300, 400]
-            },
-            {
-                "table" : "Registers", 
-                "keys" : ["DAC_LDAC_LIN"], 
-                "values" : [130, 140, 150, 170, 190]
-            },
-            {
-                "table" : "Pixels",
-                "keys" : ["tdac"],
-                "values" : [0, 16, 31]
-            }
-        ]
-    },
-    {
-        "name": "AFEScans1000",
-        "type": "Ph2_ACF",
-        "configFile": "CROC.xml",
-        "tools": ["ThresholdEqualization", "GlobalThresholdTuning", "ThresholdEqualization", "ThresholdScan", "DigitalScan", "AnalogScan", "TimeWalk", "Noise"],
-        "timeout" : 600,
-        "maxAttempts" : 3
-    },
-    {
-        "name": "IVConfigured",
-        "type": "IV",
-        "configFile": "CROC2.xml",
-        "startingCurrent" : 2.5,
-        "finalCurrent" : .5,
-        "currentStep" : 0.1
-    },
-    {
-        "name": "IVDefault",
-        "type": "IV",
-        "startingCurrent" : 0.1,
-        "finalCurrent" : 2.5,
-        "currentStep" : 0.1 
-    }
-]
+import csv
+import sys
+import scan_routine_config
 
 powerSupplyResource = "/dev/ttyUSB0"
 powerSupplyVoltage = 1.8
@@ -159,6 +80,10 @@ def IV_Task(task):
         configureCROC(task['configFile'])
     vi_curves(dir_name, task['startingCurrent'], task['finalCurrent'], task['currentStep'])
 
+def Vmonitor_Task(task):
+    dir_name = '.'
+    vmonitor()
+
 def curr_vs_DAC_Task(task):
     dir_name =  task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     if not os.path.exists(dir_name):
@@ -182,7 +107,23 @@ def curr_vs_DAC_Task(task):
         with open(outfile, 'a+') as f:
             csv.writer(f).writerow(data)
 
-def main():
+def main(config):
+    for task in config:
+        time.sleep(.5)
+
+        if task["type"] == "Ph2_ACF":
+            Ph2_ACF_Task(task)
+
+        elif task["type"] == "IV":
+            IV_Task(task)
+
+        elif task["type"] == "Vmonitor":
+            Vmonitor_Task(task)
+
+        elif task['type'] == 'curr_vs_DAC':
+            curr_vs_DAC_Task(task)
+
+if __name__=='__main__':
     powerSupply = PowerSupplyController(powerSupplyResource, 2)
     powerSupply.power_off('ALL')
     # set power supply voltage/current
@@ -192,17 +133,12 @@ def main():
     powerSupply.set_current(2, powerSupplyCurrent)
     powerSupply.power_on('ALL')
 
-    for task in config:
-        time.sleep(.5)
-
-        if task["type"] == "Ph2_ACF":
-            Ph2_ACF_Task(task)
-            
-        elif task["type"] == "IV":
-            IV_Task(task)
-
-        elif task['type'] == 'curr_vs_DAC':
-            curr_vs_DAC_Task(task)
-
-if __name__=='__main__':
-    main()
+    if sys.argv[1]=='preIrrad':
+        config = scan_routine_config.config_preIrradiation
+        main(config)
+    elif sys.argv[1]=='irrad':
+        config = scan_routine_config.config_irradiation
+        while True:
+            main(config)
+    else:
+        sys.exit(f'Unknown config: {sys.argv[1]}. Allowed are "preIrrad" and "irrad"')
