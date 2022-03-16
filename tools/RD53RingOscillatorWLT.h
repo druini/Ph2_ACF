@@ -66,9 +66,7 @@ public:
         Base::system().fPowerSupplyClient->sendAndReceivePacket("K2410:SetSpeed,PowerSupplyId:" + param("vmeter"_s) + ",ChannelId:" + param("vmeterCH"_s) + ",IntegrationTime:1");
         Base::system().fPowerSupplyClient->sendAndReceivePacket("VoltmeterSetRange,VoltmeterId:" + param("vmeter"_s) + ",ChannelId:" + param("vmeterCH"_s) + ",Value:1.3");
 
-        Base::for_each_chip([&](DeviceChain devs) {
-            RD53B<Flavor>* chip = static_cast<RD53B<Flavor>*>(devs.chip);
-
+        Base::for_each_chip([&](RD53B<Flavor>* chip) {
             results[chip].countEnableTimeBX = nBX;
 
             auto& trimOscCounts = results[chip].trimOscCounts;
@@ -131,15 +129,17 @@ public:
         return results;
     }
 
-    void draw(const ChipDataMap<ChipResults>& results) const {
+    void draw(const ChipDataMap<ChipResults>& results) {
         double fitResults[42][2];
-        TFile f(Base::getResultPath(".root").c_str(), "RECREATE");
+        // TFile f(Base::getAvailablePath(".root").c_str(), "RECREATE");
+        Base::createRootFile();
 
         for(const std::pair<const ChipLocation, ChipResults>& item: results) {
-            f.mkdir(("board_" + std::to_string(item.first.board_id)).c_str(), "", true)
-                ->mkdir(("hybrid_" + std::to_string(item.first.hybrid_id)).c_str(), "", true)
-                ->mkdir(("chip_" + std::to_string(item.first.chip_id)).c_str(), "", true)
-                ->cd();
+            Base::createRootFileDirectory(item.first);
+            // f.mkdir(("board_" + std::to_string(item.first.board_id)).c_str(), "", true)
+            //     ->mkdir(("hybrid_" + std::to_string(item.first.hybrid_id)).c_str(), "", true)
+            //     ->mkdir(("chip_" + std::to_string(item.first.chip_id)).c_str(), "", true)
+            //     ->cd();
 
             RingOscillatorHistograms histos;
             histos.fillRO(
@@ -149,10 +149,10 @@ public:
                 item.second.n,
                 fitResults
             );
-            f.Write();
+            // f.Write();
         }
 
-        std::ofstream json(Base::getResultPath(".json"));
+        std::ofstream json(Base::getOutputFilePath("results.json"));
         const char* str = "{";
         json << std::scientific
              << "{\"chips\":[";

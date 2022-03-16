@@ -67,15 +67,6 @@ template <class Flavor>
 typename RD53BInjectionTool<Flavor>::ChipEventsMap RD53BInjectionTool<Flavor>::run(Task progress) const {
     ChipEventsMap systemEventsMap;
 
-    // store original
-    std::map<ChipLocation, pixel_matrix_t<Flavor, bool>> originalEnableMasks;
-    std::map<ChipLocation, pixel_matrix_t<Flavor, bool>> originalEnableInjectionsMasks;
-    Base::for_each_chip([&] (Chip* chip) {
-        auto rd53b = static_cast<RD53B<Flavor>*>(chip);
-        originalEnableMasks[chip] = rd53b->pixelConfig.enable;
-        originalEnableInjectionsMasks[chip] = rd53b->pixelConfig.enableInjections;
-    });
-
     configureInjections();
     
     for (size_t frameId = 0; frameId < _nFrames ; ++frameId) {
@@ -86,12 +77,9 @@ typename RD53BInjectionTool<Flavor>::ChipEventsMap RD53BInjectionTool<Flavor>::r
         progress.update(double(frameId + 1) / _nFrames);
     }
 
-    
+    // reset masks
     Base::for_each_chip([&] (Chip* chip) {
-        auto rd53b = static_cast<RD53B<Flavor>*>(chip);
-        rd53b->pixelConfig.enable = originalEnableMasks[chip];
-        rd53b->pixelConfig.enableInjections = originalEnableInjectionsMasks[chip];
-        Base::chipInterface().UpdatePixelConfig(rd53b, true, false);
+        Base::chipInterface().UpdatePixelConfig(chip, true, false);
     });
 
     return systemEventsMap;
@@ -106,10 +94,8 @@ void RD53BInjectionTool<Flavor>::setupMaskFrame(size_t frameId) const {
     auto mask = generateInjectionMask(frameId);
 
     Base::for_each_chip([&] (Chip* chip) {
-        auto& cfg = static_cast<RD53B<Flavor>*>(chip)->pixelConfig;
-        cfg.enable = mask;
-        cfg.enableInjections = mask;
-        chipInterface.UpdatePixelConfig(chip, cfg, true, false);
+        auto& cfg = static_cast<RD53B<Flavor>*>(chip)->pixelConfig();
+        chipInterface.UpdatePixelMasks(chip, mask, mask, cfg.enableHitOr);
     });
 }
 
@@ -176,11 +162,11 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) {
     auto occMap = occupancy(result);
     auto totMap = totDistribution(result);
 
-    for (const auto& item : result) {
-        Base::mkdir(item.first);
+    Base::for_each_chip([&] (RD53B<Flavor>* chip) {
+        Base::createRootFileDirectory(chip);
 
-        const auto& occ = occMap[item.first];
-        const auto& tot = totMap[item.first];
+        const auto& occ = occMap[chip];
+        const auto& tot = totMap[chip];
 
         Base::drawHist(tot, "ToT Distribution", 16, 0, 16, "ToT");
 
@@ -192,7 +178,7 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) {
     
         pixel_matrix_t<Flavor, double> mask;
         mask.fill(false);
-        xt::view(mask, row_range, col_range) = true;
+        xt::view(mask, row_range, col_range) = xt::view(chip->pixelConfig().enable && chip->pixelConfig().enableInjections, row_range, col_range);
 
         LOG (INFO) 
             << "number of enabled pixels: " << xt::count_nonzero(mask)()
@@ -208,7 +194,7 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) {
             mean_occ_disabled = xt::mean(xt::filter(occ, !mask))();
         LOG (INFO) << "mean occupancy for disabled pixels: " << mean_occ_disabled << RESET;
 
-    }
+    });
 }
 
 template <class Flavor>
@@ -297,25 +283,6 @@ void RD53BInjectionTool<Flavor>::configureInjections() const {
         }
         fwInterface.ConfigureFastCommands(&fastCmdConfig);
     }
-}
-
-template <class Flavor>
-void RD53BInjectionTool<Flavor>::ReverseYAxis(TH1 *h)
-{
-    // Remove the current axis
-    h->GetYaxis()->SetLabelOffset(999);
-    h->GetYaxis()->SetTickLength(0);
-    // Redraw the new axis
-    gPad->Update();
-    TGaxis *newaxis = new TGaxis(gPad->GetUxmin(),
-                                    gPad->GetUymax(),
-                                    gPad->GetUxmin()-0.001,
-                                    gPad->GetUymin(),
-                                    h->GetYaxis()->GetXmin(),
-                                    h->GetYaxis()->GetXmax(),
-                                    510,"+");
-    newaxis->SetLabelOffset(-0.03);
-    newaxis->Draw();
 }
 
 template class RD53BInjectionTool<RD53BFlavor::ATLAS>;

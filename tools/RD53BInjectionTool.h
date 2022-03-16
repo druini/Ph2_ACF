@@ -66,8 +66,6 @@ struct RD53BInjectionTool : public RD53BTool<RD53BInjectionTool, Flavor> {
 private:
     auto generateInjectionMask(size_t i) const;
 
-    static void ReverseYAxis(TH1 *h);
-
     size_t _nFrames;
 };
 

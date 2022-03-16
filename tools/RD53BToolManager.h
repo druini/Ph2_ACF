@@ -16,10 +16,10 @@ namespace RD53BTools {
 
 template <class Tools>
 struct ToolManager : public ToolManagerBase {
-    ToolManager(SystemController& system, const toml::value& config, bool showPlots = true) 
-      : ToolManagerBase(system, config) 
+    ToolManager(SystemController& system, const std::string& configPath, bool showPlots = true, std::string resultsPath = "Results/")
+      : ToolManagerBase(system, configPath, std::move(resultsPath)) 
       , _showPlots(showPlots)
-    { 
+    {
         initialize<Tools>(); 
     }
 

@@ -50,7 +50,7 @@ bool RD53BInterface<Flavor>::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_
 
     UpdateCoreColumns(chip);
 
-    UpdatePixelConfigDense(chip, chip->pixelConfig);
+    UpdatePixelConfig(chip);
 
     return true;
 }
@@ -277,7 +277,7 @@ void RD53BInterface<Flavor>::UpdateCoreColumns(Chip* chip) {
 }
 
 template <class Flavor>
-void RD53BInterface<Flavor>::UpdateCoreColRegs(Chip* chip, const std::string& prefix, const std::vector<bool>& core_col_en) {
+void RD53BInterface<Flavor>::UpdateCoreColRegs(Chip* chip, const std::string& prefix, const std::array<bool, RD53B::nCoreCols>& core_col_en) {
     BitVector<uint16_t> cmd_stream;
     for (int i = 0; i < 4; ++i)
         SerializeCommand<RD53BCmd::WrReg>(chip, cmd_stream, RD53B::getRegister(prefix + "_" + std::to_string(i)).address, uint16_t(0));
@@ -323,10 +323,10 @@ void RD53BInterface<Flavor>::ChipErrorReport(ReadoutChip* pChip)
 template <class Flavor>
 bool RD53BInterface<Flavor>::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
-    RD53B* pRD53 = static_cast<RD53B*>(pChip);
+    // RD53B* pRD53 = static_cast<RD53B*>(pChip);
 
-    pRD53->pixelConfig = pRD53->defaultPixelConfig;
-    UpdatePixelConfig(pRD53);
+    // pRD53->pixelConfig = pRD53->defaultPixelConfig;
+    UpdatePixelConfig(pChip);
 
     return true;
 }
@@ -334,33 +334,33 @@ bool RD53BInterface<Flavor>::ConfigureChipOriginalMask(ReadoutChip* pChip, bool 
 template <class Flavor>
 bool RD53BInterface<Flavor>::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerifLoop)
 {
-    RD53B* pRD53 = static_cast<RD53B*>(pChip);
-
-    pRD53->pixelConfig.enable = mask;
-
-    UpdatePixelConfig(pRD53);
-    // RD53Interface::WriteRD53Mask(pRD53, false, false);
-
+    UpdatePixelMasksUniform(pChip, mask, mask, mask);
     return true;
 }
 
 template <class Flavor>
 bool RD53BInterface<Flavor>::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
 {
-    RD53B* pRD53 = static_cast<RD53B*>(pChip);
+    // RD53B* pRD53 = static_cast<RD53B*>(pChip);
 
-    for (auto row = 0u; row < RD53::nRows; row++)
-        for (auto col = 0u; col < RD53::nCols; col++)
-        {
-            if (mask == true) 
-                pRD53->pixelConfig.enable(row, col) = group->isChannelEnabled(row, col) && pRD53->defaultPixelConfig.enable(row, col);
-            if (inject == true)
-                pRD53->pixelConfig.enableInjections(row, col) = group->isChannelEnabled(row, col) && pRD53->defaultPixelConfig.enable(row, col);
-            else
-                pRD53->pixelConfig.enableInjections(row, col) = group->isChannelEnabled(row, col) && pRD53->defaultPixelConfig.enable(row, col) && pRD53->defaultPixelConfig.enableInjections(row, col);
-        }
+    // pixel_matrix_t<Flavor, bool> enable = false;
+    // pixel_matrix_t<Flavor, bool> enableInjections = false;
 
-    UpdatePixelConfig(pRD53);
+    // for (auto row = 0u; row < RD53::nRows; row++)
+    //     for (auto col = 0u; col < RD53::nCols; col++)
+    //     {
+    //         if (mask == true) 
+    //             enable(row, col) |= group->isChannelEnabled(row, col);
+    //             // pRD53->pixelConfig().enable(row, col) = group->isChannelEnabled(row, col) && pRD53->defaultPixelConfig.enable(row, col);
+    //         if (inject == true)
+    //             enableInjections(row, col) &= group->isChannelEnabled(row, col);
+    //         else
+    //             // pRD53->pixelConfig().enableInjections(row, col) = group->isChannelEnabled(row, col) && pRD53->defaultPixelConfig.enable(row, col);
+    //         // else
+    //             // pRD53->pixelConfig().enableInjections(row, col) = group->isChannelEnabled(row, col) && pRD53->defaultPixelConfig.enable(row, col) && pRD53->defaultPixelConfig.enableInjections(row, col);
+    //     }
+
+    // UpdatePixelConfig(pRD53);
 
     return true;
 }
@@ -372,7 +372,7 @@ bool RD53BInterface<Flavor>::WriteChipAllLocalReg(ReadoutChip* pChip, const std:
 
     for(auto row = 0u; row < RD53::nRows; row++)
         for(auto col = 0u; col < RD53::nCols; col++) 
-            pRD53->pixelConfig.tdac(row, col) = pValue.getChannel<uint16_t>(row, col);
+            pRD53->pixelConfig().tdac(row, col) = pValue.getChannel<uint16_t>(row, col);
 
     UpdatePixelConfig(pRD53);
     // RD53Interface::WriteRD53Mask(pRD53, false, false);
@@ -385,7 +385,7 @@ void RD53BInterface<Flavor>::ReadChipAllLocalReg(ReadoutChip* pChip, const std::
 {
     for(auto row = 0u; row < RD53::nRows; row++)
         for(auto col = 0u; col < RD53::nCols; col++) 
-            pValue.getChannel<uint16_t>(row, col) = static_cast<RD53B*>(pChip)->pixelConfig.tdac(row, col);
+            pValue.getChannel<uint16_t>(row, col) = static_cast<RD53B*>(pChip)->pixelConfig().tdac(row, col);
 }
 
 

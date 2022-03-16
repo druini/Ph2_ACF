@@ -84,8 +84,9 @@ public:
     }
 
     void draw(const Results& results) {
-        std::ofstream json(Base::getResultPath(".json"));
-        TFile f(Base::getResultPath(".root").c_str(), "RECREATE");
+        std::ofstream json(Base::getOutputFilePath("results.json"));
+        // TFile f(Base::getAvailablePath(".root").c_str(), "RECREATE");
+        Base::createRootFile();
 
         uint16_t boardId, hybridId, chipId;
         float setV, measV;
@@ -125,10 +126,11 @@ public:
                  << "\"hybrid\":" << hybridId << ","
                  << "\"id\":" << chipId << ",";
 
-            f.mkdir(("board_" + std::to_string(boardId)).c_str(), "", true)
-                ->mkdir(("hybrid_" + std::to_string(hybridId)).c_str(), "", true)
-                ->mkdir(("chip_" + std::to_string(chipId)).c_str(), "", true)
-                ->cd();
+            Base::createRootFileDirectory(chipRes.first);
+            // f.mkdir(("board_" + std::to_string(boardId)).c_str(), "", true)
+            //     ->mkdir(("hybrid_" + std::to_string(hybridId)).c_str(), "", true)
+            //     ->mkdir(("chip_" + std::to_string(chipId)).c_str(), "", true)
+            //     ->cd();
 
             x.reserve(y.size());
             xErr.reserve(y.size());
