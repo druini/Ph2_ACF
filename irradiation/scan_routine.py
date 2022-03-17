@@ -1,10 +1,10 @@
-from instrument_control import PowerSupplyController
+from instrument_control import PowerSupplyController, XrayController
 from vi_scan import vi_curves, vmonitor
 import xml.etree.ElementTree as ET
 import toml
 import itertools
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import csv
 import sys
@@ -108,7 +108,30 @@ def curr_vs_DAC_Task(task):
             csv.writer(f).writerow(data)
 
 def main(config):
+    psOFF = False
+    wrongTcounter = 0
     for task in config:
+        while True:
+            tempState = tempControl.poll()
+            if tempState == -1: #lost communication to arduino
+                time.sleep(1)
+                tempControl = subprocess.Popen(['python', 'peltier_com.py'])
+                time.sleep(3)
+                continue
+            elif tempState == -2: #temperature is more than 5degs from target temperature
+                powerSupply.power_off('ALL')
+                wrongTcounter += 1
+                if wrongTcounter > 2: sys.exit('Lost control over temperature')
+                psOFF = True
+                tempControl = subprocess.Popen(['python', 'peltier_com.py'])
+                time.sleep(60)
+                continue
+            elif tempState is None:
+                wrongTcounter = 0
+                if psOFF:
+                    powerSupply.power_on('ALL')
+                    psOFF = False
+                break
         time.sleep(.5)
 
         if task["type"] == "Ph2_ACF":
@@ -124,6 +147,7 @@ def main(config):
             curr_vs_DAC_Task(task)
 
 if __name__=='__main__':
+    tempControl = subprocess.Popen(['python', 'peltier_com.py'])
     powerSupply = PowerSupplyController(powerSupplyResource, 2)
     powerSupply.power_off('ALL')
     # set power supply voltage/current
@@ -137,8 +161,41 @@ if __name__=='__main__':
         config = scan_routine_config.config_preIrradiation
         main(config)
     elif sys.argv[1]=='irrad':
-        config = scan_routine_config.config_irradiation
+        configBase = scan_routine_config.config_irradiationBase
+        configMain = scan_routine_config.config_irradiationMain
+        lastMainScan = datetime.fromisocalendar(1900,1,1)
+        mainScanRepetitions = 0
+
+        xray = XrayController(resource='ASRL/dev/ttyID3003::INSTR', logfile='xray.log')
+        xray.set_current(30)
+        xray.set_voltage(60)
+        xray.on()
+        xray.open_shutter()
+
         while True:
-            main(config)
+            for i in range(3):
+                if xray.verify_parameters():
+                    break
+                else:
+                    xray.off()
+                    xray.on()
+                    time.sleep(3)
+                    xray.open_shutter()
+            else:
+                sys.exit('Xrays are broken :(')
+            main(configBase)
+            if mainScanRepetitions < 10:
+                deltaHours = 1
+            elif mainScanRepetitions < 100:
+                deltaHours = 10
+            else:
+                deltaHours = 50
+            if datetime.now() - lastMainScan > timedelta(hours=deltaHours):
+                xray.off()
+                main(configMain)
+                mainScanRepetitions += 1
+                lastMainScan = datetime.now()
+                xray.on()
+                xray.open_shutter()
     else:
         sys.exit(f'Unknown config: {sys.argv[1]}. Allowed are "preIrrad" and "irrad"')

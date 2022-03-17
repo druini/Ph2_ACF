@@ -20,7 +20,7 @@ config_preIrradiation = [
         "configFile": "CROC.xml",
         "timeout" : 600,
         "maxAttempts" : 3,
-        "tools": ["AnalogScan", "DigitalScan", "RingOsc", "ADCScan", "DACScan", "GlobalThresholdTuning"],
+        "tools": ["VrefTrimming", "AnalogScan", "DigitalScan", "RingOsc", "ADCScan", "DACScan", "GlobalThresholdTuning"],
         "params": [
             {
                 "table" : "Pixels",
@@ -65,7 +65,7 @@ config_preIrradiation = [
     {
         "name": "IVConfigured",
         "type": "IV",
-        "configFile": "CROC2.xml",
+        "configFile": "CROC.xml",
         "startingCurrent" : 2.5,
         "finalCurrent" : .5,
         "currentStep" : 0.1
@@ -79,7 +79,45 @@ config_preIrradiation = [
     }
 ]
 
-config_irradiation = [
+config_irradiationBase = [
+    {
+        "name": "ShortRingOsc_Mux",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "timeout": 600,
+        "maxAttempts": 3,
+        "tools": ["ShortRingOsc", "MuxScan"],
+    },
+    {
+        "name": "vmonitor",
+        "type": "Vmonitor",
+    }
+        ]
+
+config_irradiationMain = [
+    {
+        "name": "VrefTrimming",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "timeout": 600,
+        "maxAttempts": 3,
+        "tools": ["VrefTrimming"],
+    },
+    {
+        "name": "IVConfigured",
+        "type": "IV",
+        "configFile": "CROC.xml",
+        "startingCurrent" : 2.5,
+        "finalCurrent" : .5,
+        "currentStep" : 0.1
+    },
+    {
+        "name": "IVDefault",
+        "type": "IV",
+        "startingCurrent" : 0.1,
+        "finalCurrent" : 2.5,
+        "currentStep" : 0.1
+    },
     {
         "name": "ThresholdScan_existingTDACs",
         "type": "Ph2_ACF",
