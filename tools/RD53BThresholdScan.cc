@@ -18,83 +18,82 @@
 
 namespace RD53BTools {
 
+
 template <class Flavor>
-typename RD53BThresholdScan<Flavor>::OccupancyMap RD53BThresholdScan<Flavor>::run(Task progress) {
+void RD53BThresholdScan<Flavor>::init() {
+    vcalBins = xt::arange(param("vcalRange"_s)[0], param("vcalRange"_s)[1], param("vcalStep"_s));
+}
+
+template <class Flavor>
+typename RD53BThresholdScan<Flavor>::OccupancyMap RD53BThresholdScan<Flavor>::run(Task progress) const {
+    OccupancyMap overallOccMap;
+
     auto& chipInterface = Base::chipInterface();
 
-    size_t nSteps = (param("vcalRange"_s)[1] - param("vcalRange"_s)[0]) / param("vcalStep"_s);
-
-    Base::for_each_chip([&] (Chip* chip) {
-        auto* rd53b = static_cast<RD53B<Flavor>*>(chip);
-        chipInterface.WriteReg(rd53b, Flavor::Reg::VCAL_MED, param("vcalMed"_s));
+    Base::for_each_chip([&] (auto* chip) {
+        chipInterface.WriteReg(chip, Flavor::Reg::VCAL_MED, param("vcalMed"_s));
+        overallOccMap.insert({chip, xt::zeros<double>({vcalBins.size(), size(0), size(1)})});
     });
 
     param("injectionTool"_s).configureInjections();
 
-    std::vector<tool_result_t<RD53BInjectionTool<Flavor>>> events(nSteps);
+    std::vector<tool_result_t<RD53BInjectionTool<Flavor>>> events(vcalBins.size());
 
     size_t nFrames = param("injectionTool"_s).nFrames();
 
     for (size_t frame = 0; frame < nFrames; ++frame) {
         param("injectionTool"_s).setupMaskFrame(frame);
-        for (size_t i = 0, vcalHigh = param("vcalMed"_s) + param("vcalRange"_s)[0]; i < nSteps; ++i, vcalHigh += param("vcalStep"_s)) {
+        for (size_t i = 0; i < vcalBins.size(); ++i) {
+        // for (size_t i = 0, vcalHigh = param("vcalMed"_s) + param("vcalRange"_s)[0]; i < nSteps; ++i, vcalHigh += param("vcalStep"_s)) {
             Base::for_each_hybrid([&] (Hybrid* hybrid) {
-                chipInterface.WriteReg(hybrid, Flavor::Reg::VCAL_HIGH, vcalHigh);
+                chipInterface.WriteReg(hybrid, Flavor::Reg::VCAL_HIGH, param("vcalMed"_s) + vcalBins[i]);
             });
             
             param("injectionTool"_s).inject(events[i]);
-            progress.update(double(frame * nSteps + i) / (nFrames * nSteps));
+            progress.update(double(frame * vcalBins.size() + i) / (nFrames * vcalBins.size()));
         }
     }
 
-    OccupancyMap overallOccMap;
-    for (size_t i = 0; i < nSteps; ++i) {
+    for (size_t i = 0; i < vcalBins.size(); ++i) {
         for (const auto& item : param("injectionTool"_s).occupancy(events[i])) {
-            overallOccMap.insert({item.first, xt::zeros<double>({nSteps, size[0], size[1]})});
             xt::view(overallOccMap[item.first], i, xt::all(), xt::all()) = 
-                xt::view(item.second, xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1]));
+                xt::view(item.second, rowRange(), colRange());
         }
     }
     return overallOccMap;
 }
 
-
-
 template <class Flavor>
-std::array<ChipDataMap<xt::xtensor<double, 2>>, 2> RD53BThresholdScan<Flavor>::analyze(const OccupancyMap& occMap) const {
-    ChipDataMap<xt::xtensor<double, 2>> thresholdMap;
-    ChipDataMap<xt::xtensor<double, 2>> noiseMap;
+std::array<ChipDataMap<xt::xtensor_optional<double, 2>>, 2> RD53BThresholdScan<Flavor>::analyze(const OccupancyMap& occMap) const {
+    ChipDataMap<xt::xtensor_optional<double, 2>> thresholdMap;
+    ChipDataMap<xt::xtensor_optional<double, 2>> noiseMap;
 
-    auto vcalBins = xt::arange(param("vcalRange"_s)[0], param("vcalRange"_s)[1], param("vcalStep"_s)) + param("vcalStep"_s) / 2.0;
-    auto rowRange = xt::range(offset[0], size[0]);
-    auto colRange = xt::range(offset[1], size[1]);
-
-    Base::for_each_chip([&] (RD53B<Flavor>* chip) {
-    // for (const auto& item : occMap) {
+    Base::for_each_chip([&] (auto* chip) {
         const auto& occ = occMap.at(chip);
 
         auto diff = xt::diff(occ, 1, 0);
 
         auto vcalDiffBins = xt::view(vcalBins + param("vcalStep"_s) / 2.0, xt::range(0, diff.shape()[0]));
+        
+        // thresholdMap[chip].fill(xtl::missing<double>());
+        // noiseMap[chip].fill(xtl::missing<double>());
+        thresholdMap.insert({chip, xt::xtensor_optional<double, 2>({size(0), size(1)})});
+        noiseMap.insert({chip, xt::xtensor_optional<double, 2>({size(0), size(1)})});
 
-        thresholdMap.insert({chip, xt::zeros<double>({occ.shape()[1], occ.shape()[2]})});
-        noiseMap.insert({chip, xt::zeros<double>({occ.shape()[1], occ.shape()[2]})});
-
-        auto enable = xt::view(chip->pixelConfig().enable, rowRange, colRange);
-        auto enableInjections = xt::view(chip->pixelConfig().enableInjections, rowRange, colRange);
+        auto enabled = xt::view(chip->pixelConfig().enable && chip->pixelConfig().enableInjections, rowRange(), colRange());
 
         for (size_t row = 0; row < occ.shape()[1]; ++row) {
             for (size_t col = 0; col < occ.shape()[2]; ++col) {
-                if (enable(row, col) && enableInjections(row, col)) {
-                    if (xt::all(xt::view(occ, xt::all(), row, col) >= .99))
-                        thresholdMap[chip](row, col) = vcalDiffBins(0);
-                    else if (xt::allclose(xt::view(occ, xt::all(), row, col), 0.))
-                        thresholdMap[chip](row, col) = vcalDiffBins.periodic(-1);
-                    else {
-                        auto weights = xt::view(diff, xt::all(), row, col);
-                        thresholdMap[chip](row, col) = xt::average(vcalDiffBins, xt::abs(weights))();
-                        noiseMap[chip](row, col) = sqrt(xt::average(xt::square(vcalDiffBins - thresholdMap[chip](row, col)), weights)());
-                    }
+                auto pixelOcc = xt::view(occ, xt::all(), row, col);
+                if (enabled(row, col) && pixelOcc.front() < .01 && pixelOcc.back() > .99) {
+                    auto weights = xt::view(diff, xt::all(), row, col);
+                    thresholdMap[chip](row, col) = xt::average(vcalDiffBins, xt::abs(weights))();
+                    noiseMap[chip](row, col) = sqrt(xt::average(xt::square(vcalDiffBins - thresholdMap[chip](row, col)), weights)());
+                
+                }
+                else {
+                    thresholdMap[chip](row, col) = xtl::missing<double>();
+                    noiseMap[chip](row, col) = xtl::missing<double>();
                 }
             }
         }
@@ -108,13 +107,9 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) {
     Base::createRootFile();
 
     const size_t nInjections = param("injectionTool"_s).param("nInjections"_s);
-    const size_t nPixels = param("injectionTool"_s).param("size"_s)[0] * param("injectionTool"_s).param("size"_s)[1];
-
-    auto rowRange = xt::range(offset[0], size[0]);
-    auto colRange = xt::range(offset[1], size[1]);
+    // const size_t nPixels = param("injectionTool"_s).param("size"_s)[0] * param("injectionTool"_s).param("size"_s)[1];
 
     auto thresholdAndNoise = analyze(occMap);
-    auto vcalBins = xt::arange(param("vcalRange"_s)[0], param("vcalRange"_s)[1], param("vcalStep"_s));
 
     Base::for_each_chip([&] (RD53B<Flavor>* chip) {
     // for (const auto& item : occMap) {
@@ -134,12 +129,12 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) {
         const auto& threshold = thresholdAndNoise[0][chip];
         const auto& noise = thresholdAndNoise[1][chip];
 
-        auto enabled = xt::view(chip->pixelConfig().enable, rowRange, colRange) && xt::view(chip->pixelConfig().enableInjections, rowRange, colRange);
+        auto enabled = xt::view(chip->pixelConfig().enable && chip->pixelConfig().enableInjections, rowRange(), colRange());
+        auto valid = xt::cast<bool>(xt::has_value(threshold));
 
-        const auto valid = xt::view(occ, -1, xt::all(), xt::all()) > .9 && enabled;
-
-        LOG(INFO) << "Stuck pixels: " << ((double)xt::count_nonzero(enabled && !valid)() / nPixels);
-        const auto filtered_threshold = xt::filter(threshold, valid);
+        LOG(INFO) << "Enabled pixels: " << xt::count_nonzero(enabled)();
+        LOG(INFO) << "Succesfully computed threshold and noise for " << xt::count_nonzero(valid)() << " pixels";
+        const auto filtered_threshold = xt::filter(xt::value(threshold), valid);
         LOG(INFO) << "Mean threshold: " << xt::mean(filtered_threshold)();
         LOG(INFO) << "Threshold stddev: " << xt::stddev(filtered_threshold)();
         LOG(INFO) << "Min threshold: " << xt::amin(filtered_threshold)();
@@ -149,13 +144,13 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& occMap) {
 
         auto vcalDiffBins = xt::view(vcalBins + param("vcalStep"_s) / 2.0, xt::range(0, -1));
 
-        Base::drawMap(threshold, "Threshold Map", "Threshold", offset[0], offset[1]);
+        Base::drawMap(xt::value(threshold), "Threshold Map", "Threshold", offset(0), offset(1));
 
-        Base::drawHist(filtered_threshold, "Threshold Distribution", vcalBins.size(), vcalBins(0), vcalBins.periodic(-1), "Delta VCAL");
+        Base::drawHist(xt::value(threshold), "Threshold Distribution", vcalBins.size(), vcalBins(0), vcalBins.periodic(-1), "Delta VCAL");
 
-        Base::drawMap(noise, "Noise Map", "Noise", offset[0], offset[1]);
+        Base::drawMap(xt::value(noise), "Noise Map", "Noise", offset(0), offset(1));
 
-        Base::drawHist(xt::filter(noise, valid), "Noise Distribution", 32, 0, 32, "Delta VCAL");
+        Base::drawHist(xt::filter(xt::value(noise), valid), "Noise Distribution", 32, 0, 32, "Delta VCAL");
     });
 }
 

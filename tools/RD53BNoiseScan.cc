@@ -27,9 +27,10 @@ void RD53BNoiseScan<Flavor>::init() {
 }
 
 template <class Flavor>
-typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Task progress) const {
+ChipDataMap<typename RD53BNoiseScan<Flavor>::ChipResult> RD53BNoiseScan<Flavor>::run(Task progress) const {
     using namespace RD53BEventDecoding;
     
+    ChipDataMap<ChipResult> results;
     ChipEventsMap events;
 
     auto& chipInterface = Base::chipInterface();
@@ -57,14 +58,17 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Task 
 
     auto offset = param("offset"_s);
     auto size = param("size"_s);
+    auto rowRange = xt::range(offset[0], offset[0] + size[0]);
+    auto colRange = xt::range(offset[1], offset[1] + size[1]);
 
     pixel_matrix_t<Flavor, bool> mask;
     mask.fill(false);
-    xt::view(mask, xt::range(offset[0], offset[0] + size[0]), xt::range(offset[1], offset[1] + size[1])).fill(true);
+    xt::view(mask, rowRange, colRange).fill(true);
 
     // configure pixels
-    Base::for_each_chip([&] (Chip* chip) {
-        auto cfg = static_cast<RD53B<Flavor>*>(chip)->pixelConfig();
+    Base::for_each_chip([&] (auto* chip) {
+        auto cfg = chip->pixelConfig();
+        results[chip].enabled = cfg.enable; 
         chipInterface.UpdatePixelMasks(chip, mask && cfg.enable, cfg.enableInjections, mask && cfg.enableHitOr);
     });
     
@@ -82,13 +86,17 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Task 
         progress.update(double(triggersSent) / param("nTriggers"_s));
     }
 
+    Base::for_each_chip([&] (Chip* chip) {
+        results[chip].events = std::move(events[chip]);
+    });
+
     if (param("maskNoisyPixels"_s)) {
-        auto hitCountMap = hitCount(events);
+        auto hitCountMap = hitCount(results);
         Base::for_each_chip([&] (Chip* chip) {
             auto rd53b = static_cast<RD53B<Flavor>*>(chip);
             const auto noisy = hitCountMap[chip] / double(param("nTriggers"_s)) > param("occupancyThreshold"_s);
             LOG(INFO) << "Masking " << xt::count_nonzero(rd53b->pixelConfig().enable && noisy) << " noisy pixels for chip: " << ChipLocation(chip) << RESET;
-            rd53b->pixelConfig().enable &= !noisy;
+            xt::filter(rd53b->pixelConfig().enable, noisy).fill(false);
         });
     }
     
@@ -97,16 +105,16 @@ typename RD53BNoiseScan<Flavor>::ChipEventsMap RD53BNoiseScan<Flavor>::run(Task 
         chipInterface.UpdatePixelConfig(chip, true, false);
     });
 
-    return events;
+    return results;
 }
 
 template <class Flavor>
-ChipDataMap<pixel_matrix_t<Flavor, size_t>> RD53BNoiseScan<Flavor>::hitCount(const ChipEventsMap& data) const {
+ChipDataMap<pixel_matrix_t<Flavor, size_t>> RD53BNoiseScan<Flavor>::hitCount(const ChipDataMap<ChipResult>& data) const {
     using HitCountMatrix = pixel_matrix_t<Flavor, size_t>;
     ChipDataMap<HitCountMatrix> hitCountMap;
     for (const auto& item : data) {
         hitCountMap[item.first].fill(0);
-        for (const auto& event : item.second)
+        for (const auto& event : item.second.events)
             for (const auto& hit : event.hits)
                 ++hitCountMap[item.first](hit.row, hit.col);
     }
@@ -114,13 +122,13 @@ ChipDataMap<pixel_matrix_t<Flavor, size_t>> RD53BNoiseScan<Flavor>::hitCount(con
 }
 
 template <class Flavor>
-ChipDataMap<std::array<double, 16>> RD53BNoiseScan<Flavor>::totDistribution(const ChipEventsMap& data) const {
+ChipDataMap<std::array<double, 16>> RD53BNoiseScan<Flavor>::totDistribution(const ChipDataMap<ChipResult>& data) const {
     ChipDataMap<std::array<double, 16>> tot;
     size_t nHitsExpected = param("nTriggers"_s) * param("size"_s)[0] * param("size"_s)[1];
     for (const auto& item : data) {
         size_t nHits = 0;
         auto it = tot.insert({item.first, {0}}).first;
-        for (const auto& event : item.second) {
+        for (const auto& event : item.second.events) {
             for (const auto& hit : event.hits) {
                 it->second[hit.tot] += 1.0 / nHitsExpected;
                 ++nHits;
@@ -132,7 +140,7 @@ ChipDataMap<std::array<double, 16>> RD53BNoiseScan<Flavor>::totDistribution(cons
 }
 
 template <class Flavor>
-void RD53BNoiseScan<Flavor>::draw(const ChipEventsMap& result) {
+void RD53BNoiseScan<Flavor>::draw(const ChipDataMap<ChipResult>& result) {
     Base::createRootFile();
     
     auto hitCountMap = hitCount(result);
@@ -143,11 +151,11 @@ void RD53BNoiseScan<Flavor>::draw(const ChipEventsMap& result) {
 
         const auto& hitCount = hitCountMap[item.first];
         const auto& tot = totMap[item.first];
-        const auto occ = hitCount / double(param("nTriggers"_s));
+        // pixel_matrix_t<Flavor, double> occ = hitCount / double(param("nTriggers"_s));
 
         Base::drawHist(tot, "ToT Distribution", 16, 0, 16, "ToT");
 
-        Base::drawMap(occ, "Occupancy Map", "Occupancy");
+        Base::drawMap(hitCount, "Hit Count Map", "Hit Count");
 
         size_t maxHits = xt::amax(hitCount)();
 
@@ -157,24 +165,23 @@ void RD53BNoiseScan<Flavor>::draw(const ChipEventsMap& result) {
         auto row_range = xt::range(param("offset"_s)[0], param("offset"_s)[0] + param("size"_s)[0]);
         auto col_range = xt::range(param("offset"_s)[1], param("offset"_s)[1] + param("size"_s)[1]);
     
-        pixel_matrix_t<Flavor, double> mask;
+        pixel_matrix_t<Flavor, bool> mask;
         mask.fill(false);
         xt::view(mask, row_range, col_range) = true;
+        mask &= item.second.enabled;
 
-        size_t nHits = 0;
-        for (const auto event : result.at(item.first))
-            nHits += event.hits.size();
+        size_t nHits = xt::sum(hitCount)();
 
         LOG (INFO) << "Enabled pixels: " << xt::count_nonzero(mask)() << " / " << (Flavor::nRows * Flavor::nCols) << RESET;
 
         LOG (INFO) << "Total number of hits: " << nHits << RESET;
 
-        LOG (INFO) << "Mean occupancy for enabled pixels: " << xt::mean(xt::filter(occ, mask))() << RESET;
+        LOG (INFO) << "Mean hit count for enabled pixels: " << xt::mean(xt::filter(hitCount, mask))() << RESET;
 
-        double mean_occ_disabled = 0;
-        if (param("size"_s)[0] < RD53B<Flavor>::nRows || param("size"_s)[1] < RD53B<Flavor>::nCols)
-            mean_occ_disabled = xt::mean(xt::filter(occ, !mask))();
-        LOG (INFO) << "Mean occupancy for disabled pixels: " << mean_occ_disabled << RESET;
+        double mean_hitCount_disabled = 0;
+        if (xt::any(!mask))
+            mean_hitCount_disabled = xt::mean(xt::filter(hitCount, !mask))();
+        LOG (INFO) << "Mean hit count for disabled pixels: " << mean_hitCount_disabled << RESET;
     }
 }
 

@@ -176,7 +176,7 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) {
         auto row_range = xt::range(param("offset"_s)[0], param("offset"_s)[0] + param("size"_s)[0]);
         auto col_range = xt::range(param("offset"_s)[1], param("offset"_s)[1] + param("size"_s)[1]);
     
-        pixel_matrix_t<Flavor, double> mask;
+        pixel_matrix_t<Flavor, bool> mask;
         mask.fill(false);
         xt::view(mask, row_range, col_range) = xt::view(chip->pixelConfig().enable && chip->pixelConfig().enableInjections, row_range, col_range);
 

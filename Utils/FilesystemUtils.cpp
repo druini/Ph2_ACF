@@ -7,7 +7,8 @@ namespace fs = boost::filesystem;
 namespace FSUtils {
     fs::path getAvailableFilePath(const fs::path& path) {
         auto availablePath = detail::getAvailablePath(path);
-        fs::create_directories(availablePath.parent_path());
+        if (availablePath.has_parent_path())
+            fs::create_directories(availablePath.parent_path());
         return availablePath;
     }
     
@@ -28,7 +29,8 @@ namespace FSUtils {
                     runNumberRegexStream << "\\" << path.extension().string();
                 std::regex runNumberRegex(runNumberRegexStream.str());
                 std::vector<size_t> existingRunNumbers{{0}};
-                for (auto& entry : boost::make_iterator_range(fs::directory_iterator(path.parent_path()), {})) {
+                auto parent_path = path.has_parent_path() ? path.parent_path() : fs::path(".");
+                for (auto& entry : boost::make_iterator_range(fs::directory_iterator(parent_path), {})) {
                     std::string filename = entry.path().filename().string();
                     std::smatch m;
                     if (std::regex_match(filename, m, runNumberRegex) && m.size() > 1) {
@@ -45,7 +47,10 @@ namespace FSUtils {
                     runNumber = *it + 1;
                 std::stringstream ss;
                 ss << path.stem().string() << '(' << runNumber << ')' << path.extension().string();
-                return path.parent_path() / ss.str();
+                if (path.has_parent_path())
+                    return (parent_path / ss.str());
+                else
+                    return ss.str();
             }
         }
     }
