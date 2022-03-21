@@ -78,7 +78,6 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
         auto occMapHighCharge = injectionTool.occupancy(eventsHighCharge);
 
         Base::for_each_chip([&] (auto* chip) {
-            auto* rd53b = static_cast<RD53B<Flavor>*>(chip);
             auto& pixelConfig = chip->pixelConfig();
             auto enabled = xt::view(pixelConfig.enable, rowRange, colRange) && xt::view(pixelConfig.enableInjections, rowRange, colRange);
             auto tdacView = xt::view(tdac[chip], rowRange, colRange);
@@ -87,22 +86,26 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
 
             const auto stuck = occHighCharge < .9;
 
+            // std::cout << "tdacView:\n" << tdacView << std::endl;
+            // std::cout << "occ:\n" << occ << std::endl;
+            // std::cout << "bestTDAC:\n" << bestTDAC[chip] << std::endl;
+            // std::cout << "bestOcc:\n" << bestOcc[chip] << std::endl;
+            // std::cout << "stuck:\n" << stuck << std::endl;
+
             auto cost = xt::abs(occ - 0.5);
             auto minCost = xt::abs(bestOcc[chip] - 0.5);
 
-            xt::xtensor<bool, 2> isBest = cost < minCost || xt::isclose(occ, bestOcc[chip]);
+            xt::xtensor<bool, 2> isBest = !stuck && enabled && ((cost < minCost) || xt::isclose(occ, bestOcc[chip]));
 
             if (param("eliminateBias"_s) && i == nSteps - 1)
                 isBest |= (xt::isclose(cost, minCost) && xt::random::randint<int>(size, 0, 1));
-
-            isBest &= !stuck;
             
             LOG(INFO) << "Step: " << i;
             LOG(INFO) << "nStuck: " <<  xt::count_nonzero(stuck);
             LOG(INFO) << "nUpdated: " <<  xt::count_nonzero(isBest);
             LOG(INFO) << "nEquivalent: " << xt::count_nonzero(xt::isclose(cost, minCost));
             LOG(INFO) << "nActuallyBetter: " << xt::count_nonzero(cost < minCost && !xt::isclose(cost, minCost));
-            LOG(INFO) << "nUncertain: " <<  xt::count_nonzero(minCost > 0.4);
+            LOG(INFO) << "nUncertain: " <<  xt::count_nonzero(minCost > 0.49);
             LOG(INFO) << "==========================================";
 
             xt::masked_view(bestOcc[chip], isBest) = occ;
@@ -115,14 +118,14 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
                     tdacView
                 );
 
-                chipInterface.UpdatePixelTDAC(rd53b, tdac[chip]); // update tdacs
+                chipInterface.UpdatePixelTDAC(chip, tdac[chip]); // update tdacs
             }
         });
     }
 
-
     Base::for_each_chip([&] (auto* chip) {
-        auto enabled = xt::view(chip->pixelConfig().enable && chip->pixelConfig().enableInjections, rowRange, colRange);
+        auto& pixelConfig = chip->pixelConfig();
+        auto enabled = xt::view(pixelConfig.enable, rowRange, colRange) && xt::view(pixelConfig.enableInjections, rowRange, colRange);
         auto tdacView = xt::view(chip->pixelConfig().tdac, rowRange, colRange);
         tdacView = xt::where(enabled, bestTDAC[chip], tdacView);
         chipInterface.UpdatePixelConfig(chip, false, true);

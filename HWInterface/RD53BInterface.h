@@ -93,7 +93,7 @@ public:
     // update tdac only
     void UpdatePixelTDAC(
         Chip* chip,
-        const Ph2_HwDescription::pixel_matrix_t<Flavor, bool>& tdac
+        const Ph2_HwDescription::pixel_matrix_t<Flavor, uint8_t>& tdac
     ) 
     {
         UpdatePixelConfig(chip, nullptr, nullptr, nullptr, &tdac, false, true);
@@ -105,7 +105,7 @@ public:
         const Ph2_HwDescription::pixel_matrix_t<Flavor, bool>& enable, 
         const Ph2_HwDescription::pixel_matrix_t<Flavor, bool>& enableInjections, 
         const Ph2_HwDescription::pixel_matrix_t<Flavor, bool>& enableHitOr,
-        const Ph2_HwDescription::pixel_matrix_t<Flavor, bool>& tdac
+        const Ph2_HwDescription::pixel_matrix_t<Flavor, uint8_t>& tdac
     ) 
     {
         UpdatePixelConfig(chip, &enable, &enableInjections, &enableHitOr, &tdac, true, true);
@@ -215,7 +215,7 @@ private:
         const Ph2_HwDescription::pixel_matrix_t<Flavor, bool>* enable, 
         const Ph2_HwDescription::pixel_matrix_t<Flavor, bool>* enableInjections, 
         const Ph2_HwDescription::pixel_matrix_t<Flavor, bool>* enableHitOr,
-        const Ph2_HwDescription::pixel_matrix_t<Flavor, bool>* tdac, 
+        const Ph2_HwDescription::pixel_matrix_t<Flavor, uint8_t>* tdac, 
         bool updateMasks, 
         bool updateTdac
     ) {
