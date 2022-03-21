@@ -399,8 +399,11 @@ private:
             if (config.contains("Pixels")) {
                 chip->pixelConfigFields().for_each([&] (const auto& fieldName, auto ptr) {
                     const auto& fieldNameStr = fieldName.value;
-                    if (config.at("Pixels").contains(fieldNameStr) && config.at("Pixels").at(fieldNameStr).is_string()) {
-                        copyFile(toml::find<std::string>(config.at("Pixels"), fieldNameStr), configFilesDir);
+                    if (config.at("Pixels").contains(fieldNameStr) && config.at("Pixels").at(fieldNameStr).is_string())
+                    {
+                        auto fileName = toml::find<std::string>(config.at("Pixels"), fieldNameStr);
+                        if (boost::filesystem::exists(fileName))
+                            copyFile(fileName, configFilesDir);
                     }
                 });
             }
@@ -499,3 +502,4 @@ inline void ReverseYAxis(TH1 *h)
 
 }
 
+#endif
