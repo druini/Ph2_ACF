@@ -499,4 +499,3 @@ inline void ReverseYAxis(TH1 *h)
 
 }
 
-#endif
