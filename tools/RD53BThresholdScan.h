@@ -3,6 +3,8 @@
 
 #include "RD53BInjectionTool.h"
 
+#include "../Utils/xtensor/xoptional.hpp"
+
 namespace RD53BTools {
 
 template <class>
@@ -24,20 +26,21 @@ struct RD53BThresholdScan : public RD53BTool<RD53BThresholdScan, Flavor> {
 
     using OccupancyMap = ChipDataMap<xt::xtensor<double, 3>>;
 
-    void init() {
-        offset = param("injectionTool"_s).param("offset"_s);
-        size = param("injectionTool"_s).param("size"_s);
-    }
+    void init();
 
-    OccupancyMap run(Task progress);
+    OccupancyMap run(Task progress) const;
 
-    std::array<ChipDataMap<xt::xtensor<double, 2>>, 2> analyze(const OccupancyMap& occMap) const;
+    std::array<ChipDataMap<xt::xtensor_optional<double, 2>>, 2> analyze(const OccupancyMap& occMap) const;
 
     void draw(const OccupancyMap& occMap);
 
 private:
-    std::vector<size_t> offset;
-    std::vector<size_t> size;
+    const auto& offset(size_t i) const { return param("injectionTool"_s).param("offset"_s)[i]; }
+    const auto& size(size_t i) const { return param("injectionTool"_s).param("size"_s)[i]; }
+    auto rowRange() const { return xt::range(offset(0), offset(0) + size(0)); }
+    auto colRange() const { return xt::range(offset(1), offset(0) + size(1)); }
+
+    xt::xtensor<size_t, 1> vcalBins;
 };
 
 }

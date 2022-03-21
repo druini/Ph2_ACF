@@ -242,7 +242,7 @@ namespace xt
         template <class T, class B>
         struct xreducer_temporary_type<xtl::xoptional<T, B>>
         {
-            using type = xtl::xoptional<std::decay_t<T>, bool>;;
+            using type = xtl::xoptional<std::decay_t<T>, bool>;
         };
     }
 
@@ -1088,25 +1088,25 @@ namespace xt
         inline auto xindex_view_optional<CT, I>::value() -> value_expression
         {
             return this->derived_cast().build_index_view(this->derived_cast().expression().value());
-        };
+        }
 
         template <class CT, class I>
         inline auto xindex_view_optional<CT, I>::value() const -> const_value_expression
         {
             return this->derived_cast().build_index_view(this->derived_cast().expression().value());
-        };
+        }
 
         template <class CT, class I>
         inline auto xindex_view_optional<CT, I>::has_value() -> flag_expression
         {
             return this->derived_cast().build_index_view(this->derived_cast().expression().has_value());
-        };
+        }
 
         template <class CT, class I>
         inline auto xindex_view_optional<CT, I>::has_value() const -> const_flag_expression
         {
             return this->derived_cast().build_index_view(this->derived_cast().expression().has_value());
-        };
+        }
     }
 
     /************************************

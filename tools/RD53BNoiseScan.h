@@ -34,15 +34,20 @@ struct RD53BNoiseScan : public RD53BTool<RD53BNoiseScan, Flavor> {
 
     using ChipEventsMap = ChipDataMap<std::vector<RD53BEventDecoding::RD53BEvent>>;
 
+    struct ChipResult {
+        pixel_matrix_t<Flavor, bool> enabled;
+        std::vector<RD53BEventDecoding::RD53BEvent> events;
+    };
+
     void init();
 
-    ChipEventsMap run(Task progress) const;
+    ChipDataMap<ChipResult> run(Task progress) const;
 
-    ChipDataMap<pixel_matrix_t<Flavor, size_t>> hitCount(const ChipEventsMap& data) const;
+    ChipDataMap<pixel_matrix_t<Flavor, size_t>> hitCount(const ChipDataMap<ChipResult>& data) const;
 
-    ChipDataMap<std::array<double, 16>> totDistribution(const ChipEventsMap& data) const;
+    ChipDataMap<std::array<double, 16>> totDistribution(const ChipDataMap<ChipResult>& data) const;
 
-    void draw(const ChipEventsMap& result);
+    void draw(const ChipDataMap<ChipResult>& result);
 };
 
 }

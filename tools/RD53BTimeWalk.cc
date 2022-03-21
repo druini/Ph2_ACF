@@ -112,7 +112,7 @@ auto RD53BTimeWalk<Flavor>::run(Task progress) const -> Result {
                     chipInterface.WriteReg(hybrid, "CalEdgeFineDelay", delay);
                 });
 
-                LOG(INFO) << "frame: " << frame << ", vcalHigh: " << vcalHigh << ", delay: " << delay << RESET;
+                // LOG(INFO) << "frame: " << frame << ", vcalHigh: " << vcalHigh << ", delay: " << delay << RESET;
                 param("injectionTool"_s).inject(events(i, j));
 
                 injectionChargeProgress.update(1);
@@ -144,7 +144,6 @@ void RD53BTimeWalk<Flavor>::draw(const Result& events) {
                         nLateHits += event.hits.size();
                 }
                 lateHitRatio[item.first](i, j) = nLateHits / double(nTotalHits);
-                LOG(INFO) << i << ":" << j << " " << nLateHits;
             }
         }
     }

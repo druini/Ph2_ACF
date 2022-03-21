@@ -88,7 +88,8 @@ void run(SystemController& system, CommandLineProcessing::ArgvParser& cmd) {
         });
     }
 
-    system.ConfigureHw();
+    if (!cmd.foundOption("skipConfiguration"))
+        system.ConfigureHw();
 
     // auto toolConfig = toml::parse(cmd.optionValue("tools"));
 
@@ -131,8 +132,11 @@ int main(int argc, char** argv) {
     cmd.defineOption("saveState", "Save register values and pixel configuration in .toml file.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("saveState", "s");
 
-    cmd.defineOption("outputDir", "Specify output directory (default: \"Results/\")", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("outputDir", "Specify output directory (default: \"Results/\").", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("outputDir", "o");
+
+    cmd.defineOption("skipConfiguration", "Skip system configuration.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOptionAlternative("skipConfiguration", "i");
 
     int result = cmd.parse(argc, argv);
     
