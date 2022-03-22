@@ -38,7 +38,7 @@ private:
     const auto& offset(size_t i) const { return param("injectionTool"_s).param("offset"_s)[i]; }
     const auto& size(size_t i) const { return param("injectionTool"_s).param("size"_s)[i]; }
     auto rowRange() const { return xt::range(offset(0), offset(0) + size(0)); }
-    auto colRange() const { return xt::range(offset(1), offset(0) + size(1)); }
+    auto colRange() const { return xt::range(offset(1), offset(1) + size(1)); }
 
     xt::xtensor<size_t, 1> vcalBins;
 };
