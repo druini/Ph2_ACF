@@ -9,7 +9,7 @@ import time
 
 class PowerSupplyController:
     def __init__(self, resource, outputs):
-        self.tti = TTI(resource=resource, outputs=outputs)
+        self.tti = TTI(resource=resource, outputs=outputs, reset_on_init=False)
 
     def power_on(self, channel):
         with self.tti:
