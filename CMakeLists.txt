@@ -171,7 +171,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # Boost
     set(BOOST_INCLUDE_DIRS "$ENV{BOOST_INCLUDE}")
     set(BOOST_LIBRARY_DIRS "$ENV{BOOST_LIB}")
-    find_package(Boost 1.53 EXACT REQUIRED system filesystem thread program_options serialization)
+    find_package(Boost 1.53 REQUIRED system filesystem thread program_options serialization)
 
     message("${Boost_INCLUDE_DIRS}")
 
