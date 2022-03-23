@@ -79,8 +79,8 @@ template <class Flavor>
 auto RD53BTimeWalk<Flavor>::run(Task progress) const -> Result {
     auto& chipInterface = *static_cast<RD53BInterface<Flavor>*>(Base::system().fReadoutChipInterface);
 
-    auto events = xt::xtensor<tool_result_t<RD53BInjectionTool<Flavor>>, 2>::from_shape({nVcalSteps, nDelaySteps});
-    events.fill(tool_result_t<RD53BInjectionTool<Flavor>>{});
+    auto results = xt::xtensor<tool_result_t<RD53BInjectionTool<Flavor>>, 2>::from_shape({nVcalSteps, nDelaySteps});
+    results.fill(tool_result_t<RD53BInjectionTool<Flavor>>{});
 
     Base::for_each_chip([&] (Chip* chip) {
         chipInterface.WriteReg(chip, Flavor::Reg::VCAL_MED, param("vcalMed"_s));
@@ -113,18 +113,18 @@ auto RD53BTimeWalk<Flavor>::run(Task progress) const -> Result {
                 });
 
                 // LOG(INFO) << "frame: " << frame << ", vcalHigh: " << vcalHigh << ", delay: " << delay << RESET;
-                param("injectionTool"_s).inject(events(i, j));
+                param("injectionTool"_s).inject(results(i, j));
 
                 injectionChargeProgress.update(1);
             }
         }
     }
 
-    return events;
+    return results;
 }
 
 template <class Flavor>
-void RD53BTimeWalk<Flavor>::draw(const Result& events) {
+void RD53BTimeWalk<Flavor>::draw(const Result& results) {
     Base::createRootFile();
 
     ChipDataMap<xt::xtensor<double, 2>> lateHitRatio;
@@ -135,7 +135,7 @@ void RD53BTimeWalk<Flavor>::draw(const Result& events) {
     
     for (size_t i = 0; i < nVcalSteps; ++i) {
         for (size_t j = 0; j < nDelaySteps; ++j) {
-            for (const auto& item : events(i, j)) {
+            for (const auto& item : results(i, j)) {
                 size_t nLateHits = 0;
                 size_t nTotalHits = 0;
                 for (const auto& event : item.second) {
@@ -171,7 +171,7 @@ void RD53BTimeWalk<Flavor>::draw(const Result& events) {
 
             for (size_t i = 0; i < nVcalSteps; ++i) {
                 for (size_t j = 0; j < nDelaySteps; ++j) {
-                    for (const auto& event : events(i, j).at(chip)) {
+                    for (const auto& event : results(i, j).at(chip)) {
                         for (const auto& hit : event.hits) {
                             charge = param("vcalRange"_s)[0] + i * param("vcalStep"_s);
                             delay = j * param("fineDelayStep"_s);

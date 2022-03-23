@@ -61,20 +61,22 @@ void RD53BInjectionTool<Flavor>::init() {
     for (const auto& step : steps) 
         if (!step["parallel"_s])
             _nFrames *= step["size"_s];
+    
+    _nFrames /= param("frameStep"_s);
 }
 
 template <class Flavor>
 typename RD53BInjectionTool<Flavor>::ChipEventsMap RD53BInjectionTool<Flavor>::run(Task progress) const {
-    ChipEventsMap systemEventsMap;
+    ChipEventsMap result;
 
     configureInjections();
     
-    for (size_t frameId = 0; frameId < _nFrames ; ++frameId) {
+    for (size_t frameId = 0; frameId < nFrames() ; ++frameId) {
         setupMaskFrame(frameId);
 
-        inject(systemEventsMap);
+        inject(result);
 
-        progress.update(double(frameId + 1) / _nFrames);
+        progress.update(double(frameId + 1) / nFrames());
     }
 
     // reset masks
@@ -82,10 +84,8 @@ typename RD53BInjectionTool<Flavor>::ChipEventsMap RD53BInjectionTool<Flavor>::r
         Base::chipInterface().UpdatePixelConfig(chip, true, false);
     });
 
-    return systemEventsMap;
+    return result;
 }
-
-
 
 template <class Flavor>
 void RD53BInjectionTool<Flavor>::setupMaskFrame(size_t frameId) const {
@@ -93,12 +93,10 @@ void RD53BInjectionTool<Flavor>::setupMaskFrame(size_t frameId) const {
 
     auto mask = generateInjectionMask(frameId);
 
-    Base::for_each_chip([&] (Chip* chip) {
-        auto& cfg = static_cast<RD53B<Flavor>*>(chip)->pixelConfig();
-        chipInterface.UpdatePixelMasks(chip, mask, mask, cfg.enableHitOr);
+    Base::for_each_chip([&] (auto* chip) {
+        chipInterface.UpdatePixelMasks(chip, mask, mask, chip->pixelConfig().enableHitOr);
     });
 }
-
 
 template <class Flavor>
 void RD53BInjectionTool<Flavor>::inject(ChipEventsMap& events) const {
@@ -118,12 +116,11 @@ void RD53BInjectionTool<Flavor>::inject(ChipEventsMap& events) const {
     }
 }
 
-
 template <class Flavor>
-ChipDataMap<pixel_matrix_t<Flavor, double>> RD53BInjectionTool<Flavor>::occupancy(const ChipEventsMap& data) const {
+ChipDataMap<pixel_matrix_t<Flavor, double>> RD53BInjectionTool<Flavor>::occupancy(const ChipEventsMap& events) const {
     // using OccMatrix = pixel_matrix_t<Flavor, double>;
     ChipDataMap<pixel_matrix_t<Flavor, double>> occ;
-    for (const auto& item : data) {
+    for (const auto& item : events) {
         occ[item.first].fill(0);
         for (const auto& event : item.second)
             for (const auto& hit : event.hits)
@@ -133,10 +130,10 @@ ChipDataMap<pixel_matrix_t<Flavor, double>> RD53BInjectionTool<Flavor>::occupanc
 }
 
 template <class Flavor>
-ChipDataMap<std::array<double, 16>> RD53BInjectionTool<Flavor>::totDistribution(const ChipEventsMap& data) const {
+ChipDataMap<std::array<double, 16>> RD53BInjectionTool<Flavor>::totDistribution(const ChipEventsMap& events) const {
     ChipDataMap<std::array<double, 16>> tot;
     size_t nHitsExpected = param("nInjections"_s) * param("size"_s)[0] * param("size"_s)[1];
-    for (const auto& item : data) {
+    for (const auto& item : events) {
         size_t nHits = 0;
         auto it = tot.insert({item.first, {0}}).first;
         for (const auto& event : item.second) {
@@ -152,15 +149,12 @@ ChipDataMap<std::array<double, 16>> RD53BInjectionTool<Flavor>::totDistribution(
 
 template <class Flavor>
 void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) {
-    // TApplication* app = nullptr;
-    // if (param("showPlots"_s))
-        // app = new TApplication("app", nullptr, nullptr);
-    // TApplication app("app", nullptr, nullptr);
-    // TFile* file = new TFile(Base::getResultPath(".root").c_str(), "NEW");
     Base::createRootFile();
     
     auto occMap = occupancy(result);
     auto totMap = totDistribution(result);
+
+    auto used = usedPixels();
 
     Base::for_each_chip([&] (RD53B<Flavor>* chip) {
         Base::createRootFileDirectory(chip);
@@ -172,35 +166,23 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) {
 
         Base::drawMap(occ, "Occupancy Map", "Occupancy");
 
-        // Calculate & print mean occupancy
-        auto row_range = xt::range(param("offset"_s)[0], param("offset"_s)[0] + param("size"_s)[0]);
-        auto col_range = xt::range(param("offset"_s)[1], param("offset"_s)[1] + param("size"_s)[1]);
-    
-        pixel_matrix_t<Flavor, bool> mask;
-        mask.fill(false);
-        xt::view(mask, row_range, col_range) = xt::view(chip->pixelConfig().enable && chip->pixelConfig().enableInjections, row_range, col_range);
-
         LOG (INFO) 
-            << "number of enabled pixels: " << xt::count_nonzero(mask)()
+            << "Number of enabled pixels: " << xt::count_nonzero(used)()
             << RESET;
 
-        LOG (INFO) 
-            << "mean occupancy for enabled pixels: "
-            << xt::mean(xt::filter(occ, mask))()
-            << RESET;
+        LOG (INFO) << "Mean occupancy for enabled pixels: " << xt::mean(xt::filter(occ, used))() << RESET;
 
-        double mean_occ_disabled = 0;
-        if (param("size"_s)[0] < RD53B<Flavor>::nRows || param("size"_s)[1] < RD53B<Flavor>::nCols)
-            mean_occ_disabled = xt::mean(xt::filter(occ, !mask))();
-        LOG (INFO) << "mean occupancy for disabled pixels: " << mean_occ_disabled << RESET;
+        LOG (INFO) << "Mean occupancy for disabled pixels: " << xt::nan_to_num(xt::mean(xt::filter(occ, !used)))() << RESET;
 
     });
 }
 
 template <class Flavor>
 auto RD53BInjectionTool<Flavor>::generateInjectionMask(size_t frameId) const {
-    pixel_matrix_t<Flavor, double> fullMask;
+    pixel_matrix_t<Flavor, bool> fullMask;
     fullMask.fill(false);
+
+    frameId *= param("frameStep"_s);
 
     xt::xtensor<bool, 2> mask = xt::ones<bool>({1, 1});
     size_t lastDim = 0;
@@ -283,6 +265,17 @@ void RD53BInjectionTool<Flavor>::configureInjections() const {
         }
         fwInterface.ConfigureFastCommands(&fastCmdConfig);
     }
+}
+
+
+template <class Flavor>
+pixel_matrix_t<Flavor, bool> RD53BInjectionTool<Flavor>::usedPixels() const {
+    pixel_matrix_t<Flavor, bool> result;
+    result.fill(0);
+    for (size_t frameId = 0; frameId < nFrames() ; ++frameId) {
+        result |= generateInjectionMask(frameId);
+    }
+    return result;
 }
 
 template class RD53BInjectionTool<RD53BFlavor::ATLAS>;

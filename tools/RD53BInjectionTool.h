@@ -30,6 +30,8 @@ const auto ToolParameters<RD53BInjectionTool<Flavor>> = make_named_tuple(
     std::make_pair("pulseDuration"_s, 6ul),
     std::make_pair("offset"_s, std::vector<size_t>({0, 0})),
     std::make_pair("size"_s, std::vector<size_t>({0, 0})),
+    std::make_pair("size"_s, std::vector<size_t>({0, 0})),
+    std::make_pair("frameStep"_s, 1ul),
     std::make_pair("maskGen"_s, std::vector<MaskStep>({
         MaskStep(0, 0, 0, {8, 1}),
         MaskStep(1, 0, 1, {}),
@@ -55,13 +57,15 @@ struct RD53BInjectionTool : public RD53BTool<RD53BInjectionTool, Flavor> {
 
     void inject(ChipEventsMap& events) const;
 
-    ChipDataMap<pixel_matrix_t<Flavor, double>> occupancy(const ChipEventsMap& data) const;
+    ChipDataMap<pixel_matrix_t<Flavor, double>> occupancy(const ChipEventsMap& result) const;
 
-    ChipDataMap<std::array<double, 16>> totDistribution(const ChipEventsMap& data) const;
+    ChipDataMap<std::array<double, 16>> totDistribution(const ChipEventsMap& result) const;
 
     size_t nFrames() const { return _nFrames; }
 
     void draw(const ChipEventsMap& result);
+
+    pixel_matrix_t<Flavor, bool> usedPixels() const;
 
 private:
     auto generateInjectionMask(size_t i) const;

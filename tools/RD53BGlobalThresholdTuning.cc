@@ -22,6 +22,8 @@ ChipDataMap<size_t> RD53BGlobalThresholdTuning<Flavor>::run(Task progress) const
     auto row_range = xt::range(injectionTool.param("offset"_s)[0], injectionTool.param("offset"_s)[0] + injectionTool.param("size"_s)[0]);
     auto col_range = xt::range(injectionTool.param("offset"_s)[1], injectionTool.param("offset"_s)[1] + injectionTool.param("size"_s)[1]);
 
+    auto usedPixels = param("injectionTool"_s).usedPixels();
+
     Base::for_each_chip([&] (auto* chip) {
         chipInterface.WriteReg(chip, Flavor::Reg::VCAL_MED, param("vcalMed"_s));
         chipInterface.WriteReg(chip, Flavor::Reg::VCAL_HIGH, param("vcalMed"_s) + param("targetThreshold"_s));
@@ -29,7 +31,7 @@ ChipDataMap<size_t> RD53BGlobalThresholdTuning<Flavor>::run(Task progress) const
         bestGDAC[chip] = gdacRange[0];
         bestOcc[chip] = 0;
         minAcceptableGDAC[chip] = gdacRange[1];
-        nEnabledPixels[chip] = xt::count_nonzero(xt::view(chip->pixelConfig().enable && chip->pixelConfig().enableInjections, row_range, col_range))();
+        nEnabledPixels[chip] = xt::count_nonzero(usedPixels && chip->injectablePixels())();
     });
     
 
@@ -58,11 +60,11 @@ ChipDataMap<size_t> RD53BGlobalThresholdTuning<Flavor>::run(Task progress) const
                 chipInterface.WriteReg(chip, Flavor::Reg::VCAL_HIGH, 0xFFFF); 
             });
 
-            auto eventsHighCharge = injectionTool.run(progress.subTask({i / double(nSteps), (i + .5) / double(nSteps)}));
-            auto occMapHighCharge = injectionTool.occupancy(eventsHighCharge);
+            auto resultHighCharge = injectionTool.run(progress.subTask({i / double(nSteps), (i + .5) / double(nSteps)}));
+            auto occMapHighCharge = injectionTool.occupancy(resultHighCharge);
 
             Base::for_each_chip([&] (auto* chip) {
-                size_t nStuck = xt::count_nonzero(xt::filter(occMapHighCharge[chip] < .9, mask && chip->pixelConfig().enable && chip->pixelConfig().enableInjections))();
+                size_t nStuck = xt::count_nonzero(chip->injectablePixels() && usedPixels && (occMapHighCharge[chip] < .9))();
                 LOG(INFO) << RESET << "nStuck: " << nStuck;
                 if (nStuck > param("maxStuckPixelRatio"_s) * nEnabledPixels[chip]) {
                     isChipInValidState[chip] = false;
@@ -80,11 +82,11 @@ ChipDataMap<size_t> RD53BGlobalThresholdTuning<Flavor>::run(Task progress) const
                 chipInterface.WriteReg(chip, Flavor::Reg::VCAL_HIGH, param("vcalMed"_s) + param("targetThreshold"_s));
             });
 
-            auto events = injectionTool.run(progress.subTask({(i + .5) / double(nSteps), (i + 1) / double(nSteps)}));
-            auto occMap = injectionTool.occupancy(events);
+            auto result = injectionTool.run(progress.subTask({(i + .5) / double(nSteps), (i + 1) / double(nSteps)}));
+            auto occMap = injectionTool.occupancy(result);
 
             Base::for_each_chip([&] (auto* chip) {
-                double mean_occ = xt::mean(xt::filter(occMap[chip], mask && chip->pixelConfig().enable && chip->pixelConfig().enableInjections))(); // xt::mean(occMap[chip])();
+                double mean_occ = xt::mean(xt::filter(occMap[chip], chip->injectablePixels() && usedPixels))(); // xt::mean(occMap[chip])();
                 LOG(INFO) << RESET << "gdac: " << GDAC[chip] << ", step: " << step  << ", occ: " << mean_occ << ", valid: " << isChipInValidState[chip];
                 if (isChipInValidState[chip]) {
                     
