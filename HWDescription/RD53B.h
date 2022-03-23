@@ -167,7 +167,7 @@ public:
         static const auto pixelConfigDefauls = std::map<std::string, uint8_t>({
             {"enable", 1},
             {"enableInjections", 1},
-            {"enableInjections", 1},
+            {"enableHitOr", 1},
             {"tdac", 15}
         });
         return pixelConfigDefauls;
@@ -223,6 +223,10 @@ public:
     uint32_t getNumberOfChannels() const override;
     bool     isDACLocal(const std::string& regName) override;
     uint8_t  getNumberOfBits(const std::string& regName) override;
+
+    const auto& getConfigFileName() const { return configFileName; }
+
+    const auto& getConfig() const { return config; }    
 
     void configureRegister(std::string name, size_t value) {
         registerConfig[name] = value;

@@ -11,15 +11,17 @@ type = "RD53BInjectionTool"
 
 [DigitalScan.args]
 injectionType = "Digital"
-nInjections = 10
-triggerDuration = 4
-triggerLatency = 134
+nInjections = 50
+triggerDuration = 1
+triggerLatency = 133
+injectionPeriod = 800
 offset = [0, 0]
 size = [0, 0]
 maskGen = [
-    { dim = 0, size = 0, parallel = false, shift = [8, 1] },
+    { dim = 0, size = 2, parallel = true, shift = [] },
+    { dim = 0, size = 0, parallel = false, shift = [8, 2] },
     { dim = 1, size = 0, parallel = true, shift = [] },
-    { dim = 0, size = 21, parallel = true, shift = [] }
+    { dim = 0, size = 8, parallel = true, shift = [] }
 ]
 
 [AnalogScan]
@@ -28,15 +30,16 @@ type = "RD53BInjectionTool"
 [AnalogScan.args]
 injectionType = "Analog"
 nInjections = 50
-triggerDuration = 2
-triggerLatency = 134
+triggerDuration = 1
+triggerLatency = 133
 injectionPeriod = 800
 offset = [0, 0]
 size = [0, 0]
 maskGen = [
-    { dim = 0, size = 0, parallel = false, shift = [8, 1] },
+    { dim = 0, size = 2, parallel = true, shift = [] },
+    { dim = 0, size = 0, parallel = false, shift = [8, 2] },
     { dim = 1, size = 0, parallel = true, shift = [] },
-    { dim = 0, size = 21, parallel = true, shift = [] }
+    { dim = 0, size = 8, parallel = true, shift = [] }
 ]
 
 [ThresholdScanInjection]
@@ -44,21 +47,22 @@ type = "RD53BInjectionTool"
 
 [ThresholdScanInjection.args]
 injectionType = "Analog"
-nInjections = 100
-triggerDuration = 2
-triggerLatency = 134
-injectionPeriod = 1000
+nInjections = 30
+triggerDuration = 1
+triggerLatency = 133
+injectionPeriod = 800
 offset = [0, 0]
 size = [0, 0]
 maskGen = [
-    { dim = 0, size = 0, parallel = false, shift = [8, 1] },
+    { dim = 0, size = 2, parallel = true, shift = [] },
+    { dim = 0, size = 0, parallel = false, shift = [8, 2] },
     { dim = 1, size = 0, parallel = true, shift = [] },
-    { dim = 0, size = 21, parallel = true, shift = [] }
+    { dim = 0, size = 8, parallel = true, shift = [] }
 ]
 
 [ThresholdScan]
 type = "RD53BThresholdScan"
-args = { injectionTool = "ThresholdScanInjection", vcalMed = 300, vcalRange = [300, 1800], vcalStep = 50 }
+args = { injectionTool = "ThresholdScanInjection", vcalMed = 300, vcalRange = [100, 1000], vcalStep = 50 }
 
 [ThresholdEqualization]
 type = "RD53BThresholdEqualization"
@@ -67,10 +71,27 @@ type = "RD53BThresholdEqualization"
 thresholdScan = "ThresholdScan"
 injectionTool = "ThresholdScanInjection"
 targetThreshold = 0 # The Delta VCAL value to tune the threshold at. If it's 0 a threshold scan will be performed and the mean trheshold will be used.
+initialTDAC = 16
+nSteps = 7
 
 [GlobalThresholdTuning]
 type = "RD53BGlobalThresholdTuning"
 args = { injectionTool = "ThresholdScanInjection", targetThreshold = 500, gdacRange = [370, 550], maxStuckPixelRatio = 0.01 }
+
+[NoiseScan]
+type = "RD53BNoiseScan"
+
+[NoiseScan.args]
+nTriggers = 1000000
+triggerDuration = 1
+readoutPeriod = 10000
+triggerPeriod = 35
+occupancyThreshold = 1e-6
+maskNoisyPixels = true
+
+[StuckPixelScan]
+type = "RD53BStuckPixelScan"
+args = { injectionTool = "AnalogScan" }
 
 [RingOsc]
 type = "RD53RingOscillator"

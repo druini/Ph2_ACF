@@ -130,9 +130,10 @@ class RD53BDACCalib : public RD53BTool<RD53BDACCalib, F> {
         return res;
     }
 
-    void draw(const Results& results) const {
-        std::ofstream json(Base::getResultPath(".json"));
-        TFile f(Base::getResultPath(".root").c_str(), "RECREATE");
+    void draw(const Results& results) {
+        std::ofstream json(Base::getOutputFilePath("results.json"));
+        // TFile f(Base::getAvailablePath(".root").c_str(), "RECREATE");
+        Base::createRootFile();
 
         TF1 line("line", "[offset]+[slope]*x");
 
@@ -148,9 +149,11 @@ class RD53BDACCalib : public RD53BTool<RD53BDACCalib, F> {
                  << "\"hybrid\":" << chip.hybrid_id << ","
                  << "\"id\":" << chip.chip_id << ",";
 
-            f.mkdir(("board_" + std::to_string(chip.board_id)).c_str(), "", true)
-            ->mkdir(("hybrid_" + std::to_string(chip.hybrid_id)).c_str(), "", true)
-            ->mkdir(("chip_"+ std::to_string(chip.chip_id)).c_str(), "", true)->cd();
+            Base::createRootFileDirectory(chip);
+
+            // f.mkdir(("board_" + std::to_string(chip.board_id)).c_str(), "", true)
+            // ->mkdir(("hybrid_" + std::to_string(chip.hybrid_id)).c_str(), "", true)
+            // ->mkdir(("chip_"+ std::to_string(chip.chip_id)).c_str(), "", true)->cd();
 
             const char* str2 = "{";
             json << "\"DACs\":[";

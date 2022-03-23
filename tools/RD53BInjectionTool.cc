@@ -162,11 +162,11 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) {
     auto occMap = occupancy(result);
     auto totMap = totDistribution(result);
 
-    for (const auto& item : result) {
-        Base::mkdir(item.first);
+    Base::for_each_chip([&] (RD53B<Flavor>* chip) {
+        Base::createRootFileDirectory(chip);
 
-        const auto& occ = occMap[item.first];
-        const auto& tot = totMap[item.first];
+        const auto& occ = occMap[chip];
+        const auto& tot = totMap[chip];
 
         Base::drawHist(tot, "ToT Distribution", 16, 0, 16, "ToT");
 
@@ -176,9 +176,9 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) {
         auto row_range = xt::range(param("offset"_s)[0], param("offset"_s)[0] + param("size"_s)[0]);
         auto col_range = xt::range(param("offset"_s)[1], param("offset"_s)[1] + param("size"_s)[1]);
     
-        pixel_matrix_t<Flavor, double> mask;
+        pixel_matrix_t<Flavor, bool> mask;
         mask.fill(false);
-        xt::view(mask, row_range, col_range) = true;
+        xt::view(mask, row_range, col_range) = xt::view(chip->pixelConfig().enable && chip->pixelConfig().enableInjections, row_range, col_range);
 
         LOG (INFO) 
             << "number of enabled pixels: " << xt::count_nonzero(mask)()
@@ -194,7 +194,7 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) {
             mean_occ_disabled = xt::mean(xt::filter(occ, !mask))();
         LOG (INFO) << "mean occupancy for disabled pixels: " << mean_occ_disabled << RESET;
 
-    }
+    });
 }
 
 template <class Flavor>
@@ -283,25 +283,6 @@ void RD53BInjectionTool<Flavor>::configureInjections() const {
         }
         fwInterface.ConfigureFastCommands(&fastCmdConfig);
     }
-}
-
-template <class Flavor>
-void RD53BInjectionTool<Flavor>::ReverseYAxis(TH1 *h)
-{
-    // Remove the current axis
-    h->GetYaxis()->SetLabelOffset(999);
-    h->GetYaxis()->SetTickLength(0);
-    // Redraw the new axis
-    gPad->Update();
-    TGaxis *newaxis = new TGaxis(gPad->GetUxmin(),
-                                    gPad->GetUymax(),
-                                    gPad->GetUxmin()-0.001,
-                                    gPad->GetUymin(),
-                                    h->GetYaxis()->GetXmin(),
-                                    h->GetYaxis()->GetXmax(),
-                                    510,"+");
-    newaxis->SetLabelOffset(-0.03);
-    newaxis->Draw();
 }
 
 template class RD53BInjectionTool<RD53BFlavor::ATLAS>;

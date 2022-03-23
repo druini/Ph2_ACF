@@ -72,6 +72,10 @@ struct Task {
         _bar.set_progress(100 * (_progressRange[0] + progress * size()));
     }
 
+    Task subTask(double start, double end, double size) {
+        return subTask({start / size, end / size});
+    }
+
     Task subTask(std::array<double, 2> progressRange) {
         
         return {_bar, {_progressRange[0] + progressRange[0] * size(), _progressRange[0] + progressRange[1] * size()}};
@@ -103,12 +107,15 @@ struct ToolManagerBase {
 
     SystemController& system() const { return _system; }
 
-    const auto& resultsPath() const { return _resultsPath; }
+    const auto& outputPath() const { return _outputPath; }
+
+    const auto& configPath() const { return _configPath; }
 
 protected:
-    ToolManagerBase(SystemController& system, const toml::value& config, std::string resultsPath) 
-      : _config(config)
-      , _resultsPath(std::move(resultsPath))
+    ToolManagerBase(SystemController& system, const std::string& configPath, std::string outputPath) 
+      : _configPath(configPath)
+      , _config(toml::parse(_configPath))
+      , _outputPath(std::move(outputPath))
       , _system(system)
     {}
 
@@ -128,10 +135,11 @@ protected:
         });
     }
 
+    std::string _configPath;
     std::unordered_map<std::type_index, std::string> _toolTypeNames;
     std::unordered_map<std::string, const std::type_info&> _toolTypeInfo;
     toml::value _config;
-    std::string _resultsPath;
+    std::string _outputPath;
     SystemController& _system;
 };
 
@@ -173,8 +181,8 @@ struct RD53BTool : public RD53BToolBase {
 
     SystemController& system() const { return _toolManager->system(); }
 
-    std::string getResultPath(const std::string& suffix) const {
-        return FSUtils::getAvailablePath(boost::filesystem::path(_toolManager->resultsPath()) / (_name + suffix));
+    std::string getOutputFilePath(const std::string& filename) const {
+        return (_outputPath / filename).string();
     }
 
     friend std::ostream& operator<<(std::ostream& os, const RD53BTool& t) {
@@ -185,7 +193,10 @@ struct RD53BTool : public RD53BToolBase {
     
     template <class T>
     void Draw(const T& data, bool showPlots) {
+        initOutputDirectory();
+
         static_cast<Derived*>(this)->draw(data);
+
         if (file)
             file->Write();
         if (showPlots && nPlots) {
@@ -198,7 +209,9 @@ protected:
 
     template <class F>
     void for_each_chip(F&& f) const {
-        for_each_device<Chip>(system(), std::forward<F>(f));
+        for_each_device<Chip>(system(), [&] (Chip* chip) {
+            return std::forward<F>(f)(static_cast<RD53B<Flavor>*>(chip));
+        });
     }
 
     template <class F>
@@ -213,15 +226,17 @@ protected:
 
 
     void createRootFile() {
-        file = new TFile(getResultPath(".root").c_str(), "NEW");
+        file = new TFile(getOutputFilePath("results.root").c_str(), "NEW");
     }
 
-    void mkdir(const ChipLocation& chip) const {
+    void createRootFileDirectory(const ChipLocation& chip) const {
         if (file) {
             std::stringstream ss;
             ss << "Chip " << chip;
             file->cd();
             file->mkdir(ss.str().c_str())->cd();
+
+
         }
     }
 
@@ -263,6 +278,18 @@ protected:
         h->Fit("gaus", "Q");
         c->Write();
         ++nPlots;
+    }
+
+    template <class Container>
+    static void drawHist2D(
+        Container data, 
+        const std::string& title, 
+        const std::string& xLabel = "",
+        const std::string& yLabel = "",
+        const std::string& zLabel = "",
+        bool reverseYAxis = false
+    ) {
+        drawHist2D(data, title, 0, data.shape()[0], 0, data.shape()[1], xLabel, yLabel, zLabel, reverseYAxis);
     }
 
     template <class Container>
@@ -351,6 +378,38 @@ protected:
     TFile* file = nullptr;
 
 private:
+    void copyFile(boost::filesystem::path sourceFile, boost::filesystem::path destinationDirectory) {
+        boost::filesystem::copy(sourceFile, destinationDirectory / sourceFile.filename());
+    }
+
+    void initOutputDirectory() {
+        _outputPath = FSUtils::getAvailableDirectoryPath(
+            boost::filesystem::path(_toolManager->outputPath()) / _name
+        );
+
+        auto configFilesDir = _outputPath / "config/";
+
+        boost::filesystem::create_directories(configFilesDir);
+
+        copyFile(_toolManager->configPath(), configFilesDir);
+        
+        for_each_chip([&] (auto* chip) {
+            copyFile(chip->getConfigFileName(), configFilesDir);
+            auto& config = chip->getConfig();
+            if (config.contains("Pixels")) {
+                chip->pixelConfigFields().for_each([&] (const auto& fieldName, auto ptr) {
+                    const auto& fieldNameStr = fieldName.value;
+                    if (config.at("Pixels").contains(fieldNameStr) && config.at("Pixels").at(fieldNameStr).is_string())
+                    {
+                        auto fileName = toml::find<std::string>(config.at("Pixels"), fieldNameStr);
+                        if (boost::filesystem::exists(fileName))
+                            copyFile(fileName, configFilesDir);
+                    }
+                });
+            }
+        });
+    }
+
     template <class T, std::enable_if_t<std::is_base_of<NamedTupleBase, T>::value, int> = 0>
     void parse(T& value, const char* argName, const toml::value& argValue) const { 
         initialize(value, argValue);
@@ -387,6 +446,7 @@ private:
     std::string _name = "Untitled";
     const ToolManagerBase* _toolManager;
     parameter_tuple _parameter_values;
+    boost::filesystem::path _outputPath;
 };
 
 template <class T>

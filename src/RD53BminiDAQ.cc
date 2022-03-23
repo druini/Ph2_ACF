@@ -28,6 +28,7 @@
 #include "../tools/RD53BDACTest.h"
 #include "../tools/RD53BGlobalThresholdTuning.h"
 #include "../tools/RD53BStuckPixelScan.h"
+#include "../tools/RD53BTimeWalk.h"
 
 #include <signal.h>
 
@@ -63,7 +64,8 @@ using Tools = ToolManager<decltype(make_named_tuple(
     TOOL(RD53BDACCalib),
     TOOL(RD53BDACTest),
     TOOL(RD53BGlobalThresholdTuning),
-    TOOL(RD53BStuckPixelScan)
+    TOOL(RD53BStuckPixelScan),
+    TOOL(RD53BTimeWalk)
 ))>;
 
 INITIALIZE_EASYLOGGINGPP
@@ -86,9 +88,10 @@ void run(SystemController& system, CommandLineProcessing::ArgvParser& cmd) {
         });
     }
 
-    system.ConfigureHw();
+    if (!cmd.foundOption("skipConfiguration"))
+        system.ConfigureHw();
 
-    auto toolConfig = toml::parse(cmd.optionValue("tools"));
+    // auto toolConfig = toml::parse(cmd.optionValue("tools"));
 
     bool showPlots = !cmd.foundOption("hidePlots");
 
@@ -97,8 +100,8 @@ void run(SystemController& system, CommandLineProcessing::ArgvParser& cmd) {
         resultsPath = cmd.optionValue("outputDir");
     else
         resultsPath = "Results/";
-        
-    Tools<Flavor>(system, toolConfig, showPlots, resultsPath).run_tools(cmd.allArguments());
+
+    Tools<Flavor>(system, cmd.optionValue("tools"), showPlots, resultsPath).run_tools(cmd.allArguments());
 
     if (cmd.foundOption("saveState"))
         for_each_device<Chip>(system, [&] (Chip* chip) {
@@ -129,8 +132,11 @@ int main(int argc, char** argv) {
     cmd.defineOption("saveState", "Save register values and pixel configuration in .toml file.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("saveState", "s");
 
-    cmd.defineOption("outputDir", "Specify output directory (default: \"Results/\")", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("outputDir", "Specify output directory (default: \"Results/\").", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("outputDir", "o");
+
+    cmd.defineOption("skipConfiguration", "Skip system configuration.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOptionAlternative("skipConfiguration", "i");
 
     int result = cmd.parse(argc, argv);
     

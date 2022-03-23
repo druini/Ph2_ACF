@@ -56,8 +56,10 @@ void TempSensorHistograms::fillTC( const double (&idealityFactor)[4], const doub
 		calibPlotNTC->Write();
 		calibMG->SetTitle("Calibration Plot;Power Consumption (W);Temperature (C)");
 		calibMG_temp->SetTitle("Calibration Plot;Power Consumption (W);Temperature (C)");
-		calibMG->GetXaxis()->SetLimits(0.,0.8);
-		calibMG_temp->GetXaxis()->SetLimits(0.,0.8);
+		calibMG->GetXaxis()->SetLimits(1.,2.);
+		//calibMG->GetXaxis()->SetLimits(0.,0.8);
+		//calibMG_temp->GetXaxis()->SetLimits(0.,0.8);
+		calibMG_temp->GetXaxis()->SetLimits(1.,2.);
 		calibMG->GetHistogram()->SetMaximum(50.);
 		calibMG_temp->GetHistogram()->SetMaximum(50.);
 		calibMG->GetHistogram()->SetMinimum(0.);

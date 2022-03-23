@@ -129,13 +129,7 @@ void RD53B<Flavor>::saveRegMap(const std::string& fName2Add)
     std::string fileName = configFileName;
     fileName.insert(fileName.rfind('/'), fName2Add);
     std::ofstream file(fileName);
-    
-    for (size_t i = 0; i < Regs.size(); ++i) {
-        if (Regs[i].type == RD53BConstants::RegType::ReadWrite && registerValues[i]) {
-            config["Registers"][Regs[i].name] = *registerValues[i];
-        }
-    }
-    
+
     pixelConfigFields().for_each([&] (const auto& fieldName, auto ptr) {
         const auto& data = pixelConfig().*ptr;
 
@@ -158,7 +152,7 @@ void RD53B<Flavor>::saveRegMap(const std::string& fName2Add)
                 else {
                     std::ostringstream csvFileNameStream;
                     csvFileNameStream << fieldName.value << ".csv";
-                    csvFileName = FSUtils::getAvailablePath(csvFileNameStream.str());
+                    csvFileName = FSUtils::getAvailableFilePath(csvFileNameStream.str()).string();
                     config["Pixels"][fieldName.value] = csvFileName;
                 }
                 std::ofstream out_file(csvFileName);
@@ -170,6 +164,12 @@ void RD53B<Flavor>::saveRegMap(const std::string& fName2Add)
         }
     });
 
+    for (size_t i = 0; i < Regs.size(); ++i) {
+        if (Regs[i].type == RD53BConstants::RegType::ReadWrite && registerValues[i]) {
+            config["Registers"][Regs[i].name] = *registerValues[i];
+        }
+    }
+    
     file << config;
 }
 

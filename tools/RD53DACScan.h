@@ -29,8 +29,8 @@ struct RD53DACScan : public RD53BTool<RD53DACScan, Flavor> {
     struct ChipResults {
         double fitStart[9];
         double fitEnd[9];
-        double VMUXvolt[9][5000];
-        double DACcode[9][5000];
+        std::vector<std::vector<double>> VMUXvolt;
+        std::vector<std::vector<double>> DACcode;
     };
 
     auto run() const {
@@ -46,36 +46,33 @@ struct RD53DACScan : public RD53BTool<RD53DACScan, Flavor> {
 
         Base::for_each_chip([&] (Chip* chip) {
             auto& DACcode = results[chip].DACcode;
+            auto& VMUXvolt = results[chip].VMUXvolt;
             auto& fitStart = results[chip].fitStart;
             auto& fitEnd = results[chip].fitEnd;
+			int stepSize = 100;
 			
-			for(int input = 0; input < 4096; input+=10)
+			for(int input = 0; input < 4096; input+=stepSize)
 			{
 				LOG(INFO) << BOLDBLUE << "i        = " << BOLDYELLOW << input << " " << RESET;
+				DACcode.push_back(std::vector<double>());
+				VMUXvolt.push_back(std::vector<double>());
 				for(int variable = 0; variable < 1; variable++)
 				{
 					if(input > 4096) continue;
-					//if(input == 0)
-					//{
-					//	VMUXvolt[variable] = new double[5000];
-					//	DACcode[variable]  = new double[5000];
-					//}
 					chipInterface.WriteReg(chip, writeVar[variable], input);
 					chipInterface.WriteReg(chip, "MonitorEnable", 1); //Choose MUX entry
 					chipInterface.WriteReg(chip, "VMonitor", 0b000111);
 					
-					DACcode[variable][int(input/10)] = input; //Read DAC code
-					results[chip].VMUXvolt[variable][int(input/10)] = dKeithley2410.getVoltage();
+					DACcode[variable].push_back(input); //Read DAC code
+					VMUXvolt[variable].push_back(dKeithley2410.getVoltage());
 
 					if(input > 1)
 					{
-						if(((DACcode[variable][int(input/10)] > 0 && DACcode[variable][int(input/10) - 1] == 0) || (DACcode[variable][int(input/10) - 1] > 0 && DACcode[variable][int(input/10)] == 0)) &&
-						   fitStart[variable] == 0)
-						{ fitStart[variable] = DACcode[variable][int(input/10)]; }
-						if(((DACcode[variable][int(input/10)] == 4095 && DACcode[variable][int(input/10) - 1] < 4095) || (DACcode[variable][int(input/10)] < 4095 && DACcode[variable][int(input/10) - 1] == 4095)) &&
-						   fitEnd[variable] == 0)
-							fitEnd[variable] = DACcode[variable][int(input/10)];
-						if(fitEnd[variable] == 0 && input >= 4000) fitEnd[variable] = DACcode[variable][int(input/10)];
+						if(((DACcode[variable].end()[-1] > 0 && DACcode[variable].end()[-2] == 0) || (DACcode[variable].end()[-2] > 0 && DACcode[variable].end()[-1] == 0)) && fitStart[variable] == 0)
+							fitStart[variable] = DACcode[variable].end()[-1]; 
+						if(((DACcode[variable].end()[-1] == 4095 && DACcode[variable].end()[-2] < 4095) || (DACcode[variable].end()[-1] < 4095 && DACcode[variable].end()[-2] == 4095)) && fitEnd[variable] == 0)
+							fitEnd[variable] = DACcode[variable].end()[-1];
+						if(fitEnd[variable] == 0 && input >= 4000) fitEnd[variable] = DACcode[variable].end()[-1];
 					}
 				}
 			}

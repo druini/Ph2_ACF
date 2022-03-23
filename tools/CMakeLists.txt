@@ -125,6 +125,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # Add the library
     add_library(Ph2_Tools STATIC ${SOURCES} ${HEADERS})
 
+    target_compile_options(Ph2_Tools PRIVATE "-g")
+
     foreach(sourcefile ${BINARIES})
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
