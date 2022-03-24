@@ -7,10 +7,11 @@ import subprocess
 from datetime import datetime, timedelta
 import time
 import csv
-import sys
+import sys,os
 import scan_routine_config
+from pdb import set_trace
 
-powerSupplyResource = "/dev/ttyUSB0"
+powerSupplyResource = "ASRL/dev/ttyACM0::INSTR"
 powerSupplyVoltage = 1.8
 powerSupplyCurrent = 2
 
@@ -30,7 +31,7 @@ def getTomlFile(xmlConfig):
 
 def configureCROC(configFile):
     while True:
-        p = subprocess.Popen(["RD53BminiDAQ", "-f", configFile])
+        p = subprocess.Popen(["RD53BminiDAQ", "-f", configFile, "-t", "RD53BTools.toml"])
         returncode = p.wait(timeout=5)
         if returncode == 0:
             return True
@@ -39,7 +40,7 @@ def run_Ph2_ACF(task, paramsForLog=[]):
     dir_name =  task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     for i in range(task["maxAttempts"]):
         if i>1:
-            PowerSupplyController.power_cycle()
+            powerSupply.power_cycle()
             time.sleep(.5)
         p = subprocess.Popen(["RD53BminiDAQ", "-f", task["configFile"], "-t", "RD53BTools.toml", "-h", "-s", "-o", dir_name, *task["tools"]])
         try:
@@ -82,13 +83,13 @@ def IV_Task(task):
 
 def Vmonitor_Task(task):
     dir_name = '.'
-    vmonitor()
+    vmonitor(dir_name)
 
 def curr_vs_DAC_Task(task):
     dir_name =  task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
-    outfile = os.path.join(dir_name,f'croc_vi_curves_{time.strftime("%Y%m%d-%H%M%S")}.csv')
+    outfile = os.path.join(dir_name,f'croc_{task["name"]}_{time.strftime("%Y%m%d-%H%M%S")}.csv')
     if not os.path.isfile(outfile):
         with open(outfile, 'a+') as f:
             csv.writer(f).writerow(['PA_IN_BIAS_LIN', 'Iana'])
@@ -102,12 +103,13 @@ def curr_vs_DAC_Task(task):
         with open(tomlFile, "w") as f:
             toml.dump(tomlData, f)
         configureCROC(task['configFile'])
+        time.sleep(.5)
         data = list(values)
         data.append(powerSupply.read_current(task['PSchannel']))
         with open(outfile, 'a+') as f:
             csv.writer(f).writerow(data)
 
-def main(config):
+def main(config, tempControl, powerSupply):
     psOFF = False
     wrongTcounter = 0
     for task in config:
@@ -115,7 +117,7 @@ def main(config):
             tempState = tempControl.poll()
             if tempState == -1: #lost communication to arduino
                 time.sleep(1)
-                tempControl = subprocess.Popen(['python', 'peltier_com.py'])
+                tempControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
                 time.sleep(3)
                 continue
             elif tempState == -2: #temperature is more than 5degs from target temperature
@@ -123,7 +125,8 @@ def main(config):
                 wrongTcounter += 1
                 if wrongTcounter > 2: sys.exit('Lost control over temperature')
                 psOFF = True
-                tempControl = subprocess.Popen(['python', 'peltier_com.py'])
+                #tempControl = subprocess.Popen(['python', 'peltier_com.py'])
+                tempControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
                 time.sleep(60)
                 continue
             elif tempState is None:
@@ -147,7 +150,8 @@ def main(config):
             curr_vs_DAC_Task(task)
 
 if __name__=='__main__':
-    tempControl = subprocess.Popen(['python', 'peltier_com.py'])
+    tempControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
+    #tempControl = subprocess.Popen(['python', 'peltier_com.py'])
     powerSupply = PowerSupplyController(powerSupplyResource, 2)
     powerSupply.power_off('ALL')
     # set power supply voltage/current
@@ -159,7 +163,7 @@ if __name__=='__main__':
 
     if sys.argv[1]=='preIrrad':
         config = scan_routine_config.config_preIrradiation
-        main(config)
+        main(config, tempControl, powerSupply)
     elif sys.argv[1]=='irrad':
         configBase = scan_routine_config.config_irradiationBase
         configMain = scan_routine_config.config_irradiationMain
@@ -199,3 +203,4 @@ if __name__=='__main__':
                 xray.open_shutter()
     else:
         sys.exit(f'Unknown config: {sys.argv[1]}. Allowed are "preIrrad" and "irrad"')
+    powerSupply.power_off('ALL')
