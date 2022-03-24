@@ -14,14 +14,16 @@ injectionType = "Digital"
 nInjections = 50
 triggerDuration = 1
 triggerLatency = 133
-injectionPeriod = 800
+injectionPeriod = 600
 offset = [0, 0]
 size = [0, 0]
 maskGen = [
-    { dim = 0, size = 2, parallel = true, shift = [] },
-    { dim = 0, size = 0, parallel = false, shift = [8, 2] },
+    { dim = 0, size = 0, parallel = false, shift = [1] },
+    { dim = 1, size = 4, parallel = true, shift = [] },
+    { dim = 1, size = 2, parallel = true, shift = [] },
+    { dim = 0, size = 1, parallel = true, shift = [4] },
     { dim = 1, size = 0, parallel = true, shift = [] },
-    { dim = 0, size = 8, parallel = true, shift = [] }
+    { dim = 0, size = 21, parallel = true, shift = [] }
 ]
 
 [AnalogScan]
@@ -29,69 +31,126 @@ type = "RD53BInjectionTool"
 
 [AnalogScan.args]
 injectionType = "Analog"
-nInjections = 50
+nInjections = 100
 triggerDuration = 1
 triggerLatency = 133
-injectionPeriod = 800
+injectionPeriod = 100
 offset = [0, 0]
 size = [0, 0]
-maskGen = [
-    { dim = 0, size = 2, parallel = true, shift = [] },
-    { dim = 0, size = 0, parallel = false, shift = [8, 2] },
+maskGen =  [
+    { dim = 0, size = 0, parallel = false, shift = [1] },
+    { dim = 1, size = 4, parallel = true, shift = [] },
+    { dim = 1, size = 2, parallel = true, shift = [] },
+    { dim = 0, size = 1, parallel = true, shift = [4] },
+    { dim = 1, size = 0, parallel = true, shift = [] }
+]
+
+[AnalogScanFast]
+type = "RD53BInjectionTool"
+
+[AnalogScanFast.args]
+injectionType = "Analog"
+nInjections = 100
+triggerDuration = 1
+triggerLatency = 133
+injectionPeriod = 600
+offset = [0, 0]
+size = [0, 0]
+maskGen =  [
+    { dim = 0, size = 0, parallel = false, shift = [1] },
+    { dim = 1, size = 4, parallel = true, shift = [] },
+    { dim = 1, size = 2, parallel = true, shift = [] },
+    { dim = 0, size = 1, parallel = true, shift = [4] },
     { dim = 1, size = 0, parallel = true, shift = [] },
     { dim = 0, size = 8, parallel = true, shift = [] }
 ]
 
-[ThresholdScanInjection]
+[AnalogScanSparse]
 type = "RD53BInjectionTool"
 
-[ThresholdScanInjection.args]
+[AnalogScanSparse.args]
 injectionType = "Analog"
-nInjections = 30
+nInjections = 100
 triggerDuration = 1
 triggerLatency = 133
-injectionPeriod = 800
+injectionPeriod = 100
 offset = [0, 0]
 size = [0, 0]
+frameStep = 10
 maskGen = [
-    { dim = 0, size = 2, parallel = true, shift = [] },
-    { dim = 0, size = 0, parallel = false, shift = [8, 2] },
-    { dim = 1, size = 0, parallel = true, shift = [] },
-    { dim = 0, size = 8, parallel = true, shift = [] }
+    { dim = 0, size = 0, parallel = false, shift = [1] },
+    { dim = 1, size = 4, parallel = true, shift = [] },
+    { dim = 1, size = 2, parallel = true, shift = [] },
+    { dim = 0, size = 1, parallel = true, shift = [4] },
+    { dim = 1, size = 0, parallel = true, shift = [] }
 ]
 
 [ThresholdScan]
 type = "RD53BThresholdScan"
-args = { injectionTool = "ThresholdScanInjection", vcalMed = 300, vcalRange = [100, 1000], vcalStep = 50 }
+args = { injectionTool = "AnalogScan", vcalMed = 300, vcalRange = [0, 1000], vcalStep = 10 }
+
+[ThresholdScanFast]
+type = "RD53BThresholdScan"
+args = { injectionTool = "AnalogScanFast", vcalMed = 300, vcalRange = [0, 1000], vcalStep = 10 }
+
+[ThresholdScanSparse]
+type = "RD53BThresholdScan"
+args = { injectionTool = "AnalogScanSparse", vcalMed = 300, vcalRange = [0, 1000], vcalStep = 10 }
 
 [ThresholdEqualization]
 type = "RD53BThresholdEqualization"
 
 [ThresholdEqualization.args]
-thresholdScan = "ThresholdScan"
-injectionTool = "ThresholdScanInjection"
+thresholdScan = "ThresholdScanFast"
+injectionTool = "AnalogScanFast"
 targetThreshold = 0 # The Delta VCAL value to tune the threshold at. If it's 0 a threshold scan will be performed and the mean trheshold will be used.
+eliminateBias = false
 initialTDAC = 16
 nSteps = 7
 
 [GlobalThresholdTuning]
 type = "RD53BGlobalThresholdTuning"
-args = { injectionTool = "ThresholdScanInjection", targetThreshold = 500, gdacRange = [370, 550], maxStuckPixelRatio = 0.01 }
+args = { injectionTool = "AnalogScanSparse", vcalMed = 300, gdacRange = [400, 500], targetThreshold = 545, maxStuckPixelRatio = 0.01 }
 
 [NoiseScan]
 type = "RD53BNoiseScan"
 
 [NoiseScan.args]
-nTriggers = 1000000
+nTriggers = 10000000
 triggerDuration = 1
 readoutPeriod = 10000
 triggerPeriod = 35
 occupancyThreshold = 1e-6
-maskNoisyPixels = true
+maskNoisyPixels = false
 
 [StuckPixelScan]
 type = "RD53BStuckPixelScan"
-args = { injectionTool = "AnalogScan" }
+args = { injectionTool = "AnalogScanFast" }
+
+[TimeWalkInjectionScan]
+type = "RD53BInjectionTool"
+
+[TimeWalkInjectionScan.args]
+injectionType = "Analog"
+nInjections = 100
+triggerDuration = 10
+triggerLatency = 135
+injectionPeriod = 100
+offset = [0, 0]
+size = [0, 0]
+frameStep = 128
+maskGen = [
+    { dim = 0, size = 0, parallel = false, shift = [1] },
+    { dim = 1, size = 4, parallel = true, shift = [] },
+    { dim = 1, size = 2, parallel = true, shift = [] },
+    { dim = 0, size = 1, parallel = true, shift = [4] },
+    { dim = 1, size = 0, parallel = true, shift = [] },
+    { dim = 0, size = 1, parallel = true, shift = [] }
+]
+
+[TimeWalk]
+type = "RD53BTimeWalk"
+args = { injectionTool = "TimeWalkInjectionScan", storeHits = true, vcalRange = [0, 1500], vcalStep = 25 }
 
 [RingOsc]
 type = "RD53RingOscillator"
@@ -107,7 +166,7 @@ args = {}
 
 [IVScan]
 type = "RD53IVScan"
-args = { configFile = "/home/cms/works/power_supply/config/iv_it_croc_sldo.xml", type = "steps", powerSupplyName = "TTi_MX", channelID_Digital = "first", channelID_Analog = "second", multimeterName = "KeithleyMultimeter", powerSupplyVoltageProtection = 2.7, scanPointCurrentRange = [0.5, 2.0], scanPointCurrentStep = 0.1, finalCurrentPoint = 1.0}
+args = { configFile = "/home/cms/works/power_supply/config/iv_it_croc_sldo.xml", type = "steps", powerSupplyName = "TTi_MX", multimeterName = "KeithleyMultimeter", powerSupplyVoltageProtection = 3.0, scanPointCurrentRange = [0.5, 2.0], scanPointCurrentStep = 0.1}
 
 [ADCScan]
 type = "RD53ADCScan"
@@ -136,4 +195,5 @@ args = {}
 [CapMeasure]
 type = "RD53BCapMeasure"
 args = {}
+
 
