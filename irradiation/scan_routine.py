@@ -1,5 +1,3 @@
-from instrument_control import PowerSupplyController, XrayController
-from vi_scan import vi_curves, vmonitor
 import xml.etree.ElementTree as ET
 import toml
 import itertools
@@ -8,6 +6,7 @@ from datetime import datetime, timedelta
 import time
 import csv
 import sys,os
+import argparse
 import scan_routine_config
 from pdb import set_trace
 
@@ -16,6 +15,7 @@ powerSupplyVoltage = 1.8
 powerSupplyCurrent = 2
 
 logFile = "log.csv"
+baseDir = 'Results'
 
 fmt = "%Y %m %d-%H:%M:%S"
 
@@ -29,64 +29,80 @@ def getTomlFile(xmlConfig):
     root = tree.getroot()
     return next(root.iter("CROC")).attrib["configfile"]
 
-def configureCROC(configFile):
-    while True:
+def configureCROC(configFile, powerSupply=None):
+    for attempt in range(5):
+        if attempt>2 and powerSupply is not None:
+            powerSupply.power_cycle()
         p = subprocess.Popen(["RD53BminiDAQ", "-f", configFile, "-t", "RD53BTools.toml"])
         returncode = p.wait(timeout=5)
         if returncode == 0:
             return True
+    return False
 
-def run_Ph2_ACF(task, paramsForLog=[]):
-    dir_name =  task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+def run_Ph2_ACF(task, tool, paramsForLog=[], powerSupply=None, dir_name='Results'):
     for i in range(task["maxAttempts"]):
-        if i>1:
+        if i>1 and powerSupply is not None:
             powerSupply.power_cycle()
             time.sleep(.5)
-        p = subprocess.Popen(["RD53BminiDAQ", "-f", task["configFile"], "-t", "RD53BTools.toml", "-h", "-s", "-o", dir_name, *task["tools"]])
+        p = subprocess.Popen(["RD53BminiDAQ", "-f", task["configFile"], "-t", "RD53BTools.toml", "-h", "-s", "-o", dir_name, tool])
         try:
             returncode = p.wait(timeout=task['timeout'])
         except:
             p.terminate()
             returncode = -1
-        add_log_entry([task["name"], returncode, i, dir_name, *paramsForLog])
+        add_log_entry([task["name"], tool, returncode, i, dir_name, *paramsForLog])
         if returncode == 0:
             break
         else:
             time.sleep(1)
     else:
-        return False
+        add_log_entry([task["name"], tool, 'failed'])
     return True
 
-def Ph2_ACF_Task(task):
-    if "params" in task:
-        tomlFile = getTomlFile(task['configFile'])
-        tomlData = toml.load(tomlFile)
-        params = task['params']
-        # for p in range(len(task['params'])):
-        for values in itertools.product(*[p["values"] for p in params]):
-            paramsForLog = []
-            for i in range(len(values)):
-                for key in params[i]["keys"]:
-                    paramsForLog += [f'{key}:{values[i]}']
-                    tomlData[params[i]["table"]][key] = values[i]
-            with open(tomlFile, "w") as f:
-                toml.dump(tomlData, f)
-            run_Ph2_ACF(task, paramsForLog)
-    else:
-        run_Ph2_ACF(task)
+def Ph2_ACF_Task(task, powerSupply):
+    dir_name =  os.path.join(
+            baseDir,
+            task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+            )
+    for tool in task['tools']:
+        if "params" in task:
+            tomlFile = getTomlFile(task['configFile'])
+            tomlData = toml.load(tomlFile)
+            params = task['params']
+            # for p in range(len(task['params'])):
+            for values in itertools.product(*[p["values"] for p in params]):
+                paramsForLog = []
+                for i in range(len(values)):
+                    for key in params[i]["keys"]:
+                        paramsForLog += [f'{key}:{values[i]}']
+                        tomlData[params[i]["table"]][key] = values[i]
+                with open(tomlFile, "w") as f:
+                    toml.dump(tomlData, f)
+                run_Ph2_ACF(task, tool, paramsForLog, powerSupply, dir_name)
+        else:
+            run_Ph2_ACF(task, tool=tool, paramsForLog=[], powerSupply=powerSupply, dir_name=dir_name)
+    return True
 
-def IV_Task(task):
-    dir_name =  task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+def IV_Task(task, powerSupply):
+    dir_name = os.path.join(
+            baseDir,
+            task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+            )
     if "configFile" in task:
-        configureCROC(task['configFile'])
-    vi_curves(dir_name, task['startingCurrent'], task['finalCurrent'], task['currentStep'])
+        configured = configureCROC(task['configFile'], powerSupply=powerSupply)
+        if not configured:
+            return False
+    return vi_curves(dir_name, task['startingCurrent'], task['finalCurrent'], task['currentStep'])
 
 def Vmonitor_Task(task):
-    dir_name = '.'
-    vmonitor(dir_name)
+    dir_name = baseDir
+    return vmonitor(dir_name)
 
-def curr_vs_DAC_Task(task):
-    dir_name =  task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+def curr_vs_DAC_Task(task, powerSupply):
+    dir_name = os.path.join(
+            baseDir,
+            task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+            )
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
     outfile = os.path.join(dir_name,f'croc_{task["name"]}_{time.strftime("%Y%m%d-%H%M%S")}.csv')
@@ -102,92 +118,117 @@ def curr_vs_DAC_Task(task):
                 tomlData[params[i]["table"]][key] = values[i]
         with open(tomlFile, "w") as f:
             toml.dump(tomlData, f)
-        configureCROC(task['configFile'])
+        configured = configureCROC(task['configFile'], powerSupply)
+        if not configured:
+            return False
         time.sleep(.5)
         data = list(values)
         data.append(powerSupply.read_current(task['PSchannel']))
         with open(outfile, 'a+') as f:
             csv.writer(f).writerow(data)
+    return True
 
 def main(config, tempControl, powerSupply):
     psOFF = False
     wrongTcounter = 0
     for task in config:
-        while True:
-            tempState = tempControl.poll()
-            if tempState == -1: #lost communication to arduino
-                time.sleep(1)
-                tempControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
-                time.sleep(3)
-                continue
-            elif tempState == -2: #temperature is more than 5degs from target temperature
-                powerSupply.power_off('ALL')
-                wrongTcounter += 1
-                if wrongTcounter > 2: sys.exit('Lost control over temperature')
-                psOFF = True
-                #tempControl = subprocess.Popen(['python', 'peltier_com.py'])
-                tempControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
-                time.sleep(60)
-                continue
-            elif tempState is None:
-                wrongTcounter = 0
-                if psOFF:
-                    powerSupply.power_on('ALL')
-                    psOFF = False
-                break
-        time.sleep(.5)
+        if tempControl is not None:
+            while True:
+                tempState = tempControl.poll()
+                if tempState == -1: #lost communication to arduino
+                    time.sleep(1)
+                    tempControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
+                    time.sleep(3)
+                    continue
+                elif tempState == -2: #temperature is more than 5degs from target temperature
+                    powerSupply.power_off('ALL')
+                    wrongTcounter += 1
+                    if wrongTcounter > 2: sys.exit('Lost control over temperature')
+                    psOFF = True
+                    #tempControl = subprocess.Popen(['python', 'peltier_com.py'])
+                    tempControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
+                    time.sleep(60)
+                    continue
+                elif tempState is None:
+                    wrongTcounter = 0
+                    if psOFF:
+                        powerSupply.power_on('ALL')
+                        psOFF = False
+                    break
+            time.sleep(.5)
 
+        add_log_entry([task['name'], 'starting'])
         if task["type"] == "Ph2_ACF":
-            Ph2_ACF_Task(task)
+            ret = Ph2_ACF_Task(task, powerSupply)
 
         elif task["type"] == "IV":
-            IV_Task(task)
+            ret = IV_Task(task, powerSupply)
 
         elif task["type"] == "Vmonitor":
-            Vmonitor_Task(task)
+            ret = Vmonitor_Task(task)
 
         elif task['type'] == 'curr_vs_DAC':
-            curr_vs_DAC_Task(task)
+            if powerSupply is None:
+                continue
+            ret = curr_vs_DAC_Task(task, powerSupply)
+        add_log_entry([task['name'], 'completed'])
 
 if __name__=='__main__':
-    tempControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
-    #tempControl = subprocess.Popen(['python', 'peltier_com.py'])
-    powerSupply = PowerSupplyController(powerSupplyResource, 2)
-    powerSupply.power_off('ALL')
-    # set power supply voltage/current
-    powerSupply.set_voltage(1, powerSupplyVoltage)
-    powerSupply.set_voltage(2, powerSupplyVoltage)
-    powerSupply.set_current(1, powerSupplyCurrent)
-    powerSupply.set_current(2, powerSupplyCurrent)
-    powerSupply.power_on('ALL')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--no-instruments', action='store_true', help='Flag to not use the instrument control library')
+    parser.add_argument('-c', '--config', action='store', choices=['preIrrad','irrad'], help='Selects the scan sequence in scan_routine_config.py')
+    args = parser.parse_args()
 
-    if sys.argv[1]=='preIrrad':
+    if args.no_instruments:
+        tempControl = None
+        powerSupply = None
+    else:
+        from instrument_control import PowerSupplyController, XrayController
+        from vi_scan import vi_curves, vmonitor
+        tempControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
+        powerSupply = PowerSupplyController(powerSupplyResource, 2)
+
+    if powerSupply is not None:
+        powerSupply.power_off('ALL')
+        # set power supply voltage/current
+        powerSupply.set_voltage(1, powerSupplyVoltage)
+        powerSupply.set_voltage(2, powerSupplyVoltage)
+        powerSupply.set_current(1, powerSupplyCurrent)
+        powerSupply.set_current(2, powerSupplyCurrent)
+        powerSupply.power_on('ALL')
+
+    if args.config=='preIrrad':
         config = scan_routine_config.config_preIrradiation
         main(config, tempControl, powerSupply)
-    elif sys.argv[1]=='irrad':
+    elif args.config=='irrad':
         configBase = scan_routine_config.config_irradiationBase
         configMain = scan_routine_config.config_irradiationMain
         lastMainScan = datetime.fromisocalendar(1900,1,1)
         mainScanRepetitions = 0
 
-        xray = XrayController(resource='ASRL/dev/ttyID3003::INSTR', logfile='xray.log')
-        xray.set_current(30)
-        xray.set_voltage(60)
-        xray.on()
-        xray.open_shutter()
+        if args.no_instruments:
+            xray = None
+        else:
+            xray = XrayController(resource='ASRL/dev/ttyID3003::INSTR', logfile='xray.log')
+        if xray is not None:
+            xray.set_current(30)
+            xray.set_voltage(60)
+            xray.on()
+            xray.open_shutter()
 
         while True:
-            for i in range(3):
-                if xray.verify_parameters():
-                    break
+            if xray is not None:
+                for i in range(3):
+                    if xray.verify_parameters():
+                        break
+                    else:
+                        xray.off()
+                        xray.on()
+                        time.sleep(3)
+                        xray.open_shutter()
                 else:
-                    xray.off()
-                    xray.on()
-                    time.sleep(3)
-                    xray.open_shutter()
-            else:
-                sys.exit('Xrays are broken :(')
-            main(configBase)
+                    sys.exit('Xrays are broken :(')
+            main(configBase, tempControl, powerSupply)
             if mainScanRepetitions < 10:
                 deltaHours = 1
             elif mainScanRepetitions < 100:
@@ -195,12 +236,12 @@ if __name__=='__main__':
             else:
                 deltaHours = 50
             if datetime.now() - lastMainScan > timedelta(hours=deltaHours):
-                xray.off()
-                main(configMain)
+                if xray is not None: xray.off()
+                main(configMain, tempControl, powerSupply)
                 mainScanRepetitions += 1
                 lastMainScan = datetime.now()
-                xray.on()
-                xray.open_shutter()
-    else:
-        sys.exit(f'Unknown config: {sys.argv[1]}. Allowed are "preIrrad" and "irrad"')
-    powerSupply.power_off('ALL')
+                if xray is not None:
+                    xray.on()
+                    xray.open_shutter()
+    if powerSupply is not None:
+        powerSupply.power_off('ALL')
