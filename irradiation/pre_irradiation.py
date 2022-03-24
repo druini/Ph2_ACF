@@ -8,22 +8,22 @@ import time
 import csv 
 
 config = [
-    {
-        "name": "GlobalThresholdTuning3000",
-        "type": "Ph2_ACF",
-        "configFile": "CROC.xml",
-        "timeout" : 600,
-        "maxAttempts" : 3,
-        "tools": ["GlobalThresholdTuning3000", "ThresholdScanSparse"],
-        "updateConfig" : True,
-        "params": [
-            {
-                "table" : "Pixels",
-                "keys" : ["tdac"],
-                "values" : [16]
-            }
-        ]
-    },
+    # {
+    #     "name": "GlobalThresholdTuning3000",
+    #     "type": "Ph2_ACF",
+    #     "configFile": "CROC.xml",
+    #     "timeout" : 600,
+    #     "maxAttempts" : 3,
+    #     "tools": ["GlobalThresholdTuning3000", "ThresholdScanSparse"],
+    #     "updateConfig" : True,
+    #     "params": [
+    #         {
+    #             "table" : "Pixels",
+    #             "keys" : ["tdac"],
+    #             "values" : [16]
+    #         }
+    #     ]
+    # },
     {
         "name": "ThresholdScan3000",
         "type": "Ph2_ACF",
@@ -36,17 +36,17 @@ config = [
             {
                 "table" : "Registers", 
                 "keys" : ["DAC_PREAMP_L_LIN", "DAC_PREAMP_R_LIN", "DAC_PREAMP_TL_LIN", "DAC_PREAMP_TR_LIN", "DAC_PREAMP_T_LIN", "DAC_PREAMP_M_LIN"],
-                "values" : [100, 250, 200, 300, 400]
+                "values" : [100] #, 250, 200, 300, 400]
             },
             {
                 "table" : "Registers", 
                 "keys" : ["DAC_LDAC_LIN"], 
-                "values" : [130, 140, 150, 170, 190]
+                "values" : [130] #, 140, 150, 170, 190]
             },
             {
                 "table" : "Pixels",
                 "keys" : ["tdac"],
-                "values" : [0, 16, 31]
+                "values" : [0] #, 16, 31]
             }
         ]
     },
@@ -93,7 +93,7 @@ def getTomlFile(xmlConfig):
 
 def run_Ph2_ACF(task, paramsForLog=[]):
     for i in range(task["maxAttempts"]):
-        dir_name =  task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        dir_name =  "Results_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S") + "/" + task["name"]
         extra_flags = ["-s"] if task["updateConfig"] else []
         p = subprocess.Popen(["RD53BminiDAQ", "-f", task["configFile"], "-t", "RD53BTools.toml", "-h", "-o", dir_name, *extra_flags, *task["tools"]])
         try:
@@ -122,7 +122,12 @@ def Ph2_ACF_Task(task):
         tomlFile = getTomlFile(task['configFile'])
         tomlData = toml.load(tomlFile)
         params = task['params']
-        # for p in range(len(task['params'])):
+
+        # store original parameter values
+        original_values = []
+        for p in params:
+            original_values.append((p["table"], {key : tomlData[p["table"]].get(key, None) for key in p["keys"]}))
+            
         for values in itertools.product(*[p["values"] for p in params]):
             paramsForLog = []
             for i in range(len(values)):
@@ -132,6 +137,15 @@ def Ph2_ACF_Task(task):
             with open(tomlFile, "w") as f:
                 toml.dump(tomlData, f)
             run_Ph2_ACF(task, paramsForLog)
+
+        # restore original parameter values
+        for table, data in original_values:
+            for key, value in data.items():
+                if value is not None:
+                    tomlData[table][key] = value
+        with open(tomlFile, "w") as f:
+                toml.dump(tomlData, f)
+
     else:
         run_Ph2_ACF(task)
 
