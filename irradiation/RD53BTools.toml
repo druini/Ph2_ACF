@@ -1,0 +1,156 @@
+[RegReader]
+type = "RD53BRegReader"
+args = {}
+
+[RegTest]
+type = "RD53BRegTest"
+args = { testRegs = true, testPixels = true, ServiceFrameSkip = 50 }
+
+[DigitalScan]
+type = "RD53BInjectionTool"
+
+[DigitalScan.args]
+injectionType = "Digital"
+nInjections = 50
+triggerDuration = 1
+triggerLatency = 133
+injectionPeriod = 800
+offset = [0, 0]
+size = [0, 0]
+maskGen = [
+    { dim = 0, size = 2, parallel = true, shift = [] },
+    { dim = 0, size = 0, parallel = false, shift = [8, 2] },
+    { dim = 1, size = 0, parallel = true, shift = [] },
+    { dim = 0, size = 8, parallel = true, shift = [] }
+]
+
+[AnalogScan]
+type = "RD53BInjectionTool"
+
+[AnalogScan.args]
+injectionType = "Analog"
+nInjections = 50
+triggerDuration = 1
+triggerLatency = 133
+injectionPeriod = 800
+offset = [0, 0]
+size = [0, 0]
+maskGen = [
+    { dim = 0, size = 2, parallel = true, shift = [] },
+    { dim = 0, size = 0, parallel = false, shift = [8, 2] },
+    { dim = 1, size = 0, parallel = true, shift = [] },
+    { dim = 0, size = 8, parallel = true, shift = [] }
+]
+
+[ThresholdScanInjection]
+type = "RD53BInjectionTool"
+
+[ThresholdScanInjection.args]
+injectionType = "Analog"
+nInjections = 30
+triggerDuration = 1
+triggerLatency = 133
+injectionPeriod = 800
+offset = [0, 0]
+size = [0, 0]
+maskGen = [
+    { dim = 0, size = 2, parallel = true, shift = [] },
+    { dim = 0, size = 0, parallel = false, shift = [8, 2] },
+    { dim = 1, size = 0, parallel = true, shift = [] },
+    { dim = 0, size = 8, parallel = true, shift = [] }
+]
+
+[ThresholdScan]
+type = "RD53BThresholdScan"
+args = { injectionTool = "ThresholdScanInjection", vcalMed = 300, vcalRange = [100, 1500], vcalStep = 50 }
+
+[ThresholdEqualization]
+type = "RD53BThresholdEqualization"
+
+[ThresholdEqualization.args]
+thresholdScan = "ThresholdScan"
+injectionTool = "ThresholdScanInjection"
+targetThreshold = 0 # The Delta VCAL value to tune the threshold at. If it's 0 a threshold scan will be performed and the mean trheshold will be used.
+initialTDAC = 16
+nSteps = 7
+
+[ThresholdEqualization1000]
+type = "RD53BThresholdEqualization"
+
+[ThresholdEqualization1000.args]
+thresholdScan = "ThresholdScan"
+injectionTool = "ThresholdScanInjection"
+targetThreshold = 182 # The Delta VCAL value to tune the threshold at. If it's 0 a threshold scan will be performed and the mean trheshold will be used.
+initialTDAC = 16
+nSteps = 7
+
+[GlobalThresholdTuning3000]
+type = "RD53BGlobalThresholdTuning"
+args = { injectionTool = "ThresholdScanInjection", targetThreshold = 545, gdacRange = [370, 550], maxStuckPixelRatio = 0.01 }
+
+[GlobalThresholdTuning1000]
+type = "RD53BGlobalThresholdTuning"
+args = { injectionTool = "ThresholdScanInjection", targetThreshold = 182, gdacRange = [370, 550], maxStuckPixelRatio = 0.01 }
+
+[NoiseScan]
+type = "RD53BNoiseScan"
+
+[NoiseScan.args]
+nTriggers = 1000000
+triggerDuration = 1
+readoutPeriod = 10000
+triggerPeriod = 35
+occupancyThreshold = 1e-6
+maskNoisyPixels = true
+
+[StuckPixelScan]
+type = "RD53BStuckPixelScan"
+args = { injectionTool = "AnalogScan" }
+
+[RingOsc]
+type = "RD53RingOscillator"
+args = {}
+
+[ShortRingOsc]
+type = "RD53ShortRingOscillator"
+args = {}
+
+[MuxScan]
+type = "RD53MuxScan"
+args = {}
+
+[IVScan]
+type = "RD53IVScan"
+args = { configFile = "/home/cms/works/power_supply/config/iv_it_croc_sldo.xml", type = "steps", powerSupplyName = "TTi_MX", channelID_Digital = "first", channelID_Analog = "second", multimeterName = "KeithleyMultimeter", powerSupplyVoltageProtection = 2.7, scanPointCurrentRange = [0.5, 2.0], scanPointCurrentStep = 0.1, finalCurrentPoint = 1.0}
+
+[ADCScan]
+type = "RD53ADCScan"
+args = {}
+
+[DACScan]
+type = "RD53DACScan"
+args = {}
+
+[TempSensor]
+type = "RD53TempSensor"
+args = {}
+
+[ShortTempSensor]
+type = "RD53ShortTempSensor"
+args = {}
+
+[VrefTrimming]
+type = "RD53VrefTrimming"
+args = {}
+
+[CapMeasureScan]
+type = "RD53BCapMeasureScan"
+args = {}
+
+[CapMeasure]
+type = "RD53BCapMeasure"
+args = {}
+
+[TimeWalk]
+type = "RD53BTimeWalk"
+args = {}
