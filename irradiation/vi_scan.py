@@ -31,7 +31,7 @@ def measure_all_pins(pin_dict=PIN_DICT):
         with drb: drb.set_pin(pin)
         #time.sleep(.1)
         with multimeter:
-            measDict[pinName] = multimeter.measure('VOLT:DC', cycles=line_integration_cycles)[0]
+            measDict[pinName] = multimeter.measure('VOLT:DC', cycles=1)[0]
     for pinName in measDict:
         if pinName.endswith('A'):
             measDict[pinName] -= measDict['GNDA_ref']
@@ -75,6 +75,7 @@ def vi_curves(outdir, startingCurrent, finalCurrent, currentStep):
         for ch in (1,2):
             lv.set_channel('VOLTAGE', ch, oldVoltages[ch-1])
             lv.set_channel('CURRENT', ch, oldCurrents[ch-1])
+    return True
 
 def vmonitor(outdir):
     if not os.path.exists(outdir):
@@ -82,7 +83,7 @@ def vmonitor(outdir):
     outfile = os.path.join(outdir,f'croc_vmonitor.csv')
     if not os.path.isfile(outfile):
         with open(outfile, 'a+') as f:
-            csv.writer(f).writerow( ['timestamp']+list(PIN_DICT.values()) )
+            csv.writer(f).writerow( ['time']+list(PIN_DICT.values()) )
 
     multimeter = Keithley2000(resource='ASRL/dev/ttyUSB5::INSTR')
     with multimeter:
@@ -91,6 +92,7 @@ def vmonitor(outdir):
     time.sleep(.2)
 
     measDict = measure_all_pins()
-    measurements = [time.strftime("%Y%m%d-%H%M%S")] + list(measDict.values())
+    measurements = [time.strftime("%Y-%m-%d %H:%M:%S")] + list(measDict.values())
     with open(outfile, 'a+') as f:
         csv.writer(f).writerow(measurements)
+    return True

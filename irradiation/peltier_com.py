@@ -11,7 +11,7 @@ logging.basicConfig(
         level=logging.INFO,
         handlers=[
             logging.FileHandler("peltier.log"),
-            logging.StreamHandler(sys.stdout)
+            #logging.StreamHandler(sys.stdout)
             ]
         )
 

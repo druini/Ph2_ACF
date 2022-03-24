@@ -35,7 +35,7 @@ class PowerSupplyController:
         with self.tti:
             return self.tti.measure(channel)[1]
 
-    def power_cycle(channel='ALL'):
+    def power_cycle(self, channel='ALL'):
         with self.tti:
             self.tti.off(channel)
             time.sleep(.5)
