@@ -132,7 +132,7 @@ ChipDataMap<pixel_matrix_t<Flavor, double>> RD53BInjectionTool<Flavor>::occupanc
 template <class Flavor>
 ChipDataMap<std::array<double, 16>> RD53BInjectionTool<Flavor>::totDistribution(const ChipEventsMap& events) const {
     ChipDataMap<std::array<double, 16>> tot;
-    size_t nHitsExpected = param("nInjections"_s) * param("size"_s)[0] * param("size"_s)[1];
+    size_t nHitsExpected = param("nInjections"_s) * xt::count_nonzero(usedPixels())();
     for (const auto& item : events) {
         size_t nHits = 0;
         auto it = tot.insert({item.first, {0}}).first;
@@ -162,7 +162,7 @@ void RD53BInjectionTool<Flavor>::draw(const ChipEventsMap& result) {
         const auto& occ = occMap[chip];
         const auto& tot = totMap[chip];
 
-        Base::drawHist(tot, "ToT Distribution", 16, 0, 16, "ToT");
+        Base::drawHistRaw(tot, "ToT Distribution", 0, 16, "ToT", "Frequency");
 
         Base::drawMap(occ, "Occupancy Map", "Occupancy");
 

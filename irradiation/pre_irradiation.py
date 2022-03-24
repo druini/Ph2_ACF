@@ -1,4 +1,4 @@
-from instrument_control import PowerSupplyController
+# from instrument_control import PowerSupplyController
 import xml.etree.ElementTree as ET
 import toml
 import itertools
@@ -14,7 +14,8 @@ config = [
         "configFile": "CROC.xml",
         "timeout" : 600,
         "maxAttempts" : 3,
-        "tools": ["GlobalThresholdTuning"],
+        "tools": ["GlobalThresholdTuning3000", "ThresholdScanSparse"],
+        "updateConfig" : True,
         "params": [
             {
                 "table" : "Pixels",
@@ -29,7 +30,8 @@ config = [
         "configFile": "CROC.xml",
         "timeout" : 600,
         "maxAttempts" : 3,
-        "tools": ["ThresholdScan"],
+        "tools": ["ThresholdScanSparse"],
+        "updateConfig" : False,
         "params": [
             {
                 "table" : "Registers", 
@@ -52,7 +54,8 @@ config = [
         "name": "AFEScans1000",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
-        "tools": ["ThresholdEqualization", "GlobalThresholdTuning", "ThresholdEqualization", "ThresholdScan", "AnalogScan", "TimeWalk", "Noise"],
+        "updateConfig" : True,
+        "tools": ["ThresholdEqualization3000", "GlobalThresholdTuning1000", "ThresholdEqualization1000", "ThresholdScanSparse", "AnalogScan", "TimeWalk", "Noise"],
         "timeout" : 600,
         "maxAttempts" : 3
     }
@@ -91,7 +94,8 @@ def getTomlFile(xmlConfig):
 def run_Ph2_ACF(task, paramsForLog=[]):
     for i in range(task["maxAttempts"]):
         dir_name =  task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-        p = subprocess.Popen(["RD53BminiDAQ", "-f", task["configFile"], "-t", "RD53BTools.toml", "-h", "-s", "-o", dir_name, *task["tools"]])
+        extra_flags = ["-s"] if task["updateConfig"] else []
+        p = subprocess.Popen(["RD53BminiDAQ", "-f", task["configFile"], "-t", "RD53BTools.toml", "-h", "-o", dir_name, *extra_flags, *task["tools"]])
         try:
             returncode = p.wait(timeout=task['timeout'])
         except:
