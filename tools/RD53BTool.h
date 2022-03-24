@@ -249,10 +249,33 @@ protected:
     }
 
     template <class Container>
+    static void drawHistRaw(
+        const Container& hist,
+        std::string title,
+        double minValue, 
+        double maxValue,
+        const std::string& xLabel = "",
+        const std::string& yLabel = ""
+    ) {
+        TCanvas* c = new TCanvas(title.c_str(), title.c_str(), 600, 600);
+        TH1F* h = new TH1F(title.c_str(), title.c_str(), hist.size(), minValue, maxValue);
+        for (size_t i = 0; i < hist.size(); ++i)
+            h->Fill(i, hist[i]);
+        h->SetXTitle(xLabel.c_str());
+        h->SetYTitle(yLabel.c_str());
+        for (int i = 0; i < h->GetXaxis()->GetNbins(); ++i) 
+            h->SetBinError(i, 0);
+        h->SetFillColor(kBlue);
+        h->Draw("BAR");
+        c->Write();
+        ++nPlots;
+    }
+
+    template <class Container>
     static void drawHist(
         const Container& data,
         std::string title, 
-        double nSteps,
+        size_t nSteps,
         double minValue, 
         double maxValue,
         const std::string& xLabel = "",
@@ -275,7 +298,6 @@ protected:
             h->SetBinError(i, 0);
         h->SetFillColor(kBlue);
         h->Draw("BAR");
-        h->Fit("gaus", "Q");
         c->Write();
         ++nPlots;
     }

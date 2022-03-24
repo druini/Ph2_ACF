@@ -44,7 +44,8 @@ def run_Ph2_ACF(task, tool, paramsForLog=[], powerSupply=None, dir_name='Results
         if i>1 and powerSupply is not None:
             powerSupply.power_cycle()
             time.sleep(.5)
-        p = subprocess.Popen(["RD53BminiDAQ", "-f", task["configFile"], "-t", "RD53BTools.toml", "-h", "-s", "-o", dir_name, tool])
+        extra_flags = ["-s"] if task["updateConfig"] else []
+        p = subprocess.Popen(["RD53BminiDAQ", "-f", task["configFile"], "-t", "RD53BTools.toml", "-h", "-o", dir_name, *extra_flags, tool])
         try:
             returncode = p.wait(timeout=task['timeout'])
         except:

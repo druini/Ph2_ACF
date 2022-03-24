@@ -30,33 +30,51 @@ config_preIrradiation = [
         ]
     },
     {
-        "name": "GlobalThresholdTuning3000",
+        "name": "VrefTrimming",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
         "timeout" : 600,
         "maxAttempts" : 3,
-        "tools": ["VrefTrimming", "AnalogScan", "DigitalScan", "RingOsc", "ADCScan", "DACScan", "GlobalThresholdTuning3000"],
+        "updateConfig" : True,
+        "tools": ["VrefTrimming"],
         "params": [
             {
                 "table" : "Pixels",
                 "keys" : ["tdac"],
                 "values" : [16]
             },
+        ]
+    },
+    {
+        "name": "BasicScansUntuned",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "timeout" : 600,
+        "maxAttempts" : 3,
+        "updateConfig" : False,
+        "tools": ["AnalogScan", "DigitalScan", "RingOsc", "ADCScan", "DACScan"],
+        "params": [
             {
-                "table" : "Registers",
-                "keys" : ["DAC_PREAMP_L_LIN", "DAC_PREAMP_R_LIN", "DAC_PREAMP_TL_LIN", "DAC_PREAMP_TR_LIN", "DAC_PREAMP_T_LIN", "DAC_PREAMP_M_LIN"],
-                "values" : [358]
+                "table" : "Pixels",
+                "keys" : ["tdac"],
+                "values" : [16]
             },
+        ]
+    },
+    {
+        "name": "GlobalThresholdTuning3000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "timeout" : 600,
+        "maxAttempts" : 3,
+        "tools": ["GlobalThresholdTuning3000", "ThresholdScanSparse"],
+        "updateConfig" : True,
+        "params": [
             {
-                "table" : "Registers",
-                "keys" : ["GlobalPulseConf"],
-                "values" : [48]
-            },
-            {
-                "table" : "Registers",
-                "keys" : ["GlobalPulseWidth"],
-                "values" : [255]
-            },
+                "table" : "Pixels",
+                "keys" : ["tdac"],
+                "values" : [16]
+            }
         ]
     },
     {
@@ -65,7 +83,8 @@ config_preIrradiation = [
         "configFile": "CROC.xml",
         "timeout" : 600,
         "maxAttempts" : 3,
-        "tools": ["ThresholdScan"],
+        "tools": ["ThresholdScanSparse"],
+        "updateConfig" : False,
         "params": [
             {
                 "table" : "Registers",
@@ -88,16 +107,10 @@ config_preIrradiation = [
         "name": "AFEScans1000",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
-        "tools": ["ThresholdEqualization", "GlobalThresholdTuning1000", "ThresholdEqualization1000", "ThresholdScan", "DigitalScan", "AnalogScan", "TimeWalk", "NoiseScan"],
+        "updateConfig" : True,
+        "tools": ["ThresholdEqualization3000", "GlobalThresholdTuning1000", "ThresholdEqualization1000", "ThresholdScanSparse", "DigitalScan", "AnalogScan", "TimeWalk", "Noise"],
         "timeout" : 600,
         "maxAttempts" : 3,
-        "params": [
-            {
-                "table" : "Registers",
-                "keys" : ["DAC_PREAMP_L_LIN", "DAC_PREAMP_R_LIN", "DAC_PREAMP_TL_LIN", "DAC_PREAMP_TR_LIN", "DAC_PREAMP_T_LIN", "DAC_PREAMP_M_LIN"],
-                "values" : [358]
-            },
-        ]
     },
     #{
     #    "name": "IVConfigured",

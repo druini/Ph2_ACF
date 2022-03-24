@@ -1,0 +1,35 @@
+[Pixels]
+tdac = 16
+
+[CoreColumns]
+
+[Registers]
+PIX_MODE = 10
+DAC_PREAMP_L_LIN = 358
+DAC_PREAMP_R_LIN = 358
+DAC_PREAMP_TL_LIN = 358
+DAC_PREAMP_TR_LIN = 358
+DAC_PREAMP_T_LIN = 358
+DAC_PREAMP_M_LIN = 358
+DAC_FC_LIN = 20
+DAC_KRUM_CURR_LIN = 70
+DAC_REF_KRUM_LIN = 360
+DAC_COMP_LIN = 110
+DAC_COMP_TA_LIN = 110
+DAC_GDAC_L_LIN = 448
+DAC_GDAC_R_LIN = 448
+DAC_GDAC_M_LIN = 448
+DAC_LDAC_LIN = 130
+LEACKAGE_FEEDBACK = 0
+TriggerConfig = 133
+CalibrationConfig = 0
+VCAL_HIGH = 1290
+VCAL_MED = 300
+GlobalPulseConf = 48
+GlobalPulseWidth = 255
+DataMerging = 129
+DataMergingMux = 58596
+DataConcentratorConf = 0
+CoreColEncoderConf = 0
+AURORA_CB_CONFIG0 = 0
+RingOscConfig = 24319

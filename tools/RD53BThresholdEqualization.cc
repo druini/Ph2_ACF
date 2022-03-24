@@ -13,7 +13,7 @@
 namespace RD53BTools {
 
 template <class Flavor>
-ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Task progress) {
+ChipDataMap<pixel_matrix_t<Flavor, uint8_t>> RD53BThresholdEqualization<Flavor>::run(Task progress) {
     auto& chipInterface = Base::chipInterface();
 
     auto thresholdMeasurementTask   = progress.subTask({0, 0.2});
@@ -24,20 +24,23 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
     auto& size = injectionTool.param("size"_s);
     auto rowRange = xt::range(offset[0], offset[0] + size[0]);
     auto colRange = xt::range(offset[1], offset[1] + size[1]);
+    
+    auto usedPixels = param("injectionTool"_s).usedPixels();
 
+    ChipDataMap<pixel_matrix_t<Flavor, bool>> enabled;
     ChipDataMap<pixel_matrix_t<Flavor, uint8_t>> tdac;
-    ChipDataMap<xt::xtensor<uint8_t, 2>> bestTDAC;
-    ChipDataMap<xt::xtensor<double, 2>> bestOcc;
+    ChipDataMap<pixel_matrix_t<Flavor, uint8_t>> bestTDAC;
+    ChipDataMap<pixel_matrix_t<Flavor, uint8_t>> bestOcc;
 
-    Base::for_each_chip([&] (Chip* chip) {
+    Base::for_each_chip([&] (auto* chip) {
+        enabled[chip] = usedPixels && chip->injectablePixels();
         tdac[chip].fill(param("initialTDAC"_s));
-        chipInterface.WriteReg(chip, Flavor::Reg::VCAL_MED, param("thresholdScan"_s).param("vcalMed"_s));
-        bestTDAC.insert({chip, param("initialTDAC"_s) * xt::ones<uint8_t>({size[0], size[1]})});
-        bestOcc.insert({chip, xt::zeros<double>({size[0], size[1]})});
-        // auto* rd53b = static_cast<RD53B<Flavor>*>(chip);
-        // rd53b->pixelConfig.tdac.fill(param("initialTDAC"_s));
-        // chipInterface.UpdatePixelConfig(rd53b, false, true);
+        bestTDAC[chip].fill(param("initialTDAC"_s));
+        bestOcc[chip].fill(0);
+        // bestTDAC.insert({chip, param("initialTDAC"_s) * xt::ones<uint8_t>({size[0], size[1]})});
+        // bestOcc.insert({chip, xt::zeros<double>({size[0], size[1]})});
         chipInterface.UpdatePixelTDACUniform(chip, param("initialTDAC"_s));
+        chipInterface.WriteReg(chip, Flavor::Reg::VCAL_MED, param("thresholdScan"_s).param("vcalMed"_s));
     });
 
     ChipDataMap<size_t> VCAL_HIGH;
@@ -67,24 +70,22 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
             chipInterface.WriteReg(chip, Flavor::Reg::VCAL_HIGH, VCAL_HIGH[chip]);
         });
         
-        auto events = injectionTool.run(tuningTask.subTask({i / double(nSteps), (i + .5) / double(nSteps)}));
-        auto occMap = injectionTool.occupancy(events);
+        auto result = injectionTool.run(tuningTask.subTask({i / double(nSteps), (i + .5) / double(nSteps)}));
+        auto occMap = injectionTool.occupancy(result);
 
         Base::for_each_hybrid([&] (Hybrid* hybrid) {
             chipInterface.WriteReg(hybrid, Flavor::Reg::VCAL_HIGH, 0xFFFF);
         });
         
-        auto eventsHighCharge = injectionTool.run(tuningTask.subTask({(i + .5) / double(nSteps), (i + 1) / double(nSteps)}));
-        auto occMapHighCharge = injectionTool.occupancy(eventsHighCharge);
+        auto resultHighCharge = injectionTool.run(tuningTask.subTask({(i + .5) / double(nSteps), (i + 1) / double(nSteps)}));
+        auto occMapHighCharge = injectionTool.occupancy(resultHighCharge);
 
         Base::for_each_chip([&] (auto* chip) {
-            auto& pixelConfig = chip->pixelConfig();
-            auto enabled = xt::view(pixelConfig.enable, rowRange, colRange) && xt::view(pixelConfig.enableInjections, rowRange, colRange);
-            auto tdacView = xt::view(tdac[chip], rowRange, colRange);
-            const auto occ = xt::view(occMap[chip], rowRange, colRange);
-            const auto occHighCharge = xt::view(occMapHighCharge[chip], rowRange, colRange);
+            // auto tdacView = xt::view(tdac[chip], rowRange, colRange);
+            // const auto occ = xt::view(occMap[chip], rowRange, colRange);
+            // const auto occHighCharge = xt::view(occMapHighCharge[chip], rowRange, colRange);
 
-            const auto stuck = occHighCharge < .9;
+            const auto stuck = enabled[chip] && occMapHighCharge[chip] < .9;
 
             // std::cout << "tdacView:\n" << tdacView << std::endl;
             // std::cout << "occ:\n" << occ << std::endl;
@@ -92,10 +93,10 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
             // std::cout << "bestOcc:\n" << bestOcc[chip] << std::endl;
             // std::cout << "stuck:\n" << stuck << std::endl;
 
-            auto cost = xt::abs(occ - 0.5);
+            auto cost = xt::abs(occMap[chip] - 0.5);
             auto minCost = xt::abs(bestOcc[chip] - 0.5);
 
-            xt::xtensor<bool, 2> isBest = !stuck && enabled && ((cost < minCost) || xt::isclose(occ, bestOcc[chip]));
+            xt::xtensor<bool, 2> isBest = enabled[chip] && !stuck && ((cost < minCost) || xt::isclose(occMap[chip], bestOcc[chip]));
 
             if (param("eliminateBias"_s) && i == nSteps - 1)
                 isBest |= (xt::isclose(cost, minCost) && xt::random::randint<int>(size, 0, 1));
@@ -108,24 +109,26 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
             LOG(INFO) << "nUncertain: " <<  xt::count_nonzero(minCost > 0.49);
             LOG(INFO) << "==========================================";
 
-            xt::masked_view(bestOcc[chip], isBest) = occ;
-            xt::masked_view(bestTDAC[chip], isBest) = tdacView;
+            xt::masked_view(bestOcc[chip], isBest) = occMap[chip];
+            xt::masked_view(bestTDAC[chip], isBest) = tdac[chip];
 
             if (i < nSteps - 1) {
-                tdacView = xt::where(
-                    enabled,
-                    xt::clip(xt::where(!stuck && (occ < 0.5), tdacView + tdacStep, tdacView - tdacStep), 0, 31),
-                    tdacView
-                );
+                xt::masked_view(tdac[chip], enabled[chip]) = 
+                    xt::clip(xt::where(!stuck && (occMap[chip] < 0.5), tdac[chip] + tdacStep, tdac[chip] - tdacStep), 0, 31);
+                // tdac[chip] = xt::where(
+                //     enabled[chip], 
+                //     xt::clip(xt::where(!stuck && (occ < 0.5), tdac[chip] + tdacStep, tdac[chip] - tdacStep), 0, 31),
+                //     tdac[chip]
+                // );
 
                 chipInterface.UpdatePixelTDAC(chip, tdac[chip]); // update tdacs
             }
         });
     }
 
+
     Base::for_each_chip([&] (auto* chip) {
-        auto& pixelConfig = chip->pixelConfig();
-        auto enabled = xt::view(pixelConfig.enable, rowRange, colRange) && xt::view(pixelConfig.enableInjections, rowRange, colRange);
+        xt::xtensor<bool, 2> enabled = xt::view(usedPixels && chip->injectablePixels(), rowRange, colRange);
         auto tdacView = xt::view(chip->pixelConfig().tdac, rowRange, colRange);
         tdacView = xt::where(enabled, bestTDAC[chip], tdacView);
         chipInterface.UpdatePixelConfig(chip, false, true);
@@ -138,12 +141,13 @@ ChipDataMap<xt::xtensor<uint8_t, 2>> RD53BThresholdEqualization<Flavor>::run(Tas
 template <class Flavor>
 void RD53BThresholdEqualization<Flavor>::draw(const ChipDataMap<xt::xtensor<uint8_t, 2>>& bestTDAC) {
     Base::createRootFile();
-    auto& offset = param("injectionTool"_s).param("offset"_s);
+    // auto& offset = param("injectionTool"_s).param("offset"_s);
 
     for (const auto& item : bestTDAC) {
         const auto& tdac = item.second;
         
-        Base::drawMap(tdac, "TDAC Map", "TDAC", offset[0], offset[1]);
+        // Base::drawMap(tdac, "TDAC Map", "TDAC", offset[0], offset[1]);
+        Base::drawMap(tdac, "TDAC Map", "TDAC");
         Base::drawHist(tdac, "TDAC Distribution", 32, 0, 32, "TDAC");
     }
 }

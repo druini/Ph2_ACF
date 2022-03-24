@@ -235,6 +235,9 @@ public:
     const PixelConfig& pixelConfig() const { return _pixelConfig; }
     PixelConfig& pixelConfig() { return _pixelConfig; }
 
+    const auto& enabledPixels() const { return _pixelConfig.enable; }
+    auto injectablePixels() const { return _pixelConfig.enable && _pixelConfig.enableInjections; }
+
     // PixelConfig defaultPixelConfig;
 
     CoreColArray<bool> coreColEnable;
