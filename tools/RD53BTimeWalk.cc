@@ -133,22 +133,18 @@ void RD53BTimeWalk<Flavor>::draw(const Result& results) {
         lateHitRatio[chip] = xt::zeros<double>({nVcalSteps, nDelaySteps});
     });
     
-    auto used = param("injectionTool"_s).usedPixels();
-
     for (size_t i = 0; i < nVcalSteps; ++i) {
         for (size_t j = 0; j < nDelaySteps; ++j) {
-            Base::for_each_chip([&] (auto* chip) {
-            // for (const auto& item : results(i, j)) {
+            for (const auto& item : results(i, j)) {
                 size_t nLateHits = 0;
-                size_t nTotalHits = xt::count_nonzero(used && chip->injectablePixels())();
-                
-                for (const auto& event : results(i, j).at(chip)) {
-                    // nTotalHits += event.hits.size();
+                size_t nTotalHits = 0;
+                for (const auto& event : item.second) {
+                    nTotalHits += event.hits.size();
                     if (event.triggerPos & 1)
                         nLateHits += event.hits.size();
                 }
-                lateHitRatio[chip](i, j) = nLateHits / double(nTotalHits);
-            });
+                lateHitRatio[item.first](i, j) = nLateHits / double(nTotalHits);
+            }
         }
     }
 
