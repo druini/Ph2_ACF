@@ -373,7 +373,7 @@ protected:
         h->SetZTitle(zLabel.c_str());
         for (size_t i = 0; i < data.shape()[0]; ++i)
             for (size_t j = 0; j < data.shape()[1]; ++j)
-                h->Fill(j, Flavor::nRows - i - 1, data(i, j));
+                h->Fill(j + offsetY, Flavor::nRows - i - offsetX - 1, data(i, j));
         h->Draw("COLZ");
         
         // Reverse Y Axis

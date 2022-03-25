@@ -156,12 +156,15 @@ nSteps = 7
 
 [GlobalThresholdTuning3000]
 type = "RD53BGlobalThresholdTuning"
-args = { injectionTool = "AnalogScanSparse", vcalMed = 300, gdacRange = [400, 500], targetThreshold = 545, maxStuckPixelRatio = 0.02 }
+args = { injectionTool = "AnalogScanSparse", vcalMed = 300, gdacRange = [400, 500], targetThreshold = 545, maxStuckPixelRatio = 0.05 }
 
 [GlobalThresholdTuning1000]
 type = "RD53BGlobalThresholdTuning"
-args = { injectionTool = "AnalogScanSparse", vcalMed = 300, gdacRange = [380, 430], targetThreshold = 182, maxStuckPixelRatio = 0.02 }
+args = { injectionTool = "AnalogScanSparse", vcalMed = 300, gdacRange = [380, 430], targetThreshold = 182, maxStuckPixelRatio = 0.05 }
 
+[GainTuning]
+type = "RD53BGainTuning"
+args = { injectionTool = "AnalogScanSparse", vcalMed = 300, krumCurrRange = [0, 300], targetToT = 5.0, targetVcal = 1090 }
 
 [NoiseScan]
 type = "RD53BNoiseScan"
@@ -247,5 +250,3 @@ args = {}
 [CapMeasure]
 type = "RD53BCapMeasure"
 args = {}
-
-

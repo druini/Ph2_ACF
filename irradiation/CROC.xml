@@ -29,6 +29,7 @@
 
         <Global
           AnalogInjectionMode = "0"
+          VCAL_HIGH = "1390"
           VCAL_MED = "300"
             />
       </Hybrid>

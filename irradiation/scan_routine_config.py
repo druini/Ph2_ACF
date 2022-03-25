@@ -124,18 +124,32 @@ config_preIrradiation = [
         "tools": ["ThresholdEqualization3000", "GlobalThresholdTuning1000", "ThresholdEqualization1000", "GlobalThresholdTuning1000", "ThresholdScanLow"]
     },
     {
-        "name": "StuckPixelScan1000",
+        "name": "MaskStuck1000",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
         "updateConfig" : True,
         "tools": ["StuckPixelScan"]
     },
     {
-        "name": "NoiseScan1000",
+        "name": "MaskNoisy1000",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
         "updateConfig" : True,
-        "tools": ["NoiseScan", "NoiseScan"]
+        "tools": ["NoiseScan"]
+    },
+    {
+        "name": "GainTuning1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : True,
+        "tools": ["GainTuning"],
+    },
+    {
+        "name": "NoiseScan1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : False,
+        "tools": ["NoiseScan"],
     },
     {
         "name": "DigitalScan1000",
@@ -150,20 +164,13 @@ config_preIrradiation = [
         "configFile": "CROC.xml",
         "updateConfig" : False,
         "tools": ["AnalogScan"],
-        "params": [
-            {
-                "table" : "Registers",
-                "keys" : ["VCAL_HIGH"],
-                "values" : [500, 1000, 1500]
-            },
-        ]
     },
     {
         "name": "TimeWalk1000",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
         "updateConfig" : False,
-        "tools": ["TimeWalk"]
+        "tools": ["TimeWalk"],
     }
     #{
     #    "name": "IVConfigured",
