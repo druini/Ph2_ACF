@@ -7,46 +7,48 @@ from datetime import datetime
 import time
 import csv 
 
+powerSupplyResource = "/dev/ttyUSB0"
+powerSupplyVoltage = 1.8
+powerSupplyCurrent = 2
+
+logFile = "log.csv"
+
+fmt = "%Y %m %d-%H:%M:%S"
+
+results_dir = "pre_irrad/Results_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S") + "/"
+
+timeout = 600
+maxAttempts = 3
+
 config = [
-    # {
-    #     "name": "GlobalThresholdTuning3000",
-    #     "type": "Ph2_ACF",
-    #     "configFile": "CROC.xml",
-    #     "timeout" : 600,
-    #     "maxAttempts" : 3,
-    #     "tools": ["GlobalThresholdTuning3000", "ThresholdScanSparse"],
-    #     "updateConfig" : True,
-    #     "params": [
-    #         {
-    #             "table" : "Pixels",
-    #             "keys" : ["tdac"],
-    #             "values" : [16]
-    #         }
-    #     ]
-    # },
+    {
+        "name": "GlobalThresholdTuning3000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "tools": ["GlobalThresholdTuning3000", "ThresholdScanSparse"],
+        "updateConfig" : True
+    },
     {
         "name": "ThresholdScan3000",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
-        "timeout" : 600,
-        "maxAttempts" : 3,
         "tools": ["ThresholdScanSparse"],
         "updateConfig" : False,
         "params": [
             {
                 "table" : "Registers", 
                 "keys" : ["DAC_PREAMP_L_LIN", "DAC_PREAMP_R_LIN", "DAC_PREAMP_TL_LIN", "DAC_PREAMP_TR_LIN", "DAC_PREAMP_T_LIN", "DAC_PREAMP_M_LIN"],
-                "values" : [100] #, 250, 200, 300, 400]
+                "values" : [100, 250, 200, 300, 400]
             },
             {
                 "table" : "Registers", 
                 "keys" : ["DAC_LDAC_LIN"], 
-                "values" : [130] #, 140, 150, 170, 190]
+                "values" : [130, 140, 150, 170, 190]
             },
             {
                 "table" : "Pixels",
                 "keys" : ["tdac"],
-                "values" : [0] #, 16, 31]
+                "values" : [0, 16, 31]
             }
         ]
     },
@@ -55,9 +57,42 @@ config = [
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
         "updateConfig" : True,
-        "tools": ["ThresholdEqualization3000", "GlobalThresholdTuning1000", "ThresholdEqualization1000", "ThresholdScanSparse", "AnalogScan", "TimeWalk", "Noise"],
-        "timeout" : 600,
-        "maxAttempts" : 3
+        "tools": ["ThresholdEqualization3000", "GlobalThresholdTuning1000", "ThresholdEqualization1000", "GlobalThresholdTuning1000", "ThresholdScanLow"]
+    },
+    {
+        "name": "StuckPixelScan1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : True,
+        "tools": ["StuckPixelScan"]
+    },
+    {
+        "name": "NoiseScan1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : True,
+        "tools": ["NoiseScan", "NoiseScan"]
+    },
+    {
+        "name": "AnalogScan1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : False,
+        "tools": ["AnalogScan"],
+        "params": [
+            {
+                "table" : "Registers", 
+                "keys" : ["VCAL_HIGH"],
+                "values" : [500, 1000, 1500]
+            },
+        ]
+    },
+    {
+        "name": "TimeWalk1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : False,
+        "tools": ["TimeWalk"]
     }
     # ,
     # {
@@ -77,13 +112,6 @@ config = [
     # }
 ]
 
-powerSupplyResource = "/dev/ttyUSB0"
-powerSupplyVoltage = 1.8
-powerSupplyCurrent = 2
-
-logFile = "log.csv"
-
-fmt = "%Y %m %d-%H:%M:%S"
 
 def getTomlFile(xmlConfig):
     tree = ET.parse(xmlConfig)
@@ -92,12 +120,12 @@ def getTomlFile(xmlConfig):
     return next(root.iter("CROC")).attrib["configfile"]
 
 def run_Ph2_ACF(task, paramsForLog=[]):
-    for i in range(task["maxAttempts"]):
-        dir_name =  "Results_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S") + "/" + task["name"]
+    for i in range(maxAttempts):
+        dir_name = results_dir + task["name"]
         extra_flags = ["-s"] if task["updateConfig"] else []
         p = subprocess.Popen(["RD53BminiDAQ", "-f", task["configFile"], "-t", "RD53BTools.toml", "-h", "-o", dir_name, *extra_flags, *task["tools"]])
         try:
-            returncode = p.wait(timeout=task['timeout'])
+            returncode = p.wait(timeout=timeout)
         except:
             p.terminate()
             returncode = -1

@@ -104,9 +104,9 @@ ChipDataMap<pixel_matrix_t<Flavor, uint8_t>> RD53BThresholdEqualization<Flavor>:
             LOG(INFO) << "Step: " << i;
             LOG(INFO) << "nStuck: " <<  xt::count_nonzero(stuck);
             LOG(INFO) << "nUpdated: " <<  xt::count_nonzero(isBest);
-            LOG(INFO) << "nEquivalent: " << xt::count_nonzero(xt::isclose(cost, minCost));
-            LOG(INFO) << "nActuallyBetter: " << xt::count_nonzero(cost < minCost && !xt::isclose(cost, minCost));
-            LOG(INFO) << "nUncertain: " <<  xt::count_nonzero(minCost > 0.49);
+            // LOG(INFO) << "nEquivalent: " << xt::count_nonzero(xt::isclose(cost, minCost));
+            // LOG(INFO) << "nActuallyBetter: " << xt::count_nonzero(cost < minCost && !xt::isclose(cost, minCost));
+            // LOG(INFO) << "nUncertain: " <<  xt::count_nonzero(minCost > 0.49);
             LOG(INFO) << "==========================================";
 
             xt::masked_view(bestOcc[chip], isBest) = occMap[chip];
