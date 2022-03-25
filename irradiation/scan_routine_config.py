@@ -1,10 +1,22 @@
 config_preIrradiation = [
     #{
+    #    "name": "VrefTrimming",
+    #    "type": "Ph2_ACF",
+    #    "configFile": "CROC.xml",
+    #    "updateConfig" : True,
+    #    "tools": ["VrefTrimming"],
+    #    "params": [
+    #        {
+    #            "table" : "Pixels",
+    #            "keys" : ["tdac"],
+    #            "values" : [16]
+    #        },
+    #    ]
+    #},
+    #{
     #    'name': 'current_vs_PA_IN_BIAS_LIN',
     #    'type': 'curr_vs_DAC',
     #    'configFile': 'CROC.xml',
-    #    'timeout': 300,
-    #    'maxAttempts': 3,
     #    'PSchannel': 2,
     #    'params': [
     #        {
@@ -14,59 +26,48 @@ config_preIrradiation = [
     #        },
     #    ]
     #},
-    {
-        "name": "ToT_vs_KRUM_CURR_LIN",
-        "type": "Ph2_ACF",
-        "configFile": "CROC.xml",
-        "timeout" : 600,
-        "maxAttempts" : 3,
-        "tools": ["AnalogScan"],
-        'params': [
-            {
-                'table': 'Registers',
-                'keys' : ['DAC_KRUM_CURR_LIN'],
-                'values' : [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200]
-            },
-        ]
-    },
-    {
-        "name": "VrefTrimming",
-        "type": "Ph2_ACF",
-        "configFile": "CROC.xml",
-        "timeout" : 600,
-        "maxAttempts" : 3,
-        "updateConfig" : True,
-        "tools": ["VrefTrimming"],
-        "params": [
-            {
-                "table" : "Pixels",
-                "keys" : ["tdac"],
-                "values" : [16]
-            },
-        ]
-    },
-    {
-        "name": "BasicScansUntuned",
-        "type": "Ph2_ACF",
-        "configFile": "CROC.xml",
-        "timeout" : 600,
-        "maxAttempts" : 3,
-        "updateConfig" : False,
-        "tools": ["AnalogScan", "DigitalScan", "RingOsc", "ADCScan", "DACScan"],
-        "params": [
-            {
-                "table" : "Pixels",
-                "keys" : ["tdac"],
-                "values" : [16]
-            },
-        ]
-    },
+    ##{
+    ##    "name": "ThresholdTuning1000",
+    ##    "type": "Ph2_ACF",
+    ##    "configFile": "CROC.xml",
+    ##    "updateConfig" : True,
+    ##    "tools": ["ThresholdEqualization3000", "GlobalThresholdTuning1000", "ThresholdEqualization1000", "ThresholdScanSparse"],
+    ##        {
+    ##            "table" : "Registers",
+    ##            "keys" : ["DAC_PREAMP_L_LIN", "DAC_PREAMP_R_LIN", "DAC_PREAMP_TL_LIN", "DAC_PREAMP_TR_LIN", "DAC_PREAMP_T_LIN", "DAC_PREAMP_M_LIN"],
+    ##            "values" : [348]
+    ##        },
+    ##},
+    ##{
+    ##    "name": "ThresholdScanSparse",
+    ##    "type": "Ph2_ACF",
+    ##    "configFile": "CROC.xml",
+    ##    "tools": ["ThresholdScanSparse"],
+    ##    "updateConfig" : False,
+    ##},
+    ##{
+    ##    "name": "ToT_vs_KRUM_CURR_LIN",
+    ##    "type": "Ph2_ACF",
+    ##    "configFile": "CROC.xml",
+    ##    "updateConfig" : True,
+    ##    "tools": ["AnalogScanSparse"],
+    ##    'params': [
+    ##        {
+    ##            'table': 'Registers',
+    ##            'keys' : ['VCAL_HIGH'],
+    ##            'values' : [1391]
+    ##        },
+    ##        {
+    ##            'table': 'Registers',
+    ##            'keys' : ['DAC_KRUM_CURR_LIN'],
+    ##            'values' : [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200]
+    ##        },
+    ##    ]
+    ##},
     {
         "name": "GlobalThresholdTuning3000",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
-        "timeout" : 600,
-        "maxAttempts" : 3,
         "tools": ["GlobalThresholdTuning3000", "ThresholdScanSparse"],
         "updateConfig" : True,
         "params": [
@@ -78,11 +79,23 @@ config_preIrradiation = [
         ]
     },
     {
+        "name": "BasicScans3000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : False,
+        "tools": ["AnalogScan", "DigitalScan", "RingOsc", "ADCScan", "DACScan"],
+        "params": [
+            {
+                "table" : "Pixels",
+                "keys" : ["tdac"],
+                "values" : [16]
+            },
+        ]
+    },
+    {
         "name": "ThresholdScan3000",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
-        "timeout" : 600,
-        "maxAttempts" : 3,
         "tools": ["ThresholdScanSparse"],
         "updateConfig" : False,
         "params": [
@@ -104,14 +117,54 @@ config_preIrradiation = [
         ]
     },
     {
-        "name": "AFEScans1000",
+        "name": "ThresholdTuning1000",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
         "updateConfig" : True,
-        "tools": ["ThresholdEqualization3000", "GlobalThresholdTuning1000", "ThresholdEqualization1000", "ThresholdScanSparse", "DigitalScan", "AnalogScan", "TimeWalk", "Noise"],
-        "timeout" : 600,
-        "maxAttempts" : 3,
+        "tools": ["ThresholdEqualization3000", "GlobalThresholdTuning1000", "ThresholdEqualization1000", "GlobalThresholdTuning1000", "ThresholdScanLow"]
     },
+    {
+        "name": "StuckPixelScan1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : True,
+        "tools": ["StuckPixelScan"]
+    },
+    {
+        "name": "NoiseScan1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : True,
+        "tools": ["NoiseScan", "NoiseScan"]
+    },
+    {
+        "name": "DigitalScan1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : True,
+        "tools": ["DigitalScan"]
+    },
+    {
+        "name": "AnalogScan1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : False,
+        "tools": ["AnalogScan"],
+        "params": [
+            {
+                "table" : "Registers",
+                "keys" : ["VCAL_HIGH"],
+                "values" : [500, 1000, 1500]
+            },
+        ]
+    },
+    {
+        "name": "TimeWalk1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : False,
+        "tools": ["TimeWalk"]
+    }
     #{
     #    "name": "IVConfigured",
     #    "type": "IV",
@@ -134,8 +187,6 @@ config_irradiationBase = [
         "name": "ShortRingOsc_Mux",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
-        "timeout": 600,
-        "maxAttempts": 3,
         "tools": ["ShortRingOsc", "MuxScan"],
     },
     {
@@ -149,8 +200,6 @@ config_irradiationMain = [
         "name": "VrefTrimming",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
-        "timeout": 600,
-        "maxAttempts": 3,
         "tools": ["VrefTrimming"],
     },
     {
@@ -172,8 +221,6 @@ config_irradiationMain = [
         "name": "ThresholdScan_existingTDACs",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
-        "timeout": 600,
-        "maxAttempts": 3,
         "tools": ["ThresholdScan"],
         "params": [
             {
@@ -187,8 +234,6 @@ config_irradiationMain = [
         "name": "AFEScans",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
-        "timeout": 600,
-        "maxAttempts": 3,
         "tools": ["ThresholdEqualization1000", "ThresholdScan", "DigitalScan", "AnalogScan", "RingOsc", "ADCScan", "DACScan", "TimeWalk", "NoiseScan"],
     }
 ]

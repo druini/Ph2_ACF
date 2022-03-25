@@ -16,6 +16,8 @@ powerSupplyCurrent = 2
 
 logFile = "log.csv"
 baseDir = 'Results' + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+timeout = 600
+maxAttempts = 3
 
 fmt = "%Y %m %d-%H:%M:%S"
 
@@ -40,14 +42,14 @@ def configureCROC(configFile, powerSupply=None):
     return False
 
 def run_Ph2_ACF(task, tool, paramsForLog=[], powerSupply=None, dir_name='Results'):
-    for i in range(task["maxAttempts"]):
+    for i in range(maxAttempts):
         if i>1 and powerSupply is not None:
             powerSupply.power_cycle()
             time.sleep(.5)
         extra_flags = ["-s"] if task["updateConfig"] else []
         p = subprocess.Popen(["RD53BminiDAQ", "-f", task["configFile"], "-t", "RD53BTools.toml", "-h", "-o", dir_name, *extra_flags, tool])
         try:
-            returncode = p.wait(timeout=task['timeout'])
+            returncode = p.wait(timeout=timeout)
         except:
             p.terminate()
             returncode = -1
@@ -68,7 +70,6 @@ def Ph2_ACF_Task(task, powerSupply):
     for tool in task['tools']:
         if "params" in task:
             tomlFile = getTomlFile(task['configFile'])
-            tomlData = toml.load(tomlFile)
             params = task['params']
 
             # store original parameter values if needed
@@ -79,6 +80,7 @@ def Ph2_ACF_Task(task, powerSupply):
 
             for values in itertools.product(*[p["values"] for p in params]):
                 paramsForLog = []
+                tomlData = toml.load(tomlFile)
                 for i in range(len(values)):
                     for key in params[i]["keys"]:
                         paramsForLog += [f'{key}:{values[i]}']
@@ -89,6 +91,7 @@ def Ph2_ACF_Task(task, powerSupply):
 
             # restore original parameter values
             if not task['updateConfig']:
+                tomlData = toml.load(tomlFile)
                 for table, data in original_values:
                     for key, value in data.items():
                         if value is not None:
