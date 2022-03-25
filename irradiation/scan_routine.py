@@ -74,6 +74,7 @@ def Ph2_ACF_Task(task, powerSupply):
 
             # store original parameter values if needed
             if not task['updateConfig']:
+                tomlData = toml.load(tomlFile)
                 original_values = []
                 for p in params:
                     original_values.append((p["table"], {key : tomlData[p["table"]].get(key, None) for key in p["keys"]}))
