@@ -139,7 +139,7 @@ ChipDataMap<pixel_matrix_t<Flavor, uint8_t>> RD53BThresholdEqualization<Flavor>:
 }
 
 template <class Flavor>
-void RD53BThresholdEqualization<Flavor>::draw(const ChipDataMap<xt::xtensor<uint8_t, 2>>& bestTDAC) {
+void RD53BThresholdEqualization<Flavor>::draw(const ChipDataMap<pixel_matrix_t<Flavor, uint8_t>>& bestTDAC) {
     Base::createRootFile();
     // auto& offset = param("injectionTool"_s).param("offset"_s);
 
