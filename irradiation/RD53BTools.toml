@@ -76,7 +76,7 @@ triggerLatency = 133
 injectionPeriod = 100
 offset = [0, 0]
 size = [0, 0]
-frameStep = 32
+frameStep = 16
 maskGen = [
     { dim = 0, size = 0, parallel = false, shift = [1] },
     { dim = 1, size = 4, parallel = true, shift = [] },
