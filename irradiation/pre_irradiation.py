@@ -148,7 +148,6 @@ def add_log_entry(row):
 def Ph2_ACF_Task(task):
     if "params" in task:
         tomlFile = getTomlFile(task['configFile'])
-        tomlData = toml.load(tomlFile)
         params = task['params']
 
         # store original parameter values
@@ -158,6 +157,7 @@ def Ph2_ACF_Task(task):
             
         for values in itertools.product(*[p["values"] for p in params]):
             paramsForLog = []
+            tomlData = toml.load(tomlFile)
             for i in range(len(values)):
                 for key in params[i]["keys"]:
                     paramsForLog += [f'{key}:{values[i]}']
@@ -167,11 +167,13 @@ def Ph2_ACF_Task(task):
             run_Ph2_ACF(task, paramsForLog)
 
         # restore original parameter values
-        for table, data in original_values:
-            for key, value in data.items():
-                if value is not None:
-                    tomlData[table][key] = value
-        with open(tomlFile, "w") as f:
+        if len(params) > 0:
+            tomlData = toml.load(tomlFile)
+            for table, data in original_values:
+                for key, value in data.items():
+                    if value is not None:
+                        tomlData[table][key] = value
+            with open(tomlFile, "w") as f:Z
                 toml.dump(tomlData, f)
 
     else:
