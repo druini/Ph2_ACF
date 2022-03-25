@@ -15,7 +15,7 @@ powerSupplyVoltage = 1.8
 powerSupplyCurrent = 2
 
 logFile = "log.csv"
-baseDir = 'Results'
+baseDir = 'Results' + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 
 fmt = "%Y %m %d-%H:%M:%S"
 
@@ -70,7 +70,13 @@ def Ph2_ACF_Task(task, powerSupply):
             tomlFile = getTomlFile(task['configFile'])
             tomlData = toml.load(tomlFile)
             params = task['params']
-            # for p in range(len(task['params'])):
+
+            # store original parameter values if needed
+            if not task['updateConfig']:
+                original_values = []
+                for p in params:
+                    original_values.append((p["table"], {key : tomlData[p["table"]].get(key, None) for key in p["keys"]}))
+
             for values in itertools.product(*[p["values"] for p in params]):
                 paramsForLog = []
                 for i in range(len(values)):
@@ -80,6 +86,16 @@ def Ph2_ACF_Task(task, powerSupply):
                 with open(tomlFile, "w") as f:
                     toml.dump(tomlData, f)
                 run_Ph2_ACF(task, tool, paramsForLog, powerSupply, dir_name)
+
+            # restore original parameter values
+            if not task['updateConfig']:
+                for table, data in original_values:
+                    for key, value in data.items():
+                        if value is not None:
+                            tomlData[table][key] = value
+                with open(tomlFile, "w") as f:
+                    toml.dump(tomlData, f)
+
         else:
             run_Ph2_ACF(task, tool=tool, paramsForLog=[], powerSupply=powerSupply, dir_name=dir_name)
     return True
