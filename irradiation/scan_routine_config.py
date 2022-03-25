@@ -171,7 +171,7 @@ config_preIrradiation = [
         "configFile": "CROC.xml",
         "updateConfig" : False,
         "tools": ["TimeWalk"],
-    }
+    },
     #{
     #    "name": "IVConfigured",
     #    "type": "IV",
@@ -247,9 +247,38 @@ config_irradiationMain = [
         ],
     },
     {
-        "name": "AFEScans",
+        "name": "ThresholdScan_newTuning",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
-        "tools": ["ThresholdEqualization1000", "ThresholdScan", "DigitalScan", "AnalogScan", "RingOsc", "ADCScan", "DACScan", "TimeWalk", "NoiseScan"],
+        "updateConfig" : True,
+        "tools": ["ThresholdEqualization1000", "GlobalThresholdTuning1000", "ThresholdScanLow"]
+    },
+    {
+        "name": "GainTuning1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : True,
+        "tools": ["GainTuning"],
+    },
+    {
+        "name": "BasicScans1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : False,
+        "tools": ["AnalogScan", "DigitalScan", "RingOsc", "ADCScan", "DACScan"],
+    },
+    {
+        "name": "NoiseScan1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : False,
+        "tools": ["NoiseScan"],
+    },
+    {
+        "name": "TimeWalk1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : False,
+        "tools": ["TimeWalk"],
     }
 ]
