@@ -26,3 +26,4 @@ src/test.cc
 build*
 rundir*
 .vscode/
+__pycache__
