@@ -29,6 +29,7 @@
 #include "../tools/RD53BGlobalThresholdTuning.h"
 #include "../tools/RD53BStuckPixelScan.h"
 #include "../tools/RD53BTimeWalk.h"
+#include "../tools/RD53BGainTuning.h"
 
 #include <signal.h>
 
@@ -65,7 +66,8 @@ using Tools = ToolManager<decltype(make_named_tuple(
     TOOL(RD53BDACTest),
     TOOL(RD53BGlobalThresholdTuning),
     TOOL(RD53BStuckPixelScan),
-    TOOL(RD53BTimeWalk)
+    TOOL(RD53BTimeWalk),
+    TOOL(RD53BGainTuning)
 ))>;
 
 INITIALIZE_EASYLOGGINGPP

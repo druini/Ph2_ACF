@@ -124,18 +124,18 @@ ChipDataMap<pixel_matrix_t<Flavor, size_t>> RD53BNoiseScan<Flavor>::hitCount(con
 template <class Flavor>
 ChipDataMap<std::array<double, 16>> RD53BNoiseScan<Flavor>::totDistribution(const ChipDataMap<ChipResult>& data) const {
     ChipDataMap<std::array<double, 16>> tot;
-    size_t nHitsExpected = param("nTriggers"_s) * param("size"_s)[0] * param("size"_s)[1];
-    for (const auto& item : data) {
+    Base::for_each_chip([&] (auto* chip) {
+        size_t nHitsExpected = param("nTriggers"_s) * xt::count_nonzero(chip->injectablePixels())();
         size_t nHits = 0;
-        auto it = tot.insert({item.first, {0}}).first;
-        for (const auto& event : item.second.events) {
+        auto it = tot.insert({chip, {0}}).first;
+        for (const auto& event : data.at(chip).events) {
             for (const auto& hit : event.hits) {
-                it->second[hit.tot] += 1.0 / nHitsExpected;
+                it->second[hit.tot + 1] += 1.0 / nHitsExpected;
                 ++nHits;
             }
         }
-        it->second[15] = (nHitsExpected - nHits) / double(nHitsExpected);
-    }
+        it->second[0] = (nHitsExpected - nHits) / double(nHitsExpected);
+    });
     return tot;
 }
 
@@ -153,7 +153,7 @@ void RD53BNoiseScan<Flavor>::draw(const ChipDataMap<ChipResult>& result) {
         const auto& tot = totMap[item.first];
         // pixel_matrix_t<Flavor, double> occ = hitCount / double(param("nTriggers"_s));
 
-        Base::drawHist(tot, "ToT Distribution", 16, 0, 16, "ToT");
+        Base::drawHistRaw(tot, "ToT Distribution", 0, 16, "ToT", "Frequency");
 
         Base::drawMap(hitCount, "Hit Count Map", "Hit Count");
 

@@ -91,7 +91,7 @@ std::array<ChipDataMap<xt::xtensor_optional<double, 2>>, 2> RD53BThresholdScan<F
                 if (enabled(row, col) && (pixelOcc.front() < .1) && (pixelOcc.back() > .9)) {
                     auto weights = xt::view(diff, xt::all(), row, col);
                     thresholdMap[chip](row, col) = xt::average(vcalDiffBins, xt::abs(weights))();
-                    noiseMap[chip](row, col) = sqrt(xt::average(xt::square(vcalDiffBins - thresholdMap[chip](row, col)), weights)());
+                    noiseMap[chip](row, col) = sqrt(xt::average(xt::square(vcalDiffBins - thresholdMap[chip](row, col)), xt::abs(weights))());
                 
                 }
                 else {
@@ -151,7 +151,7 @@ void RD53BThresholdScan<Flavor>::draw(const OccupancyMap& result) {
 
         Base::drawMap(xt::value(threshold), "Threshold Map", "Threshold", offset(0), offset(1));
 
-        Base::drawHist(filtered_threshold, "Threshold Distribution", vcalBins.size(), vcalBins(0), vcalBins.periodic(-1), "Delta VCAL");
+        Base::drawHist(filtered_threshold, "Threshold Distribution", 150, vcalBins(0), vcalBins.periodic(-1), "Delta VCAL");
 
         Base::drawMap(xt::value(noise), "Noise Map", "Noise", offset(0), offset(1));
 

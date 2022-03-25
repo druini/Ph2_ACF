@@ -114,9 +114,9 @@ auto RD53BTimeWalk<Flavor>::run(Task progress) const -> Result {
 
                 // LOG(INFO) << "frame: " << frame << ", vcalHigh: " << vcalHigh << ", delay: " << delay << RESET;
                 param("injectionTool"_s).inject(results(i, j));
-
-                injectionChargeProgress.update(1);
             }
+            
+            injectionChargeProgress.update(1);
         }
     }
 

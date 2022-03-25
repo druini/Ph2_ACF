@@ -27,7 +27,7 @@ struct RD53BThresholdEqualization : public RD53BTool<RD53BThresholdEqualization,
 
     ChipDataMap<pixel_matrix_t<Flavor, uint8_t>> run(Task progress);
 
-    void draw(const ChipDataMap<xt::xtensor<uint8_t, 2>>& bestTDAC);
+    void draw(const ChipDataMap<pixel_matrix_t<Flavor, uint8_t>>& bestTDAC);
 };
 
 }
