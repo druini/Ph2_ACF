@@ -18,20 +18,26 @@ PIN_DICT    = {
         'd'  : 'Vofs',
         'e'  : 'Vref_ADC',
         #'f'  : 'Vmux',
+        'NTC': 'NTC',
         }
 
 def measure_all_pins(pin_dict=PIN_DICT):
-    multimeter = Keithley2000(resource='ASRL/dev/ttyUSB5::INSTR')
+    multimeter = Keithley2000(resource='ASRL/dev/ttyUSB5::INSTR', reset_on_init=False)
     drb        = DoubleRelayBoard(resource='ASRL/dev/ttyUSB1::INSTR', resource2='ASRL/dev/ttyUSB3::INSTR')
 
     measDict = {}
-    for pin,pinName in PIN_DICT.items():
-        #logger.info(f'== Now connecting: {pin} ({pinName})')
-        # Connect pin
-        with drb: drb.set_pin(pin)
-        #time.sleep(.1)
-        with multimeter:
-            measDict[pinName] = multimeter.measure('VOLT:DC', cycles=1)[0]
+    with multimeter:
+        with drb:
+            for pin,pinName in PIN_DICT.items():
+                #logger.info(f'== Now connecting: {pin} ({pinName})')
+                # Connect pin
+                drb.set_pin(pin)
+                if pin=='NTC':
+                    multimeter.set('CONFIGURE', 'RES')
+                    measDict[pinName] = multimeter.measure('RES')[0]
+                    multimeter.set('CONFIGURE', 'VOLT:DC')
+                else:
+                    measDict[pinName] = multimeter.measure('VOLT:DC', cycles=1)[0]
     for pinName in measDict:
         if pinName.endswith('A'):
             measDict[pinName] -= measDict['GNDA_ref']
@@ -58,7 +64,6 @@ def vi_curves(outdir, startingCurrent, finalCurrent, currentStep):
     with multimeter:
         multimeter.set('CONFIGURE', 'VOLT:DC')
         multimeter.set_all_line_integrations(1)
-    time.sleep(.2)
 
     if startingCurrent>finalCurrent and currentStep>0:
         currentStep = -currentStep
@@ -89,7 +94,6 @@ def vmonitor(outdir):
     with multimeter:
         multimeter.set('CONFIGURE', 'VOLT:DC')
         multimeter.set_all_line_integrations(1)
-    time.sleep(.2)
 
     measDict = measure_all_pins()
     measurements = [time.strftime("%Y-%m-%d %H:%M:%S")] + list(measDict.values())
