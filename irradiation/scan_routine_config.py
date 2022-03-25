@@ -200,33 +200,42 @@ config_irradiationMain = [
         "name": "VrefTrimming",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
+        "updateConfig" : True,
         "tools": ["VrefTrimming"],
     },
+    #{
+    #    "name": "IVConfigured",
+    #    "type": "IV",
+    #    "configFile": "CROC.xml",
+    #    "startingCurrent" : 2.5,
+    #    "finalCurrent" : .5,
+    #    "currentStep" : 0.1
+    #},
+    #{
+    #    "name": "IVDefault",
+    #    "type": "IV",
+    #    "startingCurrent" : 0.1,
+    #    "finalCurrent" : 2.5,
+    #    "currentStep" : 0.1
+    #},
     {
-        "name": "IVConfigured",
-        "type": "IV",
-        "configFile": "CROC.xml",
-        "startingCurrent" : 2.5,
-        "finalCurrent" : .5,
-        "currentStep" : 0.1
-    },
-    {
-        "name": "IVDefault",
-        "type": "IV",
-        "startingCurrent" : 0.1,
-        "finalCurrent" : 2.5,
-        "currentStep" : 0.1
-    },
-    {
-        "name": "ThresholdScan_existingTDACs",
+        "name": "ThresholdScan_previousTDACs",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
+        "updateConfig" : False,
+        "tools": ["ThresholdScanLow"]
+    },
+    {
+        "name": "ThresholdScan_preIrradTDACs",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : False,
         "tools": ["ThresholdScan"],
         "params": [
             {
                 "table" : "Pixels",
                 "keys" : ["tdac"],
-                "values" : ["tdac.csv", "tdac_preIrradiation.csv"]
+                "values" : ["tdac_preIrradiation.csv"]
             }
         ],
     },
