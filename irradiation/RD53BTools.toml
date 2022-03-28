@@ -164,7 +164,7 @@ args = { injectionTool = "AnalogScanSparse", vcalMed = 300, gdacRange = [380, 43
 
 [GainTuning]
 type = "RD53BGainTuning"
-args = { injectionTool = "AnalogScanSparse", vcalMed = 300, krumCurrRange = [0, 300], targetToT = 5.0, targetVcal = 1090 }
+args = { injectionTool = "AnalogScanSparse", vcalMed = 300, krumCurrRange = [0, 300], targetToT = 5.82, targetVcal = 1090 }
 
 [NoiseScan]
 type = "RD53BNoiseScan"

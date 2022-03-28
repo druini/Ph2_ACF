@@ -1,4 +1,5 @@
 [Pixels]
+tdac = 16
 
 [CoreColumns]
 
@@ -20,15 +21,3 @@ DAC_GDAC_R_LIN = 448
 DAC_GDAC_M_LIN = 448
 DAC_LDAC_LIN = 130
 LEACKAGE_FEEDBACK = 0
-TriggerConfig = 133
-CalibrationConfig = 0
-VCAL_HIGH = 1290
-VCAL_MED = 300
-GlobalPulseConf = 48
-GlobalPulseWidth = 255
-DataMerging = 129
-DataMergingMux = 58596
-DataConcentratorConf = 0
-CoreColEncoderConf = 0
-AURORA_CB_CONFIG0 = 0
-RingOscConfig = 24319
