@@ -14,12 +14,15 @@ powerSupplyResource = "ASRL/dev/ttyACM0::INSTR"
 powerSupplyVoltage = 1.8
 powerSupplyCurrent = 2
 
-logFile = "log.csv"
 baseDir = 'Results' + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+logFile = os.path.join(baseDir, "log.csv")
 timeout = 600
 maxAttempts = 3
 
 fmt = "%Y %m %d-%H:%M:%S"
+
+if not os.path.exists(baseDir):
+    os.makedirs(baseDir)
 
 def add_log_entry(row):
     with open(logFile, 'a+') as f:
@@ -74,6 +77,7 @@ def Ph2_ACF_Task(task, powerSupply):
 
             # store original parameter values if needed
             if not task['updateConfig']:
+                tomlData = toml.load(tomlFile)
                 original_values = []
                 for p in params:
                     original_values.append((p["table"], {key : tomlData[p["table"]].get(key, None) for key in p["keys"]}))
