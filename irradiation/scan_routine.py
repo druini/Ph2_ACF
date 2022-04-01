@@ -70,8 +70,15 @@ def Ph2_ACF_Task(task, powerSupply):
             baseDir,
             task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
             )
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
     for tool in task['tools']:
         if "params" in task:
+            if powerSupply is not None:
+                currConsumption = os.path.join(dir_name, 'currentConsumption.txt')
+                if not os.path.isfile(currConsumption):
+                    with open(currConsumption, 'w') as f:
+                        f.write('params, Iana, Idig\n')
             tomlFile = getTomlFile(task['configFile'])
             params = task['params']
 
@@ -92,6 +99,12 @@ def Ph2_ACF_Task(task, powerSupply):
                 with open(tomlFile, "w") as f:
                     toml.dump(tomlData, f)
                 run_Ph2_ACF(task, tool, paramsForLog, powerSupply, dir_name)
+                if powerSupply is not None:
+                    idig = powerSupply.read_current(1)
+                    iana = powerSupply.read_current(2)
+                    with open(currConsumption, 'a+') as f:
+                        f.write(f'{"_".join(paramsForLog)},{iana},{idig}\n')
+
 
             # restore original parameter values
             if not task['updateConfig']:
