@@ -4,6 +4,7 @@ from icicle.double_relay_board import DoubleRelayBoard
 from icicle.keithley2000 import Keithley2000
 from icicle.tti import TTI
 from scan_routine import configureCROC, getTomlFile
+from NTC_com import tempCelsius
 
 PIN_DICT    = {
         'aa' : 'VinA',
@@ -35,7 +36,7 @@ def measure_all_pins(pin_dict=PIN_DICT):
                 drb.set_pin(pin)
                 if pin=='NTC':
                     multimeter.set('CONFIGURE', 'RES')
-                    measDict[pinName] = multimeter.measure('RES')[0]
+                    measDict[pinName] = tempCelsius(multimeter.measure('RES')[0])
                     multimeter.set('CONFIGURE', 'VOLT:DC')
                 else:
                     measDict[pinName] = multimeter.measure('VOLT:DC', cycles=1)[0]
@@ -81,7 +82,7 @@ def vi_curves(outdir, startingCurrent, finalCurrent, currentStep):
         for ch in (1,2):
             lv.set_channel('VOLTAGE', ch, oldVoltages[ch-1])
             lv.set_channel('CURRENT', ch, oldCurrents[ch-1])
-    return True
+    return 0
 
 def vmonitor(outdir):
     if not os.path.exists(outdir):
@@ -100,7 +101,7 @@ def vmonitor(outdir):
     measurements = [time.strftime("%Y-%m-%d %H:%M:%S")] + list(measDict.values())
     with open(outfile, 'a+') as f:
         csv.writer(f).writerow(measurements)
-    return True
+    return 0
 
 def I_vs_VrefTrim(outdir, xmlConfig):
     vtrimA = 0b1010

@@ -53,7 +53,7 @@ while True:
                 logging.warning('Cannot reestablish communication, retrying...')
         else:
             logging.error('Could not reestablish communication to arduino, exiting (code -1)')
-            sys.exit(-1)
+            sys.exit(1)
         continue
 
     datastring = datastring_raw.split(' ')
@@ -80,5 +80,5 @@ while True:
         cntr_largeTempDiff = 0
     if cntr_largeTempDiff>4:
         logging.error('Read large temperature difference for 5 times in a row, exiting (code -2)')
-        sys.exit(-2)
+        sys.exit(2)
     time.sleep(0.05)
