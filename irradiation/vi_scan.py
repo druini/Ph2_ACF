@@ -48,8 +48,8 @@ def measure_all_pins(pin_dict=PIN_DICT):
     return measDict
 
 def vi_curves(outdir, startingCurrent, finalCurrent, currentStep):
-    multimeter  = Keithley2000(resource='ASRL/dev/ttyUSB5::INSTR')
-    lv          = TTI(resource='ASRL/dev/ttyACM0::INSTR', outputs=2)
+    multimeter  = Keithley2000(resource='ASRL/dev/ttyUSB5::INSTR', reset_on_init=False)
+    lv          = TTI(resource='ASRL/dev/ttyACM0::INSTR', outputs=2, reset_on_init=False)
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     outfile = os.path.join(outdir,f'croc_vi_curves_{time.strftime("%Y%m%d-%H%M%S")}.csv')
@@ -58,8 +58,9 @@ def vi_curves(outdir, startingCurrent, finalCurrent, currentStep):
             csv.writer(f).writerow( ['Iin']+list(PIN_DICT.values()) )
     
     with lv:
-        oldVoltages = [ lv.query_channel('VOLTAGE', ch) for ch in (1,2) ]
-        oldCurrents = [ lv.query_channel('CURRENT', ch) for ch in (1,2) ]
+        oldVoltages = [ lv.query_channel('VOLTAGE', ch).split(' ')[1] for ch in (1,2) ]
+        oldCurrents = [ lv.query_channel('CURRENT', ch).split(' ')[1] for ch in (1,2) ]
+        print(oldVoltages, oldCurrents)
         for ch in (1,2):
             lv.set_channel('CURRENT', ch, startingCurrent)
             lv.set_channel('VOLTAGE', ch, 2.5)
@@ -69,16 +70,18 @@ def vi_curves(outdir, startingCurrent, finalCurrent, currentStep):
 
     if startingCurrent>finalCurrent and currentStep>0:
         currentStep = -currentStep
-    currents = numpy.arange(startingCurrent, finalCurrent, currentStep)
-    for i in currents:
-        with lv:
+    currents = np.arange(startingCurrent, finalCurrent, currentStep)
+    with lv:
+        for i in currents:
+            i = round(i,2)
+            print(f'Setting current to {i}')
             for ch in (1,2):
                 lv.set_channel('CURRENT', ch, i)
-        measDict = measure_all_pins()
-        measurements = [i] + list(measDict.values())
-        with open(outfile, 'a+') as f:
-            csv.writer(f).writerow(measurements)
-    with lv:
+            measDict = measure_all_pins()
+            measurements = [i] + list(measDict.values())
+            with open(outfile, 'a+') as f:
+                csv.writer(f).writerow(measurements)
+
         for ch in (1,2):
             lv.set_channel('VOLTAGE', ch, oldVoltages[ch-1])
             lv.set_channel('CURRENT', ch, oldCurrents[ch-1])
@@ -92,7 +95,7 @@ def vmonitor(outdir):
         with open(outfile, 'a+') as f:
             csv.writer(f).writerow( ['time']+list(PIN_DICT.values()) )
 
-    multimeter = Keithley2000(resource='ASRL/dev/ttyUSB5::INSTR')
+    multimeter = Keithley2000(resource='ASRL/dev/ttyUSB5::INSTR', reset_on_init=False)
     with multimeter:
         multimeter.set('CONFIGURE', 'VOLT:DC')
         multimeter.set_all_line_integrations(1)
