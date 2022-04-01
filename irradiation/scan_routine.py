@@ -9,8 +9,8 @@ import NTC_com as NTC
 from pdb import set_trace
 
 powerSupplyResource = "ASRL/dev/ttyACM0::INSTR"
-powerSupplyVoltage = 1.8
-powerSupplyCurrent = 2
+powerSupplyVoltage = 2.5
+powerSupplyCurrent = 1.2
 
 baseDir = 'Results' + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 logFile = os.path.join(baseDir, "log.csv")
@@ -194,6 +194,7 @@ def launchScanRoutine(config, peltierControl, ntcControl, powerSupply):
     wrongTcounter = 0
     peltierUnreacheableCounter = 0
     for task in config:
+        print(f'Starting task {task["name"]} of type {task["type"]}\n')
         if peltierControl is not None:
             while True:
                 peltierState = peltierControl.poll()
@@ -243,7 +244,7 @@ def launchScanRoutine(config, peltierControl, ntcControl, powerSupply):
                 continue
             ret = curr_vs_DAC_Task(task, powerSupply)
         add_log_entry([task['name'], 'completed'])
-        return ret
+        checkReturncode( ret, None, None )
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
@@ -273,8 +274,7 @@ if __name__=='__main__':
 
     if args.config=='preIrrad':
         config = scan_routine_config.config_preIrradiation
-        scanRoutineReturn = launchScanRoutine(config, peltierControl, ntcControl, powerSupply)
-        checkReturncode( scanRoutineReturn )
+        launchScanRoutine(config, peltierControl, ntcControl, powerSupply)
     elif args.config=='irrad':
         configBase = scan_routine_config.config_irradiationBase
         configMain = scan_routine_config.config_irradiationMain
@@ -308,7 +308,7 @@ if __name__=='__main__':
                 else:
                     sys.exit('Xrays are broken :(')
             scanRoutineReturn = launchScanRoutine(configBase, peltierControl, ntcControl, powerSupply)
-            checkReturncode( scanRoutineReturn )
+            checkReturncode( scanRoutineReturn, powerSupply, xray )
             if mainScanRepetitions < 10:
                 deltaHours = 1
             elif mainScanRepetitions < 100:
@@ -318,11 +318,15 @@ if __name__=='__main__':
             if datetime.now() - lastMainScan > timedelta(hours=deltaHours):
                 if xray is not None: xray.off()
                 scanRoutineReturn = launchScanRoutine(configMain, peltierControl, ntcControl, powerSupply)
-                checkReturncode( scanRoutineReturn )
+                checkReturncode( scanRoutineReturn, powerSupply, xray )
                 mainScanRepetitions += 1
                 lastMainScan = datetime.now()
                 if xray is not None:
                     xray.on()
                     xray.open_shutter()
+    if peltierControl is not None:
+        peltierControl.terminate()
+    if ntcControl is not None:
+        ntcControl.terminate()
     if powerSupply is not None:
         powerSupply.power_off('ALL')

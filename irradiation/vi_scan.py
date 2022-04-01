@@ -60,7 +60,6 @@ def vi_curves(outdir, startingCurrent, finalCurrent, currentStep):
     with lv:
         oldVoltages = [ lv.query_channel('VOLTAGE', ch).split(' ')[1] for ch in (1,2) ]
         oldCurrents = [ lv.query_channel('CURRENT', ch).split(' ')[1] for ch in (1,2) ]
-        print(oldVoltages, oldCurrents)
         for ch in (1,2):
             lv.set_channel('CURRENT', ch, startingCurrent)
             lv.set_channel('VOLTAGE', ch, 2.5)
