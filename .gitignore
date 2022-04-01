@@ -27,3 +27,5 @@ build*
 rundir*
 .vscode/
 __pycache__
+CROC*
+myBuild
