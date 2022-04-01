@@ -1,8 +1,9 @@
-import time, csv, os
+import time, csv, os, toml
 import numpy as np
 from icicle.double_relay_board import DoubleRelayBoard
 from icicle.keithley2000 import Keithley2000
 from icicle.tti import TTI
+from scan_routine import configureCROC, getTomlFile
 
 PIN_DICT    = {
         'aa' : 'VinA',
@@ -100,3 +101,58 @@ def vmonitor(outdir):
     with open(outfile, 'a+') as f:
         csv.writer(f).writerow(measurements)
     return True
+
+def I_vs_VrefTrim(outdir, xmlConfig):
+    vtrimA = 0b1010
+    vtrimD = 0b1111 # from separate VrefTrimming
+    multimeter = Keithley2000(resource='ASRL/dev/ttyUSB5::INSTR', reset_on_init=False)
+    drb        = DoubleRelayBoard(resource='ASRL/dev/ttyUSB1::INSTR', resource2='ASRL/dev/ttyUSB3::INSTR')
+    lv         = TTI(resource='ASRL/dev/ttyACM0::INSTR', outputs=2, reset_on_init=False)
+
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    outfile = os.path.join(outdir,f'croc_Iana_vs_VrefTrim.csv')
+    if not os.path.isfile(outfile):
+        with open(outfile, 'a+') as f:
+            csv.writer(f).writerow(['VOLTAGE_TRIM', 'TRIM_VREFA', 'TRIM_VREFD', 'VddA', 'VddD', 'Iana', 'Idig'])
+
+    tomlFile = getTomlFile(xmlConfig)
+    tomlData = toml.load(tomlFile)
+
+    with multimeter:
+        multimeter.set('CONFIGURE', 'VOLT:DC')
+        multimeter.set_all_line_integrations(1)
+        with drb:
+            with lv:
+                for vA in range(16):
+                    voltage_trim = (vA<<4) + (vtrimD)
+                    tomlData['Registers']['VOLTAGE_TRIM'] = voltage_trim
+                    with open(tomlFile, "w") as f:
+                        toml.dump(tomlData, f)
+                    configureCROC(xmlConfig)
+                    drb.set_pin('ac')
+                    vdda = multimeter.measure('VOLT:DC', cycles=1)[0]
+                    drb.set_pin('ad')
+                    vddd = multimeter.measure('VOLT:DC', cycles=1)[0]
+                    iana = lv.measure(2)[1]
+                    idig = lv.measure(1)[1]
+                    with open(outfile, 'a+') as f:
+                        csv.writer(f).writerow([voltage_trim, vA, vtrimD, vdda, vddd, iana, idig])
+                for vD in range(16):
+                    voltage_trim = (vtrimA<<4) + (vD)
+                    tomlData['Registers']['VOLTAGE_TRIM'] = voltage_trim
+                    with open(tomlFile, "w") as f:
+                        toml.dump(tomlData, f)
+                    configureCROC(xmlConfig)
+                    drb.set_pin('ac')
+                    vdda = multimeter.measure('VOLT:DC', cycles=1)[0]
+                    drb.set_pin('ad')
+                    vddd = multimeter.measure('VOLT:DC', cycles=1)[0]
+                    iana = lv.measure(2)[1]
+                    idig = lv.measure(1)[1]
+                    with open(outfile, 'a+') as f:
+                        csv.writer(f).writerow([voltage_trim, vtrimA, vD, vdda, vddd, iana, idig])
+    voltage_trim = (vtrimA<<4) + (vtrimD)
+    tomlData['Registers']['VOLTAGE_TRIM'] = voltage_trim
+    with open(tomlFile, "w") as f:
+        toml.dump(tomlData, f)
