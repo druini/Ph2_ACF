@@ -40,6 +40,7 @@ def measure_all_pins(pin_dict=PIN_DICT):
                     multimeter.set('CONFIGURE', 'VOLT:DC')
                 else:
                     measDict[pinName] = multimeter.measure('VOLT:DC', cycles=1)[0]
+            drb.set_pin('NTC')
     for pinName in measDict:
         if pinName.endswith('A'):
             measDict[pinName] -= measDict['GNDA_ref']
@@ -84,6 +85,7 @@ def vi_curves(outdir, startingCurrent, finalCurrent, currentStep):
         for ch in (1,2):
             lv.set_channel('VOLTAGE', ch, oldVoltages[ch-1])
             lv.set_channel('CURRENT', ch, oldCurrents[ch-1])
+    with multimeter: multimeter.set('CONFIGURE', 'RES')
     return 0
 
 def vmonitor(outdir):
@@ -103,6 +105,7 @@ def vmonitor(outdir):
     measurements = [time.strftime("%Y-%m-%d %H:%M:%S")] + list(measDict.values())
     with open(outfile, 'a+') as f:
         csv.writer(f).writerow(measurements)
+    with multimeter: multimeter.set('CONFIGURE', 'RES')
     return 0
 
 def I_vs_VrefTrim(outdir, xmlConfig):

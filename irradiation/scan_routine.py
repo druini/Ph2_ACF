@@ -147,7 +147,7 @@ def Ph2_ACF_Task(task, powerSupply):
 def IV_Task(task, powerSupply):
     dir_name = os.path.join(
             baseDir,
-            task["name"] + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+            task["name"]
             )
     if "configFile" in task:
         configured = configureCROC(task['configFile'], powerSupply=powerSupply)
@@ -232,6 +232,7 @@ def launchScanRoutine(config, peltierControl, ntcControl, powerSupply):
         elif task["type"] == "IV":
             if ntcControl is not None: ntcControl.send_signal(signal.SIGSTOP)
             ret = IV_Task(task, powerSupply)
+            powerSupply.power_cycle()
             if ntcControl is not None: ntcControl.send_signal(signal.SIGCONT)
 
         elif task["type"] == "Vmonitor":
