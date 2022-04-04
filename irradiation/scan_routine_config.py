@@ -8,14 +8,39 @@ config_preIrradiation = [
         "params": [
             {
                 "table" : "Pixels",
+                "keys" : ["enable"],
+                "values" : [1]
+            },
+            {
+                "table" : "Pixels",
                 "keys" : ["tdac"],
                 "values" : [16]
             },
+            {
+                "table" : "Registers",
+                "keys" : ["DAC_GDAC_L_LIN", "DAC_GDAC_R_LIN", "DAC_GDAC_M_LIN"],
+                "values" : [470]
+            },
         ]
     },
+    ##{
+    ##    "name": "vmonitor",
+    ##    "type": "Vmonitor",
+    ##},
     {
-        "name": "vmonitor",
-        "type": "Vmonitor",
+        "name": "IVConfigured",
+        "type": "IV",
+        "configFile": "CROC.xml",
+        "startingCurrent" : 1.,
+        "finalCurrent" : 2.5,
+        "currentStep" : 0.1
+    },
+    {
+        "name": "IVDefault",
+        "type": "IV",
+        "startingCurrent" : 0.1,
+        "finalCurrent" : 2.5,
+        "currentStep" : 0.1
     },
     ##{
     ##    'name': 'current_vs_PA_IN_BIAS_LIN',
@@ -146,7 +171,7 @@ config_preIrradiation = [
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
         "updateConfig" : True,
-        "tools": ["ThresholdEqualization3000", "GlobalThresholdTuning1000", "ThresholdEqualization1000", "GlobalThresholdTuning1000", "ThresholdScanLow"],
+        "tools": ["ThresholdEqualization3000", "GlobalThresholdTuning1000", "GainTuning", "GlobalThresholdTuning1000", "ThresholdEqualization1000", "GlobalThresholdTuning1000", "ThresholdScanLow"],
         "params": [
             {
                 "table" : "Pixels",
@@ -218,21 +243,6 @@ config_preIrradiation = [
         "updateConfig" : False,
         "tools": ["TimeWalk"],
     },
-    #{
-    #    "name": "IVConfigured",
-    #    "type": "IV",
-    #    "configFile": "CROC.xml",
-    #    "startingCurrent" : 2.5,
-    #    "finalCurrent" : .5,
-    #    "currentStep" : 0.1
-    #},
-    #{
-    #    "name": "IVDefault",
-    #    "type": "IV",
-    #    "startingCurrent" : 0.1,
-    #    "finalCurrent" : 2.5,
-    #    "currentStep" : 0.1
-    #}
 ]
 
 config_irradiationBase = [
@@ -247,7 +257,7 @@ config_irradiationBase = [
         "name": "vmonitor",
         "type": "Vmonitor",
     }
-        ]
+]
 
 config_irradiationMain = [
     {
@@ -257,21 +267,21 @@ config_irradiationMain = [
         "updateConfig" : True,
         "tools": ["VrefTrimming"],
     },
-    #{
-    #    "name": "IVConfigured",
-    #    "type": "IV",
-    #    "configFile": "CROC.xml",
-    #    "startingCurrent" : 2.5,
-    #    "finalCurrent" : .5,
-    #    "currentStep" : 0.1
-    #},
-    #{
-    #    "name": "IVDefault",
-    #    "type": "IV",
-    #    "startingCurrent" : 0.1,
-    #    "finalCurrent" : 2.5,
-    #    "currentStep" : 0.1
-    #},
+    {
+        "name": "IVConfigured",
+        "type": "IV",
+        "configFile": "CROC.xml",
+        "startingCurrent" : 1,
+        "finalCurrent" : 2.5,
+        "currentStep" : 0.1
+    },
+    {
+        "name": "IVDefault",
+        "type": "IV",
+        "startingCurrent" : 0.1,
+        "finalCurrent" : 2.5,
+        "currentStep" : 0.1
+    },
     {
         "name": "ThresholdScan_previousTDACs",
         "type": "Ph2_ACF",
@@ -290,22 +300,35 @@ config_irradiationMain = [
                 "table" : "Pixels",
                 "keys" : ["tdac"],
                 "values" : ["tdac_preIrradiation.csv"]
-            }
+            },
+            {
+                "table" : "Registers",
+                "keys" : ["DAC_GDAC_L_LIN", "DAC_GDAC_R_LIN", "DAC_GDAC_M_LIN"],
+                "values" : [470]
+            },
         ],
+    },
+    {
+        "name": "ThresholdTuning",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : True,
+        "tools": ["GlobalThresholdTuning1000", "ThresholdEqualization1000", "GlobalThresholdTuning1000"],
+        ],
+    },
+    {
+        "name": "NoiseScan1000",
+        "type": "Ph2_ACF",
+        "configFile": "CROC.xml",
+        "updateConfig" : False,
+        "tools": ["NoiseScan"],
     },
     {
         "name": "ThresholdScan_newTuning",
         "type": "Ph2_ACF",
         "configFile": "CROC.xml",
-        "updateConfig" : True,
-        "tools": ["ThresholdEqualization1000", "GlobalThresholdTuning1000", "ThresholdScanLow"]
-    },
-    {
-        "name": "GainTuning1000",
-        "type": "Ph2_ACF",
-        "configFile": "CROC.xml",
-        "updateConfig" : True,
-        "tools": ["GainTuning"],
+        "updateConfig" : False,
+        "tools": ["ThresholdScanLow"]
     },
     {
         "name": "ToTMeasurement1000",
@@ -327,13 +350,6 @@ config_irradiationMain = [
         "configFile": "CROC.xml",
         "updateConfig" : False,
         "tools": ["AnalogScan", "DigitalScan", "RingOsc", "ADCScan", "DACScan"],
-    },
-    {
-        "name": "NoiseScan1000",
-        "type": "Ph2_ACF",
-        "configFile": "CROC.xml",
-        "updateConfig" : False,
-        "tools": ["NoiseScan"],
     },
     {
         "name": "TimeWalk1000",
