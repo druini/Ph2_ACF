@@ -292,14 +292,20 @@ if __name__=='__main__':
     elif args.config=='irrad':
         configBase = scan_routine_config.config_irradiationBase
         configMain = scan_routine_config.config_irradiationMain
-        lastMainScan = datetime.fromisocalendar(1900,1,1)
-        mainScanRepetitions = 0
+        lastScanLog = 'lastMainScan.txt'
+        if os.path.isfile(lastScanLog):
+            with open(lastScanLog) as f:
+                l = next(csv.reader(f))
+            lastMainScan = datetime.strptime(l[0],fmt)
+            mainScanRepetitions = int(l[1])-1
+        else:
+            lastMainScan = datetime.fromisocalendar(1900,1,1)
+            mainScanRepetitions = 0
 
         if args.no_instruments:
             xray = None
         else:
-            xray = None
-            #xray = XrayController(resource='ASRL/dev/ttyID3003::INSTR', logfile='xray.log')
+            xray = XrayController(resource='ASRL/dev/ttyID3003::INSTR', logfile='xray.log')
         if xray is not None:
             xray.set_current(30)
             xray.set_voltage(60)
@@ -336,6 +342,9 @@ if __name__=='__main__':
                 checkReturncode( scanRoutineReturnCode, powerSupply, xray)
                 mainScanRepetitions += 1
                 lastMainScan = datetime.now()
+                with open(lastScanLog, 'w') as f:
+                    w = csv.writer(f)
+                    w.writerow([lastMainScan, mainScanRepetitions])
                 if xray is not None:
                     xray.on()
                     xray.open_shutter()
