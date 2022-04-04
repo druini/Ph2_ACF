@@ -305,7 +305,8 @@ if __name__=='__main__':
         if args.no_instruments:
             xray = None
         else:
-            xray = XrayController(resource='ASRL/dev/ttyID3003::INSTR', logfile='xray.log')
+            xray = None
+            #xray = XrayController(resource='ASRL/dev/ttyID3003::INSTR', logfile='xray.log')
         if xray is not None:
             xray.set_current(30)
             xray.set_voltage(60)
@@ -327,17 +328,27 @@ if __name__=='__main__':
                         time.sleep(3)
                         xray.open_shutter()
                 else:
+                    telegram.send_text('Xrays are broken :(')
                     sys.exit('Xrays are broken :(')
             scanRoutineReturnCode = launchScanRoutine(configBase, peltierControl, ntcControl, powerSupply, xray)
             checkReturncode( scanRoutineReturnCode, powerSupply, xray)
-            if mainScanRepetitions < 10:
+            if peltierControl is not None:
+                if peltierControl.poll() is not None:
+                    peltierControl.terminate()
+                    peltierControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
+            if mainScanRepetitions < 5:
+                deltaHours = .5
+            elif mainScanRepetitions < 10:
                 deltaHours = 1
             elif mainScanRepetitions < 100:
                 deltaHours = 10
             else:
                 deltaHours = 50
             if datetime.now() - lastMainScan > timedelta(hours=deltaHours):
-                if xray is not None: xray.off()
+                if xray is not None:
+                    xray.close_shutter()
+                    xray.set_current(2)
+                    xray.set_voltage(10)
                 scanRoutineReturnCode = launchScanRoutine(configMain, peltierControl, ntcControl, powerSupply, xray)
                 checkReturncode( scanRoutineReturnCode, powerSupply, xray)
                 mainScanRepetitions += 1
@@ -345,8 +356,13 @@ if __name__=='__main__':
                 with open(lastScanLog, 'w') as f:
                     w = csv.writer(f)
                     w.writerow([lastMainScan, mainScanRepetitions])
+                if peltierControl is not None:
+                    if peltierControl.poll() is not None:
+                        peltierControl.terminate()
+                        peltierControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
                 if xray is not None:
-                    xray.on()
+                    xray.set_voltage(60)
+                    xray.set_current(30)
                     xray.open_shutter()
     if peltierControl is not None:
         peltierControl.terminate()
