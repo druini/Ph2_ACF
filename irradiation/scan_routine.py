@@ -44,7 +44,7 @@ def configureCROC(configFile, powerSupply=None):
 
 def checkReturncode(code, powerSupply, xray):
     if code<0: # Ph2_ACF task cannot complete
-        telegram.send_text('Cannot complete Ph2_ACF task')
+        telegram.send_text(f'Cannot complete Ph2_ACF task (code {code})')
         add_log_entry(['gave up on this task'])
     elif code==1: # peltier controller unreacheable
         ntcLog = tail(NTC.LOGFILE, 1)[-1].split(' ')
@@ -52,21 +52,23 @@ def checkReturncode(code, powerSupply, xray):
         if datetime.now() - datetime.strptime(ntcTime, NTC.DATEFMT) > timedelta(minutes=1):
             telegram.send_text(f'Peltier controller unreacheable and NTC lost since {ntcTime}. I have no clue about the temperature and will shut down...')
             add_log_entry(['lost peltier and ntc info: shutting down'])
-            powerSupply.power_off()
-            xray.off()
+            if powerSupply is not None: powerSupply.power_off()
+            if xray is not None: xray.off()
             sys.exit()
         else:
             if ntcTemp > -5: #FIXME check actual temperature
                 telegram.send_text(f'Peltier controller unreacheable and NTC at {ntcTemp}! Shutting down.')
                 add_log_entry(['lost peltier and ntc is warm: shutting down'])
+                if powerSupply is not None: powerSupply.power_off()
+                if xray is not None: xray.off()
                 sys.exit()
             else:
                 telegram.send_text(f'Peltier controller unreacheable but NTC still cold ({ntcTemp})...please check')
     elif code==2: # temperature away from target
         telegram.send_text('Lost control of peltier temperature! Shutting everything off.')
         add_log_entry(['lost control of temperature'])
-        powerSupply.power_off()
-        xray.off()
+        if powerSupply is not None: powerSupply.power_off()
+        if xray is not None: xray.off()
         sys.exit()
 
 def run_Ph2_ACF(task, tool, paramsForLog=[], powerSupply=None, dir_name='Results'):
@@ -189,16 +191,32 @@ def curr_vs_DAC_Task(task, powerSupply):
             csv.writer(f).writerow(data)
     return 0
 
-def launchScanRoutine(config, peltierControl, ntcControl, powerSupply):
+def launchScanRoutine(config, peltierControl, ntcControl, powerSupply, xray):
     psOFF = False
     wrongTcounter = 0
     peltierUnreacheableCounter = 0
+    peltierCrashed = 0
     for task in config:
         print(f'Starting task {task["name"]} of type {task["type"]}\n')
         if peltierControl is not None:
             while True:
                 peltierState = peltierControl.poll()
-                if peltierState == 1: #lost communication to arduino
+                if peltierState is None:
+                    wrongTcounter = 0
+                    peltierUnreacheableCounter = 0
+                    peltierCrashed = 0
+                    if psOFF:
+                        powerSupply.power_on('ALL')
+                        psOFF = False
+                    break
+                elif peltierState < 0: #process was terminated externally (e.g. from htop)
+                    peltierControl.terminate()
+                    if peltierCrashed>2:
+                        return 1
+                    peltierControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
+                    peltierCrashed += 1
+                elif peltierState == 1: #lost communication to arduino
+                    peltierControl.terminate()
                     if peltierUnreacheableCounter>2:
                         return 1
                     time.sleep(1)
@@ -207,6 +225,7 @@ def launchScanRoutine(config, peltierControl, ntcControl, powerSupply):
                     peltierUnreacheableCounter += 1
                     continue
                 elif peltierState == 2: #temperature is more than 5degs from target temperature
+                    peltierControl.terminate()
                     powerSupply.power_off('ALL')
                     if wrongTcounter > 2:
                         return 2
@@ -216,13 +235,6 @@ def launchScanRoutine(config, peltierControl, ntcControl, powerSupply):
                     time.sleep(60)
                     wrongTcounter += 1
                     continue
-                elif peltierState is None:
-                    wrongTcounter = 0
-                    peltierUnreacheableCounter = 0
-                    if psOFF:
-                        powerSupply.power_on('ALL')
-                        psOFF = False
-                    break
             time.sleep(.5)
 
         add_log_entry([task['name'], 'starting'])
@@ -245,7 +257,8 @@ def launchScanRoutine(config, peltierControl, ntcControl, powerSupply):
                 continue
             ret = curr_vs_DAC_Task(task, powerSupply)
         add_log_entry([task['name'], 'completed'])
-        checkReturncode( ret, None, None )
+        checkReturncode( ret, powerSupply, xray )
+    return 0
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
@@ -275,7 +288,7 @@ if __name__=='__main__':
 
     if args.config=='preIrrad':
         config = scan_routine_config.config_preIrradiation
-        launchScanRoutine(config, peltierControl, ntcControl, powerSupply)
+        launchScanRoutine(config, peltierControl, ntcControl, powerSupply, None)
     elif args.config=='irrad':
         configBase = scan_routine_config.config_irradiationBase
         configMain = scan_routine_config.config_irradiationMain
@@ -285,7 +298,8 @@ if __name__=='__main__':
         if args.no_instruments:
             xray = None
         else:
-            xray = XrayController(resource='ASRL/dev/ttyID3003::INSTR', logfile='xray.log')
+            xray = None
+            #xray = XrayController(resource='ASRL/dev/ttyID3003::INSTR', logfile='xray.log')
         if xray is not None:
             xray.set_current(30)
             xray.set_voltage(60)
@@ -308,8 +322,8 @@ if __name__=='__main__':
                         xray.open_shutter()
                 else:
                     sys.exit('Xrays are broken :(')
-            scanRoutineReturn = launchScanRoutine(configBase, peltierControl, ntcControl, powerSupply)
-            checkReturncode( scanRoutineReturn, powerSupply, xray )
+            scanRoutineReturnCode = launchScanRoutine(configBase, peltierControl, ntcControl, powerSupply, xray)
+            checkReturncode( scanRoutineReturnCode, powerSupply, xray)
             if mainScanRepetitions < 10:
                 deltaHours = 1
             elif mainScanRepetitions < 100:
@@ -318,8 +332,8 @@ if __name__=='__main__':
                 deltaHours = 50
             if datetime.now() - lastMainScan > timedelta(hours=deltaHours):
                 if xray is not None: xray.off()
-                scanRoutineReturn = launchScanRoutine(configMain, peltierControl, ntcControl, powerSupply)
-                checkReturncode( scanRoutineReturn, powerSupply, xray )
+                scanRoutineReturnCode = launchScanRoutine(configMain, peltierControl, ntcControl, powerSupply, xray)
+                checkReturncode( scanRoutineReturnCode, powerSupply, xray)
                 mainScanRepetitions += 1
                 lastMainScan = datetime.now()
                 if xray is not None:
