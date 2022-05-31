@@ -9,18 +9,16 @@ import NTC_com as NTC
 from pdb import set_trace
 
 powerSupplyResource = "ASRL/dev/ttyACM0::INSTR"
-powerSupplyVoltage = 2.5
-powerSupplyCurrent = 1.2
+powerSupplyVoltage = 2.5 ### SLDO
+powerSupplyCurrent = 1.
+#powerSupplyVoltage = 1.8 ### LDO
+#powerSupplyCurrent = 2.
 
-baseDir = 'Results' + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-logFile = os.path.join(baseDir, "log.csv")
-timeout = 600
+#baseDir = 'test' #'irrad' + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+timeout = 3600
 maxAttempts = 3
 
 fmt = "%Y %m %d-%H:%M:%S"
-
-if not os.path.exists(baseDir):
-    os.makedirs(baseDir)
 
 def add_log_entry(row):
     with open(logFile, 'a+') as f:
@@ -80,7 +78,13 @@ def run_Ph2_ACF(task, tool, paramsForLog=[], powerSupply=None, dir_name='Results
         p = subprocess.Popen(["RD53BminiDAQ", "-f", task["configFile"], "-t", "RD53BTools.toml", "-h", "-o", dir_name, *extra_flags, tool])
         try:
             returncode = p.wait(timeout=timeout)
+            if tool=='MuxScan':
+                returncode = 0
+                break
         except:
+            if tool=='MuxScan':
+                returncode = 0
+                break
             p.terminate()
             returncode = -1 # cannot complete task
         add_log_entry([task["name"], tool, returncode, i, dir_name, *paramsForLog])
@@ -100,6 +104,7 @@ def Ph2_ACF_Task(task, powerSupply):
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
     for tool in task['tools']:
+        time.sleep(1)
         if "params" in task:
             if powerSupply is not None:
                 currConsumption = os.path.join(dir_name, 'currentConsumption.txt')
@@ -108,6 +113,10 @@ def Ph2_ACF_Task(task, powerSupply):
                         f.write('params, Iana, Idig\n')
             tomlFile = getTomlFile(task['configFile'])
             params = task['params']
+            for p in params:
+                if ('enable' in p['keys']) and ('enable.csv' in p['values']):
+                    os.system('cp ../enable.csv .')
+                    break
 
             # store original parameter values if needed
             if not task['updateConfig']:
@@ -144,6 +153,7 @@ def Ph2_ACF_Task(task, powerSupply):
 
         else:
             ret = run_Ph2_ACF(task, tool=tool, paramsForLog=[], powerSupply=powerSupply, dir_name=dir_name)
+    time.sleep(1)
     return ret
 
 def IV_Task(task, powerSupply):
@@ -192,6 +202,7 @@ def curr_vs_DAC_Task(task, powerSupply):
     return 0
 
 def launchScanRoutine(config, peltierControl, ntcControl, powerSupply, xray):
+    time.sleep(1)
     psOFF = False
     wrongTcounter = 0
     peltierUnreacheableCounter = 0
@@ -261,112 +272,128 @@ def launchScanRoutine(config, peltierControl, ntcControl, powerSupply, xray):
     return 0
 
 if __name__=='__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--no-instruments', action='store_true', help='Flag to not use the instrument control library')
-    parser.add_argument('-c', '--config', action='store', choices=['preIrrad','irrad'], help='Selects the scan sequence in scan_routine_config.py')
-    args = parser.parse_args()
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--no-instruments', action='store_true', help='Flag to not use the instrument control library')
+        parser.add_argument('-c', '--config', action='store', choices=['preIrrad','irrad', 'PostIrrad'], help='Selects the scan sequence in scan_routine_config.py')
+        args = parser.parse_args()
 
-    if args.no_instruments:
-        peltierControl = None
-        ntcControl     = None
-        powerSupply    = None
-    else:
-        from instrument_control import PowerSupplyController, XrayController
-        from vi_scan import vi_curves, vmonitor
-        peltierControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
-        ntcControl     = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','NTC_com.py')])
-        powerSupply = PowerSupplyController(powerSupplyResource, 2)
+        baseDir = args.config + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        logFile = os.path.join(baseDir, "log.csv")
 
-    if powerSupply is not None:
-        powerSupply.power_off('ALL')
-        # set power supply voltage/current
-        powerSupply.set_voltage(1, powerSupplyVoltage)
-        powerSupply.set_voltage(2, powerSupplyVoltage)
-        powerSupply.set_current(1, powerSupplyCurrent)
-        powerSupply.set_current(2, powerSupplyCurrent)
-        powerSupply.power_on('ALL')
-
-    if args.config=='preIrrad':
-        config = scan_routine_config.config_preIrradiation
-        launchScanRoutine(config, peltierControl, ntcControl, powerSupply, None)
-    elif args.config=='irrad':
-        configBase = scan_routine_config.config_irradiationBase
-        configMain = scan_routine_config.config_irradiationMain
-        lastScanLog = 'lastMainScan.txt'
-        if os.path.isfile(lastScanLog):
-            with open(lastScanLog) as f:
-                l = next(csv.reader(f))
-            lastMainScan = datetime.strptime(l[0],fmt)
-            mainScanRepetitions = int(l[1])-1
-        else:
-            lastMainScan = datetime.fromisocalendar(1900,1,1)
-            mainScanRepetitions = 0
+        if not os.path.exists(baseDir):
+            os.makedirs(baseDir)
 
         if args.no_instruments:
-            xray = None
+            peltierControl = None
+            ntcControl     = None
+            powerSupply    = None
         else:
-            xray = None
-            #xray = XrayController(resource='ASRL/dev/ttyID3003::INSTR', logfile='xray.log')
-        if xray is not None:
-            xray.set_current(30)
-            xray.set_voltage(60)
-            xray.on()
-            xray.open_shutter()
+            from instrument_control import PowerSupplyController, XrayController
+            from vi_scan import vi_curves, vmonitor
+            peltierControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
+            ntcControl     = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','NTC_com.py')])
+            powerSupply = PowerSupplyController(powerSupplyResource, 2)
 
-        while True:
-            if ntcControl is not None:
-                if ntcControl.poll() is not None:
-                    ntcControl.terminate()
-                    ntcControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','NTC_com.py')])
-            if xray is not None:
-                for i in range(3):
-                    if xray.verify_parameters():
-                        break
-                    else:
-                        xray.off()
-                        xray.on()
-                        time.sleep(3)
-                        xray.open_shutter()
-                else:
-                    telegram.send_text('Xrays are broken :(')
-                    sys.exit('Xrays are broken :(')
-            scanRoutineReturnCode = launchScanRoutine(configBase, peltierControl, ntcControl, powerSupply, xray)
-            checkReturncode( scanRoutineReturnCode, powerSupply, xray)
-            if peltierControl is not None:
-                if peltierControl.poll() is not None:
-                    peltierControl.terminate()
-                    peltierControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
-            if mainScanRepetitions < 5:
-                deltaHours = .5
-            elif mainScanRepetitions < 10:
-                deltaHours = 1
-            elif mainScanRepetitions < 100:
-                deltaHours = 10
+        if powerSupply is not None:
+            powerSupply.power_off('ALL')
+            # set power supply voltage/current
+            powerSupply.set_voltage(1, powerSupplyVoltage)
+            powerSupply.set_voltage(2, powerSupplyVoltage)
+            powerSupply.set_current(1, powerSupplyCurrent)
+            powerSupply.set_current(2, powerSupplyCurrent)
+            powerSupply.power_on('ALL')
+
+        if args.config=='preIrrad':
+            config = scan_routine_config.config_preIrradiation
+            launchScanRoutine(config, peltierControl, ntcControl, powerSupply, None)
+        elif args.config=='PostIrrad':
+            config = scan_routine_config.config_postIrradiation
+            launchScanRoutine(config, peltierControl, ntcControl, powerSupply, None)
+        elif args.config=='irrad':
+            configBase = scan_routine_config.config_irradiationBase
+            configMain = scan_routine_config.config_irradiationMain
+            lastScanLog = 'lastMainScan.txt'
+            if os.path.isfile(lastScanLog):
+                with open(lastScanLog) as f:
+                    l = next(csv.reader(f))
+                lastMainScan = datetime.strptime(l[0],fmt)
+                mainScanRepetitions = int(l[1])
             else:
-                deltaHours = 50
-            if datetime.now() - lastMainScan > timedelta(hours=deltaHours):
+                lastMainScan = datetime.fromisocalendar(1900,1,1)
+                mainScanRepetitions = 0
+
+            if args.no_instruments:
+                xray = None
+            else:
+                xray = XrayController(resource='ASRL/dev/ttyID3003::INSTR', logfile='xray.log')
+            if xray is not None:
+                xray.set_current(30)
+                xray.set_voltage(60)
+                xray.on()
+                xray.open_shutter()
+
+            while True:
+                if ntcControl is not None:
+                    if ntcControl.poll() is not None:
+                        ntcControl.terminate()
+                        ntcControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','NTC_com.py')])
                 if xray is not None:
-                    xray.close_shutter()
-                    xray.set_current(2)
-                    xray.set_voltage(10)
-                scanRoutineReturnCode = launchScanRoutine(configMain, peltierControl, ntcControl, powerSupply, xray)
+                    for i in range(3):
+                        if xray.verify_parameters():
+                            break
+                        else:
+                            xray.reset()
+                            xray.off()
+                            xray.reset()
+                            xray.on()
+                            time.sleep(3)
+                            xray.open_shutter()
+                    else:
+                        telegram.send_text('Xrays are broken :(')
+                        sys.exit('Xrays are broken :(')
+                scanRoutineReturnCode = launchScanRoutine(configBase, peltierControl, ntcControl, powerSupply, xray)
                 checkReturncode( scanRoutineReturnCode, powerSupply, xray)
-                mainScanRepetitions += 1
-                lastMainScan = datetime.now()
-                with open(lastScanLog, 'w') as f:
-                    w = csv.writer(f)
-                    w.writerow([lastMainScan, mainScanRepetitions])
                 if peltierControl is not None:
                     if peltierControl.poll() is not None:
                         peltierControl.terminate()
                         peltierControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
-                if xray is not None:
-                    xray.set_voltage(60)
-                    xray.set_current(30)
-                    xray.open_shutter()
-    if peltierControl is not None:
-        peltierControl.terminate()
-    if ntcControl is not None:
-        ntcControl.terminate()
-    if powerSupply is not None:
-        powerSupply.power_off('ALL')
+                if mainScanRepetitions < 5:
+                    deltaHours = .5
+                elif mainScanRepetitions < 10:
+                    deltaHours = 1
+                #elif mainScanRepetitions < 100:
+                #    deltaHours = 10
+                else:
+                    #deltaHours = 50
+                    deltaHours = 10
+                if datetime.now() - lastMainScan > timedelta(hours=deltaHours):
+                    if xray is not None:
+                        xray.close_shutter()
+                        xray.set_current(2)
+                        xray.set_voltage(10)
+                    scanRoutineReturnCode = launchScanRoutine(configMain, peltierControl, ntcControl, powerSupply, xray)
+                    checkReturncode( scanRoutineReturnCode, powerSupply, xray)
+                    mainScanRepetitions += 1
+                    lastMainScan = datetime.now()
+                    with open(lastScanLog, 'w') as f:
+                        w = csv.writer(f)
+                        w.writerow([lastMainScan.strftime(fmt), mainScanRepetitions])
+                    if peltierControl is not None:
+                        if peltierControl.poll() is not None:
+                            peltierControl.terminate()
+                            peltierControl = subprocess.Popen(['python', os.path.join(os.environ['PH2ACF_BASE_DIR'],'irradiation','peltier_com.py')])
+                    break
+                    if xray is not None:
+                        xray.set_voltage(60)
+                        xray.set_current(30)
+                        xray.open_shutter()
+        if peltierControl is not None:
+            peltierControl.terminate()
+        if ntcControl is not None:
+            ntcControl.terminate()
+        if powerSupply is not None:
+            powerSupply.power_off('ALL')
+        telegram.send_text('All done')
+    except:
+        telegram.send_text('Something went wrong, please restart')

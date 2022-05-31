@@ -82,9 +82,12 @@ def vi_curves(outdir, startingCurrent, finalCurrent, currentStep):
             with open(outfile, 'a+') as f:
                 csv.writer(f).writerow(measurements)
 
+        lv.off('ALL')
+        time.sleep(2)
         for ch in (1,2):
             lv.set_channel('VOLTAGE', ch, oldVoltages[ch-1])
             lv.set_channel('CURRENT', ch, oldCurrents[ch-1])
+        lv.on('ALL')
     with multimeter: multimeter.set('CONFIGURE', 'RES')
     return 0
 
@@ -109,8 +112,8 @@ def vmonitor(outdir):
     return 0
 
 def I_vs_VrefTrim(outdir, xmlConfig):
-    vtrimA = 0b1010
-    vtrimD = 0b1111 # from separate VrefTrimming
+    vtrimA = 7
+    vtrimD = 15 # from separate VrefTrimming
     multimeter = Keithley2000(resource='ASRL/dev/ttyUSB5::INSTR', reset_on_init=False)
     drb        = DoubleRelayBoard(resource='ASRL/dev/ttyUSB1::INSTR', resource2='ASRL/dev/ttyUSB3::INSTR')
     lv         = TTI(resource='ASRL/dev/ttyACM0::INSTR', outputs=2, reset_on_init=False)
