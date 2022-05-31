@@ -38,7 +38,7 @@ class PowerSupplyController:
     def power_cycle(self, channel='ALL'):
         with self.tti:
             self.tti.off(channel)
-            time.sleep(.5)
+            time.sleep(2)
             return self.tti.on(channel)
 
 class MultimeterController:
@@ -59,21 +59,21 @@ class XrayController:
         self.logfile = logfile
         if self.logfile is not None:
             with open(self.logfile, 'a+') as f:
-                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},initialized xrays')
+                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},initialized xrays\n')
 
     def reset(self):
         with self.xray:
             self.xray.reset()
         if self.logfile is not None:
             with open(self.logfile, 'a+') as f:
-                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},xrays reset')
+                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},xrays reset\n')
 
     def on(self):
         with self.xray:
             self.xray.set_hv('on')
         if self.logfile is not None:
             with open(self.logfile, 'a+') as f:
-                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},xrays on')
+                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},xrays on\n')
 
     def off(self):
         with self.xray:
@@ -81,39 +81,40 @@ class XrayController:
             self.xray.set_hv('off')
         if self.logfile is not None:
             with open(self.logfile, 'a+') as f:
-                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},xrays off')
+                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},xrays off\n')
 
     def set_current(self, current):
         with self.xray:
             self.xray.set_current(current)
         if self.logfile is not None:
             with open(self.logfile, 'a+') as f:
-                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},set xray current to {current}')
+                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},set xray current to {current}\n')
 
     def set_voltage(self, voltage):
         with self.xray:
             self.xray.set_voltage(voltage)
         if self.logfile is not None:
             with open(self.logfile, 'a+') as f:
-                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},set xray voltage to {voltage}')
+                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},set xray voltage to {voltage}\n')
 
     def verify_parameters(self):
         with self.xray:
-            self.xray.verify_parameters()
+            ret = self.xray.verify_parameters()
         if self.logfile is not None:
             with open(self.logfile, 'a+') as f:
-                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},verified xray parameters')
+                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},verified xray parameters\n')
+        return ret
 
     def open_shutter(self):
         with self.xray:
             self.xray.open_shutter(3)
         if self.logfile is not None:
             with open(self.logfile, 'a+') as f:
-                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},open xray shutter 3')
+                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},open xray shutter 3\n')
 
     def close_shutter(self):
         with self.xray:
             self.xray.close_shutter(3)
         if self.logfile is not None:
             with open(self.logfile, 'a+') as f:
-                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},close xray shutter 3')
+                f.write(f'{time.strftime("%Y %m %d-%H:%M:%S")},close xray shutter 3\n')
